@@ -1,0 +1,109 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    groups:
+      microsoft:
+        patterns: ["Microsoft.*", "System.*"]
+      opentelemetry:
+        patterns: ["OpenTelemetry.*"]
+      testing:
+        patterns: ["xunit*", "TngTech.*", "Microsoft.Testing.*"]
+    labels: [dependencies, backend]
+    commit-message:
+      prefix: "build(deps)"
+
+  - package-ecosystem: dotnet-sdk
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    labels: [dependencies, backend]
+    commit-message:
+      prefix: "build(sdk)"
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    cooldown:
+      default-days: 3
+      semver-major-days: 14
+    groups:
+      next:
+        patterns: ["next", "react", "react-dom", "eslint-config-next", "@types/react", "@types/react-dom"]
+      tooling:
+        patterns: ["eslint*", "prettier*", "typescript", "@types/node"]
+      ui:
+        patterns:
+          - radix-ui
+          - lucide-react
+          - next-themes
+          - tw-animate-css
+          - class-variance-authority
+          - clsx
+          - tailwind-merge
+          - shadcn
+          - tailwindcss
+          - "@tailwindcss/*"
+          - postcss
+          - geist
+      playwright:
+        patterns: ["@playwright/*"]
+      opentelemetry:
+        patterns: ["@vercel/otel", "@opentelemetry/*"]
+    labels: [dependencies, frontend]
+    commit-message:
+      prefix: "build(deps)"
+
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/setup-backend
+      - /.github/actions/setup-frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: [dependencies, ci]
+    commit-message:
+      prefix: "ci(deps)"
+
+  - package-ecosystem: docker
+    directory: /infra/docker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    labels: [dependencies, infra]
+    commit-message:
+      prefix: "build(images)"
+
+  - package-ecosystem: docker-compose
+    directory: /infra/compose
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    labels: [dependencies, infra]
+    commit-message:
+      prefix: "build(images)"

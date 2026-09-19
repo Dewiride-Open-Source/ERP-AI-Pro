@@ -1,0 +1,41 @@
+name: ci-frontend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint-typecheck-build:
+    name: Lint, typecheck and build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up frontend
+        uses: ./.github/actions/setup-frontend
+      - name: Lint
+        working-directory: frontend
+        run: pnpm lint
+      - name: Typecheck
+        working-directory: frontend
+        run: pnpm typecheck
+      - name: Format check
+        working-directory: frontend
+        run: pnpm format:check
+      - name: Feature boundaries
+        run: node scripts/checks/feature-boundaries.ts
+      - name: Build
+        working-directory: frontend
+        run: pnpm build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"

@@ -1,0 +1,16 @@
+name: ERP-AI-Pro CodeQL configuration
+queries:
+  - uses: security-extended
+paths:
+  - backend
+  - frontend
+  - scripts
+  - infra
+  - .github
+paths-ignore:
+  - "**/Migrations/**"
+  - "**/node_modules/**"
+  - "**/artifacts/**"
+  - "**/.next/**"
+  - frontend/e2e/playwright-report
+  - frontend/e2e/test-results

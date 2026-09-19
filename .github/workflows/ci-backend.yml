@@ -1,0 +1,54 @@
+name: ci-backend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-and-test:
+    name: Build, analyse and test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up backend
+        uses: ./.github/actions/setup-backend
+      - name: Set up Node.js for repository checks
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      - name: Build
+        working-directory: backend
+        run: dotnet build --no-restore -warnaserror -p:ContinuousIntegrationBuild=true
+      - name: Verify formatting
+        working-directory: backend
+        run: dotnet format --verify-no-changes --no-restore
+      - name: Test
+        working-directory: backend
+        run: dotnet test --solution Dewiride.Erp.slnx --no-build --report-trx --coverage --coverage-output-format cobertura
+      - name: Coverage gate
+        run: node scripts/checks/coverage-gate.ts
+      - name: Folder cap
+        run: node scripts/checks/folder-size.ts
+      - name: Comment policy
+        run: node scripts/checks/comment-policy.ts
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-test-results
+          path: |
+            backend/artifacts/TestResults/**/*.trx
+            backend/artifacts/TestResults/**/*.cobertura.xml
+          retention-days: 14
+          if-no-files-found: warn
