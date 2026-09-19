@@ -17,6 +17,14 @@ updates:
         patterns: ["OpenTelemetry.*"]
       testing:
         patterns: ["xunit*", "TngTech.*", "Microsoft.Testing.*"]
+    ignore:
+      # The solution tracks the .NET LTS line (10); framework-versioned packages move majors only with an ADR
+      - dependency-name: "Microsoft.AspNetCore.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.EntityFrameworkCore*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.Extensions.*"
+        update-types: ["version-update:semver-major"]
     labels: [dependencies, backend]
     commit-message:
       prefix: "build(deps)"
@@ -28,6 +36,10 @@ updates:
       day: monday
       time: "06:00"
       timezone: Asia/Kolkata
+    ignore:
+      # global.json stays on the .NET 10 LTS feature band; a new major is an ADR decision
+      - dependency-name: dotnet-sdk
+        update-types: ["version-update:semver-major"]
     labels: [dependencies, backend]
     commit-message:
       prefix: "build(sdk)"
@@ -65,6 +77,16 @@ updates:
         patterns: ["@playwright/*"]
       opentelemetry:
         patterns: ["@vercel/otel", "@opentelemetry/*"]
+    ignore:
+      # Node 24 is the LTS line; @types/node follows the runtime major
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # eslint-config-next's plugins run on ESLint 9; ESLint 10 breaks eslint-plugin-react
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      # typescript-eslint supports TypeScript < 7; the TypeScript 7 (Go) compiler has no JS API
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
     labels: [dependencies, frontend]
     commit-message:
       prefix: "build(deps)"
@@ -93,6 +115,14 @@ updates:
       day: monday
       time: "06:00"
       timezone: Asia/Kolkata
+    ignore:
+      # Runtime images stay on the LTS lines: Node 24 and .NET 10; digests within them still update
+      - dependency-name: library/node
+        update-types: ["version-update:semver-major"]
+      - dependency-name: mcr.microsoft.com/dotnet/sdk
+        update-types: ["version-update:semver-major"]
+      - dependency-name: mcr.microsoft.com/dotnet/aspnet
+        update-types: ["version-update:semver-major"]
     labels: [dependencies, infra]
     commit-message:
       prefix: "build(images)"

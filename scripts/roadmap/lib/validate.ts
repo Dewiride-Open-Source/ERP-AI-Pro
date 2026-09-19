@@ -106,13 +106,19 @@ function validateSubPhase(sub: SubPhase, where: string, ctx: SubPhaseContext): v
     const value = sub[key];
     if (value === undefined) continue;
     if (!DATE_PATTERN.test(value)) error(`${where}: ${key} must be an ISO date`);
-    else if (today && value > today) error(`${where}: ${key} ${value} is in the future`);
+    else if (today && value > latestAcceptableDate(today)) error(`${where}: ${key} ${value} is in the future`);
   }
   if (sub.status === 'done' && !sub.completedOn) error(`${where}: done without completedOn`);
   if (sub.status === 'in-progress' && !sub.startedOn) error(`${where}: in-progress without startedOn`);
   if (sub.status === 'blocked' && !sub.blockedReason) error(`${where}: blocked without blockedReason`);
   if (sub.status !== 'blocked' && sub.blockedReason) warning(`${where}: blockedReason set but status is ${sub.status}`);
   if (sub.status !== 'done' && sub.completedOn) warning(`${where}: completedOn set but status is ${sub.status}`);
+}
+
+function latestAcceptableDate(today: string): string {
+  const date = new Date(`${today}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
 }
 
 function rejectBareLabels(where: string, fields: Record<string, string | undefined>, error: (message: string) => void): void {
