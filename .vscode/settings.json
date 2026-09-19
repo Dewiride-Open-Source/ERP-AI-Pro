@@ -1,0 +1,23 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.useFlatConfig": true,
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[css]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[csharp]": { "editor.defaultFormatter": "ms-dotnettools.csharp" },
+  "dotnet.defaultSolution": "backend/Dewiride.Erp.slnx",
+  "dotnet.testWindow.useTestingPlatformProtocol": true,
+  "files.eol": "\n",
+  "workbench.editor.customLabels.patterns": {
+    "**/app/**/page.tsx": "${dirname(1)}/${dirname} - page.tsx",
+    "**/app/**/layout.tsx": "${dirname(1)}/${dirname} - layout.tsx",
+    "**/app/**/loading.tsx": "${dirname(1)}/${dirname} - loading.tsx",
+    "**/app/**/error.tsx": "${dirname(1)}/${dirname} - error.tsx",
+    "**/app/**/route.ts": "${dirname(1)}/${dirname} - route.ts"
+  }
+}

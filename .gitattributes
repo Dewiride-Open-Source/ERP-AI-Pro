@@ -1,0 +1,21 @@
+* text=auto eol=lf
+
+*.sh text eol=lf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.pfx binary
+*.pdf binary
+
+docs/roadmap/ROADMAP.md linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
+**/packages.lock.json linguist-generated=true
+**/Migrations/** linguist-generated=true

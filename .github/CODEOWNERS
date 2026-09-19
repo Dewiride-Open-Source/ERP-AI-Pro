@@ -1,0 +1,12 @@
+# Changes to these paths require review by the repository owner.
+/.github/                         @jagdish-kumawat
+/backend/Directory.Build.props    @jagdish-kumawat
+/backend/Directory.Build.targets  @jagdish-kumawat
+/backend/Directory.Packages.props @jagdish-kumawat
+/backend/global.json              @jagdish-kumawat
+/backend/nuget.config             @jagdish-kumawat
+/backend/build/                   @jagdish-kumawat
+/infra/                           @jagdish-kumawat
+/scripts/                         @jagdish-kumawat
+/docs/roadmap/                    @jagdish-kumawat
+/SECURITY.md                      @jagdish-kumawat

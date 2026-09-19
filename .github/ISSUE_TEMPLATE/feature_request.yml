@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a capability or a change to the roadmap
+labels: [enhancement]
+body:
+  - type: input
+    id: roadmap
+    attributes:
+      label: Related roadmap phase or sub-phase id (if any)
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: compliance
+    attributes:
+      label: Statutory or compliance considerations (GST, TDS, PF/ESI, MCA, DPDP)

@@ -1,0 +1,42 @@
+# .NET
+backend/artifacts/
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.trx
+
+# Node / Next.js
+node_modules/
+.pnpm-store/
+.next/
+next-env.d.ts
+out/
+*.tsbuildinfo
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+frontend/e2e/screenshots/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+infra/compose/secrets/
+*.pfx
+*.pem
+*.key
+
+# Claude Code operating manuals and skills stay local to the owner
+**/CLAUDE.md
+.claude/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.swp
+.idea/

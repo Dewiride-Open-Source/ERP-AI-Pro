@@ -1,0 +1,33 @@
+name: Bug report
+description: Something behaves incorrectly
+labels: [bug]
+body:
+  - type: input
+    id: area
+    attributes:
+      label: Area
+      description: Module or component (e.g. finance-sales, web shell, ci)
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour (include ProblemDetails body, logs, screenshots)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Commit or image tag
