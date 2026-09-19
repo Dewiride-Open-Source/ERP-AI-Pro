@@ -1,0 +1,8 @@
+{
+  "extends": "@dewiride/erp-config/tsconfig/node",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2023"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "playwright-report", "test-results"]
+}
