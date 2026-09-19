@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Kernel/Dewiride.Erp.BuildingBlocks.Kernel/Dewiride.Erp.BuildingBlocks.Kernel.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
+  </ItemGroup>
+
+</Project>
