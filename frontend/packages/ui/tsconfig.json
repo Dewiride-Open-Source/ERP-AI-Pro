@@ -1,0 +1,10 @@
+{
+  "extends": "@dewiride/erp-config/tsconfig/react-library",
+  "compilerOptions": {
+    "paths": {
+      "@dewiride/erp-ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "eslint.config.mjs", "postcss.config.mjs"],
+  "exclude": ["node_modules"]
+}

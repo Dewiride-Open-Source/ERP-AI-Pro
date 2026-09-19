@@ -1,0 +1,26 @@
+{
+  "name": "@dewiride/erp-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig/base": "./tsconfig/base.json",
+    "./tsconfig/nextjs": "./tsconfig/nextjs.json",
+    "./tsconfig/react-library": "./tsconfig/react-library.json",
+    "./tsconfig/node": "./tsconfig/node.json",
+    "./eslint/next": "./eslint/next.mjs",
+    "./eslint/react-library": "./eslint/react-library.mjs",
+    "./eslint/node": "./eslint/node.mjs",
+    "./prettier": "./prettier.mjs"
+  },
+  "dependencies": {
+    "eslint-config-next": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:"
+  },
+  "peerDependencies": {
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  }
+}

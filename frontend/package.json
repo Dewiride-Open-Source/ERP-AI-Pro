@@ -1,0 +1,31 @@
+{
+  "name": "@dewiride/erp-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.4.2",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24.0.0",
+      "onFail": "error"
+    }
+  },
+  "scripts": {
+    "dev": "pnpm --filter @dewiride/erp-web dev",
+    "build": "pnpm --filter @dewiride/erp-web build",
+    "start": "pnpm --filter @dewiride/erp-web start",
+    "lint": "pnpm -r --parallel lint",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "e2e": "pnpm --filter @dewiride/erp-e2e test",
+    "e2e:install": "pnpm --filter @dewiride/erp-e2e exec playwright install --with-deps"
+  },
+  "devDependencies": {
+    "@dewiride/erp-config": "workspace:*",
+    "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}
