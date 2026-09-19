@@ -1,0 +1,23 @@
+{
+  "solution": {
+    "path": "..\\Dewiride.Erp.slnx",
+    "projects": [
+      "BuildingBlocks\\Application\\Dewiride.Erp.BuildingBlocks.Application\\Dewiride.Erp.BuildingBlocks.Application.csproj",
+      "BuildingBlocks\\Configuration\\Dewiride.Erp.BuildingBlocks.Configuration\\Dewiride.Erp.BuildingBlocks.Configuration.csproj",
+      "BuildingBlocks\\Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints.csproj",
+      "BuildingBlocks\\Kernel\\Dewiride.Erp.BuildingBlocks.Kernel\\Dewiride.Erp.BuildingBlocks.Kernel.csproj",
+      "BuildingBlocks\\Modules\\Dewiride.Erp.BuildingBlocks.Modules\\Dewiride.Erp.BuildingBlocks.Modules.csproj",
+      "BuildingBlocks\\Observability\\Dewiride.Erp.BuildingBlocks.Observability\\Dewiride.Erp.BuildingBlocks.Observability.csproj",
+      "Hosts\\Api\\Dewiride.Erp.Host.Api\\Dewiride.Erp.Host.Api.csproj",
+      "Hosts\\HealthProbe\\Dewiride.Erp.Host.HealthProbe\\Dewiride.Erp.Host.HealthProbe.csproj",
+      "Modules\\Platform\\SystemInfo\\Contracts\\Dewiride.Erp.Modules.Platform.SystemInfo.Contracts\\Dewiride.Erp.Modules.Platform.SystemInfo.Contracts.csproj",
+      "Modules\\Platform\\SystemInfo\\Module\\Dewiride.Erp.Modules.Platform.SystemInfo\\Dewiride.Erp.Modules.Platform.SystemInfo.csproj",
+      "Modules\\Platform\\SystemInfo\\Tests\\IntegrationTests\\Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests\\Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.csproj",
+      "Modules\\Platform\\SystemInfo\\Tests\\UnitTests\\Dewiride.Erp.Modules.Platform.SystemInfo.UnitTests\\Dewiride.Erp.Modules.Platform.SystemInfo.UnitTests.csproj",
+      "Tests\\Architecture\\Dewiride.Erp.ArchitectureTests\\Dewiride.Erp.ArchitectureTests.csproj",
+      "Tests\\BuildingBlocks\\Dewiride.Erp.BuildingBlocks.UnitTests\\Dewiride.Erp.BuildingBlocks.UnitTests.csproj",
+      "Tests\\Host\\Dewiride.Erp.Host.Api.IntegrationTests\\Dewiride.Erp.Host.Api.IntegrationTests.csproj",
+      "Tests\\Shared\\Dewiride.Erp.Testing\\Dewiride.Erp.Testing.csproj"
+    ]
+  }
+}

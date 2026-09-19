@@ -1,0 +1,28 @@
+<Solution>
+  <Folder Name="/BuildingBlocks/">
+    <Project Path="BuildingBlocks/Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
+    <Project Path="BuildingBlocks/Configuration/Dewiride.Erp.BuildingBlocks.Configuration/Dewiride.Erp.BuildingBlocks.Configuration.csproj" />
+    <Project Path="BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
+    <Project Path="BuildingBlocks/Kernel/Dewiride.Erp.BuildingBlocks.Kernel/Dewiride.Erp.BuildingBlocks.Kernel.csproj" />
+    <Project Path="BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
+    <Project Path="BuildingBlocks/Observability/Dewiride.Erp.BuildingBlocks.Observability/Dewiride.Erp.BuildingBlocks.Observability.csproj" />
+  </Folder>
+  <Folder Name="/Hosts/">
+    <Project Path="Hosts/Api/Dewiride.Erp.Host.Api/Dewiride.Erp.Host.Api.csproj" />
+    <Project Path="Hosts/HealthProbe/Dewiride.Erp.Host.HealthProbe/Dewiride.Erp.Host.HealthProbe.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/SystemInfo/">
+    <Project Path="Modules/Platform/SystemInfo/Contracts/Dewiride.Erp.Modules.Platform.SystemInfo.Contracts/Dewiride.Erp.Modules.Platform.SystemInfo.Contracts.csproj" />
+    <Project Path="Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo/Dewiride.Erp.Modules.Platform.SystemInfo.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/SystemInfo/Tests/">
+    <Project Path="Modules/Platform/SystemInfo/Tests/UnitTests/Dewiride.Erp.Modules.Platform.SystemInfo.UnitTests/Dewiride.Erp.Modules.Platform.SystemInfo.UnitTests.csproj" />
+    <Project Path="Modules/Platform/SystemInfo/Tests/IntegrationTests/Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests/Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/Architecture/Dewiride.Erp.ArchitectureTests/Dewiride.Erp.ArchitectureTests.csproj" />
+    <Project Path="Tests/BuildingBlocks/Dewiride.Erp.BuildingBlocks.UnitTests/Dewiride.Erp.BuildingBlocks.UnitTests.csproj" />
+    <Project Path="Tests/Host/Dewiride.Erp.Host.Api.IntegrationTests/Dewiride.Erp.Host.Api.IntegrationTests.csproj" />
+    <Project Path="Tests/Shared/Dewiride.Erp.Testing/Dewiride.Erp.Testing.csproj" />
+  </Folder>
+</Solution>

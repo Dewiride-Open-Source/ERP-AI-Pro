@@ -1,0 +1,22 @@
+<Project>
+
+  <PropertyGroup>
+    <ErpIsContracts Condition="$(MSBuildProjectName.EndsWith('.Contracts'))">true</ErpIsContracts>
+    <ErpIsTests Condition="$(MSBuildProjectName.EndsWith('Tests'))">true</ErpIsTests>
+    <ErpIsModule Condition="$(MSBuildProjectName.StartsWith('Dewiride.Erp.Modules.')) and '$(ErpIsContracts)' != 'true' and '$(ErpIsTests)' != 'true'">true</ErpIsModule>
+    <ErpIsHost Condition="$(MSBuildProjectName.StartsWith('Dewiride.Erp.Host.')) and '$(ErpIsTests)' != 'true'">true</ErpIsHost>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ErpIsHost)' == 'true'">
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(ErpIsModule)' == 'true'">
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <InternalsVisibleTo Include="$(MSBuildProjectName).UnitTests" />
+    <InternalsVisibleTo Include="$(MSBuildProjectName).IntegrationTests" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)Tests.props" Condition="'$(ErpIsTests)' == 'true'" />
+
+</Project>

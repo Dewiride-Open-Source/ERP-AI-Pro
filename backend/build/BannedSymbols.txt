@@ -1,0 +1,12 @@
+P:System.DateTime.Now; Use TimeProvider.GetUtcNow() or GetLocalNow()
+P:System.DateTime.UtcNow; Use TimeProvider.GetUtcNow()
+P:System.DateTime.Today; Use TimeProvider.GetLocalNow().Date
+P:System.DateTimeOffset.Now; Use TimeProvider.GetLocalNow()
+P:System.DateTimeOffset.UtcNow; Use TimeProvider.GetUtcNow()
+M:System.Guid.NewGuid; Use Guid.CreateVersion7()
+M:System.Threading.Thread.Sleep(System.Int32); Use await Task.Delay with the TimeProvider
+M:System.Threading.Thread.Sleep(System.TimeSpan); Use await Task.Delay with the TimeProvider
+P:System.Threading.Tasks.Task`1.Result; Await the task
+M:System.Threading.Tasks.Task.Wait; Await the task
+M:System.Threading.Tasks.Task.Wait(System.TimeSpan); Await the task
+M:System.Threading.Tasks.Task.Wait(System.Threading.CancellationToken); Await the task

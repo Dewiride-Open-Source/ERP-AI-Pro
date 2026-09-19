@@ -1,0 +1,27 @@
+<Project>
+
+  <ItemGroup>
+    <ErpBannedPackage Include="MediatR" Reason="commercial licence" />
+    <ErpBannedPackage Include="MediatR.Contracts" Reason="commercial licence" />
+    <ErpBannedPackage Include="AutoMapper" Reason="commercial licence" />
+    <ErpBannedPackage Include="FluentAssertions" Reason="commercial licence" />
+    <ErpBannedPackage Include="Newtonsoft.Json" Reason="System.Text.Json is the JSON serializer" />
+    <ErpBannedPackage Include="Serilog" Reason="ILogger with OpenTelemetry is the logging stack" />
+    <ErpBannedPackage Include="NLog" Reason="ILogger with OpenTelemetry is the logging stack" />
+    <ErpBannedPackage Include="Swashbuckle.AspNetCore" Reason="Microsoft.AspNetCore.OpenApi generates the document" />
+    <ErpBannedPackage Include="Moq" Reason="Microsoft fakes and hand-written doubles are used" />
+    <ErpBannedPackage Include="Microsoft.SemanticKernel" Reason="Microsoft.Extensions.AI is the AI contract" />
+    <ErpBannedPackage Include="Microsoft.NET.Test.Sdk" Reason="Microsoft.Testing.Platform is the only test platform" />
+    <ErpBannedPackage Include="xunit.runner.visualstudio" Reason="Microsoft.Testing.Platform is the only test platform" />
+    <ErpBannedPackage Include="coverlet.collector" Reason="Microsoft.Testing.Extensions.CodeCoverage produces coverage" />
+  </ItemGroup>
+
+  <Target Name="ErpFailOnBannedPackages" BeforeTargets="CollectPackageReferences;_CheckForInvalidConfigurationAndPlatform">
+    <ItemGroup>
+      <_ErpBannedReference Include="@(PackageReference)" Condition="'@(ErpBannedPackage)' != '' and '@(PackageReference->'%(Identity)')' != '' and '%(Identity)' != ''" />
+      <_ErpBannedHit Include="@(_ErpBannedReference)" Condition="'@(ErpBannedPackage->WithMetadataValue('Identity', '%(Identity)'))' != ''" />
+    </ItemGroup>
+    <Error Condition="'@(_ErpBannedHit)' != ''" Code="ERP0002" Text="Package '%(_ErpBannedHit.Identity)' is banned in this repository (see docs/adr/0009-third-party-packages.md)." />
+  </Target>
+
+</Project>
