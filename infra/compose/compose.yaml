@@ -1,0 +1,42 @@
+name: erp-ai-pro
+
+services:
+  api:
+    image: ghcr.io/dewiride-open-source/erp-ai-pro/api:${IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ERP_ENVIRONMENT: ${ERP_ENVIRONMENT:-local-dev}
+      Erp__Platform__Host__KnownNetworks__0: ${COMPOSE_NETWORK_CIDR:-172.28.0.0/16}
+    networks:
+      - erp
+    expose:
+      - "8080"
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/dewiride-open-source/erp-ai-pro/web:${IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: infra/docker/web.Dockerfile
+    environment:
+      API_INTERNAL_URL: http://api:8080
+      NEXT_PUBLIC_APP_NAME: ${APP_NAME:-ERP-AI-Pro}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - erp
+    expose:
+      - "3000"
+    restart: unless-stopped
+
+networks:
+  erp:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${COMPOSE_NETWORK_CIDR:-172.28.0.0/16}
