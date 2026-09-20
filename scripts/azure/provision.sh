@@ -144,6 +144,7 @@ main() {
   log_info "  2. bash scripts/azure/provision.sh      (grants the runtime service principal its roles)"
   log_info "  3. bash scripts/azure/seed.sh           (configuration values and Key Vault references)"
   log_info "  4. bash scripts/azure/verify.sh"
+  log_info "  5. bash scripts/azure/verify.sh --entra  (after entra.sh and the second provision.sh)"
 }
 
 main "$@"

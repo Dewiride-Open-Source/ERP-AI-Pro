@@ -6,6 +6,7 @@ fi
 readonly ERP_AZURE_COMMON_SH_LOADED=1
 
 set -Eeuo pipefail
+shopt -s inherit_errexit
 
 export MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'
 

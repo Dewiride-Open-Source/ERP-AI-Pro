@@ -29,6 +29,9 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 |---|---|---|
 | `ERP_ENVIRONMENT` | API | App Configuration label (`local-dev` or `production`) — `azure-configuration` |
 | `APPCONFIG_ENDPOINT` | API | Azure App Configuration endpoint; Production fails to start without it — `azure-configuration` |
+| `AZURE_TOKEN_CREDENTIALS` | API | `dev` on developer machines (Azure CLI sign-in), `EnvironmentCredential` in the API container — `azure-configuration-api-configuration-bootstrap` |
+| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | API container | tenant and application id of the runtime service principal the container signs in as — `azure-configuration-api-configuration-bootstrap` |
+| `AZURE_CLIENT_CERTIFICATE_PATH` | API container | path of the runtime certificate secret file (`/run/secrets/erp-runtime-client.pem`) — `azure-configuration-api-configuration-bootstrap` |
 | `ERP_TEST_SQL_CONNECTION` | integration tests | server-level SQL Server connection used to create per-run test databases — `backend-platform` |
 
 ## Configuration keys (`appsettings.json` / App Configuration)
@@ -39,6 +42,8 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | `Erp:Platform:Host:AllowedHosts` | string | `*` | host filtering behind the edge proxy; narrowed to the public host name in the `first-deployment` phase |
 | `Erp:Platform:Host:KnownNetworks` | string[] | `[]` | CIDR ranges trusted for forwarded headers (the compose network in production) |
 | `Erp:Sentinel` | string | — | labelled `local-dev` and `production`; the value is the UTC timestamp of the last bump, and bumping it triggers a full configuration refresh in the API from sub-phase `azure-configuration-api-configuration-bootstrap` |
+| `Erp:Platform:Identity:TenantId` | string | — | labelled `local-dev` and `production`; the Entra tenant id, written by `scripts/azure/entra.sh` (sub-phase `azure-configuration-entra-app-registration-scripts`) and bound by the `authentication` phase |
+| `Erp:Platform:Identity:ClientId` | string | — | labelled `local-dev` and `production`; the application (client) id of that environment's sign-in registration, written by `scripts/azure/entra.sh` and bound by the `authentication` phase |
 
 ## Feature flags
 
@@ -51,6 +56,8 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | Secret | Environment | Purpose |
 |---|---|---|
 | `Erp--Platform--Database--ConnectionString` | local-dev, production | SQL Server / Azure SQL connection string — `backend-platform` phase |
+| `Erp--Platform--Identity--ClientCertificate` | local-dev, production | PKCS#12 certificate with private key of that environment's sign-in registration, created by `scripts/azure/entra.sh`; referenced by `Erp:Platform:Identity:ClientCertificate` from sub-phase `azure-configuration-configuration-conventions-and-seed-data` |
+| `Erp--Platform--Identity--RuntimeClientCertificate` | production | PEM certificate with private key of the runtime service principal, created by `scripts/azure/entra.sh`; exported by hand with `scripts/azure/export-runtime-certificate.sh` to the server's compose secret file; never an App Configuration reference |
 
 ## Keys (Key Vault)
 

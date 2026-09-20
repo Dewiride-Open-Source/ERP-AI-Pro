@@ -1,0 +1,18 @@
+[
+  {
+    "id": "3f1c9a6e-2b4d-4e8f-9c1a-5d7e8f0a1b2c",
+    "allowedMemberTypes": ["User"],
+    "displayName": "ERP User",
+    "description": "Signed-in employee with the baseline permissions.",
+    "value": "Erp.User",
+    "isEnabled": true
+  },
+  {
+    "id": "a8d2e4f6-1c3b-4a5d-8e9f-0b1c2d3e4f5a",
+    "allowedMemberTypes": ["User"],
+    "displayName": "ERP Administrator",
+    "description": "Administers the ERP and holds every permission.",
+    "value": "Erp.Admin",
+    "isEnabled": true
+  }
+]

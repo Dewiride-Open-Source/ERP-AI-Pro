@@ -1,0 +1,19 @@
+{
+  "issuerParameters": {
+    "name": "Self"
+  },
+  "keyProperties": {
+    "exportable": true,
+    "keyType": "RSA",
+    "keySize": 2048,
+    "reuseKey": false
+  },
+  "secretProperties": {
+    "contentType": "__CONTENT_TYPE__"
+  },
+  "x509CertificateProperties": {
+    "subject": "CN=__SUBJECT__",
+    "keyUsage": ["digitalSignature", "keyEncipherment"],
+    "validityInMonths": 12
+  }
+}
