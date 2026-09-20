@@ -1,0 +1,13 @@
+{
+  "Erp": {
+    "Platform": {
+      "Host": {
+        "ApplicationName": "ERP-AI-Pro",
+        "AllowedHosts": "*"
+      },
+      "Identity": {
+        "Instance": "https://login.microsoftonline.com/"
+      }
+    }
+  }
+}

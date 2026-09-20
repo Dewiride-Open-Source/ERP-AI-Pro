@@ -1,6 +1,6 @@
 # Azure bootstrap (operator guide)
 
-The scripts under `scripts/azure/` create and converge the only Azure resources this project uses: one App Configuration store, one Key Vault per environment and, from sub-phase `azure-configuration-entra-app-registration-scripts`, the Entra app registrations. Every script is idempotent: a second run with the same parameter file changes nothing. Nothing in this guide or in the scripts deletes or purges a resource.
+The scripts under `scripts/azure/` create and converge the only Azure resources this project uses: one App Configuration store, one Key Vault per environment and, from sub-phase `azure-configuration-entra-app-registration-scripts`, the Entra app registrations. Every script is idempotent: a second run with the same parameter file changes nothing, with one deliberate exception: `seed.sh` bumps the labelled `Erp:Sentinel` on every run unless `--no-sentinel` is given (section 5b). Nothing in this guide or in the scripts deletes or purges a resource.
 
 ## 1. Purpose and resources
 
@@ -55,7 +55,7 @@ cp scripts/azure/params.env.example scripts/azure/params.env
 
 ## 4. Order of operations
 
-Run every command from the repository root. `check.sh`, `provision.sh` and `verify.sh` arrive with sub-phase `azure-configuration-idempotent-azure-provisioning-scripts`; `entra.sh` and `export-runtime-certificate.sh` arrive with `azure-configuration-entra-app-registration-scripts`; `seed.sh` arrives with `azure-configuration-configuration-conventions-and-seed-data`.
+Run every command from the repository root.
 
 | Step | Command | What it does |
 |---|---|---|
@@ -65,9 +65,11 @@ Run every command from the repository root. `check.sh`, `provision.sh` and `veri
 | 4 | `bash scripts/azure/entra.sh --dry-run` | prints every Graph, Key Vault and App Configuration write it would make, with `<pending>` in place of the ids a create would produce; writes nothing |
 | 5 | `bash scripts/azure/entra.sh` | creates or converges the three app registrations, their service principals, app roles, Graph consent, certificates and key credentials, assigns the operator `Erp.Admin` and writes the identity ids to App Configuration (section 5a) |
 | 6 | `bash scripts/azure/provision.sh` | run again: grants the runtime service principal App Configuration Data Reader on the store and Key Vault Secrets User plus Crypto User on the production vault, which cannot exist before step 5 |
-| 7 | `bash scripts/azure/seed.sh` | imports the seed files and Key Vault references and bumps the labelled sentinels |
-| 8 | `bash scripts/azure/verify.sh` | reads the provisioned resources back and prints `[ok]` or `[FAIL]` per assertion |
-| 9 | `bash scripts/azure/verify.sh --entra` | reads the registrations, service principals, grants, certificates, key credentials and identity ids back |
+| 7 | `bash scripts/azure/seed.sh --dry-run` | previews every import with the CLI's own `--dry-run` and prints every other write; writes nothing |
+| 8 | `bash scripts/azure/seed.sh` | imports `infra/appconfig` (unlabelled defaults, each label file, feature flags, Key Vault references) and bumps the labelled sentinels (section 5b) |
+| 9 | `bash scripts/azure/verify.sh` | reads the provisioned resources back and prints `[ok]` or `[FAIL]` per assertion |
+| 10 | `bash scripts/azure/verify.sh --entra` | reads the registrations, service principals, grants, certificates, key credentials and identity ids back |
+| 11 | `bash scripts/azure/verify.sh --labels` | reads every seeded value, flag and reference back and proves the `local-dev` label overrides the unlabelled default |
 
 `provision.sh` ends by printing `APPCONFIG_ENDPOINT=https://<store>.azconfig.io` and both vault URIs. Keep the endpoint: developers put it in `dotnet user-secrets`, and the server puts it in `infra/compose/.env`, from which `compose.yaml` passes it to the api container as `APPCONFIG_ENDPOINT`.
 
@@ -183,7 +185,15 @@ The runtime service principal does not exist until `entra.sh` has created it, so
 | `Erp:Platform:Identity:ClientId` | `local-dev` | application (client) id of the local-dev sign-in registration |
 | `Erp:Platform:Identity:ClientId` | `production` | application (client) id of the production sign-in registration |
 
-Nothing else: `Erp:Platform:Identity:Instance` and the Key Vault reference `Erp:Platform:Identity:ClientCertificate` belong to `seed.sh` (sub-phase `azure-configuration-configuration-conventions-and-seed-data`), and the runtime registration is never written to App Configuration. In particular the runtime certificate is never an App Configuration Key Vault reference: the container must already hold it to reach the store at all, so it travels only as the compose secret file above.
+Nothing else: `Erp:Platform:Identity:Instance` and the Key Vault reference `Erp:Platform:Identity:ClientCertificate` belong to `seed.sh` (section 5b), and the runtime registration is never written to App Configuration. In particular the runtime certificate is never an App Configuration Key Vault reference: the container must already hold it to reach the store at all, so it travels only as the compose secret file above.
+
+## 5b. Seeding the store
+
+`bash scripts/azure/seed.sh` is the only writer of the keys in `infra/appconfig/` and never deletes a key. Per run it validates the seed files (`node scripts/azure/lib/seed-files.ts validate`), imports `defaults.json` unlabelled and each label file under its label with `az appconfig kv import --format json --separator : --import-mode ignore-match` (only a changed or missing value is written), creates each feature flag of `feature-flags.json` under each label and enables or disables it to match the file, writes each Key Vault reference of `key-vault-references.json` after confirming the secret exists in that label's vault (`kv-erp-ai-pro-dev` for `local-dev`, `kv-erp-ai-pro-prod` for `production`), bumps the labelled `Erp:Sentinel` and prints a read-back table per label. Options: `--label local-dev|production|all` (default `all`), `--no-sentinel` (seed without triggering a reload), `--dry-run`.
+
+- A missing secret stops the run with the vault and secret name: create the secret first (the sign-in certificates come from `entra.sh`); the script never writes a placeholder, because an unresolvable reference fails API startup and a placeholder would later be read as the real value.
+- The sentinel bump is the only write an unchanged re-run performs; a running API reloads within `Erp:Platform:Configuration:RefreshInterval`, and restarting the api container applies the change at once.
+- How to add a setting, a flag or a secret: [docs/guides/adding-a-setting.md](../guides/adding-a-setting.md).
 
 ## 6. Developer onboarding
 

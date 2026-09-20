@@ -14,6 +14,10 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
     public const string InMemorySource = "InMemory";
 
+    private readonly Dictionary<string, string> _configuration = new(StringComparer.OrdinalIgnoreCase);
+
+    private bool _hostCreated;
+
     public ErpApiFactory()
         : this(Environments.Development)
     {
@@ -28,11 +32,37 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
     public static ErpApiFactory ForEnvironment(string environment) => new(environment);
 
+    public ErpApiFactory WithConfiguration(string key, string value)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(value);
+        if (_hostCreated)
+        {
+            throw new InvalidOperationException("WithConfiguration must be called before the first client or service is requested from the factory.");
+        }
+
+        _configuration[key] = value;
+
+        return this;
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        _hostCreated = true;
+
+        return base.CreateHost(builder);
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.UseEnvironment(Environment);
+        foreach (var (key, value) in _configuration)
+        {
+            builder.UseSetting(key, value);
+        }
+
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);
         builder.UseSetting("APPCONFIG_ENDPOINT", string.Empty);
         builder.UseSetting(ConfigurationSourceSetting, InMemorySource);

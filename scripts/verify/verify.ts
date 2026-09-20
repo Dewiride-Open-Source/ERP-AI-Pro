@@ -50,6 +50,7 @@ steps.push(
   { name: "comment policy", cwd: repoRoot, command: "node", args: ["scripts/checks/comment-policy.ts"] },
   { name: "azure scripts check", cwd: repoRoot, command: bash, args: ["scripts/azure/check.sh"], shell: false },
   { name: "roadmap tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/roadmap/tests/*.test.ts"] },
+  { name: "check tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/checks/tests/*.test.ts"] },
   { name: "roadmap check", cwd: repoRoot, command: "node", args: ["scripts/roadmap/roadmap.ts", "check"] },
 );
 

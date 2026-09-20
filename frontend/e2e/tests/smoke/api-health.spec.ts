@@ -11,7 +11,7 @@ test.describe("api smoke", () => {
     const info = await request.get("/api/platform/system-info");
     expect(info.status()).toBe(200);
     const body = (await info.json()) as { applicationName: string; version: string };
-    expect(body.applicationName).toBe("ERP-AI-Pro");
+    expect(body.applicationName).toMatch(/^ERP-AI-Pro( \(local-dev\))?$/);
     expect(body.version).toMatch(/\d+\.\d+\.\d+/);
 
     const missing = await request.get("/api/platform/does-not-exist");

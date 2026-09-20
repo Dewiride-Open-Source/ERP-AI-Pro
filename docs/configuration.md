@@ -41,28 +41,30 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 
 | Key | Type | Default | Purpose |
 |---|---|---|---|
-| `Erp:Platform:Host:ApplicationName` | string | `ERP-AI-Pro` | name reported by the system-info endpoint and, from the `backend-platform` phase, the Data Protection application name and telemetry service name |
-| `Erp:Platform:Host:AllowedHosts` | string | `*` | host filtering behind the edge proxy; narrowed to the public host name in the `first-deployment` phase |
-| `Erp:Platform:Host:KnownNetworks` | string[] | `[]` | CIDR ranges trusted for forwarded headers (the compose network in production) |
+| `Erp:Platform:Host:ApplicationName` | string | `ERP-AI-Pro` | name reported by the system-info endpoint and, from the `backend-platform` phase, the Data Protection application name and telemetry service name; seeded unlabelled from `infra/appconfig/defaults.json` and overridden to `ERP-AI-Pro (local-dev)` under the `local-dev` label, which makes the environment visible on the system page and doubles as the label-precedence proof of `verify.sh --labels` |
+| `Erp:Platform:Host:AllowedHosts` | string | `*` | host filtering behind the edge proxy; seeded unlabelled from `infra/appconfig/defaults.json` and narrowed to the public host name under the `production` label in the `first-deployment` phase |
+| `Erp:Platform:Host:KnownNetworks` | string[] | `[]` | CIDR ranges trusted for forwarded headers (the compose network in production); host-local, set through `Erp__Platform__Host__KnownNetworks__0` in the compose file and never seeded in the store |
 | `Erp:Platform:Configuration:RefreshInterval` | TimeSpan | `00:30:00` | how often the API checks the labelled `Erp:Sentinel` and the feature flags (between 1 second and 1 day); bootstrap-only: `appsettings.json`, environment or user secrets; read before the store is connected, not refreshable, never seeded in the store |
 | `Erp:Platform:Configuration:SecretRefreshInterval` | TimeSpan | `01:00:00` | how long a resolved Key Vault reference is cached before the secret is read again (between 1 minute and 7 days); bootstrap-only: `appsettings.json`, environment or user secrets; read before the store is connected, not refreshable, never seeded in the store |
 | `Erp:Platform:Configuration:StartupTimeout` | TimeSpan | `00:01:00` | how long the first load from the store may take before startup fails (between 1 second and 10 minutes); bootstrap-only: `appsettings.json`, environment or user secrets; read before the store is connected, not refreshable, never seeded in the store |
 | `Erp:Sentinel` | string | — | labelled `local-dev` and `production`; the value is the UTC timestamp of the last bump, and bumping it triggers a full configuration refresh in the API at the next check |
 | `Erp:Platform:Identity:TenantId` | string | — | labelled `local-dev` and `production`; the Entra tenant id, written by `scripts/azure/entra.sh` (sub-phase `azure-configuration-entra-app-registration-scripts`) and bound by the `authentication` phase |
 | `Erp:Platform:Identity:ClientId` | string | — | labelled `local-dev` and `production`; the application (client) id of that environment's sign-in registration, written by `scripts/azure/entra.sh` and bound by the `authentication` phase |
+| `Erp:Platform:Identity:Instance` | string | `https://login.microsoftonline.com/` | Entra authority the sign-in redirects to; seeded unlabelled from `infra/appconfig/defaults.json` and bound by the `authentication` phase |
+| `Erp:Platform:Identity:ClientCertificate` | Key Vault reference | — | labelled `local-dev` and `production`; resolves to `Erp--Platform--Identity--ClientCertificate` in that environment's vault (URI composed by `scripts/azure/seed.sh` from `infra/appconfig/key-vault-references.json`), the PKCS#12 sign-in certificate the `authentication` phase presents to Entra |
 
 ## Feature flags
 
 | Flag | Purpose |
 |---|---|
-| `Erp.Modules.Platform.SystemInfo` | module flag name reserved for the system-info module; flag evaluation arrives with the `azure-configuration` phase |
+| `Erp.Modules.Platform.SystemInfo` | module flag of the system-info module; seeded from `infra/appconfig/feature-flags.json` as enabled under `local-dev` and `production`; flag evaluation arrives with the feature-management sub-phase of the `azure-configuration` phase |
 
 ## Secrets (Key Vault)
 
 | Secret | Environment | Purpose |
 |---|---|---|
 | `Erp--Platform--Database--ConnectionString` | local-dev, production | SQL Server / Azure SQL connection string — `backend-platform` phase |
-| `Erp--Platform--Identity--ClientCertificate` | local-dev, production | PKCS#12 certificate with private key of that environment's sign-in registration, created by `scripts/azure/entra.sh`; referenced by `Erp:Platform:Identity:ClientCertificate` from sub-phase `azure-configuration-configuration-conventions-and-seed-data` |
+| `Erp--Platform--Identity--ClientCertificate` | local-dev, production | PKCS#12 certificate with private key of that environment's sign-in registration, created by `scripts/azure/entra.sh`; referenced by `Erp:Platform:Identity:ClientCertificate`, written by `scripts/azure/seed.sh` only after the secret exists |
 | `Erp--Platform--Identity--RuntimeClientCertificate` | production | PEM certificate with private key of the runtime service principal, created by `scripts/azure/entra.sh`; exported by hand with `scripts/azure/export-runtime-certificate.sh` to the server's compose secret file; never an App Configuration reference |
 
 ## Keys (Key Vault)
