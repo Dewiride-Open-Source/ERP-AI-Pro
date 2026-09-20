@@ -269,10 +269,16 @@
           "id": "azure-configuration-entra-app-registration-scripts",
           "title": "Entra app registration scripts",
           "scope": "Add scripts that create or update per-environment single-tenant app registrations (web redirect URIs signin-oidc/signout-callback-oidc, implicit flow off, app roles from app-roles.json with baseline Erp.User plus Erp.Admin, Graph openid/profile/User.Read consent, api.requestedAccessTokenVersion=2 via az rest), create the service principal with assignment required, create the production automation service principal with a certificate credential (secret fallback) stored in the matching Key Vault, write resulting ids to App Configuration, and verify the registration by reading it back and asserting expected settings.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "bash scripts/azure/entra.sh creates or updates the registrations named in params.env for local-dev, production and the runtime service principal; running it a second time performs no Microsoft Graph or Key Vault write and exits 0 (verified by the owner-consented runs recorded in the pull request).",
+            "bash scripts/azure/verify.sh --entra passes by reading back: single-tenant audience, the documented redirect URIs per environment, implicit grant off, access token version 2, app roles Erp.User and Erp.Admin with their fixed ids, Graph openid/profile/User.Read granted, service principals with assignment required, a key credential matching the Key Vault certificate, and App Configuration keys Erp:Platform:Identity:TenantId and ClientId per label.",
+            "The runtime service principal authenticates with a certificate only (no client secret exists on any registration), its certificate lives in kv-erp-ai-pro-prod as PEM, bash scripts/azure/export-runtime-certificate.sh produces a PEM that openssl validates, and after re-running provision.sh the principal holds App Configuration Data Reader plus Key Vault Secrets User and Crypto User on the production vault.",
+            "No certificate, key or token value is printed by any script; docs/configuration.md registers the Erp:Platform:Identity ids and both certificate secrets, and docs/operations/azure-bootstrap.md documents the Entra steps and the export procedure."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-20"
         },
         {
           "id": "azure-configuration-api-configuration-bootstrap",
