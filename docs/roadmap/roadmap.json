@@ -322,10 +322,17 @@
           "id": "azure-configuration-web-app-runtime-configuration",
           "title": "Web app runtime configuration",
           "scope": "Define the Next.js environment contract (server-only vs NEXT_PUBLIC_ variables) validated with Zod at startup in instrumentation.ts, configure the same-origin API base path used by Server Actions and the fetch wrapper, add .env.example, and add a unit test that fails when a required variable is missing.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "readServerEnv in frontend/apps/web/src/shared/config/env.schema.ts validates API_INTERNAL_URL, OTEL_EXPORTER_OTLP_ENDPOINT and OTEL_SERVICE_NAME with Zod, and pnpm test:unit (node --test) proves that a missing or blank API_INTERNAL_URL fails when NODE_ENV=production, defaults to http://localhost:5080 in development, has trailing slashes stripped, accepts http://api:8080 and rejects non-http(s) or malformed values.",
+            "instrumentation.ts runs the validation on the Node.js runtime so next start and the standalone server exit with a message naming the offending variable, pnpm build still succeeds without API_INTERNAL_URL, and proxy.ts and shared/api/http.ts obtain the API base URL only through the schema (no other process.env.API_INTERNAL_URL read exists).",
+            "NEXT_PUBLIC_APP_NAME is validated in next.config.ts at build time and supplied through the web image build argument; infra/compose/compose.yaml no longer passes it at runtime; both .env.example files and docs/configuration.md list every web variable with its default and requirement.",
+            "The same-origin base path /api is one constant in shared/api/base-path.ts used by proxy.ts, apiFetch and the sign-in link, and the existing Playwright suites pass unchanged.",
+            "pnpm test:unit is a step in scripts/verify/verify.ts and in the Lint, typecheck and build job of .github/workflows/ci-frontend.yml (job name unchanged), and docs/guides/testing.md documents the web unit layer."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-20"
         },
         {
           "id": "azure-configuration-feature-management",
