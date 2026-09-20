@@ -304,10 +304,17 @@
           "id": "azure-configuration-configuration-conventions-and-seed-data",
           "title": "Configuration conventions and seed data",
           "scope": "Define key naming (`Erp:<Module>:<Setting>`, Key Vault references named `Erp--<Module>--<Secret>`), add config/appconfig.local-dev.json and config/appconfig.production.json with a script that imports them into their labels and creates Key Vault secret placeholders, add an in-memory configuration source for integration tests and CI so the suite needs no Azure access, document how to add a setting, and add tests proving a local-dev label value overrides the unlabelled default.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "infra/appconfig/defaults.json, local-dev.json, production.json, feature-flags.json and key-vault-references.json contain only keys of the form Erp:<Domain>:<Module>:<Setting>, flags of the form Erp.Modules.<Domain>.<Module>[.<Capability>] and secrets of the form Erp--<Domain>--<Module>--<Name>, carry no vault, store or tenant identifiers, and a node test run by scripts/verify/verify.ts and CI enforces that.",
+            "bash scripts/azure/seed.sh imports the unlabelled defaults and each label file, sets the labelled feature flags, writes Key Vault references composed from params.env only after confirming the secret exists, bumps the labelled Erp:Sentinel, prints a read-back, is re-runnable and supports --dry-run (verified by the owner-consented run recorded in the pull request).",
+            "ErpApiFactory.WithConfiguration supplies an in-memory source that overrides appsettings.json, proven by an integration test through /api/platform/system-info and bound options, and the entire suite runs without Azure access.",
+            "Erp:Platform:Host:ApplicationName is seeded as ERP-AI-Pro unlabelled and ERP-AI-Pro (local-dev) under local-dev, and bash scripts/azure/verify.sh --labels reads both back and proves the label overrides the default (owner-run, recorded in the pull request).",
+            "docs/guides/adding-a-setting.md documents adding a key, flag and secret for both labels and every seeded key is registered in docs/configuration.md."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-20"
         },
         {
           "id": "azure-configuration-web-app-runtime-configuration",
