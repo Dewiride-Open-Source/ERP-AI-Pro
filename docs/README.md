@@ -23,5 +23,6 @@
 | [0008](adr/0008-local-sql-server-and-azure-sql.md) | Owner's SQL Server for development, Azure SQL in production, one schema per module |
 | [0009](adr/0009-third-party-packages.md) | Third-party package approvals and bans |
 | [0010](adr/0010-azure-provisioning-tier-and-credential-model.md) | Azure provisioning, App Configuration tier and operational credential model |
+| [0011](adr/0011-configuration-source-selection-and-runtime-credential.md) | Configuration source selection and runtime credential |
 
 New decisions use [0000-template.md](adr/0000-template.md).

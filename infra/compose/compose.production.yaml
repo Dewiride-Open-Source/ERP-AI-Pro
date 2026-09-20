@@ -3,6 +3,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ERP_ENVIRONMENT: production
+      AZURE_TOKEN_CREDENTIALS: EnvironmentCredential
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
+      AZURE_CLIENT_CERTIFICATE_PATH: /run/secrets/erp-runtime-client.pem
+    secrets:
+      - erp-runtime-client.pem
     read_only: true
     tmpfs:
       - /tmp
@@ -38,3 +44,7 @@ services:
       options:
         max-size: 20m
         max-file: "5"
+
+secrets:
+  erp-runtime-client.pem:
+    file: ./secrets/erp-runtime-client.pem

@@ -1,3 +1,5 @@
+using Dewiride.Erp.BuildingBlocks.Configuration;
+using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Routing;
@@ -15,7 +17,12 @@ public static class HealthEndpoints
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: [ReadyTag]);
+        var checks = builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: [ReadyTag]);
+
+        if (builder.GetErpConfigurationInfo().Source == ErpConfigurationSource.AppConfiguration)
+        {
+            checks.AddAzureAppConfiguration(name: "app-configuration", tags: [ReadyTag]);
+        }
 
         return builder;
     }

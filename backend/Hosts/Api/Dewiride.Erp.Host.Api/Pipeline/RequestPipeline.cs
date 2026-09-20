@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Endpoints;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -36,6 +37,7 @@ internal static class RequestPipeline
     public static WebApplication UseRequestPipeline(this WebApplication app)
     {
         app.UseForwardedHeaders();
+        app.UseErpConfigurationRefresh();
         app.UseHostFiltering();
         app.UseErpEndpointPipeline();
 

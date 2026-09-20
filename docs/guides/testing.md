@@ -5,7 +5,7 @@
 | Layer | Where | Tooling | Runs against |
 |---|---|---|---|
 | Unit | `Modules/<D>/<M>/Tests/UnitTests`, `Tests/BuildingBlocks` | xUnit v3 on Microsoft.Testing.Platform, `FakeTimeProvider`, `FakeLogger<T>` | nothing external |
-| Integration | `Modules/<D>/<M>/Tests/IntegrationTests`, `Tests/Host` | `WebApplicationFactory<Program>` from `Dewiride.Erp.Testing` (`ErpApiFactory`, `ErpApiFactory.ForEnvironment`) | nothing external today; a real SQL Server (`ERP_TEST_SQL_CONNECTION` locally, a service container in CI) and the test authentication handler arrive with the backend-platform and authentication phases |
+| Integration | `Modules/<D>/<M>/Tests/IntegrationTests`, `Tests/Host` | `WebApplicationFactory<Program>` from `Dewiride.Erp.Testing` (`ErpApiFactory`, `ErpApiFactory.ForEnvironment`) | nothing external today: every `ErpApiFactory`, Development or Production, forces the in-memory configuration source (`ERP_CONFIGURATION_SOURCE=InMemory`, `APPCONFIG_ENDPOINT` blanked) so tests never need Azure or an endpoint and a developer's user secrets cannot connect a test host to the store; a real SQL Server (`ERP_TEST_SQL_CONNECTION` locally, a service container in CI) and the test authentication handler arrive with the backend-platform and authentication phases |
 | Architecture | `Tests/Architecture` | ArchUnitNET | compiled assemblies |
 | Scripts | `scripts/**/tests` | `node --test` | files in a temp directory |
 | End-to-end | `frontend/e2e` | Playwright | built web app + running API |

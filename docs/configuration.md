@@ -8,6 +8,12 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 |---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | API | `Development` or `Production` framework behaviour |
 | `ASPNETCORE_HTTP_PORTS` | API container | listening port (8080 in containers) |
+| `ERP_ENVIRONMENT` | API | App Configuration label, `local-dev` or `production`; required, and validated, whenever `APPCONFIG_ENDPOINT` is set (`local-dev` from `launchSettings.json` on developer machines, `production` from `compose.production.yaml`) |
+| `APPCONFIG_ENDPOINT` | API | Azure App Configuration endpoint (`https://<store>.azconfig.io`); when set the API loads the store and its Key Vault references, when empty a Development host runs on `appsettings.json` plus user secrets and a Production host refuses to start; developers keep it in `dotnet user-secrets`, never in a committed file |
+| `ERP_CONFIGURATION_SOURCE` | integration tests | test-only bootstrap value `InMemory`, set by `ErpApiFactory` through `UseSetting` so every test host, Development or Production, runs on in-memory configuration without Azure; never set by hand |
+| `AZURE_TOKEN_CREDENTIALS` | API | mandatory selector for `DefaultAzureCredential`: `AzureCliCredential` on developer machines (from `launchSettings.json`; only the `az login` session is used, never a Visual Studio or VS Code sign-in) and `EnvironmentCredential` in the api container (from `compose.production.yaml`); outside `Development` the credential factory rejects any other value at startup |
+| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | API container | tenant and application (client) id of the runtime service principal the container signs in as; both required in Production |
+| `AZURE_CLIENT_CERTIFICATE_PATH` | API container | path of the runtime certificate secret file, `/run/secrets/erp-runtime-client.pem`, which the credential factory opens for reading at startup so an unreadable file fails with a message naming the fix; must name an existing `.pem` or `.pfx` file in Production, and `AZURE_CLIENT_SECRET` must not be set alongside it |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL` | API, web | OTLP exporter; telemetry export is off when the endpoint is unset (the API speaks gRPC, the web app OTLP/HTTP) |
 | `OTEL_SERVICE_NAME` | web | service name for `@vercel/otel` |
 | `API_INTERNAL_URL` | web | base URL of the API for server-side fetches and the runtime `/api/*` rewrite in `proxy.ts` |
@@ -21,17 +27,14 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | `IMAGE_TAG` | image tag pulled from ghcr.io (`local` for locally built images) |
 | `APP_NAME` | value passed to the web app as `NEXT_PUBLIC_APP_NAME` |
 | `COMPOSE_NETWORK_CIDR` | subnet of the compose network; the API trusts forwarded headers only from this range |
+| `APPCONFIG_ENDPOINT` | passed to the API as `APPCONFIG_ENDPOINT`; required by the production stack, which refuses to start without it; left empty on a developer machine because the local stack cannot sign in to Azure and runs on `appsettings.json` (`dotnet run` uses user secrets instead) |
+| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | production stack only; passed to the api container as the runtime service principal's tenant and application (client) id (ids, never secrets; the certificate is the compose secret `erp-runtime-client.pem` from `infra/compose/secrets/`) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`, `WEB_OTEL_EXPORTER_OTLP_ENDPOINT` | local Aspire dashboard endpoints for the API (gRPC) and the web app (OTLP/HTTP) |
 
 ### Arriving with later phases
 
 | Variable | Used by | Phase |
 |---|---|---|
-| `ERP_ENVIRONMENT` | API | App Configuration label (`local-dev` or `production`) — `azure-configuration` |
-| `APPCONFIG_ENDPOINT` | API | Azure App Configuration endpoint; Production fails to start without it — `azure-configuration` |
-| `AZURE_TOKEN_CREDENTIALS` | API | `dev` on developer machines (Azure CLI sign-in), `EnvironmentCredential` in the API container — `azure-configuration-api-configuration-bootstrap` |
-| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | API container | tenant and application id of the runtime service principal the container signs in as — `azure-configuration-api-configuration-bootstrap` |
-| `AZURE_CLIENT_CERTIFICATE_PATH` | API container | path of the runtime certificate secret file (`/run/secrets/erp-runtime-client.pem`) — `azure-configuration-api-configuration-bootstrap` |
 | `ERP_TEST_SQL_CONNECTION` | integration tests | server-level SQL Server connection used to create per-run test databases — `backend-platform` |
 
 ## Configuration keys (`appsettings.json` / App Configuration)
@@ -41,7 +44,10 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | `Erp:Platform:Host:ApplicationName` | string | `ERP-AI-Pro` | name reported by the system-info endpoint and, from the `backend-platform` phase, the Data Protection application name and telemetry service name |
 | `Erp:Platform:Host:AllowedHosts` | string | `*` | host filtering behind the edge proxy; narrowed to the public host name in the `first-deployment` phase |
 | `Erp:Platform:Host:KnownNetworks` | string[] | `[]` | CIDR ranges trusted for forwarded headers (the compose network in production) |
-| `Erp:Sentinel` | string | — | labelled `local-dev` and `production`; the value is the UTC timestamp of the last bump, and bumping it triggers a full configuration refresh in the API from sub-phase `azure-configuration-api-configuration-bootstrap` |
+| `Erp:Platform:Configuration:RefreshInterval` | TimeSpan | `00:30:00` | how often the API checks the labelled `Erp:Sentinel` and the feature flags (between 1 second and 1 day); bootstrap-only: `appsettings.json`, environment or user secrets; read before the store is connected, not refreshable, never seeded in the store |
+| `Erp:Platform:Configuration:SecretRefreshInterval` | TimeSpan | `01:00:00` | how long a resolved Key Vault reference is cached before the secret is read again (between 1 minute and 7 days); bootstrap-only: `appsettings.json`, environment or user secrets; read before the store is connected, not refreshable, never seeded in the store |
+| `Erp:Platform:Configuration:StartupTimeout` | TimeSpan | `00:01:00` | how long the first load from the store may take before startup fails (between 1 second and 10 minutes); bootstrap-only: `appsettings.json`, environment or user secrets; read before the store is connected, not refreshable, never seeded in the store |
+| `Erp:Sentinel` | string | — | labelled `local-dev` and `production`; the value is the UTC timestamp of the last bump, and bumping it triggers a full configuration refresh in the API at the next check |
 | `Erp:Platform:Identity:TenantId` | string | — | labelled `local-dev` and `production`; the Entra tenant id, written by `scripts/azure/entra.sh` (sub-phase `azure-configuration-entra-app-registration-scripts`) and bound by the `authentication` phase |
 | `Erp:Platform:Identity:ClientId` | string | — | labelled `local-dev` and `production`; the application (client) id of that environment's sign-in registration, written by `scripts/azure/entra.sh` and bound by the `authentication` phase |
 

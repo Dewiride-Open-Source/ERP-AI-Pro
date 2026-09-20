@@ -36,10 +36,12 @@ pnpm dev                                                   # http://localhost:30
 ## Configuration and secrets
 
 - Non-secret defaults are in `backend/Hosts/Api/Dewiride.Erp.Host.Api/appsettings.json` and `appsettings.Development.json`.
-- Once the Azure configuration phase is complete, `az login` plus `APPCONFIG_ENDPOINT` and `ERP_ENVIRONMENT=local-dev` load the rest from Azure App Configuration and the local-dev Key Vault (including the SQL Server connection string).
-- Until then, machine-specific values go to `dotnet user-secrets` (backend) and `frontend/apps/web/.env.local` (never committed).
-- Access to the store and the local-dev vault, the group to join and the `dotnet user-secrets` command for `APPCONFIG_ENDPOINT` are in [docs/operations/azure-bootstrap.md](../operations/azure-bootstrap.md), section "Developer onboarding".
-- Integration tests that need a database read `ERP_TEST_SQL_CONNECTION` (a server-level connection with rights to create databases) and create a fresh database per run.
+- The API picks its configuration source at startup. With `APPCONFIG_ENDPOINT` set it loads Azure App Configuration with the `local-dev` label and resolves the Key Vault references from the local-dev vault (including the SQL Server connection string); without it a Development host runs on `appsettings.json` plus `dotnet user-secrets` and nothing in Azure is contacted.
+- To use the store: `az login --tenant <tenant id>` once, then `cd backend && dotnet user-secrets set APPCONFIG_ENDPOINT https://<store>.azconfig.io --project Hosts/Api/Dewiride.Erp.Host.Api`. `ERP_ENVIRONMENT=local-dev` and `AZURE_TOKEN_CREDENTIALS=AzureCliCredential` (which makes `DefaultAzureCredential` use the `az login` session and nothing else) come from `Properties/launchSettings.json`; `APPCONFIG_ENDPOINT` itself is never committed.
+- Any other machine-specific value goes to `dotnet user-secrets` (backend) and `frontend/apps/web/.env.local` (never committed).
+- Access to the store and the local-dev vault and the group to join are in [docs/operations/azure-bootstrap.md](../operations/azure-bootstrap.md), section "Developer onboarding".
+- The refresh intervals under `Erp:Platform:Configuration` are read from `appsettings.json` before the store is connected; a store value never changes them.
+- Integration tests never reach the store: every `ErpApiFactory` blanks `APPCONFIG_ENDPOINT` and forces the in-memory source, so the endpoint in your user secrets cannot switch a test host to Azure (a Development test host still loads the user-secrets file itself, exactly as `dotnet run` does). Tests that need a database read `ERP_TEST_SQL_CONNECTION` (a server-level connection with rights to create databases) and create a fresh database per run.
 
 ## Containers
 

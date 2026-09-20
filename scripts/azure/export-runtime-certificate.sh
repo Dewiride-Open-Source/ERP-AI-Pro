@@ -21,7 +21,7 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
 
 readonly DEFAULT_OUT_FILE='scripts/azure/out/erp-runtime-client.pem'
 readonly SERVER_SECRETS_DIR='infra/compose/secrets'
-readonly API_CONTAINER_USER_PLACEHOLDER='<api container uid/gid>'
+readonly API_CONTAINER_USER='1654'
 
 OUT_FILE="$DEFAULT_OUT_FILE"
 
@@ -97,10 +97,10 @@ main() {
   log_info "next steps:"
   log_info "  1. copy the file to the server over an encrypted channel, for example: scp $OUT_FILE <user>@<server>:~/erp-runtime-client.pem"
   log_info "  2. on the server, from the repository root:"
-  log_info "     mkdir -p $SERVER_SECRETS_DIR"
-  log_info "     install -o $API_CONTAINER_USER_PLACEHOLDER -g $API_CONTAINER_USER_PLACEHOLDER -m 0400 ~/erp-runtime-client.pem $SERVER_SECRETS_DIR/erp-runtime-client.pem"
+  log_info "     install -d -m 0700 $SERVER_SECRETS_DIR"
+  log_info "     install -o $API_CONTAINER_USER -g $API_CONTAINER_USER -m 0400 ~/erp-runtime-client.pem $SERVER_SECRETS_DIR/erp-runtime-client.pem"
   log_info "     rm -f ~/erp-runtime-client.pem"
-  log_info "     (the uid and gid are those of the API container user, recorded by sub-phase azure-configuration-api-configuration-bootstrap)"
+  log_info "     ($API_CONTAINER_USER is the uid and gid of the app user in the chiseled aspnet image the api container runs as)"
   log_info "  3. delete the local copy: rm -f $OUT_FILE"
   log_info "  4. bash scripts/azure/verify.sh --entra"
 }

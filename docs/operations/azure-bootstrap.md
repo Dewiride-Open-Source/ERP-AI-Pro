@@ -69,7 +69,7 @@ Run every command from the repository root. `check.sh`, `provision.sh` and `veri
 | 8 | `bash scripts/azure/verify.sh` | reads the provisioned resources back and prints `[ok]` or `[FAIL]` per assertion |
 | 9 | `bash scripts/azure/verify.sh --entra` | reads the registrations, service principals, grants, certificates, key credentials and identity ids back |
 
-`provision.sh` ends by printing `APPCONFIG_ENDPOINT=https://<store>.azconfig.io` and both vault URIs. Keep the endpoint: developers put it in `dotnet user-secrets`, and the server puts it in `infra/compose/.env` once sub-phase `azure-configuration-api-configuration-bootstrap` wires `APPCONFIG_ENDPOINT` into the compose files.
+`provision.sh` ends by printing `APPCONFIG_ENDPOINT=https://<store>.azconfig.io` and both vault URIs. Keep the endpoint: developers put it in `dotnet user-secrets`, and the server puts it in `infra/compose/.env`, from which `compose.yaml` passes it to the api container as `APPCONFIG_ENDPOINT`.
 
 ## 5. Access model
 
@@ -168,7 +168,7 @@ The api container signs in as the runtime service principal with the PEM file fr
 
 1. `bash scripts/azure/export-runtime-certificate.sh --out <file>` (default `scripts/azure/out/erp-runtime-client.pem`; the folder and every `.pem` file are gitignored). The script refuses an existing path, accepts only a `.pem` destination that git ignores, downloads the current secret version with a restrictive umask and mode 600 (on Windows the file inherits the folder's permissions instead, so keep it inside your user profile), and checks it with `openssl x509 -noout -subject -enddate` and `openssl rsa -check -noout`; when either check fails the file is deleted and the script stops. It never echoes the content.
 2. Copy the file to the server over an encrypted channel, never through chat, email or a ticket.
-3. On the server, from the deployment checkout: `install -o <uid> -g <gid> -m 0400 erp-runtime-client.pem infra/compose/secrets/`, where `<uid>` and `<gid>` are those of the API container user; sub-phase `azure-configuration-api-configuration-bootstrap` records the values and wires the secret into the compose files.
+3. On the server, from the deployment checkout: `install -d -m 0700 infra/compose/secrets` once, then `install -o 1654 -g 1654 -m 0400 erp-runtime-client.pem infra/compose/secrets/`. 1654 is the uid and gid of the `app` user in the chiseled aspnet image the api container runs as (`APP_UID` in the image); `compose.production.yaml` mounts the file as the secret `erp-runtime-client.pem` at `/run/secrets/erp-runtime-client.pem`, and a file with any other owner is unreadable to the container.
 4. Delete the local copy.
 
 ### Second provision.sh run
@@ -189,12 +189,12 @@ Nothing else: `Erp:Platform:Identity:Instance` and the Key Vault reference `Erp:
 
 1. Ask the operator to add you to the developers group when `ERP_AZURE_DEVELOPERS_GROUP` is configured; otherwise the operator assigns App Configuration Data Reader on the store and Key Vault Secrets User plus Key Vault Crypto User on the development vault to your account by hand.
 2. `az login --tenant <tenant id>` on your machine.
-3. Store the endpoint the operator gives you: `cd backend && dotnet user-secrets set APPCONFIG_ENDPOINT https://<store>.azconfig.io --project Hosts/Api/Dewiride.Erp.Host.Api`. The API reads it from sub-phase `azure-configuration-api-configuration-bootstrap`; until then the value is stored but unused.
+3. Store the endpoint the operator gives you: `cd backend && dotnet user-secrets set APPCONFIG_ENDPOINT https://<store>.azconfig.io --project Hosts/Api/Dewiride.Erp.Host.Api`. The next `dotnet run` loads the store with the `local-dev` label and its Key Vault references; without the value the API runs on `appsettings.json` plus user secrets.
 4. A new role assignment can take up to 15 minutes to propagate; a `403` from the store or the vault inside that window is expected.
 
 ## 7. Production server
 
-The server signs in as the runtime service principal with the certificate exported in section 5a; it never holds a client secret and never reaches the vault through a browser or a developer account. The api container needs these values, which sub-phase `azure-configuration-api-configuration-bootstrap` wires into the compose files (`infra/compose/.env` and the compose secret):
+The server signs in as the runtime service principal with the certificate exported in section 5a; it never holds a client secret and never reaches the vault through a browser or a developer account. The api container needs these values; `compose.yaml` and `compose.production.yaml` carry the variables (interpolated from `infra/compose/.env`) and mount the certificate as the compose secret `erp-runtime-client.pem`, and the API validates every one of them at startup before its first call to Azure:
 
 | Variable | Value | Source |
 |---|---|---|
