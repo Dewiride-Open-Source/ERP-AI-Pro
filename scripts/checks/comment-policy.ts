@@ -8,6 +8,7 @@ type Language = { extensions: string[]; line: RegExp[]; blockStart?: RegExp; blo
 const languages: Language[] = [
   { extensions: [".cs"], line: [/^\s*\/\/\/?/], blockStart: /\/\*/, blockEnd: /\*\// },
   { extensions: [".ts", ".tsx", ".mjs", ".js"], line: [/^\s*\/\//], blockStart: /\/\*/, blockEnd: /\*\// },
+  { extensions: [".bicep"], line: [/^\s*\/\//], blockStart: /\/\*/, blockEnd: /\*\// },
   { extensions: [".yml", ".yaml", ".sh", ".editorconfig", ".dockerignore", ".gitignore"], line: [/^\s*#/] },
   { extensions: ["Dockerfile"], line: [/^\s*#/] },
   { extensions: [".css"], line: [], blockStart: /\/\*/, blockEnd: /\*\// },

@@ -5,7 +5,7 @@
 | [Roadmap](roadmap/ROADMAP.md) | generated view of `roadmap/roadmap.json`, the single source of truth for what is planned, in progress and done |
 | [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [AI capabilities](architecture/ai-capabilities.md) |
 | [Guides](guides/local-development.md) | [local development](guides/local-development.md), [testing](guides/testing.md), [comment policy](guides/comment-policy.md) |
-| [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md); deployment runbooks arrive with the first-deployment phase |
+| [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md), [Azure bootstrap](operations/azure-bootstrap.md); deployment runbooks arrive with the first-deployment phase |
 | [Configuration register](configuration.md) | every configuration key, feature flag and secret name |
 | [Routing register](routing.md) | every API route group and web route |
 
@@ -22,5 +22,6 @@
 | [0007](adr/0007-nextjs-app-router-feature-folders.md) | Next.js App Router with feature folders that mirror the backend |
 | [0008](adr/0008-local-sql-server-and-azure-sql.md) | Owner's SQL Server for development, Azure SQL in production, one schema per module |
 | [0009](adr/0009-third-party-packages.md) | Third-party package approvals and bans |
+| [0010](adr/0010-azure-provisioning-tier-and-credential-model.md) | Azure provisioning, App Configuration tier and operational credential model |
 
 New decisions use [0000-template.md](adr/0000-template.md).

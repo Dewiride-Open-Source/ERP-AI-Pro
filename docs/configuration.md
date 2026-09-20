@@ -38,6 +38,7 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | `Erp:Platform:Host:ApplicationName` | string | `ERP-AI-Pro` | name reported by the system-info endpoint and, from the `backend-platform` phase, the Data Protection application name and telemetry service name |
 | `Erp:Platform:Host:AllowedHosts` | string | `*` | host filtering behind the edge proxy; narrowed to the public host name in the `first-deployment` phase |
 | `Erp:Platform:Host:KnownNetworks` | string[] | `[]` | CIDR ranges trusted for forwarded headers (the compose network in production) |
+| `Erp:Sentinel` | string | — | labelled `local-dev` and `production`; the value is the UTC timestamp of the last bump, and bumping it triggers a full configuration refresh in the API from sub-phase `azure-configuration-api-configuration-bootstrap` |
 
 ## Feature flags
 
@@ -50,3 +51,9 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | Secret | Environment | Purpose |
 |---|---|---|
 | `Erp--Platform--Database--ConnectionString` | local-dev, production | SQL Server / Azure SQL connection string — `backend-platform` phase |
+
+## Keys (Key Vault)
+
+| Key | Environment | Purpose |
+|---|---|---|
+| `Erp--Platform--DataProtection--Key` | local-dev, production | RSA 2048 key with `wrapKey`/`unwrapKey`; protects the ASP.NET Core Data Protection key ring from the `authentication` phase |

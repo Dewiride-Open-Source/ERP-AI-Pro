@@ -47,6 +47,7 @@ if (!values["skip-backend"]) {
 steps.push(
   { name: "folder cap", cwd: repoRoot, command: "node", args: ["scripts/checks/folder-size.ts"] },
   { name: "comment policy", cwd: repoRoot, command: "node", args: ["scripts/checks/comment-policy.ts"] },
+  { name: "azure scripts check", cwd: repoRoot, command: "bash", args: ["scripts/azure/check.sh"] },
   { name: "roadmap tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/roadmap/tests/*.test.ts"] },
   { name: "roadmap check", cwd: repoRoot, command: "node", args: ["scripts/roadmap/roadmap.ts", "check"] },
 );

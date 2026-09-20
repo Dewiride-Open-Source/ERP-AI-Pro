@@ -8,7 +8,7 @@
 | Node.js | 24 LTS | `node --version` |
 | pnpm | 12 | `npm i -g pnpm@12` then `pnpm --version` |
 | Docker Desktop | current, with Compose v2 | `docker compose version` |
-| Azure CLI | current, signed in to the Dewiride tenant | `az account show` |
+| Azure CLI | current, with Bicep (`az bicep install`), signed in to the Dewiride tenant | `az account show`, `az bicep version` |
 | SQL Server | the owner's instance, reachable from this machine | SQL Server Management Studio |
 | Git | `core.longpaths true` on Windows | `git config core.longpaths` |
 
@@ -38,6 +38,7 @@ pnpm dev                                                   # http://localhost:30
 - Non-secret defaults are in `backend/Hosts/Api/Dewiride.Erp.Host.Api/appsettings.json` and `appsettings.Development.json`.
 - Once the Azure configuration phase is complete, `az login` plus `APPCONFIG_ENDPOINT` and `ERP_ENVIRONMENT=local-dev` load the rest from Azure App Configuration and the local-dev Key Vault (including the SQL Server connection string).
 - Until then, machine-specific values go to `dotnet user-secrets` (backend) and `frontend/apps/web/.env.local` (never committed).
+- Access to the store and the local-dev vault, the group to join and the `dotnet user-secrets` command for `APPCONFIG_ENDPOINT` are in [docs/operations/azure-bootstrap.md](../operations/azure-bootstrap.md), section "Developer onboarding".
 - Integration tests that need a database read `ERP_TEST_SQL_CONNECTION` (a server-level connection with rights to create databases) and create a fresh database per run.
 
 ## Containers
