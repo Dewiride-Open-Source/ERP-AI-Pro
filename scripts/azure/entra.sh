@@ -13,6 +13,7 @@ identity ids. Safe to run repeatedly; never deletes a registration.
 
 Options:
   --dry-run                              Print every write that would run; write nothing.
+  --clear-production-redirect-uris       Allow the run to remove the production redirect URIs when ERP_AZURE_PRODUCTION_WEB_ORIGIN is empty.
   --params <file>                        Parameter file (default: scripts/azure/params.env).
   --rotate-signin-certificate <label>    Create a new version of the sign-in certificate of local-dev or production and register it.
   --rotate-runtime-certificate           Create a new version of the runtime certificate and register it.
@@ -75,6 +76,9 @@ parse_entra_args() {
         set_mode rotate-runtime
         TARGET="$RUNTIME_TARGET"
         ;;
+      --clear-production-redirect-uris)
+        CLEAR_REDIRECT_URIS_ALLOWED=1
+        ;;
       --prune-old-credentials)
         set_mode prune
         TARGET="$(require_target "$1" "${2:-}" 1)"
@@ -131,7 +135,7 @@ converge_signin_app() {
 
   log_step "Sign-in registration '$display_name' ($label)"
   if [[ "$label" == production ]] && (( ${#redirect_uris[@]} == 0 )); then
-    log_warn "ERP_AZURE_PRODUCTION_WEB_ORIGIN is empty: no redirect URI is registered and sign-in stays impossible until the parameter is set and entra.sh re-run"
+    log_warn "ERP_AZURE_PRODUCTION_WEB_ORIGIN is empty: no redirect URI is requested for production, so its sign-in stays impossible until the parameter is set and entra.sh re-run"
   fi
   local ids object_id app_id
   ids="$(ensure_app "$display_name" web "${redirect_uris[@]}")"

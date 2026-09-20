@@ -34,6 +34,7 @@ GRAPH_SCOPE_PROFILE=''
 GRAPH_SCOPE_USER_READ=''
 PERMISSION_GRANT_FAILURES=()
 CERTIFICATE_POLICY_FILE=''
+CLEAR_REDIRECT_URIS_ALLOWED="${CLEAR_REDIRECT_URIS_ALLOWED:-0}"
 
 is_pending() {
   [[ "$1" == "$PENDING_ID" ]]
@@ -68,10 +69,11 @@ key_identifier_to_hex() {
 
 require_origin() {
   local name="$1" value="$2"
-  if [[ "$value" =~ ^https://[^/[:space:]]+$ ]] || [[ "$value" =~ ^http://(localhost|127\.0\.0\.1)(:[0-9]+)?$ ]]; then
+  local host='[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*'
+  if [[ "$value" =~ ^https://$host(:[0-9]{1,5})?$ ]] || [[ "$value" =~ ^http://(localhost|127\.0\.0\.1)(:[0-9]{1,5})?$ ]]; then
     return 0
   fi
-  die "$name must be an https origin without a path or trailing slash (http is accepted for localhost only); got '$value'"
+  die "$name must be an https origin made of a host name and an optional port, without path, wildcard, credentials or query (http is accepted for localhost only); got '$value'"
 }
 
 require_signin_label() {
@@ -176,10 +178,45 @@ find_app() {
   printf '%s' "$rows"
 }
 
+app_owner_ids() {
+  local object_id="$1"
+  graph_get "applications/$object_id/owners?\$select=id" 'value[].id'
+}
+
+# Graph does not record the creator of an application as its owner, so a registration
+# created by these scripts has no owner until ensure_app_owner adds the operator.
+require_operator_owns_app() {
+  local object_id="$1" display_name="$2"
+  local owners
+  owners="$(app_owner_ids "$object_id")" || die "cannot read the owners of app registration '$display_name'"
+  [[ -n "$owners" ]] || return 0
+  local operator_id
+  operator_id="$(signed_in_user_object_id)"
+  grep -qix "$operator_id" <<< "$owners" || die "app registration '$display_name' ($object_id) exists but the signed-in user is not one of its owners; it was not created by these scripts — rename it or have an owner add you before re-running"
+}
+
+ensure_app_owner() {
+  local object_id="$1" app_id="$2" display_name="$3"
+  local operator_id
+  operator_id="$(signed_in_user_object_id)"
+  if is_pending "$object_id"; then
+    run az ad app owner add --id "$object_id" --owner-object-id "$operator_id" --only-show-errors
+    return 0
+  fi
+  local owners
+  owners="$(app_owner_ids "$object_id")" || die "cannot read the owners of app registration '$display_name'"
+  if grep -qix "$operator_id" <<< "$owners"; then
+    log_info "operator owns '$display_name'"
+    return 0
+  fi
+  run az ad app owner add --id "$app_id" --owner-object-id "$operator_id" --only-show-errors || die "cannot add the operator as owner of '$display_name'"
+  log_change "operator ownership of '$display_name'" added
+}
+
 app_differences() {
   local app_json="$1"
   shift
-  node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const app = JSON.parse(raw); const expected = process.argv.slice(1).sort(); const differences = []; if (app.signInAudience !== "AzureADMyOrg") differences.push("signInAudience"); const web = app.web ?? {}; const current = [...(web.redirectUris ?? [])].sort(); if (current.length !== expected.length || current.some((uri, index) => uri !== expected[index])) differences.push("redirectUris"); const implicit = web.implicitGrantSettings ?? {}; if (implicit.enableIdTokenIssuance === true || implicit.enableAccessTokenIssuance === true) differences.push("implicitGrant"); if ((app.api ?? {}).requestedAccessTokenVersion !== 2) differences.push("requestedAccessTokenVersion"); process.stdout.write(differences.join("\n")); });' "$@" <<< "$app_json"
+  node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const app = JSON.parse(raw); const expected = process.argv.slice(1).sort(); const differences = []; if (app.signInAudience !== "AzureADMyOrg") differences.push("signInAudience"); const web = app.web ?? {}; const current = [...(web.redirectUris ?? [])].sort(); if (current.length !== expected.length || current.some((uri, index) => uri !== expected[index])) differences.push("redirectUris"); const implicit = web.implicitGrantSettings ?? {}; if (implicit.enableIdTokenIssuance === true || implicit.enableAccessTokenIssuance === true) differences.push("implicitGrant"); if ((app.api ?? {}).requestedAccessTokenVersion !== 2) differences.push("requestedAccessTokenVersion"); if (((app.spa ?? {}).redirectUris ?? []).length > 0 || ((app.publicClient ?? {}).redirectUris ?? []).length > 0 || app.isFallbackPublicClient === true) differences.push("otherPlatforms"); process.stdout.write(differences.join("\n")); });' "$@" <<< "$app_json"
 }
 
 converge_app() {
@@ -188,6 +225,7 @@ converge_app() {
   local -a redirect_uris=("$@")
   local app_json
   app_json="$(az_read ad app show --id "$object_id" --output json)" || die "cannot read app registration '$display_name'"
+  require_operator_owns_app "$object_id" "$display_name"
   local differences
   differences="$(app_differences "$app_json" "${redirect_uris[@]}")"
   if [[ -z "$differences" ]]; then
@@ -195,12 +233,13 @@ converge_app() {
     return 0
   fi
   local -a update_args=()
-  local clear_redirect_uris=0 difference
+  local clear_redirect_uris=0 clear_other_platforms=0 difference
   while IFS= read -r difference; do
     case "$difference" in
       signInAudience) update_args+=(--sign-in-audience AzureADMyOrg) ;;
       implicitGrant) update_args+=(--enable-id-token-issuance false --enable-access-token-issuance false) ;;
       requestedAccessTokenVersion) update_args+=(--requested-access-token-version 2) ;;
+      otherPlatforms) clear_other_platforms=1 ;;
       redirectUris)
         if (( ${#redirect_uris[@]} > 0 )); then
           update_args+=(--web-redirect-uris "${redirect_uris[@]}")
@@ -211,11 +250,17 @@ converge_app() {
       *) die "converge_app: unexpected difference '$difference'" ;;
     esac
   done <<< "$differences"
+  if (( clear_redirect_uris )) && ! (( CLEAR_REDIRECT_URIS_ALLOWED )); then
+    die "'$display_name' has redirect URIs registered but the parameter file requests none ($(node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { process.stdout.write(((JSON.parse(raw).web ?? {}).redirectUris ?? []).join(", ")); });' <<< "$app_json")); set ERP_AZURE_PRODUCTION_WEB_ORIGIN in params.env, or pass --clear-production-redirect-uris to remove them"
+  fi
   if (( ${#update_args[@]} > 0 )); then
     run az ad app update --id "$object_id" "${update_args[@]}" --output none --only-show-errors || die "cannot update app registration '$display_name'"
   fi
   if (( clear_redirect_uris )); then
     graph_patch "applications/$object_id" '{"web":{"redirectUris":[]}}' || die "cannot clear the redirect URIs of '$display_name'"
+  fi
+  if (( clear_other_platforms )); then
+    graph_patch "applications/$object_id" '{"spa":{"redirectUris":[]},"publicClient":{"redirectUris":[]},"isFallbackPublicClient":false}' || die "cannot remove the non-web platforms of '$display_name'"
   fi
   log_change "'$display_name'" updated " ($(printf '%s\n' "$differences" | awk '{ printf "%s%s", (NR > 1 ? ", " : ""), $0 }'))"
 }
@@ -234,6 +279,7 @@ ensure_app() {
   found="$(find_app "$display_name")" || die "cannot resolve app registration '$display_name'"
   if [[ -n "$found" ]]; then
     converge_app "${found%%$'\t'*}" "$display_name" "${redirect_uris[@]}"
+    ensure_app_owner "${found%%$'\t'*}" "${found#*$'\t'}" "$display_name"
     printf '%s' "$found"
     return 0
   fi
@@ -245,6 +291,7 @@ ensure_app() {
   if (( DRY_RUN )); then
     run az ad app create "${create_args[@]}" --query '[id, appId]' --output tsv --only-show-errors
     log_change "'$display_name'" created
+    ensure_app_owner "$PENDING_ID" "$PENDING_ID" "$display_name"
     printf '%s\t%s' "$PENDING_ID" "$PENDING_ID"
     return 0
   fi
@@ -257,6 +304,7 @@ ensure_app() {
     die "unexpected response while creating app registration '$display_name'"
   fi
   log_info "'$display_name' created (application id $app_id)"
+  retry 6 10 -- ensure_app_owner "$object_id" "$app_id" "$display_name"
   printf '%s\t%s' "$object_id" "$app_id"
 }
 
@@ -389,16 +437,17 @@ ensure_assignment_required() {
   retry 6 10 -- ensure_assignment_required_once "$sp_id" "$body"
 }
 
-grant_scope_covers() {
-  local scope="$1" value
-  for value in "${GRAPH_SCOPE_VALUES[@]}"; do
-    [[ " $scope " == *" $value "* ]] || return 1
-  done
+grant_scope_matches() {
+  local granted
+  granted="$(printf '%s\n' $1 | LC_ALL=C sort -u | tr '\n' ' ')"
+  local expected
+  expected="$(printf '%s\n' "${GRAPH_SCOPE_VALUES[@]}" | LC_ALL=C sort -u | tr '\n' ' ')"
+  [[ "$granted" == "$expected" ]]
 }
 
 permission_grant_scope() {
   local app_id="$1"
-  az_read ad app permission list-grants --id "$app_id" --query "[?resourceId=='$GRAPH_SP_OBJECT_ID'].scope | [0]" --output tsv
+  az_read ad app permission list-grants --id "$app_id" --query "[?resourceId=='$GRAPH_SP_OBJECT_ID' && consentType=='AllPrincipals'].scope | [0]" --output tsv
 }
 
 ensure_permission_grant() {
@@ -416,7 +465,7 @@ ensure_permission_grant() {
     log_warn "the permission grants of $app_id could not be read; the dry run assumes none"
     scope=''
   fi
-  if grant_scope_covers "$scope"; then
+  if grant_scope_matches "$scope"; then
     log_info "Graph consent unchanged ($scope)"
     return 0
   fi
@@ -486,6 +535,14 @@ certificate_expiry() {
   az_read keyvault certificate show --vault-name "$vault" --name "$name" --query attributes.expires --output tsv
 }
 
+require_certificate_not_soft_deleted() {
+  local vault="$1" name="$2"
+  local output
+  if output="$(az_read keyvault certificate show-deleted --vault-name "$vault" --name "$name" --query recoveryId --output tsv 2>&1)" && [[ -n "$output" ]]; then
+    die "certificate '$name' in vault '$vault' is soft-deleted; recover it with: az keyvault certificate recover --vault-name $vault --name $name (purge protection keeps the name reserved), then re-run"
+  fi
+}
+
 remove_certificate_policy_file() {
   [[ -z "$CERTIFICATE_POLICY_FILE" ]] || rm -f -- "$CERTIFICATE_POLICY_FILE"
   CERTIFICATE_POLICY_FILE=''
@@ -509,8 +566,9 @@ create_certificate_version() {
     printf '%s' "$PENDING_ID"
     return 0
   fi
+  require_certificate_not_soft_deleted "$vault" "$name"
   render_certificate_policy "$common_name" "$content_type"
-  retry -- az keyvault certificate create --vault-name "$vault" --name "$name" --policy "@$CERTIFICATE_POLICY_FILE" --output none --only-show-errors
+  retry 6 15 -- az keyvault certificate create --vault-name "$vault" --name "$name" --policy "@$CERTIFICATE_POLICY_FILE" --output none --only-show-errors
   remove_certificate_policy_file
   local thumbprint
   thumbprint="$(certificate_thumbprint "$vault" "$name")" || die "certificate '$name' in vault '$vault' cannot be read after creation"

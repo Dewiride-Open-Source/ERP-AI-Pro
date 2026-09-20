@@ -68,19 +68,23 @@ main() {
   cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
   require_command az openssl
   [[ ! -e "$OUT_FILE" ]] || die "$OUT_FILE already exists; delete it or choose another --out path (the file is never overwritten)"
+  [[ "$OUT_FILE" == *.pem ]] || die "--out must end in .pem so the file stays covered by .gitignore; got '$OUT_FILE'"
+  if git -C "$REPO_ROOT" rev-parse --is-inside-work-tree > /dev/null 2>&1 && ! git -C "$REPO_ROOT" check-ignore -q -- "$OUT_FILE"; then
+    die "--out '$OUT_FILE' is inside the repository but not ignored by git; use the default location or a path under scripts/azure/out/"
+  fi
 
   log_step "Checking the Azure CLI sign-in"
   ensure_login
 
   log_step "Downloading $RUNTIME_CERTIFICATE_NAME from $ERP_AZURE_KEYVAULT_PROD_NAME"
-  mkdir -p -- "$(dirname -- "$OUT_FILE")"
   umask 077
+  mkdir -p -- "$(dirname -- "$OUT_FILE")"
   trap discard_partial_download EXIT
   DOWNLOAD_STARTED=1
   az keyvault secret download --vault-name "$ERP_AZURE_KEYVAULT_PROD_NAME" --name "$RUNTIME_CERTIFICATE_NAME" \
     --file "$OUT_FILE" --only-show-errors
   chmod 600 -- "$OUT_FILE"
-  log_info "saved to $OUT_FILE (mode 600)"
+  log_info "saved to $OUT_FILE (mode 600; on Windows the file inherits the folder's permissions instead, so keep it inside your user profile)"
 
   log_step "Validating with openssl"
   openssl x509 -in "$OUT_FILE" -noout -subject -enddate || discard_invalid_file

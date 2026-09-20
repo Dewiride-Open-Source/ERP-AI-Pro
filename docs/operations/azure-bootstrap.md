@@ -116,14 +116,14 @@ No script signs in or switches subscriptions itself. When the CLI context differ
 | production sign-in | `ERP_AZURE_APP_WEB_PRODUCTION_NAME` | web | the deployed API, in the same way |
 | runtime | `ERP_AZURE_APP_RUNTIME_NAME` | none | the service principal the api container signs in as to read the store and the production vault; no redirect URIs, no app roles, no Graph permissions |
 
-Properties every registration converges to: `signInAudience` `AzureADMyOrg`; implicit grant off (`enableIdTokenIssuance` and `enableAccessTokenIssuance` both `false`); `api.requestedAccessTokenVersion` `2`. Sign-in registrations additionally get a service principal with `appRoleAssignmentRequired` `true`, so only assigned users can sign in.
+Properties every registration converges to: `signInAudience` `AzureADMyOrg`; implicit grant off (`enableIdTokenIssuance` and `enableAccessTokenIssuance` both `false`); `api.requestedAccessTokenVersion` `2`; no single-page, mobile or fallback public client platform. The operator is added as owner of every registration (Microsoft Graph does not record the creator as owner); a same-named registration owned by someone else is refused, never adopted. Sign-in registrations additionally get a service principal with `appRoleAssignmentRequired` `true`, so only assigned users can sign in.
 
 ### Redirect URIs
 
 | Registration | Redirect URIs |
 |---|---|
 | local-dev sign-in | `<ERP_AZURE_LOCAL_WEB_ORIGIN>/api/auth/signin-oidc`, `<ERP_AZURE_LOCAL_WEB_ORIGIN>/api/auth/signout-callback-oidc`, `<ERP_AZURE_LOCAL_API_ORIGIN>/api/auth/signin-oidc`, `<ERP_AZURE_LOCAL_API_ORIGIN>/api/auth/signout-callback-oidc` |
-| production sign-in | `<ERP_AZURE_PRODUCTION_WEB_ORIGIN>/api/auth/signin-oidc`, `<ERP_AZURE_PRODUCTION_WEB_ORIGIN>/api/auth/signout-callback-oidc`; while the parameter is empty no redirect URI is registered and the script warns that production sign-in stays impossible until the parameter is set and `entra.sh` is run again |
+| production sign-in | `<ERP_AZURE_PRODUCTION_WEB_ORIGIN>/api/auth/signin-oidc`, `<ERP_AZURE_PRODUCTION_WEB_ORIGIN>/api/auth/signout-callback-oidc`; while the parameter is empty no redirect URI is requested and the script warns that production sign-in stays impossible until the parameter is set and `entra.sh` is run again. A re-run with an empty parameter never removes redirect URIs that are already registered: it stops and lists them, and only `bash scripts/azure/entra.sh --clear-production-redirect-uris` removes them deliberately |
 | runtime | none |
 
 ### App roles
@@ -139,7 +139,7 @@ Both roles are assignable to users only and enabled. `entra.sh` updates the role
 
 ### Consent path
 
-Each sign-in registration requests the Microsoft Graph delegated permissions `openid`, `profile` and `User.Read`. Their permission ids are read from the Microsoft Graph service principal at run time, never hard-coded. `entra.sh` then grants them for the whole tenant with `az ad app permission grant --scope "openid profile User.Read"` as the operator, so no employee sees a consent prompt. When the tenant's consent policy refuses that grant, the script prints the exact command for a Global Administrator to run:
+Each sign-in registration requests the Microsoft Graph delegated permissions `openid`, `profile` and `User.Read`. Their permission ids are read from the Microsoft Graph service principal at run time, never hard-coded. `entra.sh` then grants them for the whole tenant with `az ad app permission grant --scope "openid profile User.Read"` as the operator, so no employee sees a consent prompt. Only the tenant-wide grant counts: a per-user consent recorded by an interactive sign-in never satisfies the check, and a tenant-wide grant whose scopes differ from exactly these three is re-issued. When the tenant's consent policy refuses that grant, the script prints the exact command for a Global Administrator to run:
 
 ```bash
 az ad app permission admin-consent --id <application id>
@@ -166,7 +166,7 @@ Every certificate is self-signed by Key Vault from the policy in `scripts/azure/
 
 The api container signs in as the runtime service principal with the PEM file from the production vault, placed on the server as a compose secret. The export is done by hand, once per certificate version:
 
-1. `bash scripts/azure/export-runtime-certificate.sh --out <file>` (default `scripts/azure/out/erp-runtime-client.pem`; the folder and every `.pem` file are gitignored). The script refuses an existing path, downloads the current secret version, sets the file mode to 600, and checks it with `openssl x509 -noout -subject -enddate` and `openssl rsa -check -noout`; when either check fails the file is deleted and the script stops. It never echoes the content.
+1. `bash scripts/azure/export-runtime-certificate.sh --out <file>` (default `scripts/azure/out/erp-runtime-client.pem`; the folder and every `.pem` file are gitignored). The script refuses an existing path, accepts only a `.pem` destination that git ignores, downloads the current secret version with a restrictive umask and mode 600 (on Windows the file inherits the folder's permissions instead, so keep it inside your user profile), and checks it with `openssl x509 -noout -subject -enddate` and `openssl rsa -check -noout`; when either check fails the file is deleted and the script stops. It never echoes the content.
 2. Copy the file to the server over an encrypted channel, never through chat, email or a ticket.
 3. On the server, from the deployment checkout: `install -o <uid> -g <gid> -m 0400 erp-runtime-client.pem infra/compose/secrets/`, where `<uid>` and `<gid>` are those of the API container user; sub-phase `azure-configuration-api-configuration-bootstrap` records the values and wires the secret into the compose files.
 4. Delete the local copy.
@@ -212,6 +212,7 @@ The server signs in as the runtime service principal with the certificate export
 - `--dry-run` writes nothing: control-plane changes are shown through `az deployment group what-if`, and every data-plane command is printed with a `[dry-run]` prefix instead of being executed. Before the resource group exists the what-if step is skipped, because what-if needs a scope to run against.
 - What-if noise: on a converged deployment what-if still reports `Modify` lines for properties Azure fills in or does not echo back: on the store `dataPlaneProxy`, `defaultKeyValueRevisionRetentionPeriodInSeconds` and, on the Free tier, `softDeleteRetentionInDays: 0 => 7`; on each vault `networkAcls` shown as added; on each key `rotationPolicy` shown as removed; on each role assignment `principalType` as `NoEffect`. None of these is applied: a second run leaves the store settings, the key versions and the rotation policies exactly as they were. A run is converged when what-if shows no `Create` or `Delete` entry and no `Modify` beyond this list.
 - Soft-deleted vault: `az keyvault recover --name <vault>` and then run `provision.sh` again, because recovery restores the vault and its keys but drops the role assignments.
+- Soft-deleted certificate (deleted in the portal to start over): `entra.sh` stops and prints `az keyvault certificate recover --vault-name <vault> --name <certificate>`; purge protection keeps the name reserved, so recovery is the only way forward.
 - Store on the Free tier: there is no soft delete, so a deleted store is recreated by `provision.sh` and repopulated by `seed.sh` (and `entra.sh`, which writes the identity ids). On `Standard` or `Premium` run `az appconfig recover --name <store>` first.
 - `NameUnavailable` on the store or `VaultAlreadyExists` on a vault means the name is taken globally, either by another subscription or by a soft-deleted vault of your own (`az keyvault list-deleted`). Recover your own vault as above or choose a new name in `params.env`.
 - A `403` immediately after a fresh role assignment is propagation delay: the scripts retry data-plane calls for about five minutes (20 attempts, 15 seconds apart) and then stop with a message that role assignments can take up to 15 minutes to propagate; re-run when it does.

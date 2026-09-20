@@ -39,6 +39,7 @@ readonly PROVISION_HINT='run: bash scripts/azure/provision.sh'
 
 ENTRA_MODE=0
 FAILURES=0
+OPERATOR_ID=''
 
 pass() { printf '[ok]   %s\n' "$*"; }
 
@@ -221,6 +222,23 @@ verify_registration_shape() {
   local registration_json="$1" display_name="$2"
   assert_equals "'$display_name' is single tenant" 'AzureADMyOrg' "$(json_eval "$registration_json" 'value.signInAudience')"
   assert_equals "'$display_name' has no client secret" '0' "$(json_eval "$registration_json" '(value.passwordCredentials || []).length')"
+  assert_equals "'$display_name' has no single-page, mobile or fallback public client platform" '0' \
+    "$(json_eval "$registration_json" '((value.spa && value.spa.redirectUris) || []).length + ((value.publicClient && value.publicClient.redirectUris) || []).length + (value.isFallbackPublicClient === true ? 1 : 0)')"
+  local owners
+  if owners="$(app_owner_ids "$(json_eval "$registration_json" 'value.id')" 2>&1)"; then
+    if grep -qix "$OPERATOR_ID" <<< "$owners"; then
+      pass "operator owns '$display_name'"
+    else
+      fail "operator owns '$display_name' (not in the owner list; the registration was not created by these scripts)"
+    fi
+  else
+    fail "operator owns '$display_name' (query failed: $(query_error_summary "$owners"))"
+  fi
+}
+
+verify_service_principal_shape() {
+  local principal_json="$1" display_name="$2"
+  assert_equals "'$display_name' service principal has no client secret" '0' "$(json_eval "$principal_json" '(value.passwordCredentials || []).length')"
 }
 
 verify_signin_registration_shape() {
@@ -281,6 +299,11 @@ verify_permission_grant() {
       fail "'$display_name' Microsoft Graph consent covers $scope (granted: '${granted:-<none>}'); $ENTRA_HINT or, as Global Administrator: az ad app permission admin-consent --id $app_id"
     fi
   done
+  if grant_scope_matches "$granted"; then
+    pass "'$display_name' tenant-wide Microsoft Graph consent is exactly ${GRAPH_SCOPE_VALUES[*]}"
+  else
+    fail "'$display_name' tenant-wide Microsoft Graph consent is exactly ${GRAPH_SCOPE_VALUES[*]} (granted: '${granted:-<none>}'); $ENTRA_HINT"
+  fi
 }
 
 verify_app_role_assignment() {
@@ -380,6 +403,7 @@ verify_signin_registration() {
 
   if load_service_principal "$app_id" "$display_name" principal_json; then
     principal_id="$(json_eval "$principal_json" 'value.id')"
+    verify_service_principal_shape "$principal_json" "$display_name"
     assert_equals "'$display_name' service principal requires assignment" 'true' "$(json_eval "$principal_json" 'value.appRoleAssignmentRequired')"
     verify_permission_grant "$app_id" "$display_name"
     verify_app_role_assignment "$principal_id" "$operator_id" "$display_name"
@@ -420,6 +444,7 @@ verify_runtime_registration() {
 
   load_service_principal "$app_id" "$display_name" principal_json || return 0
   principal_id="$(json_eval "$principal_json" 'value.id')"
+  verify_service_principal_shape "$principal_json" "$display_name"
   local store_id production_vault_id
   store_id="$(store_resource_id)"
   production_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_PROD_NAME")"
@@ -430,6 +455,7 @@ verify_runtime_registration() {
 
 verify_entra() {
   local operator_id="$1"
+  OPERATOR_ID="$operator_id"
   log_step "Resolving Microsoft Graph"
   resolve_graph_scope_ids
   log_info "Microsoft Graph service principal: $GRAPH_SP_OBJECT_ID"
