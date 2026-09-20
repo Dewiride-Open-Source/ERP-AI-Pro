@@ -13,6 +13,8 @@ updates:
     groups:
       microsoft:
         patterns: ["Microsoft.*", "System.*"]
+      azure:
+        patterns: ["Azure.*"]
       opentelemetry:
         patterns: ["OpenTelemetry.*"]
       testing:

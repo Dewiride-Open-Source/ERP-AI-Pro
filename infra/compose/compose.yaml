@@ -10,6 +10,7 @@ services:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_HTTP_PORTS: "8080"
       ERP_ENVIRONMENT: ${ERP_ENVIRONMENT:-local-dev}
+      APPCONFIG_ENDPOINT: ${APPCONFIG_ENDPOINT:-}
       Erp__Platform__Host__KnownNetworks__0: ${COMPOSE_NETWORK_CIDR:-172.28.0.0/16}
     networks:
       - erp

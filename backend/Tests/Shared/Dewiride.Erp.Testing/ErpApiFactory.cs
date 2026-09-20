@@ -10,6 +10,10 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 {
     public const string ThrowingPath = "/__test/throw";
 
+    public const string ConfigurationSourceSetting = "ERP_CONFIGURATION_SOURCE";
+
+    public const string InMemorySource = "InMemory";
+
     public ErpApiFactory()
         : this(Environments.Development)
     {
@@ -30,6 +34,8 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
         builder.UseEnvironment(Environment);
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);
+        builder.UseSetting("APPCONFIG_ENDPOINT", string.Empty);
+        builder.UseSetting(ConfigurationSourceSetting, InMemorySource);
         builder.ConfigureServices(services => services.AddTransient<IStartupFilter, ThrowingRouteStartupFilter>());
     }
 
