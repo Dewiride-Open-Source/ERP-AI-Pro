@@ -17,7 +17,8 @@ public sealed class SystemInfoModule : IModule
         Schema: null,
         RoutePrefix: "/platform/system-info",
         FeatureFlag: "Erp.Modules.Platform.SystemInfo",
-        Permissions: []);
+        Permissions: [],
+        Capabilities: []);
 
     public void AddServices(IHostApplicationBuilder builder)
     {

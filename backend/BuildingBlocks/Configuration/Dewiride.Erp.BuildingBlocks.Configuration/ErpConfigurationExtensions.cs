@@ -38,6 +38,7 @@ public static class ErpConfigurationExtensions
         if (info.Source == ErpConfigurationSource.AppConfiguration)
         {
             var credential = AzureCredentialFactory.Create(builder.Environment, environmentVariable);
+            AppConfigurationSetup.RequireMicrosoftFeatureFlagSchema();
             builder.Configuration.AddAzureAppConfiguration(
                 options =>
                 {

@@ -50,7 +50,7 @@ Rules that keep the shape honest:
 ```
 frontend/apps/web/src/features/finance/sales/
 ├── index.ts                      public surface: the only file app/ may import
-├── nav.ts                        navigation manifest { id, title, icon, basePath, permission, items }
+├── nav.ts                        navigation manifest { id, title, icon, basePath, featureFlag, permission, items }
 ├── invoices/
 │   ├── components/{invoice-table.tsx, invoice-form.tsx, invoice-lines-editor.tsx, invoice-status-badge.tsx}
 │   ├── server/{actions.ts, queries.ts}
@@ -60,6 +60,7 @@ frontend/apps/web/src/features/finance/sales/
 ├── credit-notes/  receipts/  reports/gstr1/   same shape
 └── _shared/                      finance-wide UI, importable only from features/finance/**
 
+frontend/apps/web/src/app/(app)/finance/sales/layout.tsx                                                 gates the segment with requireFeature
 frontend/apps/web/src/app/(app)/finance/sales/invoices/{page.tsx, new/page.tsx, [invoiceId]/page.tsx}   routes only
 frontend/e2e/tests/finance/sales/invoices.spec.ts                                                        one spec per feature
 ```

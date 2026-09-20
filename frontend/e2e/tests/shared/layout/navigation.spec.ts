@@ -8,7 +8,12 @@ test.describe("app shell navigation", () => {
     const shell = new AppShell(page);
     await new SystemInfoPage(page).goto();
 
-    await shell.primaryNavigation.getByRole("link", { name: "System" }).click();
+    await expect(shell.navigationLink("System")).toBeVisible();
+    await expect(shell.primaryNavigation).toMatchAriaSnapshot(`
+      - navigation "Primary":
+        - link "System"
+    `);
+    await shell.navigationLink("System").click();
     await expect(page).toHaveURL(/\/platform\/system-info$/);
     await shell.wordmarkLink.click();
     await expect(page).toHaveURL(/\/login$/);

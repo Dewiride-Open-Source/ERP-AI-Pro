@@ -29,7 +29,7 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 - Every module assembly contains exactly one public `IModule` implementation, and `Hosts/Api/Modules.cs` lists every one of them.
 - Every type is `internal` unless it is a module class, lives in `Contracts`, or is a BuildingBlocks API.
 - Every DbContext maps only entity types from its own assembly.
-- Every endpoint group requires authorization unless the route is on the anonymous whitelist (`/healthz/*`, `/api/auth/login`, OIDC callbacks, `/api/platform/system-info` until authentication exists, OpenAPI in Development).
+- Every endpoint group requires authorization unless the route is on the anonymous whitelist (`/healthz/*`, `/api/auth/login`, OIDC callbacks, `/api/platform/system-info` and `/api/platform/features` until authentication exists, OpenAPI in Development).
 - No assembly references a banned package.
 - Namespace equals folder for every type (also a compiler error through IDE0130).
 

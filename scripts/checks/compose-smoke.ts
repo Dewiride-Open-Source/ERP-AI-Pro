@@ -9,7 +9,7 @@ const projectName = "erp-ai-pro-smoke";
 const apiBaseUrl = "http://127.0.0.1:5080";
 const webBaseUrl = "http://127.0.0.1:3000";
 
-type Check = { name: string; url: string; status: number; redirect?: string; header?: [string, string] };
+type Check = { name: string; url: string; status: number; redirect?: string; header?: [string, string]; body?: string };
 
 const checks: Check[] = [
   { name: "api liveness", url: `${apiBaseUrl}/healthz/live`, status: 200 },
@@ -19,6 +19,8 @@ const checks: Check[] = [
   { name: "web root redirects to login", url: `${webBaseUrl}/`, status: 307, redirect: "/login" },
   { name: "web login page", url: `${webBaseUrl}/login`, status: 200, header: ["content-security-policy", "'nonce-"] },
   { name: "api through the web origin", url: `${webBaseUrl}/api/platform/system-info`, status: 200, header: ["content-type", "application/json"] },
+  { name: "api feature flags", url: `${apiBaseUrl}/api/platform/features`, status: 200, header: ["content-type", "application/json"], body: "Erp.Modules.Platform.SystemInfo" },
+  { name: "feature flags through the web origin", url: `${webBaseUrl}/api/platform/features`, status: 200, header: ["content-type", "application/json"], body: "Erp.Modules.Platform.SystemInfo" },
 ];
 
 function compose(...args: string[]): void {
@@ -42,6 +44,7 @@ async function verify(check: Check): Promise<string | undefined> {
     const actual = response.headers.get(name) ?? "";
     if (!actual.includes(expected)) return `${check.name}: header ${name} "${actual}" does not contain "${expected}"`;
   }
+  if (check.body && !(await response.text()).includes(check.body)) return `${check.name}: body does not contain "${check.body}"`;
   return undefined;
 }
 

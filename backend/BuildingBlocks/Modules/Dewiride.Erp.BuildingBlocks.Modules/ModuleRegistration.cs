@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Modules.Features;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -14,6 +15,7 @@ public static class ModuleRegistration
 
         var catalog = new ModuleCatalog(modules);
         builder.Services.AddSingleton(catalog);
+        builder.Services.AddErpFeatureManagement();
 
         foreach (var module in catalog.Modules)
         {
@@ -33,9 +35,11 @@ public static class ModuleRegistration
         foreach (var module in catalog.Modules)
         {
             var descriptor = module.Descriptor;
-            var group = api.MapGroup(descriptor.RoutePrefix).WithTags(descriptor.Id);
+            var group = api.MapGroup(descriptor.RoutePrefix).WithTags(descriptor.Id).RequireFeature(descriptor.FeatureFlag);
             module.MapEndpoints(group);
         }
+
+        FeatureEndpoints.Map(api);
 
         return api;
     }

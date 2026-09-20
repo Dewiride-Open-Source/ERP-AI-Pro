@@ -17,6 +17,10 @@ export class AppShell {
     return this.banner.getByRole("link", { name: /ERP-AI-Pro/ });
   }
 
+  navigationLink(name: string): Locator {
+    return this.primaryNavigation.getByRole("link", { name });
+  }
+
   theme(value: ThemeOption): Locator {
     return this.page.getByTestId(`theme-${value}`);
   }
