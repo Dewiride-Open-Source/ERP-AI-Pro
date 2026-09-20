@@ -286,7 +286,7 @@
           "id": "azure-configuration-api-configuration-bootstrap",
           "title": "API configuration bootstrap",
           "scope": "Implement backend/BuildingBlocks/Configuration: AddAzureAppConfiguration selecting all keys with the null label then the APPCONFIG_LABEL label, sentinel-key refreshAll with the refresh middleware, Key Vault references with secret refresh interval, an App Configuration health check, a credential factory (DefaultAzureCredential with AZURE_TOKEN_CREDENTIALS=dev locally, EnvironmentCredential with certificate in production), strongly-typed options with ValidateOnStart, and a local-only fallback to appsettings plus dotnet user-secrets when APPCONFIG_ENDPOINT is unset, covered by unit tests.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "AddErpConfiguration selects AppConfiguration, InMemory or LocalDevelopment from APPCONFIG_ENDPOINT, the test-only bootstrap value ERP_CONFIGURATION_SOURCE and ASPNETCORE_ENVIRONMENT; a Production host without APPCONFIG_ENDPOINT fails at startup with a message naming the variable; every ErpApiFactory (Development and Production) resolves InMemory without setting APPCONFIG_ENDPOINT; unit and integration tests cover every branch.",
             "Unit tests prove the App Configuration chain builds with the labelled Erp:Sentinel registration and the validated intervals, the in-repo refresh middleware throttles to one refresh per second and always calls the next middleware, the App Configuration health check and refresher provider are registered only for the AppConfiguration source, and UseErpConfigurationRefresh runs between forwarded headers and host filtering.",
@@ -296,7 +296,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-09-20"
+          "startedOn": "2026-09-20",
+          "completedOn": "2026-09-20",
+          "notes": "AddErpConfiguration in BuildingBlocks.Configuration boots from App Configuration plus Key Vault references when APPCONFIG_ENDPOINT is set (label from ERP_ENVIRONMENT, not APPCONFIG_LABEL), from appsettings plus user secrets in Development otherwise (framework behaviour, no code), and from the test-only in-memory source for every ErpApiFactory; Production without the endpoint fails at startup. DefaultAzureCredential everywhere: AZURE_TOKEN_CREDENTIALS=AzureCliCredential locally (supersedes the dev value in ADR-0010, recorded in ADR-0011) and EnvironmentCredential with the runtime certificate in the api container, validated outside Development by AzureCredentialFactory (certificate opened for reading, client secret rejected). Refresh runs through the in-repo ConfigurationRefreshMiddleware (Microsoft.Azure.AppConfiguration.AspNetCore has no net10.0 asset) with a 30-minute labelled Erp:Sentinel check for the Free tier; Erp:Platform:Configuration:{RefreshInterval,SecretRefreshInterval,StartupTimeout} are bootstrap-only options validated for every source. The app-configuration readiness check and refresher provider exist only for the AppConfiguration source; /run/secrets is read through a filtering file provider that hides certificate files."
         },
         {
           "id": "azure-configuration-configuration-conventions-and-seed-data",
