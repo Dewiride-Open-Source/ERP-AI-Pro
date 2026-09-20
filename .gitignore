@@ -27,6 +27,7 @@ frontend/e2e/screenshots/
 .env.*
 !.env.example
 infra/compose/secrets/
+scripts/azure/params.env
 *.pfx
 *.pem
 *.key

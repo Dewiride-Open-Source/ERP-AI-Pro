@@ -251,10 +251,19 @@
           "id": "azure-configuration-idempotent-azure-provisioning-scripts",
           "title": "Idempotent Azure provisioning scripts",
           "scope": "Add infra/azure scripts (bash plus PowerShell, az CLI) that create the resource group, one App Configuration store with a sentinel key and labels local-dev/production, Key Vaults for local-dev and production with RBAC authorization and purge protection, and role assignments (App Configuration Data Reader, Key Vault Secrets User, Key Vault Crypto User) for developers and the production service principal, re-runnable with a dry-run flag, a parameter file, printed endpoints and docs/azure/bootstrap.md.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "done",
+          "acceptance": [
+            "bash scripts/azure/provision.sh --dry-run exits 0 without creating or changing any Azure resource: it prints the az deployment group what-if result and every data-plane command it would run.",
+            "Running bash scripts/azure/provision.sh twice with the same parameter file leaves the second what-if with no Create or Delete entries and no Modify beyond the server-filled properties listed as what-if noise in docs/operations/azure-bootstrap.md, keeps the sentinel values, key versions and rotation policies unchanged, and both runs exit 0 with the store endpoint and vault URIs printed (verified by the owner-consented run recorded in the pull request).",
+            "bash scripts/azure/verify.sh confirms the store has local authentication disabled, both vaults use RBAC with purge protection, Erp:Sentinel exists under the labels local-dev and production, Erp--Platform--DataProtection--Key exists in both vaults, and every row of the documented role matrix (operator, optional developers group with Secrets User and Crypto User on the development vault, optional runtime service principal) is assigned.",
+            "bash scripts/azure/check.sh (bicep build with linter errors plus bash syntax checks) passes and runs in node scripts/verify/verify.ts and in the ci-backend workflow.",
+            "docs/operations/azure-bootstrap.md documents parameters, script order, access model and recovery; ADR-0010 is accepted and indexed; docs/configuration.md registers the sentinel key and the data-protection key."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-20",
+          "completedOn": "2026-09-20",
+          "notes": "scripts/azure (bash + Bicep, no PowerShell, replacing the infra/azure wording) provisions rg-erp-ai-pro with the App Configuration store on the Free tier by owner decision, both RBAC vaults with purge protection and a data-protection key each, deterministic role assignments and the labelled Erp:Sentinel keys; the live run, a converged second run and verify.sh are recorded in the pull request; the operator guide lives at docs/operations/azure-bootstrap.md and ADR-0010 records the tier and credential model; the runtime service principal's roles are granted by re-running provision.sh after the app-registration sub-phase."
         },
         {
           "id": "azure-configuration-entra-app-registration-scripts",
@@ -284,18 +293,18 @@
           "dependsOn": []
         },
         {
-          "id": "azure-configuration-feature-management",
-          "title": "Feature management",
-          "scope": "Integrate Microsoft.FeatureManagement with a typed feature catalogue (`Erp.Modules.<Name>` toggles plus named capability flags) read from App Configuration under the environment label, a RequireFeature endpoint filter returning 404 when a module is disabled, a GET /api/features endpoint for UI gating, and unit and integration tests using in-memory flags.",
+          "id": "azure-configuration-web-app-runtime-configuration",
+          "title": "Web app runtime configuration",
+          "scope": "Define the Next.js environment contract (server-only vs NEXT_PUBLIC_ variables) validated with Zod at startup in instrumentation.ts, configure the same-origin API base path used by Server Actions and the fetch wrapper, add .env.example, and add a unit test that fails when a required variable is missing.",
           "status": "planned",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
         },
         {
-          "id": "azure-configuration-web-app-runtime-configuration",
-          "title": "Web app runtime configuration",
-          "scope": "Define the Next.js environment contract (server-only vs NEXT_PUBLIC_ variables) validated with Zod at startup in instrumentation.ts, configure the same-origin API base path used by Server Actions and the fetch wrapper, add .env.example, and add a unit test that fails when a required variable is missing.",
+          "id": "azure-configuration-feature-management",
+          "title": "Feature management",
+          "scope": "Integrate Microsoft.FeatureManagement with a typed feature catalogue (`Erp.Modules.<Name>` toggles plus named capability flags) read from App Configuration under the environment label, a RequireFeature endpoint filter returning 404 when a module is disabled, a GET /api/features endpoint for UI gating, and unit and integration tests using in-memory flags.",
           "status": "planned",
           "acceptance": [],
           "tags": [],

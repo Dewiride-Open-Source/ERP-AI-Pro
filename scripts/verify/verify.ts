@@ -8,6 +8,7 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const backend = join(repoRoot, "backend");
 const frontend = join(repoRoot, "frontend");
 const isWindows = process.platform === "win32";
+const bash = isWindows ? gitBashPath() : "bash";
 
 const { values } = parseArgs({
   options: {
@@ -24,7 +25,7 @@ if (values.help) {
   process.exit(0);
 }
 
-type Step = { name: string; cwd: string; command: string; args: string[]; env?: Record<string, string> };
+type Step = { name: string; cwd: string; command: string; args: string[]; env?: Record<string, string>; shell?: boolean };
 
 const steps: Step[] = [];
 
@@ -47,6 +48,7 @@ if (!values["skip-backend"]) {
 steps.push(
   { name: "folder cap", cwd: repoRoot, command: "node", args: ["scripts/checks/folder-size.ts"] },
   { name: "comment policy", cwd: repoRoot, command: "node", args: ["scripts/checks/comment-policy.ts"] },
+  { name: "azure scripts check", cwd: repoRoot, command: bash, args: ["scripts/azure/check.sh"], shell: false },
   { name: "roadmap tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/roadmap/tests/*.test.ts"] },
   { name: "roadmap check", cwd: repoRoot, command: "node", args: ["scripts/roadmap/roadmap.ts", "check"] },
 );
@@ -90,7 +92,7 @@ for (const step of steps) {
   const result = spawnSync(step.command, step.args, {
     cwd: step.cwd,
     stdio: "inherit",
-    shell: isWindows,
+    shell: step.shell ?? isWindows,
     env: { ...process.env, ...step.env },
   });
   const seconds = (performance.now() - started) / 1000;
@@ -106,3 +108,17 @@ const failed = results.some((r) => !r.ok);
 const skipped = steps.length - results.length;
 if (skipped > 0) console.log(`  ${skipped} step(s) not run`);
 process.exit(failed ? 1 : 0);
+
+function gitBashPath(): string {
+  const git = spawnSync("where", ["git"], { encoding: "utf8" });
+  const gitExe = git.status === 0 ? git.stdout.split(/\r?\n/).find((line) => line.endsWith("git.exe")) : undefined;
+  if (!gitExe) return "bash";
+  let directory = dirname(gitExe);
+  for (let depth = 0; depth < 4; depth++) {
+    for (const candidate of [join(directory, "bin", "bash.exe"), join(directory, "usr", "bin", "bash.exe")]) {
+      if (existsSync(candidate)) return candidate;
+    }
+    directory = dirname(directory);
+  }
+  return "bash";
+}
