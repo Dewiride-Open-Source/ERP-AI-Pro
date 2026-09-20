@@ -14,10 +14,11 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | `AZURE_TOKEN_CREDENTIALS` | API | mandatory selector for `DefaultAzureCredential`: `AzureCliCredential` on developer machines (from `launchSettings.json`; only the `az login` session is used, never a Visual Studio or VS Code sign-in) and `EnvironmentCredential` in the api container (from `compose.production.yaml`); outside `Development` the credential factory rejects any other value at startup |
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | API container | tenant and application (client) id of the runtime service principal the container signs in as; both required in Production |
 | `AZURE_CLIENT_CERTIFICATE_PATH` | API container | path of the runtime certificate secret file, `/run/secrets/erp-runtime-client.pem`, which the credential factory opens for reading at startup so an unreadable file fails with a message naming the fix; must name an existing `.pem` or `.pfx` file in Production, and `AZURE_CLIENT_SECRET` must not be set alongside it |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL` | API, web | OTLP exporter; telemetry export is off when the endpoint is unset (the API speaks gRPC, the web app OTLP/HTTP) |
-| `OTEL_SERVICE_NAME` | web | service name for `@vercel/otel` |
-| `API_INTERNAL_URL` | web | base URL of the API for server-side fetches and the runtime `/api/*` rewrite in `proxy.ts` |
-| `NEXT_PUBLIC_APP_NAME` | web | display name in the shell |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL` | API, web | OTLP exporter; telemetry export is off when the endpoint is unset. The API speaks gRPC. The web app validates both: the endpoint is an `http` or `https` base URL (a path prefix is allowed, credentials are not, trailing slashes are stripped) and the protocol is `http/protobuf` (default) or `http/json`; the web app builds its trace exporter from the validated values (`<endpoint>/v1/traces`) and consults no other `OTEL_EXPORTER_*` variable |
+| `OTEL_SERVICE_NAME` | web | service name for `@vercel/otel`; optional, default `erp-ai-pro-web`, 1–120 characters |
+| `NODE_ENV` | web | `development`, `production` or `test` (default `development`); `next start` and the standalone server set `production`, which makes `API_INTERNAL_URL` mandatory |
+| `API_INTERNAL_URL` | web | origin of the API (`scheme://host[:port]`, no path, query, fragment or credentials; normalised to the origin, so `http://api:8080/` becomes `http://api:8080`) for server-side fetches (`apiFetch`) and the runtime `/api/*` and `/openapi/*` rewrite in `proxy.ts`; single-label hosts such as `http://api:8080` accepted; required when `NODE_ENV=production`, default `http://localhost:5080` in development. Every web variable in this table is validated by `src/shared/config/env.schema.ts`: `next start` and the standalone server exit with a message naming the offending variable (`scripts/checks/web-startup-guard.ts` proves it after every build), `next build` succeeds without it |
+| `NEXT_PUBLIC_APP_NAME` | web (build time) | display name in the shell and the browser title, 1–60 characters, default `ERP-AI-Pro`; read by `next.config.ts` when `next build` runs and inlined into the bundle, so at runtime the variable has no effect — the image takes it as a build argument (table below) |
 | `E2E_BASE_URL`, `E2E_API_BASE_URL` | Playwright | target origins; when `E2E_BASE_URL` is unset Playwright starts the API and the web app itself |
 
 ### Compose interpolation (`infra/compose/.env`)
@@ -25,11 +26,16 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | Variable | Purpose |
 |---|---|
 | `IMAGE_TAG` | image tag pulled from ghcr.io (`local` for locally built images) |
-| `APP_NAME` | value passed to the web app as `NEXT_PUBLIC_APP_NAME` |
 | `COMPOSE_NETWORK_CIDR` | subnet of the compose network; the API trusts forwarded headers only from this range |
 | `APPCONFIG_ENDPOINT` | passed to the API as `APPCONFIG_ENDPOINT`; required by the production stack, which refuses to start without it; left empty on a developer machine because the local stack cannot sign in to Azure and runs on `appsettings.json` (`dotnet run` uses user secrets instead) |
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | production stack only; passed to the api container as the runtime service principal's tenant and application (client) id (ids, never secrets; the certificate is the compose secret `erp-runtime-client.pem` from `infra/compose/secrets/`) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`, `WEB_OTEL_EXPORTER_OTLP_ENDPOINT` | local Aspire dashboard endpoints for the API (gRPC) and the web app (OTLP/HTTP) |
+
+### Image build arguments (`infra/docker/web.Dockerfile`)
+
+| Argument | Default | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_APP_NAME` | `ERP-AI-Pro` | inlined display name; pass `--build-arg NEXT_PUBLIC_APP_NAME=...` to `docker build` (or `build.args` in a compose override) to rename the product in a custom image |
 
 ### Arriving with later phases
 

@@ -1,5 +1,10 @@
 import "server-only";
 
-export const serverEnv = {
-  apiInternalUrl: (process.env.API_INTERNAL_URL ?? "http://localhost:5080").replace(/\/+$/, ""),
-} as const;
+import { readServerEnv, type ServerEnv } from "./env.schema";
+
+let cached: ServerEnv | undefined;
+
+export function serverEnv(): ServerEnv {
+  cached ??= readServerEnv(process.env);
+  return cached;
+}

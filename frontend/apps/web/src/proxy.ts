@@ -1,13 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { apiBasePath } from "./shared/api/base-path";
+import { readServerEnv, type ServerEnv } from "./shared/config/env.schema";
+
 const isDevelopment = process.env.NODE_ENV === "development";
-const apiPrefixes = ["/api/", "/openapi/"];
+const apiPrefixes = [`${apiBasePath}/`, "/openapi/"];
+
+let cachedEnv: ServerEnv | undefined;
+
+function serverEnv(): ServerEnv {
+  cachedEnv ??= readServerEnv(process.env);
+  return cachedEnv;
+}
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   if (apiPrefixes.some((prefix) => pathname.startsWith(prefix))) {
-    const apiInternalUrl = process.env.API_INTERNAL_URL ?? "http://localhost:5080";
-    return NextResponse.rewrite(new URL(`${pathname}${search}`, apiInternalUrl), {
+    return NextResponse.rewrite(new URL(`${pathname}${search}`, serverEnv().apiInternalUrl), {
       request: { headers: withoutForwardedHeaders(request.headers) },
     });
   }

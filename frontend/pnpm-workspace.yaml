@@ -43,3 +43,4 @@ catalog:
   "@opentelemetry/sdk-logs": 0.222.0
   "@opentelemetry/instrumentation": 0.222.0
   "@playwright/test": 1.63.0
+  zod: 4.6.5

@@ -29,6 +29,9 @@ jobs:
       - name: Typecheck
         working-directory: frontend
         run: pnpm typecheck
+      - name: Unit tests
+        working-directory: frontend
+        run: pnpm test:unit
       - name: Format check
         working-directory: frontend
         run: pnpm format:check
@@ -37,5 +40,7 @@ jobs:
       - name: Build
         working-directory: frontend
         run: pnpm build
+      - name: Web startup guard
+        run: node scripts/checks/web-startup-guard.ts
         env:
           NEXT_TELEMETRY_DISABLED: "1"
