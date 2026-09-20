@@ -15,6 +15,8 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --filter @dewiride/erp-web...
 
 FROM dependencies AS build
+ARG NEXT_PUBLIC_APP_NAME=ERP-AI-Pro
+ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
 COPY frontend/ ./
 RUN pnpm --filter @dewiride/erp-web build
 

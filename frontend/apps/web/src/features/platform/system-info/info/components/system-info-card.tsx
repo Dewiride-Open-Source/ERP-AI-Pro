@@ -9,6 +9,7 @@ import {
 import { ActivityIcon, ServerIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { ApiError } from "@/shared/api/problem-details";
 import { formatDateTimeIst } from "@/shared/format/dates";
 import { formatDuration } from "@/shared/format/durations";
 
@@ -23,7 +24,7 @@ export async function SystemInfoCard() {
   try {
     info = await getSystemInfo();
   } catch (error) {
-    failure = error instanceof Error ? error.message : "The API did not respond.";
+    failure = error instanceof ApiError ? error.message : "The API did not respond.";
   }
 
   return (

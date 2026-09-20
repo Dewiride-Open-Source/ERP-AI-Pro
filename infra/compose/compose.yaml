@@ -25,7 +25,6 @@ services:
       dockerfile: infra/docker/web.Dockerfile
     environment:
       API_INTERNAL_URL: http://api:8080
-      NEXT_PUBLIC_APP_NAME: ${APP_NAME:-ERP-AI-Pro}
     depends_on:
       api:
         condition: service_healthy

@@ -59,9 +59,11 @@ if (!values["skip-frontend"]) {
     { name: "frontend install (frozen)", cwd: frontend, command: "pnpm", args: ["install", "--frozen-lockfile"] },
     { name: "frontend lint", cwd: frontend, command: "pnpm", args: ["lint"] },
     { name: "frontend typecheck", cwd: frontend, command: "pnpm", args: ["typecheck"] },
+    { name: "frontend unit tests", cwd: frontend, command: "pnpm", args: ["test:unit"] },
     { name: "frontend format", cwd: frontend, command: "pnpm", args: ["format:check"] },
     { name: "feature boundaries", cwd: repoRoot, command: "node", args: ["scripts/checks/feature-boundaries.ts"] },
     { name: "frontend build", cwd: frontend, command: "pnpm", args: ["build"] },
+    { name: "web startup guard", cwd: repoRoot, command: "node", args: ["scripts/checks/web-startup-guard.ts"] },
   );
 }
 

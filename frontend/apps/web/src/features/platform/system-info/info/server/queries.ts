@@ -11,4 +11,4 @@ export type SystemInfo = {
   uptimeSeconds: number;
 };
 
-export const getSystemInfo = cache(() => apiFetch<SystemInfo>("/api/platform/system-info"));
+export const getSystemInfo = cache(() => apiFetch<SystemInfo>("/platform/system-info"));

@@ -61,6 +61,8 @@ updates:
         patterns: ["next", "react", "react-dom", "eslint-config-next", "@types/react", "@types/react-dom"]
       tooling:
         patterns: ["eslint*", "prettier*", "typescript", "@types/node"]
+      validation:
+        patterns: ["zod"]
       ui:
         patterns:
           - radix-ui

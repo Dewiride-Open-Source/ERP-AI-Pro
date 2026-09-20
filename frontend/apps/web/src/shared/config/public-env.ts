@@ -1,3 +1,3 @@
-export const publicEnv = {
-  appName: process.env.NEXT_PUBLIC_APP_NAME ?? "ERP-AI-Pro",
-} as const;
+import { readPublicEnv } from "./env.schema";
+
+export const publicEnv = readPublicEnv({ NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME });

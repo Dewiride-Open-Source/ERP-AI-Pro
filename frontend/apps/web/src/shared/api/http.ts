@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 
 import { serverEnv } from "@/shared/config/env";
 
+import { apiBasePath } from "./base-path";
 import { ApiError, type ProblemDetails } from "./problem-details";
 
 type RequestOptions = {
@@ -21,7 +22,7 @@ export async function apiFetch<TResponse>(path: string, options: RequestOptions 
   if (traceparent) requestHeaders.set("traceparent", traceparent);
   if (options.body !== undefined) requestHeaders.set("Content-Type", "application/json");
 
-  const response = await fetch(`${serverEnv.apiInternalUrl}${path}`, {
+  const response = await fetch(`${serverEnv().apiInternalUrl}${apiBasePath}${path}`, {
     method: options.method ?? "GET",
     headers: requestHeaders,
     cache: "no-store",
