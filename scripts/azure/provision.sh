@@ -11,7 +11,9 @@ Options:
   --params <file>   Parameter file (default: scripts/azure/params.env).
   --help            Show this help.'
 
+# shellcheck source=lib/common.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
+# shellcheck source=lib/appconfig.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/appconfig.sh"
 
 readonly SENTINEL_KEY='Erp:Sentinel'
@@ -41,7 +43,7 @@ main() {
   parse_args "$@"
   (( ${#ARGS[@]} == 0 )) || die "unexpected argument '${ARGS[0]}'"
   load_params
-  cd -- "$REPO_ROOT"
+  cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
   require_command az node
   [[ -f "$TEMPLATE_FILE" ]] || die "template '$TEMPLATE_FILE' not found"
 
@@ -95,7 +97,8 @@ main() {
     log_info "what-if skipped until the resource group exists"
   fi
 
-  local deployment_name="erp-ai-pro-$(date -u +%Y%m%d%H%M%S)"
+  local deployment_name
+  deployment_name="erp-ai-pro-$(date -u +%Y%m%d%H%M%S)"
   local store_endpoint="https://$ERP_AZURE_APPCONFIG_NAME.azconfig.io"
   local development_vault_uri="https://$ERP_AZURE_KEYVAULT_DEV_NAME.vault.azure.net/"
   local production_vault_uri="https://$ERP_AZURE_KEYVAULT_PROD_NAME.vault.azure.net/"

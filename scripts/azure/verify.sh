@@ -12,7 +12,9 @@ Options:
 
 ACCEPTS_DRY_RUN=0
 
+# shellcheck source=lib/common.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
+# shellcheck source=lib/appconfig.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/appconfig.sh"
 
 readonly SENTINEL_KEY='Erp:Sentinel'
@@ -38,14 +40,8 @@ fail() {
 
 skip() { printf '[skip] %s\n' "$*"; }
 
-read_value() {
-  local -n target="$1"
-  shift
-  if target="$(az_read "$@" --output tsv 2> /dev/null)"; then
-    return 0
-  fi
-  target=''
-  return 1
+query_error_summary() {
+  printf '%s' "$1" | tr -d '\r' | sed -n '/[^[:space:]]/p' | tail -n 1
 }
 
 assert_equals() {
@@ -60,30 +56,25 @@ assert_equals() {
 assert_query() {
   local description="$1" expected="$2"
   shift 2
-  local actual
-  if read_value actual "$@"; then
-    assert_equals "$description" "$expected" "$actual"
+  local output
+  if output="$(az_read "$@" --output tsv 2>&1)"; then
+    assert_equals "$description" "$expected" "$output"
   else
-    fail "$description (query failed)"
+    fail "$description (query failed: $(query_error_summary "$output"))"
   fi
 }
 
 assert_role() {
   local description="$1" scope="$2" principal_id="$3" role_id="$4"
-  local count
-  if read_value count role assignment list --scope "$scope" --assignee-object-id "$principal_id" --role "$role_id" \
-    --fill-principal-name false --query 'length(@)'; then
-    assert_equals "$description" '1' "$count"
-  else
-    fail "$description (query failed)"
-  fi
+  assert_query "$description" '1' role assignment list --scope "$scope" --assignee-object-id "$principal_id" --role "$role_id" \
+    --fill-principal-name false --query 'length(@)'
 }
 
 verify_store() {
   log_step "App Configuration store $ERP_AZURE_APPCONFIG_NAME"
   local store_json
-  if ! store_json="$(az_read appconfig show --name "$ERP_AZURE_APPCONFIG_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2> /dev/null)"; then
-    fail "store exists in resource group $ERP_AZURE_RESOURCE_GROUP"
+  if ! store_json="$(az_read appconfig show --name "$ERP_AZURE_APPCONFIG_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
+    fail "store exists in resource group $ERP_AZURE_RESOURCE_GROUP ($(query_error_summary "$store_json"))"
     return 0
   fi
   pass "store exists in resource group $ERP_AZURE_RESOURCE_GROUP"
@@ -156,10 +147,14 @@ verify_sentinels() {
   log_step "Sentinel keys"
   local label value
   for label in "${LABELS[@]}"; do
-    if value="$(appconfig_kv_get "$SENTINEL_KEY" "$label" 2> /dev/null)" && [[ -n "$value" ]]; then
-      pass "$SENTINEL_KEY [$label] present ($value)"
+    if value="$(appconfig_kv_get "$SENTINEL_KEY" "$label" 2>&1)"; then
+      if [[ -n "$value" ]]; then
+        pass "$SENTINEL_KEY [$label] present ($value)"
+      else
+        fail "$SENTINEL_KEY [$label] present (no value)"
+      fi
     else
-      fail "$SENTINEL_KEY [$label] present"
+      fail "$SENTINEL_KEY [$label] present (query failed: $(query_error_summary "$value"))"
     fi
   done
 }

@@ -5,6 +5,7 @@ if [[ -n "${ERP_AZURE_APPCONFIG_SH_LOADED:-}" ]]; then
 fi
 readonly ERP_AZURE_APPCONFIG_SH_LOADED=1
 
+# shellcheck source=common.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
 
 readonly APPCONFIG_KEYVAULT_REFERENCE_CONTENT_TYPE='application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
@@ -51,13 +52,6 @@ appconfig_read_current() {
   target=""
 }
 
-appconfig_set_command_label_args() {
-  local -n target="$1"
-  local label="$2"
-  target=()
-  [[ -z "$label" ]] || target=(--label "$label")
-}
-
 appconfig_log_write() {
   local key="$1" label="$2" previous="$3" suffix="$4"
   local verb="updated"
@@ -74,8 +68,8 @@ ensure_kv_once() {
     log_info "$key [$(appconfig_label_display "$label")] unchanged"
     return 0
   fi
-  local -a label_args
-  appconfig_set_command_label_args label_args "$label"
+  local -a label_args=()
+  [[ -z "$label" ]] || label_args=(--label "$label")
   run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$key" "${label_args[@]}" \
     --value "$value" --yes --output none --only-show-errors || return 1
   appconfig_log_write "$key" "$label" "$current" ""
@@ -83,6 +77,7 @@ ensure_kv_once() {
 
 ensure_kv() {
   (( $# == 3 )) || die "ensure_kv: usage ensure_kv <key> <label> <value>"
+  [[ -n "$3" ]] || die "ensure_kv: the value for '$1' must not be empty"
   retry -- ensure_kv_once "$1" "$2" "$3"
 }
 
@@ -95,8 +90,8 @@ ensure_kv_reference_once() {
     log_info "$key [$(appconfig_label_display "$label")] unchanged (Key Vault reference)"
     return 0
   fi
-  local -a label_args
-  appconfig_set_command_label_args label_args "$label"
+  local -a label_args=()
+  [[ -z "$label" ]] || label_args=(--label "$label")
   run az appconfig kv set-keyvault --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$key" "${label_args[@]}" \
     --secret-identifier "$secret_uri" --yes --output none --only-show-errors || return 1
   appconfig_log_write "$key" "$label" "$current_content_type$current_uri" " (Key Vault reference)"

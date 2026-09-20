@@ -178,21 +178,35 @@ signed_in_user_object_id() {
   printf '%s' "$object_id"
 }
 
+odata_string_literal() {
+  local value="$1"
+  printf "'%s'" "${value//\'/\'\'}"
+}
+
 developers_group_object_id() {
   if [[ -z "$ERP_AZURE_DEVELOPERS_GROUP" ]]; then
     return 0
   fi
-  local object_id
-  if ! object_id="$(az_read ad group show --group "$ERP_AZURE_DEVELOPERS_GROUP" --query id --output tsv 2> /dev/null)" || [[ -z "$object_id" ]]; then
-    die "Entra group '$ERP_AZURE_DEVELOPERS_GROUP' not found; create the group first or leave the parameter empty"
+  local ids
+  if is_guid "$ERP_AZURE_DEVELOPERS_GROUP"; then
+    ids="$(az_read ad group show --group "$ERP_AZURE_DEVELOPERS_GROUP" --query id --output tsv 2> /dev/null)" || ids=''
+  else
+    ids="$(az_read ad group list --filter "displayName eq $(odata_string_literal "$ERP_AZURE_DEVELOPERS_GROUP")" --query '[].id' --output tsv)" \
+      || die "cannot list Entra groups named '$ERP_AZURE_DEVELOPERS_GROUP'"
   fi
-  printf '%s' "$object_id"
+  [[ -n "$ids" ]] || die "Entra group '$ERP_AZURE_DEVELOPERS_GROUP' not found; create the group first or leave the parameter empty"
+  (( $(printf '%s\n' "$ids" | wc -l) == 1 )) || die "more than one Entra group is named '$ERP_AZURE_DEVELOPERS_GROUP'; set the parameter to the object id of the intended group"
+  printf '%s' "$ids"
 }
 
 runtime_service_principal_object_id() {
-  local object_id
-  object_id="$(az_read ad sp list --display-name "$ERP_AZURE_APP_RUNTIME_NAME" --query '[0].id' --output tsv)" || die "cannot list service principals named '$ERP_AZURE_APP_RUNTIME_NAME'"
-  printf '%s' "$object_id"
+  local ids
+  ids="$(az_read ad sp list --filter "displayName eq $(odata_string_literal "$ERP_AZURE_APP_RUNTIME_NAME")" --query '[].id' --output tsv)" \
+    || die "cannot list service principals named '$ERP_AZURE_APP_RUNTIME_NAME'"
+  if [[ -n "$ids" ]] && (( $(printf '%s\n' "$ids" | wc -l) > 1 )); then
+    die "more than one service principal is named '$ERP_AZURE_APP_RUNTIME_NAME'; rename or delete the duplicates before granting roles"
+  fi
+  printf '%s' "$ids"
 }
 
 run() {
@@ -221,7 +235,7 @@ retry() {
       return 0
     fi
     if (( attempt >= attempts )); then
-      die "'$(quote_command "$@")' failed after $attempts attempts; role assignments can take up to 15 minutes to propagate; re-run"
+      die "'$(quote_command "$@")' failed after $attempts attempts (see the errors above); a 403 means a role assignment is still propagating, which can take up to 15 minutes: re-run"
     fi
     log_warn "attempt $attempt of $attempts failed; retrying in ${delay}s"
     sleep "$delay"

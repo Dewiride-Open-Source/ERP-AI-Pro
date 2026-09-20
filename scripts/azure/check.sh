@@ -11,6 +11,7 @@ Options:
 ACCEPTS_DRY_RUN=0
 ACCEPTS_PARAMS=0
 
+# shellcheck source=lib/common.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 
 readonly MINIMUM_BICEP_MAJOR=0
@@ -62,7 +63,7 @@ check_shell_syntax() {
   done
   if command -v shellcheck > /dev/null 2>&1; then
     log_step "shellcheck"
-    shellcheck --shell=bash --severity=warning --exclude=SC1091 "${scripts[@]}"
+    shellcheck --external-sources --source-path=SCRIPTDIR --shell=bash --severity=warning scripts/azure/check.sh scripts/azure/provision.sh scripts/azure/verify.sh
     log_info "clean"
   else
     log_info "shellcheck not on PATH; skipped"
@@ -73,7 +74,7 @@ check_shell_syntax() {
 main() {
   parse_args "$@"
   (( ${#ARGS[@]} == 0 )) || die "unexpected argument '${ARGS[0]}'"
-  cd -- "$REPO_ROOT"
+  cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
   command -v az > /dev/null 2>&1 || die "Azure CLI 'az' is not on PATH; install it from https://learn.microsoft.com/cli/azure/install-azure-cli and run 'az bicep install'"
   require_command bash sed find sort
 
