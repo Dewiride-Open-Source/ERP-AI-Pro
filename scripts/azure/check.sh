@@ -63,7 +63,7 @@ check_shell_syntax() {
   done
   if command -v shellcheck > /dev/null 2>&1; then
     log_step "shellcheck"
-    shellcheck --external-sources --source-path=SCRIPTDIR --shell=bash --severity=warning scripts/azure/check.sh scripts/azure/provision.sh scripts/azure/verify.sh
+    shellcheck --external-sources --source-path=SCRIPTDIR --shell=bash --severity=warning scripts/azure/check.sh scripts/azure/provision.sh scripts/azure/verify.sh scripts/azure/entra.sh scripts/azure/export-runtime-certificate.sh
     log_info "clean"
   else
     log_info "shellcheck not on PATH; skipped"
