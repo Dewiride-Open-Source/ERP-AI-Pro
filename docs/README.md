@@ -24,5 +24,6 @@
 | [0009](adr/0009-third-party-packages.md) | Third-party package approvals and bans |
 | [0010](adr/0010-azure-provisioning-tier-and-credential-model.md) | Azure provisioning, App Configuration tier and operational credential model |
 | [0011](adr/0011-configuration-source-selection-and-runtime-credential.md) | Configuration source selection and runtime credential |
+| [0012](adr/0012-feature-flag-catalog-and-defaults.md) | Feature flag catalog, default-enabled modules and the disabled-module contract |
 
 New decisions use [0000-template.md](adr/0000-template.md).

@@ -36,7 +36,7 @@ public sealed class ModuleCatalogTests
 
     private sealed class StubModule(string domain, string name) : IModule
     {
-        public ModuleDescriptor Descriptor { get; } = new(domain, name, null, $"/{domain.ToLowerInvariant()}/{name.ToLowerInvariant()}", $"Erp.Modules.{domain}.{name}", []);
+        public ModuleDescriptor Descriptor { get; } = new(domain, name, null, $"/{domain.ToLowerInvariant()}/{name.ToLowerInvariant()}", $"Erp.Modules.{domain}.{name}", [], []);
 
         public void AddServices(IHostApplicationBuilder builder)
         {

@@ -1,6 +1,15 @@
 import { defineConfig, devices } from "@playwright/test";
 
-import { apiBaseURL, baseURL, offlineBaseURL, startServers, unreachableApiURL } from "./fixtures/targets";
+import {
+  apiBaseURL,
+  baseURL,
+  gatedApiBaseURL,
+  gatedBaseURL,
+  gatedFeatureFlag,
+  offlineBaseURL,
+  startServers,
+  unreachableApiURL,
+} from "./fixtures/targets";
 
 const isCI = Boolean(process.env.CI);
 const browserOnly = { testIgnore: "**/tests/smoke/**" };
@@ -53,6 +62,27 @@ export default defineConfig({
         reuseExistingServer: !isCI,
         timeout: 120_000,
         env: { API_INTERNAL_URL: unreachableApiURL },
+      },
+      {
+        command:
+          "dotnet run --project ../../backend/Hosts/Api/Dewiride.Erp.Host.Api --no-build --no-launch-profile",
+        url: `${gatedApiBaseURL}/healthz/live`,
+        reuseExistingServer: !isCI,
+        timeout: 120_000,
+        env: {
+          ASPNETCORE_ENVIRONMENT: "Development",
+          ASPNETCORE_URLS: gatedApiBaseURL,
+          APPCONFIG_ENDPOINT: "",
+          feature_management__feature_flags__0__id: gatedFeatureFlag,
+          feature_management__feature_flags__0__enabled: "false",
+        },
+      },
+      {
+        command: "pnpm --filter @dewiride/erp-web exec next start -p 3002",
+        url: `${gatedBaseURL}/healthz`,
+        reuseExistingServer: !isCI,
+        timeout: 120_000,
+        env: { API_INTERNAL_URL: gatedApiBaseURL },
       },
     ],
   }),

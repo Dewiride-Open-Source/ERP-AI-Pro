@@ -12,6 +12,7 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         "/healthz/live",
         "/healthz/ready",
         "/api/platform/system-info",
+        "/api/platform/features",
         "/openapi/{documentName}.json",
     ];
 
@@ -72,6 +73,8 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
             Assert.Equal($"/{Kebab(descriptor.Domain)}/{Kebab(descriptor.Name)}", descriptor.RoutePrefix);
             Assert.Equal($"Erp.Modules.{descriptor.Domain}.{descriptor.Name}", descriptor.FeatureFlag);
             Assert.All(descriptor.Permissions, p => Assert.Matches("^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){3}$", p));
+            Assert.All(descriptor.Capabilities, c => Assert.Matches("^[A-Z][A-Za-z0-9]*$", c.Name));
+            Assert.Equal(descriptor.Capabilities.Count, descriptor.Capabilities.Select(c => c.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count());
         }
     }
 

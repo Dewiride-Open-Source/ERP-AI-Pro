@@ -8,7 +8,7 @@ Use `backend/Modules/Platform/SystemInfo` as the reference implementation. A sca
    - `Contracts/Dewiride.Erp.Modules.<Domain>.<Module>.Contracts/` — class library; references `Dewiride.Erp.BuildingBlocks.Kernel`.
    - `Module/Dewiride.Erp.Modules.<Domain>.<Module>/` — class library with `FrameworkReference Microsoft.AspNetCore.App`; references its Contracts and the BuildingBlocks it needs.
    - `Tests/UnitTests/Dewiride.Erp.Modules.<Domain>.<Module>.UnitTests/` and `Tests/IntegrationTests/Dewiride.Erp.Modules.<Domain>.<Module>.IntegrationTests/` — test projects (the `build/Tests.props` defaults apply by the `Tests` suffix); the integration project references `Tests/Shared/Dewiride.Erp.Testing` and `Hosts/Api`.
-2. Add `<Module>Module.cs` implementing `IModule`: the `ModuleDescriptor` (domain, module, schema, route prefix, feature flag, permissions), `AddServices` (options, DbContext, handlers, `AddValidation()`) and `MapEndpoints(RouteGroupBuilder)`.
+2. Add `<Module>Module.cs` implementing `IModule`: the `ModuleDescriptor` (domain, module, schema, route prefix, feature flag, permissions, capabilities), `AddServices` (options, DbContext, handlers, `AddValidation()`) and `MapEndpoints(RouteGroupBuilder)`. The module flag `Erp.Modules.<Domain>.<Module>` gates the whole route group and evaluates enabled until a configuration source switches it off; each `ModuleCapability(Name, EnabledByDefault)` becomes the flag `Erp.Modules.<Domain>.<Module>.<Name>` (declare AI capabilities with `EnabledByDefault: false`).
 3. Add the DbContext under `Persistence/` deriving from `ModuleDbContext` with `HasDefaultSchema("<domain>_<module>")`, a design-time factory, and the first migration with `--output-dir Persistence/Migrations`.
 4. Add feature folders following `module-anatomy.md`.
 5. Register the module in `backend/Hosts/Api/Modules.cs` (one line) and add the four projects to `backend/Dewiride.Erp.slnx` under solution folder `Modules/<Domain>/<Module>` and to `backend/solutions/<Domain>.slnf`.
@@ -17,7 +17,7 @@ Use `backend/Modules/Platform/SystemInfo` as the reference implementation. A sca
 
 ## Frontend
 
-1. Create `frontend/apps/web/src/features/<domain>/<module>/` with `index.ts` (public surface) and `nav.ts` (navigation manifest with the permission that reveals it).
+1. Create `frontend/apps/web/src/features/<domain>/<module>/` with `index.ts` (public surface) and `nav.ts` (navigation manifest with the `featureFlag` that reveals it and, from the authentication phase, the permission). Gate the module's route segment with `await requireFeature(<module>Navigation.featureFlag)` in its `layout.tsx`, so a disabled module renders the in-shell not-found page.
 2. Register the manifest in `features/registry.ts`.
 3. Add routes under `app/(app)/<domain>/<module>/...` that import only from the module `index.ts`.
 4. Add page objects and specs under `frontend/e2e/{pages,tests}/<domain>/<module>/`.

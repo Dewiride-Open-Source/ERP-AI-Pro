@@ -14,6 +14,8 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
     public const string InMemorySource = "InMemory";
 
+    private const string FeatureFlagsSection = "feature_management:feature_flags:";
+
     private readonly Dictionary<string, string> _configuration = new(StringComparer.OrdinalIgnoreCase);
 
     private bool _hostCreated;
@@ -44,6 +46,15 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         _configuration[key] = value;
 
         return this;
+    }
+
+    public ErpApiFactory WithFeature(string name, bool enabled)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var index = _configuration.Keys.Count(key => key.StartsWith(FeatureFlagsSection, StringComparison.OrdinalIgnoreCase) && key.EndsWith(":id", StringComparison.OrdinalIgnoreCase));
+
+        return WithConfiguration($"{FeatureFlagsSection}{index}:id", name)
+            .WithConfiguration($"{FeatureFlagsSection}{index}:enabled", enabled ? "true" : "false");
     }
 
     protected override IHost CreateHost(IHostBuilder builder)

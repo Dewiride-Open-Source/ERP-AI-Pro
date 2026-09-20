@@ -37,6 +37,7 @@ public sealed class ErpConfigurationExtensionsTests
 
         Assert.Equal(new ErpConfigurationInfo(ErpConfigurationSource.AppConfiguration, ErpEnvironmentNames.LocalDev, Endpoint), RegisteredInfo(builder));
         Assert.Equal("ERP-AI-Pro (local-dev)", builder.Configuration[ApplicationNameKey]);
+        Assert.Equal("true", Environment.GetEnvironmentVariable(AppConfigurationSetup.FeatureFlagSchemaVariable));
         using var provider = builder.Services.BuildServiceProvider();
         var refresher = Assert.Single(provider.GetRequiredService<IConfigurationRefresherProvider>().Refreshers);
         Assert.Equal(Endpoint, refresher.AppConfigurationEndpoint);

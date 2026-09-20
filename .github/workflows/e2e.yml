@@ -62,12 +62,34 @@ jobs:
           nohup pnpm exec next start -p 3001 > "$RUNNER_TEMP/web-offline.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf http://localhost:3001/healthz && break; sleep 1; done
           curl -sf http://localhost:3001/healthz
+      - name: Start API with the system-info module disabled
+        working-directory: backend
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: http://localhost:5081
+          APPCONFIG_ENDPOINT: ""
+          feature_management__feature_flags__0__id: Erp.Modules.Platform.SystemInfo
+          feature_management__feature_flags__0__enabled: "false"
+        run: |
+          nohup dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api --no-build --no-launch-profile -c Release > "$RUNNER_TEMP/api-gated.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:5081/healthz/live && break; sleep 1; done
+          curl -sf http://localhost:5081/healthz/live
+      - name: Start web app against the gated API
+        working-directory: frontend/apps/web
+        env:
+          API_INTERNAL_URL: http://localhost:5081
+        run: |
+          nohup pnpm exec next start -p 3002 > "$RUNNER_TEMP/web-gated.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3002/healthz && break; sleep 1; done
+          curl -sf http://localhost:3002/healthz
       - name: Run Playwright
         working-directory: frontend/e2e
         env:
           E2E_BASE_URL: http://localhost:3000
           E2E_API_BASE_URL: http://localhost:5080
           E2E_OFFLINE_BASE_URL: http://localhost:3001
+          E2E_GATED_BASE_URL: http://localhost:3002
+          E2E_GATED_API_BASE_URL: http://localhost:5081
         run: pnpm exec playwright test --project=${{ matrix.project }}
       - name: Upload report and screenshots
         if: always()

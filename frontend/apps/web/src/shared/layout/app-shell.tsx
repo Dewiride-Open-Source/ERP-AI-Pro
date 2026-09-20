@@ -4,8 +4,12 @@ import type { ReactNode } from "react";
 
 import { navigation } from "@/features/registry";
 import { Wordmark } from "@/shared/brand/wordmark";
+import { isFeatureEnabled } from "@/shared/feature-flags/feature-flags";
+import { getFeatureFlags } from "@/shared/feature-flags/queries";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export async function AppShell({ children }: { children: ReactNode }) {
+  const flags = await getFeatureFlags();
+  const entries = navigation.filter((item) => isFeatureEnabled(flags, item.featureFlag));
   return (
     <div className="flex min-h-dvh flex-col bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -18,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Wordmark />
             </Link>
             <nav aria-label="Primary" className="hidden items-center gap-1 sm:flex">
-              {navigation.map((item) => (
+              {entries.map((item) => (
                 <Link
                   key={item.id}
                   href={item.basePath}
