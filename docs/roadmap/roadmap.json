@@ -340,7 +340,7 @@
           "id": "azure-configuration-feature-management",
           "title": "Feature management",
           "scope": "Integrate Microsoft.FeatureManagement with a typed feature catalogue (`Erp.Modules.<Name>` toggles plus named capability flags) read from App Configuration under the environment label, a RequireFeature endpoint filter returning 404 when a module is disabled, a GET /api/features endpoint for UI gating, and unit and integration tests using in-memory flags.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "FeatureCatalogue derives one flag per module and one per declared ModuleCapability, and the custom IFeatureDefinitionProvider returns configured definitions first and catalogue defaults otherwise, so an undefined module flag evaluates enabled while a definition from a later configuration provider overrides an earlier one by id; unit tests cover each path.",
             "Every module route group is feature-gated: with Erp.Modules.Platform.SystemInfo disabled through configuration, GET /api/platform/system-info returns 404 application/problem+json with code feature.disabled, and GET /api/platform/features returns { features: [{ name, enabled }] } for the whole catalogue and is whitelisted as anonymous in the architecture test.",
@@ -350,7 +350,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-09-20"
+          "startedOn": "2026-09-20",
+          "completedOn": "2026-09-20",
+          "notes": "BuildingBlocks.Modules/Features integrates Microsoft.FeatureManagement 4.7.0 (core package only; .AspNetCore is not referenced because its gate answers a bodiless 404): FeatureCatalog derives one flag per module (enabled by default) and one per ModuleCapability with its declared default; CatalogFeatureDefinitionProvider returns configured definitions first (custom merging, later provider wins by id; the store is run with the Microsoft flag schema forced so its flags take part in that order) and catalog defaults otherwise; RequireFeature metadata on every module route group is evaluated by FeatureGateMiddleware before binding and answers a disabled flag with 404 ProblemDetails code feature.disabled; GET /api/platform/features (not /api/features, under the exempt platform prefix; anonymous until the authentication phase) lists every flag. ErpApiFactory.WithFeature writes flags in the Microsoft schema; the web shell hides disabled modules and a module segment renders the in-shell not-found page; Playwright proves the disabled state against a gated API and web pair (E2E_GATED_*). ADR-0012 records the default-enabled policy."
         },
         {
           "id": "azure-configuration-secrets-hygiene-and-rotation-runbook",
