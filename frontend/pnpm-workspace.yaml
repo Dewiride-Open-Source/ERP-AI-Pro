@@ -13,8 +13,8 @@ allowBuilds:
 
 catalog:
   next: 16.3.5
-  react: 19.2.8
-  react-dom: 19.2.8
+  react: 19.3.0
+  react-dom: 19.3.0
   typescript: 6.0.3
   "@types/node": 24.13.5
   "@types/react": 19.3.0
