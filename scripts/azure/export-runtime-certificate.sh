@@ -99,9 +99,9 @@ main() {
   log_info "  2. on the server, from the repository root:"
   log_info "     install -d -m 0700 $SERVER_SECRETS_DIR"
   log_info "     install -o $API_CONTAINER_USER -g $API_CONTAINER_USER -m 0400 ~/erp-runtime-client.pem $SERVER_SECRETS_DIR/erp-runtime-client.pem"
-  log_info "     rm -f ~/erp-runtime-client.pem"
+  log_info "     shred -u ~/erp-runtime-client.pem"
   log_info "     ($API_CONTAINER_USER is the uid and gid of the app user in the chiseled aspnet image the api container runs as)"
-  log_info "  3. delete the local copy: rm -f $OUT_FILE"
+  log_info "  3. shred the local copy: shred -u $OUT_FILE   (rm -P on macOS; on Windows delete it from a volume without shadow copies)"
   log_info "  4. bash scripts/azure/verify.sh --entra"
 }
 

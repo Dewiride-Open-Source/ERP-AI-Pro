@@ -42,6 +42,8 @@ jobs:
         run: node scripts/checks/folder-size.ts
       - name: Comment policy
         run: node scripts/checks/comment-policy.ts
+      - name: Secret patterns
+        run: node scripts/checks/secret-patterns.ts
       - name: Azure scripts check
         run: bash scripts/azure/check.sh
       - name: Repository check tests

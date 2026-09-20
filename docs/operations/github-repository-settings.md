@@ -13,6 +13,7 @@ These settings live outside the repository and must be applied by the owner in *
 - [ ] **Dependabot security updates**: enabled. Version updates come from `.github/dependabot.yml`.
 - [ ] **Code scanning**: do **not** enable *Default setup*. The repository ships the advanced-setup workflow `.github/workflows/codeql.yml` (C#, JavaScript/TypeScript, Actions); enabling default setup would reject its uploads.
 - [ ] **Secret scanning** and **Push protection**: enabled.
+  - The in-repo check `node scripts/checks/secret-patterns.ts` (verify.ts and the ci-backend workflow) covers the same ground for every tracked and new file, so a value that GitHub does not recognise still fails the build; a push-protection block is fixed by rotating the value ([runbooks/secrets.md](runbooks/secrets.md)), never bypassed.
 - [ ] **Private vulnerability reporting**: enabled (referenced by `SECURITY.md` and the issue template config).
 
 ## Rulesets → `main`
