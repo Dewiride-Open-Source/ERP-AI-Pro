@@ -304,7 +304,7 @@
           "id": "azure-configuration-configuration-conventions-and-seed-data",
           "title": "Configuration conventions and seed data",
           "scope": "Define key naming (`Erp:<Module>:<Setting>`, Key Vault references named `Erp--<Module>--<Secret>`), add config/appconfig.local-dev.json and config/appconfig.production.json with a script that imports them into their labels and creates Key Vault secret placeholders, add an in-memory configuration source for integration tests and CI so the suite needs no Azure access, document how to add a setting, and add tests proving a local-dev label value overrides the unlabelled default.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "infra/appconfig/defaults.json, local-dev.json, production.json, feature-flags.json and key-vault-references.json contain only keys of the form Erp:<Domain>:<Module>:<Setting>, flags of the form Erp.Modules.<Domain>.<Module>[.<Capability>] and secrets of the form Erp--<Domain>--<Module>--<Name>, carry no vault, store or tenant identifiers, and a node test run by scripts/verify/verify.ts and CI enforces that.",
             "bash scripts/azure/seed.sh imports the unlabelled defaults and each label file, sets the labelled feature flags, writes Key Vault references composed from params.env only after confirming the secret exists, bumps the labelled Erp:Sentinel, prints a read-back, is re-runnable and supports --dry-run (verified by the owner-consented run recorded in the pull request).",
@@ -314,7 +314,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-09-20"
+          "startedOn": "2026-09-20",
+          "completedOn": "2026-09-20",
+          "notes": "infra/appconfig/{defaults,local-dev,production,feature-flags,key-vault-references}.json (not config/appconfig.*.json) hold every store value under the ADR-0005 names Erp:<Domain>:<Module>:<Setting>, Erp.Modules.<Domain>.<Module>[.<Capability>] and Erp--<Domain>--<Module>--<Name>; scripts/azure/lib/seed-files.ts validates them (no environment identifiers, credentials, arrays, bootstrap-only, host-local or entra.sh-owned keys; string values only) and scripts/checks/tests/appconfig-seed.test.ts enforces that in verify.ts and CI. scripts/azure/seed.sh imports the files with az appconfig kv import --import-mode ignore-match, converges the labelled feature flags, writes Key Vault references only after the secret exists (no placeholders: an unresolvable reference fails API startup), bumps the labelled Erp:Sentinel unless --no-sentinel and prints a read-back; scripts/azure/verify.sh --labels reads everything back and proves the local-dev label overrides the unlabelled default. The in-memory test source already existed from the previous sub-phase; ErpApiFactory.WithConfiguration(key, value) adds a per-test override passed as a host setting. Label precedence is proven against the live store and by the API's system page, not by a unit test."
         },
         {
           "id": "azure-configuration-web-app-runtime-configuration",
