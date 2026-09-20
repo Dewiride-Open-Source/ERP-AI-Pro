@@ -251,7 +251,7 @@
           "id": "azure-configuration-idempotent-azure-provisioning-scripts",
           "title": "Idempotent Azure provisioning scripts",
           "scope": "Add infra/azure scripts (bash plus PowerShell, az CLI) that create the resource group, one App Configuration store with a sentinel key and labels local-dev/production, Key Vaults for local-dev and production with RBAC authorization and purge protection, and role assignments (App Configuration Data Reader, Key Vault Secrets User, Key Vault Crypto User) for developers and the production service principal, re-runnable with a dry-run flag, a parameter file, printed endpoints and docs/azure/bootstrap.md.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "bash scripts/azure/provision.sh --dry-run exits 0 without creating or changing any Azure resource: it prints the az deployment group what-if result and every data-plane command it would run.",
             "Running bash scripts/azure/provision.sh twice with the same parameter file leaves the second what-if with no Create or Delete entries and no Modify beyond the server-filled properties listed as what-if noise in docs/operations/azure-bootstrap.md, keeps the sentinel values, key versions and rotation policies unchanged, and both runs exit 0 with the store endpoint and vault URIs printed (verified by the owner-consented run recorded in the pull request).",
@@ -261,7 +261,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-09-20"
+          "startedOn": "2026-09-20",
+          "completedOn": "2026-09-20",
+          "notes": "scripts/azure (bash + Bicep, no PowerShell, replacing the infra/azure wording) provisions rg-erp-ai-pro with the App Configuration store on the Free tier by owner decision, both RBAC vaults with purge protection and a data-protection key each, deterministic role assignments and the labelled Erp:Sentinel keys; the live run, a converged second run and verify.sh are recorded in the pull request; the operator guide lives at docs/operations/azure-bootstrap.md and ADR-0010 records the tier and credential model; the runtime service principal's roles are granted by re-running provision.sh after the app-registration sub-phase."
         },
         {
           "id": "azure-configuration-entra-app-registration-scripts",
