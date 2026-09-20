@@ -171,7 +171,7 @@ The api container signs in as the runtime service principal with the PEM file fr
 1. `bash scripts/azure/export-runtime-certificate.sh --out <file>` (default `scripts/azure/out/erp-runtime-client.pem`; the folder and every `.pem` file are gitignored). The script refuses an existing path, accepts only a `.pem` destination that git ignores, downloads the current secret version with a restrictive umask and mode 600 (on Windows the file inherits the folder's permissions instead, so keep it inside your user profile), and checks it with `openssl x509 -noout -subject -enddate` and `openssl rsa -check -noout`; when either check fails the file is deleted and the script stops. It never echoes the content.
 2. Copy the file to the server over an encrypted channel, never through chat, email or a ticket.
 3. On the server, from the deployment checkout: `install -d -m 0700 infra/compose/secrets` once, then `install -o 1654 -g 1654 -m 0400 erp-runtime-client.pem infra/compose/secrets/`. 1654 is the uid and gid of the `app` user in the chiseled aspnet image the api container runs as (`APP_UID` in the image); `compose.production.yaml` mounts the file as the secret `erp-runtime-client.pem` at `/run/secrets/erp-runtime-client.pem`, and a file with any other owner is unreadable to the container.
-4. Delete the local copy.
+4. Shred both staging copies (`shred -u` on Linux, `rm -P` on macOS; on Windows delete the file from a volume without shadow copies): the one on the workstation and the one copied to the server's home directory. Later rotations follow [runbooks/secrets.md](runbooks/secrets.md), which also covers recreating the running api container.
 
 ### Second provision.sh run
 

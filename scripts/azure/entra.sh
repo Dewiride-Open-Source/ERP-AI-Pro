@@ -253,7 +253,7 @@ run_rotate_runtime() {
   fi
   log_info "next steps:"
   log_info "  1. bash scripts/azure/export-runtime-certificate.sh   (downloads the new version and prints the placement command for the server)"
-  log_info "  2. on the server: docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d api"
+  log_info "  2. on the server: docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api   (a plain up -d keeps the running container with the old certificate file)"
   log_info "  3. bash scripts/azure/verify.sh --entra"
   log_info "  4. bash scripts/azure/entra.sh --prune-old-credentials $RUNTIME_TARGET"
 }

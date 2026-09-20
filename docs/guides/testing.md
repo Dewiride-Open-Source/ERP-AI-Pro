@@ -8,7 +8,7 @@
 | Integration | `Modules/<D>/<M>/Tests/IntegrationTests`, `Tests/Host` | `WebApplicationFactory<Program>` from `Dewiride.Erp.Testing` (`ErpApiFactory`, `ErpApiFactory.ForEnvironment`) | nothing external today: every `ErpApiFactory`, Development or Production, forces the in-memory configuration source (`ERP_CONFIGURATION_SOURCE=InMemory`, `APPCONFIG_ENDPOINT` blanked) so tests never need Azure or an endpoint and a developer's user secrets cannot connect a test host to the store; a real SQL Server (`ERP_TEST_SQL_CONNECTION` locally, a service container in CI) and the test authentication handler arrive with the backend-platform and authentication phases |
 | Architecture | `Tests/Architecture` | ArchUnitNET | compiled assemblies |
 | Web unit | `frontend/apps/web/src/**/*.test.ts`, next to the code | `node --test` on Node 24 (native type stripping, no extra packages); `pnpm test:unit`; `Method_Condition_ExpectedResult` titles | pure modules only (the environment schema); nothing external |
-| Scripts | `scripts/roadmap/tests`, `scripts/checks/tests` | `node --test`; sentence-style titles (`test('a labelled override needs an unlabelled default', ...)`) | the roadmap model in a temp directory; the seed files under `infra/appconfig` |
+| Scripts | `scripts/roadmap/tests`, `scripts/checks/tests` | `node --test`; sentence-style titles (`test('a labelled override needs an unlabelled default', ...)`) | the roadmap model in a temp directory; the seed files under `infra/appconfig`; a throwaway git repository for the secret-pattern check |
 | End-to-end | `frontend/e2e` | Playwright | built web app + running API |
 
 ## Running
@@ -17,7 +17,7 @@
 cd backend && dotnet test --solution Dewiride.Erp.slnx --report-trx --coverage --coverage-output-format cobertura
 cd backend && dotnet test --project Modules/Platform/SystemInfo/Tests/UnitTests/Dewiride.Erp.Modules.Platform.SystemInfo.UnitTests
 node --test "scripts/roadmap/tests/*.test.ts"
-node --test "scripts/checks/tests/*.test.ts"     # seed-file conventions and every other repository check
+node --test "scripts/checks/tests/*.test.ts"     # seed-file conventions, the secret-pattern check and every other repository check
 cd frontend && pnpm test:unit                    # web unit tests (src/**/*.test.ts)
 cd frontend && pnpm e2e                       # all projects
 cd frontend && pnpm e2e -- --project=chromium  # one project

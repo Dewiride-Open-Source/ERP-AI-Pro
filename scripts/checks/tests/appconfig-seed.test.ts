@@ -81,7 +81,7 @@ test('a value carrying a store, vault, SQL host, connection string, credential o
   data.defaults.set('Erp:Platform:Host:Sql', 'erp-sql.database.windows.net');
   data.defaults.set('Erp:Platform:Host:Store2', 'Endpoint=https://x;Id=a');
   data.defaults.set('Erp:Platform:Host:Db', 'Server=tcp:x,1433;Database=ErpAiPro');
-  data.defaults.set('Erp:Platform:Host:Login', 'User Id=erp;Password=P@ssw0rd!');
+  data.defaults.set('Erp:Platform:Host:Login', 'User Id=erp;Password=<sql-password>');
   data.defaults.set('Erp:Platform:Host:Tenant', '00000000-0000-0000-0000-000000000000');
   const problems = validateSeedData(data);
   assert.equal(problems.length, 7);
