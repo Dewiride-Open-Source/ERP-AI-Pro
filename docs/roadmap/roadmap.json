@@ -358,10 +358,16 @@
           "id": "azure-configuration-secrets-hygiene-and-rotation-runbook",
           "title": "Secrets hygiene and rotation runbook",
           "scope": "Write docs/runbooks/secrets.md (naming, rotation steps, refresh intervals, emergency revocation), confirm secret scanning and push protection are enabled, and add a CI grep plus unit test that rejects any committed value resembling a client secret, connection-string password or private key.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "node scripts/checks/secret-patterns.ts passes on the repository and exits 1 with <path>:<line>: <reason> for a file containing a private key header, an Entra client-secret shape, a connection-string password, an App Configuration access key or a bearer token; it runs in node scripts/verify/verify.ts and in the ci-backend workflow.",
+            "node --test scripts/checks/tests/*.test.ts proves that role definition GUIDs, <placeholder> values, CHANGE_ME, ${VAR} interpolations, TrustServerCertificate=True and lockfile hashes are not reported and that git-ignored files are never scanned.",
+            "docs/operations/runbooks/secrets.md documents naming, the secret inventory, refresh intervals with the sentinel bump command, the rotation loop for ordinary secrets, the sign-in certificate and the runtime certificate export loop, emergency revocation and the quarterly access review, and is linked from docs/README.md.",
+            "docs/operations/github-repository-settings.md carries the secret-scanning and push-protection checklist row that references the in-repo check, ready for the owner to tick after checking GitHub Settings, Code security."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-20"
         }
       ]
     },
