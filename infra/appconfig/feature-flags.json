@@ -1,0 +1,11 @@
+{
+  "flags": [
+    {
+      "id": "Erp.Modules.Platform.SystemInfo",
+      "enabled": {
+        "local-dev": true,
+        "production": true
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-USAGE='Usage: bash scripts/azure/verify.sh [--entra] [--params <file>]
+USAGE='Usage: bash scripts/azure/verify.sh [--entra] [--labels] [--params <file>]
 
 Reads the provisioned Azure resources back and asserts the documented state:
 the App Configuration store, both Key Vaults, the data-protection keys, every
@@ -10,6 +10,10 @@ Options:
   --entra           Check the Entra app registrations, service principals,
                     certificates, role assignments and identity keys written
                     by entra.sh instead of the provisioned resources.
+  --labels          Check the seeded settings, feature flags and Key Vault
+                    references written by seed.sh: every value of
+                    infra/appconfig is read back, and the local-dev label
+                    is proven to override the unlabelled default.
   --params <file>   Parameter file (default: scripts/azure/params.env).
   --help            Show this help.'
 
@@ -36,8 +40,13 @@ readonly ROLE_KEY_VAULT_CERTIFICATES_OFFICER='a4417e6f-fecd-4de8-b567-7b04205569
 
 readonly ENTRA_HINT='run: bash scripts/azure/entra.sh'
 readonly PROVISION_HINT='run: bash scripts/azure/provision.sh'
+readonly SEED_HINT='run: bash scripts/azure/seed.sh'
+readonly SEED_DIRECTORY='infra/appconfig'
+readonly SEED_FILES_CLI='scripts/azure/lib/seed-files.ts'
+readonly LABEL_PRECEDENCE_KEY='Erp:Platform:Host:ApplicationName'
 
 ENTRA_MODE=0
+LABELS_MODE=0
 FAILURES=0
 OPERATOR_ID=''
 
@@ -59,6 +68,15 @@ query_error_summary() {
 assert_equals() {
   local description="$1" expected="$2" actual="$3"
   if [[ "${actual,,}" == "${expected,,}" ]]; then
+    pass "$description"
+  else
+    fail "$description (expected '$expected', got '${actual:-<none>}')"
+  fi
+}
+
+assert_equals_exact() {
+  local description="$1" expected="$2" actual="$3"
+  if [[ "$actual" == "$expected" ]]; then
     pass "$description"
   else
     fail "$description (expected '$expected', got '${actual:-<none>}')"
@@ -466,6 +484,137 @@ verify_entra() {
   verify_runtime_registration
 }
 
+seed_rows() {
+  local command="$1" file="$2"
+  node "$SEED_FILES_CLI" "$command" "$file" | tr -d '\r'
+}
+
+seed_value() {
+  local file="$1" key="$2"
+  local row row_key value
+  while IFS=$'\t' read -r row_key value; do
+    if [[ "$row_key" == "$key" ]]; then
+      printf '%s' "$value"
+      return 0
+    fi
+  done < <(seed_rows settings "$file")
+  return 1
+}
+
+assert_seeded_value() {
+  local description="$1" key="$2" label="$3" expected="$4"
+  local value
+  if ! value="$(appconfig_kv_get "$key" "$label" 2>&1)"; then
+    fail "$description (query failed: $(query_error_summary "$value"))"
+  elif [[ -z "$value" ]]; then
+    fail "$description (key absent from the store); $SEED_HINT"
+  else
+    assert_equals_exact "$description" "$expected" "$value"
+  fi
+}
+
+verify_seeded_settings() {
+  local file="$1" label="$2"
+  local -a rows=()
+  mapfile -t rows < <(seed_rows settings "$file")
+  if (( ${#rows[@]} == 0 )); then
+    skip "$file holds no keys"
+    return 0
+  fi
+  local row key expected
+  for row in "${rows[@]}"; do
+    IFS=$'\t' read -r key expected <<< "$row"
+    assert_seeded_value "$key [$(appconfig_label_display "$label")] equals $file" "$key" "$label" "$expected"
+  done
+}
+
+verify_seeded_feature_flags() {
+  local label="$1"
+  local -a rows=()
+  mapfile -t rows < <(seed_rows flags "$SEED_DIRECTORY/feature-flags.json")
+  local row id flag_label enabled expected state
+  for row in "${rows[@]}"; do
+    IFS=$'\t' read -r id flag_label enabled <<< "$row"
+    [[ "$flag_label" == "$label" ]] || continue
+    expected='off'
+    [[ "$enabled" != true ]] || expected='on'
+    if state="$(az_read appconfig feature show --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --feature "$id" --label "$label" --query state --output tsv 2>&1)"; then
+      assert_equals "feature flag $id [$label] is $expected" "$expected" "$state"
+    else
+      fail "feature flag $id [$label] is $expected (query failed: $(query_error_summary "$state")); $SEED_HINT"
+    fi
+  done
+}
+
+verify_seeded_references() {
+  local label="$1" vault_name="$2"
+  local vault_uri
+  if ! vault_uri="$(az_read keyvault show --name "$vault_name" --query properties.vaultUri --output tsv 2>&1)"; then
+    fail "vault $vault_name reachable for the $label references ($(query_error_summary "$vault_uri")); $PROVISION_HINT"
+    return 0
+  fi
+  local -a rows=()
+  mapfile -t rows < <(seed_rows references "$SEED_DIRECTORY/key-vault-references.json")
+  local row key secret content_type uri
+  for row in "${rows[@]}"; do
+    IFS=$'\t' read -r key secret <<< "$row"
+    if ! content_type="$(appconfig_kv_query "$key" "$label" 'contentType' 2>&1)"; then
+      fail "$key [$label] is a Key Vault reference (query failed: $(query_error_summary "$content_type")); $SEED_HINT"
+      continue
+    fi
+    assert_equals "$key [$label] is a Key Vault reference" "$APPCONFIG_KEYVAULT_REFERENCE_CONTENT_TYPE" "$content_type"
+    uri="$(appconfig_kv_reference_uri "$key" "$label")" || uri=''
+    assert_equals "$key [$label] points to $secret in $vault_name" "${vault_uri%/}/secrets/$secret" "$uri"
+  done
+}
+
+verify_label_precedence() {
+  log_step "Label precedence"
+  local unlabelled labelled expected_default expected_override
+  expected_default="$(seed_value "$SEED_DIRECTORY/defaults.json" "$LABEL_PRECEDENCE_KEY")" || { fail "$LABEL_PRECEDENCE_KEY is defined in defaults.json"; return 0; }
+  expected_override="$(seed_value "$SEED_DIRECTORY/local-dev.json" "$LABEL_PRECEDENCE_KEY")" || { fail "$LABEL_PRECEDENCE_KEY is overridden in local-dev.json"; return 0; }
+  if [[ "$expected_default" == "$expected_override" ]]; then
+    fail "local-dev.json gives $LABEL_PRECEDENCE_KEY a value different from defaults.json (both are '$expected_default')"
+    return 0
+  fi
+  pass "local-dev.json overrides $LABEL_PRECEDENCE_KEY ('$expected_default' -> '$expected_override')"
+  unlabelled="$(appconfig_kv_get "$LABEL_PRECEDENCE_KEY" '')" || unlabelled=''
+  labelled="$(appconfig_kv_get "$LABEL_PRECEDENCE_KEY" local-dev)" || labelled=''
+  assert_equals_exact "$LABEL_PRECEDENCE_KEY [(null)] is the default" "$expected_default" "$unlabelled"
+  assert_equals_exact "$LABEL_PRECEDENCE_KEY [local-dev] is the override the API loads last" "$expected_override" "$labelled"
+  if [[ -n "$labelled" && "$labelled" != "$unlabelled" ]]; then
+    pass "the local-dev label overrides the unlabelled default in the store"
+  else
+    fail "the local-dev label overrides the unlabelled default in the store (unlabelled '${unlabelled:-<none>}', local-dev '${labelled:-<none>}'); $SEED_HINT"
+  fi
+}
+
+verify_labels() {
+  log_step "Seed files"
+  if node "$SEED_FILES_CLI" validate > /dev/null 2>&1; then
+    pass "$SEED_DIRECTORY passes validation"
+  else
+    fail "$SEED_DIRECTORY passes validation (run: node $SEED_FILES_CLI validate)"
+    return 0
+  fi
+
+  log_step "Unlabelled defaults"
+  verify_seeded_settings "$SEED_DIRECTORY/defaults.json" ''
+
+  local label vault_name
+  for label in "${LABELS[@]}"; do
+    log_step "Label $label"
+    verify_seeded_settings "$SEED_DIRECTORY/$label.json" "$label"
+    verify_seeded_feature_flags "$label"
+    vault_name="$ERP_AZURE_KEYVAULT_PROD_NAME"
+    [[ "$label" != local-dev ]] || vault_name="$ERP_AZURE_KEYVAULT_DEV_NAME"
+    verify_seeded_references "$label" "$vault_name"
+  done
+
+  verify_label_precedence
+  verify_sentinels
+}
+
 verify_provisioning() {
   local operator_id="$1"
   local developers_group_id runtime_id
@@ -483,12 +632,13 @@ main() {
   local -a arguments=()
   local argument
   for argument in "$@"; do
-    if [[ "$argument" == '--entra' ]]; then
-      ENTRA_MODE=1
-    else
-      arguments+=("$argument")
-    fi
+    case "$argument" in
+      --entra) ENTRA_MODE=1 ;;
+      --labels) LABELS_MODE=1 ;;
+      *) arguments+=("$argument") ;;
+    esac
   done
+  (( ENTRA_MODE + LABELS_MODE <= 1 )) || die "--entra and --labels are separate runs; pass one of them"
   parse_args "${arguments[@]}"
   (( ${#ARGS[@]} == 0 )) || die "unexpected argument '${ARGS[0]}'"
   load_params
@@ -504,6 +654,8 @@ main() {
 
   if (( ENTRA_MODE )); then
     verify_entra "$operator_id"
+  elif (( LABELS_MODE )); then
+    verify_labels
   else
     verify_provisioning "$operator_id"
   fi
