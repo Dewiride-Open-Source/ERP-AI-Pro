@@ -17,14 +17,21 @@ const hostLocalKeys = new Set(["Erp:Platform:Host:KnownNetworks"]);
 const entraOwnedKeys = new Set(["Erp:Platform:Identity:TenantId", "Erp:Platform:Identity:ClientId"]);
 const secretLikeSettingPattern = /(Secret|Password|Pwd|Token|ConnectionString|ApiKey|AccessKey|PrivateKey|Certificate)$/i;
 const controlCharacterPattern = /[\u0000-\u001f\u007f]/;
+const azureHostSuffixes: { name: string; suffix: string }[] = [
+  { name: "a store endpoint", suffix: ".azconfig.io" },
+  { name: "a vault address", suffix: ".vault.azure.net" },
+  { name: "an Azure SQL host", suffix: ".database.windows.net" },
+];
 const identifierPatterns: { name: string; pattern: RegExp }[] = [
-  { name: "a store endpoint", pattern: /\.azconfig\.io/i },
-  { name: "a vault address", pattern: /\.vault\.azure\.net/i },
-  { name: "an Azure SQL host", pattern: /\.database\.windows\.net/i },
   { name: "a connection string", pattern: /(^|[;\s])(Endpoint|Server|Data Source|AccountKey|SharedAccessKey)=/i },
   { name: "a credential", pattern: /(^|[;\s])(Password|Pwd|Secret|ClientSecret|ApiKey|Token|sig)=/i },
   { name: "a GUID", pattern: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i },
 ];
+
+function carriedIdentifier(value: string): string | undefined {
+  const lowered = value.toLowerCase();
+  return azureHostSuffixes.find(({ suffix }) => lowered.includes(suffix))?.name ?? identifierPatterns.find(({ pattern }) => pattern.test(value))?.name;
+}
 
 export interface FeatureFlagSeed {
   id: string;
@@ -111,9 +118,8 @@ function validateSetting(file: string, key: string, value: string, problems: str
   }
   if (value.trim() === "") problems.push(`${file}: value of '${key}' is empty; leave the key out instead of seeding an empty value`);
   if (controlCharacterPattern.test(value)) problems.push(`${file}: value of '${key}' contains a control character`);
-  for (const { name, pattern } of identifierPatterns) {
-    if (pattern.test(value)) problems.push(`${file}: value of '${key}' carries ${name}; environment identifiers and credentials stay out of the repository`);
-  }
+  const identifier = carriedIdentifier(value);
+  if (identifier) problems.push(`${file}: value of '${key}' carries ${identifier}; environment identifiers and credentials stay out of the repository`);
 }
 
 function validateOverrides(data: SeedData, problems: string[]): void {
