@@ -55,8 +55,14 @@ require_repo_root_cwd() {
   [[ "$PWD" == "$REPO_ROOT" ]] || die "the current directory must be the repository root ($REPO_ROOT) so that az can open @file arguments"
 }
 
-base64_to_hex() {
+# Graph returns customKeyIdentifier either as the SHA-1 thumbprint text (credentials
+# uploaded through the Azure CLI) or as the base64-encoded thumbprint bytes.
+key_identifier_to_hex() {
   [[ -n "$1" ]] || return 0
+  if [[ "$1" =~ ^[0-9A-Fa-f]{40}$ ]]; then
+    printf '%s' "$1"
+    return 0
+  fi
   { printf '%s' "$1" | base64 -d 2> /dev/null | od -An -tx1 | tr -d ' \n'; } || true
 }
 
@@ -559,7 +565,7 @@ key_credential_thumbprints() {
   local key_id identifier
   while IFS=$'\t' read -r key_id identifier; do
     [[ -n "$key_id" ]] || continue
-    printf '%s\t%s\n' "$key_id" "$(base64_to_hex "$identifier")"
+    printf '%s\t%s\n' "$key_id" "$(key_identifier_to_hex "$identifier")"
   done <<< "$rows"
 }
 
