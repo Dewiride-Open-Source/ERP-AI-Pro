@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-20",
+  "updatedOn": "2026-09-21",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -386,10 +386,16 @@
           "id": "backend-platform-module-contract-and-registration",
           "title": "Module contract and registration",
           "scope": "Define IModule (RegisterServices, MapEndpoints(RouteGroupBuilder), migrations assembly, feature-flag key, permission declarations) in backend/BuildingBlocks/Modules with a static module catalogue in the host (no runtime assembly scanning), per-module feature flags from `azure-configuration-feature-management`, and architecture tests enforcing namespace equals folder path, one public entry type per module, and no cross-module references except <Domain>.Contracts projects.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "ModuleCatalog rejects a duplicate module id, route prefix, schema or feature flag and a permission that does not start with <domain>.<module>., each with a message naming the module, proven by unit tests.",
+            "Architecture tests fail on a .cs file whose namespace does not equal its folder path, on a module folder missing one of the four projects or its README.md, and on a folder holding more than 12 source files.",
+            "IModule.AddServices, IModule.MapEndpoints and the static Modules.All catalogue are unchanged and every existing unit, integration and architecture test passes.",
+            "docs/architecture/dependency-rules.md lists exactly the rules the architecture tests assert, including the layout, permission-prefix and public-request-record exemptions."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-21"
         },
         {
           "id": "backend-platform-persistence-conventions-contexts-schemas-and-ids",
