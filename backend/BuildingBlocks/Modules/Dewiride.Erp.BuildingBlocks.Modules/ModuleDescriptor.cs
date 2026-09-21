@@ -10,4 +10,6 @@ public sealed record ModuleDescriptor(
     IReadOnlyCollection<ModuleCapability> Capabilities)
 {
     public string Id => $"{Domain}.{Name}";
+
+    public string PermissionPrefix => RoutePrefix.Trim('/').Replace('/', '.') + ".";
 }

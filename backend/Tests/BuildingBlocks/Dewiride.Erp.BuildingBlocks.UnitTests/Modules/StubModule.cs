@@ -6,14 +6,15 @@ namespace Dewiride.Erp.BuildingBlocks.UnitTests.Modules;
 
 internal sealed class StubModule(string domain, string name, params ModuleCapability[] capabilities) : IModule
 {
-    public ModuleDescriptor Descriptor { get; } = new(
-        domain,
-        name,
-        null,
-        $"/{domain.ToLowerInvariant()}/{name.ToLowerInvariant()}",
-        $"Erp.Modules.{domain}.{name}",
-        [],
-        capabilities);
+    public string? Schema { get; init; }
+
+    public string RoutePrefix { get; init; } = $"/{domain.ToLowerInvariant()}/{name.ToLowerInvariant()}";
+
+    public string FeatureFlag { get; init; } = $"Erp.Modules.{domain}.{name}";
+
+    public IReadOnlyCollection<string> Permissions { get; init; } = [];
+
+    public ModuleDescriptor Descriptor => new(domain, name, Schema, RoutePrefix, FeatureFlag, Permissions, capabilities);
 
     public void AddServices(IHostApplicationBuilder builder)
     {

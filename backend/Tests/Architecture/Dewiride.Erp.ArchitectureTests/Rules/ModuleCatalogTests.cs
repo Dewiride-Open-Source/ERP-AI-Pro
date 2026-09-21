@@ -18,6 +18,10 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
 
     private static readonly string[] DevelopmentOnlyRoutePrefixes = ["/scalar"];
 
+    private static readonly string[] GeneratedBaseTypes = ["Microsoft.EntityFrameworkCore.Migrations.Migration", "Microsoft.EntityFrameworkCore.Infrastructure.ModelSnapshot"];
+
+    private const string RequestsNamespaceSuffix = ".Endpoints.Requests";
+
     private readonly ErpApiFactory _factory;
 
     public ModuleCatalogTests(ErpApiFactory factory)
@@ -40,7 +44,7 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
     {
         var violations = ErpAssemblies.ModuleImplementations
             .SelectMany(a => a.GetExportedTypes())
-            .Where(t => !typeof(IModule).IsAssignableFrom(t))
+            .Where(t => !typeof(IModule).IsAssignableFrom(t) && !IsGeneratedPersistenceType(t) && !IsRequestRecord(t))
             .Select(t => t.FullName)
             .ToList();
 
@@ -73,10 +77,27 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
             Assert.Equal($"/{Kebab(descriptor.Domain)}/{Kebab(descriptor.Name)}", descriptor.RoutePrefix);
             Assert.Equal($"Erp.Modules.{descriptor.Domain}.{descriptor.Name}", descriptor.FeatureFlag);
             Assert.All(descriptor.Permissions, p => Assert.Matches("^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){3}$", p));
+            Assert.All(descriptor.Permissions, p => Assert.StartsWith(descriptor.PermissionPrefix, p, StringComparison.Ordinal));
             Assert.All(descriptor.Capabilities, c => Assert.Matches("^[A-Z][A-Za-z0-9]*$", c.Name));
             Assert.Equal(descriptor.Capabilities.Count, descriptor.Capabilities.Select(c => c.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count());
         }
     }
+
+    private static bool IsGeneratedPersistenceType(Type type)
+    {
+        for (var current = type.BaseType; current is not null; current = current.BaseType)
+        {
+            if (GeneratedBaseTypes.Contains(current.FullName, StringComparer.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsRequestRecord(Type type) =>
+        type.Namespace is { } ns && ns.EndsWith(RequestsNamespaceSuffix, StringComparison.Ordinal);
 
     private static string Kebab(string pascal) => System.Text.RegularExpressions.Regex.Replace(pascal, "(?<=[a-z0-9])(?=[A-Z])", "-").ToLowerInvariant();
 
