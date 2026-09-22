@@ -403,7 +403,7 @@
           "id": "backend-platform-persistence-conventions-contexts-schemas-and-ids",
           "title": "Persistence conventions: contexts, schemas and ids",
           "scope": "Implement a ModuleDbContext base with HasDefaultSchema(<module>) and MigrationsHistoryTable per schema, provider selection (UseSqlServer with compatibility level 170 and EnableRetryOnFailure locally, UseAzureSql in production), strongly-typed ids with EF value converters, complex-type value objects, and a sample module proving migrations run against the owner's SQL Server instance in local integration tests and against the SQL Server 2025 service container in CI.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "AddModuleDbContext<TContext> configures HasDefaultSchema, the __EFMigrationsHistory table inside the module schema, compatibility level 170 with EnableRetryOnFailure on UseSqlServer, and UseAzureSql when Erp:Platform:Database:Provider is AzureSql, proven by unit tests over the options and an integration test that reads sys.schemas and INFORMATION_SCHEMA.TABLES.",
             "A strongly-typed id and a complex-type value object (a readonly record struct mapped through ComplexProperty) round-trip through SQL Server with the expected column names and types, DateTimeOffset values are stored in UTC, and HasPendingModelChanges() is false for every registered context under both provider options.",
@@ -413,7 +413,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-09-22"
+          "startedOn": "2026-09-22",
+          "completedOn": "2026-09-22",
+          "notes": "BuildingBlocks.Persistence (ModuleDbContext, AddModuleDbContext<T>, DatabaseOptions, DbContextCatalog, DatabaseMigrator, id/UTC converters, offline design time) and Hosts/Composition exist; SystemInfo records every API start in platform_system_info.Startups and lists the 20 newest at GET /api/platform/system-info/startups with the web table; SqlTestDatabase gives every test process its own database; CI runs SQL Server 2025 through .github/actions/start-sql-server; the empty table state is reachable only before the first start is recorded, so it is not browser-tested; the cn package replaced clsx and tailwind-merge (ADR-0014)."
         },
         {
           "id": "backend-platform-persistence-auditing-and-domain-primitives",
