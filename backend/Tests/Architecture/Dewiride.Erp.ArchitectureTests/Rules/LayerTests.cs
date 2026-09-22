@@ -79,6 +79,6 @@ public sealed class LayerTests
     private static void AssertRule(IArchRule rule)
     {
         var failures = rule.Evaluate(Architecture).Where(r => !r.Passed).Select(r => r.Description).ToList();
-        Assert.Empty(failures);
+        Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
     }
 }
