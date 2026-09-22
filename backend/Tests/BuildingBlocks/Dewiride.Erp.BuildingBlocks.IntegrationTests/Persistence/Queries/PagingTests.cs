@@ -25,7 +25,7 @@ public sealed class PagingTests(SampleDatabase database) : IClassFixture<SampleD
     [Fact]
     public async Task ToPagedResultAsync_SortedAndFilteredList_ReturnsThePageAndTheTotalAcrossPages()
     {
-        var stamp = Guid.CreateVersion7().ToString("N")[..8];
+        var stamp = Guid.CreateVersion7().ToString("N")[^12..];
         var ids = new List<SampleId>();
         foreach (var (name, price) in new[] { ("a", 10m), ("b", 30m), ("c", 20m), ("d", 40m), ("e", 50m) })
         {
@@ -47,7 +47,7 @@ public sealed class PagingTests(SampleDatabase database) : IClassFixture<SampleD
     [Fact]
     public async Task ToPagedResultAsync_PageBeyondTheEnd_ReturnsNoItemsWithoutQueryingRows()
     {
-        var stamp = Guid.CreateVersion7().ToString("N")[..8];
+        var stamp = Guid.CreateVersion7().ToString("N")[^12..];
         await AddAsync($"{stamp}-only", 1m, "Pune");
 
         var page = await QueryAsync(ListRequest.Parse(3, 50, null, $"name:contains:{stamp}").Value);
@@ -77,7 +77,7 @@ public sealed class PagingTests(SampleDatabase database) : IClassFixture<SampleD
     [Fact]
     public async Task ApplySort_TieBreakerOnly_IsDeterministicAcrossCalls()
     {
-        var stamp = Guid.CreateVersion7().ToString("N")[..8];
+        var stamp = Guid.CreateVersion7().ToString("N")[^12..];
         for (var i = 0; i < 3; i++)
         {
             await AddAsync($"{stamp}-same", 5m, "Pune");
