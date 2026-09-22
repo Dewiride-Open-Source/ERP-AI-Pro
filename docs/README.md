@@ -27,5 +27,6 @@
 | [0012](adr/0012-feature-flag-catalog-and-defaults.md) | Feature flag catalog, default-enabled modules and the disabled-module contract |
 | [0013](adr/0013-persistence-conventions-and-test-databases.md) | Persistence conventions, per-process test databases and the CI SQL Server action |
 | [0014](adr/0014-cn-class-name-helper.md) | The `cn` package replaces `clsx` and `tailwind-merge` |
+| [0015](adr/0015-auditing-soft-delete-and-domain-primitives.md) | Auditing, soft delete, row versions, the actor model and the domain primitives |
 
 New decisions use [0000-template.md](adr/0000-template.md).

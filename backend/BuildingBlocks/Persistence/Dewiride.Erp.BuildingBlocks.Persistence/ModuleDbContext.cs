@@ -1,6 +1,8 @@
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Dewiride.Erp.BuildingBlocks.Persistence;
 
@@ -16,6 +18,7 @@ public abstract class ModuleDbContext : DbContext
         ArgumentException.ThrowIfNullOrWhiteSpace(schema);
 
         Schema = schema;
+        ChangeTracker.CascadeDeleteTiming = CascadeTiming.OnSaveChanges;
     }
 
     public string Schema { get; }
@@ -26,6 +29,8 @@ public abstract class ModuleDbContext : DbContext
 
         configurationBuilder.Properties<decimal>().HavePrecision(MoneyPrecision, MoneyScale);
         configurationBuilder.Properties<DateTimeOffset>().HaveConversion<UtcDateTimeOffsetConverter>();
+        configurationBuilder.Properties<Currency>().HaveConversion<CurrencyConverter>().HaveMaxLength(Currency.CodeLength).AreUnicode(false).AreFixedLength();
+        configurationBuilder.ComplexProperties<Money>();
         configurationBuilder.IgnoreAny<IDomainEvent>();
         foreach (var idType in StronglyTypedIdTypes.In(GetType().Assembly))
         {
@@ -39,5 +44,6 @@ public abstract class ModuleDbContext : DbContext
 
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
+        modelBuilder.ApplySoftDelete().ApplyRowVersion();
     }
 }

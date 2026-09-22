@@ -23,6 +23,12 @@
 | Route | `/api/<domain>/<module>/<resource>[/{id}[/<action>]]` kebab-case, plural | `POST /api/finance/sales/invoices/{invoiceId}/issue` |
 | Schema | `<domain>_<module>` | `finance_sales` |
 | Table | plural PascalCase | `Invoices`, `InvoiceLines` |
+| Column | PascalCase, PK `Id`; complex-type members `<Property>_<Member>` | `Name`, `Price_Amount`, `Price_Currency`, `Address_City` |
+| Audit interfaces | `IAuditable`, `ISoftDeletable`, `IVersioned` in `Dewiride.Erp.BuildingBlocks.Kernel.Domain`; getter-only, `private set` on the entity | `sealed class Client : AggregateRoot<ClientId>, IAuditable, ISoftDeletable, IVersioned` |
+| Soft-delete query filter | the constant `SoftDeleteFilter.Name` (`Dewiride.Erp.BuildingBlocks.Persistence.Conventions`) | `"SoftDelete"`; `query.IncludeDeleted()` |
+| Money primitives | `Dewiride.Erp.BuildingBlocks.Kernel.Monetary` | `Money`, `Currency`, `Percentage` and their `[JsonConverter]`-attached `MoneyJsonConverter`, `CurrencyJsonConverter`, `PercentageJsonConverter` |
+| Time primitives | `Dewiride.Erp.BuildingBlocks.Kernel.Time` | `FinancialYear`, `FinancialQuarter`, `IndianStandardTime`, `FinancialYearJsonConverter` |
+| Actor | `IActorContext`, `ActorIds`, `SystemActorContext` in `Dewiride.Erp.BuildingBlocks.Application.Actors`; `HttpActorContext` in `Dewiride.Erp.BuildingBlocks.Endpoints.Actors` | `ActorIds.System`, `ActorIds.Anonymous` |
 | Permission | `<domain>.<module>.<feature>.<action>` | `finance.sales.invoices.issue` |
 | Feature flag | `Erp.Modules.<Domain>.<Module>[.<Capability>]` | `Erp.Modules.Finance.Sales.EInvoicing` |
 | Configuration key | `Erp:<Domain>:<Module>:<Setting>` | `Erp:Finance:Sales:InvoicePrefix` |

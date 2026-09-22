@@ -1,7 +1,10 @@
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Actors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Scalar.AspNetCore;
 
@@ -19,6 +22,8 @@ public static class ErpEndpointsExtensions
             options.CustomizeProblemDetails = context =>
                 context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier);
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.Replace(ServiceDescriptor.Scoped<IActorContext, HttpActorContext>());
         builder.Services.AddOpenApi(OpenApiDocumentName, options =>
             options.AddDocumentTransformer((document, _, _) =>
             {

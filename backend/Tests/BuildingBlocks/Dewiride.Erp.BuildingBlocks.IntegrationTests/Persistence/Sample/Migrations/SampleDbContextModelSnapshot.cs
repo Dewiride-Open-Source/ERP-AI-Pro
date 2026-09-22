@@ -29,6 +29,27 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -37,9 +58,11 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<decimal>("Price")
-                        .HasPrecision(19, 4)
-                        .HasColumnType("decimal(19,4)");
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Address", "Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleAggregate.Address#SampleAddress", b1 =>
                         {
@@ -56,9 +79,59 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                                 .HasColumnType("nvarchar(100)");
                         });
 
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Price", "Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleAggregate.Price#Money", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("decimal(19,4)");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .IsUnicode(false)
+                                .HasColumnType("char(3)")
+                                .IsFixedLength();
+                        });
+
                     b.HasKey("Id");
 
                     b.ToTable("Samples", "test_sample");
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("SampleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SampleId");
+
+                    b.ToTable("SampleLines", "test_sample");
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleLine", b =>
+                {
+                    b.HasOne("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleAggregate", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("SampleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleAggregate", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

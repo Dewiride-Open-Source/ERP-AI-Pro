@@ -421,7 +421,7 @@
           "id": "backend-platform-persistence-auditing-and-domain-primitives",
           "title": "Persistence conventions: auditing, soft delete and domain primitives",
           "scope": "Add backend/BuildingBlocks/Domain with Entity and AggregateRoot bases, IAuditable with a CreatedBy/At and ModifiedBy/At interceptor, ISoftDeletable with a named query filter, RowVersion concurrency, UTC DateTimeOffset storage with IST helpers, Money (currency plus minor units with paise rounding), Percentage and Indian financial-year helpers, covered by unit tests.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "Saving an IAuditable entity stamps CreatedAt/CreatedBy and ModifiedAt/ModifiedBy from IActorContext and TimeProvider, an update stamps ModifiedAt/ModifiedBy only, deleting an ISoftDeletable entity sets IsDeleted, DeletedAt and DeletedBy instead of removing the row, and the named SoftDelete query filter hides it unless a query ignores that filter — proven against SQL Server on the sample aggregate.",
             "An IVersioned entity maps to a rowversion column and a stale update surfaces as DbUpdateConcurrencyException, proven against SQL Server.",
@@ -431,7 +431,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-09-22"
+          "startedOn": "2026-09-22",
+          "completedOn": "2026-09-22",
+          "notes": "Kernel.Domain IAuditable/ISoftDeletable/IVersioned stamped by AuditingSaveChangesInterceptor (async only; delete stamps follow the IsDeleted transition, a second delete is a no-op, CascadeDeleteTiming OnSaveChanges keeps child rows of a soft-deleted root, BulkWriteGuardInterceptor refuses ExecuteDelete/ExecuteUpdate on soft-deletable and auditable types); ModelRules apply the SoftDelete named filter on the root of each hierarchy and IsRowVersion; IActorContext with SystemActorContext and HttpActorContext (Entra oid); Kernel.Monetary Money/Currency/Percentage and Kernel.Time IndianStandardTime/FinancialYear/FinancialQuarter with attached JSON converters; Money maps by convention to <Property>_Amount decimal(19,4) + <Property>_Currency char(3); proven by 576 backend tests against SQL Server on SampleAggregate; ADR-0015. Scope deviation: primitives live in the existing BuildingBlocks.Kernel (namespace Monetary, not Money, because a type cannot share its namespace's name) rather than a new BuildingBlocks/Domain project."
         },
         {
           "id": "backend-platform-application-layer-primitives",

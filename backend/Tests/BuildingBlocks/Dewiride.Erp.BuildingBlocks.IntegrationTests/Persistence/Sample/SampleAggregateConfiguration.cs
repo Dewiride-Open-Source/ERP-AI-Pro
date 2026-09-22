@@ -10,6 +10,7 @@ public sealed class SampleAggregateConfiguration : IEntityTypeConfiguration<Samp
         builder.ToTable("Samples");
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Name).HasMaxLength(SampleAggregate.NameMaxLength);
+        builder.HasMany(s => s.Lines).WithOne().HasForeignKey(l => l.SampleId);
         builder.ComplexProperty(s => s.Address, address =>
         {
             address.Property(a => a.Line1).HasMaxLength(SampleAggregate.Line1MaxLength);
