@@ -41,6 +41,15 @@ export interface FeatureFlagSeed {
 export interface KeyVaultReferenceSeed {
   key: string;
   secret: string;
+  labels?: Label[];
+}
+
+export function referenceLabels(reference: KeyVaultReferenceSeed): readonly Label[] {
+  return reference.labels ?? labels;
+}
+
+function isLabelList(value: unknown): value is Label[] {
+  return Array.isArray(value) && value.length > 0 && new Set(value).size === value.length && value.every((label) => (labels as readonly unknown[]).includes(label));
 }
 
 export interface SeedData {
@@ -86,7 +95,7 @@ export function readFeatureFlags(file: string): FeatureFlagSeed[] {
 
 export function readKeyVaultReferences(file: string): KeyVaultReferenceSeed[] {
   const document = readJson(file);
-  if (!Array.isArray(document)) throw new Error(`${file}: expected an array of { key, secret }`);
+  if (!Array.isArray(document)) throw new Error(`${file}: expected an array of { key, secret, labels? }`);
   return document as KeyVaultReferenceSeed[];
 }
 
@@ -155,6 +164,9 @@ function validateReferences(references: KeyVaultReferenceSeed[], files: SettingF
     if (!keyPattern.test(key)) problems.push(`key-vault-references.json: key '${key}' is not Erp:<Domain>:<Module>:<Setting>`);
     if (!secretPattern.test(secret)) problems.push(`key-vault-references.json: secret '${secret}' is not Erp--<Domain>--<Module>--<Name>`);
     if (entraOwnedKeys.has(key)) problems.push(`key-vault-references.json: key '${key}' is written by scripts/azure/entra.sh and must not be seeded`);
+    if (reference?.labels !== undefined && !isLabelList(reference.labels)) {
+      problems.push(`key-vault-references.json: labels of '${key}' must list ${labels.join(" and/or ")}`);
+    }
     if (seen.has(key)) problems.push(`key-vault-references.json: key '${key}' is listed twice`);
     seen.add(key);
     for (const [file, settings] of files) {
@@ -194,7 +206,7 @@ function main(argv: string[]): number {
     }
     case "references": {
       if (!file) throw new Error("usage: references <file>");
-      printTable(readKeyVaultReferences(file).map((reference) => [reference.key, reference.secret]));
+      printTable(readKeyVaultReferences(file).map((reference) => [reference.key, reference.secret, referenceLabels(reference).join(",")]));
       return 0;
     }
     case "validate": {

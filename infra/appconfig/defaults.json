@@ -7,6 +7,12 @@
       },
       "Identity": {
         "Instance": "https://login.microsoftonline.com/"
+      },
+      "Database": {
+        "Provider": "SqlServer",
+        "CommandTimeout": "00:00:30",
+        "MaxRetryCount": "5",
+        "MaxRetryDelay": "00:00:10"
       }
     }
   }

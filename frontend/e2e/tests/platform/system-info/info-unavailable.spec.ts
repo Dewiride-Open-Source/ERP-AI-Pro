@@ -22,9 +22,17 @@ test.describe("system information page without the API", () => {
       await expect(systemInfo.application).toHaveCount(0);
       await expect(systemInfo.refresh).toBeEnabled();
 
+      await expect(systemInfo.startupsCard).toBeVisible();
+      await expect(systemInfo.startupsUnavailable).toBeVisible();
+      await expect(systemInfo.startupsUnavailable).toHaveRole("status");
+      await expect(systemInfo.startupsUnavailable).toContainText("Recent starts are not available.");
+      await expect(systemInfo.startupsTable).toHaveCount(0);
+      await expect(systemInfo.startupsRows).toHaveCount(0);
+
       await systemInfo.refresh.click();
       await expect(systemInfo.refresh).toBeEnabled();
       await expect(systemInfo.unavailable).toBeVisible();
+      await expect(systemInfo.startupsUnavailable).toBeVisible();
 
       await capture("system-info-unavailable");
     },

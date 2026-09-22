@@ -4,7 +4,7 @@ How secrets are named, stored, refreshed, rotated and revoked. Every command run
 
 ## 1. Principles
 
-- Key Vault is the only home of a secret value. The API reads a secret only through an App Configuration Key Vault reference (`infra/appconfig/key-vault-references.json`, written by `scripts/azure/seed.sh`), the developer through `az login`, the api container through the runtime service principal's certificate.
+- Key Vault is the only home of a secret value. The API reads a secret only through an App Configuration Key Vault reference (`infra/appconfig/key-vault-references.json`, written by `scripts/azure/seed.sh`), the developer through `az login`, the api container through the runtime service principal's certificate. The one exception is the local container stack, which cannot sign in to Azure and reads its SQL login from the git-ignored file secret `infra/compose/secrets/Erp__Platform__Database__ConnectionString` (section 5d).
 - Nothing secret is ever committed: not in code, compose files, workflows, `.env` files, `CLAUDE.md`, memory or documentation. Three layers enforce it: GitHub secret scanning with push protection (repository setting, [github-repository-settings.md](../github-repository-settings.md)), the in-repo check `node scripts/checks/secret-patterns.ts` (every tracked and new file that git does not ignore; runs in `node scripts/verify/verify.ts` and in the `ci-backend` workflow), and `scripts/azure/lib/seed-files.ts`, which refuses credentials and environment identifiers in the seed files.
 - A push-protection block or a check finding is fixed at the root: rotate the value in Key Vault (section 5), then remove it from the change. Never bypass the block, never rewrite pushed history to hide a value that has already left the machine.
 - Placeholders in committed examples are written as `<name>`, `${VAR}` or `CHANGE_ME`; the check recognises those shapes and reports everything else that looks like a credential.
@@ -15,7 +15,7 @@ How secrets are named, stored, refreshed, rotated and revoked. Every command run
 |---|---|---|
 | Key Vault secret, certificate or key | `Erp--<Domain>--<Module>--<Name>` | `Erp--Platform--Identity--ClientCertificate` |
 | App Configuration key that references a secret | `Erp:<Domain>:<Module>:<Setting>` | `Erp:Platform:Identity:ClientCertificate` |
-| Compose secret file | `<name>.pem` under `infra/compose/secrets/` (git-ignored) | `erp-runtime-client.pem` |
+| Compose secret file | `<name>.pem` for a certificate, `Erp__<Domain>__<Module>__<Name>` for a configuration value read by the key-per-file provider, under `infra/compose/secrets/` (git-ignored) | `erp-runtime-client.pem`, `Erp__Platform__Database__ConnectionString` |
 
 ## 3. Inventory
 
@@ -24,7 +24,7 @@ How secrets are named, stored, refreshed, rotated and revoked. Every command run
 | `Erp--Platform--Identity--ClientCertificate` | `kv-erp-ai-pro-dev`, `kv-erp-ai-pro-prod` | `scripts/azure/entra.sh` (self-signed, 12 months) | the API through the reference `Erp:Platform:Identity:ClientCertificate` (bound by the authentication phase) | section 5b |
 | `Erp--Platform--Identity--RuntimeClientCertificate` | `kv-erp-ai-pro-prod` | `scripts/azure/entra.sh` (self-signed, 12 months) | the api container as the compose secret file `erp-runtime-client.pem` (never a reference) | section 5c |
 | `Erp--Platform--DataProtection--Key` (key) | both vaults | `scripts/azure/provision.sh` (RSA 2048) | the Data Protection key ring from the authentication phase | that phase's runbook |
-| `Erp--Platform--Database--ConnectionString` | both vaults | the backend-platform phase | the API through its reference | that phase's runbook |
+| `Erp--Platform--Database--ConnectionString` | `kv-erp-ai-pro-dev` (`kv-erp-ai-pro-prod` from the first-deployment phase) | `az keyvault secret set --file` in the session that introduced the key, with the owner's consent; the local-dev value is the Windows sign-in string `Server=localhost;Database=ErpAiPro;Integrated Security=True;Encrypt=True;TrustServerCertificate=True` and holds no credential | `dotnet run` with the store through the reference `Erp:Platform:Database:ConnectionString` (label `local-dev`; the same value sits in `dotnet user-secrets` for `dotnet ef`); the container stack reads the file secret `Erp__Platform__Database__ConnectionString` instead (a SQL login, never a reference) | section 5d |
 
 ## 4. Refresh intervals
 
@@ -66,9 +66,17 @@ Recreating the api container applies everything at once: `docker compose -f infr
 5. `bash scripts/azure/entra.sh --prune-old-credentials runtime`, then `bash scripts/azure/verify.sh --entra`.
 6. Shred both staging copies, on the server `shred -u ~/erp-runtime-client.pem` and on the workstation `shred -u scripts/azure/out/erp-runtime-client.pem` (`rm -P` on macOS; on Windows delete it from a volume without shadow copies). Only `infra/compose/secrets/erp-runtime-client.pem` on the server remains.
 
-### 5d. Data-protection key and database connection string
+### 5d. Database connection string
 
-Rotation of `Erp--Platform--DataProtection--Key` and `Erp--Platform--Database--ConnectionString` is written by the phases that introduce their consumers (authentication and backend-platform); until then the key exists only so the role assignments are meaningful.
+The value differs per consumer, so rotate the one that changed:
+
+1. Host processes on the owner's machine (`dotnet run`, `dotnet ef`, tests) sign in with Windows authentication, so `Erp--Platform--Database--ConnectionString` in `kv-erp-ai-pro-dev` carries no credential and changes only when the server or database name does: set a new secret version (5a step 2), bump the `local-dev` sentinel (section 4) or restart `dotnet run`, and set the same value again with `dotnet user-secrets set "Erp:Platform:Database:ConnectionString" ... --project Hosts/Api/Dewiride.Erp.Host.Api` from `backend/` so `dotnet ef` follows.
+2. The container stack signs in with a SQL login carried by the file secret `infra/compose/secrets/Erp__Platform__Database__ConnectionString`: change the login's password in SQL Server first (`ALTER LOGIN <login> WITH PASSWORD = ...` from SQL Server Management Studio, the same rule as 5a step 1), rewrite the file with the new password, then `docker compose -f infra/compose/compose.yaml -f infra/compose/compose.override.yaml up -d --force-recreate api`.
+3. Production (from the first-deployment phase) uses `Authentication="Active Directory Default"` and holds no password: a new version in `kv-erp-ai-pro-prod` (5a step 2), a `production` sentinel bump and `docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api`.
+
+### 5e. Data-protection key
+
+Rotation of `Erp--Platform--DataProtection--Key` is written by the authentication phase, which introduces its consumer; until then the key exists only so the role assignments are meaningful.
 
 ## 6. Emergency revocation
 

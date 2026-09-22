@@ -1,5 +1,5 @@
 name: Set up backend
-description: Installs the .NET SDK from global.json and restores NuGet packages in locked mode.
+description: Installs the .NET SDK from global.json, restores the local tools from dotnet-tools.json and restores NuGet packages in locked mode.
 runs:
   using: composite
   steps:
@@ -8,7 +8,13 @@ runs:
       with:
         global-json-file: backend/global.json
         cache: true
-        cache-dependency-path: backend/Hosts/**/packages.lock.json
+        cache-dependency-path: |
+          backend/Hosts/**/packages.lock.json
+          backend/.config/dotnet-tools.json
+    - name: Restore tools
+      shell: bash
+      working-directory: backend
+      run: dotnet tool restore
     - name: Restore packages
       shell: bash
       working-directory: backend

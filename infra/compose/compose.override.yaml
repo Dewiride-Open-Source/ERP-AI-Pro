@@ -6,6 +6,8 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     extra_hosts:
       - host.docker.internal:host-gateway
+    secrets:
+      - Erp__Platform__Database__ConnectionString
     ports:
       - "127.0.0.1:5080:8080"
 
@@ -26,3 +28,7 @@ services:
     ports:
       - "127.0.0.1:18888:18888"
     restart: unless-stopped
+
+secrets:
+  Erp__Platform__Database__ConnectionString:
+    file: ./secrets/Erp__Platform__Database__ConnectionString

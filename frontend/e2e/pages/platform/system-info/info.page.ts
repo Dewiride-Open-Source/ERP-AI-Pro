@@ -9,6 +9,12 @@ export class SystemInfoPage {
   readonly uptime: Locator;
   readonly refresh: Locator;
   readonly unavailable: Locator;
+  readonly startupsCard: Locator;
+  readonly startupsTable: Locator;
+  readonly startupsRows: Locator;
+  readonly startupsVersion: Locator;
+  readonly startupsEmpty: Locator;
+  readonly startupsUnavailable: Locator;
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole("heading", { name: "System information" });
@@ -19,6 +25,12 @@ export class SystemInfoPage {
     this.uptime = page.getByTestId("system-info-uptime");
     this.refresh = page.getByTestId("system-info-refresh");
     this.unavailable = page.getByTestId("system-info-unavailable");
+    this.startupsCard = page.getByTestId("recent-startups-card");
+    this.startupsTable = page.getByTestId("recent-startups-table");
+    this.startupsRows = page.getByTestId("recent-startups-row");
+    this.startupsVersion = this.startupsRows.first().getByTestId("recent-startups-version");
+    this.startupsEmpty = page.getByTestId("recent-startups-empty");
+    this.startupsUnavailable = page.getByTestId("recent-startups-unavailable");
   }
 
   async goto(): Promise<void> {

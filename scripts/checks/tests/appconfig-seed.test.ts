@@ -9,6 +9,7 @@ import {
   readFeatureFlags,
   readKeyVaultReferences,
   readSeedData,
+  referenceLabels,
   repoRoot,
   validateSeedData,
   type SeedData,
@@ -167,6 +168,29 @@ test('a Key Vault reference needs an Erp key, an Erp-- secret name, one listing 
   assert.ok(problems.some((p) => p.includes("key 'Erp:Platform:Identity:ClientCertificate' is listed twice")));
 });
 
+test('a Key Vault reference may restrict itself to one label', () => {
+  const data = wellFormed();
+  data.references.push({ key: 'Erp:Platform:Database:ConnectionString', secret: 'Erp--Platform--Database--ConnectionString', labels: ['local-dev'] });
+  data.references.push({ key: 'Erp:Platform:Mail:Password', secret: 'Erp--Platform--Mail--Password', labels: ['production', 'local-dev'] });
+  assert.deepEqual(validateSeedData(data), []);
+  assert.deepEqual(referenceLabels(data.references[0]!), ['local-dev', 'production']);
+  assert.deepEqual(referenceLabels(data.references[1]!), ['local-dev']);
+});
+
+test('a Key Vault reference with an unknown, empty, duplicated or non-array labels value is reported', () => {
+  const data = wellFormed();
+  data.references.push({ key: 'Erp:Platform:Database:ConnectionString', secret: 'Erp--Platform--Database--ConnectionString', labels: ['staging'] as never });
+  data.references.push({ key: 'Erp:Platform:Mail:Password', secret: 'Erp--Platform--Mail--Password', labels: [] });
+  data.references.push({ key: 'Erp:Finance:Gst:ApiKey', secret: 'Erp--Finance--Gst--ApiKey', labels: ['local-dev', 'local-dev'] });
+  data.references.push({ key: 'Erp:Finance:Gst:Password', secret: 'Erp--Finance--Gst--Password', labels: 'local-dev' as never });
+  assert.deepEqual(validateSeedData(data), [
+    "key-vault-references.json: labels of 'Erp:Platform:Database:ConnectionString' must list local-dev and/or production",
+    "key-vault-references.json: labels of 'Erp:Platform:Mail:Password' must list local-dev and/or production",
+    "key-vault-references.json: labels of 'Erp:Finance:Gst:ApiKey' must list local-dev and/or production",
+    "key-vault-references.json: labels of 'Erp:Finance:Gst:Password' must list local-dev and/or production",
+  ]);
+});
+
 test('the flag and reference readers reject a document of the wrong shape', () => {
   const directory = mkdtempSync(join(tmpdir(), 'appconfig-seed-'));
   const flags = join(directory, 'feature-flags.json');
@@ -174,7 +198,7 @@ test('the flag and reference readers reject a document of the wrong shape', () =
   writeFileSync(flags, '{}');
   writeFileSync(references, '{ "key": "Erp:Platform:Identity:ClientCertificate" }');
   assert.throws(() => readFeatureFlags(flags), /expected \{ "flags": \[\.\.\.\] \}/);
-  assert.throws(() => readKeyVaultReferences(references), /expected an array of \{ key, secret \}/);
+  assert.throws(() => readKeyVaultReferences(references), /expected an array of \{ key, secret, labels\? \}/);
 });
 
 test('the command line prints tab-separated rows and validates a directory', () => {
@@ -189,7 +213,10 @@ test('the command line prints tab-separated rows and validates a directory', () 
   ]);
   const references = run('references', join(seedDirectory, 'key-vault-references.json'));
   assert.equal(references.status, 0);
-  assert.equal(references.stdout.trim(), 'Erp:Platform:Identity:ClientCertificate\tErp--Platform--Identity--ClientCertificate');
+  assert.deepEqual(references.stdout.trim().split('\n'), [
+    'Erp:Platform:Identity:ClientCertificate\tErp--Platform--Identity--ClientCertificate\tlocal-dev,production',
+    'Erp:Platform:Database:ConnectionString\tErp--Platform--Database--ConnectionString\tlocal-dev',
+  ]);
   assert.equal(run('validate', seedDirectory).status, 0);
 
   const broken = mkdtempSync(join(tmpdir(), 'appconfig-seed-'));

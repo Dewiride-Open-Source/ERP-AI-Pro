@@ -25,6 +25,31 @@ test.describe("system information page", () => {
       - definition: /\\d+s/
     `);
 
+    await expect(systemInfo.startupsCard).toBeVisible();
+    await expect(systemInfo.startupsUnavailable).toHaveCount(0);
+    await expect(systemInfo.startupsEmpty).toHaveCount(0);
+    await expect(systemInfo.startupsRows.first()).toBeVisible();
+    expect(await systemInfo.startupsRows.count()).toBeGreaterThanOrEqual(1);
+    await expect(systemInfo.startupsVersion).toContainText(/\d+\.\d+\.\d+/);
+
+    await expect(systemInfo.startupsTable).toMatchAriaSnapshot(`
+      - table:
+        - rowgroup:
+          - row "Started Version Framework Environment Recorded":
+            - columnheader "Started"
+            - columnheader "Version"
+            - columnheader "Framework"
+            - columnheader "Environment"
+            - columnheader "Recorded"
+        - rowgroup:
+          - row /\\d+\\.\\d+\\.\\d+/:
+            - cell /\\d{4}/
+            - cell /\\d+\\.\\d+\\.\\d+/
+            - cell /\\.NET \\d+\\.\\d+/
+            - cell /\\w+/
+            - cell /\\d{4}/
+    `);
+
     const refreshed = page.waitForResponse(
       (response) =>
         response.url().includes("/platform/system-info") && response.request().headers()["rsc"] === "1",
@@ -33,6 +58,7 @@ test.describe("system information page", () => {
     expect((await refreshed).ok()).toBe(true);
     await expect(systemInfo.refresh).toBeEnabled();
     await expect(systemInfo.uptime).toContainText(/\d+s/);
+    await expect(systemInfo.startupsRows.first()).toBeVisible();
 
     await capture("system-info");
   });

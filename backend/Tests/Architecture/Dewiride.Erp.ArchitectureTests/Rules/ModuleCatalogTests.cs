@@ -1,7 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.Testing;
 using Microsoft.AspNetCore.Authorization;
-using HostModules = Dewiride.Erp.Host.Api.Modules;
+using HostModules = Dewiride.Erp.Host.Composition.Modules;
 
 namespace Dewiride.Erp.ArchitectureTests.Rules;
 
@@ -12,6 +12,7 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         "/healthz/live",
         "/healthz/ready",
         "/api/platform/system-info",
+        "/api/platform/system-info/startups",
         "/api/platform/features",
         "/openapi/{documentName}.json",
     ];

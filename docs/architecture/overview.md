@@ -21,7 +21,7 @@ ERP-AI-Pro is a modular monolith: one ASP.NET Core process hosts independent bus
 
 | Piece | Technology | Notes |
 |---|---|---|
-| API host | .NET 10, ASP.NET Core minimal APIs | composes every module from `Hosts/Api/Modules.cs`; owns authentication, authorization, antiforgery, rate limiting, ProblemDetails, OpenAPI, health |
+| API host | .NET 10, ASP.NET Core minimal APIs | composes every module from `Modules.All` in `Hosts/Composition`; owns authentication, authorization, antiforgery, rate limiting, ProblemDetails, OpenAPI, health |
 | Modules | one assembly + one contracts assembly each | own schema, route group, feature flag, permissions; communicate through contracts and integration events |
 | Web app | Next.js 16 App Router | routing-only `app/`, feature folders mirroring modules, Server Components and Server Functions, nonce CSP |
 | Database | SQL Server (owner's instance) / Azure SQL | one database, schema per module, migrations per module, applied by the migrator container in production |

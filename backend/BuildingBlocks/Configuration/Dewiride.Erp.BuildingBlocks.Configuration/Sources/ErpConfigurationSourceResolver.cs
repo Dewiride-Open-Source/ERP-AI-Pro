@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 
-internal static class ErpConfigurationSourceResolver
+public static class ErpConfigurationSourceResolver
 {
     public const string EndpointVariable = "APPCONFIG_ENDPOINT";
 
@@ -11,8 +11,18 @@ internal static class ErpConfigurationSourceResolver
 
     public const string InMemorySource = "InMemory";
 
+    public const string LocalDevelopmentSource = "LocalDevelopment";
+
     public static ErpConfigurationInfo Resolve(IConfiguration bootstrap, IHostEnvironment environment)
     {
+        ArgumentNullException.ThrowIfNull(bootstrap);
+        ArgumentNullException.ThrowIfNull(environment);
+
+        if (string.Equals(bootstrap[SourceSetting], LocalDevelopmentSource, StringComparison.OrdinalIgnoreCase))
+        {
+            return new ErpConfigurationInfo(ErpConfigurationSource.LocalDevelopment, null, null);
+        }
+
         var endpointValue = bootstrap[EndpointVariable];
         if (!string.IsNullOrWhiteSpace(endpointValue))
         {

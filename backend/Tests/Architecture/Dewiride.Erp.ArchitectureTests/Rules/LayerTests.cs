@@ -24,6 +24,8 @@ public sealed class LayerTests
 
     private static readonly IObjectProvider<IType> PersistenceTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Persistence(\..*)?$").As("persistence types");
 
+    private static readonly IObjectProvider<IType> HostingTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Hosting(\..*)?$").As("hosting types");
+
     [Fact]
     public void Domain_DependsOnlyOnKernelSharedKernelAndSystem()
     {
@@ -52,6 +54,18 @@ public sealed class LayerTests
     public void Application_DoesNotDependOnEndpoints()
     {
         AssertRule(Types().That().Are(ApplicationTypes).Should().NotDependOnAny(EndpointTypes).WithoutRequiringPositiveResults());
+    }
+
+    [Fact]
+    public void Persistence_DoesNotDependOnAspNetCoreOrEndpoints()
+    {
+        AssertRule(Types().That().Are(PersistenceTypes).Should().NotDependOnAny(AspNetCoreTypes).AndShould().NotDependOnAny(EndpointTypes).WithoutRequiringPositiveResults());
+    }
+
+    [Fact]
+    public void Hosting_DoesNotDependOnAspNetCoreEntityFrameworkOrEndpoints()
+    {
+        AssertRule(Types().That().Are(HostingTypes).Should().NotDependOnAny(AspNetCoreTypes).AndShould().NotDependOnAny(EntityFrameworkTypes).AndShould().NotDependOnAny(EndpointTypes).WithoutRequiringPositiveResults());
     }
 
     [Fact]
