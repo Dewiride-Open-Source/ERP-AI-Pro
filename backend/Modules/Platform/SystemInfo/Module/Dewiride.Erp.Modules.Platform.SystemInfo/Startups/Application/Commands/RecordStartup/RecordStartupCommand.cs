@@ -9,4 +9,4 @@ internal sealed record RecordStartupCommand(
     string EnvironmentName,
     string? ConfigurationLabel,
     string MachineName,
-    DateTimeOffset StartedAt) : ICommand<StartupId>;
+    DateTimeOffset StartedAt) : ICommand<ApiStartupId>;

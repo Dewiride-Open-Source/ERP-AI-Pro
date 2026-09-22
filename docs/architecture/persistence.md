@@ -54,7 +54,7 @@ dotnet ef migrations has-pending-model-changes --context SystemInfoDbContext --p
 ```
 
 - `dotnet ef` always runs the API host offline: `AddErpPlatform` sets the bootstrap setting `ERP_CONFIGURATION_SOURCE=LocalDevelopment` when `EF.IsDesignTime` is true, before `AddErpConfiguration` runs, so a design-time host never contacts Azure App Configuration and reads the connection string from user secrets (developer machine) or the environment variable (CI). `LocalDevelopment` forces `appsettings.json` + user secrets + environment in any `ASPNETCORE_ENVIRONMENT`.
-- There is no `IDesignTimeDbContextFactory`: the host composition builds every context with exactly the run-time options (schema, history table, provider, conventions), and a per-module factory would duplicate that wiring and drift from it.
+- No module carries an `IDesignTimeDbContextFactory`: the host composition builds every module context with exactly the run-time options (schema, history table, provider, conventions), and a per-module factory would duplicate that wiring and drift from it. The one factory in the repository is the test-only `SampleDbContextDesignTimeFactory` of the BuildingBlocks integration tests, whose `SampleDbContext` is not in the catalogue and whose test executable hosts no API.
 - Migration SQL must run unchanged on SQL Server 2025 and Azure SQL: no `USE`, no cross-database names, no SQL Agent, no server-level permissions.
 - Migrations are never applied at startup (`Migrate()`/`EnsureCreated()` are forbidden). Local development applies them with `dotnet ef database update`, which creates the `ErpAiPro` database when it does not exist; production applies them with the migrator from the migration-tooling sub-phase.
 

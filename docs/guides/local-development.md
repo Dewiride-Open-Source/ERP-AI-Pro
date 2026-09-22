@@ -56,7 +56,7 @@ pnpm dev                                                   # http://localhost:30
 
 1. Enable TCP/IP for the instance on port 1433 (SQL Server Configuration Manager → SQL Server Network Configuration → Protocols → TCP/IP → Enabled, IPAll → TCP Port 1433) and restart the SQL Server service.
 2. Enable mixed-mode sign-in (SQL Server Management Studio → server Properties → Security → SQL Server and Windows Authentication mode) and restart the service.
-3. Create a SQL login and its user in `ErpAiPro` with `db_datareader`, `db_datawriter` and `db_ddladmin`.
+3. Create a SQL login and its user in `ErpAiPro` with `db_datareader` and `db_datawriter`: the api container only reads and writes rows, because migrations are applied from the host with `dotnet ef database update` (the migrator container of the migration-tooling sub-phase adds the schema right it needs).
 4. Write the git-ignored file `infra/compose/secrets/Erp__Platform__Database__ConnectionString` holding `Server=host.docker.internal,1433;Database=ErpAiPro;User ID=<login>;Password=<password>;Encrypt=True;TrustServerCertificate=True`. `compose.override.yaml` mounts it as the compose secret `Erp__Platform__Database__ConnectionString` on the api service, the key-per-file provider reads `/run/secrets/Erp__Platform__Database__ConnectionString` as `Erp:Platform:Database:ConnectionString`, and the compose smoke script refuses to start without the file, naming it.
 
 ## Everyday commands

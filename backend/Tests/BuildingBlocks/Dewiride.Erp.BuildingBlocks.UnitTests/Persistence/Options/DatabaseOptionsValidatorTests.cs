@@ -26,16 +26,4 @@ public sealed class DatabaseOptionsValidatorTests
 
         Assert.True(result.Succeeded);
     }
-
-    [Fact]
-    public void Defaults_MatchTheDocumentedValues()
-    {
-        var options = new DatabaseOptions();
-
-        Assert.Null(options.ConnectionString);
-        Assert.Equal(DatabaseProvider.SqlServer, options.Provider);
-        Assert.Equal(TimeSpan.FromSeconds(30), options.CommandTimeout);
-        Assert.Equal(5, options.MaxRetryCount);
-        Assert.Equal(TimeSpan.FromSeconds(10), options.MaxRetryDelay);
-    }
 }

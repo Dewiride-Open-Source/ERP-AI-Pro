@@ -46,13 +46,16 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
         using var client = factory.CreateClient();
         await factory.Services.GetRequiredService<StartupRecorder>().Recorded.WaitAsync(TestContext.Current.CancellationToken);
         var oldest = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var seededNewestFirst = new List<Guid>();
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<SystemInfoDbContext>();
             for (var i = 0; i < 25; i++)
             {
                 var startedAt = oldest.AddMinutes(i);
-                context.Startups.Add(ApiStartup.Record("ERP-AI-Pro (seeded)", new BuildInfo($"0.0.{i}", ".NET 10.0.0"), "Test", null, "seed", startedAt, startedAt.AddSeconds(1)).Value);
+                var startup = ApiStartup.Record("ERP-AI-Pro (seeded)", new BuildInfo($"0.0.{i}", ".NET 10.0.0"), "Test", null, "seed", startedAt, startedAt.AddSeconds(1)).Value;
+                context.Startups.Add(startup);
+                seededNewestFirst.Insert(0, startup.Id.Value);
             }
 
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -65,11 +68,10 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
         Assert.NotNull(body);
         Assert.Equal(ListRecentStartupsQuery.DefaultCount, body.Startups.Count);
         Assert.Equal(body.Startups.OrderByDescending(s => s.StartedAt).ThenByDescending(s => s.RecordedAt).Select(s => s.Id), body.Startups.Select(s => s.Id));
-        await using (var scope = factory.Services.CreateAsyncScope())
-        {
-            var context = scope.ServiceProvider.GetRequiredService<SystemInfoDbContext>();
-            var expected = await context.Startups.OrderByDescending(s => s.StartedAt).ThenByDescending(s => s.RecordedAt).Take(ListRecentStartupsQuery.DefaultCount).Select(s => s.Id.Value).ToListAsync(TestContext.Current.CancellationToken);
-            Assert.Equal(expected, body.Startups.Select(s => s.Id));
-        }
+        var seededInResponse = body.Startups.Select(s => s.Id).Where(seededNewestFirst.Contains).ToList();
+        var liveStartsInResponse = body.Startups.Count - seededInResponse.Count;
+        Assert.InRange(liveStartsInResponse, 1, ListRecentStartupsQuery.DefaultCount - 1);
+        Assert.Equal(seededNewestFirst.Take(ListRecentStartupsQuery.DefaultCount - liveStartsInResponse), seededInResponse);
+        Assert.DoesNotContain(seededNewestFirst[^1], body.Startups.Select(s => s.Id));
     }
 }

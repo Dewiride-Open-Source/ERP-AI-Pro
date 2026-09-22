@@ -3,7 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 
 namespace Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Domain;
 
-internal sealed class ApiStartup : AggregateRoot<StartupId>
+internal sealed class ApiStartup : AggregateRoot<ApiStartupId>
 {
     public const int ApplicationNameMaxLength = 100;
 
@@ -17,7 +17,7 @@ internal sealed class ApiStartup : AggregateRoot<StartupId>
 
     public const int MachineNameMaxLength = 100;
 
-    private ApiStartup(StartupId id)
+    private ApiStartup(ApiStartupId id)
         : base(id)
     {
     }
@@ -47,35 +47,35 @@ internal sealed class ApiStartup : AggregateRoot<StartupId>
     {
         if (string.IsNullOrWhiteSpace(applicationName))
         {
-            return StartupErrors.ApplicationNameRequired;
+            return ApiStartupErrors.ApplicationNameRequired;
         }
 
         if (string.IsNullOrWhiteSpace(build.Version))
         {
-            return StartupErrors.VersionRequired;
+            return ApiStartupErrors.VersionRequired;
         }
 
         if (string.IsNullOrWhiteSpace(build.Framework))
         {
-            return StartupErrors.FrameworkRequired;
+            return ApiStartupErrors.FrameworkRequired;
         }
 
         if (string.IsNullOrWhiteSpace(environmentName))
         {
-            return StartupErrors.EnvironmentNameRequired;
+            return ApiStartupErrors.EnvironmentNameRequired;
         }
 
         if (string.IsNullOrWhiteSpace(machineName))
         {
-            return StartupErrors.MachineNameRequired;
+            return ApiStartupErrors.MachineNameRequired;
         }
 
         if (recordedAt < startedAt)
         {
-            return StartupErrors.RecordedBeforeStart;
+            return ApiStartupErrors.RecordedBeforeStart;
         }
 
-        return new ApiStartup(StartupId.Create())
+        return new ApiStartup(ApiStartupId.Create())
         {
             ApplicationName = Truncate(applicationName, ApplicationNameMaxLength),
             Build = new BuildInfo(Truncate(build.Version, VersionMaxLength), Truncate(build.Framework, FrameworkMaxLength)),

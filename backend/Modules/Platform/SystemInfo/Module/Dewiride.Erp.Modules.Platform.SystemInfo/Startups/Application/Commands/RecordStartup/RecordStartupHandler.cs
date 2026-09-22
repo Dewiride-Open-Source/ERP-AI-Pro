@@ -5,9 +5,9 @@ using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Domain;
 
 namespace Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Application.Commands.RecordStartup;
 
-internal sealed class RecordStartupHandler(SystemInfoDbContext context, TimeProvider timeProvider) : ICommandHandler<RecordStartupCommand, StartupId>
+internal sealed class RecordStartupHandler(SystemInfoDbContext context, TimeProvider timeProvider) : ICommandHandler<RecordStartupCommand, ApiStartupId>
 {
-    public async Task<Result<StartupId>> HandleAsync(RecordStartupCommand command, CancellationToken cancellationToken)
+    public async Task<Result<ApiStartupId>> HandleAsync(RecordStartupCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
 

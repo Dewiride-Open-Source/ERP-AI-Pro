@@ -54,7 +54,7 @@ public sealed class ApiStartupTests
         var result = ApiStartup.Record("ERP-AI-Pro", new BuildInfo("1.0.0", ".NET 10.0.1"), "Development", null, "DEV-BOX", StartedAt, StartedAt.AddTicks(-1));
 
         Assert.True(result.IsFailure);
-        Assert.Equal(StartupErrors.RecordedBeforeStart, result.Error);
+        Assert.Equal(ApiStartupErrors.RecordedBeforeStart, result.Error);
     }
 
     [Fact]

@@ -1,3 +1,2 @@
-export { SystemInfoCard } from "./info/components/system-info-card";
+export { SystemInfoOverview } from "./info/components/system-info-overview";
 export { systemInfoNavigation } from "./nav";
-export { RecentStartupsTable } from "./startups/components/recent-startups-table";

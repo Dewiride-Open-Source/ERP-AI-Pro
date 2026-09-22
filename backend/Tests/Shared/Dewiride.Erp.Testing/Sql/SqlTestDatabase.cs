@@ -1,3 +1,4 @@
+using System.Data;
 using System.Security.Cryptography;
 using Microsoft.Data.SqlClient;
 using Xunit;
@@ -11,6 +12,8 @@ public sealed class SqlTestDatabase : IAsyncLifetime
     public const string NamePrefix = "ErpAiProTest_";
 
     private const int LeftoverAgeHours = 24;
+
+    private const string LeftoverLockResource = "ErpAiProTest_leftovers";
 
     private const string CreateStatement = "DECLARE @sql nvarchar(max) = N'CREATE DATABASE ' + QUOTENAME(@name) + N';'; EXEC sp_executesql @sql;";
 
@@ -31,9 +34,11 @@ public sealed class SqlTestDatabase : IAsyncLifetime
 
     public string ConnectionString { get; private set; } = string.Empty;
 
-    public async ValueTask InitializeAsync()
+    public static string ResolveServerConnectionString(Func<string, string?> environmentVariable)
     {
-        var server = Environment.GetEnvironmentVariable(ConnectionVariable);
+        ArgumentNullException.ThrowIfNull(environmentVariable);
+
+        var server = environmentVariable(ConnectionVariable);
         if (string.IsNullOrWhiteSpace(server))
         {
             throw new InvalidOperationException(
@@ -48,7 +53,12 @@ public sealed class SqlTestDatabase : IAsyncLifetime
                 $"{ConnectionVariable} must not name a database ('{builder.InitialCatalog}' was given); the fixture creates one per test process.");
         }
 
-        _serverConnectionString = builder.ConnectionString;
+        return builder.ConnectionString;
+    }
+
+    public async ValueTask InitializeAsync()
+    {
+        _serverConnectionString = ResolveServerConnectionString(Environment.GetEnvironmentVariable);
         Name = $"{NamePrefix}{TimeProvider.System.GetUtcNow():yyyyMMddHHmmss}_{Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(4))}";
 
         await using (var connection = new SqlConnection(_serverConnectionString))
@@ -58,8 +68,7 @@ public sealed class SqlTestDatabase : IAsyncLifetime
             await ExecuteAsync(connection, CreateStatement, Name);
         }
 
-        builder.InitialCatalog = Name;
-        ConnectionString = builder.ConnectionString;
+        ConnectionString = new SqlConnectionStringBuilder(_serverConnectionString) { InitialCatalog = Name }.ConnectionString;
         await TestDatabaseHost.MigrateAsync(ConnectionString);
         _current = this;
     }
@@ -80,30 +89,55 @@ public sealed class SqlTestDatabase : IAsyncLifetime
 
     private static async Task DropLeftoversAsync(SqlConnection connection)
     {
-        var leftovers = new List<string>();
-        await using (var command = connection.CreateCommand())
+        await using var command = connection.CreateCommand();
+        command.CommandText = "sp_getapplock";
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@Resource", LeftoverLockResource);
+        command.Parameters.AddWithValue("@LockMode", "Exclusive");
+        command.Parameters.AddWithValue("@LockOwner", "Session");
+        command.Parameters.AddWithValue("@LockTimeout", (int)TimeSpan.FromMinutes(2).TotalMilliseconds);
+        var outcome = command.Parameters.Add("@Result", SqlDbType.Int);
+        outcome.Direction = ParameterDirection.ReturnValue;
+        await command.ExecuteNonQueryAsync();
+        if ((int)outcome.Value < 0)
         {
-            command.CommandText = "SELECT name FROM sys.databases WHERE name LIKE @pattern AND create_date < DATEADD(hour, -@hours, GETDATE());";
-            command.Parameters.AddWithValue("@pattern", NamePrefix.Replace("_", "[_]", StringComparison.Ordinal) + "%");
-            command.Parameters.AddWithValue("@hours", LeftoverAgeHours);
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                leftovers.Add(reader.GetString(0));
-            }
+            throw new InvalidOperationException($"The lock '{LeftoverLockResource}' guarding the cleanup of leftover test databases was not granted (sp_getapplock returned {outcome.Value}).");
         }
 
-        foreach (var leftover in leftovers)
+        foreach (var leftover in await FindLeftoversAsync(connection))
         {
             await ExecuteAsync(connection, DropStatement, leftover);
         }
+
+        await using var release = connection.CreateCommand();
+        release.CommandText = "sp_releaseapplock";
+        release.CommandType = CommandType.StoredProcedure;
+        release.Parameters.AddWithValue("@Resource", LeftoverLockResource);
+        release.Parameters.AddWithValue("@LockOwner", "Session");
+        await release.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<List<string>> FindLeftoversAsync(SqlConnection connection)
+    {
+        var leftovers = new List<string>();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT name FROM sys.databases WHERE name LIKE @pattern AND create_date < DATEADD(hour, -@hours, GETDATE());";
+        command.Parameters.AddWithValue("@pattern", NamePrefix.Replace("_", "[_]", StringComparison.Ordinal) + "%");
+        command.Parameters.AddWithValue("@hours", LeftoverAgeHours);
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            leftovers.Add(reader.GetString(0));
+        }
+
+        return leftovers;
     }
 
     private static async Task ExecuteAsync(SqlConnection connection, string statement, string database)
     {
         await using var command = connection.CreateCommand();
         command.CommandText = statement;
-        command.Parameters.Add("@name", System.Data.SqlDbType.NVarChar, 128).Value = database;
+        command.Parameters.Add("@name", SqlDbType.NVarChar, 128).Value = database;
         await command.ExecuteNonQueryAsync();
     }
 }

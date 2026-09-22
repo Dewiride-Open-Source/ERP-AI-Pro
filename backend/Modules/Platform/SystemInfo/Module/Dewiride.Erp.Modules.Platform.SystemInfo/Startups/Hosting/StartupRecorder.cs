@@ -22,9 +22,9 @@ internal sealed partial class StartupRecorder(
 {
     private static readonly Error Skipped = Error.Failure("startup.module-disabled", "The system-info module is disabled, so the start was not recorded.");
 
-    private readonly TaskCompletionSource<Result<StartupId>> _recorded = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<Result<ApiStartupId>> _recorded = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    public Task<Result<StartupId>> Recorded => _recorded.Task;
+    public Task<Result<ApiStartupId>> Recorded => _recorded.Task;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -44,7 +44,7 @@ internal sealed partial class StartupRecorder(
         }
     }
 
-    private async Task<Result<StartupId>> RecordAsync(CancellationToken cancellationToken)
+    private async Task<Result<ApiStartupId>> RecordAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var features = scope.ServiceProvider.GetRequiredService<IFeatureManager>();
@@ -61,7 +61,7 @@ internal sealed partial class StartupRecorder(
             configuration.Label,
             Environment.MachineName,
             application.StartedAt);
-        var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<RecordStartupCommand, StartupId>>();
+        var handler = scope.ServiceProvider.GetRequiredService<ICommandHandler<RecordStartupCommand, ApiStartupId>>();
         var result = await handler.HandleAsync(command, cancellationToken);
         if (result.IsFailure)
         {
