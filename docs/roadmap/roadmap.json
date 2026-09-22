@@ -456,10 +456,17 @@
           "id": "backend-platform-http-and-openapi-conventions",
           "title": "HTTP and OpenAPI conventions",
           "scope": "Standardise endpoints on TypedResults, per-module validation registration (built-in DataAnnotations validation with the per-assembly source generator), AddProblemDetails plus a global IExceptionHandler, correlation-id middleware, route prefix /api/<domain>/<feature>, an OpenAPI 3.1 document with build-time openapi.json and Scalar UI in Development only, and a generated TypeScript client in frontend/packages/api-client (generator chosen by ADR) with a CI drift check.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "Every API response carries an X-Correlation-ID header (the caller's value when it is well formed, otherwise the W3C trace id of the request), the same value appears as traceId in every ProblemDetails body and in the log scope of the request, and integration tests prove all three.",
+            "A request record that fails DataAnnotations or IValidatableObject answers 400 application/problem+json with an errors member per field, every non-2xx response carries type = /problems/<code> and the code extension, and the OpenAPI operation documents the validation problem shape.",
+            "docs/openapi/erp.json is an OpenAPI 3.1 document snapshotted from the test host and kept equal to the running API by a test that fails on drift and can be refreshed with ERP_OPENAPI_SNAPSHOT=update; a schema-shape test rejects the constructs the TypeScript generator cannot express.",
+            "frontend/packages/api-client is generated from that document into a built package the web app consumes for system info, startups and feature flags, no hand-written API response type remains in the web app or the Playwright suite, and a CI check fails when the generated output drifts from the committed one or is not deterministic.",
+            "The web pages that use the generated client are proven in a real browser (desktop and mobile, light and dark) and the ADR records the generator, the exact versions, the licences of every transitive dependency and the snapshot mechanism."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-22"
         },
         {
           "id": "backend-platform-transport-security-middleware",
