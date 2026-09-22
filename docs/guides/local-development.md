@@ -24,7 +24,8 @@ dotnet restore
 dotnet tool restore                                        # dotnet-ef from .config/dotnet-tools.json
 dotnet build --no-restore -warnaserror
 dotnet user-secrets set "Erp:Platform:Database:ConnectionString" "Server=localhost;Database=ErpAiPro;Integrated Security=True;Encrypt=True;TrustServerCertificate=True" --project Hosts/Api/Dewiride.Erp.Host.Api
-dotnet ef database update --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api   # creates ErpAiPro when it does not exist
+dotnet ef database update --context IdempotencyDbContext --project BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency --startup-project Hosts/Api/Dewiride.Erp.Host.Api   # creates ErpAiPro when it does not exist
+dotnet ef database update --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
 dotnet test --solution Dewiride.Erp.slnx                   # needs ERP_TEST_SQL_CONNECTION (section "Configuration and secrets")
 dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api      # http://localhost:5080
 

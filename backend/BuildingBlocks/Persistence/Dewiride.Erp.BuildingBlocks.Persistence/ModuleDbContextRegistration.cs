@@ -1,8 +1,10 @@
+using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.Observability.Health;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -32,8 +34,14 @@ public static class ModuleDbContextRegistration
         ArgumentException.ThrowIfNullOrWhiteSpace(schema);
 
         services.AddDbContext<TContext>((provider, options) =>
+        {
             Configure(options, provider.GetRequiredService<IOptions<DatabaseOptions>>().Value, schema)
-                .AddInterceptors(provider.GetRequiredService<AuditingSaveChangesInterceptor>(), provider.GetRequiredService<BulkWriteGuardInterceptor>()));
+                .AddInterceptors(provider.GetRequiredService<AuditingSaveChangesInterceptor>(), provider.GetRequiredService<BulkWriteGuardInterceptor>());
+            if (provider.GetService<ErpConfigurationInfo>()?.Source == ErpConfigurationSource.InMemory)
+            {
+                options.ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning));
+            }
+        });
         services.AddSingleton(new DbContextRegistration(typeof(TContext), schema));
         services.AddHealthChecks().AddDbContextCheck<TContext>($"database:{schema}", tags: [HealthEndpoints.ReadyTag]);
 

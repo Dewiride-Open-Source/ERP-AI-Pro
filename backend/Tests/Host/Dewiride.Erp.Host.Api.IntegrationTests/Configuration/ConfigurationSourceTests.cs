@@ -37,6 +37,6 @@ public sealed class ConfigurationSourceTests : IClassFixture<ErpApiFactory>
     {
         var registrations = _factory.Services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
 
-        Assert.Equal(["database:platform_system_info", "self"], registrations.Select(r => r.Name).Order(StringComparer.Ordinal));
+        Assert.Equal(["database:platform_idempotency", "database:platform_system_info", "self"], registrations.Select(r => r.Name).Order(StringComparer.Ordinal));
     }
 }

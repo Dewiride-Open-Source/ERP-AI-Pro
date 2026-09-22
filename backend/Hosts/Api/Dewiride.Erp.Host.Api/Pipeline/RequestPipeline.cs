@@ -1,6 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Endpoints;
+using Dewiride.Erp.BuildingBlocks.Idempotency;
 using Dewiride.Erp.BuildingBlocks.Modules.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
@@ -42,6 +43,7 @@ internal static class RequestPipeline
         app.UseHostFiltering();
         app.UseErpEndpointPipeline();
         app.UseFeatureGate();
+        app.UseErpIdempotency();
 
         return app;
     }

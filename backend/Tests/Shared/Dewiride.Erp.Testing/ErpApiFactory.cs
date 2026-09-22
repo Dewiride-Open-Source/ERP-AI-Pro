@@ -3,6 +3,7 @@ using Dewiride.Erp.Testing.Sql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -21,6 +22,8 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
     private const string FeatureFlagsSection = "feature_management:feature_flags:";
 
     private readonly Dictionary<string, string> _configuration = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly List<Action<IEndpointRouteBuilder>> _testEndpoints = [];
 
     private bool _hostCreated;
 
@@ -61,6 +64,19 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
             .WithConfiguration($"{FeatureFlagsSection}{index}:enabled", enabled ? "true" : "false");
     }
 
+    public ErpApiFactory WithTestEndpoints(Action<IEndpointRouteBuilder> map)
+    {
+        ArgumentNullException.ThrowIfNull(map);
+        if (_hostCreated)
+        {
+            throw new InvalidOperationException("WithTestEndpoints must be called before the first client or service is requested from the factory.");
+        }
+
+        _testEndpoints.Add(map);
+
+        return this;
+    }
+
     protected override IHost CreateHost(IHostBuilder builder)
     {
         _hostCreated = true;
@@ -86,7 +102,29 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);
         builder.UseSetting("APPCONFIG_ENDPOINT", string.Empty);
         builder.UseSetting(ConfigurationSourceSetting, InMemorySource);
-        builder.ConfigureServices(services => services.AddTransient<IStartupFilter, ThrowingRouteStartupFilter>());
+        builder.ConfigureServices(services =>
+        {
+            services.AddTransient<IStartupFilter, ThrowingRouteStartupFilter>();
+            services.AddTransient<IStartupFilter>(_ => new TestEndpointsStartupFilter(_testEndpoints));
+        });
+    }
+
+    private sealed class TestEndpointsStartupFilter(IReadOnlyList<Action<IEndpointRouteBuilder>> maps) : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+        {
+            next(app);
+            if (maps.Count > 0)
+            {
+                app.UseEndpoints(routes =>
+                {
+                    foreach (var map in maps)
+                    {
+                        map(routes);
+                    }
+                });
+            }
+        };
     }
 
     private sealed class ThrowingRouteStartupFilter : IStartupFilter

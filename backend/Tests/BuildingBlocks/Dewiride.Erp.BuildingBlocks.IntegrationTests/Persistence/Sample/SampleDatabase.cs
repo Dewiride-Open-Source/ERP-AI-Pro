@@ -1,4 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
+using Dewiride.Erp.BuildingBlocks.Idempotency.Persistence;
+using Dewiride.Erp.BuildingBlocks.Idempotency.Storage;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
@@ -30,13 +33,19 @@ public sealed class SampleDatabase : IAsyncLifetime
         services.AddScoped<IActorContext>(_ => Actor);
         services.AddErpPersistenceCore();
         services.AddModuleDbContext<SampleDbContext>(SampleDbContext.SchemaName);
+        services.AddModuleDbContext<IdempotencyDbContext>(IdempotencyDbContext.SchemaName);
+        services.AddScoped<IIdempotencyStore, SqlIdempotencyStore>();
+        services.AddHandlersFromAssembly(typeof(SampleDatabase).Assembly);
         _provider = services.BuildServiceProvider();
 
         await _provider.GetRequiredService<DatabaseMigrator>().MigrateAllAsync(CancellationToken.None);
     }
 
-    public AsyncServiceScope CreateScope() =>
-        (_provider ?? throw new InvalidOperationException("The sample database has not been initialised.")).CreateAsyncScope();
+    public IServiceScopeFactory ScopeFactory => Provider.GetRequiredService<IServiceScopeFactory>();
+
+    private ServiceProvider Provider => _provider ?? throw new InvalidOperationException("The sample database has not been initialised.");
+
+    public AsyncServiceScope CreateScope() => Provider.CreateAsyncScope();
 
     public async Task AddAsync(SampleAggregate sample)
     {

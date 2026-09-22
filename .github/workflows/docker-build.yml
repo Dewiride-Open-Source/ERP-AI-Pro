@@ -36,7 +36,9 @@ jobs:
         working-directory: backend
         env:
           Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
-        run: dotnet ef database update --no-build --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
+        run: |
+          dotnet ef database update --no-build --context IdempotencyDbContext --project BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency --startup-project Hosts/Api/Dewiride.Erp.Host.Api
+          dotnet ef database update --no-build --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
       - name: Write the compose database secret
         env:
           CONNECTION_STRING: ${{ steps.sql.outputs.container-connection-string }}

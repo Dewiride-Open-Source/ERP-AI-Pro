@@ -33,7 +33,7 @@ Every module DbContext derives from `ModuleDbContext`, lives in `<Module>.Persis
 - a readiness health check named `database:<schema>` (`AddDbContextCheck<TContext>`) tagged `ready`, reported by `/healthz/ready`;
 - an entry in the `DbContextCatalog`, which `DatabaseMigrator.MigrateAllAsync` walks in registration order.
 
-`ErpHostComposition.AddErpPlatform(this IHostApplicationBuilder builder, Assembly hostAssembly)` in `Hosts/Composition/Dewiride.Erp.Host.Composition` runs the design-time source rule, then `AddErpConfiguration(hostAssembly)`, `AddErpPersistence()` and `AddModules(Modules.All)`. The API host, the test database host and the migrator all call it, so no context can be missing from the catalogue.
+`ErpHostComposition.AddErpPlatform(this IHostApplicationBuilder builder, Assembly hostAssembly)` in `Hosts/Composition/Dewiride.Erp.Host.Composition` runs the design-time source rule, then `AddErpConfiguration(hostAssembly)`, `AddErpPersistence()`, `AddErpIdempotency()` and `AddModules(Modules.All)`. The API host, the test database host and the migrator all call it, so no context can be missing from the catalogue.
 
 ## Conventions
 
@@ -68,7 +68,7 @@ Three getter-only interfaces in `Dewiride.Erp.BuildingBlocks.Kernel.Domain` opt 
 | `Deleted` | not `ISoftDeletable` | the row is deleted |
 
 - `ModelRules.ApplySoftDelete` adds the named query filter `SoftDeleteFilter.Name` (`"SoftDelete"`, `entity => !entity.IsDeleted`) to every entity type that introduces `ISoftDeletable` into its hierarchy, so every query hides deleted rows; derived types inherit the root's filter. A derived type implementing it while its root does not, or an owned type implementing it, fails model building with an `InvalidOperationException` naming the type (EF Core allows a filter only on the root). An administrative read calls `SoftDeleteFilter.IncludeDeleted<TEntity>()`, which is `IgnoreQueryFilters([SoftDeleteFilter.Name])` and leaves every other named filter in force.
-- `ModelRules.ApplyRowVersion` maps `IVersioned.RowVersion` with `IsRowVersion()` on the type that introduces the interface: a SQL Server `rowversion` column, a concurrency token generated on add and update, so a stale update surfaces as `DbUpdateConcurrencyException` from `SaveChangesAsync`; the persistence layer never catches it, translating it into an `ErrorKind.Conflict` result belongs to the application pipeline.
+- `ModelRules.ApplyRowVersion` maps `IVersioned.RowVersion` with `IsRowVersion()` on the type that introduces the interface: a SQL Server `rowversion` column, a concurrency token generated on add and update, so a stale update surfaces as `DbUpdateConcurrencyException` from `SaveChangesAsync`; no entity configuration or interceptor catches it, and `EfUnitOfWork` — the unit of work of the application pipeline — turns it into `Error.Conflict("concurrency.conflict", …)` naming the entity types (`application-pipeline.md`).
 - `ModuleDbContext` sets `ChangeTracker.CascadeDeleteTiming = CascadeTiming.OnSaveChanges`: EF cascades only entries still `Deleted` after the interceptor ran, so `Remove(root)` on a soft-deletable aggregate leaves its loaded child entities and owned types untouched (the child rows stay, reachable through the hidden root), while a hard-deleted root still cascades at save time.
 - `ExecuteUpdateAsync` and `ExecuteDeleteAsync` run without the change tracker, so `BulkWriteGuardInterceptor` (an `IQueryExpressionInterceptor` on every module context) throws `InvalidOperationException` at query compilation for `ExecuteDelete` on an `ISoftDeletable` type and for `ExecuteUpdate` on an `IAuditable` or `ISoftDeletable` type; every other entity type keeps both operations, and the `SoftDelete` filter still applies to their source query.
 
@@ -108,7 +108,7 @@ dotnet ef migrations has-pending-model-changes --context SystemInfoDbContext --p
 - it drops leftover databases named `ErpAiProTest_%` older than 24 hours, creates `ErpAiProTest_<yyyyMMddHHmmss>_<8 hex>` and migrates every catalogue context through `TestDatabaseHost`, a non-started host built with `AddErpPlatform`;
 - it exposes the static `Current`; on dispose it clears the connection pools, sets `SINGLE_USER WITH ROLLBACK IMMEDIATE` and drops the database.
 
-`ErpApiFactory` injects `Current.ConnectionString` as `Erp:Platform:Database:ConnectionString` unless the test supplied one with `WithConfiguration`, and throws a message naming the `AssemblyFixture` line when no test database exists, so a Development test host can never reach the developer's own `ErpAiPro` database through the user-secrets value. Every test host registers the readiness checks `self` and `database:platform_system_info`.
+`ErpApiFactory` injects `Current.ConnectionString` as `Erp:Platform:Database:ConnectionString` unless the test supplied one with `WithConfiguration`, and throws a message naming the `AssemblyFixture` line when no test database exists, so a Development test host can never reach the developer's own `ErpAiPro` database through the user-secrets value. Every test host registers the readiness checks `self`, `database:platform_idempotency` and `database:platform_system_info`.
 
 ## CI
 

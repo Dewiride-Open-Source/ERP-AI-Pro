@@ -53,7 +53,12 @@ public sealed class SampleAggregate : AggregateRoot<SampleId>, IAuditable, ISoft
 
     public byte[] RowVersion { get; private set; } = [];
 
-    public void Rename(string name) => Name = name;
+    public void Rename(string name, DateTimeOffset renamedAt)
+    {
+        var oldName = Name;
+        Name = name;
+        Raise(new SampleRenamed(Id, oldName, name, renamedAt));
+    }
 
     public void Reprice(Money price) => Price = price;
 

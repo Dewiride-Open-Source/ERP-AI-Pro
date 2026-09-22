@@ -50,6 +50,8 @@ dotnet_diagnostic.CA1848.severity = none
 dotnet_diagnostic.CA2007.severity = none
 # CA1716: domain names such as Error and Event are deliberate even where they match language keywords
 dotnet_diagnostic.CA1716.severity = none
+# CA1711: IDomainEventHandler<TEvent> carries the domain-driven design name; no delegate type in this codebase ends in EventHandler
+dotnet_code_quality.CA1711.allowed_suffixes = EventHandler
 
 dotnet_naming_rule.interfaces_start_with_i.symbols = interfaces
 dotnet_naming_rule.interfaces_start_with_i.style = prefix_i

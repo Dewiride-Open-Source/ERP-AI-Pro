@@ -21,9 +21,9 @@ public sealed class ConcurrencyTests(SampleDatabase database) : IClassFixture<Sa
         var secondCopy = await secondContext.Samples.SingleAsync(s => s.Id == id, TestContext.Current.CancellationToken);
         var versionBefore = firstCopy.RowVersion.ToArray();
 
-        firstCopy.Rename("First writer");
+        firstCopy.Rename("First writer", database.Clock.GetUtcNow());
         await firstContext.SaveChangesAsync(TestContext.Current.CancellationToken);
-        secondCopy.Rename("Second writer");
+        secondCopy.Rename("Second writer", database.Clock.GetUtcNow());
 
         await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => secondContext.SaveChangesAsync(TestContext.Current.CancellationToken));
         Assert.Equal("First writer", (await database.FindAsync(id)).Name);

@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency.csproj" />
     <ProjectReference Include="../../../Hosts/Api/Dewiride.Erp.Host.Api/Dewiride.Erp.Host.Api.csproj" />
     <ProjectReference Include="../../Shared/Dewiride.Erp.Testing/Dewiride.Erp.Testing.csproj" />
   </ItemGroup>

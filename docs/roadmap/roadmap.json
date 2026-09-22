@@ -439,10 +439,18 @@
           "id": "backend-platform-application-layer-primitives",
           "title": "Application-layer primitives",
           "scope": "Add hand-written ICommand/IQuery handler abstractions with convention-based DI registration and pipeline steps (validation, unit of work, logging, transaction), a Result<T> type with typed error kinds mapped to RFC 9457 ProblemDetails, pagination/sorting/safe-filter request contracts, in-process domain events, and an idempotency-key endpoint filter for POST, with unit tests.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "done",
+          "acceptance": [
+            "A command handler resolved from the container runs the logging, validation and unit-of-work steps in that order regardless of registration order; a validation failure answers 400 application/problem+json with an errors member per field without touching the database; a successful command commits the handler's writes and its domain-event handlers' writes in one transaction; a failed result or an exception leaves no rows.",
+            "Paging, sorting and filtering request contracts cap the page size at 200 and reject a field or operator outside the handler's allow-list with 400 ProblemDetails codes query.invalid-field and query.invalid-operator, and the parsing of the wire grammar is covered by unit tests including separators inside values.",
+            "A POST endpoint marked with RequireIdempotencyKey() replays the stored response for a repeated Idempotency-Key with the header Idempotency-Replayed: true, answers 422 idempotency.key-reused for a different payload under the same key, 409 idempotency.in-progress while the first request is still running and 400 without a key, stores keys in platform_idempotency.IdempotencyKeys and purges them after Erp:Platform:Idempotency:RetentionPeriod — proven against SQL Server.",
+            "Unit tests cover every pipeline step, the paging contracts, the idempotency header and fingerprint, and the domain-event dispatch; integration tests prove the transactional behaviour on the sample aggregate; the application-pipeline architecture document exists and ADR-0016 is accepted."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-22",
+          "completedOn": "2026-09-22",
+          "notes": "Every handler resolves as a pipeline (AddHandlersFromAssembly): LoggingStep, ValidationStep (DataAnnotations + IValidatableObject into Error.Fields, rendered as HttpValidationProblemDetails) and UnitOfWorkStep ordered by PipelineStage; EfUnitOfWork runs a command in one transaction with its IDomainEventHandler reactions (events taken before each save so a removed aggregate still raises them, max 10 rounds, DbUpdateConcurrencyException becomes concurrency.conflict, UnitOfWorkSignal records the commit); query contracts PageRequest/SortRequest/FilterRequest with per-handler SortableFields/FilterableFields allow-lists, parameterised predicates, deterministic tie-breaker and ToPagedResultAsync, surfaced by Endpoints PagingParameters/PagedResponse; new BuildingBlocks.Idempotency owns platform_idempotency and the RequireIdempotencyKey middleware (fingerprint, replay, 400/409/422 codes, cleanup service), wired into AddErpPlatform and the request pipeline after the feature gate; Erp:Platform:Idempotency keys seeded with consent; 760 backend tests; ADR-0016 and docs/architecture/application-pipeline.md."
         },
         {
           "id": "backend-platform-http-and-openapi-conventions",
