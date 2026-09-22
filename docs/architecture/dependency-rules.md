@@ -15,6 +15,8 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 
 `Hosts.Composition` holds `Modules.All` and `AddErpPlatform`, shared by the API host, the test database host and the migrator.
 
+`BuildingBlocks.Endpoints` references `BuildingBlocks.Application` (for `IActorContext`, which `HttpActorContext` implements) and `BuildingBlocks.Persistence` references `BuildingBlocks.Application` (for `IActorContext` and `SystemActorContext`, consumed by `AuditingSaveChangesInterceptor` and registered by `AddErpPersistenceCore`).
+
 ## Namespaces inside a module
 
 | Namespace segment | May reference | Never references |

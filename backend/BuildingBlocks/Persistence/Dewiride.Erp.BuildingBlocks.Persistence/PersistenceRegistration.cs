@@ -1,3 +1,5 @@
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
@@ -30,6 +32,10 @@ public static class PersistenceRegistration
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<DatabaseOptions>, DatabaseOptionsValidator>());
         services.TryAddSingleton(provider => new DbContextCatalog(provider.GetServices<DbContextRegistration>()));
         services.TryAddSingleton<DatabaseMigrator>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.TryAddScoped<IActorContext, SystemActorContext>();
+        services.TryAddScoped<AuditingSaveChangesInterceptor>();
+        services.TryAddSingleton<BulkWriteGuardInterceptor>();
 
         return services;
     }

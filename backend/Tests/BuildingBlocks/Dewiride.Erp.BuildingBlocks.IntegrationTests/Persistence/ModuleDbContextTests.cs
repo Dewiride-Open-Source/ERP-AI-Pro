@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
+using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,7 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence;
 public sealed class ModuleDbContextTests(SampleDatabase database) : IClassFixture<SampleDatabase>
 {
     [Fact]
-    public async Task Migrate_SampleContext_CreatesTheSchemaWithTheHistoryTableAndTheTableInsideIt()
+    public async Task Migrate_SampleContext_CreatesTheSchemaWithTheHistoryTableAndTheTablesInsideIt()
     {
         await using var scope = database.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
@@ -21,7 +22,7 @@ public sealed class ModuleDbContextTests(SampleDatabase database) : IClassFixtur
             .ToListAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal([SampleDbContext.SchemaName], schemas);
-        Assert.Equal(["Samples", ModuleDbContextRegistration.MigrationsHistoryTable], tables.Order(StringComparer.Ordinal));
+        Assert.Equal(["SampleLines", "Samples", ModuleDbContextRegistration.MigrationsHistoryTable], tables.Order(StringComparer.Ordinal));
     }
 
     [Fact]
@@ -33,7 +34,7 @@ public sealed class ModuleDbContextTests(SampleDatabase database) : IClassFixtur
         await using (var scope = database.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
-            context.Samples.Add(new SampleAggregate(id, "Round trip", 1234.5678m, new SampleAddress("12 MG Road", "Jaipur"), occurredAt));
+            context.Samples.Add(new SampleAggregate(id, "Round trip", new Money(1234.5678m, Currency.Inr), new SampleAddress("12 MG Road", "Jaipur"), occurredAt));
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
@@ -49,7 +50,7 @@ public sealed class ModuleDbContextTests(SampleDatabase database) : IClassFixtur
 
             Assert.Equal(id, sample.Id);
             Assert.Equal("Round trip", sample.Name);
-            Assert.Equal(1234.5678m, sample.Price);
+            Assert.Equal(new Money(1234.5678m, Currency.Inr), sample.Price);
             Assert.Equal(new SampleAddress("12 MG Road", "Jaipur"), sample.Address);
             Assert.Equal(occurredAt, sample.OccurredAt);
             Assert.Equal(TimeSpan.Zero, sample.OccurredAt.Offset);
@@ -57,10 +58,19 @@ public sealed class ModuleDbContextTests(SampleDatabase database) : IClassFixtur
                 [
                     new ColumnShape("Address_City", "nvarchar", 50, null, null),
                     new ColumnShape("Address_Line1", "nvarchar", 100, null, null),
+                    new ColumnShape("CreatedAt", "datetimeoffset", null, null, null),
+                    new ColumnShape("CreatedBy", "uniqueidentifier", null, null, null),
+                    new ColumnShape("DeletedAt", "datetimeoffset", null, null, null),
+                    new ColumnShape("DeletedBy", "uniqueidentifier", null, null, null),
                     new ColumnShape("Id", "uniqueidentifier", null, null, null),
+                    new ColumnShape("IsDeleted", "bit", null, null, null),
+                    new ColumnShape("ModifiedAt", "datetimeoffset", null, null, null),
+                    new ColumnShape("ModifiedBy", "uniqueidentifier", null, null, null),
                     new ColumnShape("Name", "nvarchar", 50, null, null),
                     new ColumnShape("OccurredAt", "datetimeoffset", null, null, null),
-                    new ColumnShape("Price", "decimal", null, 19, 4),
+                    new ColumnShape("Price_Amount", "decimal", null, 19, 4),
+                    new ColumnShape("Price_Currency", "char", 3, null, null),
+                    new ColumnShape("RowVersion", "timestamp", null, null, null),
                 ],
                 columns.OrderBy(c => c.Name, StringComparer.Ordinal));
         }
@@ -74,7 +84,7 @@ public sealed class ModuleDbContextTests(SampleDatabase database) : IClassFixtur
         await using (var scope = database.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
-            context.Samples.Add(new SampleAggregate(id, "Offset", 1m, new SampleAddress("1", "Pune"), new DateTimeOffset(2026, 4, 1, 0, 15, 0, TimeSpan.FromHours(5.5))));
+            context.Samples.Add(new SampleAggregate(id, "Offset", new Money(1m, Currency.Inr), new SampleAddress("1", "Pune"), new DateTimeOffset(2026, 4, 1, 0, 15, 0, TimeSpan.FromHours(5.5))));
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 

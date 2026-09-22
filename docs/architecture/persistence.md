@@ -41,7 +41,49 @@ Every module DbContext derives from `ModuleDbContext`, lives in `<Module>.Persis
 - `decimal` properties default to precision 19, scale 4.
 - `DateTimeOffset` values are normalised to UTC on write and on read by `UtcDateTimeOffsetConverter`.
 - Value objects are readonly record structs mapped as complex types through `ComplexProperty` in the entity configuration (the `[ComplexType]` attribute is class-only, so the Domain stays attribute-free), by table splitting with column names `<Property>_<Member>` (`Build_Version`, `Build_Framework`).
+- `Money` (`Dewiride.Erp.BuildingBlocks.Kernel.Monetary`) is a complex type by convention: `ConfigureConventions` declares `ComplexProperties<Money>()` and `Properties<Currency>().HaveConversion<CurrencyConverter>().HaveMaxLength(3).AreUnicode(false).AreFixedLength()`, so every `Money` property maps to `<Property>_Amount decimal(19,4)` and `<Property>_Currency char(3)` (`Price_Amount`, `Price_Currency`) with no entity configuration. `CurrencyConverter` stores `Currency.Code` and reads back through `Currency.FromCode`, so a code outside the fixed table fails on read.
 - `IDomainEvent` collections on aggregates are ignored by the model.
+- `OnModelCreating` applies `ApplyConfigurationsFromAssembly(GetType().Assembly)` and then `ModelRules.ApplySoftDelete().ApplyRowVersion()` (next section).
+
+## Auditing, soft delete and row versions
+
+Three getter-only interfaces in `Dewiride.Erp.BuildingBlocks.Kernel.Domain` opt an entity in; implementers declare the properties with `private set` and never assign them, because `AuditingSaveChangesInterceptor` writes them through the change tracker:
+
+| Interface | Members | Applied by |
+|---|---|---|
+| `IAuditable` | `DateTimeOffset CreatedAt`, `Guid CreatedBy`, `DateTimeOffset? ModifiedAt`, `Guid? ModifiedBy` | the interceptor |
+| `ISoftDeletable` | `bool IsDeleted`, `DateTimeOffset? DeletedAt`, `Guid? DeletedBy` | the interceptor and the `SoftDelete` query filter |
+| `IVersioned` | `byte[] RowVersion` | `ModelRules.ApplyRowVersion` (`IsRowVersion()`) |
+
+`AuditingSaveChangesInterceptor(IActorContext actor, TimeProvider timeProvider)` in `BuildingBlocks.Persistence/Auditing` is a scoped `SaveChangesInterceptor` that `AddErpPersistenceCore` registers with `TryAddScoped` and `AddModuleDbContext` adds to every module context with `AddInterceptors`. Its synchronous `SavingChanges` throws `NotSupportedException`: every database write is `SaveChangesAsync`. `SavingChangesAsync` calls the static `Stamp(ChangeTracker, DateTimeOffset now, Guid actorId)` with `timeProvider.GetUtcNow()` and `actor.ActorId`:
+
+| Entry state | Entity | Stamps |
+|---|---|---|
+| `Added` | `IAuditable` | `CreatedAt`/`CreatedBy` = now/actor; `ModifiedAt`/`ModifiedBy` = `null` |
+| `Added` | `ISoftDeletable` | `IsDeleted` = `false`; `DeletedAt`/`DeletedBy` = `null` |
+| `Modified` | `IAuditable` | `ModifiedAt`/`ModifiedBy` = now/actor; `CreatedAt`/`CreatedBy` marked unmodified so the row keeps its original values |
+| `Modified` | `ISoftDeletable` | by the `IsDeleted` transition: `false` → `true` sets `DeletedAt`/`DeletedBy` = now/actor; `true` → `false` clears them; no transition marks `IsDeleted`, `DeletedAt`, `DeletedBy` unmodified (a tampered value or `Update(detached)` cannot resurrect a row or rewrite its deleter) |
+| `Deleted` | `ISoftDeletable`, original `IsDeleted` = `true` | state becomes `Unchanged`; the first deletion's stamps stay |
+| `Deleted` | `ISoftDeletable` | state becomes `Modified`; `IsDeleted` = `true`; `DeletedAt`/`DeletedBy` = now/actor; when the entity is also `IAuditable`, `ModifiedAt`/`ModifiedBy` = now/actor and `CreatedAt`/`CreatedBy` marked unmodified |
+| `Deleted` | not `ISoftDeletable` | the row is deleted |
+
+- `ModelRules.ApplySoftDelete` adds the named query filter `SoftDeleteFilter.Name` (`"SoftDelete"`, `entity => !entity.IsDeleted`) to every entity type that introduces `ISoftDeletable` into its hierarchy, so every query hides deleted rows; derived types inherit the root's filter. A derived type implementing it while its root does not, or an owned type implementing it, fails model building with an `InvalidOperationException` naming the type (EF Core allows a filter only on the root). An administrative read calls `SoftDeleteFilter.IncludeDeleted<TEntity>()`, which is `IgnoreQueryFilters([SoftDeleteFilter.Name])` and leaves every other named filter in force.
+- `ModelRules.ApplyRowVersion` maps `IVersioned.RowVersion` with `IsRowVersion()` on the type that introduces the interface: a SQL Server `rowversion` column, a concurrency token generated on add and update, so a stale update surfaces as `DbUpdateConcurrencyException` from `SaveChangesAsync`; the persistence layer never catches it, translating it into an `ErrorKind.Conflict` result belongs to the application pipeline.
+- `ModuleDbContext` sets `ChangeTracker.CascadeDeleteTiming = CascadeTiming.OnSaveChanges`: EF cascades only entries still `Deleted` after the interceptor ran, so `Remove(root)` on a soft-deletable aggregate leaves its loaded child entities and owned types untouched (the child rows stay, reachable through the hidden root), while a hard-deleted root still cascades at save time.
+- `ExecuteUpdateAsync` and `ExecuteDeleteAsync` run without the change tracker, so `BulkWriteGuardInterceptor` (an `IQueryExpressionInterceptor` on every module context) throws `InvalidOperationException` at query compilation for `ExecuteDelete` on an `ISoftDeletable` type and for `ExecuteUpdate` on an `IAuditable` or `ISoftDeletable` type; every other entity type keeps both operations, and the `SoftDelete` filter still applies to their source query.
+
+The BuildingBlocks integration tests prove these conventions against SQL Server on `SampleAggregate` (`IAuditable`, `ISoftDeletable`, `IVersioned`, a `Money` price) under `Tests/BuildingBlocks/Dewiride.Erp.BuildingBlocks.IntegrationTests/Persistence/`: `AuditingTests`, `SoftDeleteTests` (including a soft-deleted root that keeps its `SampleLine` child rows), `ConcurrencyTests`, `MoneyMappingTests` and `BulkWriteGuardTests`, with `FakeTimeProvider` as the clock and `TestActorContext` as the actor; `ModelRulesTests` in the unit tests prove the hierarchy and owned-type rules on a connection-less model.
+
+## Actors
+
+`IActorContext` (`Guid ActorId`, `bool IsAuthenticated`) in `Dewiride.Erp.BuildingBlocks.Application.Actors` names who is writing. `ActorIds.System` is `00000000-0000-0000-0000-000000000001` and `ActorIds.Anonymous` is `00000000-0000-0000-0000-000000000002`; both are distinguishable from any Entra object id.
+
+| Implementation | Process | Resolution |
+|---|---|---|
+| `SystemActorContext` (`BuildingBlocks.Application.Actors`) | every host that calls `AddErpPersistence` without `AddErpEndpoints`: the test database host, the migrator | `(ActorIds.System, false)` |
+| `HttpActorContext` (`internal`, `BuildingBlocks.Endpoints.Actors`) | the API host | from `IHttpContextAccessor`, once per scope: no `HttpContext` (a hosted service's own scope) → `(ActorIds.System, false)`; a principal that is not authenticated → `(ActorIds.Anonymous, false)`; an authenticated principal → the `http://schemas.microsoft.com/identity/claims/objectidentifier` claim, else the short `oid` claim, parsed as a `Guid` → `(objectId, true)`; an authenticated principal without a parseable object identifier → `InvalidOperationException` |
+
+`AddErpPersistenceCore` registers `TryAddSingleton(TimeProvider.System)` and `TryAddScoped<IActorContext, SystemActorContext>()`; `AddErpEndpoints` calls `AddHttpContextAccessor()` and `services.Replace(ServiceDescriptor.Scoped<IActorContext, HttpActorContext>())`, which wins whichever of the two runs first. A test supplies its own actor by registering `IActorContext` before `AddErpPersistenceCore`, as `SampleDatabase` does with `TestActorContext`.
 
 ## Migrations and design time
 

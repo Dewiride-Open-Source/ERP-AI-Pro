@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Observability.Health;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Microsoft.EntityFrameworkCore;
@@ -31,14 +32,15 @@ public static class ModuleDbContextRegistration
         ArgumentException.ThrowIfNullOrWhiteSpace(schema);
 
         services.AddDbContext<TContext>((provider, options) =>
-            Configure(options, provider.GetRequiredService<IOptions<DatabaseOptions>>().Value, schema));
+            Configure(options, provider.GetRequiredService<IOptions<DatabaseOptions>>().Value, schema)
+                .AddInterceptors(provider.GetRequiredService<AuditingSaveChangesInterceptor>(), provider.GetRequiredService<BulkWriteGuardInterceptor>()));
         services.AddSingleton(new DbContextRegistration(typeof(TContext), schema));
         services.AddHealthChecks().AddDbContextCheck<TContext>($"database:{schema}", tags: [HealthEndpoints.ReadyTag]);
 
         return services;
     }
 
-    public static void Configure(DbContextOptionsBuilder options, DatabaseOptions database, string schema)
+    public static DbContextOptionsBuilder Configure(DbContextOptionsBuilder options, DatabaseOptions database, string schema)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(database);
@@ -51,10 +53,10 @@ public static class ModuleDbContextRegistration
                 .MigrationsHistoryTable(MigrationsHistoryTable, schema)
                 .CommandTimeout(commandTimeout)
                 .EnableRetryOnFailure(database.MaxRetryCount, database.MaxRetryDelay, errorNumbersToAdd: null));
-            return;
+            return options;
         }
 
-        options.UseSqlServer(database.ConnectionString, sql => sql
+        return options.UseSqlServer(database.ConnectionString, sql => sql
             .MigrationsHistoryTable(MigrationsHistoryTable, schema)
             .CommandTimeout(commandTimeout)
             .UseCompatibilityLevel(CompatibilityLevel)
