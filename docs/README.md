@@ -3,7 +3,7 @@
 | Section | Contents |
 |---|---|
 | [Roadmap](roadmap/ROADMAP.md) | generated view of `roadmap/roadmap.json`, the single source of truth for what is planned, in progress and done |
-| [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [AI capabilities](architecture/ai-capabilities.md) |
+| [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [persistence](architecture/persistence.md), [AI capabilities](architecture/ai-capabilities.md) |
 | [Guides](guides/local-development.md) | [local development](guides/local-development.md), [testing](guides/testing.md), [adding a setting, flag or secret](guides/adding-a-setting.md), [comment policy](guides/comment-policy.md) |
 | [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md), [Azure bootstrap](operations/azure-bootstrap.md), [secrets runbook](operations/runbooks/secrets.md); deployment runbooks arrive with the first-deployment phase |
 | [Configuration register](configuration.md) | every configuration key, feature flag and secret name |
@@ -25,5 +25,7 @@
 | [0010](adr/0010-azure-provisioning-tier-and-credential-model.md) | Azure provisioning, App Configuration tier and operational credential model |
 | [0011](adr/0011-configuration-source-selection-and-runtime-credential.md) | Configuration source selection and runtime credential |
 | [0012](adr/0012-feature-flag-catalog-and-defaults.md) | Feature flag catalog, default-enabled modules and the disabled-module contract |
+| [0013](adr/0013-persistence-conventions-and-test-databases.md) | Persistence conventions, per-process test databases and the CI SQL Server action |
+| [0014](adr/0014-cn-class-name-helper.md) | The `cn` package replaces `clsx` and `tailwind-merge` |
 
 New decisions use [0000-template.md](adr/0000-template.md).

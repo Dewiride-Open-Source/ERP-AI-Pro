@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <CodeCoverage>
+    <!-- ArchUnitNET reads the assemblies from disk; static instrumentation would rewrite them during the run and every layer rule would see the coverage tracker as a dependency. -->
+    <EnableStaticManagedInstrumentation>False</EnableStaticManagedInstrumentation>
+    <EnableStaticNativeInstrumentation>False</EnableStaticNativeInstrumentation>
+    <ModulePaths>
+      <Exclude>
+        <ModulePath>.*</ModulePath>
+      </Exclude>
+    </ModulePaths>
+  </CodeCoverage>
+</Configuration>

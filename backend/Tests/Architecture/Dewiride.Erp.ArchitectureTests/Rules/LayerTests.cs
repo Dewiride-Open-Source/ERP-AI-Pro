@@ -24,6 +24,8 @@ public sealed class LayerTests
 
     private static readonly IObjectProvider<IType> PersistenceTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Persistence(\..*)?$").As("persistence types");
 
+    private static readonly IObjectProvider<IType> HostingTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Hosting(\..*)?$").As("hosting types");
+
     [Fact]
     public void Domain_DependsOnlyOnKernelSharedKernelAndSystem()
     {
@@ -55,6 +57,18 @@ public sealed class LayerTests
     }
 
     [Fact]
+    public void Persistence_DoesNotDependOnAspNetCoreOrEndpoints()
+    {
+        AssertRule(Types().That().Are(PersistenceTypes).Should().NotDependOnAny(AspNetCoreTypes).AndShould().NotDependOnAny(EndpointTypes).WithoutRequiringPositiveResults());
+    }
+
+    [Fact]
+    public void Hosting_DoesNotDependOnAspNetCoreEntityFrameworkOrEndpoints()
+    {
+        AssertRule(Types().That().Are(HostingTypes).Should().NotDependOnAny(AspNetCoreTypes).AndShould().NotDependOnAny(EntityFrameworkTypes).AndShould().NotDependOnAny(EndpointTypes).WithoutRequiringPositiveResults());
+    }
+
+    [Fact]
     public void Handlers_AreSealed()
     {
         AssertRule(Classes().That().ImplementInterface(typeof(BuildingBlocks.Application.Commands.ICommandHandler<,>))
@@ -65,6 +79,6 @@ public sealed class LayerTests
     private static void AssertRule(IArchRule rule)
     {
         var failures = rule.Evaluate(Architecture).Where(r => !r.Passed).Select(r => r.Description).ToList();
-        Assert.Empty(failures);
+        Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
     }
 }

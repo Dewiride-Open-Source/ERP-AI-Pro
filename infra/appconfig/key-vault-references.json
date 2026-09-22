@@ -2,5 +2,10 @@
   {
     "key": "Erp:Platform:Identity:ClientCertificate",
     "secret": "Erp--Platform--Identity--ClientCertificate"
+  },
+  {
+    "key": "Erp:Platform:Database:ConnectionString",
+    "secret": "Erp--Platform--Database--ConnectionString",
+    "labels": ["local-dev"]
   }
 ]

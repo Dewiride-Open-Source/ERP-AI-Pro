@@ -1,10 +1,12 @@
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { repoRoot } from "./lib/walk.ts";
 
 const composeDirectory = join(repoRoot, "infra", "compose");
 const composeFiles = ["-f", "compose.yaml", "-f", "compose.override.yaml"];
+const databaseSecretFile = join(composeDirectory, "secrets", "Erp__Platform__Database__ConnectionString");
 const projectName = "erp-ai-pro-smoke";
 const apiBaseUrl = "http://127.0.0.1:5080";
 const webBaseUrl = "http://127.0.0.1:3000";
@@ -21,6 +23,8 @@ const checks: Check[] = [
   { name: "api through the web origin", url: `${webBaseUrl}/api/platform/system-info`, status: 200, header: ["content-type", "application/json"] },
   { name: "api feature flags", url: `${apiBaseUrl}/api/platform/features`, status: 200, header: ["content-type", "application/json"], body: "Erp.Modules.Platform.SystemInfo" },
   { name: "feature flags through the web origin", url: `${webBaseUrl}/api/platform/features`, status: 200, header: ["content-type", "application/json"], body: "Erp.Modules.Platform.SystemInfo" },
+  { name: "api startups", url: `${apiBaseUrl}/api/platform/system-info/startups`, status: 200, header: ["content-type", "application/json"], body: '"startups"' },
+  { name: "startups through the web origin", url: `${webBaseUrl}/api/platform/system-info/startups`, status: 200, header: ["content-type", "application/json"], body: '"startups"' },
 ];
 
 function compose(...args: string[]): void {
@@ -46,6 +50,11 @@ async function verify(check: Check): Promise<string | undefined> {
   }
   if (check.body && !(await response.text()).includes(check.body)) return `${check.name}: body does not contain "${check.body}"`;
   return undefined;
+}
+
+if (!existsSync(databaseSecretFile)) {
+  console.error("compose smoke: infra/compose/secrets/Erp__Platform__Database__ConnectionString is missing; create it as described in docs/guides/local-development.md");
+  process.exit(1);
 }
 
 let failures: string[] = [];

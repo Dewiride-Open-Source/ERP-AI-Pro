@@ -94,6 +94,19 @@ public sealed class ErpConfigurationSourceResolverTests
         Assert.Contains(Environments.Production, exception.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Resolve_LocalDevelopmentSettingWithEndpointInProduction_ReturnsLocalDevelopment()
+    {
+        var bootstrap = Bootstrap(
+            (ErpConfigurationSourceResolver.SourceSetting, ErpConfigurationSourceResolver.LocalDevelopmentSource),
+            (ErpConfigurationSourceResolver.EndpointVariable, Endpoint),
+            (ErpEnvironmentNames.VariableName, ErpEnvironmentNames.Production));
+
+        var info = ErpConfigurationSourceResolver.Resolve(bootstrap, new FakeHostEnvironment(Environments.Production));
+
+        Assert.Equal(new ErpConfigurationInfo(ErpConfigurationSource.LocalDevelopment, null, null), info);
+    }
+
     private static IConfiguration Bootstrap(params (string Key, string? Value)[] values) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(values.Select(v => new KeyValuePair<string, string?>(v.Key, v.Value)))

@@ -1,3 +1,5 @@
+using Dewiride.Erp.BuildingBlocks.Persistence.Options;
+using Dewiride.Erp.Testing.Sql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -13,6 +15,8 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
     public const string ConfigurationSourceSetting = "ERP_CONFIGURATION_SOURCE";
 
     public const string InMemorySource = "InMemory";
+
+    public const string DatabaseConnectionKey = $"{DatabaseOptions.SectionName}:ConnectionString";
 
     private const string FeatureFlagsSection = "feature_management:feature_flags:";
 
@@ -72,6 +76,11 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         foreach (var (key, value) in _configuration)
         {
             builder.UseSetting(key, value);
+        }
+
+        if (!_configuration.ContainsKey(DatabaseConnectionKey))
+        {
+            builder.UseSetting(DatabaseConnectionKey, SqlTestDatabase.Current.ConnectionString);
         }
 
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);

@@ -1,1 +1,9 @@
-{}
+{
+  "Erp": {
+    "Platform": {
+      "Database": {
+        "Provider": "AzureSql"
+      }
+    }
+  }
+}

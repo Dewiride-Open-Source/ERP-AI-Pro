@@ -29,9 +29,17 @@ jobs:
         uses: ./.github/actions/setup-backend
       - name: Set up frontend
         uses: ./.github/actions/setup-frontend
+      - name: Start SQL Server
+        id: sql
+        uses: ./.github/actions/start-sql-server
       - name: Build API
         working-directory: backend
         run: dotnet build Hosts/Api/Dewiride.Erp.Host.Api --no-restore -c Release
+      - name: Apply migrations
+        working-directory: backend
+        env:
+          Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
+        run: dotnet ef database update --no-build --configuration Release --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
       - name: Build web app
         working-directory: frontend
         run: pnpm build
@@ -42,6 +50,8 @@ jobs:
         run: pnpm exec playwright install --with-deps
       - name: Start API
         working-directory: backend
+        env:
+          Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
         run: |
           nohup dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api --no-build -c Release > "$RUNNER_TEMP/api.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf http://localhost:5080/healthz/live && break; sleep 1; done
@@ -68,6 +78,7 @@ jobs:
           ASPNETCORE_ENVIRONMENT: Development
           ASPNETCORE_URLS: http://localhost:5081
           APPCONFIG_ENDPOINT: ""
+          Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
           feature_management__feature_flags__0__id: Erp.Modules.Platform.SystemInfo
           feature_management__feature_flags__0__enabled: "false"
         run: |

@@ -12,8 +12,9 @@ Options:
                     by entra.sh instead of the provisioned resources.
   --labels          Check the seeded settings, feature flags and Key Vault
                     references written by seed.sh: every value of
-                    infra/appconfig is read back, and the local-dev label
-                    is proven to override the unlabelled default.
+                    infra/appconfig is read back (a reference only under the
+                    labels it lists), and the local-dev label is proven to
+                    override the unlabelled default.
   --params <file>   Parameter file (default: scripts/azure/params.env).
   --help            Show this help.'
 
@@ -555,9 +556,13 @@ verify_seeded_references() {
   fi
   local -a rows=()
   mapfile -t rows < <(seed_rows references "$SEED_DIRECTORY/key-vault-references.json")
-  local row key secret content_type uri
+  local row key secret ref_labels content_type uri
   for row in "${rows[@]}"; do
-    IFS=$'\t' read -r key secret <<< "$row"
+    IFS=$'\t' read -r key secret ref_labels <<< "$row"
+    if [[ ",$ref_labels," != *",$label,"* ]]; then
+      skip "$key [$label] not seeded under this label"
+      continue
+    fi
     if ! content_type="$(appconfig_kv_query "$key" "$label" 'contentType' 2>&1)"; then
       fail "$key [$label] is a Key Vault reference (query failed: $(query_error_summary "$content_type")); $SEED_HINT"
       continue

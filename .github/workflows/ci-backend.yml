@@ -23,6 +23,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up backend
         uses: ./.github/actions/setup-backend
+      - name: Start SQL Server
+        id: sql
+        uses: ./.github/actions/start-sql-server
       - name: Set up Node.js for repository checks
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -30,11 +33,16 @@ jobs:
       - name: Build
         working-directory: backend
         run: dotnet build --no-restore -warnaserror -p:ContinuousIntegrationBuild=true
+      - name: Pending model changes
+        working-directory: backend
+        run: dotnet ef migrations has-pending-model-changes --no-build --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
       - name: Verify formatting
         working-directory: backend
         run: dotnet format --verify-no-changes --no-restore
       - name: Test
         working-directory: backend
+        env:
+          ERP_TEST_SQL_CONNECTION: ${{ steps.sql.outputs.server-connection-string }}
         run: dotnet test --solution Dewiride.Erp.slnx --no-build --report-trx --coverage --coverage-output-format cobertura
       - name: Coverage gate
         run: node scripts/checks/coverage-gate.ts

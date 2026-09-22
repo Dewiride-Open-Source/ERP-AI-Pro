@@ -79,6 +79,9 @@ dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 dotnet_naming_style.camel_case_underscore.required_prefix = _
 dotnet_naming_style.camel_case_underscore.capitalization = camel_case
 
+[**/Migrations/*.cs]
+generated_code = true
+
 [*.{csproj,props,targets,slnx,xml}]
 indent_size = 2
 

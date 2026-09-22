@@ -33,10 +33,10 @@ public sealed class ConfigurationSourceTests : IClassFixture<ErpApiFactory>
     }
 
     [Fact]
-    public void Services_InMemorySource_RegistersOnlyTheSelfHealthCheck()
+    public void Services_InMemorySource_RegistersTheSelfAndModuleDatabaseHealthChecks()
     {
         var registrations = _factory.Services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
 
-        Assert.Equal(["self"], registrations.Select(r => r.Name));
+        Assert.Equal(["database:platform_system_info", "self"], registrations.Select(r => r.Name).Order(StringComparer.Ordinal));
     }
 }

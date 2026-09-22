@@ -1,0 +1,36 @@
+using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
+using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
+using Dewiride.Erp.BuildingBlocks.Persistence.Options;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+
+namespace Dewiride.Erp.BuildingBlocks.Persistence;
+
+public static class PersistenceRegistration
+{
+    public static IHostApplicationBuilder AddErpPersistence(this IHostApplicationBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.Services.AddErpPersistenceCore();
+
+        return builder;
+    }
+
+    public static IServiceCollection AddErpPersistenceCore(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.AddOptions<DatabaseOptions>()
+            .BindConfiguration(DatabaseOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<DatabaseOptions>, DatabaseOptionsValidator>());
+        services.TryAddSingleton(provider => new DbContextCatalog(provider.GetServices<DbContextRegistration>()));
+        services.TryAddSingleton<DatabaseMigrator>();
+
+        return services;
+    }
+}

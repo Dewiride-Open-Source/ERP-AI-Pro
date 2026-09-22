@@ -1,0 +1,82 @@
+name: Start SQL Server
+description: >-
+  Starts SQL Server 2025 Developer in a container published on port 1433 with an sa password generated
+  at run time and masked, waits until it answers, creates the database and outputs the server-level,
+  database and container connection strings. The image runs through docker run rather than a services
+  container so the digest is pinned in this file; Dependabot cannot bump an image inside a docker run
+  command, so the digest is bumped by hand when the cumulative update changes.
+inputs:
+  database:
+    description: Name of the database to create once the server answers.
+    default: ErpAiPro
+  container-name:
+    description: Name of the SQL Server container.
+    default: erp-sql
+outputs:
+  server-connection-string:
+    description: Server-level connection string for sa with rights to create databases; no Database= part.
+    value: ${{ steps.connection.outputs.server-connection-string }}
+  database-connection-string:
+    description: Connection string to the created database for processes running on the runner.
+    value: ${{ steps.connection.outputs.database-connection-string }}
+  container-connection-string:
+    description: Connection string to the created database for containers that reach the runner through host.docker.internal.
+    value: ${{ steps.connection.outputs.container-connection-string }}
+runs:
+  using: composite
+  steps:
+    - name: Generate the sa password
+      id: password
+      shell: bash
+      run: |
+        # "Aa1!" guarantees the three character classes the SQL Server password policy requires
+        password="$(openssl rand -base64 30 | tr -dc 'A-Za-z0-9' | head -c 28)Aa1!"
+        echo "::add-mask::$password"
+        echo "sa-password=$password" >> "$GITHUB_OUTPUT"
+    - name: Start the container
+      shell: bash
+      env:
+        CONTAINER_NAME: ${{ inputs.container-name }}
+        MSSQL_SA_PASSWORD: ${{ steps.password.outputs.sa-password }}
+      run: |
+        docker run --detach --name "$CONTAINER_NAME" --publish 1433:1433 \
+          --env ACCEPT_EULA=Y --env MSSQL_PID=Developer --env MSSQL_SA_PASSWORD \
+          mcr.microsoft.com/mssql/server:2025-CU9-ubuntu-24.04@sha256:2b5b581621126574f3d1f75e78d3eebe8d05aedb59ad0cfdf9aa42cb0634d726
+    - name: Wait for SQL Server
+      shell: bash
+      env:
+        CONTAINER_NAME: ${{ inputs.container-name }}
+      run: |
+        # sqlcmd reads the password from SQLCMDPASSWORD inside the container, so it never appears on a command line
+        for attempt in $(seq 1 60); do
+          if docker exec "$CONTAINER_NAME" bash -c 'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" exec /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -No -Q "SELECT 1"' > /dev/null 2>&1; then
+            echo "SQL Server answered after $attempt attempt(s)"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "SQL Server did not answer within 120 seconds" >&2
+        docker logs "$CONTAINER_NAME"
+        exit 1
+    - name: Create the database
+      shell: bash
+      env:
+        CONTAINER_NAME: ${{ inputs.container-name }}
+        DATABASE: ${{ inputs.database }}
+      run: |
+        [[ "$DATABASE" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || { echo "database name '$DATABASE' must be a plain identifier" >&2; exit 1; }
+        docker exec --env "QUERY=IF DB_ID(N'$DATABASE') IS NULL CREATE DATABASE [$DATABASE];" "$CONTAINER_NAME" \
+          bash -c 'SQLCMDPASSWORD="$MSSQL_SA_PASSWORD" exec /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -No -b -Q "$QUERY"'
+    - name: Write the connection strings
+      id: connection
+      shell: bash
+      env:
+        DATABASE: ${{ inputs.database }}
+        MSSQL_SA_PASSWORD: ${{ steps.password.outputs.sa-password }}
+      run: |
+        credentials="User ID=sa;Password=$MSSQL_SA_PASSWORD;Encrypt=True;TrustServerCertificate=True"
+        {
+          echo "server-connection-string=Server=localhost,1433;$credentials"
+          echo "database-connection-string=Server=localhost,1433;Database=$DATABASE;$credentials"
+          echo "container-connection-string=Server=host.docker.internal,1433;Database=$DATABASE;$credentials"
+        } >> "$GITHUB_OUTPUT"

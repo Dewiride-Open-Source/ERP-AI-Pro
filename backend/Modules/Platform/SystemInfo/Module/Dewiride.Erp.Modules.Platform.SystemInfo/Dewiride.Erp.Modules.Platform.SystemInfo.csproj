@@ -6,6 +6,7 @@
     <ProjectReference Include="../../../../../BuildingBlocks/Configuration/Dewiride.Erp.BuildingBlocks.Configuration/Dewiride.Erp.BuildingBlocks.Configuration.csproj" />
     <ProjectReference Include="../../../../../BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
     <ProjectReference Include="../../../../../BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

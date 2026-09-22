@@ -4,9 +4,10 @@ USAGE='Usage: bash scripts/azure/seed.sh [--dry-run] [--label <local-dev|product
 
 Imports infra/appconfig into the App Configuration store: the unlabelled
 defaults, each label file, the labelled feature flags and the Key Vault
-references (written only when the secret already exists in that label'"'"'s vault),
-then bumps the labelled Erp:Sentinel so a running API picks the change up at its
-next check. Never deletes a key; safe to run repeatedly.
+references (only under the labels a reference lists, and only when the secret
+already exists in that label'"'"'s vault), then bumps the labelled Erp:Sentinel so
+a running API picks the change up at its next check. Never deletes a key; safe
+to run repeatedly.
 
 Options:
   --dry-run          Preview every import and print every other write; write nothing.
@@ -162,7 +163,7 @@ seed_feature_flags() {
 
 seed_key_vault_references() {
   local label="$1"
-  local vault base_uri key secret
+  local vault base_uri key secret ref_labels
   vault="$(vault_for_label "$label")"
   local -a rows=()
   mapfile -t rows < <(seed_rows references "$SEED_DIRECTORY/key-vault-references.json")
@@ -170,7 +171,11 @@ seed_key_vault_references() {
   base_uri="$(vault_uri "$vault")"
   local row
   for row in "${rows[@]}"; do
-    IFS=$'\t' read -r key secret <<< "$row"
+    IFS=$'\t' read -r key secret ref_labels <<< "$row"
+    if [[ ",$ref_labels," != *",$label,"* ]]; then
+      log_info "$key [$label] not seeded under this label"
+      continue
+    fi
     require_secret "$vault" "$secret"
     ensure_kv_reference "$key" "$label" "$base_uri/secrets/$secret"
   done

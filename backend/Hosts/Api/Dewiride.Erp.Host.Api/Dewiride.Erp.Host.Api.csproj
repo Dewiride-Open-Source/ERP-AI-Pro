@@ -10,11 +10,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../BuildingBlocks/Configuration/Dewiride.Erp.BuildingBlocks.Configuration/Dewiride.Erp.BuildingBlocks.Configuration.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
-    <ProjectReference Include="../../../BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Observability/Dewiride.Erp.BuildingBlocks.Observability/Dewiride.Erp.BuildingBlocks.Observability.csproj" />
-    <ProjectReference Include="../../../Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo/Dewiride.Erp.Modules.Platform.SystemInfo.csproj" />
+    <ProjectReference Include="../../Composition/Dewiride.Erp.Host.Composition/Dewiride.Erp.Host.Composition.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

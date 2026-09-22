@@ -13,7 +13,7 @@ backend/Modules/Finance/Sales/
 ├── Module/Dewiride.Erp.Modules.Finance.Sales/                   one implementation assembly, everything internal
 │   ├── SalesModule.cs                                           sealed IModule: descriptor, AddServices, MapEndpoints
 │   ├── SalesValidation.cs                                       services.AddValidation() for this assembly
-│   ├── Persistence/{SalesDbContext.cs, SalesDbContextDesignTimeFactory.cs, Migrations/}
+│   ├── Persistence/{SalesDbContext.cs, Migrations/}
 │   ├── Invoices/                                                FEATURE
 │   │   ├── Domain/{Invoice.cs, InvoiceId.cs, InvoiceLine.cs, InvoiceNumber.cs, InvoiceStatus.cs, InvoiceErrors.cs, Events/, Rules/}
 │   │   ├── Application/
@@ -22,6 +22,7 @@ backend/Modules/Finance/Sales/
 │   │   │   └── EventHandlers/InvoiceIssuedHandler.cs
 │   │   ├── Endpoints/{InvoiceEndpoints.cs, Requests/CreateDraftInvoiceRequest.cs, Responses/InvoiceResponse.cs}
 │   │   ├── Persistence/{InvoiceConfiguration.cs, InvoiceLineConfiguration.cs}
+│   │   ├── Hosting/InvoiceReminderService.cs                    hosted services that drive Application handlers (a BackgroundService)
 │   │   ├── Reports/InvoiceRegister/{InvoiceRegisterQuery.cs, InvoiceRegisterHandler.cs, InvoiceRegisterEndpoints.cs}
 │   │   └── Ai/
 │   │       ├── InvoiceExtraction/{ExtractInvoiceDraftCommand.cs, ExtractInvoiceDraftHandler.cs, InvoiceDraftExtraction.cs, extract-invoice.prompt.md}
@@ -42,6 +43,8 @@ Rules that keep the shape honest:
 - Namespace equals folder path (build error otherwise); one type per file.
 - A folder holds at most 12 source files; split by sub-feature or concern, never by growing the folder. `Persistence/Migrations/` is generated and exempt.
 - `Domain/` references only `BuildingBlocks.Kernel` (and `SharedKernel`). `Application/` may use the module DbContext directly. `Endpoints/` call handlers and map results; no logic.
+- `Persistence/<Module>DbContext` derives from `ModuleDbContext` and is registered from `AddServices` with `builder.AddModuleDbContext<T>(schema)`; there is no design-time factory, `dotnet ef` runs the API host offline (see `persistence.md`).
+- `Hosting/` holds hosted services (`BackgroundService`) that drive Application handlers; it may reference Application, Domain, `BuildingBlocks.*` and `Microsoft.Extensions.*` (hosting, dependency injection, logging, feature management), never ASP.NET Core, EF Core or Endpoints.
 - `Ai/` folders depend on `IChatClient` and `BuildingBlocks.Ai` only; their output is a suggestion a human confirms.
 - Request and response records carry unique names (`CreateDraftInvoiceRequest`, `InvoiceResponse`) so OpenAPI schema ids never collide.
 

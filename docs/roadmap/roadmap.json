@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-21",
+  "updatedOn": "2026-09-22",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -403,10 +403,19 @@
           "id": "backend-platform-persistence-conventions-contexts-schemas-and-ids",
           "title": "Persistence conventions: contexts, schemas and ids",
           "scope": "Implement a ModuleDbContext base with HasDefaultSchema(<module>) and MigrationsHistoryTable per schema, provider selection (UseSqlServer with compatibility level 170 and EnableRetryOnFailure locally, UseAzureSql in production), strongly-typed ids with EF value converters, complex-type value objects, and a sample module proving migrations run against the owner's SQL Server instance in local integration tests and against the SQL Server 2025 service container in CI.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "done",
+          "acceptance": [
+            "AddModuleDbContext<TContext> configures HasDefaultSchema, the __EFMigrationsHistory table inside the module schema, compatibility level 170 with EnableRetryOnFailure on UseSqlServer, and UseAzureSql when Erp:Platform:Database:Provider is AzureSql, proven by unit tests over the options and an integration test that reads sys.schemas and INFORMATION_SCHEMA.TABLES.",
+            "A strongly-typed id and a complex-type value object (a readonly record struct mapped through ComplexProperty) round-trip through SQL Server with the expected column names and types, DateTimeOffset values are stored in UTC, and HasPendingModelChanges() is false for every registered context under both provider options.",
+            "The integration suites create one fresh database per test process from ERP_TEST_SQL_CONNECTION on the owner's SQL Server 2025 instance and on the container started by .github/actions/start-sql-server in ci-backend.yml, e2e.yml and docker-build.yml, and fail with a message naming the variable when it is missing.",
+            "GET /api/platform/system-info/startups lists the running API's own start (asserted by id) after the platform_system_info migration, a test that seeds 25 older starts into the per-process test database sees only the newest of them behind the live starts and never the oldest five, and the web system-info page shows the table with the API's own start and its unavailable state in light and dark on desktop and mobile (the empty state exists but is reachable only before the first start is recorded, so it is not browser-tested).",
+            "The Erp:Platform:Database keys are registered in docs/configuration.md and seeded under local-dev with the Key Vault reference through an owner-consented seed run recorded in the pull request, dotnet ef runs offline through the API host, and ADR-0013 is accepted."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-22",
+          "completedOn": "2026-09-22",
+          "notes": "BuildingBlocks.Persistence (ModuleDbContext, AddModuleDbContext<T>, DatabaseOptions, DbContextCatalog, DatabaseMigrator, id/UTC converters, offline design time) and Hosts/Composition exist; SystemInfo records every API start in platform_system_info.Startups and lists the 20 newest at GET /api/platform/system-info/startups with the web table; SqlTestDatabase gives every test process its own database; CI runs SQL Server 2025 through .github/actions/start-sql-server; the empty table state is reachable only before the first start is recorded, so it is not browser-tested; the cn package replaced clsx and tailwind-merge (ADR-0014)."
         },
         {
           "id": "backend-platform-persistence-auditing-and-domain-primitives",

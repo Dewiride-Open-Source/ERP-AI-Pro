@@ -1,2 +1,2 @@
-export { SystemInfoCard } from "./info/components/system-info-card";
+export { SystemInfoOverview } from "./info/components/system-info-overview";
 export { systemInfoNavigation } from "./nav";
