@@ -13,7 +13,7 @@ Use `backend/Modules/Platform/SystemInfo` as the reference implementation. A sca
 4. Add feature folders following `module-anatomy.md`.
 5. Register the module in `backend/Hosts/Api/Modules.cs` (one line) and add the four projects to `backend/Dewiride.Erp.slnx` under solution folder `Modules/<Domain>/<Module>` and to `backend/solutions/<Domain>.slnf`.
 6. Add the module's routes to `docs/routing.md` and its configuration keys and feature flag to `docs/configuration.md`.
-7. Run the architecture tests: they verify the module is listed, its namespaces match folders, its endpoints require authorization and it references only contracts of other modules.
+7. Run the architecture tests: they verify the module is listed, its four projects and `README.md` exist under `Modules/<Domain>/<Module>/`, its namespaces match folders, no folder holds more than 12 source files, its descriptor follows the naming table (permissions start with `<domain>.<module>.`), its endpoints require authorization and it references only contracts of other modules.
 
 ## Frontend
 
