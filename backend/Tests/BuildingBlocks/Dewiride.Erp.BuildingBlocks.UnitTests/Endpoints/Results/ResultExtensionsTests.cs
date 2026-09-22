@@ -25,6 +25,48 @@ public sealed class ResultExtensionsTests
     }
 
     [Fact]
+    public void ToProblem_ValidationErrorWithFields_IsAValidationProblemWithErrorsPerField()
+    {
+        var error = Error.Validation("request.invalid", "The request is invalid.", new Dictionary<string, string[]>(StringComparer.Ordinal) { ["Name"] = ["required"], ["Age"] = ["too low", "not even"] });
+
+        var problem = error.ToProblem();
+
+        var validation = Assert.IsType<HttpValidationProblemDetails>(problem.ProblemDetails);
+        Assert.Equal(StatusCodes.Status400BadRequest, problem.StatusCode);
+        Assert.Equal("The request is invalid.", validation.Detail);
+        Assert.Equal("request.invalid", validation.Extensions["code"]);
+        Assert.Equal(["required"], validation.Errors["Name"]);
+        Assert.Equal(["too low", "not even"], validation.Errors["Age"]);
+    }
+
+    [Fact]
+    public void ToProblem_ValidationErrorWithoutFields_IsAPlainProblem()
+    {
+        var problem = Error.Validation("query.invalid-sort", "bad sort").ToProblem();
+
+        Assert.IsNotType<HttpValidationProblemDetails>(problem.ProblemDetails);
+        Assert.Equal(StatusCodes.Status400BadRequest, problem.StatusCode);
+    }
+
+    [Fact]
+    public void ToCreatedResult_Success_IsCreatedAtTheLocation()
+    {
+        var result = Result.Success(42).ToCreatedResult(id => $"/api/things/{id}");
+
+        var created = Assert.IsType<Created<int>>(result.Result);
+        Assert.Equal("/api/things/42", created.Location);
+        Assert.Equal(42, created.Value);
+    }
+
+    [Fact]
+    public void ToCreatedResult_Failure_IsProblem()
+    {
+        var result = Result.Fail<int>(Error.Conflict("x", "taken")).ToCreatedResult(id => $"/api/things/{id}");
+
+        Assert.Equal(StatusCodes.Status409Conflict, Assert.IsType<ProblemHttpResult>(result.Result).StatusCode);
+    }
+
+    [Fact]
     public void ToHttpResult_SuccessWithValue_IsOk()
     {
         var result = Result.Success("payload").ToHttpResult();

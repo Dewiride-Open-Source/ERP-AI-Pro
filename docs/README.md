@@ -3,7 +3,7 @@
 | Section | Contents |
 |---|---|
 | [Roadmap](roadmap/ROADMAP.md) | generated view of `roadmap/roadmap.json`, the single source of truth for what is planned, in progress and done |
-| [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [persistence](architecture/persistence.md), [AI capabilities](architecture/ai-capabilities.md) |
+| [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [persistence](architecture/persistence.md), [application pipeline](architecture/application-pipeline.md), [AI capabilities](architecture/ai-capabilities.md) |
 | [Guides](guides/local-development.md) | [local development](guides/local-development.md), [testing](guides/testing.md), [adding a setting, flag or secret](guides/adding-a-setting.md), [comment policy](guides/comment-policy.md) |
 | [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md), [Azure bootstrap](operations/azure-bootstrap.md), [secrets runbook](operations/runbooks/secrets.md); deployment runbooks arrive with the first-deployment phase |
 | [Configuration register](configuration.md) | every configuration key, feature flag and secret name |
@@ -28,5 +28,6 @@
 | [0013](adr/0013-persistence-conventions-and-test-databases.md) | Persistence conventions, per-process test databases and the CI SQL Server action |
 | [0014](adr/0014-cn-class-name-helper.md) | The `cn` package replaces `clsx` and `tailwind-merge` |
 | [0015](adr/0015-auditing-soft-delete-and-domain-primitives.md) | Auditing, soft delete, row versions, the actor model and the domain primitives |
+| [0016](adr/0016-application-pipeline-and-idempotency.md) | The application pipeline, the unit of work, query contracts and idempotency keys |
 
 New decisions use [0000-template.md](adr/0000-template.md).

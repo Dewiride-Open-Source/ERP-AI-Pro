@@ -460,6 +460,14 @@
           "Scalar.AspNetCore": "[2.17.6, )"
         }
       },
+      "dewiride.erp.buildingblocks.idempotency": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
+          "Microsoft.AspNetCore.OpenApi": "[10.0.12, )"
+        }
+      },
       "dewiride.erp.buildingblocks.kernel": {
         "type": "Project"
       },
@@ -498,6 +506,7 @@
         "type": "Project",
         "dependencies": {
           "Dewiride.Erp.BuildingBlocks.Configuration": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Idempotency": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.SystemInfo": "[1.0.0, )"

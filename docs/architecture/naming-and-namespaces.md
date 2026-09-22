@@ -29,6 +29,7 @@
 | Money primitives | `Dewiride.Erp.BuildingBlocks.Kernel.Monetary` | `Money`, `Currency`, `Percentage` and their `[JsonConverter]`-attached `MoneyJsonConverter`, `CurrencyJsonConverter`, `PercentageJsonConverter` |
 | Time primitives | `Dewiride.Erp.BuildingBlocks.Kernel.Time` | `FinancialYear`, `FinancialQuarter`, `IndianStandardTime`, `FinancialYearJsonConverter` |
 | Actor | `IActorContext`, `ActorIds`, `SystemActorContext` in `Dewiride.Erp.BuildingBlocks.Application.Actors`; `HttpActorContext` in `Dewiride.Erp.BuildingBlocks.Endpoints.Actors` | `ActorIds.System`, `ActorIds.Anonymous` |
+| Error code | `<area>.<kebab-case-problem>` in ProblemDetails `code` | `request.invalid`, `query.invalid-field`, `concurrency.conflict`, `idempotency.key-reused` |
 | Permission | `<domain>.<module>.<feature>.<action>` | `finance.sales.invoices.issue` |
 | Feature flag | `Erp.Modules.<Domain>.<Module>[.<Capability>]` | `Erp.Modules.Finance.Sales.EInvoicing` |
 | Configuration key | `Erp:<Domain>:<Module>:<Setting>` | `Erp:Finance:Sales:InvoicePrefix` |

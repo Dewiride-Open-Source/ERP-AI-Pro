@@ -5,6 +5,7 @@
       "BuildingBlocks\\Application\\Dewiride.Erp.BuildingBlocks.Application\\Dewiride.Erp.BuildingBlocks.Application.csproj",
       "BuildingBlocks\\Configuration\\Dewiride.Erp.BuildingBlocks.Configuration\\Dewiride.Erp.BuildingBlocks.Configuration.csproj",
       "BuildingBlocks\\Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints.csproj",
+      "BuildingBlocks\\Idempotency\\Dewiride.Erp.BuildingBlocks.Idempotency\\Dewiride.Erp.BuildingBlocks.Idempotency.csproj",
       "BuildingBlocks\\Kernel\\Dewiride.Erp.BuildingBlocks.Kernel\\Dewiride.Erp.BuildingBlocks.Kernel.csproj",
       "BuildingBlocks\\Modules\\Dewiride.Erp.BuildingBlocks.Modules\\Dewiride.Erp.BuildingBlocks.Modules.csproj",
       "BuildingBlocks\\Observability\\Dewiride.Erp.BuildingBlocks.Observability\\Dewiride.Erp.BuildingBlocks.Observability.csproj",

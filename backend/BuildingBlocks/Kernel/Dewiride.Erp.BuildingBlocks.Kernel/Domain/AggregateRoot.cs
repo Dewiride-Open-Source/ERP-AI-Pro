@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Entity<TId>, IHasDomainEvents
     where TId : struct, IEquatable<TId>
 {
     private readonly List<IDomainEvent> _domainEvents = [];

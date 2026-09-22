@@ -35,7 +35,9 @@ jobs:
         run: dotnet build --no-restore -warnaserror -p:ContinuousIntegrationBuild=true
       - name: Pending model changes
         working-directory: backend
-        run: dotnet ef migrations has-pending-model-changes --no-build --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
+        run: |
+          dotnet ef migrations has-pending-model-changes --no-build --context IdempotencyDbContext --project BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency --startup-project Hosts/Api/Dewiride.Erp.Host.Api
+          dotnet ef migrations has-pending-model-changes --no-build --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
       - name: Verify formatting
         working-directory: backend
         run: dotnet format --verify-no-changes --no-restore

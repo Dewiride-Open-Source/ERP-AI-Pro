@@ -15,7 +15,7 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 
 `Hosts.Composition` holds `Modules.All` and `AddErpPlatform`, shared by the API host, the test database host and the migrator.
 
-`BuildingBlocks.Endpoints` references `BuildingBlocks.Application` (for `IActorContext`, which `HttpActorContext` implements) and `BuildingBlocks.Persistence` references `BuildingBlocks.Application` (for `IActorContext` and `SystemActorContext`, consumed by `AuditingSaveChangesInterceptor` and registered by `AddErpPersistenceCore`).
+`BuildingBlocks.Idempotency` references `BuildingBlocks.Application` and `BuildingBlocks.Persistence`: it owns the schema `platform_idempotency` and its middleware. `BuildingBlocks.Endpoints` references `BuildingBlocks.Application` (for `IActorContext`, which `HttpActorContext` implements) and `BuildingBlocks.Persistence` references `BuildingBlocks.Application` (for `IActorContext` and `SystemActorContext`, consumed by `AuditingSaveChangesInterceptor` and registered by `AddErpPersistenceCore`).
 
 ## Namespaces inside a module
 
@@ -43,7 +43,7 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 
 - Every DbContext in a module assembly derives from `ModuleDbContext` and lives in the namespace `<Module>.Persistence`.
 - Every catalogue context maps only entity types from its own assembly.
-- A module context's schema equals its descriptor's `Schema`. Schemas owned by building blocks (later: `platform_idempotency`, `files`) are named by concern and sit outside the `<domain>_<module>` descriptor rule.
+- A module context's schema equals its descriptor's `Schema`. Schemas owned by building blocks (`platform_idempotency`; `files` in a later sub-phase) are named by concern and sit outside the `<domain>_<module>` descriptor rule.
 - Every strongly-typed id property in every catalogue model uses `StronglyTypedIdConverter`.
 
 ## Frontend

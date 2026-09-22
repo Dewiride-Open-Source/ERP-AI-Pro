@@ -12,6 +12,8 @@ Every API route group and web route in the system. API routes follow `/api/<doma
 | `GET /scalar` | anonymous, Development only | API reference UI |
 | `GET /api/platform/features` | anonymous until the authentication phase | every feature flag of the catalog with its evaluated state (`{ features: [{ name, enabled }] }`), read by the web shell to hide disabled modules |
 
+Two conventions apply to the routes this register lists, from the module that first uses them: a route that creates something carries `.RequireIdempotencyKey()`, so the caller sends an `Idempotency-Key` header with a UUID, a repeat of the same request replays the first response with `Idempotency-Replayed: true`, and the same key with a different body answers 422; a route that lists something accepts `?page=&pageSize=&sort=&filter=` with per-route field allow-lists. Both grammars are in `docs/architecture/application-pipeline.md`. The routes below predate the conventions: `system-info/startups` returns a fixed 20 rows and no route creates anything yet.
+
 ## Modules
 
 | Domain / Module | API group | Web routes | Notes |

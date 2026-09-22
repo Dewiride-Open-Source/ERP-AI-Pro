@@ -13,6 +13,11 @@
         "CommandTimeout": "00:00:30",
         "MaxRetryCount": "5",
         "MaxRetryDelay": "00:00:10"
+      },
+      "Idempotency": {
+        "RetentionPeriod": "1.00:00:00",
+        "MaxStoredResponseBytes": "1048576",
+        "CleanupInterval": "01:00:00"
       }
     }
   }

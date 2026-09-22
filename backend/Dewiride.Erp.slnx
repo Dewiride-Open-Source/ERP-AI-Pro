@@ -3,6 +3,7 @@
     <Project Path="BuildingBlocks/Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
     <Project Path="BuildingBlocks/Configuration/Dewiride.Erp.BuildingBlocks.Configuration/Dewiride.Erp.BuildingBlocks.Configuration.csproj" />
     <Project Path="BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
+    <Project Path="BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency.csproj" />
     <Project Path="BuildingBlocks/Kernel/Dewiride.Erp.BuildingBlocks.Kernel/Dewiride.Erp.BuildingBlocks.Kernel.csproj" />
     <Project Path="BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
     <Project Path="BuildingBlocks/Observability/Dewiride.Erp.BuildingBlocks.Observability/Dewiride.Erp.BuildingBlocks.Observability.csproj" />

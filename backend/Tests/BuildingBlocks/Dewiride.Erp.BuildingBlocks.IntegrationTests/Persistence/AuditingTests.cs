@@ -42,7 +42,7 @@ public sealed class AuditingTests(SampleDatabase database) : IClassFixture<Sampl
         {
             var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
             var tracked = await context.Samples.SingleAsync(s => s.Id == id, TestContext.Current.CancellationToken);
-            tracked.Rename("Renamed");
+            tracked.Rename("Renamed", database.Clock.GetUtcNow());
             await context.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 

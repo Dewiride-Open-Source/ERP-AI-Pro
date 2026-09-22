@@ -7,7 +7,7 @@ namespace Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Application.Commands
 
 internal sealed class RecordStartupHandler(SystemInfoDbContext context, TimeProvider timeProvider) : ICommandHandler<RecordStartupCommand, ApiStartupId>
 {
-    public async Task<Result<ApiStartupId>> HandleAsync(RecordStartupCommand command, CancellationToken cancellationToken)
+    public Task<Result<ApiStartupId>> HandleAsync(RecordStartupCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
 
@@ -21,12 +21,11 @@ internal sealed class RecordStartupHandler(SystemInfoDbContext context, TimeProv
             timeProvider.GetUtcNow());
         if (startup.IsFailure)
         {
-            return startup.Error!;
+            return Task.FromResult<Result<ApiStartupId>>(startup.Error!);
         }
 
         context.Startups.Add(startup.Value);
-        await context.SaveChangesAsync(cancellationToken);
 
-        return startup.Value.Id;
+        return Task.FromResult<Result<ApiStartupId>>(startup.Value.Id);
     }
 }
