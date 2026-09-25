@@ -474,10 +474,16 @@
           "id": "backend-platform-transport-security-middleware",
           "title": "Transport security middleware",
           "scope": "Configure forwarded headers with KnownIPNetworks from configuration and ForwardLimit 1, HostFiltering with AllowedHosts, HSTS with configurable ramp and HTTPS redirection, security-headers middleware (CSP with nonces, X-Content-Type-Options, Referrer-Policy, frame-ancestors, Permissions-Policy), Kestrel AddServerHeader=false and request size limits in the documented middleware order, with integration tests for each header and proxy scenario.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "Integration tests against a real Kestrel listener prove that API responses carry X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy, the default-src 'none' Content-Security-Policy, Cross-Origin-Resource-Policy and Cross-Origin-Opener-Policy, and never Strict-Transport-Security or an HTTPS redirect, in both Development and Production hosts; the proxy owns TLS and HSTS.",
+            "X-Forwarded-For and X-Forwarded-Proto are applied only when the direct peer is inside Erp:Platform:Host:KnownNetworks, with ForwardLimit 1; an invalid network entry fails startup with a message naming it; a Host header outside Erp:Platform:Host:AllowedHosts answers 400.",
+            "A request body over Erp:Platform:Host:MaxRequestBodyBytes answers 413 problem details with code request.too-large, whether the body is read by the JSON binder or read manually, and a request that runs past Erp:Platform:Host:RequestTimeout answers 504 problem details with code request.timeout; both keys are registered, defaulted and seeded under both labels.",
+            "docs/architecture/request-pipeline.md is the single documented middleware order, UseRouting is explicit in the pipeline, and integration tests prove each adjacency that matters (exception handling wraps the timeout, routing runs before the feature gate, forwarded headers run before anything that reads the client address)."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-09-25",
           "notes": "Already in place from backend-platform-http-and-openapi-conventions: CorrelationIdMiddleware runs first in UseErpEndpointPipeline, and GlobalExceptionHandler answers a BadHttpRequestException with its own status (413 request.too-large, otherwise request.malformed, logged at warning) with ProblemTypes.RequestTooLarge as the 413 default code. This sub-phase adds the Kestrel body limit and the request timeout that produce those responses and proves them with integration tests; it does not re-implement the mapping."
         },
         {
