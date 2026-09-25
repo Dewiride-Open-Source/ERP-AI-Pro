@@ -2,13 +2,6 @@ import "server-only";
 
 import { cache } from "react";
 
-import { apiFetch } from "@/shared/api/http";
+import { callApi } from "@/shared/api/client";
 
-export type SystemInfo = {
-  applicationName: string;
-  version: string;
-  startedAt: string;
-  uptimeSeconds: number;
-};
-
-export const getSystemInfo = cache(() => apiFetch<SystemInfo>("/platform/system-info"));
+export const getSystemInfo = cache(() => callApi((client) => client.api.platform.systemInfo.get()));

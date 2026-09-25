@@ -25,7 +25,7 @@ const bannedPatterns: { pattern: RegExp; reason: string }[] = [
 
 const roots = ["backend", "frontend", "scripts", "infra", ".github"].map((r) => join(repoRoot, r));
 const generatedFolders = ["Migrations"];
-const generatedPaths = ["/components/ui/"];
+const generatedPaths = ["/components/ui/", "/packages/api-client/src/generated/"];
 const selfPath = "scripts/checks/comment-policy.ts";
 
 const findings: string[] = [];

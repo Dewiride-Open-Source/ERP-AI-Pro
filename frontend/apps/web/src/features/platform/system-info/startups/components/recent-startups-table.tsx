@@ -1,3 +1,4 @@
+import type { StartupResponse } from "@dewiride/erp-api-client";
 import { Badge } from "@dewiride/erp-ui/components/ui/badge";
 import {
   Card,
@@ -19,14 +20,16 @@ import { HistoryIcon } from "lucide-react";
 import { ApiError } from "@/shared/api/problem-details";
 import { formatDateTimeIst } from "@/shared/format/dates";
 
-import { getRecentStartups, type Startup } from "../server/queries";
+import { getRecentStartups } from "../server/queries";
+
+const missing = "—";
 
 export async function RecentStartupsTable() {
-  let startups: Startup[] | undefined;
+  let startups: StartupResponse[] | undefined;
   let failure: string | undefined;
 
   try {
-    startups = (await getRecentStartups()).startups;
+    startups = (await getRecentStartups()).startups ?? [];
   } catch (error) {
     failure = error instanceof ApiError ? error.message : "The API did not respond.";
   }
@@ -47,7 +50,7 @@ export async function RecentStartupsTable() {
   );
 }
 
-function StartupsTable({ startups }: { startups: Startup[] }) {
+function StartupsTable({ startups }: { startups: StartupResponse[] }) {
   if (startups.length === 0) return <Empty />;
 
   return (
@@ -64,20 +67,20 @@ function StartupsTable({ startups }: { startups: Startup[] }) {
       <TableBody>
         {startups.map((startup) => (
           <TableRow key={startup.id} data-testid="recent-startups-row">
-            <TableCell>{formatDateTimeIst(startup.startedAt)}</TableCell>
+            <TableCell>{startup.startedAt ? formatDateTimeIst(startup.startedAt) : missing}</TableCell>
             <TableCell>
               <Badge variant="secondary" data-testid="recent-startups-version">
-                {startup.version}
+                {startup.version ?? missing}
               </Badge>
             </TableCell>
-            <TableCell>{startup.framework}</TableCell>
+            <TableCell>{startup.framework ?? missing}</TableCell>
             <TableCell>
-              {startup.environmentName}
+              {startup.environmentName ?? missing}
               {startup.configurationLabel ? (
                 <span className="ml-2 text-xs text-muted-foreground">{startup.configurationLabel}</span>
               ) : null}
             </TableCell>
-            <TableCell>{formatDateTimeIst(startup.recordedAt)}</TableCell>
+            <TableCell>{startup.recordedAt ? formatDateTimeIst(startup.recordedAt) : missing}</TableCell>
           </TableRow>
         ))}
       </TableBody>

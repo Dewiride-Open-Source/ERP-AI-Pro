@@ -2,18 +2,18 @@ import "server-only";
 
 import { cache } from "react";
 
-import { apiFetch } from "@/shared/api/http";
+import { callApi } from "@/shared/api/client";
 
 import type { FeatureFlags } from "./feature-flags";
 
-type FeaturesResponse = {
-  features: { name: string; enabled: boolean }[];
-};
-
 export const getFeatureFlags = cache(async (): Promise<FeatureFlags> => {
   try {
-    const response = await apiFetch<FeaturesResponse>("/platform/features");
-    return new Map(response.features.map((feature) => [feature.name, feature.enabled]));
+    const response = await callApi((client) => client.api.platform.features.get());
+    return new Map(
+      (response.features ?? []).flatMap(({ name, enabled }) =>
+        name && typeof enabled === "boolean" ? [[name, enabled] as const] : [],
+      ),
+    );
   } catch {
     return new Map();
   }

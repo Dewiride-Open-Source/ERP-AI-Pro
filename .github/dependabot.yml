@@ -83,6 +83,9 @@ updates:
         patterns: ["@playwright/*"]
       opentelemetry:
         patterns: ["@vercel/otel", "@opentelemetry/*"]
+      # The Kiota runtime ships as one prerelease line (ADR-0017), so its packages move together
+      kiota:
+        patterns: ["@microsoft/kiota-*"]
     ignore:
       # Node 24 is the LTS line; @types/node follows the runtime major
       - dependency-name: "@types/node"

@@ -52,12 +52,14 @@ steps.push(
   { name: "azure scripts check", cwd: repoRoot, command: bash, args: ["scripts/azure/check.sh"], shell: false },
   { name: "roadmap tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/roadmap/tests/*.test.ts"] },
   { name: "check tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/checks/tests/*.test.ts"] },
+  { name: "api client tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/api-client/tests/*.test.ts"] },
   { name: "roadmap check", cwd: repoRoot, command: "node", args: ["scripts/roadmap/roadmap.ts", "check"] },
 );
 
 if (!values["skip-frontend"]) {
   steps.push(
     { name: "frontend install (frozen)", cwd: frontend, command: "pnpm", args: ["install", "--frozen-lockfile"] },
+    { name: "api client drift", cwd: repoRoot, command: "node", args: ["scripts/api-client/drift.ts"] },
     { name: "frontend lint", cwd: frontend, command: "pnpm", args: ["lint"] },
     { name: "frontend typecheck", cwd: frontend, command: "pnpm", args: ["typecheck"] },
     { name: "frontend unit tests", cwd: frontend, command: "pnpm", args: ["test:unit"] },

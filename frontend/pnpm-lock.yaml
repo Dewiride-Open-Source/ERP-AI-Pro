@@ -164,6 +164,15 @@ settings:
 
 catalogs:
   default:
+    '@microsoft/kiota-abstractions':
+      specifier: 1.0.0-preview.108
+      version: 1.0.0-preview.108
+    '@microsoft/kiota-http-fetchlibrary':
+      specifier: 1.0.0-preview.108
+      version: 1.0.0-preview.108
+    '@microsoft/kiota-serialization-json':
+      specifier: 1.0.0-preview.108
+      version: 1.0.0-preview.108
     '@opentelemetry/api':
       specifier: 1.9.1
       version: 1.9.1
@@ -277,6 +286,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@dewiride/erp-api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@dewiride/erp-ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -356,6 +368,31 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.5
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.5(jiti@2.7.0)(supports-color@7.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/api-client:
+    dependencies:
+      '@microsoft/kiota-abstractions':
+        specifier: 'catalog:'
+        version: 1.0.0-preview.108
+      '@microsoft/kiota-http-fetchlibrary':
+        specifier: 'catalog:'
+        version: 1.0.0-preview.108
+      '@microsoft/kiota-serialization-json':
+        specifier: 'catalog:'
+        version: 1.0.0-preview.108
+    devDependencies:
+      '@dewiride/erp-config':
+        specifier: workspace:*
+        version: link:../config
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.5
@@ -858,6 +895,15 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@microsoft/kiota-abstractions@1.0.0-preview.108':
+    resolution: {integrity: sha512-BMcVp6tUDnt2RXlYb5zU+8VdDNqlpcYzuumJZkgSoJauYyVeEaigtdx5bPL+cYLlom/S23LVONs5Ci06Orn8Fg==}
+
+  '@microsoft/kiota-http-fetchlibrary@1.0.0-preview.108':
+    resolution: {integrity: sha512-5r0qfzzsgsVK5TL5MJ9SQ5M9n5BfHm5SVlfUlFlOyH6EFrdTld2mt6ddsLfYoUhCg4Vx+rKQosOIRMPXM6VWpg==}
+
+  '@microsoft/kiota-serialization-json@1.0.0-preview.108':
+    resolution: {integrity: sha512-fjK5G5oPhi/FS+idZtVoowytk4jgqExu36gQ+EAQv37inlwT0bLCcG7jUzLc2mM1agM7E9TV8qjDVSIQsCZgtg==}
 
   '@modelcontextprotocol/sdk@1.30.0':
     resolution: {integrity: sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA==}
@@ -1708,6 +1754,9 @@ packages:
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
+
+  '@std-uritemplate/std-uritemplate@2.0.12':
+    resolution: {integrity: sha512-s/R828vYTrFPgAOFAUiHuP4i1eSZHCO9PKVfzVR+2DFERJ/G71BpZJVObM2yy3xeMjMW3wB61gvanb6/pV1lJw==}
 
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
@@ -4028,6 +4077,9 @@ packages:
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
 
+  tinyduration@3.4.1:
+    resolution: {integrity: sha512-NemFoamVYn7TmtwZKZ3OiliM9fZkr6EWiTM+wKknco6POSy2gS689xx/pXip0JYp40HXpUw6k65CUYHWYUXdaA==}
+
   tinyglobby@0.2.17:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
@@ -4678,6 +4730,24 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  '@microsoft/kiota-abstractions@1.0.0-preview.108':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@std-uritemplate/std-uritemplate': 2.0.12
+      tinyduration: 3.4.1
+      tslib: 2.8.1
+
+  '@microsoft/kiota-http-fetchlibrary@1.0.0-preview.108':
+    dependencies:
+      '@microsoft/kiota-abstractions': 1.0.0-preview.108
+      '@opentelemetry/api': 1.9.1
+      tslib: 2.8.1
+
+  '@microsoft/kiota-serialization-json@1.0.0-preview.108':
+    dependencies:
+      '@microsoft/kiota-abstractions': 1.0.0-preview.108
+      tslib: 2.8.1
 
   '@modelcontextprotocol/sdk@1.30.0(supports-color@7.2.0)(zod@3.25.76)':
     dependencies:
@@ -5568,6 +5638,8 @@ snapshots:
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
+
+  '@std-uritemplate/std-uritemplate@2.0.12': {}
 
   '@swc/helpers@0.5.23':
     dependencies:
@@ -8049,6 +8121,8 @@ snapshots:
   tapable@2.3.3: {}
 
   tiny-invariant@1.3.3: {}
+
+  tinyduration@3.4.1: {}
 
   tinyglobby@0.2.17:
     dependencies:

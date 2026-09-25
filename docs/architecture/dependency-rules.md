@@ -36,6 +36,7 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 - Every module descriptor follows the naming table in `naming-and-namespaces.md`: assembly `Dewiride.Erp.Modules.<Domain>.<Module>`, schema `<domain>_<module>` when present, route prefix `/<domain>/<module>`, flag `Erp.Modules.<Domain>.<Module>`, permissions `<domain>.<module>.<feature>.<action>` starting with the module's own prefix, PascalCase capability names. `ModuleCatalog` re-checks at startup that no two modules share an id, route prefix, schema or flag and that every permission carries its module prefix.
 - Every module lives at `Modules/<Domain>/<Module>/` with `README.md` and the four projects `Contracts/`, `Module/`, `Tests/UnitTests/`, `Tests/IntegrationTests/` named after the assembly.
 - Every endpoint group requires authorization unless the route is on the anonymous whitelist (`/healthz/*`, `/api/auth/login`, OIDC callbacks, `/api/platform/system-info`, `/api/platform/system-info/startups` and `/api/platform/features` until authentication exists, OpenAPI in Development).
+- Every type under `<Feature>.Endpoints.Requests` is a public sealed record whose attributes all use the `property:` target, and every such record that carries validation rules is known to the running `ValidationOptions`, which fails when the module never calls `AddValidation()` (`RequestRecordTests`).
 - No assembly references a banned package.
 - Namespace equals folder for every `.cs` file under `BuildingBlocks/`, `Hosts/`, `Modules/` and `Tests/` (`Migrations/` folders exempt; also a compiler error through IDE0130), and no folder holds more than 12 source files.
 
@@ -51,3 +52,4 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 - `src/app/**` imports only `@/features/<domain>/<module>` (the module `index.ts`) and `@/shared/**`.
 - `src/features/<domain>/<module>/**` never imports another module's internals; cross-module UI goes through the other module's `index.ts`.
 - `packages/ui` never imports from `apps/web`.
+- `packages/api-client/src/generated` is written only by `scripts/api-client/generate.ts`; `scripts/api-client/drift.ts` fails when it differs from what `docs/openapi/erp.json` generates.

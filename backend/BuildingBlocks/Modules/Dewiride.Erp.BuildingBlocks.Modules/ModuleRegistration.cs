@@ -35,7 +35,12 @@ public static class ModuleRegistration
         foreach (var module in catalog.Modules)
         {
             var descriptor = module.Descriptor;
-            var group = api.MapGroup(descriptor.RoutePrefix).WithTags(descriptor.Id).RequireFeature(descriptor.FeatureFlag);
+            var group = api.MapGroup(descriptor.RoutePrefix)
+                .WithTags(descriptor.Id)
+                .RequireFeature(descriptor.FeatureFlag)
+                .ProducesValidationProblem()
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
             module.MapEndpoints(group);
         }
 

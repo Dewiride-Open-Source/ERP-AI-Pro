@@ -4,6 +4,6 @@ const indiaDateTime = new Intl.DateTimeFormat("en-IN", {
   timeStyle: "short",
 });
 
-export function formatDateTimeIst(value: Date | string): string {
-  return indiaDateTime.format(typeof value === "string" ? new Date(value) : value);
+export function formatDateTimeIst(value: Date): string {
+  return indiaDateTime.format(value);
 }

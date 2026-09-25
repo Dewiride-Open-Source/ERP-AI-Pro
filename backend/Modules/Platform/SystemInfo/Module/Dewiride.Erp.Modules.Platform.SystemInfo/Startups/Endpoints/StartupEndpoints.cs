@@ -1,6 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Application.Queries;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Application.Queries.ListRecentStartups;
+using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Endpoints.Requests;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Endpoints.Responses;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,15 +16,16 @@ internal static class StartupEndpoints
     {
         group.MapGet("/startups", ListAsync)
             .WithName("Platform.SystemInfo.ListStartups")
-            .WithSummary("Lists the 20 most recent starts of the API, newest first.")
+            .WithSummary("Lists the most recent starts of the API, newest first.")
             .AllowAnonymous();
     }
 
     private static async Task<Results<Ok<RecentStartupsResponse>, ProblemHttpResult>> ListAsync(
+        [AsParameters] ListRecentStartupsRequest request,
         IQueryHandler<ListRecentStartupsQuery, IReadOnlyList<StartupDetails>> handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new ListRecentStartupsQuery(), cancellationToken);
+        var result = await handler.HandleAsync(new ListRecentStartupsQuery(request.Count), cancellationToken);
 
         return result.IsSuccess
             ? TypedResults.Ok(new RecentStartupsResponse(result.Value.Select(ToResponse).ToArray()))

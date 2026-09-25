@@ -21,7 +21,7 @@ cd ERP-AI-Pro
 # backend
 cd backend
 dotnet restore
-dotnet tool restore                                        # dotnet-ef from .config/dotnet-tools.json
+dotnet tool restore                                        # dotnet-ef and kiota from .config/dotnet-tools.json
 dotnet build --no-restore -warnaserror
 dotnet user-secrets set "Erp:Platform:Database:ConnectionString" "Server=localhost;Database=ErpAiPro;Integrated Security=True;Encrypt=True;TrustServerCertificate=True" --project Hosts/Api/Dewiride.Erp.Host.Api
 dotnet ef database update --context IdempotencyDbContext --project BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency --startup-project Hosts/Api/Dewiride.Erp.Host.Api   # creates ErpAiPro when it does not exist
@@ -32,10 +32,10 @@ dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api      # http://localhost:508
 # frontend (second terminal)
 cd frontend
 pnpm install --frozen-lockfile
-pnpm dev                                                   # http://localhost:3000 → redirects to /login
+pnpm dev                                                   # builds @dewiride/erp-api-client, then http://localhost:3000 → redirects to /login
 ```
 
-`http://localhost:3000/platform/system-info` shows data fetched from the API through the `/api` rewrite. `http://localhost:5080/scalar` shows the API reference in Development.
+`http://localhost:3000/platform/system-info` shows data the web server reads through the generated API client (`shared/api/client.ts`); the browser reaches `/api/*` through the rewrite in `proxy.ts`. `http://localhost:5080/scalar` shows the API reference in Development.
 
 ## Configuration and secrets
 
@@ -62,7 +62,7 @@ pnpm dev                                                   # http://localhost:30
 
 ## Everyday commands
 
-See the command table in the repository README. Before a pull request: `node scripts/verify/verify.ts` (add `--e2e` for Playwright, `--docker` for image builds and the compose smoke test).
+See the command table in the repository README. After changing an API route, request or response, refresh the contract and the web client with `node scripts/api-client/generate.ts` (it needs `ERP_TEST_SQL_CONNECTION`) and commit `docs/openapi/erp.json` with `frontend/packages/api-client/src/generated`. Before a pull request: `node scripts/verify/verify.ts` (add `--e2e` for Playwright, `--docker` for image builds and the compose smoke test).
 
 ## Commit signing
 

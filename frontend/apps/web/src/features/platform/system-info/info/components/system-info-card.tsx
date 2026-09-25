@@ -1,3 +1,4 @@
+import type { SystemInfoResponse } from "@dewiride/erp-api-client";
 import { Badge } from "@dewiride/erp-ui/components/ui/badge";
 import {
   Card,
@@ -13,12 +14,14 @@ import { ApiError } from "@/shared/api/problem-details";
 import { formatDateTimeIst } from "@/shared/format/dates";
 import { formatDuration } from "@/shared/format/durations";
 
-import { getSystemInfo, type SystemInfo } from "../server/queries";
+import { getSystemInfo } from "../server/queries";
 
 import { RefreshButton } from "./refresh-button";
 
+const missing = "—";
+
 export async function SystemInfoCard() {
-  let info: SystemInfo | undefined;
+  let info: SystemInfoResponse | undefined;
   let failure: string | undefined;
 
   try {
@@ -51,22 +54,30 @@ export async function SystemInfoCard() {
   );
 }
 
-function InfoGrid({ info }: { info: SystemInfo }) {
+function InfoGrid({ info }: { info: SystemInfoResponse }) {
   return (
     <dl className="grid gap-4 sm:grid-cols-2">
-      <Item label="Application" value={info.applicationName} testId="system-info-application" />
+      <Item label="Application" value={info.applicationName ?? missing} testId="system-info-application" />
       <Item
         label="Version"
-        value={<Badge variant="secondary">{info.version}</Badge>}
+        value={
+          <Badge variant="secondary" className="h-auto max-w-full break-all whitespace-normal">
+            {info.version ?? missing}
+          </Badge>
+        }
         testId="system-info-version"
       />
-      <Item label="Started" value={formatDateTimeIst(info.startedAt)} testId="system-info-started" />
+      <Item
+        label="Started"
+        value={info.startedAt ? formatDateTimeIst(info.startedAt) : missing}
+        testId="system-info-started"
+      />
       <Item
         label="Uptime"
         value={
           <span className="inline-flex items-center gap-2">
             <ActivityIcon className="size-4 text-success" aria-hidden />
-            {formatDuration(info.uptimeSeconds)}
+            {typeof info.uptimeSeconds === "number" ? formatDuration(info.uptimeSeconds) : missing}
           </span>
         }
         testId="system-info-uptime"
@@ -77,7 +88,7 @@ function InfoGrid({ info }: { info: SystemInfo }) {
 
 function Item({ label, value, testId }: { label: string; value: ReactNode; testId: string }) {
   return (
-    <div className="rounded-lg border bg-muted/40 p-4" data-testid={testId}>
+    <div className="min-w-0 rounded-lg border bg-muted/40 p-4" data-testid={testId}>
       <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{label}</dt>
       <dd className="mt-1 text-base font-medium">{value}</dd>
     </div>

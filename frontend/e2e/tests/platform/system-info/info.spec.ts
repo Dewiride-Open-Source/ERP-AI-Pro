@@ -13,6 +13,11 @@ test.describe("system information page", () => {
     await expect(systemInfo.version).toContainText(/\d+\.\d+\.\d+/);
     await expect(systemInfo.started).toContainText(/\d{4}/);
     await expect(systemInfo.uptime).toContainText(/\d+s/);
+    const card = await systemInfo.card.boundingBox();
+    for (const item of [systemInfo.application, systemInfo.version, systemInfo.started, systemInfo.uptime]) {
+      const box = await item.boundingBox();
+      expect(box!.x + box!.width).toBeLessThanOrEqual(card!.x + card!.width);
+    }
 
     await expect(systemInfo.card).toMatchAriaSnapshot(`
       - term: Application

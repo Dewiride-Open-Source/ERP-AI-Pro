@@ -8,6 +8,7 @@ WORKDIR /workspace
 FROM base AS dependencies
 COPY frontend/package.json frontend/pnpm-workspace.yaml frontend/pnpm-lock.yaml frontend/.npmrc ./
 COPY frontend/apps/web/package.json ./apps/web/
+COPY frontend/packages/api-client/package.json ./packages/api-client/
 COPY frontend/packages/config/package.json ./packages/config/
 COPY frontend/packages/ui/package.json ./packages/ui/
 COPY frontend/e2e/package.json ./e2e/
@@ -18,7 +19,7 @@ FROM dependencies AS build
 ARG NEXT_PUBLIC_APP_NAME=ERP-AI-Pro
 ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
 COPY frontend/ ./
-RUN pnpm --filter @dewiride/erp-web build
+RUN pnpm --filter "@dewiride/erp-web..." build
 
 FROM docker.io/library/node:24-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 AS runtime
 ENV NODE_ENV=production \
