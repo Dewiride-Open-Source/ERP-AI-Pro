@@ -18,6 +18,9 @@ test.describe("system information page", () => {
       const box = await item.boundingBox();
       expect(box!.x + box!.width).toBeLessThanOrEqual(card!.x + card!.width);
     }
+    const versionItem = await systemInfo.version.boundingBox();
+    const versionBadge = await systemInfo.versionBadge.boundingBox();
+    expect(versionBadge!.x + versionBadge!.width).toBeLessThanOrEqual(versionItem!.x + versionItem!.width);
 
     await expect(systemInfo.card).toMatchAriaSnapshot(`
       - term: Application

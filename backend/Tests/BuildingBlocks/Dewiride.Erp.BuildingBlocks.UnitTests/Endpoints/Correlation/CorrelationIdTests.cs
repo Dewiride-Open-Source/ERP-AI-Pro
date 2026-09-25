@@ -26,6 +26,7 @@ public sealed class CorrelationIdTests
     [InlineData("has space")]
     [InlineData("semi;colon")]
     [InlineData("new\nline")]
+    [InlineData("order-4711\n")]
     [InlineData("<script>")]
     [InlineData("slash/es")]
     public void IsWellFormed_ValueOutsideTheAllowedAlphabet_ReturnsFalse(string? value) => Assert.False(CorrelationId.IsWellFormed(value));

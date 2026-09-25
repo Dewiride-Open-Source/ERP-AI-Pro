@@ -35,6 +35,19 @@ public sealed class ProblemDetailsTests : IClassFixture<ProblemDetailsTests.Fixt
     }
 
     [Fact]
+    public async Task Post_RouteThatOnlyAllowsGet_AnswersAClientErrorProblemType()
+    {
+        using var response = await _client.PostAsync(new Uri("/api/platform/system-info", UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var problem = await ReadAsync(response);
+        Assert.Equal("/problems/request.method-not-allowed", problem.Type);
+        Assert.Equal(ProblemTypes.RequestMethodNotAllowed, problem.Extensions[ResultExtensions.CodeExtension]?.ToString());
+        Assert.Equal(Assert.Single(response.Headers.GetValues(CorrelationId.HeaderName)), problem.Extensions["traceId"]?.ToString());
+    }
+
+    [Fact]
     public async Task Get_ThrowingRoute_AnswersTheServerErrorProblemType()
     {
         using var response = await _client.GetAsync(new Uri(ErpApiFactory.ThrowingPath, UriKind.Relative), TestContext.Current.CancellationToken);

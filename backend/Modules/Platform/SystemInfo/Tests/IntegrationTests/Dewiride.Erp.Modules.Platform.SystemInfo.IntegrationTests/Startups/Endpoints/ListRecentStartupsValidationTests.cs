@@ -35,13 +35,24 @@ public sealed class ListRecentStartupsValidationTests(ErpApiFactory factory) : I
     [Theory]
     [InlineData("abc")]
     [InlineData("1.5")]
-    public async Task Get_TakeThatIsNotAnInteger_AnswersBadRequest(string take)
+    public async Task Get_TakeThatIsNotAnInteger_AnswersMalformedRequestProblem(string take)
     {
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync(new Uri($"{Route}?take={take}", UriKind.Relative), TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertMalformedAsync(response);
+    }
+
+    [Fact]
+    public async Task Get_TakeThatIsNotAnIntegerInProduction_AnswersTheSameMalformedRequestProblem()
+    {
+        using var production = ErpApiFactory.ForEnvironment(Environments.Production);
+        using var client = production.CreateClient();
+
+        using var response = await client.GetAsync(new Uri($"{Route}?take=many", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        await AssertMalformedAsync(response);
     }
 
     [Theory]
@@ -55,5 +66,16 @@ public sealed class ListRecentStartupsValidationTests(ErpApiFactory factory) : I
         using var response = await client.GetAsync(new Uri(Route + query, UriKind.Relative), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    private static async Task AssertMalformedAsync(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var problem = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(TestContext.Current.CancellationToken);
+        Assert.NotNull(problem);
+        Assert.Equal("/problems/request.malformed", problem.Type);
+        Assert.Equal("request.malformed", problem.Extensions["code"]?.ToString());
+        Assert.Equal(Route, problem.Instance);
     }
 }

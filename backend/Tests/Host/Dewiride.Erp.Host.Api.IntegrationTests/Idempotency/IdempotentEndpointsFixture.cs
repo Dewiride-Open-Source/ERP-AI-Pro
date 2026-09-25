@@ -1,6 +1,8 @@
 using System.Globalization;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Idempotency;
@@ -14,6 +16,8 @@ public sealed class IdempotentEndpointsFixture : IAsyncDisposable
     public const string FailingPath = "/__test/failing-orders";
 
     public const string LargePath = "/__test/large-orders";
+
+    public const string RejectedPath = "/__test/rejected-orders";
 
     public const int MaxStoredResponseBytes = 1024;
 
@@ -39,6 +43,7 @@ public sealed class IdempotentEndpointsFixture : IAsyncDisposable
             routes.MapPost(FailingPath, (OrderRequest order) => order.Item == "explode"
                 ? throw new InvalidOperationException("boom")
                 : Results.StatusCode(StatusCodes.Status503ServiceUnavailable)).RequireIdempotencyKey();
+            routes.MapPost(RejectedPath, (OrderRequest order) => Error.Conflict("order.duplicate", $"An order for {order.Item} already exists.").ToProblem()).RequireIdempotencyKey();
             routes.MapPost(LargePath, (OrderRequest order) => Results.Ok(new OrderResponse(Interlocked.Increment(ref _orders), new string('x', MaxStoredResponseBytes * 2)))).RequireIdempotencyKey();
         });
     }

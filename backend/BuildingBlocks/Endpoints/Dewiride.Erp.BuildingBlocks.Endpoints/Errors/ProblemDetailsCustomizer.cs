@@ -6,8 +6,6 @@ namespace Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 
 internal static class ProblemDetailsCustomizer
 {
-    public const string TraceIdExtension = "traceId";
-
     public static void Customize(ProblemDetailsContext context)
     {
         var problem = context.ProblemDetails;
@@ -25,6 +23,6 @@ internal static class ProblemDetailsCustomizer
         }
 
         problem.Instance ??= context.HttpContext.Request.Path;
-        problem.Extensions[TraceIdExtension] = context.HttpContext.Features.Get<ICorrelationIdFeature>()?.CorrelationId ?? context.HttpContext.TraceIdentifier;
+        problem.Extensions[ProblemTypes.TraceIdExtension] = context.HttpContext.Features.Get<ICorrelationIdFeature>()?.CorrelationId ?? context.HttpContext.TraceIdentifier;
     }
 }

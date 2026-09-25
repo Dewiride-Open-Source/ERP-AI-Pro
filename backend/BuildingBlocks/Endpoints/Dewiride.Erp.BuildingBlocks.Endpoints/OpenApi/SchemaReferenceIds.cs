@@ -17,11 +17,13 @@ internal sealed class SchemaReferenceIds(Func<JsonTypeInfo, string?> inner)
             return null;
         }
 
-        var owner = _owners.GetOrAdd(id, type.Type);
+        // A value type and its nullable form share one schema, so they are the same owner.
+        var clrType = Nullable.GetUnderlyingType(type.Type) ?? type.Type;
+        var owner = _owners.GetOrAdd(id, clrType);
 
-        return owner == type.Type
+        return owner == clrType
             ? id
             : throw new InvalidOperationException(
-                $"'{owner.FullName}' and '{type.Type.FullName}' both map to the schema id '{id}'. The generated TypeScript client names its models after schema ids, so rename one of the types.");
+                $"'{owner.FullName}' and '{clrType.FullName}' both map to the schema id '{id}'. The generated TypeScript client names its models after schema ids, so rename one of the types.");
     }
 }

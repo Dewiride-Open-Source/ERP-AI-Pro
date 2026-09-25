@@ -27,7 +27,7 @@ internal sealed class ProblemDetailsSchemaTransformer : IOpenApiSchemaTransforme
             Type = JsonSchemaType.String,
             Description = "Stable machine-readable error code; the type member is this code under /problems/.",
         };
-        schema.Properties[ProblemDetailsCustomizer.TraceIdExtension] = new OpenApiSchema
+        schema.Properties[ProblemTypes.TraceIdExtension] = new OpenApiSchema
         {
             Type = JsonSchemaType.String,
             Description = "Correlation id of the request, the same value the X-Correlation-ID response header carries.",

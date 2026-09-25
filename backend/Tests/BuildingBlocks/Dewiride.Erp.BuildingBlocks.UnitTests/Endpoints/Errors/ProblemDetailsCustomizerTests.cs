@@ -74,7 +74,7 @@ public sealed class ProblemDetailsCustomizerTests
 
         ProblemDetailsCustomizer.Customize(context);
 
-        Assert.Equal(CorrelationValue, context.ProblemDetails.Extensions[ProblemDetailsCustomizer.TraceIdExtension]);
+        Assert.Equal(CorrelationValue, context.ProblemDetails.Extensions[ProblemTypes.TraceIdExtension]);
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public sealed class ProblemDetailsCustomizerTests
 
         ProblemDetailsCustomizer.Customize(context);
 
-        Assert.Equal("0HN7A3B4C5D6E", context.ProblemDetails.Extensions[ProblemDetailsCustomizer.TraceIdExtension]);
+        Assert.Equal("0HN7A3B4C5D6E", context.ProblemDetails.Extensions[ProblemTypes.TraceIdExtension]);
     }
 
     [Fact]

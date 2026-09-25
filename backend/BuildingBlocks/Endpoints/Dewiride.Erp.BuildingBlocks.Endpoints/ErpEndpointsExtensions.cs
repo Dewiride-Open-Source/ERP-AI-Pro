@@ -6,6 +6,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Security;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -20,6 +21,9 @@ public static class ErpEndpointsExtensions
 
         builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = ProblemDetailsCustomizer.Customize);
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+        // Outside Development the binder would answer a value it cannot read with a bare 400; throwing routes every binding failure through GlobalExceptionHandler.
+        builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 
         // Numbers are JSON numbers on the wire in both directions, so the document describes one type per member.
         builder.Services.ConfigureHttpJsonOptions(options =>

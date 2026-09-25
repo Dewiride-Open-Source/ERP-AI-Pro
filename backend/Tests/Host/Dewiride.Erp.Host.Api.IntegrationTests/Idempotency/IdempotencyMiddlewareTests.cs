@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
 using Microsoft.AspNetCore.Mvc;
 using static Dewiride.Erp.Host.Api.IntegrationTests.Idempotency.IdempotentEndpointsFixture;
@@ -122,6 +123,22 @@ public sealed class IdempotencyMiddlewareTests(IdempotentEndpointsFixture fixtur
     }
 
     [Fact]
+    public async Task Post_ReplayOfAStoredProblem_ReportsTheCorrelationIdOfTheReplay()
+    {
+        var key = Guid.CreateVersion7().ToString("D");
+
+        using var first = await SendAsync(RejectedPath, key, new OrderRequest("pen"), "order-first");
+        using var second = await SendAsync(RejectedPath, key, new OrderRequest("pen"), "order-replay");
+
+        await AssertProblemAsync(first, HttpStatusCode.Conflict, "order.duplicate");
+        await AssertProblemAsync(second, HttpStatusCode.Conflict, "order.duplicate");
+        Assert.Equal("true", Assert.Single(second.Headers.GetValues(IdempotencyKeyHeader.ReplayedName)));
+        Assert.Equal("order-first", await TraceIdAsync(first));
+        Assert.Equal("order-replay", Assert.Single(second.Headers.GetValues(CorrelationId.HeaderName)));
+        Assert.Equal("order-replay", await TraceIdAsync(second));
+    }
+
+    [Fact]
     public async Task Get_WithoutTheMetadata_IgnoresTheHeader()
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/platform/features");
@@ -134,12 +151,23 @@ public sealed class IdempotencyMiddlewareTests(IdempotentEndpointsFixture fixtur
 
     private Task<HttpResponseMessage> PostAsync(string path, Guid key, OrderRequest body) => SendAsync(path, key.ToString("D"), body);
 
-    private async Task<HttpResponseMessage> SendAsync(string path, string header, OrderRequest body)
+    private async Task<HttpResponseMessage> SendAsync(string path, string header, OrderRequest body, string? correlationId = null)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
         request.Headers.TryAddWithoutValidation(IdempotencyKeyHeader.Name, header);
+        if (correlationId is not null)
+        {
+            request.Headers.TryAddWithoutValidation(CorrelationId.HeaderName, correlationId);
+        }
 
         return await fixture.Factory.CreateClient().SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    private static async Task<string?> TraceIdAsync(HttpResponseMessage response)
+    {
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+
+        return body.RootElement.GetProperty("traceId").GetString();
     }
 
     private static async Task AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status, string code)

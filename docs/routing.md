@@ -9,7 +9,7 @@ Every API response carries `X-Correlation-ID`, and every non-2xx body is `applic
 | Route | Auth | Purpose |
 |---|---|---|
 | `GET /healthz/live` | anonymous | process liveness (container health check) |
-| `GET /healthz/ready` | anonymous | readiness including dependencies |
+| `GET /healthz/ready` | anonymous | readiness including dependencies: `200 text/plain` `Healthy` or `Degraded`, or `503 application/problem+json` `service.unavailable` naming no check |
 | `GET /openapi/erp.json` | anonymous, Development only | OpenAPI 3.1 document, identical to the committed [`docs/openapi/erp.json`](openapi/erp.json) apart from formatting |
 | `GET /scalar` | anonymous, Development only | API reference UI |
 | `GET /api/platform/features` | anonymous until the authentication phase | every feature flag of the catalog with its evaluated state (`{ features: [{ name, enabled }] }`), read by the web shell to hide disabled modules |

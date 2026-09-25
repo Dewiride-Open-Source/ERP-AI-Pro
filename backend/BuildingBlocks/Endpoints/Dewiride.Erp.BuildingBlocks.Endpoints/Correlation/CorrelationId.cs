@@ -10,6 +10,7 @@ public static partial class CorrelationId
 
     public static bool IsWellFormed(string? value) => value is not null && value.Length <= MaxLength && Pattern().IsMatch(value);
 
-    [GeneratedRegex("^[A-Za-z0-9._-]+$")]
+    // \z rather than $, which would also match before a trailing line feed.
+    [GeneratedRegex(@"^[A-Za-z0-9._-]+\z")]
     private static partial Regex Pattern();
 }

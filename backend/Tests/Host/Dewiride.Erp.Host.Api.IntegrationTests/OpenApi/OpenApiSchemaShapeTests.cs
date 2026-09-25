@@ -61,6 +61,31 @@ public sealed partial class OpenApiSchemaShapeTests(ErpApiFactory factory) : ICl
         Assert.Empty(offenders);
     }
 
+    [Fact]
+    public void Inspect_PropertyNamedLikeAMapKeyword_StillReportsItsComposedSchema()
+    {
+        using var document = JsonDocument.Parse("""
+            {
+              "components": {
+                "schemas": {
+                  "DocumentResponse": {
+                    "type": "object",
+                    "properties": {
+                      "content": { "oneOf": [{ "type": "null" }, { "$ref": "#/components/schemas/Line" }] },
+                      "oneOf": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+            """);
+        var violations = new List<string>();
+
+        Inspect(document.RootElement, string.Empty, keysAreNames: false, violations);
+
+        Assert.Equal(["/components/schemas/DocumentResponse/properties/content/oneOf"], violations);
+    }
+
     [GeneratedRegex("^[A-Z][A-Za-z0-9]*$")]
     private static partial Regex SchemaId();
 
@@ -76,7 +101,8 @@ public sealed partial class OpenApiSchemaShapeTests(ErpApiFactory factory) : ICl
                         violations.Add($"{path}/{member.Name}");
                     }
 
-                    Inspect(member.Value, $"{path}/{member.Name}", NameMaps.Contains(member.Name, StringComparer.Ordinal), violations);
+                    // Every value inside a map of names is a keyword object again, even when the name itself reads like a map keyword.
+                    Inspect(member.Value, $"{path}/{member.Name}", !keysAreNames && NameMaps.Contains(member.Name, StringComparer.Ordinal), violations);
                 }
 
                 break;
