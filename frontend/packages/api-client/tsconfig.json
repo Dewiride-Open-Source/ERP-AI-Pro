@@ -1,0 +1,11 @@
+{
+  "extends": "@dewiride/erp-config/tsconfig/node",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "exactOptionalPropertyTypes": false,
+    "incremental": false
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -5,3 +5,5 @@ pnpm-lock.yaml
 playwright-report
 test-results
 next-env.d.ts
+packages/api-client/dist
+packages/api-client/src/generated

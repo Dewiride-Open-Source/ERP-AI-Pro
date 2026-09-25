@@ -21,10 +21,10 @@ The roadmap runs from user management through clients, vendors, GST-compliant fi
 
 ```
 backend/     .NET solution — BuildingBlocks/, Hosts/{Api,HealthProbe}, Modules/<Domain>/<Module>/, Tests/
-frontend/    pnpm workspace — apps/web (Next.js), packages/{config,ui}, e2e (Playwright)
+frontend/    pnpm workspace — apps/web (Next.js), packages/{api-client,config,ui}, e2e (Playwright)
 infra/       Dockerfiles and Compose files
-scripts/     roadmap CLI, verification runner, repository checks (Node 24, zero dependencies)
-docs/        roadmap, architecture, guides, operations, ADRs, configuration and routing registers
+scripts/     roadmap CLI, verification runner, repository checks, API client generation (Node 24, zero dependencies)
+docs/        roadmap, architecture, guides, operations, ADRs, configuration and routing registers, the OpenAPI document
 .github/     workflows, composite actions, Dependabot, CodeQL configuration, templates
 ```
 
@@ -46,6 +46,7 @@ cd frontend && pnpm install --frozen-lockfile && pnpm dev
 |---|---|
 | Backend build + tests | `cd backend && dotnet build -warnaserror && dotnet test --solution Dewiride.Erp.slnx` |
 | Frontend lint, typecheck, build | `cd frontend && pnpm lint && pnpm typecheck && pnpm build` |
+| API contract + web client | `node scripts/api-client/generate.ts` (refreshes `docs/openapi/erp.json`, regenerates `frontend/packages/api-client`) · `node scripts/api-client/drift.ts` |
 | End-to-end tests | `cd frontend && pnpm e2e` (installs browsers with `pnpm e2e:install`) |
 | Containers | `docker compose -f infra/compose/compose.yaml -f infra/compose/compose.override.yaml up -d --build --wait` |
 | Roadmap | `node scripts/roadmap/roadmap.ts next` · `start <id>` · `done <id>` · `build` · `check` |

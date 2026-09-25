@@ -1,0 +1,28 @@
+{
+  "name": "@dewiride/erp-api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@microsoft/kiota-abstractions": "catalog:",
+    "@microsoft/kiota-http-fetchlibrary": "catalog:",
+    "@microsoft/kiota-serialization-json": "catalog:"
+  },
+  "devDependencies": {
+    "@dewiride/erp-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

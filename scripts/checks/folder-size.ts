@@ -5,7 +5,7 @@ import { hasSegment, repoRoot, toRepoPath, walk } from "./lib/walk.ts";
 const MAX_SOURCE_FILES_PER_FOLDER = 12;
 const sourceExtensions = [".cs", ".ts", ".tsx"];
 const generatedFolders = ["Migrations"];
-const generatedPaths = ["/components/ui"];
+const generatedPaths = ["/components/ui", "/packages/api-client/src/generated"];
 
 const roots = [join(repoRoot, "backend"), join(repoRoot, "frontend"), join(repoRoot, "scripts")];
 

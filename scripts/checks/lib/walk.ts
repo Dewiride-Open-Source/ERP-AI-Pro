@@ -11,6 +11,7 @@ const ignoredDirectories = new Set([
   "artifacts",
   "bin",
   "obj",
+  "dist",
   "test-results",
   "playwright-report",
   "screenshots",

@@ -23,6 +23,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up frontend
         uses: ./.github/actions/setup-frontend
+      - name: Set up backend for the client generator
+        uses: ./.github/actions/setup-backend
+      - name: API client tests
+        run: node --test "scripts/api-client/tests/*.test.ts"
+      - name: API client drift
+        run: node scripts/api-client/drift.ts
       - name: Lint
         working-directory: frontend
         run: pnpm lint

@@ -2,19 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 
-import { apiFetch } from "@/shared/api/http";
+import { callApi } from "@/shared/api/client";
 
-export type Startup = {
-  id: string;
-  applicationName: string;
-  version: string;
-  framework: string;
-  environmentName: string;
-  configurationLabel: string | null;
-  startedAt: string;
-  recordedAt: string;
-};
-
-export type RecentStartups = { startups: Startup[] };
-
-export const getRecentStartups = cache(() => apiFetch<RecentStartups>("/platform/system-info/startups"));
+export const getRecentStartups = cache(() =>
+  callApi((client) => client.api.platform.systemInfo.startups.get()),
+);

@@ -1,0 +1,29 @@
+{
+  "descriptionHash": "CD2EFF828ADE4F12C935BDD371566858A71226C9D3B9028A9B8D1D28ABBE738C21B4178109C640265BB19E7E6EA0453FD0A6752BC67615FDE05C45AC7AAEA47E",
+  "descriptionLocation": "../../../../../docs/openapi/erp.json",
+  "lockFileVersion": "1.0.0",
+  "kiotaVersion": "1.35.0",
+  "clientClassName": "ErpApiClient",
+  "typeAccessModifier": "Public",
+  "clientNamespaceName": "ErpApi",
+  "language": "TypeScript",
+  "usesBackingStore": false,
+  "excludeBackwardCompatible": true,
+  "includeAdditionalData": true,
+  "disableSSLValidation": false,
+  "serializers": [
+    "@microsoft/kiota-serialization-json.JsonSerializationWriterFactory"
+  ],
+  "deserializers": [
+    "@microsoft/kiota-serialization-json.JsonParseNodeFactory"
+  ],
+  "structuredMimeTypes": [
+    "application/json"
+  ],
+  "includePatterns": [],
+  "excludePatterns": [],
+  "disabledValidationRules": [
+    "NoServerEntry"
+  ],
+  "allowedExternalOrigins": []
+}

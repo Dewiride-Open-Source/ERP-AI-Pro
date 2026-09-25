@@ -1,14 +1,21 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Storage;
 using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.BuildingBlocks.Idempotency.Http;
 
-internal sealed class IdempotencyMiddleware(RequestDelegate next, TimeProvider timeProvider, IOptions<IdempotencyOptions> options)
+internal sealed partial class IdempotencyMiddleware(RequestDelegate next, TimeProvider timeProvider, IOptions<IdempotencyOptions> options, ILogger<IdempotencyMiddleware> logger)
 {
+    private const string ProblemMediaType = "application/problem+json";
+
     public async Task InvokeAsync(HttpContext context, IProblemDetailsService problemDetails)
     {
         if (context.GetEndpoint()?.Metadata.GetMetadata<RequireIdempotencyKeyMetadata>() is null)
@@ -50,7 +57,7 @@ internal sealed class IdempotencyMiddleware(RequestDelegate next, TimeProvider t
         await CaptureAsync(context, store, actorId, parsed.Key).ConfigureAwait(false);
     }
 
-    private static async Task ReplayAsync(HttpContext context, IProblemDetailsService problemDetails, IdempotencyRecord record, CancellationToken cancellationToken)
+    private async Task ReplayAsync(HttpContext context, IProblemDetailsService problemDetails, IdempotencyRecord record, CancellationToken cancellationToken)
     {
         if (record.Body is null)
         {
@@ -70,9 +77,44 @@ internal sealed class IdempotencyMiddleware(RequestDelegate next, TimeProvider t
             context.Response.Headers.Location = record.Location;
         }
 
-        context.Response.ContentLength = record.Body.Length;
-        await context.Response.Body.WriteAsync(record.Body, cancellationToken).ConfigureAwait(false);
+        var body = ReplayedBody(context, record.ContentType, record.Body);
+        context.Response.ContentLength = body.Length;
+        await context.Response.Body.WriteAsync(body, cancellationToken).ConfigureAwait(false);
     }
+
+    // A stored problem carries the trace id of the request that produced it; the replay answers under its own correlation id and the log links the two.
+    private byte[] ReplayedBody(HttpContext context, string? contentType, byte[] body)
+    {
+        var correlationId = context.Features.Get<ICorrelationIdFeature>()?.CorrelationId;
+        if (correlationId is null || contentType is null || !contentType.StartsWith(ProblemMediaType, StringComparison.OrdinalIgnoreCase))
+        {
+            return body;
+        }
+
+        JsonObject? problem;
+        try
+        {
+            problem = JsonNode.Parse(body) as JsonObject;
+        }
+        catch (JsonException)
+        {
+            return body;
+        }
+
+        if (problem is null)
+        {
+            return body;
+        }
+
+        var original = problem[ProblemTypes.TraceIdExtension] is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;
+        problem[ProblemTypes.TraceIdExtension] = correlationId;
+        LogProblemReplayed(logger, original ?? "(none)", correlationId);
+
+        return JsonSerializer.SerializeToUtf8Bytes(problem);
+    }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Replayed the stored problem of request {OriginalCorrelationId} as request {ReplayCorrelationId}")]
+    private static partial void LogProblemReplayed(ILogger logger, string originalCorrelationId, string replayCorrelationId);
 
     private async Task CaptureAsync(HttpContext context, IIdempotencyStore store, Guid actorId, Guid key)
     {

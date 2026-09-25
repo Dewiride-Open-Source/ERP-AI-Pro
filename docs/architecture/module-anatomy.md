@@ -11,8 +11,7 @@ backend/Modules/Finance/Sales/
 │   ├── SalesPermissions.cs                                      "finance.sales.invoices.issue" ...
 │   └── Invoices/{ISalesInvoiceQueries.cs, InvoiceSummary.cs, Events/InvoiceIssued.cs}
 ├── Module/Dewiride.Erp.Modules.Finance.Sales/                   one implementation assembly, everything internal
-│   ├── SalesModule.cs                                           sealed IModule: descriptor, AddServices, MapEndpoints
-│   ├── SalesValidation.cs                                       services.AddValidation() for this assembly
+│   ├── SalesModule.cs                                           sealed IModule: descriptor, AddServices (calls AddValidation for this assembly), MapEndpoints
 │   ├── Persistence/{SalesDbContext.cs, Migrations/}
 │   ├── Invoices/                                                FEATURE
 │   │   ├── Domain/{Invoice.cs, InvoiceId.cs, InvoiceLine.cs, InvoiceNumber.cs, InvoiceStatus.cs, InvoiceErrors.cs, Events/, Rules/}
@@ -50,6 +49,7 @@ Rules that keep the shape honest:
 - `Hosting/` holds hosted services (`BackgroundService`) that drive Application handlers; it may reference Application, Domain, `BuildingBlocks.*` and `Microsoft.Extensions.*` (hosting, dependency injection, logging, feature management), never ASP.NET Core, EF Core or Endpoints.
 - `Ai/` folders depend on `IChatClient` and `BuildingBlocks.Ai` only; their output is a suggestion a human confirms.
 - Request and response records carry unique names (`CreateDraftInvoiceRequest`, `InvoiceResponse`) so OpenAPI schema ids never collide.
+- Request records are `public sealed record` types in `Endpoints/Requests/` with every attribute on the `property:` target (`FromQuery(Name = …)` for the wire name, `Description` for the document, DataAnnotations for the rules), and `AddServices` calls `builder.Services.AddValidation()`, because the validation generator skips non-public types and assemblies that never call it, without a warning (`http-conventions.md`). Response records stay `internal`.
 
 ## Frontend
 

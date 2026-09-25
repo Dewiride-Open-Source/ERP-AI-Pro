@@ -1,8 +1,7 @@
 import { expect, test } from "../../fixtures/test";
 
-type RecentStartups = {
-  startups: { id: string; applicationName: string; version: string; framework: string; startedAt: string }[];
-};
+const applicationName = /^ERP-AI-Pro( \(local-dev\))?$/;
+const utcTimestamp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|\+00:00)$/;
 
 test.describe("api smoke", () => {
   test("health, system info and problem details are reachable through the web origin", async ({
@@ -14,22 +13,32 @@ test.describe("api smoke", () => {
 
     const info = await request.get("/api/platform/system-info");
     expect(info.status()).toBe(200);
-    const body = (await info.json()) as { applicationName: string; version: string };
-    expect(body.applicationName).toMatch(/^ERP-AI-Pro( \(local-dev\))?$/);
-    expect(body.version).toMatch(/\d+\.\d+\.\d+/);
+    expect(await info.json()).toMatchObject({
+      applicationName: expect.stringMatching(applicationName),
+      version: expect.stringMatching(/\d+\.\d+\.\d+/),
+    });
 
     const startups = await request.get("/api/platform/system-info/startups");
     expect(startups.status()).toBe(200);
     expect(startups.headers()["content-type"]).toContain("application/json");
-    const recent = (await startups.json()) as RecentStartups;
-    expect(recent.startups.length).toBeGreaterThanOrEqual(1);
-    const [latest] = recent.startups;
-    expect(latest?.id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(latest?.applicationName).toMatch(/^ERP-AI-Pro( \(local-dev\))?$/);
-    expect(latest?.version).toMatch(/\d+\.\d+\.\d+/);
-    expect(latest?.framework).toMatch(/^\.NET \d+\.\d+/);
-    expect(latest?.startedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|\+00:00)$/);
-    expect(new Date(latest?.startedAt ?? "").getTime()).not.toBeNaN();
+    const recent: unknown = await startups.json();
+    expect(recent).toMatchObject({
+      startups: expect.arrayContaining([
+        expect.objectContaining({
+          id: expect.stringMatching(/^[0-9a-f-]{36}$/),
+          applicationName: expect.stringMatching(applicationName),
+          version: expect.stringMatching(/\d+\.\d+\.\d+/),
+          framework: expect.stringMatching(/^\.NET \d+\.\d+/),
+          startedAt: expect.stringMatching(utcTimestamp),
+        }),
+      ]),
+    });
+
+    const one = await request.get("/api/platform/system-info/startups?take=1");
+    expect(one.status()).toBe(200);
+    expect(await one.json()).toMatchObject({
+      startups: [expect.objectContaining({ id: expect.any(String) })],
+    });
 
     const missing = await request.get("/api/platform/does-not-exist");
     expect(missing.status()).toBe(404);

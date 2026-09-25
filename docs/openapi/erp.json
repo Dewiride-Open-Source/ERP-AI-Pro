@@ -1,0 +1,374 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "ERP-AI-Pro API",
+    "description": "Modular ERP for Dewiride. Routes are grouped as /api/<domain>/<module>/<resource>, every response carries an X-Correlation-ID header and every error is an RFC 9457 problem document.",
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/LICENSE"
+    },
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/platform/system-info": {
+      "get": {
+        "tags": [
+          "Platform.SystemInfo"
+        ],
+        "summary": "Returns the application name, version and uptime of the API.",
+        "operationId": "Platform.SystemInfo.Get",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemInfoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/system-info/startups": {
+      "get": {
+        "tags": [
+          "Platform.SystemInfo"
+        ],
+        "summary": "Lists the most recent starts of the API, newest first.",
+        "operationId": "Platform.SystemInfo.ListStartups",
+        "parameters": [
+          {
+            "name": "take",
+            "in": "query",
+            "description": "How many starts to return, between 1 and 100; 20 when the caller does not ask.",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecentStartupsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/platform/features": {
+      "get": {
+        "tags": [
+          "Platform.Features"
+        ],
+        "summary": "Returns every feature flag of the catalog with its evaluated state.",
+        "operationId": "Platform.Features.List",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "FeaturesResponse": {
+        "required": [
+          "features"
+        ],
+        "type": "object",
+        "properties": {
+          "features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeatureStateResponse"
+            }
+          }
+        }
+      },
+      "FeatureStateResponse": {
+        "required": [
+          "name",
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "x-ms-primary-error-message": true
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable error code; the type member is this code under /problems/."
+          },
+          "traceId": {
+            "type": "string",
+            "description": "Correlation id of the request, the same value the X-Correlation-ID response header carries."
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "x-ms-primary-error-message": true
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable machine-readable error code; the type member is this code under /problems/."
+          },
+          "traceId": {
+            "type": "string",
+            "description": "Correlation id of the request, the same value the X-Correlation-ID response header carries."
+          }
+        }
+      },
+      "RecentStartupsResponse": {
+        "required": [
+          "startups"
+        ],
+        "type": "object",
+        "properties": {
+          "startups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StartupResponse"
+            }
+          }
+        }
+      },
+      "StartupResponse": {
+        "required": [
+          "id",
+          "applicationName",
+          "version",
+          "framework",
+          "environmentName",
+          "configurationLabel",
+          "startedAt",
+          "recordedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationName": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "framework": {
+            "type": "string"
+          },
+          "environmentName": {
+            "type": "string"
+          },
+          "configurationLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SystemInfoResponse": {
+        "required": [
+          "applicationName",
+          "version",
+          "startedAt",
+          "uptimeSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "applicationName": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uptimeSeconds": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Platform.SystemInfo"
+    },
+    {
+      "name": "Platform.Features"
+    }
+  ]
+}

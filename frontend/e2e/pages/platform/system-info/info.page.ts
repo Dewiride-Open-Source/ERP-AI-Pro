@@ -5,6 +5,7 @@ export class SystemInfoPage {
   readonly card: Locator;
   readonly application: Locator;
   readonly version: Locator;
+  readonly versionBadge: Locator;
   readonly started: Locator;
   readonly uptime: Locator;
   readonly refresh: Locator;
@@ -21,6 +22,7 @@ export class SystemInfoPage {
     this.card = page.getByTestId("system-info-card");
     this.application = page.getByTestId("system-info-application");
     this.version = page.getByTestId("system-info-version");
+    this.versionBadge = this.version.locator("[data-slot=badge]");
     this.started = page.getByTestId("system-info-started");
     this.uptime = page.getByTestId("system-info-uptime");
     this.refresh = page.getByTestId("system-info-refresh");
