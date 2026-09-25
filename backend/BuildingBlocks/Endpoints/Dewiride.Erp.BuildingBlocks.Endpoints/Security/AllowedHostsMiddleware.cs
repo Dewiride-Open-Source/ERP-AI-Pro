@@ -26,7 +26,7 @@ internal sealed partial class AllowedHostsMiddleware(RequestDelegate next, IOpti
 
         LogRejected(logger, context.Request.Host.Value ?? string.Empty);
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
-        await problemDetails.WriteAsync(new ProblemDetailsContext
+        await problemDetails.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = context,
             ProblemDetails = new ProblemDetails

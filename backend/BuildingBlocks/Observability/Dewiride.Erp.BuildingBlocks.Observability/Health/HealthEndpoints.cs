@@ -51,7 +51,7 @@ public static class HealthEndpoints
             return context.Response.WriteAsync(report.Status.ToString(), context.RequestAborted);
         }
 
-        return context.RequestServices.GetRequiredService<IProblemDetailsService>().WriteAsync(new ProblemDetailsContext
+        return context.RequestServices.GetRequiredService<IProblemDetailsService>().TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = context,
             ProblemDetails = new ProblemDetails { Status = StatusCodes.Status503ServiceUnavailable, Title = UnhealthyTitle },

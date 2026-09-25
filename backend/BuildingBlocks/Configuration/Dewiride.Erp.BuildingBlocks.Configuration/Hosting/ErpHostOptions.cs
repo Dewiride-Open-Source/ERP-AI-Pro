@@ -16,7 +16,7 @@ public sealed class ErpHostOptions
 
     public IReadOnlyList<string> KnownNetworks { get; set; } = [];
 
-    [Range(1024, 1024 * 1024 * 1024)]
+    [Range(typeof(long), "1024", "1073741824")]
     public long MaxRequestBodyBytes { get; set; } = 1024 * 1024;
 
     [Range(typeof(TimeSpan), "00:00:01", "00:10:00")]

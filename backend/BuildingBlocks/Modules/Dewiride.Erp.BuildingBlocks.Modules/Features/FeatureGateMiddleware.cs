@@ -18,7 +18,7 @@ internal sealed class FeatureGateMiddleware(RequestDelegate next)
         }
 
         context.Response.StatusCode = StatusCodes.Status404NotFound;
-        await problemDetails.WriteAsync(new ProblemDetailsContext
+        await problemDetails.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = context,
             ProblemDetails = new ProblemDetails

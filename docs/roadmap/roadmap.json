@@ -474,7 +474,7 @@
           "id": "backend-platform-transport-security-middleware",
           "title": "Transport security middleware",
           "scope": "Configure forwarded headers with KnownIPNetworks from configuration and ForwardLimit 1, HostFiltering with AllowedHosts, HSTS with configurable ramp and HTTPS redirection, security-headers middleware (CSP with nonces, X-Content-Type-Options, Referrer-Policy, frame-ancestors, Permissions-Policy), Kestrel AddServerHeader=false and request size limits in the documented middleware order, with integration tests for each header and proxy scenario.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "Integration tests against a real Kestrel listener prove that API responses carry X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy, the default-src 'none' Content-Security-Policy, Cross-Origin-Resource-Policy and Cross-Origin-Opener-Policy, and never Strict-Transport-Security or an HTTPS redirect, in both Development and Production hosts; the proxy owns TLS and HSTS.",
             "X-Forwarded-For and X-Forwarded-Proto are applied only when the direct peer is inside Erp:Platform:Host:KnownNetworks, with ForwardLimit 1; an invalid network entry fails startup with a message naming it; a Host header outside Erp:Platform:Host:AllowedHosts answers 400.",
@@ -484,7 +484,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-09-25",
-          "notes": "Already in place from backend-platform-http-and-openapi-conventions: CorrelationIdMiddleware runs first in UseErpEndpointPipeline, and GlobalExceptionHandler answers a BadHttpRequestException with its own status (413 request.too-large, otherwise request.malformed, logged at warning) with ProblemTypes.RequestTooLarge as the 413 default code. This sub-phase adds the Kestrel body limit and the request timeout that produce those responses and proves them with integration tests; it does not re-implement the mapping."
+          "completedOn": "2026-09-25",
+          "notes": "docs/architecture/request-pipeline.md is the single documented order with a proving test per row (ADR-0018): forwarded headers (only peers inside Erp:Platform:Host:KnownNetworks, ForwardLimit 1, X-Forwarded-For and X-Forwarded-Proto only; an empty list trusts no proxy; ErpHostOptionsValidator fails startup on an entry that is not an exact CIDR network) -> configuration refresh -> correlation id -> security headers (now also CORP, COOP and X-Permitted-Cross-Domain-Policies) -> exception handler -> status code pages -> AllowedHostsMiddleware (400 request.host-not-allowed as a problem; the framework host filter stays permissive and UseHostFiltering is gone) -> explicit UseRouting -> UseRequestTimeouts (Erp:Platform:Host:RequestTimeout, 504 request.timeout, declared on every module group) -> DatabaseCancellationMiddleware (a DbException after RequestAborted was cancelled becomes OperationCanceledException, so a timed-out query answers 504) -> feature gate -> idempotency. Kestrel drops the Server header and caps bodies at Erp:Platform:Host:MaxRequestBodyBytes (413 request.too-large from the binder and from manual reads); both keys are seeded unlabelled, so they apply under both labels. The API never sends HSTS or an HTTPS redirect, proved falsifiably on a real Kestrel listener (ErpApiFactory.WithKestrel). Platform problem writers use TryWriteAsync, so a caller that accepts no JSON keeps the status. The web rewrite proxy waits 660 s (experimental.proxyTimeout), above the 10-minute timeout ceiling. The 499 branch and request.cancelled are gone: ExceptionHandlerMiddleware answers 499 before any IExceptionHandler. The authentication phase must call UseAuthentication, UseAuthorization and UseAntiforgery explicitly after UseRouting."
         },
         {
           "id": "backend-platform-rate-limiting-output-caching-and-health",
@@ -775,7 +776,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-transport-security-middleware: the API is only ever called as http://api:8080 by the web container and as http://127.0.0.1:8080 by its container health probe, so the production value of Erp:Platform:Host:AllowedHosts is api;127.0.0.1 (never the public host name, which only reaches the web container), and Erp:Platform:Host:KnownNetworks must list the compose network so forwarded client addresses are trusted; an empty list trusts no proxy. Never set ASPNETCORE_FORWARDEDHEADERS_ENABLED."
+          "notes": "From backend-platform-transport-security-middleware: the API is called under three host names in production - the public host name (the edge proxy routes /api/* straight to api:8080 and passes the browser's Host through), api (the web container's server-side calls to http://api:8080) and 127.0.0.1 (the container health probe) - so the production value of Erp:Platform:Host:AllowedHosts is <public host name>;api;127.0.0.1, and Erp:Platform:Host:KnownNetworks must list the compose network so forwarded client addresses are trusted; an empty list trusts no proxy. Never set ASPNETCORE_FORWARDEDHEADERS_ENABLED."
         },
         {
           "id": "first-deployment-production-database-provisioning",

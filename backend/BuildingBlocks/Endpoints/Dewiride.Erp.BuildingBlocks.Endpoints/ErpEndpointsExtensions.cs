@@ -50,6 +50,7 @@ public static class ErpEndpointsExtensions
         app.UseMiddleware<AllowedHostsMiddleware>();
         app.UseRouting();
         app.UseRequestTimeouts();
+        app.UseMiddleware<DatabaseCancellationMiddleware>();
 
         return app;
     }

@@ -48,6 +48,23 @@ public sealed class AllowedHostsTests : IClassFixture<AllowedHostsTests.Fixture>
         Assert.Equal(correlationId, problem.Extensions[ProblemTypes.TraceIdExtension]?.ToString());
     }
 
+    [Theory]
+    [InlineData("text/html")]
+    [InlineData("application/xml")]
+    public async Task Get_HostOffTheListForAClientThatAcceptsNoJson_AnswersBadRequestAsPlainTextWithTheHeaders(string accept)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/platform/system-info");
+        request.Headers.Host = "evil.example.com";
+        request.Headers.Accept.ParseAdd(accept);
+
+        using var response = await _client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Single(response.Headers.GetValues(CorrelationId.HeaderName));
+        Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
+        Assert.Equal("text/plain", response.Content.Headers.ContentType?.MediaType);
+    }
+
     [Fact]
     public async Task Get_AnyHostWithTheDefaultWildcard_IsServed()
     {
