@@ -1,6 +1,6 @@
 # HTTP conventions
 
-How every API route behaves on the wire, how its contract is published and how the web app consumes it. The decision and its reasons are in [ADR-0017](../adr/0017-http-conventions-openapi-snapshot-and-generated-client.md); the request pipeline order is in the root `CLAUDE.md` §9.
+How every API route behaves on the wire, how its contract is published and how the web app consumes it. The decision and its reasons are in [ADR-0017](../adr/0017-http-conventions-openapi-snapshot-and-generated-client.md); the middleware order, the body limit and the request timeout are in [request pipeline](request-pipeline.md).
 
 ## Correlation id
 
@@ -26,7 +26,7 @@ Every non-2xx body is `application/problem+json` (RFC 9457), health endpoints in
 | `traceId` | the correlation id of the request |
 | `errors` | validation problems only: member name (camelCase) → messages |
 
-Default codes, used when nothing more specific was set: `request.invalid` (400), `request.unauthenticated` (401), `request.forbidden` (403), `resource.not-found` (404), `request.method-not-allowed` (405), `request.too-large` (413), `request.unsupported-media-type` (415), `rate-limit.exceeded` (429), `request.cancelled` (499), `service.unavailable` (503), `request.rejected` (any other 4xx) and `server.error` (any other 5xx). Codes raised by the platform: `request.malformed` (a value the binder cannot read, such as `?take=many` or a body that is not JSON; `RouteHandlerOptions.ThrowOnBadRequest` is on in every environment so these always reach `GlobalExceptionHandler`), `feature.disabled` (the module's flag is off), `idempotency.*` and `query.*` (see [application pipeline](application-pipeline.md)). A failing readiness check answers 503 `service.unavailable` and names no check, because `/healthz/ready` is anonymous; a healthy or degraded report stays a plain-text status word.
+Default codes, used when nothing more specific was set: `request.invalid` (400), `request.unauthenticated` (401), `request.forbidden` (403), `resource.not-found` (404), `request.method-not-allowed` (405), `request.too-large` (413), `request.unsupported-media-type` (415), `rate-limit.exceeded` (429), `service.unavailable` (503), `request.timeout` (504), `request.rejected` (any other 4xx) and `server.error` (any other 5xx). Codes raised by the platform: `request.host-not-allowed` (a `Host` outside `Erp:Platform:Host:AllowedHosts`), `request.malformed` (a value the binder cannot read, such as `?take=many` or a body that is not JSON; `RouteHandlerOptions.ThrowOnBadRequest` is on in every environment so these always reach `GlobalExceptionHandler`), `feature.disabled` (the module's flag is off), `idempotency.*` and `query.*` (see [application pipeline](application-pipeline.md)). A failing readiness check answers 503 `service.unavailable` and names no check, because `/healthz/ready` is anonymous; a healthy or degraded report stays a plain-text status word.
 
 A replayed idempotent response (`Idempotency-Replayed: true`) carries the stored body with its `traceId` rewritten to the replay's correlation id; the log line `Replayed the stored problem of request <original> as request <replay>` links the two. A module's own codes are `<aggregate>.<reason>` in kebab case, for example `invoice.already-issued`.
 

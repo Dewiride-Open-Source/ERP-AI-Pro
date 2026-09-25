@@ -31,6 +31,8 @@ public static class ErpEndpointsExtensions
             options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
             options.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
         });
+        builder.Services.AddRequestTimeouts();
+        builder.Services.AddOptions<AllowedHostsOptions>();
         builder.Services.AddHttpContextAccessor();
         builder.Services.Replace(ServiceDescriptor.Scoped<IActorContext, HttpActorContext>());
 
@@ -45,6 +47,9 @@ public static class ErpEndpointsExtensions
         app.UseMiddleware<SecurityHeadersMiddleware>();
         app.UseExceptionHandler();
         app.UseStatusCodePages();
+        app.UseMiddleware<AllowedHostsMiddleware>();
+        app.UseRouting();
+        app.UseRequestTimeouts();
 
         return app;
     }

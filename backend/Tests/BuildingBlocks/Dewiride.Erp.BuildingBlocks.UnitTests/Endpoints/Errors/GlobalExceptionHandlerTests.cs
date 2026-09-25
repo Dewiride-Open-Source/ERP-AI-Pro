@@ -17,6 +17,7 @@ public sealed class GlobalExceptionHandlerTests
         Assert.Equal(StatusCodes.Status413PayloadTooLarge, context.Response.StatusCode);
         Assert.Equal(StatusCodes.Status413PayloadTooLarge, problem.Status);
         Assert.Equal(ProblemTypes.RequestTooLarge, problem.Extensions[ResultExtensions.CodeExtension]);
+        Assert.Null(problem.Title);
         Assert.Equal(LogLevel.Warning, record.Level);
         Assert.Null(record.Exception);
     }
@@ -33,17 +34,7 @@ public sealed class GlobalExceptionHandlerTests
     }
 
     [Fact]
-    public async Task TryHandleAsync_CancellationAfterTheCallerLeft_AnswersRequestCancelledAtWarning()
-    {
-        var (problem, record, context) = await HandleAsync(new OperationCanceledException(), callerLeft: true);
-
-        Assert.Equal(StatusCodes.Status499ClientClosedRequest, context.Response.StatusCode);
-        Assert.Equal(ProblemTypes.RequestCancelled, problem.Extensions[ResultExtensions.CodeExtension]);
-        Assert.Equal(LogLevel.Warning, record.Level);
-    }
-
-    [Fact]
-    public async Task TryHandleAsync_CancellationWhileTheCallerStillWaits_AnswersServerErrorAtError()
+    public async Task TryHandleAsync_CancellationThatReachesTheHandler_AnswersServerErrorAtError()
     {
         var (problem, record, context) = await HandleAsync(new OperationCanceledException());
 
@@ -67,15 +58,9 @@ public sealed class GlobalExceptionHandlerTests
         Assert.Same(failure, record.Exception);
     }
 
-    private static async Task<(ProblemDetails Problem, FakeLogRecord Record, HttpContext Context)> HandleAsync(Exception exception, bool callerLeft = false)
+    private static async Task<(ProblemDetails Problem, FakeLogRecord Record, HttpContext Context)> HandleAsync(Exception exception)
     {
-        using var aborted = new CancellationTokenSource();
-        if (callerLeft)
-        {
-            await aborted.CancelAsync();
-        }
-
-        var context = new DefaultHttpContext { RequestAborted = aborted.Token };
+        var context = new DefaultHttpContext();
         context.Request.Path = "/api/finance/sales/invoices";
         var problems = new RecordingProblemDetailsService();
         var logger = new FakeLogger<GlobalExceptionHandler>();

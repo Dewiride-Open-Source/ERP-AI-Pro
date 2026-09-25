@@ -774,7 +774,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-transport-security-middleware: the API is only ever called as http://api:8080 by the web container and as http://127.0.0.1:8080 by its container health probe, so the production value of Erp:Platform:Host:AllowedHosts is api;127.0.0.1 (never the public host name, which only reaches the web container), and Erp:Platform:Host:KnownNetworks must list the compose network so forwarded client addresses are trusted; an empty list trusts no proxy. Never set ASPNETCORE_FORWARDEDHEADERS_ENABLED."
         },
         {
           "id": "first-deployment-production-database-provisioning",

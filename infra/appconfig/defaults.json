@@ -3,7 +3,9 @@
     "Platform": {
       "Host": {
         "ApplicationName": "ERP-AI-Pro",
-        "AllowedHosts": "*"
+        "AllowedHosts": "*",
+        "MaxRequestBodyBytes": "1048576",
+        "RequestTimeout": "00:00:30"
       },
       "Identity": {
         "Instance": "https://login.microsoftonline.com/"

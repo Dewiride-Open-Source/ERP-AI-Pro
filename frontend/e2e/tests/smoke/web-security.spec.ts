@@ -37,5 +37,9 @@ test.describe("web origin security", () => {
     expect(info.headers()["content-security-policy"]).toBe("default-src 'none'; frame-ancestors 'none'");
     expect(info.headers()["x-content-type-options"]).toBe("nosniff");
     expect(info.headers()["cache-control"]).toBe("no-store");
+    expect(info.headers()["cross-origin-resource-policy"]).toBe("same-origin");
+    expect(info.headers()["cross-origin-opener-policy"]).toBe("same-origin");
+    expect(info.headers()["x-permitted-cross-domain-policies"]).toBe("none");
+    expect(info.headers()["strict-transport-security"]).toBeUndefined();
   });
 });
