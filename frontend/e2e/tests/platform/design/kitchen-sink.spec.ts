@@ -1498,10 +1498,16 @@ test.describe("design system kitchen sink", () => {
     await kitchenSink.section("overlays").getByRole("button", { name: "Edit contact" }).focus();
     for (let stop = 1; stop <= 12; stop += 1) {
       await page.keyboard.press("Shift+Tab");
-      const top = await page.evaluate(() => document.activeElement?.getBoundingClientRect().top ?? 0);
-      expect(top - ringExtent, `focus ring of stop ${stop} before Edit contact`).toBeGreaterThanOrEqual(
-        headerBottom,
-      );
+      // WebKit scrolls a newly focused element into view on a later rendering update, so the position is polled until the
+      // scroll has settled; an element left under the header still fails when the poll times out.
+      await expect
+        .poll(
+          async () =>
+            (await page.evaluate(() => document.activeElement?.getBoundingClientRect().top ?? 0)) -
+            ringExtent,
+          { message: `focus ring of stop ${stop} before Edit contact` },
+        )
+        .toBeGreaterThanOrEqual(headerBottom);
     }
   });
 
