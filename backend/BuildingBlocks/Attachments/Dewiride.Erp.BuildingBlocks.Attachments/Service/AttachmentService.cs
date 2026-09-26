@@ -190,7 +190,9 @@ internal sealed partial class AttachmentService(
     private static bool TryHashToken(string? token, out byte[] tokenHash)
     {
         tokenHash = [];
-        if (token is null || token.Length != Base64Url.GetEncodedLength(DownloadLink.TokenLength))
+
+        // TryDecodeFromChars throws rather than returning false for a character outside the alphabet, so the text is checked first.
+        if (token is null || !Base64Url.IsValid(token, out var decodedLength) || decodedLength != DownloadLink.TokenLength)
         {
             return false;
         }

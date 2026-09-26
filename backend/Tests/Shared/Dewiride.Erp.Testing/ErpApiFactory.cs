@@ -32,6 +32,10 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
     private const string FeatureFlagsSection = "feature_management:feature_flags:";
 
+    // One key per test process: every factory shares the process's test database and blob container, so content one host
+    // stored must stay readable, and deduplicable, for every other.
+    private static readonly string TestEncryptionKey = $"test:{Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))}";
+
     private readonly Dictionary<string, string> _configuration = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly List<Action<IEndpointRouteBuilder>> _testEndpoints = [];
@@ -136,7 +140,7 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
         if (!_configuration.ContainsKey(AttachmentsEncryptionKeyKey))
         {
-            builder.UseSetting(AttachmentsEncryptionKeyKey, $"test:{Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))}");
+            builder.UseSetting(AttachmentsEncryptionKeyKey, TestEncryptionKey);
         }
 
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);

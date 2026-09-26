@@ -57,7 +57,7 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
         await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.NotFound, AttachmentErrors.NotFound.Code);
     }
 
-    [Fact(Skip = "Defect: AttachmentUploader deduplicates against stored content whose KeyId the key ring can no longer open, so the new upload answers 201 but every download of it answers 404.")]
+    [Fact]
     public async Task Get_ContentOfAnUploadMatchingBytesStoredUnderAKeyNoLongerConfigured_StreamsTheFile()
     {
         var token = AttachmentsApi.UniqueToken();

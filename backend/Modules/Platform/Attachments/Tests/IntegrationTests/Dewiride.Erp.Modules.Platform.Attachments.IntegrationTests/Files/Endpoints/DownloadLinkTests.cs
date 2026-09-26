@@ -28,7 +28,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
         Assert.InRange(link.ExpiresAt, before + lifetime, after + lifetime);
     }
 
-    [Fact(Skip = "Defect: TransferEndpoints.CreateDownloadLinkAsync cuts the request path at its last '/', so a request ending in a slash answers a link under /download-links/content that no route serves.")]
+    [Fact]
     public async Task Post_DownloadLinksWithATrailingSlash_ReturnsAContentPathThatServesTheFile()
     {
         using var client = factory.CreateClient();

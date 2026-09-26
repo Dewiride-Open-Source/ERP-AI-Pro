@@ -93,7 +93,7 @@ public sealed class AttachmentDownloadTests(ErpApiFactory factory) : IClassFixtu
         Assert.Equal(0, await RedemptionsAsync(details.Id));
     }
 
-    [Fact(Skip = "Production defect: AttachmentService.TryHashToken relies on Base64Url.TryDecodeFromChars returning false, but it throws FormatException for a character outside the Base64Url alphabet, so such a link of the token's length escapes as an exception (HTTP 500) instead of attachment.not-found.")]
+    [Fact]
     public async Task OpenDownloadAsync_TokenOfTheRightLengthWithCharactersOutsideBase64Url_ReturnsNotFoundWithoutARedemption()
     {
         var details = await UploadAsync();

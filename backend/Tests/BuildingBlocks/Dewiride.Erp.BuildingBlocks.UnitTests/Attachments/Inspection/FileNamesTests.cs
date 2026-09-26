@@ -63,7 +63,7 @@ public sealed class FileNamesTests
     }
 
     // A fact rather than theory data: xUnit serialises inline strings as UTF-8, which replaces an unpaired surrogate before the test runs.
-    [Fact(Skip = "Defect: FileNames.Sanitize calls string.Normalize before it drops characters, and Normalize throws ArgumentException on an unpaired surrogate, so IAttachmentService.UploadAsync throws instead of answering attachment.file-name-invalid.")]
+    [Fact]
     public void Sanitize_UnpairedSurrogate_IsDroppedLikeAnyUnprintableCharacter()
     {
         Assert.Equal("statement.pdf", FileNames.Sanitize("statement\uD83D.pdf"));

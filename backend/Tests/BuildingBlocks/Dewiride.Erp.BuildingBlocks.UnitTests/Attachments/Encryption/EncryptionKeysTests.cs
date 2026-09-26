@@ -165,7 +165,20 @@ public sealed class EncryptionKeysTests
         var parsed = EncryptionKeys.TryParse(TestKeys.Setting(current), TestKeys.RetiredSetting(TestKeys.Create(), TestKeys.Create(current.Id)), out _, out var problem);
 
         Assert.False(parsed);
-        Assert.Equal($"The attachment encryption key id '{current.Id}' appears more than once across EncryptionKey and RetiredEncryptionKeys.", problem);
+        Assert.Equal($"The attachment encryption key id '{current.Id}' names two different keys across EncryptionKey and RetiredEncryptionKeys.", problem);
+    }
+
+    [Fact]
+    public void TryParse_CurrentKeyAlsoInTheRetiredList_IsAcceptedOnceAsTheCurrentKey()
+    {
+        var current = TestKeys.Create();
+        var retired = TestKeys.Create();
+
+        var parsed = EncryptionKeys.TryParse(TestKeys.Setting(current), TestKeys.RetiredSetting(retired, current), out var keys, out var problem);
+
+        Assert.True(parsed, problem);
+        Assert.Equal(current.Id, keys!.Current.Id);
+        Assert.Equal([retired.Id], keys.Retired.Select(key => key.Id));
     }
 
     [Fact]
@@ -203,7 +216,7 @@ public sealed class EncryptionKeysTests
             ($"bad id:{Convert.ToBase64String(current.Material)}", null),
             ($"{current.Id}:{shortMaterial}", null),
             (TestKeys.Setting(current), $"{TestKeys.Setting(retired)};{retired.Id}:{shortMaterial}"),
-            (TestKeys.Setting(current), $"{TestKeys.Setting(retired)};{TestKeys.Setting(current)}"),
+            (TestKeys.Setting(current), $"{TestKeys.Setting(retired)};{TestKeys.Setting(TestKeys.Create(current.Id))}"),
         };
 
         foreach (var (currentValue, retiredValue) in failures)

@@ -74,7 +74,7 @@ public sealed class LayerTests
         AssertRule(Types().That().Are(HostingTypes).Should().NotDependOnAny(AspNetCoreTypes).AndShould().NotDependOnAny(EntityFrameworkTypes).AndShould().NotDependOnAny(EndpointTypes).WithoutRequiringPositiveResults());
     }
 
-    [Fact(Skip = "Defect: Dewiride.Erp.BuildingBlocks.Attachments.Hosting.AttachmentStorageInitializer depends on Azure.Storage.Blobs (BlobContainerClient.CreateIfNotExistsAsync, BlobContainerInfo, PublicAccessType) to create the emulator container; that call belongs in Storage.Blob.AttachmentBlobClients.")]
+    [Fact]
     public void AzureStorage_IsReferencedOnlyByTheBlobStorageNamespace()
     {
         Assert.NotEmpty(Types(true).That().ResideInNamespaceMatching(AzureStorageNamespace).GetObjects(Architecture));

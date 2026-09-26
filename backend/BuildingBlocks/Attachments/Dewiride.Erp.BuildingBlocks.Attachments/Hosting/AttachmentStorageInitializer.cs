@@ -1,4 +1,3 @@
-using Azure.Storage.Blobs.Models;
 using Dewiride.Erp.BuildingBlocks.Attachments.Encryption;
 using Dewiride.Erp.BuildingBlocks.Attachments.Storage.Blob;
 using Microsoft.Extensions.Hosting;
@@ -20,14 +19,9 @@ internal sealed partial class AttachmentStorageInitializer(
         var settings = options.Value;
         var currentKey = keys.Current;
 
-        // An emulator starts empty, so the container is created here; a real account gets it from scripts/azure, and the
-        // API's identity holds no right to create containers there.
-        if (clients.UsesEmulator)
-        {
-            await clients.Container.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken).ConfigureAwait(false);
-        }
+        await clients.PrepareEmulatorAsync(cancellationToken).ConfigureAwait(false);
 
-        LogReady(logger, clients.Container.Uri, currentKey.Id, settings.MaxSizeBytes, clients.UsesEmulator);
+        LogReady(logger, clients.ContainerUri, currentKey.Id, settings.MaxSizeBytes, clients.UsesEmulator);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

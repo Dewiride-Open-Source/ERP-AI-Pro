@@ -19,6 +19,8 @@ namespace Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints;
 
 internal static class AttachmentEndpoints
 {
+    public const string GetRouteName = "Platform.Attachments.Get";
+
     public static void Map(RouteGroupBuilder group)
     {
         group.MapGet("/", ListAsync)
@@ -32,7 +34,7 @@ internal static class AttachmentEndpoints
             .AllowAnonymous();
 
         group.MapGet("/{id:guid}", GetAsync)
-            .WithName("Platform.Attachments.Get")
+            .WithName(GetRouteName)
             .WithSummary("Describes one stored attachment.")
             .AllowAnonymous();
 

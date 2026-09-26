@@ -1,5 +1,6 @@
 using Azure.Core;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Dewiride.Erp.BuildingBlocks.Observability.Health;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -24,6 +25,18 @@ internal sealed class AttachmentBlobClients
     public BlobContainerClient Probe { get; }
 
     public bool UsesEmulator { get; }
+
+    public Uri ContainerUri => Container.Uri;
+
+    // An emulator starts empty, so its container is created at startup; a real account gets it from scripts/azure, and the
+    // API's identity holds no right to create containers there.
+    public async Task PrepareEmulatorAsync(CancellationToken cancellationToken)
+    {
+        if (UsesEmulator)
+        {
+            await Container.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+    }
 
     public static AttachmentBlobClients Create(IServiceProvider services)
     {

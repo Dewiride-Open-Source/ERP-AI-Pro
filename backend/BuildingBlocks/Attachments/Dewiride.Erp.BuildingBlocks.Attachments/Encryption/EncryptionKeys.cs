@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 
 namespace Dewiride.Erp.BuildingBlocks.Attachments.Encryption;
 
@@ -44,14 +45,24 @@ internal static class EncryptionKeys
             retiredKeys.Add(retiredKey);
         }
 
-        var duplicate = retiredKeys.Prepend(currentKey).GroupBy(key => key.Id, StringComparer.Ordinal).FirstOrDefault(group => group.Count() > 1);
-        if (duplicate is not null)
+        // A rotation first copies the current key into the retired list and only then replaces the current key, so while the
+        // two settings refresh one after the other the same key may appear in both; an id naming two different keys is refused.
+        var distinct = new List<EncryptionKey>();
+        foreach (var key in retiredKeys.Prepend(currentKey))
         {
-            problem = $"The attachment encryption key id '{duplicate.Key}' appears more than once across EncryptionKey and RetiredEncryptionKeys.";
-            return false;
+            var existing = distinct.Find(candidate => string.Equals(candidate.Id, key.Id, StringComparison.Ordinal));
+            if (existing is null)
+            {
+                distinct.Add(key);
+            }
+            else if (!CryptographicOperations.FixedTimeEquals(existing.Material, key.Material))
+            {
+                problem = $"The attachment encryption key id '{key.Id}' names two different keys across EncryptionKey and RetiredEncryptionKeys.";
+                return false;
+            }
         }
 
-        keys = new EncryptionKeySet(currentKey, retiredKeys);
+        keys = new EncryptionKeySet(currentKey, distinct.Skip(1).ToList());
         problem = null;
         return true;
     }

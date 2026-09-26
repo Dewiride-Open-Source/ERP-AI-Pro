@@ -78,8 +78,11 @@ internal sealed partial class AttachmentUploader(
             }
 
             var (sha256, length, keyId, scanStatus) = written.Value;
+
+            // Only content some configured key can still open is reused; otherwise the upload keeps its own copy.
+            var openableKeyIds = keys.All.Select(key => key.Id).ToList();
             var existing = await context.StoredContents
-                .Where(c => c.Sha256 == sha256 && c.Length == length)
+                .Where(c => c.Sha256 == sha256 && c.Length == length && openableKeyIds.Contains(c.KeyId))
                 .OrderBy(c => c.StoredAt)
                 .FirstOrDefaultAsync(cancellationToken)
                 .ConfigureAwait(false);

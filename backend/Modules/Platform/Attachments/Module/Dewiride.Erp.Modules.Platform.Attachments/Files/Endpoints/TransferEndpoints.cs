@@ -24,6 +24,8 @@ internal static class TransferEndpoints
 {
     public const string TimeoutPolicy = "platform.attachments.transfer";
 
+    public const string DownloadRouteName = "Platform.Attachments.Download";
+
     private const string FormData = "multipart/form-data";
 
     public static void Map(RouteGroupBuilder group)
@@ -69,7 +71,7 @@ internal static class TransferEndpoints
             .AllowAnonymous();
 
         group.MapGet("/{id:guid}/content", OpenContentAsync)
-            .WithName("Platform.Attachments.Download")
+            .WithName(DownloadRouteName)
             .WithSummary("Streams the original file for a valid, unexpired link of the person asking.")
             .Produces<Stream>(StatusCodes.Status200OK, "application/octet-stream")
             .WithRequestTimeout(TimeoutPolicy)
@@ -80,6 +82,7 @@ internal static class TransferEndpoints
     // answers) comes from reading a request body that ended early, as when a proxy cuts an upload short.
     private static async Task<Results<Created<AttachmentResponse>, ProblemHttpResult>> UploadAsync(
         HttpRequest request,
+        LinkGenerator links,
         ICommandHandler<UploadAttachmentCommand, AttachmentDetails> handler,
         CancellationToken cancellationToken)
     {
@@ -94,7 +97,7 @@ internal static class TransferEndpoints
             var result = await handler.HandleAsync(new UploadAttachmentCommand(file.Value.FileName, file.Value.ContentType, file.Value.Content), cancellationToken);
 
             return result.IsSuccess
-                ? TypedResults.Created($"{request.PathBase}{request.Path.Value!.TrimEnd('/')}/{result.Value.Id.Value}", AttachmentEndpoints.ToResponse(result.Value))
+                ? TypedResults.Created(PathTo(links, request.HttpContext, AttachmentEndpoints.GetRouteName, new { id = result.Value.Id.Value }), AttachmentEndpoints.ToResponse(result.Value))
                 : result.Error!.ToProblem();
         }
         catch (Exception exception) when (exception is InvalidDataException or IOException and not BadHttpRequestException && !cancellationToken.IsCancellationRequested)
@@ -105,7 +108,8 @@ internal static class TransferEndpoints
 
     private static async Task<Results<Ok<DownloadLinkResponse>, ProblemHttpResult>> CreateDownloadLinkAsync(
         Guid id,
-        HttpRequest request,
+        HttpContext httpContext,
+        LinkGenerator links,
         ICommandHandler<CreateDownloadLinkCommand, DownloadLinkDetails> handler,
         CancellationToken cancellationToken)
     {
@@ -115,8 +119,7 @@ internal static class TransferEndpoints
             return result.Error!.ToProblem();
         }
 
-        var attachmentPath = request.Path.Value![..request.Path.Value!.LastIndexOf('/')];
-        var url = $"{request.PathBase}{attachmentPath}/content?link={Uri.EscapeDataString(result.Value.Token)}";
+        var url = PathTo(links, httpContext, DownloadRouteName, new { id, link = result.Value.Token });
 
         return TypedResults.Ok(new DownloadLinkResponse(url, result.Value.ExpiresAt));
     }
@@ -140,4 +143,8 @@ internal static class TransferEndpoints
 
         return TypedResults.Stream(result.Value.Content, result.Value.ContentType, result.Value.FileName);
     }
+
+    private static string PathTo(LinkGenerator links, HttpContext httpContext, string routeName, object values) =>
+        links.GetPathByName(httpContext, routeName, values)
+        ?? throw new InvalidOperationException($"No endpoint is named '{routeName}'.");
 }
