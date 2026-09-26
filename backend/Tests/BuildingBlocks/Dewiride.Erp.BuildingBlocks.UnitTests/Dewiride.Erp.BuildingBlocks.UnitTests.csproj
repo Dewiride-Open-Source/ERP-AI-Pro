@@ -16,4 +16,8 @@
     <ProjectReference Include="../../../BuildingBlocks/Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" />
+  </ItemGroup>
+
 </Project>

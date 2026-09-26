@@ -6,4 +6,8 @@
     <ProjectReference Include="../../Shared/Dewiride.Erp.Testing/Dewiride.Erp.Testing.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" />
+  </ItemGroup>
+
 </Project>

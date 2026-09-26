@@ -508,10 +508,18 @@
           "id": "backend-platform-observability-baseline",
           "title": "Observability baseline",
           "scope": "Add backend/BuildingBlocks/Observability with OpenTelemetry traces/metrics/logs exported over OTLP only when OTEL_EXPORTER_OTLP_ENDPOINT is set, source-generated LoggerMessage conventions enforced by analyzers, ASP.NET Core/Kestrel/HttpClient/EF Core meters, Microsoft.Extensions.Http.Resilience standard handler for outbound HTTP, and the local aspire-dashboard compose profile receiving telemetry.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "done",
+          "acceptance": [
+            "The API exports traces, metrics and logs over OTLP only when OTEL_EXPORTER_OTLP_ENDPOINT is set; metrics come from an explicit meter list (ASP.NET Core hosting, Kestrel, memory pool, routing, diagnostics, rate limiting, authentication, authorization, System.Net.Http, name resolution, System.Runtime, Microsoft.EntityFrameworkCore, SQL client operations and Dewiride.Erp.*), and the resource carries the service name, the host's version, an instance id and the deployment environment; proven by unit tests with the in-memory exporter.",
+            "Every SQL command issued through SqlClient produces a client span and a db.client.operation.duration measurement whose query text carries no parameter values and whose error status carries no value the server quoted, proven against SQL Server.",
+            "Every IHttpClientFactory client carries the standard resilience handler with retries disabled for unsafe methods and one pipeline per destination, proven by tests that a GET is retried after a transient failure, a POST is not, and an open circuit for one destination leaves another served; Polly (BSD-3-Clause), which the handler depends on, is approved by the owner and recorded.",
+            "CA1848 and CA2254 are build errors and the solution builds; the local Aspire dashboard (compose observability profile) shows an API request trace with its SQL span and the matching log carrying the correlation id, recorded in the pull request; docs/guides/observability.md and ADR-0020 describe the baseline."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-26",
+          "completedOn": "2026-09-26",
+          "notes": "ADR-0020 and docs/guides/observability.md: metrics from the explicit TelemetryMeters.Names list (ASP.NET Core hosting, Kestrel, memory pool, routing, diagnostics, rate limiting, authentication, authorization, System.Net.Http, name resolution, System.Runtime, Dewiride.Erp.*), plus Microsoft.EntityFrameworkCore, SqlClient db.client.operation.duration and Polly; OpenTelemetry.Instrumentation.Runtime removed. AddErpDatabaseTelemetry (Persistence) adds SqlClient spans with command text and no parameter values, and SqlErrorStatusProcessor clears the error message SQL Server can quote a value in. ErpResourceDetector reports the host version and deployment environment. CA1848 and CA2254 are errors. AddErpHttpClientDefaults (in AddErpPlatform) gives every IHttpClientFactory client the standard resilience handler, retries only for safe methods and one pipeline per destination; Polly 8.8.0 approved by the owner and pinned. Verified in the local Aspire dashboard: the startups request trace with its SQL span, and the SQL log carrying the caller's correlation id."
         },
         {
           "id": "backend-platform-migration-tooling-and-seeding",

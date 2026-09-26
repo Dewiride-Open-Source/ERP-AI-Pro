@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
+using Dewiride.Erp.BuildingBlocks.Persistence.Telemetry;
 using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -19,6 +20,7 @@ public static class PersistenceRegistration
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.Services.AddErpPersistenceCore();
+        builder.Services.AddErpDatabaseTelemetry();
 
         return builder;
     }

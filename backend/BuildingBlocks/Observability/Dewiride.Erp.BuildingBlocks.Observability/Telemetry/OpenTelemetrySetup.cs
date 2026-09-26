@@ -13,6 +13,8 @@ public static class OpenTelemetrySetup
 {
     public const string ActivitySourcePrefix = "Dewiride.Erp";
 
+    public const string OtlpEndpointVariable = "OTEL_EXPORTER_OTLP_ENDPOINT";
+
     public static IHostApplicationBuilder AddErpTelemetry(this IHostApplicationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -25,19 +27,18 @@ public static class OpenTelemetrySetup
             logging.IncludeScopes = true;
         });
 
+        builder.Services.AddSingleton<ErpResourceDetector>();
         var telemetry = builder.Services.AddOpenTelemetry()
-            .ConfigureResource(resource => resource.AddService(serviceName, serviceVersion: typeof(OpenTelemetrySetup).Assembly.GetName().Version?.ToString()))
-            .WithMetrics(metrics => metrics
-                .AddAspNetCoreInstrumentation()
-                .AddHttpClientInstrumentation()
-                .AddRuntimeInstrumentation()
-                .AddMeter($"{ActivitySourcePrefix}.*"))
+            .ConfigureResource(resource => resource
+                .AddService(serviceName, autoGenerateServiceInstanceId: false, serviceInstanceId: Environment.MachineName)
+                .AddDetector(provider => provider.GetRequiredService<ErpResourceDetector>()))
+            .WithMetrics(metrics => metrics.AddMeter([.. TelemetryMeters.Names]))
             .WithTracing(tracing => tracing
                 .AddAspNetCoreInstrumentation(options => options.Filter = context => !context.Request.Path.StartsWithSegments("/healthz", StringComparison.OrdinalIgnoreCase))
                 .AddHttpClientInstrumentation()
                 .AddSource($"{ActivitySourcePrefix}.*"));
 
-        if (!string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
+        if (!string.IsNullOrWhiteSpace(builder.Configuration[OtlpEndpointVariable]))
         {
             telemetry.UseOtlpExporter();
         }
