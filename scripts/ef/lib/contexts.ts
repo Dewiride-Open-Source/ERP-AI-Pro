@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, posix, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -39,12 +39,12 @@ export function contextKey(contextName: string): string {
 }
 
 function collect(directory: string, backend: string, entries: DbContextEntry[]): void {
-  for (const name of readdirSync(directory)) {
-    if (skippedDirectories.has(name)) continue;
-    const path = join(directory, name);
-    if (statSync(path).isDirectory()) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (skippedDirectories.has(entry.name)) continue;
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) {
       collect(path, backend, entries);
-    } else if (name.endsWith("DbContext.cs") && directory.split(sep).at(-1) === "Persistence") {
+    } else if (entry.isFile() && entry.name.endsWith("DbContext.cs") && directory.split(sep).at(-1) === "Persistence") {
       const match = contextDeclaration.exec(readFileSync(path, "utf8"));
       if (match?.[1]) {
         entries.push({ key: contextKey(match[1]), contextName: match[1], project: owningProject(directory, backend) });
