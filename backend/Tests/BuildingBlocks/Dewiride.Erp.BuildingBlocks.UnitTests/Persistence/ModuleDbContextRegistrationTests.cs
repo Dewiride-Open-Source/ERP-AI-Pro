@@ -1,7 +1,9 @@
+using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -80,6 +82,30 @@ public sealed class ModuleDbContextRegistrationTests
         var check = Assert.Single(provider.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations);
         Assert.Equal($"database:{Schema}", check.Name);
         Assert.Contains("ready", check.Tags);
+    }
+
+    [Theory]
+    [InlineData("InMemory", WarningBehavior.Log)]
+    [InlineData("LocalDevelopment", WarningBehavior.Throw)]
+    [InlineData(null, WarningBehavior.Throw)]
+    public void AddModuleDbContext_ConfigurationSourceSetting_LogsTheManyServiceProvidersWarningOnlyInTestHostsAndThrowsElsewhere(string? source, WarningBehavior behavior)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"{DatabaseOptions.SectionName}:ConnectionString"] = ConnectionString,
+                [ErpConfigurationSourceResolver.SourceSetting] = source,
+            })
+            .Build());
+        services.AddErpPersistenceCore();
+        services.AddModuleDbContext<SampleContext>(Schema);
+
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<SampleContext>>();
+
+        Assert.Equal(behavior, options.FindExtension<CoreOptionsExtension>()?.WarningsConfiguration.GetBehavior(CoreEventId.ManyServiceProvidersCreatedWarning));
     }
 
     private sealed class SampleContext(DbContextOptions<SampleContext> options) : ModuleDbContext(options, ModuleDbContextRegistrationTests.Schema);
