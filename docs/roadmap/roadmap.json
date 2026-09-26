@@ -572,10 +572,17 @@
           "id": "web-foundation-design-tokens-and-theme-package",
           "title": "Design tokens and theme package",
           "scope": "Build frontend/packages/ui with OKLch light/dark colour, typography, spacing, radius and motion tokens, shadcn init (Base UI primitives, cssVariables, tw-animate-css, lucide) wired to next-themes class strategy, an @import-able theme CSS shared across the workspace, and a /design/kitchen-sink route rendering every primitive in both themes that Playwright screenshots at desktop and mobile widths.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "@dewiride/erp-ui exports theme.css, holding the colour, typography, spacing, radius, elevation, layer, focus and motion tokens without importing Tailwind, and globals.css, which imports Tailwind once and then the theme, so the web build carries a single preflight; a unit test proves every declared foreground/background pair and status colour on its tint meets 4.5:1 and input borders and the focus ring meet 3:1 in light and dark",
+            "Motion durations and easings are tokens that collapse to 0.01 ms under prefers-reduced-motion in one place backed by one global safety net; a Playwright test with reduced motion emulated measures the demo animation, a token-driven transition and a generated primitive's literal duration at 0.01 ms or less, and without the preference measures the token durations",
+            "/design/kitchen-sink, available in every environment and outside the navigation, renders every colour token as a swatch, every token group, every primitive installed in packages/ui in its default, disabled, invalid and loading states where it has them, and the primitives left out with the reason for each; Playwright captures each section in light and dark on desktop and mobile, takes ARIA snapshots, operates every control including one validation failure, and finds no horizontal overflow and no console errors",
+            "The theme toggle is a radio group operable with the arrow keys, the document declares color-scheme light dark, primitives come only from the radix-nova registry through the shadcn CLI with every local change recorded in the design-system register, and the lockfile holds no @base-ui package or unapproved package; ADR-0023 records the token architecture and the rule for generated primitives"
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-26",
+          "notes": "Radix, not Base UI: the scope's Base UI primitives wording is superseded by accepted ADR-0007 and ADR-0009 (shadcn/ui on Radix); packages/ui stays on the radix-nova style and init is never re-run. The radix-nova combobox imports @base-ui/react and is excluded, so the forms kit decides between an in-house Radix popover combobox and cmdk; sidebar moves to the authenticated shell because its generated use-mobile hook fails react-hooks/set-state-in-effect; global-error styling moves to the feedback baseline; Toaster and TooltipProvider are mounted at the root here, so the feedback baseline builds toast patterns without a second mount. Owner decisions 2026-09-26: generated primitives that fail exactOptionalPropertyTypes get a minimal recorded patch; the kitchen sink is available in every environment (signed-in only from the authentication phase); status and input colours darken to meet WCAG contrast."
         },
         {
           "id": "web-foundation-feature-folder-conventions-and-routing",
