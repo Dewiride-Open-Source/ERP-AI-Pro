@@ -15,7 +15,7 @@ public static class DatabaseTelemetry
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddSqlClientInstrumentation());
+        services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddProcessor(new SqlErrorStatusProcessor()).AddSqlClientInstrumentation());
         services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddMeter(EntityFrameworkCoreMeter).AddSqlClientInstrumentation());
 
         return services;

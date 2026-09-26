@@ -1,8 +1,8 @@
-using System.Collections;
 using System.Diagnostics;
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Telemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Trace;
 
@@ -19,7 +19,7 @@ public sealed class TelemetryTests
     [Fact]
     public async Task Get_Startups_ExportsTheRequestSpanWithItsSqlSpanInOneTrace()
     {
-        var spans = new ExportedItems<Activity>();
+        var spans = new ExportedItemCollection<Activity>();
         await using var factory = new ErpApiFactory();
         using var traced = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans))));
@@ -37,8 +37,8 @@ public sealed class TelemetryTests
     public async Task Get_WithACorrelationId_ExportsTheSqlCommandLogWithTheCorrelationIdAndTheRequestTraceId()
     {
         const string correlationId = "telemetry-4711";
-        var spans = new ExportedItems<Activity>();
-        var logs = new ExportedItems<LogRecord>();
+        var spans = new ExportedItemCollection<Activity>();
+        var logs = new ExportedItemCollection<LogRecord>();
         await using var factory = new ErpApiFactory();
         using var traced = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
         {
@@ -57,7 +57,7 @@ public sealed class TelemetryTests
         Assert.Equal(correlationId, CorrelationIdOf(log));
     }
 
-    private static T WaitFor<T>(ExportedItems<T> items, Func<T, bool> match)
+    private static T WaitFor<T>(ExportedItemCollection<T> items, Func<T, bool> match)
         where T : class
     {
         T? found = null;
@@ -81,75 +81,5 @@ public sealed class TelemetryTests
         }, (object?)null);
 
         return value;
-    }
-
-    private sealed class ExportedItems<T> : ICollection<T>
-    {
-        private readonly List<T> _items = [];
-
-        private readonly Lock _gate = new();
-
-        public int Count
-        {
-            get
-            {
-                lock (_gate)
-                {
-                    return _items.Count;
-                }
-            }
-        }
-
-        public bool IsReadOnly => false;
-
-        public void Add(T item)
-        {
-            lock (_gate)
-            {
-                _items.Add(item);
-            }
-        }
-
-        public void Clear()
-        {
-            lock (_gate)
-            {
-                _items.Clear();
-            }
-        }
-
-        public bool Contains(T item)
-        {
-            lock (_gate)
-            {
-                return _items.Contains(item);
-            }
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            lock (_gate)
-            {
-                _items.CopyTo(array, arrayIndex);
-            }
-        }
-
-        public bool Remove(T item)
-        {
-            lock (_gate)
-            {
-                return _items.Remove(item);
-            }
-        }
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            lock (_gate)
-            {
-                return _items.ToList().GetEnumerator();
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
