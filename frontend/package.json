@@ -22,7 +22,7 @@
     "format:check": "prettier --check .",
     "e2e": "pnpm --filter @dewiride/erp-e2e test",
     "e2e:install": "pnpm --filter @dewiride/erp-e2e exec playwright install --with-deps",
-    "test:unit": "pnpm --filter @dewiride/erp-web test:unit"
+    "test:unit": "pnpm --filter @dewiride/erp-web --filter @dewiride/erp-ui test:unit"
   },
   "devDependencies": {
     "@dewiride/erp-config": "workspace:*",

@@ -12,8 +12,8 @@ export async function AppShell({ children }: { children: ReactNode }) {
   const entries = navigation.filter((item) => isFeatureEnabled(flags, item.featureFlag));
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-(--layer-sticky) border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-header w-full max-w-page items-center justify-between gap-4 px-gutter">
+      <header className="sticky top-0 z-(--layer-sticky) h-header border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto flex h-full w-full max-w-page items-center justify-between gap-4 px-gutter">
           <div className="flex items-center gap-6">
             <Link href="/login" className="rounded-md focus-ring">
               <Wordmark />

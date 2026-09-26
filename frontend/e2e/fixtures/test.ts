@@ -1,4 +1,4 @@
-import { test as base, expect, type Page, type TestInfo } from "@playwright/test";
+import { test as base, expect, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,10 +11,12 @@ type Fixtures = {
   theme: Theme;
   expectedConsoleError: RegExp | undefined;
   consoleErrors: string[];
-  capture: (name: string) => Promise<void>;
+  capture: (name: string, target?: Locator) => Promise<void>;
 };
 
 const screenshotsRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "screenshots");
+
+const captureHiddenAttribute = "data-e2e-capture-hidden";
 
 export const test = base.extend<Fixtures>({
   theme: ["light", { option: true }],
@@ -42,10 +44,14 @@ export const test = base.extend<Fixtures>({
   },
 
   capture: async ({ page, theme }, use, testInfo) => {
-    await use(async (name: string) => {
+    await use(async (name: string, target?: Locator) => {
       const file = screenshotPath(testInfo, name, theme);
       mkdirSync(dirname(file), { recursive: true });
-      await page.screenshot({ path: file, fullPage: true });
+      if (target === undefined) {
+        await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
+      } else {
+        await captureElement(target, file);
+      }
       await testInfo.attach(`${name}--${theme}`, { path: file, contentType: "image/png" });
     });
   },
@@ -64,6 +70,39 @@ export function forEachTheme(
         await body({ page, capture, theme }, isMobile);
       });
     });
+  }
+}
+
+// Radix radio groups move focus in a timeout after the arrow's keydown and check the newly focused radio only while an arrow key
+// is still held, so the key is released once that radio is checked, as a person's key press is, never straight after keydown.
+export async function pressArrowUntilChecked(page: Page, key: string, radio: Locator): Promise<void> {
+  await page.keyboard.down(key);
+  try {
+    await expect(radio).toBeChecked();
+  } finally {
+    await page.keyboard.up(key);
+  }
+}
+
+// An element taller than the viewport is captured from a scrolled page, where a sticky element outside it (the app header)
+// would be painted across the middle of the image; hiding those for the capture keeps the image to the element alone.
+async function captureElement(target: Locator, file: string): Promise<void> {
+  await target.evaluate((element, attribute) => {
+    for (const candidate of element.ownerDocument.body.querySelectorAll("*")) {
+      if (candidate.contains(element) || element.contains(candidate)) continue;
+      if (getComputedStyle(candidate).position === "sticky") candidate.setAttribute(attribute, "");
+    }
+  }, captureHiddenAttribute);
+  try {
+    await target.screenshot({
+      path: file,
+      animations: "disabled",
+      style: `[${captureHiddenAttribute}] { visibility: hidden !important; }`,
+    });
+  } finally {
+    await target.page().evaluate((attribute) => {
+      for (const hidden of document.querySelectorAll(`[${attribute}]`)) hidden.removeAttribute(attribute);
+    }, captureHiddenAttribute);
   }
 }
 
