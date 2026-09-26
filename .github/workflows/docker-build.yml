@@ -27,13 +27,16 @@ jobs:
       - name: Start SQL Server
         id: sql
         uses: ./.github/actions/start-sql-server
-      - name: Write the compose database secrets
+      - name: Write the compose secrets
         env:
           CONNECTION_STRING: ${{ steps.sql.outputs.container-connection-string }}
         run: |
           mkdir -p infra/compose/secrets
           printf '%s' "$CONNECTION_STRING" > infra/compose/secrets/Erp__Platform__Database__ConnectionString
           printf '%s' "$CONNECTION_STRING" > infra/compose/secrets/Erp__Platform__Database__MigratorConnectionString
+          material="$(openssl rand -base64 32)"
+          echo "::add-mask::$material"
+          printf 'ci:%s' "$material" > infra/compose/secrets/Erp__Platform__Attachments__EncryptionKey
       - name: Set up Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build API image

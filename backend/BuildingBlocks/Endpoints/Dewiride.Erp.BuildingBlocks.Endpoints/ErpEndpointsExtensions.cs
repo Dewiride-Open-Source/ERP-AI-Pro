@@ -28,11 +28,13 @@ public static class ErpEndpointsExtensions
         // Outside Development the binder would answer a value it cannot read with a bare 400; throwing routes every binding failure through GlobalExceptionHandler.
         builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 
-        // Numbers are JSON numbers on the wire in both directions, so the document describes one type per member.
+        // Numbers are JSON numbers on the wire in both directions and enums are camelCase names, so the document describes one
+        // type per member and the generated client carries the meaning of an enum value rather than its number.
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
             options.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));
         });
         builder.Services.AddRequestTimeouts();
         builder.Services.AddOptions<RateLimitingOptions>()

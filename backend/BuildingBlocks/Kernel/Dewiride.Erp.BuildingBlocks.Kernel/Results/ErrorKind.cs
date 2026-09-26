@@ -6,5 +6,7 @@ public enum ErrorKind
     NotFound,
     Conflict,
     Forbidden,
+    TooLarge,
+    UnsupportedType,
     Failure,
 }

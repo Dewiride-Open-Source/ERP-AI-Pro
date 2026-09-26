@@ -1,0 +1,46 @@
+name: Start Azurite
+description: >-
+  Starts the Azurite Blob Storage emulator in a container published on 127.0.0.1:10000 with in-memory storage and
+  telemetry off, waits until it answers and outputs the host the attachments store reaches it on
+  (Erp:Platform:Attachments:EmulatorHost). Azurite stays strict (no --loose, no --skipApiVersionCheck), so a header or a
+  service version the emulator does not support fails the run instead of passing silently. The image runs through
+  docker run rather than a services container so the digest is pinned in this file; Dependabot cannot bump an image
+  inside a docker run command, so the digest is bumped by hand to the reference Dependabot keeps current in
+  infra/compose/compose.override.yaml, and scripts/checks/tests/azurite-pin.test.ts fails while the two differ.
+inputs:
+  container-name:
+    description: Name of the Azurite container.
+    default: erp-azurite
+outputs:
+  emulator-host:
+    description: Host of the emulator for processes running on the runner, the value of ERP_TEST_BLOB_EMULATOR_HOST and Erp__Platform__Attachments__EmulatorHost.
+    value: ${{ steps.wait.outputs.emulator-host }}
+runs:
+  using: composite
+  steps:
+    - name: Start the container
+      shell: bash
+      env:
+        CONTAINER_NAME: ${{ inputs.container-name }}
+      run: |
+        docker run --detach --name "$CONTAINER_NAME" --publish 127.0.0.1:10000:10000 \
+          mcr.microsoft.com/azure-storage/azurite:3.37.0@sha256:830430c1da1a2d537e08f3e6764dd1f5ae00cf0346bcaf625b968ec3f0971fd5 \
+          azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --inMemoryPersistence --disableTelemetry
+    - name: Wait for Azurite
+      id: wait
+      shell: bash
+      env:
+        CONTAINER_NAME: ${{ inputs.container-name }}
+      run: |
+        # A published port can accept a connection before Azurite listens, so only an HTTP answer counts; any status proves it serves
+        for attempt in $(seq 1 30); do
+          if curl --silent --output /dev/null --max-time 2 http://127.0.0.1:10000/; then
+            echo "Azurite answered after $attempt attempt(s)"
+            echo "emulator-host=127.0.0.1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "Azurite did not answer after 30 attempts" >&2
+        docker logs "$CONTAINER_NAME"
+        exit 1

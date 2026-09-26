@@ -32,6 +32,15 @@ jobs:
       - name: Start SQL Server
         id: sql
         uses: ./.github/actions/start-sql-server
+      - name: Start Azurite
+        id: azurite
+        uses: ./.github/actions/start-azurite
+      - name: Generate the attachments encryption key
+        id: attachments-key
+        run: |
+          material="$(openssl rand -base64 32)"
+          echo "::add-mask::$material"
+          echo "encryption-key=ci:$material" >> "$GITHUB_OUTPUT"
       - name: Build API and migrator
         working-directory: backend
         run: |
@@ -55,6 +64,8 @@ jobs:
         working-directory: backend
         env:
           Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
+          Erp__Platform__Attachments__EmulatorHost: ${{ steps.azurite.outputs.emulator-host }}
+          Erp__Platform__Attachments__EncryptionKey: ${{ steps.attachments-key.outputs.encryption-key }}
         run: |
           nohup dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api --no-build -c Release > "$RUNNER_TEMP/api.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf http://localhost:5080/healthz/live && break; sleep 1; done
@@ -75,15 +86,19 @@ jobs:
           nohup pnpm exec next start -p 3001 > "$RUNNER_TEMP/web-offline.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf http://localhost:3001/healthz && break; sleep 1; done
           curl -sf http://localhost:3001/healthz
-      - name: Start API with the system-info module disabled
+      - name: Start API with the system-info and attachments modules disabled
         working-directory: backend
         env:
           ASPNETCORE_ENVIRONMENT: Development
           ASPNETCORE_URLS: http://localhost:5081
           APPCONFIG_ENDPOINT: ""
           Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
+          Erp__Platform__Attachments__EmulatorHost: ${{ steps.azurite.outputs.emulator-host }}
+          Erp__Platform__Attachments__EncryptionKey: ${{ steps.attachments-key.outputs.encryption-key }}
           feature_management__feature_flags__0__id: Erp.Modules.Platform.SystemInfo
           feature_management__feature_flags__0__enabled: "false"
+          feature_management__feature_flags__1__id: Erp.Modules.Platform.Attachments
+          feature_management__feature_flags__1__enabled: "false"
         run: |
           nohup dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api --no-build --no-launch-profile -c Release > "$RUNNER_TEMP/api-gated.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf http://localhost:5081/healthz/live && break; sleep 1; done

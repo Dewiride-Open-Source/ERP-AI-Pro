@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Net;
+using Azure.Core;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Observability.Health;
 using Dewiride.Erp.Testing;
@@ -13,6 +14,10 @@ namespace Dewiride.Erp.Host.Api.IntegrationTests.Health;
 public sealed class HealthEndpointsTests : IClassFixture<ErpApiFactory>
 {
     private const string FailingCheck = "failing-dependency";
+
+    private const string AttachmentStorageCheck = "storage:attachments";
+
+    private const string UnreachableBlobService = "https://127.0.0.1:1/";
 
     private static readonly TimeSpan AnswerBound = HealthEndpoints.CheckTimeout + TimeSpan.FromSeconds(8);
 
@@ -107,6 +112,32 @@ public sealed class HealthEndpointsTests : IClassFixture<ErpApiFactory>
         Assert.InRange(stopwatch.Elapsed, TimeSpan.Zero, AnswerBound);
     }
 
+    [Fact]
+    public async Task ReadinessChecks_AgainstTheTestContainer_ReportAttachmentStorageHealthy()
+    {
+        var report = await _factory.Services.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync(registration => registration.Tags.Contains(HealthEndpoints.ReadyTag), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HealthStatus.Healthy, report.Entries[AttachmentStorageCheck].Status);
+    }
+
+    [Fact]
+    public async Task Get_ReadinessWithAttachmentStorageUnreachable_AnswersDegradedFromTheStorageCheckOnly()
+    {
+        using var factory = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsBlobServiceUriKey, UnreachableBlobService);
+        using var unreachable = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddSingleton<TokenCredential>(new StaticTokenCredential())));
+        using var client = unreachable.CreateClient();
+
+        using var response = await client.GetAsync(new Uri("/healthz/ready", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(nameof(HealthStatus.Degraded), await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var report = await unreachable.Services.GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync(registration => registration.Tags.Contains(HealthEndpoints.ReadyTag), TestContext.Current.CancellationToken);
+        Assert.Equal([AttachmentStorageCheck], report.Entries.Where(entry => entry.Value.Status != HealthStatus.Healthy).Select(entry => entry.Key));
+    }
+
     [Theory]
     [InlineData("/healthz/live")]
     [InlineData("/healthz/ready")]
@@ -118,5 +149,14 @@ public sealed class HealthEndpointsTests : IClassFixture<ErpApiFactory>
 
         Assert.NotNull(endpoint.Metadata.GetMetadata<DisableRateLimitingAttribute>());
         Assert.NotNull(endpoint.Metadata.GetMetadata<IDisableHttpMetricsMetadata>());
+    }
+
+    private sealed class StaticTokenCredential : TokenCredential
+    {
+        public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+            new("readiness-test", TimeProvider.System.GetUtcNow().AddHours(1));
+
+        public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken) =>
+            ValueTask.FromResult(GetToken(requestContext, cancellationToken));
     }
 }

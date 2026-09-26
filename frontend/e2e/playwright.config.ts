@@ -5,7 +5,7 @@ import {
   baseURL,
   gatedApiBaseURL,
   gatedBaseURL,
-  gatedFeatureFlag,
+  gatedFeatureFlags,
   offlineBaseURL,
   startServers,
   unreachableApiURL,
@@ -73,8 +73,13 @@ export default defineConfig({
           ASPNETCORE_ENVIRONMENT: "Development",
           ASPNETCORE_URLS: gatedApiBaseURL,
           APPCONFIG_ENDPOINT: "",
-          feature_management__feature_flags__0__id: gatedFeatureFlag,
-          feature_management__feature_flags__0__enabled: "false",
+          AZURE_TOKEN_CREDENTIALS: "AzureCliCredential",
+          ...Object.fromEntries(
+            gatedFeatureFlags.flatMap((flag, index) => [
+              [`feature_management__feature_flags__${index}__id`, flag],
+              [`feature_management__feature_flags__${index}__enabled`, "false"],
+            ]),
+          ),
         },
       },
       {

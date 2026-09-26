@@ -137,13 +137,16 @@ load_params() {
   : "${ERP_AZURE_APP_WEB_LOCAL_DEV_NAME:=ERP-AI-Pro Web (local-dev)}"
   : "${ERP_AZURE_APP_WEB_PRODUCTION_NAME:=ERP-AI-Pro Web (production)}"
   : "${ERP_AZURE_APP_RUNTIME_NAME:=ERP-AI-Pro Runtime (production)}"
+  : "${ERP_AZURE_STORAGE_DEV_NAME:=sterpaiprodev}"
   export ERP_AZURE_APPCONFIG_SKU ERP_AZURE_DEVELOPERS_GROUP ERP_AZURE_PRODUCTION_WEB_ORIGIN \
     ERP_AZURE_LOCAL_WEB_ORIGIN ERP_AZURE_LOCAL_API_ORIGIN ERP_AZURE_APP_WEB_LOCAL_DEV_NAME \
-    ERP_AZURE_APP_WEB_PRODUCTION_NAME ERP_AZURE_APP_RUNTIME_NAME
+    ERP_AZURE_APP_WEB_PRODUCTION_NAME ERP_AZURE_APP_RUNTIME_NAME ERP_AZURE_STORAGE_DEV_NAME
 
   require_var "${ERP_AZURE_REQUIRED_PARAMS[@]}"
   is_guid "$ERP_AZURE_TENANT_ID" || die "ERP_AZURE_TENANT_ID must be a GUID"
   is_guid "$ERP_AZURE_SUBSCRIPTION_ID" || die "ERP_AZURE_SUBSCRIPTION_ID must be a GUID"
+  [[ "$ERP_AZURE_STORAGE_DEV_NAME" =~ ^[a-z0-9]{3,24}$ ]] \
+    || die "ERP_AZURE_STORAGE_DEV_NAME must be 3 to 24 lowercase letters or digits; '$ERP_AZURE_STORAGE_DEV_NAME' was rejected"
 
   local sku
   for sku in "${ERP_AZURE_APPCONFIG_SKUS[@]}"; do
@@ -253,6 +256,17 @@ vault_resource_id() {
   local vault_name="$1"
   printf '/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s' \
     "$ERP_AZURE_SUBSCRIPTION_ID" "$ERP_AZURE_RESOURCE_GROUP" "$vault_name"
+}
+
+storage_account_resource_id() {
+  local account_name="$1"
+  printf '/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Storage/storageAccounts/%s' \
+    "$ERP_AZURE_SUBSCRIPTION_ID" "$ERP_AZURE_RESOURCE_GROUP" "$account_name"
+}
+
+storage_container_resource_id() {
+  local account_name="$1" container_name="$2"
+  printf '%s/blobServices/default/containers/%s' "$(storage_account_resource_id "$account_name")" "$container_name"
 }
 
 utc_timestamp() {

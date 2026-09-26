@@ -1,4 +1,4 @@
-import { gatedApiBaseURL, gatedBaseURL, gatedFeatureFlag } from "../../fixtures/targets";
+import { gatedApiBaseURL, gatedBaseURL, gatedFeatureFlags } from "../../fixtures/targets";
 import { expect, test } from "../../fixtures/test";
 
 test.describe("feature flags", () => {
@@ -8,14 +8,14 @@ test.describe("feature flags", () => {
     expect(response.headers()["content-type"]).toContain("application/json");
     const body: unknown = await response.json();
     expect(body).toMatchObject({
-      features: expect.arrayContaining([{ name: gatedFeatureFlag, enabled: true }]),
+      features: expect.arrayContaining(gatedFeatureFlags.map((name) => ({ name, enabled: true }))),
     });
     expect(body).not.toMatchObject({
       features: expect.arrayContaining([expect.objectContaining({ enabled: false })]),
     });
   });
 
-  test("the gated stack reports the module disabled and answers its routes with problem details", async ({
+  test("the gated stack reports the modules disabled and answers their routes with problem details", async ({
     request,
   }) => {
     test.skip(!gatedBaseURL, "E2E_GATED_BASE_URL is not set and Playwright did not start the gated pair");
@@ -23,7 +23,7 @@ test.describe("feature flags", () => {
     const features = await request.get(`${gatedApiBaseURL}/api/platform/features`);
     expect(features.status()).toBe(200);
     expect(await features.json()).toMatchObject({
-      features: expect.arrayContaining([{ name: gatedFeatureFlag, enabled: false }]),
+      features: expect.arrayContaining(gatedFeatureFlags.map((name) => ({ name, enabled: false }))),
     });
 
     const gated = await request.get(`${gatedApiBaseURL}/api/platform/system-info`);
@@ -33,6 +33,13 @@ test.describe("feature flags", () => {
       type: "/problems/feature.disabled",
       code: "feature.disabled",
       instance: "/api/platform/system-info",
+    });
+
+    const attachments = await request.get(`${gatedApiBaseURL}/api/platform/attachments`);
+    expect(attachments.status()).toBe(404);
+    expect(await attachments.json()).toMatchObject({
+      code: "feature.disabled",
+      instance: "/api/platform/attachments",
     });
 
     const throughWeb = await request.get(`${gatedBaseURL}/api/platform/system-info`);

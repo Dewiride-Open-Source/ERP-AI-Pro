@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Attachments/Dewiride.Erp.BuildingBlocks.Attachments/Dewiride.Erp.BuildingBlocks.Attachments.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
     <ProjectReference Include="../../../Hosts/Api/Dewiride.Erp.Host.Api/Dewiride.Erp.Host.Api.csproj" />

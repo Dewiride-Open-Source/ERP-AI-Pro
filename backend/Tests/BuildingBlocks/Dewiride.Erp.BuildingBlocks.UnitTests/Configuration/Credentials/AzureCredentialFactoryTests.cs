@@ -1,8 +1,8 @@
 using Azure.Identity;
-using Dewiride.Erp.BuildingBlocks.Configuration.AppConfiguration;
+using Dewiride.Erp.BuildingBlocks.Configuration.Credentials;
 using Microsoft.Extensions.Hosting;
 
-namespace Dewiride.Erp.BuildingBlocks.UnitTests.Configuration.AppConfiguration;
+namespace Dewiride.Erp.BuildingBlocks.UnitTests.Configuration.Credentials;
 
 public sealed class AzureCredentialFactoryTests
 {

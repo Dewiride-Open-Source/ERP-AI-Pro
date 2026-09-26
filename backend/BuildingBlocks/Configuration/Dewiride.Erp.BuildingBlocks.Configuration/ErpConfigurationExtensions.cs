@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Reflection;
 using Dewiride.Erp.BuildingBlocks.Configuration.AppConfiguration;
+using Dewiride.Erp.BuildingBlocks.Configuration.Credentials;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Microsoft.AspNetCore.Builder;
@@ -48,6 +49,12 @@ public static class ErpConfigurationExtensions
                 },
                 optional: false);
             builder.Services.AddAzureAppConfiguration();
+            builder.Services.AddSingleton(credential);
+        }
+        else
+        {
+            // Resolved only by a client that reaches Azure, so hosts that never do (tests, the emulator mode) need no identity.
+            builder.Services.TryAddSingleton(provider => AzureCredentialFactory.Create(provider.GetRequiredService<IHostEnvironment>(), environmentVariable));
         }
 
         builder.Services

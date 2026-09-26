@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../../Module/Dewiride.Erp.Modules.Platform.Attachments/Dewiride.Erp.Modules.Platform.Attachments.csproj" />
+  </ItemGroup>
+
+</Project>

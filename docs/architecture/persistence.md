@@ -33,7 +33,7 @@ Every module DbContext derives from `ModuleDbContext`, lives in `<Module>.Persis
 - a readiness health check named `database:<schema>` (`AddDbContextCheck<TContext>`) tagged `ready`, reported by `/healthz/ready`;
 - an entry in the `DbContextCatalog`, which `DatabaseMigrator.MigrateAllAsync` walks in registration order.
 
-`ErpHostComposition.AddErpPlatform(this IHostApplicationBuilder builder, Assembly hostAssembly)` in `Hosts/Composition/Dewiride.Erp.Host.Composition` runs the design-time source rule, then `AddErpConfiguration(hostAssembly)`, `AddErpPersistence()`, `AddErpIdempotency()` and `AddModules(Modules.All)`. The API host, the test database host and the migrator all call it, so no context can be missing from the catalogue.
+`ErpHostComposition.AddErpPlatform(this IHostApplicationBuilder builder, Assembly hostAssembly)` in `Hosts/Composition/Dewiride.Erp.Host.Composition` runs the design-time source rule, then `AddErpConfiguration(hostAssembly)`, `AddErpCaching()`, `AddErpHttpClientDefaults()`, `AddErpPersistence()`, `AddErpIdempotency()`, `AddErpAttachments()` and `AddModules(Modules.All)`. The API host, the test database host and the migrator all call it, so no context can be missing from the catalogue; the catalogue order, and so the migrator's order, is `platform_idempotency`, `files`, then the module schemas in `Modules.All` order. A building block that owns a schema registers its context with the same `AddModuleDbContext<TContext>(schema)` from its own registration method (`AddErpIdempotency`, `AddErpAttachments`) instead of a module's `AddServices`.
 
 ## Conventions
 
@@ -103,15 +103,22 @@ node scripts/ef/ef.ts pending --all
 
 ## Test databases
 
-`SqlTestDatabase` in `Tests/Shared/Dewiride.Erp.Testing` is an xunit v3 assembly fixture, declared with `[assembly: AssemblyFixture(typeof(SqlTestDatabase))]` in every SQL-backed test project (`Tests/Host`, the SystemInfo integration tests, `Tests/Architecture`, the BuildingBlocks integration tests):
+`SqlTestDatabase` in `Tests/Shared/Dewiride.Erp.Testing` is an xunit v3 assembly fixture, declared with `[assembly: AssemblyFixture(typeof(SqlTestDatabase))]` in every SQL-backed test project (`Tests/Host`, the SystemInfo and Attachments integration tests, `Tests/Architecture`, the BuildingBlocks integration tests):
 
 - it reads `ERP_TEST_SQL_CONNECTION`, a server-level connection string with rights to create databases and no `Database=` part (on the owner's machine `Server=localhost;Integrated Security=True;Encrypt=True;TrustServerCertificate=True`), and fails with a message naming the variable and `docs/guides/testing.md` when it is missing;
 - it drops leftover databases named `ErpAiProTest_%` older than 24 hours, creates `ErpAiProTest_<yyyyMMddHHmmss>_<8 hex>` and migrates every catalogue context and runs every seeder through `TestDatabaseHost`, a non-started host built with `AddErpPlatform`;
 - it exposes the static `Current`; on dispose it clears the connection pools, sets `SINGLE_USER WITH ROLLBACK IMMEDIATE` and drops the database.
 
-`ErpApiFactory` injects `Current.ConnectionString` as `Erp:Platform:Database:ConnectionString` unless the test supplied one with `WithConfiguration`, and throws a message naming the `AssemblyFixture` line when no test database exists, so a Development test host can never reach the developer's own `ErpAiPro` database through the user-secrets value. Every test host registers the readiness checks `self`, `database:platform_idempotency` and `database:platform_system_info`.
+`ErpApiFactory` injects `Current.ConnectionString` as `Erp:Platform:Database:ConnectionString` unless the test supplied one with `WithConfiguration`, and throws a message naming the `AssemblyFixture` line when no test database exists, so a Development test host can never reach the developer's own `ErpAiPro` database through the user-secrets value. Every test host registers the readiness checks `self`, `database:files`, `database:platform_idempotency`, `database:platform_system_info` and `storage:attachments`.
 
-The one exception is a test of the migration path itself: `Dewiride.Erp.Host.Migrator.IntegrationTests` declares no assembly fixture and references neither `SqlTestDatabase` nor `Hosts/Api`; each test creates an `EmptyTestDatabase` (same naming, server and drop rules, but no migration has touched it) and runs the migrator program against it.
+Next to it, the same projects declare `[assembly: AssemblyFixture(typeof(BlobTestContainer))]` (`Tests/Shared/Dewiride.Erp.Testing/Blob`), because every test host also starts the attachments storage ([attachments](attachments.md)):
+
+- it reads `ERP_TEST_BLOB_EMULATOR_HOST`, the host of an Azurite blob emulator on port 10000 (`127.0.0.1` on a developer machine and in CI), and fails with a message naming the variable and `docs/guides/testing.md` when it is missing;
+- it deletes leftover containers named `erptest-*` last modified more than 24 hours ago, creates `erptest-<yyyyMMddHHmmss>-<8 hex>` on the emulator's well-known development account and exposes the static `Current`; on dispose it deletes the container.
+
+`ErpApiFactory` blanks `Erp:Platform:Attachments:BlobServiceUri` and injects `Erp:Platform:Attachments:EmulatorHost` and `ContainerName` from `BlobTestContainer.Current` unless the test configured a storage target itself, and sets `Erp:Platform:Attachments:EncryptionKey` to one key generated per test process (`test:<32 random bytes in base64>`) unless the test supplied one, so every host of the process can read what another stored; without the fixture it throws a message naming the `AssemblyFixture` line, so a test host never reaches the development storage account through a user-secrets value.
+
+The one exception is a test of the migration path itself: `Dewiride.Erp.Host.Migrator.IntegrationTests` declares no assembly fixture and references neither `SqlTestDatabase`, `BlobTestContainer` nor `Hosts/Api`; each test creates an `EmptyTestDatabase` (same naming, server and drop rules, but no migration has touched it) and runs the migrator program against it. `RunAsync_MigrateWithoutAnyAttachmentSetting_SucceedsAndCreatesTheFilesTables` proves the migrator creates the five `files` tables with no `Erp:Platform:Attachments` setting present, because only the API validates those settings.
 
 ## CI
 
@@ -123,10 +130,12 @@ The composite action `.github/actions/start-sql-server` runs `docker run` of `mc
 | `e2e.yml` | the migrator (`dotnet run --project Hosts/Migrator/Dewiride.Erp.Host.Migrator -- migrate`) before the API starts; `Erp__Platform__Database__ConnectionString` on the migrator and both API starts (the normal pair and the gated pair) |
 | `docker-build.yml` | the compose secret files `infra/compose/secrets/Erp__Platform__Database__ConnectionString` and `Erp__Platform__Database__MigratorConnectionString` written from `container-connection-string`; the stack's migrator container migrates the database and the smoke test asserts it exited 0 |
 
+The composite action `.github/actions/start-azurite` does the same for attachment storage: it runs Azurite (`mcr.microsoft.com/azure-storage/azurite:3.37.0`, digest-pinned, blob service only, in memory, telemetry off, strict API-version checking) published on `127.0.0.1:10000` and outputs `emulator-host`, which `ci-backend.yml` passes to the test step as `ERP_TEST_BLOB_EMULATOR_HOST` (the test hosts take their encryption key from `ErpApiFactory`) and `e2e.yml` to both API starts as `Erp__Platform__Attachments__EmulatorHost`, next to `Erp__Platform__Attachments__EncryptionKey` generated and masked in the same run; `docker-build.yml` uses the compose stack's own `azurite` service instead and writes a generated, masked key to the compose secret file `infra/compose/secrets/Erp__Platform__Attachments__EncryptionKey` beside the two database files.
+
 ## Schema ownership
 
 - A module schema is `<domain>_<module>`: the descriptor's `Schema`, the constant passed to `AddModuleDbContext`, and the schema of the module's migrations history table are one value (`platform_system_info` for Platform / SystemInfo). `ModuleCatalog` rejects two modules sharing a schema.
-- A schema owned by a building block (later: `platform_idempotency`, `files`) is named by its concern and sits outside the `<domain>_<module>` descriptor rule.
+- A schema owned by a building block is named by its concern and sits outside the `<domain>_<module>` descriptor rule: `platform_idempotency` (`IdempotencyDbContext`, `BuildingBlocks.Idempotency`) and `files` (`AttachmentsDbContext`, `BuildingBlocks.Attachments`: `Attachments`, `StoredContents`, `UploadReservations`, `DownloadLinks`, `DownloadRedemptions`). The module that exposes a building block's routes declares no schema of its own (`Platform/Attachments` has `Schema: null`), and no other context adds a foreign key into a building-block schema.
 
 ## Rules the architecture tests assert
 

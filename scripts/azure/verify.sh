@@ -3,8 +3,10 @@
 USAGE='Usage: bash scripts/azure/verify.sh [--entra] [--labels] [--params <file>]
 
 Reads the provisioned Azure resources back and asserts the documented state:
-the App Configuration store, both Key Vaults, the data-protection keys, every
-row of the role matrix and the labelled Erp:Sentinel keys. Never writes.
+the App Configuration store, both Key Vaults, the data-protection keys, the
+development storage account (properties, blob service, private attachments
+container, delete lock and a read-only blob listing signed in with Entra ID),
+every row of the role matrix and the labelled Erp:Sentinel keys. Never writes.
 
 Options:
   --entra           Check the Entra app registrations, service principals,
@@ -13,8 +15,10 @@ Options:
   --labels          Check the seeded settings, feature flags and Key Vault
                     references written by seed.sh: every value of
                     infra/appconfig is read back (a reference only under the
-                    labels it lists), and the local-dev label is proven to
-                    override the unlabelled default.
+                    labels it lists), the local-dev label is proven to
+                    override the unlabelled default, and the blob endpoint
+                    provision.sh writes under local-dev is compared with the
+                    storage account.
   --params <file>   Parameter file (default: scripts/azure/params.env).
   --help            Show this help.'
 
@@ -38,6 +42,14 @@ readonly ROLE_KEY_VAULT_SECRETS_OFFICER='b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
 readonly ROLE_KEY_VAULT_CRYPTO_USER='12338af0-0e69-4776-bea7-57ae8d297424'
 readonly ROLE_KEY_VAULT_CRYPTO_OFFICER='14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
 readonly ROLE_KEY_VAULT_CERTIFICATES_OFFICER='a4417e6f-fecd-4de8-b567-7b0420556985'
+readonly ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR='ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+
+readonly ATTACHMENTS_CONTAINER_NAME='attachments'
+readonly STORAGE_ACCOUNT_SKU='Standard_LRS'
+readonly STORAGE_DELETE_RETENTION_DAYS='7'
+readonly STORAGE_LOCK_NAME='do-not-delete'
+readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
+readonly BLOB_SERVICE_URI_LABEL='local-dev'
 
 readonly ENTRA_HINT='run: bash scripts/azure/entra.sh'
 readonly PROVISION_HINT='run: bash scripts/azure/provision.sh'
@@ -148,12 +160,71 @@ verify_vault() {
   assert_query "$vault_name holds RSA key $DATA_PROTECTION_KEY_NAME" 'RSA' keyvault key show --vault-name "$vault_name" --name "$DATA_PROTECTION_KEY_NAME" --query key.kty
 }
 
+verify_storage_account() {
+  local account_name="$1"
+  log_step "Storage account $account_name"
+  local account_json
+  if ! account_json="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
+    fail "storage account $account_name exists in resource group $ERP_AZURE_RESOURCE_GROUP ($(query_error_summary "$account_json")); $PROVISION_HINT"
+    return 0
+  fi
+  pass "storage account $account_name exists in resource group $ERP_AZURE_RESOURCE_GROUP"
+
+  assert_equals "$account_name kind is StorageV2" 'StorageV2' "$(json_field "$account_json" kind)"
+  assert_equals "$account_name sku is $STORAGE_ACCOUNT_SKU" "$STORAGE_ACCOUNT_SKU" "$(json_field "$account_json" sku.name)"
+  assert_equals "$account_name access tier is Hot" 'Hot' "$(json_field "$account_json" accessTier)"
+  assert_equals "$account_name Shared Key authorization disabled" 'false' "$(json_field "$account_json" allowSharedKeyAccess)"
+  assert_equals "$account_name defaults to Entra ID authorization" 'true' "$(json_field "$account_json" defaultToOAuthAuthentication)"
+  assert_equals "$account_name public blob access disallowed" 'false' "$(json_field "$account_json" allowBlobPublicAccess)"
+  assert_equals "$account_name cross-tenant replication disallowed" 'false' "$(json_field "$account_json" allowCrossTenantReplication)"
+  assert_equals "$account_name minimum TLS version is 1.2" 'TLS1_2' "$(json_field "$account_json" minimumTlsVersion)"
+  assert_equals "$account_name accepts HTTPS only" 'true' "$(json_field "$account_json" enableHttpsTrafficOnly)"
+  local feature
+  for feature in isHnsEnabled isSftpEnabled enableNfsV3 isLocalUserEnabled; do
+    assert_equals "$account_name $feature is off" 'false' "$(json_eval "$account_json" 'String(value[args[0]] === true)' "$feature")"
+  done
+  local endpoint
+  endpoint="$(json_field "$account_json" primaryEndpoints.blob)"
+  if [[ -n "$endpoint" ]]; then
+    pass "$account_name blob endpoint $endpoint"
+  else
+    fail "$account_name blob endpoint missing"
+  fi
+
+  local service_json
+  if service_json="$(az_read storage account blob-service-properties show --account-name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
+    assert_equals "$account_name blob soft delete enabled" 'true' "$(json_eval "$service_json" 'String((value.deleteRetentionPolicy || {}).enabled === true)')"
+    assert_equals "$account_name blob soft delete keeps $STORAGE_DELETE_RETENTION_DAYS days" "$STORAGE_DELETE_RETENTION_DAYS" "$(json_field "$service_json" deleteRetentionPolicy.days)"
+    assert_equals "$account_name container soft delete enabled" 'true' "$(json_eval "$service_json" 'String((value.containerDeleteRetentionPolicy || {}).enabled === true)')"
+    assert_equals "$account_name container soft delete keeps $STORAGE_DELETE_RETENTION_DAYS days" "$STORAGE_DELETE_RETENTION_DAYS" "$(json_field "$service_json" containerDeleteRetentionPolicy.days)"
+    assert_equals "$account_name blob versioning off" 'false' "$(json_eval "$service_json" 'String(value.isVersioningEnabled === true)')"
+    assert_equals "$account_name change feed off" 'false' "$(json_eval "$service_json" 'String((value.changeFeed || {}).enabled === true)')"
+  else
+    fail "$account_name blob service properties readable ($(query_error_summary "$service_json"))"
+  fi
+
+  assert_query "$account_name container $ATTACHMENTS_CONTAINER_NAME is private" 'None' storage container-rm show --storage-account "$account_name" \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --name "$ATTACHMENTS_CONTAINER_NAME" --query publicAccess
+  assert_query "$account_name carries the CanNotDelete lock $STORAGE_LOCK_NAME" 'CanNotDelete' lock show --name "$STORAGE_LOCK_NAME" \
+    --resource "$(storage_account_resource_id "$account_name")" --query level
+
+  local listing
+  if listing="$(az_read storage blob list --account-name "$account_name" --container-name "$ATTACHMENTS_CONTAINER_NAME" --auth-mode login \
+    --num-results 1 --output none 2>&1)"; then
+    pass "operator lists $account_name/$ATTACHMENTS_CONTAINER_NAME with Entra ID (--auth-mode login)"
+  else
+    fail "operator lists $account_name/$ATTACHMENTS_CONTAINER_NAME with Entra ID (--auth-mode login) ($(query_error_summary "$listing")); a 403 within 10 minutes of provision.sh is role propagation"
+  fi
+}
+
 verify_roles() {
   local operator_id="$1" developers_group_id="$2" runtime_id="$3"
-  local store_id development_vault_id production_vault_id
+  local store_id development_vault_id production_vault_id attachments_container_id attachments_container
   store_id="$(store_resource_id)"
   development_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_DEV_NAME")"
   production_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_PROD_NAME")"
+  attachments_container_id="$(storage_container_resource_id "$ERP_AZURE_STORAGE_DEV_NAME" "$ATTACHMENTS_CONTAINER_NAME")"
+  attachments_container="$ERP_AZURE_STORAGE_DEV_NAME/$ATTACHMENTS_CONTAINER_NAME"
 
   log_step "Role assignments: operator"
   assert_role "operator is App Configuration Data Owner on the store" "$store_id" "$operator_id" "$ROLE_APP_CONFIGURATION_DATA_OWNER"
@@ -164,12 +235,14 @@ verify_roles() {
     assert_role "operator is Key Vault Certificates Officer on $vault_name" "$vault_id" "$operator_id" "$ROLE_KEY_VAULT_CERTIFICATES_OFFICER"
     assert_role "operator is Key Vault Crypto Officer on $vault_name" "$vault_id" "$operator_id" "$ROLE_KEY_VAULT_CRYPTO_OFFICER"
   done
+  assert_role "operator is Storage Blob Data Contributor on container $attachments_container" "$attachments_container_id" "$operator_id" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
 
   log_step "Role assignments: developers group"
   if [[ -n "$developers_group_id" ]]; then
     assert_role "developers group is App Configuration Data Reader on the store" "$store_id" "$developers_group_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
     assert_role "developers group is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_DEV_NAME" "$development_vault_id" "$developers_group_id" "$ROLE_KEY_VAULT_SECRETS_USER"
     assert_role "developers group is Key Vault Crypto User on $ERP_AZURE_KEYVAULT_DEV_NAME" "$development_vault_id" "$developers_group_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
+    assert_role "developers group is Storage Blob Data Contributor on container $attachments_container" "$attachments_container_id" "$developers_group_id" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
   else
     skip "developers group roles: skipped: not configured"
   fi
@@ -594,6 +667,24 @@ verify_label_precedence() {
   fi
 }
 
+verify_blob_service_uri() {
+  log_step "Provisioned endpoints"
+  local description="$BLOB_SERVICE_URI_KEY [$BLOB_SERVICE_URI_LABEL] is the blob endpoint of $ERP_AZURE_STORAGE_DEV_NAME"
+  local endpoint value
+  if ! endpoint="$(az_read storage account show --name "$ERP_AZURE_STORAGE_DEV_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
+    --query primaryEndpoints.blob --output tsv 2>&1)"; then
+    fail "$description (query failed: $(query_error_summary "$endpoint")); $PROVISION_HINT"
+    return 0
+  fi
+  if ! value="$(appconfig_kv_get "$BLOB_SERVICE_URI_KEY" "$BLOB_SERVICE_URI_LABEL" 2>&1)"; then
+    fail "$description (query failed: $(query_error_summary "$value"))"
+  elif [[ -z "$value" ]]; then
+    fail "$description (key absent from the store); $PROVISION_HINT"
+  else
+    assert_equals_exact "$description" "$endpoint" "$value"
+  fi
+}
+
 verify_labels() {
   log_step "Seed files"
   if node "$SEED_FILES_CLI" validate > /dev/null 2>&1; then
@@ -617,6 +708,7 @@ verify_labels() {
   done
 
   verify_label_precedence
+  verify_blob_service_uri
   verify_sentinels
 }
 
@@ -629,6 +721,7 @@ verify_provisioning() {
   verify_store
   verify_vault "$ERP_AZURE_KEYVAULT_DEV_NAME"
   verify_vault "$ERP_AZURE_KEYVAULT_PROD_NAME"
+  verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME"
   verify_roles "$operator_id" "$developers_group_id" "$runtime_id"
   verify_sentinels
 }

@@ -6,7 +6,7 @@ import { repoRoot } from "./lib/walk.ts";
 
 const composeDirectory = join(repoRoot, "infra", "compose");
 const composeFiles = ["-f", "compose.yaml", "-f", "compose.override.yaml"];
-const secretFiles = ["Erp__Platform__Database__ConnectionString", "Erp__Platform__Database__MigratorConnectionString"];
+const secretFiles = ["Erp__Platform__Database__ConnectionString", "Erp__Platform__Database__MigratorConnectionString", "Erp__Platform__Attachments__EncryptionKey"];
 const projectName = "erp-ai-pro-smoke";
 const apiBaseUrl = "http://127.0.0.1:5080";
 const webBaseUrl = "http://127.0.0.1:3000";
@@ -65,7 +65,7 @@ async function verify(check: Check): Promise<string | undefined> {
 
 const missingSecrets = secretFiles.filter((name) => !existsSync(join(composeDirectory, "secrets", name)));
 if (missingSecrets.length > 0) {
-  console.error(`compose smoke: ${missingSecrets.map((name) => `infra/compose/secrets/${name}`).join(" and ")} missing; create them as described in docs/guides/local-development.md`);
+  console.error(`compose smoke: ${new Intl.ListFormat("en", { type: "conjunction" }).format(missingSecrets.map((name) => `infra/compose/secrets/${name}`))} missing; create them as described in docs/guides/local-development.md`);
   process.exit(1);
 }
 
@@ -75,7 +75,7 @@ try {
   failures = [migratorOutcome(), ...(await Promise.all(checks.map(verify)))].filter((f): f is string => f !== undefined);
 } finally {
   if (failures.length > 0) compose("logs", "--no-color", "--tail", "100");
-  compose("down", "--remove-orphans", "--timeout", "10");
+  compose("down", "--remove-orphans", "--volumes", "--timeout", "10");
 }
 
 if (failures.length > 0) {

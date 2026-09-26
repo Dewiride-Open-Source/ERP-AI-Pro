@@ -53,6 +53,8 @@ public sealed class ResultTests
     [InlineData(ErrorKind.NotFound)]
     [InlineData(ErrorKind.Conflict)]
     [InlineData(ErrorKind.Forbidden)]
+    [InlineData(ErrorKind.TooLarge)]
+    [InlineData(ErrorKind.UnsupportedType)]
     [InlineData(ErrorKind.Failure)]
     public void ErrorFactories_StampTheKind(ErrorKind kind)
     {
@@ -62,6 +64,8 @@ public sealed class ResultTests
             ErrorKind.NotFound => Error.NotFound("c", "m"),
             ErrorKind.Conflict => Error.Conflict("c", "m"),
             ErrorKind.Forbidden => Error.Forbidden("c", "m"),
+            ErrorKind.TooLarge => Error.TooLarge("c", "m"),
+            ErrorKind.UnsupportedType => Error.UnsupportedType("c", "m"),
             _ => Error.Failure("c", "m"),
         };
 

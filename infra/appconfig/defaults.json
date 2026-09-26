@@ -32,6 +32,12 @@
         "RetentionPeriod": "1.00:00:00",
         "MaxStoredResponseBytes": "1048576",
         "CleanupInterval": "01:00:00"
+      },
+      "Attachments": {
+        "MaxSizeBytes": "26214400",
+        "AllowedContentTypes": "application/pdf;image/png;image/jpeg;image/gif;image/webp;text/plain;text/csv;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "DownloadLinkLifetime": "00:05:00",
+        "TransferTimeout": "00:10:00"
       }
     }
   }

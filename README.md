@@ -1,6 +1,6 @@
 # ERP-AI-Pro
 
-Open-source ERP for a small Indian private-limited software company, built by [Dewiride](https://github.com/Dewiride-Open-Source). A modular monolith on .NET 10 with a Next.js 16 web application, signed in through Microsoft Entra ID, configured from Azure App Configuration and Key Vault, and deployed with Docker Compose on the company's own server.
+Open-source ERP for a small Indian private-limited software company, built by [Dewiride](https://github.com/Dewiride-Open-Source). A modular monolith on .NET 10 with a Next.js 16 web application, signed in through Microsoft Entra ID, configured from Azure App Configuration and Key Vault, keeping attachments encrypted in Azure Blob Storage, and deployed with Docker Compose on the company's own server.
 
 The roadmap runs from user management through clients, vendors, GST-compliant finance, Indian statutory payroll, timesheets, HR and integrations, with AI capabilities woven into every module. See [docs/roadmap/ROADMAP.md](docs/roadmap/ROADMAP.md) for what is done, in progress and planned.
 
@@ -12,6 +12,7 @@ The roadmap runs from user management through clients, vendors, GST-compliant fi
 | Frontend | Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4, shadcn/ui, light + dark theme |
 | Identity | Microsoft Entra ID (workforce tenant), backend-for-frontend cookie session |
 | Data | SQL Server (owner's instance for development), Azure SQL in production |
+| Files | Azure Blob Storage (one Entra-only account per environment), encrypted by the API before upload and streamed back through it; the Azurite emulator for tests and the local containers |
 | Configuration | Azure App Configuration (labels per environment) + Azure Key Vault |
 | Observability | OpenTelemetry, Aspire dashboard locally |
 | Testing | xUnit v3 on Microsoft.Testing.Platform, ArchUnitNET, Playwright (desktop + mobile, light + dark) |
@@ -20,7 +21,7 @@ The roadmap runs from user management through clients, vendors, GST-compliant fi
 ## Repository map
 
 ```
-backend/     .NET solution — BuildingBlocks/, Hosts/{Api,HealthProbe}, Modules/<Domain>/<Module>/, Tests/
+backend/     .NET solution — BuildingBlocks/, Hosts/{Api,Composition,HealthProbe,Migrator}, Modules/<Domain>/<Module>/, Tests/
 frontend/    pnpm workspace — apps/web (Next.js), packages/{api-client,config,ui}, e2e (Playwright)
 infra/       Dockerfiles and Compose files
 scripts/     roadmap CLI, verification runner, repository checks, API client generation (Node 24, zero dependencies)
@@ -30,7 +31,7 @@ docs/        roadmap, architecture, guides, operations, ADRs, configuration and 
 
 ## Quick start
 
-Prerequisites: .NET SDK 10, Node.js 24, pnpm 12 (`npm i -g pnpm@12`), Docker Desktop. Details in [docs/guides/local-development.md](docs/guides/local-development.md).
+Prerequisites: .NET SDK 10, Node.js 24, pnpm 12 (`npm i -g pnpm@12`), Docker Desktop, SQL Server 2025 Developer, and the Azure CLI signed in to the Dewiride tenant (the API keeps attachments in the development storage account as your own identity). The API refuses to start without its database connection string and the attachments storage endpoint and encryption key, which come from App Configuration or `dotnet user-secrets`; [docs/guides/local-development.md](docs/guides/local-development.md) sets them up, including the Azurite container and the two variables the backend tests need (`ERP_TEST_SQL_CONNECTION`, `ERP_TEST_BLOB_EMULATOR_HOST`).
 
 ```bash
 # API on http://localhost:5080 (health, /api/platform/system-info, /scalar)
@@ -44,11 +45,11 @@ cd frontend && pnpm install --frozen-lockfile && pnpm dev
 
 | Task | Command |
 |---|---|
-| Backend build + tests | `cd backend && dotnet build -warnaserror && dotnet test --solution Dewiride.Erp.slnx` |
+| Backend build + tests | `cd backend && dotnet build -warnaserror && dotnet test --solution Dewiride.Erp.slnx` (needs `ERP_TEST_SQL_CONNECTION`, `ERP_TEST_BLOB_EMULATOR_HOST` and Azurite running) |
 | Frontend lint, typecheck, build | `cd frontend && pnpm lint && pnpm typecheck && pnpm build` |
-| API contract + web client | `node scripts/api-client/generate.ts` (refreshes `docs/openapi/erp.json`, regenerates `frontend/packages/api-client`) · `node scripts/api-client/drift.ts` |
+| API contract + web client | `node scripts/api-client/generate.ts` (refreshes `docs/openapi/erp.json` through the API test host, so it needs the same two test variables, and regenerates `frontend/packages/api-client`) · `node scripts/api-client/drift.ts` |
 | End-to-end tests | `cd frontend && pnpm e2e` (installs browsers with `pnpm e2e:install`) |
-| Containers | `docker compose -f infra/compose/compose.yaml -f infra/compose/compose.override.yaml up -d --build --wait` |
+| Containers | `docker compose -f infra/compose/compose.yaml -f infra/compose/compose.override.yaml up -d --build --wait` (needs the git-ignored secret files under `infra/compose/secrets/`) |
 | Roadmap | `node scripts/roadmap/roadmap.ts next` · `start <id>` · `done <id>` · `build` · `check` |
 | Full verification | `node scripts/verify/verify.ts [--e2e] [--docker]` |
 

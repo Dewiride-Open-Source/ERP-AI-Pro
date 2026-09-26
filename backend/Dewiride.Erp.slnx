@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/BuildingBlocks/">
     <Project Path="BuildingBlocks/Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
+    <Project Path="BuildingBlocks/Attachments/Dewiride.Erp.BuildingBlocks.Attachments/Dewiride.Erp.BuildingBlocks.Attachments.csproj" />
     <Project Path="BuildingBlocks/Caching/Dewiride.Erp.BuildingBlocks.Caching/Dewiride.Erp.BuildingBlocks.Caching.csproj" />
     <Project Path="BuildingBlocks/Configuration/Dewiride.Erp.BuildingBlocks.Configuration/Dewiride.Erp.BuildingBlocks.Configuration.csproj" />
     <Project Path="BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
@@ -15,6 +16,14 @@
     <Project Path="Hosts/Composition/Dewiride.Erp.Host.Composition/Dewiride.Erp.Host.Composition.csproj" />
     <Project Path="Hosts/HealthProbe/Dewiride.Erp.Host.HealthProbe/Dewiride.Erp.Host.HealthProbe.csproj" />
     <Project Path="Hosts/Migrator/Dewiride.Erp.Host.Migrator/Dewiride.Erp.Host.Migrator.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/Attachments/">
+    <Project Path="Modules/Platform/Attachments/Contracts/Dewiride.Erp.Modules.Platform.Attachments.Contracts/Dewiride.Erp.Modules.Platform.Attachments.Contracts.csproj" />
+    <Project Path="Modules/Platform/Attachments/Module/Dewiride.Erp.Modules.Platform.Attachments/Dewiride.Erp.Modules.Platform.Attachments.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/Attachments/Tests/">
+    <Project Path="Modules/Platform/Attachments/Tests/UnitTests/Dewiride.Erp.Modules.Platform.Attachments.UnitTests/Dewiride.Erp.Modules.Platform.Attachments.UnitTests.csproj" />
+    <Project Path="Modules/Platform/Attachments/Tests/IntegrationTests/Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests/Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/Modules/Platform/SystemInfo/">
     <Project Path="Modules/Platform/SystemInfo/Contracts/Dewiride.Erp.Modules.Platform.SystemInfo.Contracts/Dewiride.Erp.Modules.Platform.SystemInfo.Contracts.csproj" />

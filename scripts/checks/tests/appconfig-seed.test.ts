@@ -89,6 +89,30 @@ test('a value carrying a store, vault, SQL host, connection string, credential o
   assert.ok(problems.every((p) => p.includes('environment identifiers and credentials stay out of the repository')));
 });
 
+test('a value carrying a blob endpoint is reported', () => {
+  const data = wellFormed();
+  data.defaults.set('Erp:Platform:Attachments:Endpoint', 'https://sterpaiprodev.blob.core.windows.net/');
+  data.labelled['local-dev'].set('Erp:Platform:Host:ApplicationName', 'STERPAIPRODEV.BLOB.CORE.WINDOWS.NET');
+  assert.deepEqual(validateSeedData(data), [
+    "defaults.json: value of 'Erp:Platform:Attachments:Endpoint' carries a blob endpoint; environment identifiers and credentials stay out of the repository",
+    "local-dev.json: value of 'Erp:Platform:Host:ApplicationName' carries a blob endpoint; environment identifiers and credentials stay out of the repository",
+  ]);
+});
+
+test('a shared access signature in a query string is reported as a credential', () => {
+  const data = wellFormed();
+  data.defaults.set('Erp:Platform:Host:Report', 'https://files.example.test/report.pdf?sv=2026-06-06&se=2026-10-01T00%3A00%3A00Z&sp=r&sig=abc');
+  data.defaults.set('Erp:Platform:Host:Download', 'https://files.example.test/report.pdf?sig=abc');
+  data.defaults.set('Erp:Platform:Host:Callback', 'https://files.example.test/hook?user=erp&token=abc');
+  data.defaults.set('Erp:Platform:Host:Search', 'https://files.example.test/search?q=invoice&page=2');
+  const problems = validateSeedData(data);
+  assert.deepEqual(problems, [
+    "defaults.json: value of 'Erp:Platform:Host:Report' carries a credential; environment identifiers and credentials stay out of the repository",
+    "defaults.json: value of 'Erp:Platform:Host:Download' carries a credential; environment identifiers and credentials stay out of the repository",
+    "defaults.json: value of 'Erp:Platform:Host:Callback' carries a credential; environment identifiers and credentials stay out of the repository",
+  ]);
+});
+
 test('a secret-like key seeded as a plain value is reported', () => {
   const data = wellFormed();
   data.defaults.set('Erp:Platform:Mail:Password', 'x');
@@ -98,6 +122,43 @@ test('a secret-like key seeded as a plain value is reported', () => {
   const problems = validateSeedData(data);
   assert.equal(problems.length, 4);
   assert.ok(problems.every((p) => p.includes('names a secret; seed it as a Key Vault reference')));
+});
+
+test('an encryption key or a list of retired encryption keys seeded as a plain value is reported', () => {
+  const data = wellFormed();
+  data.defaults.set('Erp:Platform:Attachments:EncryptionKey', 'dev-1:placeholder');
+  data.labelled['local-dev'].set('Erp:Platform:Attachments:EncryptionKey', 'dev-2:placeholder');
+  data.defaults.set('Erp:Platform:Attachments:RetiredEncryptionKeys', 'dev-0:placeholder');
+  data.defaults.set('Erp:Platform:Attachments:EncryptionKeyRotation', 'manual');
+  assert.deepEqual(validateSeedData(data), [
+    "defaults.json: key 'Erp:Platform:Attachments:EncryptionKey' names a secret; seed it as a Key Vault reference, never as a plain value",
+    "defaults.json: key 'Erp:Platform:Attachments:RetiredEncryptionKeys' names a secret; seed it as a Key Vault reference, never as a plain value",
+    "local-dev.json: key 'Erp:Platform:Attachments:EncryptionKey' names a secret; seed it as a Key Vault reference, never as a plain value",
+  ]);
+});
+
+test('the attachments emulator host is host-local and never seeded', () => {
+  const data = wellFormed();
+  data.defaults.set('Erp:Platform:Attachments:EmulatorHost', 'azurite');
+  assert.deepEqual(validateSeedData(data), [
+    "defaults.json: key 'Erp:Platform:Attachments:EmulatorHost' is host-local and must not be seeded",
+  ]);
+});
+
+test('provision.sh-owned keys are never seeded, neither as a value nor as a reference', () => {
+  const data = wellFormed();
+  data.defaults.set('Erp:Platform:Attachments:BlobServiceUri', 'https://storage.example.test/');
+  data.labelled['local-dev'].set('Erp:Platform:Attachments:BlobServiceUri', 'https://storage.example.test/dev/');
+  data.references.push({ key: 'Erp:Platform:Attachments:BlobServiceUri', secret: 'Erp--Platform--Attachments--BlobServiceUri', labels: ['production'] });
+  const problems = validateSeedData(data);
+  assert.deepEqual(
+    problems.filter((p) => p.includes('written by scripts/azure/provision.sh')),
+    [
+      "defaults.json: key 'Erp:Platform:Attachments:BlobServiceUri' is written by scripts/azure/provision.sh and must not be seeded",
+      "local-dev.json: key 'Erp:Platform:Attachments:BlobServiceUri' is written by scripts/azure/provision.sh and must not be seeded",
+      "key-vault-references.json: key 'Erp:Platform:Attachments:BlobServiceUri' is written by scripts/azure/provision.sh and must not be seeded",
+    ],
+  );
 });
 
 test('bootstrap-only, host-local and entra.sh-owned keys are never seeded', () => {
@@ -210,12 +271,15 @@ test('the command line prints tab-separated rows and validates a directory', () 
   assert.deepEqual(flags.stdout.trim().split('\n'), [
     'Erp.Modules.Platform.SystemInfo\tlocal-dev\ttrue',
     'Erp.Modules.Platform.SystemInfo\tproduction\ttrue',
+    'Erp.Modules.Platform.Attachments\tlocal-dev\ttrue',
+    'Erp.Modules.Platform.Attachments\tproduction\ttrue',
   ]);
   const references = run('references', join(seedDirectory, 'key-vault-references.json'));
   assert.equal(references.status, 0);
   assert.deepEqual(references.stdout.trim().split('\n'), [
     'Erp:Platform:Identity:ClientCertificate\tErp--Platform--Identity--ClientCertificate\tlocal-dev,production',
     'Erp:Platform:Database:ConnectionString\tErp--Platform--Database--ConnectionString\tlocal-dev',
+    'Erp:Platform:Attachments:EncryptionKey\tErp--Platform--Attachments--EncryptionKey\tlocal-dev',
   ]);
   assert.equal(run('validate', seedDirectory).status, 0);
 

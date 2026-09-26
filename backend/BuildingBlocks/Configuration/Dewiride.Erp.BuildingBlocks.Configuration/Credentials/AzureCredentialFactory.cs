@@ -2,7 +2,7 @@ using Azure.Core;
 using Azure.Identity;
 using Microsoft.Extensions.Hosting;
 
-namespace Dewiride.Erp.BuildingBlocks.Configuration.AppConfiguration;
+namespace Dewiride.Erp.BuildingBlocks.Configuration.Credentials;
 
 internal static class AzureCredentialFactory
 {

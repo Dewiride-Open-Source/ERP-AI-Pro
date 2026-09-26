@@ -12,10 +12,15 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      Erp__Platform__Attachments__EmulatorHost: azurite
     extra_hosts:
       - host.docker.internal:host-gateway
     secrets:
       - Erp__Platform__Database__ConnectionString
+      - Erp__Platform__Attachments__EncryptionKey
+    depends_on:
+      azurite:
+        condition: service_healthy
     ports:
       - "127.0.0.1:5080:8080"
 
@@ -25,6 +30,22 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
     ports:
       - "127.0.0.1:3000:3000"
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.37.0@sha256:830430c1da1a2d537e08f3e6764dd1f5ae00cf0346bcaf625b968ec3f0971fd5
+    command: ["azurite-blob", "--blobHost", "0.0.0.0", "--blobPort", "10000", "--location", "/data", "--disableTelemetry"]
+    volumes:
+      - azurite-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').connect(10000, '127.0.0.1').on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      start_interval: 1s
+      retries: 3
+    networks:
+      - erp
+    restart: unless-stopped
 
   aspire-dashboard:
     image: mcr.microsoft.com/dotnet/aspire-dashboard:13@sha256:0ef531119b8073aed12b0db2b4e4ab02866c6c69b7a52264269abd00cfb48a34
@@ -37,8 +58,13 @@ services:
       - "127.0.0.1:18888:18888"
     restart: unless-stopped
 
+volumes:
+  azurite-data:
+
 secrets:
   Erp__Platform__Database__ConnectionString:
     file: ./secrets/Erp__Platform__Database__ConnectionString
   Erp__Platform__Database__MigratorConnectionString:
     file: ./secrets/Erp__Platform__Database__MigratorConnectionString
+  Erp__Platform__Attachments__EncryptionKey:
+    file: ./secrets/Erp__Platform__Attachments__EncryptionKey

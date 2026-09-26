@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dewiride.Erp.BuildingBlocks.UnitTests" />
+    <InternalsVisibleTo Include="Dewiride.Erp.BuildingBlocks.IntegrationTests" />
+    <InternalsVisibleTo Include="Dewiride.Erp.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="../../Kernel/Dewiride.Erp.BuildingBlocks.Kernel/Dewiride.Erp.BuildingBlocks.Kernel.csproj" />
+    <ProjectReference Include="../../Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" />
+  </ItemGroup>
+
+</Project>

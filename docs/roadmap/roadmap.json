@@ -543,10 +543,19 @@
           "id": "backend-platform-attachments-building-block",
           "title": "Attachments building block",
           "scope": "Add backend/BuildingBlocks/Attachments with an IDocumentStore abstraction backed by an encrypted, content-addressed Docker volume, metadata in a `files` schema, size and content-type allow-list, virus-scan hook interface, authorised time-limited download endpoint, upload endpoint and a frontend/packages/ui upload component, so every business module stores real files from day one and `documents` extends rather than replaces it.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "done",
+          "acceptance": [
+            "POST /api/platform/attachments streams one multipart file into the Azure Blob Storage container named by Erp:Platform:Attachments (the Entra-only development account for local runs, Azurite in tests and CI) as an AES-256-GCM envelope under a per-file data key wrapped by the Key Vault encryption key, records it in the files schema, stores identical content once, and answers 413 over MaxSizeBytes, 415 for a content type outside the allow-list or whose leading bytes do not match it and 400 for an empty file, as ProblemDetails, without leaving a committed blob behind",
+            "A download link from POST /api/platform/attachments/{id}/download-links streams the original bytes with the original file name and content type until DownloadLinkLifetime passes and records each download; a tampered, expired, other-actor or deleted-attachment link answers 404, and a stored file whose envelope fails authentication answers 404 before any byte is sent",
+            "The virus-scan hook runs on every upload: without a scanner the attachment records notScanned, a clean verdict records clean, and an infected verdict answers 422 attachment.infected and stores nothing",
+            "The web /platform/attachments page uploads through the shared drop-zone component with progress, lists, downloads and deletes attachments, refuses an oversized or disallowed file before sending it, and is covered by Playwright on desktop and mobile in light and dark with screenshots, including the disabled-flag and unavailable-API states",
+            "ADR-0022 records Azure Blob Storage as the store (over a Docker volume and Azure Files), the envelope format, the key source and rotation, the storage layout and the download-link design; the development storage account, its encryption key and the seeded settings are provisioned with the owner's consent and verified by a real round trip, and production storage is left to the first-deployment phase"
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-26",
+          "completedOn": "2026-09-26",
+          "notes": "BuildingBlocks.Attachments (Azure Blob Storage, Entra-only account per environment, Azurite in tests/CI/compose; AES-256-GCM envelope under a Key Vault key; files schema with verified deduplication, upload reservations, actor-bound DB-backed download links and recorded redemptions; AttachmentsSweeper; upload concurrency cap) and the Platform/Attachments module and /platform/attachments page exist; ADR-0022. Development account sterpaiprodev, its key, the tunables, the Attachments flag and the local-dev rate-limit allowance were provisioned and seeded with the owner's consent on 2026-09-26 and verified by a real round trip; production storage is first-deployment-production-attachments-storage. Verification review: 29 findings, 23 confirmed and fixed, 6 refuted. Proof: verify.ts --docker green (1668 .NET tests), Playwright 144 passed across five browser projects against the development account."
         }
       ]
     },
@@ -584,7 +593,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-attachments-building-block: frontend/packages/ui/src/components/upload/file-drop-zone.tsx (FileDropZone, checkFile) and frontend/apps/web/src/shared/api/upload.ts already provide the drop zone and the progress upload; the forms kit wraps them rather than adding a second file input."
         },
         {
           "id": "web-foundation-data-table-kit-core",
@@ -633,7 +643,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-rate-limiting-output-caching-and-health (ADR-0019): call UseAuthentication() explicitly between UseErpEndpointPipeline() and UseErpRateLimiting(), and UseAuthorization() and UseAntiforgery() after it, so a signed-in caller is rate-limited per actor instead of per address; no named rate-limit policy exists yet, so decide there whether the sign-in endpoints need a stricter one."
+          "notes": "From backend-platform-rate-limiting-output-caching-and-health (ADR-0019): call UseAuthentication() explicitly between UseErpEndpointPipeline() and UseErpRateLimiting(), and UseAuthorization() and UseAntiforgery() after it, so a signed-in caller is rate-limited per actor instead of per address; no named rate-limit policy exists yet, so decide there whether the sign-in endpoints need a stricter one. From backend-platform-attachments-building-block (ADR-0022): remove AllowAnonymous from the seven /api/platform/attachments routes (and their entries in ModuleCatalogTests.AnonymousRouteWhitelist and docs/routing.md) and require platform.attachments.files.upload, .read and .delete; download links are bound to the IActorContext actor that created them, so once sign-in exists a link works only for the signed-in person who asked for it; the web Server Functions createDownloadLink and deleteAttachment must re-check the session before calling the API."
         },
         {
           "id": "authentication-token-cache-and-data-protection-key",
@@ -652,7 +662,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "The web API client forwards only cookie, traceparent, tracestate and x-correlation-id (frontend/apps/web/src/shared/api/forwarded-headers.ts, used by shared/api/client.ts). When antiforgery lands, add the X-XSRF-TOKEN header read from the antiforgery cookie there for unsafe methods, with a web unit test and a Playwright proof, and document it in docs/architecture/http-conventions.md; ADR-0017 defers it to this sub-phase."
+          "notes": "The web API client forwards only cookie, traceparent, tracestate and x-correlation-id (frontend/apps/web/src/shared/api/forwarded-headers.ts, used by shared/api/client.ts). When antiforgery lands, add the X-XSRF-TOKEN header read from the antiforgery cookie there for unsafe methods, with a web unit test and a Playwright proof, and document it in docs/architecture/http-conventions.md; ADR-0017 defers it to this sub-phase. From backend-platform-attachments-building-block: the browser uploads files itself through frontend/apps/web/src/shared/api/upload.ts (XMLHttpRequest multipart POST to /api/platform/attachments), so that request must carry X-XSRF-TOKEN as well; the upload endpoint binds no form, so the header check is the only antiforgery check it gets."
         },
         {
           "id": "authentication-session-endpoints-openapi-security-and-bearer",
@@ -801,7 +811,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-transport-security-middleware: the API is called under three host names in production - the public host name (the edge proxy routes /api/* straight to api:8080 and passes the browser's Host through), api (the web container's server-side calls to http://api:8080) and 127.0.0.1 (the container health probe) - so the production value of Erp:Platform:Host:AllowedHosts is <public host name>;api;127.0.0.1, and Erp:Platform:Host:KnownNetworks must list the compose network so forwarded client addresses are trusted; an empty list trusts no proxy. Never set ASPNETCORE_FORWARDEDHEADERS_ENABLED."
+          "notes": "From backend-platform-transport-security-middleware: the API is called under three host names in production - the public host name (the edge proxy routes /api/* straight to api:8080 and passes the browser's Host through), api (the web container's server-side calls to http://api:8080) and 127.0.0.1 (the container health probe) - so the production value of Erp:Platform:Host:AllowedHosts is <public host name>;api;127.0.0.1, and Erp:Platform:Host:KnownNetworks must list the compose network so forwarded client addresses are trusted; an empty list trusts no proxy. Never set ASPNETCORE_FORWARDEDHEADERS_ENABLED. From backend-platform-attachments-building-block (ADR-0022): attachments live in Azure Blob Storage, so the stack needs no attachments volume; the production api reads Erp:Platform:Attachments:BlobServiceUri and the EncryptionKey reference from the production label that first-deployment-production-attachments-storage creates, and the edge proxy must pass /api/platform/attachments uploads of up to MaxSizeBytes plus 64 KiB and allow transfers of up to Erp:Platform:Attachments:TransferTimeout."
         },
         {
           "id": "first-deployment-production-database-provisioning",
@@ -812,6 +822,15 @@
           "tags": [],
           "dependsOn": [],
           "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): create the migrator service principal (certificate file erp-migrator-client.pem, id in MIGRATOR_AZURE_CLIENT_ID) with App Configuration Data Reader and Key Vault Secrets User on the production store and vault, its contained database user with the schema role, the secret Erp--Platform--Database--MigratorConnectionString in kv-erp-ai-pro-prod and its production-label reference Erp:Platform:Database:MigratorConnectionString; compose.production.yaml already runs the migrator service with that identity."
+        },
+        {
+          "id": "first-deployment-production-attachments-storage",
+          "title": "Production attachments storage",
+          "scope": "Provision the production storage account for attachments with the existing storage-account Bicep module (Entra only, private attachments container, blob and container soft delete, CanNotDelete lock) after asking the owner for its redundancy (locally redundant, zone-redundant across three Central India zones, or geo-redundant) and its soft-delete retention; grant Storage Blob Data Contributor on the container to the runtime service principal only; create Erp--Platform--Attachments--EncryptionKey in kv-erp-ai-pro-prod with its own value; write Erp:Platform:Attachments:BlobServiceUri and the EncryptionKey reference under the production label; optionally restrict the account to the server's fixed address; extend verify.sh to production; and prove a production upload and download round trip.",
+          "status": "planned",
+          "acceptance": [],
+          "tags": [],
+          "dependsOn": []
         },
         {
           "id": "first-deployment-host-bootstrap-runbook-and-scripts",
@@ -830,7 +849,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-rate-limiting-output-caching-and-health (ADR-0019): the edge proxy must append the client address to X-Forwarded-For on requests it passes to both the API and the web container, because the web container forwards the last entry on its server-side API calls and the API rate-limits anonymous callers by it; the web container must be reachable only through the proxy."
+          "notes": "From backend-platform-attachments-building-block (ADR-0022): /api/* must reach the API directly, never through the web container, whose standalone server buffers every body it proxies to Next.js's 10 MB default (proxyClientMaxBodySize is raised only for next dev and next start); limit request bodies to MaxSizeBytes plus 64 KiB on the attachments upload and to Erp:Platform:Host:MaxRequestBodyBytes elsewhere on /api, keep a small limit on web routes, and turn request buffering off for the upload and the content download so they stream. Adding the proxy to the local compose stack also ends the local limit: an upload over 10 MB through the web container's own /api rewrite gets no answer."
         },
         {
           "id": "first-deployment-release-and-deploy-pipeline",
@@ -858,7 +877,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-attachments-building-block (ADR-0022): attachments live in Azure Blob Storage, not on a volume, so their backup is the account's redundancy plus blob and container soft delete (versioning or point-in-time restore only if the owner chooses the extra cost), and the drill restores a deleted blob and a deleted container; the attachments encryption key in Key Vault (soft delete and purge protection) is as critical as the data, because losing it makes every attachment it wrapped unreadable."
         },
         {
           "id": "first-deployment-go-live-checklist-and-production-smoke",
@@ -867,7 +887,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-attachments-building-block: the owner deferred the attachment virus scanner on 2026-09-26 (uploads record notScanned); decide before go-live between Microsoft Defender for Storage malware scanning (about 935 INR per storage account per month plus about 14 INR per GB scanned, asynchronous, and only possible if the stored bytes are not encrypted by the API) and a scanner on the server behind IAttachmentScanner (needs the owner's approval of a non-Microsoft package or image)."
         }
       ]
     },
@@ -2207,7 +2228,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-attachments-building-block (ADR-0022): build on BuildingBlocks.Attachments and IAttachmentService. Deleting an attachment only soft-deletes its row and keeps its content, and identical uploads share one StoredContent, so the retention job must purge a blob and its StoredContents row only when no attachment row references it any more, must honour DPDP erasure requests, and must re-wrap envelopes before a retired encryption key is removed (files.StoredContents.KeyId lists the content each key still protects); files.DownloadRedemptions is the read record until the audit-trail building block exists."
         },
         {
           "id": "documents-generated-documents-service",

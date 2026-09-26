@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Dewiride.Erp.BuildingBlocks.Persistence.Seeding;
@@ -13,7 +14,11 @@ public sealed class MigratorApplicationTests
 {
     private const string UnreachableServer = "Server=127.0.0.1,1;Database=ErpAiPro;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;Connect Timeout=1";
 
-    private static readonly string[] Schemas = ["platform_idempotency", "platform_system_info"];
+    private const string FilesSchema = "files";
+
+    private static readonly string[] Schemas = [FilesSchema, "platform_idempotency", "platform_system_info"];
+
+    private static readonly string[] FilesTables = ["Attachments", "DownloadLinks", "DownloadRedemptions", "StoredContents", "UploadReservations"];
 
     [Fact]
     public async Task RunAsync_MigrateOnAFreshDatabase_AppliesEveryCatalogueContext()
@@ -29,6 +34,22 @@ public sealed class MigratorApplicationTests
         }
 
         Assert.Equal(MigratorExitCodes.Succeeded, await RunAsync([MigratorApplication.StatusCommand], database.ConnectionString));
+    }
+
+    [Fact]
+    public async Task RunAsync_MigrateWithoutAnyAttachmentSetting_SucceedsAndCreatesTheFilesTables()
+    {
+        await using var database = await EmptyTestDatabase.CreateAsync();
+        var attachmentSettingsPresent = true;
+
+        var exitCode = await RunAsync(
+            [MigratorApplication.MigrateCommand],
+            database.ConnectionString,
+            inspectConfiguration: configuration => attachmentSettingsPresent = configuration.GetSection(AttachmentsOptions.SectionName).Exists());
+
+        Assert.False(attachmentSettingsPresent, $"The test process supplies {AttachmentsOptions.SectionName} settings, so this test cannot prove the migrator runs without them.");
+        Assert.Equal(MigratorExitCodes.Succeeded, exitCode);
+        Assert.Equal(FilesTables, await ListTablesAsync(database.ConnectionString, FilesSchema));
     }
 
     [Fact]
@@ -170,6 +191,7 @@ public sealed class MigratorApplicationTests
         Dictionary<string, string?>? settings = null,
         Action<IServiceCollection>? configureServices = null,
         bool useInMemorySource = true,
+        Action<IConfiguration>? inspectConfiguration = null,
         CancellationToken? cancellationToken = null) =>
         MigratorApplication.RunAsync(args, builder =>
         {
@@ -180,6 +202,7 @@ public sealed class MigratorApplicationTests
                 [$"{DatabaseOptions.SectionName}:{nameof(DatabaseOptions.ConnectionString)}"] = connectionString,
             });
             configureServices?.Invoke(builder.Services);
+            inspectConfiguration?.Invoke(builder.Configuration);
         }, cancellationToken ?? TestContext.Current.CancellationToken);
 
     private static async Task<int> CountAllAppliedAsync(string connectionString)
@@ -200,6 +223,24 @@ public sealed class MigratorApplicationTests
         await using var command = new SqlCommand("SELECT COUNT(*) FROM sys.tables WHERE name = N'__EFMigrationsHistory'", connection);
 
         return (int)(await command.ExecuteScalarAsync(TestContext.Current.CancellationToken))!;
+    }
+
+    private static async Task<string[]> ListTablesAsync(string connectionString, string schema)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new SqlCommand(
+            "SELECT t.name FROM sys.tables t JOIN sys.schemas s ON s.schema_id = t.schema_id WHERE s.name = @schema AND t.name <> N'__EFMigrationsHistory'",
+            connection);
+        command.Parameters.AddWithValue("@schema", schema);
+        await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+        var tables = new List<string>();
+        while (await reader.ReadAsync(TestContext.Current.CancellationToken))
+        {
+            tables.Add(reader.GetString(0));
+        }
+
+        return [.. tables.Order(StringComparer.Ordinal)];
     }
 
     private static async Task<int> CountAppliedAsync(string connectionString, string schema)
