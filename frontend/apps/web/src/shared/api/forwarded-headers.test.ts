@@ -23,7 +23,8 @@ test("forwardedHeaders_OtherIncomingHeaders_AreNotForwarded", () => {
   const incoming = new Headers({
     authorization: "Bearer should-not-leave",
     host: "erp.example",
-    "x-forwarded-for": "203.0.113.7",
+    "x-forwarded-host": "evil.example",
+    "x-forwarded-proto": "https",
     accept: "text/html",
   });
 
@@ -32,4 +33,20 @@ test("forwardedHeaders_OtherIncomingHeaders_AreNotForwarded", () => {
 
 test("forwardedHeaders_EmptyValue_IsNotForwarded", () => {
   assert.deepEqual(forwardedHeaders(new Headers({ cookie: "" })), {});
+});
+
+test("forwardedHeaders_ForwardedChain_ForwardsOnlyTheAddressTheEdgeProxyAppended", () => {
+  const incoming = new Headers({ "x-forwarded-for": "198.51.100.1, 203.0.113.7" });
+
+  assert.deepEqual(forwardedHeaders(incoming), { "x-forwarded-for": "203.0.113.7" });
+});
+
+test("forwardedHeaders_SingleForwardedAddress_ForwardsItTrimmed", () => {
+  const incoming = new Headers({ "x-forwarded-for": " 2001:db8::7 " });
+
+  assert.deepEqual(forwardedHeaders(incoming), { "x-forwarded-for": "2001:db8::7" });
+});
+
+test("forwardedHeaders_BlankLastForwardedEntry_IsNotForwarded", () => {
+  assert.deepEqual(forwardedHeaders(new Headers({ "x-forwarded-for": "203.0.113.7, " })), {});
 });

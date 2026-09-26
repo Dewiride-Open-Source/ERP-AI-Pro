@@ -32,5 +32,6 @@
 | [0016](adr/0016-application-pipeline-and-idempotency.md) | The application pipeline, the unit of work, query contracts and idempotency keys |
 | [0017](adr/0017-http-conventions-openapi-snapshot-and-generated-client.md) | HTTP conventions, the committed OpenAPI document and the generated TypeScript client |
 | [0018](adr/0018-transport-security-and-the-request-pipeline-order.md) | Transport security and the request pipeline order |
+| [0019](adr/0019-rate-limiting-reference-data-caching-and-health.md) | Rate limiting, reference-data caching and health checks |
 
 New decisions use [0000-template.md](adr/0000-template.md).

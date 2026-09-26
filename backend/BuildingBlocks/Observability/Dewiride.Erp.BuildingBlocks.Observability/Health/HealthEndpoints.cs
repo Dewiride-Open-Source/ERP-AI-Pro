@@ -18,16 +18,28 @@ public static class HealthEndpoints
 
     public const string UnhealthyTitle = "A dependency of the API is unavailable.";
 
+    // Below the container probe's 3-second client timeout, so a hung dependency still yields an answer the probe reads.
+    public static readonly TimeSpan CheckTimeout = TimeSpan.FromSeconds(2);
+
     public static IHostApplicationBuilder AddErpHealthChecks(this IHostApplicationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         var checks = builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: [ReadyTag]);
 
+        // The API keeps serving from the configuration it last loaded when the store is unreachable, so the store only degrades readiness.
         if (builder.GetErpConfigurationInfo().Source == ErpConfigurationSource.AppConfiguration)
         {
-            checks.AddAzureAppConfiguration(name: "app-configuration", tags: [ReadyTag]);
+            checks.AddAzureAppConfiguration(name: "app-configuration", failureStatus: HealthStatus.Degraded, tags: [ReadyTag]);
         }
+
+        builder.Services.PostConfigure<HealthCheckServiceOptions>(static options =>
+        {
+            foreach (var registration in options.Registrations.Where(registration => registration.Timeout == Timeout.InfiniteTimeSpan))
+            {
+                registration.Timeout = CheckTimeout;
+            }
+        });
 
         return builder;
     }
@@ -36,8 +48,12 @@ public static class HealthEndpoints
     {
         ArgumentNullException.ThrowIfNull(endpoints);
 
-        endpoints.MapHealthChecks("/healthz/live", new HealthCheckOptions { Predicate = _ => false, ResponseWriter = WriteAsync });
-        endpoints.MapHealthChecks("/healthz/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains(ReadyTag), ResponseWriter = WriteAsync });
+        endpoints.MapHealthChecks("/healthz/live", new HealthCheckOptions { Predicate = _ => false, ResponseWriter = WriteAsync })
+            .DisableRateLimiting()
+            .DisableHttpMetrics();
+        endpoints.MapHealthChecks("/healthz/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains(ReadyTag), ResponseWriter = WriteAsync })
+            .DisableRateLimiting()
+            .DisableHttpMetrics();
 
         return endpoints;
     }

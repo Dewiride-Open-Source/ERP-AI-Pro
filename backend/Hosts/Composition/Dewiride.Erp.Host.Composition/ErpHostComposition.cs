@@ -1,4 +1,5 @@
 using System.Reflection;
+using Dewiride.Erp.BuildingBlocks.Caching;
 using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Idempotency;
 using Dewiride.Erp.BuildingBlocks.Modules;
@@ -17,6 +18,7 @@ public static class ErpHostComposition
 
         builder.UseOfflineConfigurationAtDesignTime();
         builder.AddErpConfiguration(hostAssembly);
+        builder.AddErpCaching();
         builder.AddErpPersistence();
         builder.AddErpIdempotency();
         builder.AddModules(Modules.All);

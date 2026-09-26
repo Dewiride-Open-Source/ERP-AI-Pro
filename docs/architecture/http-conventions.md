@@ -53,7 +53,7 @@ public sealed record ListRecentStartupsRequest(
 ## The OpenAPI document
 
 - Built by `Hosts/Api/OpenApi/OpenApiSetup` with `ErpOpenApiOptions.Configure`: OpenAPI 3.1, title `ERP-AI-Pro API`, version `1.0`, no `servers` entry. Development serves it at `/openapi/erp.json` with the Scalar reference at `/scalar`; Production maps neither.
-- Every module route group documents the 400 validation problem and the 404, 500 and 504 (`request.timeout`) problems; an endpoint declares any other status it answers with `ProducesProblem`.
+- Every module route group documents the 400 validation problem and the 404, 429 (`rate-limit.exceeded`), 500 and 504 (`request.timeout`) problems; an endpoint declares any other status it answers with `ProducesProblem`.
 - Operations are described with `.WithName("<Domain>.<Module>.<Action>")` and `.WithSummary(…)`. Response records stay internal to the module, so their XML comments do not reach the document.
 - `docs/openapi/erp.json` is the committed contract. After changing an endpoint, refresh it:
 

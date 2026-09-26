@@ -614,7 +614,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-rate-limiting-output-caching-and-health (ADR-0019): call UseAuthentication() explicitly between UseErpEndpointPipeline() and UseErpRateLimiting(), and UseAuthorization() and UseAntiforgery() after it, so a signed-in caller is rate-limited per actor instead of per address; no named rate-limit policy exists yet, so decide there whether the sign-in endpoints need a stricter one."
         },
         {
           "id": "authentication-token-cache-and-data-protection-key",
@@ -809,7 +810,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-rate-limiting-output-caching-and-health (ADR-0019): the edge proxy must append the client address to X-Forwarded-For on requests it passes to both the API and the web container, because the web container forwards the last entry on its server-side API calls and the API rate-limits anonymous callers by it; the web container must be reachable only through the proxy."
         },
         {
           "id": "first-deployment-release-and-deploy-pipeline",

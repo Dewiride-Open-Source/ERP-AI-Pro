@@ -1,3 +1,5 @@
+using System.Globalization;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Caching;
 using Microsoft.AspNetCore.Http;
 
 namespace Dewiride.Erp.BuildingBlocks.Endpoints.Security;
@@ -18,7 +20,7 @@ internal sealed class SecurityHeadersMiddleware(RequestDelegate next)
             headers["Cross-Origin-Resource-Policy"] = "same-origin";
             headers["Cross-Origin-Opener-Policy"] = "same-origin";
             headers["X-Permitted-Cross-Domain-Policies"] = "none";
-            headers.CacheControl = "no-store";
+            headers.CacheControl = CacheControl(httpContext);
             if (!httpContext.Request.Path.StartsWithSegments(ApiReferencePath))
             {
                 headers.ContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
@@ -29,4 +31,11 @@ internal sealed class SecurityHeadersMiddleware(RequestDelegate next)
 
         return next(context);
     }
+
+    private static string CacheControl(HttpContext context) =>
+        context.Response.StatusCode == StatusCodes.Status200OK
+        && HttpMethods.IsGet(context.Request.Method)
+        && context.GetEndpoint()?.Metadata.GetMetadata<ReferenceDataCacheMetadata>() is { } referenceData
+            ? string.Create(CultureInfo.InvariantCulture, $"private, max-age={(long)referenceData.MaxAge.TotalSeconds}")
+            : "no-store";
 }
