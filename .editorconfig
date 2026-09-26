@@ -44,8 +44,9 @@ dotnet_diagnostic.IDE0055.severity = warning
 dotnet_diagnostic.IDE0065.severity = error
 # CA1062: nullable reference types make the null-argument guards redundant on public members
 dotnet_diagnostic.CA1062.severity = none
-# CA1848: LoggerMessage delegates are mandatory only on hot paths; ordinary ILogger calls stay allowed
-dotnet_diagnostic.CA1848.severity = none
+# CA1848, CA2254: every log call is a [LoggerMessage] source-generated method with a constant template, so logs stay structured and allocation-free
+dotnet_diagnostic.CA1848.severity = error
+dotnet_diagnostic.CA2254.severity = error
 # CA2007: ASP.NET Core has no synchronisation context, so ConfigureAwait(false) adds nothing
 dotnet_diagnostic.CA2007.severity = none
 # CA1716: domain names such as Error and Event are deliberate even where they match language keywords

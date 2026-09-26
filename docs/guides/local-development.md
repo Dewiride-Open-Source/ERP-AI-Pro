@@ -53,7 +53,7 @@ pnpm dev                                                   # builds @dewiride/er
 
 ## Containers
 
-`docker compose -f infra/compose/compose.yaml -f infra/compose/compose.override.yaml --profile observability up -d --wait` starts the API and web images plus the Aspire dashboard (`http://localhost:18888`) for local telemetry. No SQL Server container exists: the api container reaches the owner's SQL Server through `host.docker.internal` (Docker Desktop maps it to the host) with a SQL login, because a container cannot use Windows sign-in. Before the first `up`:
+`docker compose -f infra/compose/compose.yaml -f infra/compose/compose.override.yaml --profile observability up -d --wait` starts the API and web images plus the Aspire dashboard (`http://localhost:18888`) for local telemetry; the containers send it telemetry once `OTEL_EXPORTER_OTLP_ENDPOINT` and `WEB_OTEL_EXPORTER_OTLP_ENDPOINT` are set in `infra/compose/.env` ([observability](observability.md)). No SQL Server container exists: the api container reaches the owner's SQL Server through `host.docker.internal` (Docker Desktop maps it to the host) with a SQL login, because a container cannot use Windows sign-in. Before the first `up`:
 
 1. Enable TCP/IP for the instance on port 1433 (SQL Server Configuration Manager → SQL Server Network Configuration → Protocols → TCP/IP → Enabled, IPAll → TCP Port 1433) and restart the SQL Server service.
 2. Enable mixed-mode sign-in (SQL Server Management Studio → server Properties → Security → SQL Server and Windows Authentication mode) and restart the service.
