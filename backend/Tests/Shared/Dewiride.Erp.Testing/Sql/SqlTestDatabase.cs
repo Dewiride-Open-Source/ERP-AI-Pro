@@ -59,13 +59,13 @@ public sealed class SqlTestDatabase : IAsyncLifetime
     public async ValueTask InitializeAsync()
     {
         _serverConnectionString = ResolveServerConnectionString(Environment.GetEnvironmentVariable);
-        Name = $"{NamePrefix}{TimeProvider.System.GetUtcNow():yyyyMMddHHmmss}_{Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(4))}";
+        Name = NewName();
 
         await using (var connection = new SqlConnection(_serverConnectionString))
         {
             await connection.OpenAsync();
             await DropLeftoversAsync(connection);
-            await ExecuteAsync(connection, CreateStatement, Name);
+            await CreateAsync(connection, Name);
         }
 
         ConnectionString = new SqlConnectionStringBuilder(_serverConnectionString) { InitialCatalog = Name }.ConnectionString;
@@ -84,8 +84,14 @@ public sealed class SqlTestDatabase : IAsyncLifetime
         SqlConnection.ClearAllPools();
         await using var connection = new SqlConnection(_serverConnectionString);
         await connection.OpenAsync();
-        await ExecuteAsync(connection, DropStatement, Name);
+        await DropAsync(connection, Name);
     }
+
+    internal static string NewName() => $"{NamePrefix}{TimeProvider.System.GetUtcNow():yyyyMMddHHmmss}_{Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(4))}";
+
+    internal static Task CreateAsync(SqlConnection connection, string database) => ExecuteAsync(connection, CreateStatement, database);
+
+    internal static Task DropAsync(SqlConnection connection, string database) => ExecuteAsync(connection, DropStatement, database);
 
     private static async Task DropLeftoversAsync(SqlConnection connection)
     {
@@ -106,7 +112,7 @@ public sealed class SqlTestDatabase : IAsyncLifetime
 
         foreach (var leftover in await FindLeftoversAsync(connection))
         {
-            await ExecuteAsync(connection, DropStatement, leftover);
+            await DropAsync(connection, leftover);
         }
 
         await using var release = connection.CreateCommand();

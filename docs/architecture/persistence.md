@@ -87,28 +87,31 @@ The BuildingBlocks integration tests prove these conventions against SQL Server 
 
 ## Migrations and design time
 
-From `backend/` after `dotnet tool restore` (`dotnet-ef` is a local tool in `.config/dotnet-tools.json`):
+From the repository root after `cd backend && dotnet tool restore` (`dotnet-ef` is a local tool in `.config/dotnet-tools.json`), through `scripts/ef/ef.ts`, which discovers every context and passes `--context`, `--project` and `--startup-project Hosts/Api/Dewiride.Erp.Host.Api` ([migrations guide](../guides/migrations.md)):
 
 ```bash
-dotnet ef migrations add <Name> --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api --output-dir Persistence/Migrations
-dotnet ef database update --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
-dotnet ef migrations has-pending-model-changes --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
+node scripts/ef/ef.ts add <Name> --context system-info
+node scripts/ef/ef.ts update --all
+node scripts/ef/ef.ts pending --all
 ```
 
 - `dotnet ef` always runs the API host offline: `AddErpPlatform` sets the bootstrap setting `ERP_CONFIGURATION_SOURCE=LocalDevelopment` when `EF.IsDesignTime` is true, before `AddErpConfiguration` runs, so a design-time host never contacts Azure App Configuration and reads the connection string from user secrets (developer machine) or the environment variable (CI). `LocalDevelopment` forces `appsettings.json` + user secrets + environment in any `ASPNETCORE_ENVIRONMENT`.
 - No module carries an `IDesignTimeDbContextFactory`: the host composition builds every module context with exactly the run-time options (schema, history table, provider, conventions), and a per-module factory would duplicate that wiring and drift from it. The one factory in the repository is the test-only `SampleDbContextDesignTimeFactory` of the BuildingBlocks integration tests, whose `SampleDbContext` is not in the catalogue and whose test executable hosts no API.
 - Migration SQL must run unchanged on SQL Server 2025 and Azure SQL: no `USE`, no cross-database names, no SQL Agent, no server-level permissions.
-- Migrations are never applied at startup (`Migrate()`/`EnsureCreated()` are forbidden). Local development applies them with `dotnet ef database update`, which creates the `ErpAiPro` database when it does not exist; production applies them with the migrator from the migration-tooling sub-phase.
+- Migrations are never applied at startup (`Migrate()`/`EnsureCreated()` are forbidden). Local development applies them with `node scripts/ef/ef.ts update --all` (which creates the `ErpAiPro` database when it does not exist) or the migrator; the local containers and production apply them with the compose `migrator` service, which runs `Hosts/Migrator` with its own schema-rights connection (`Erp:Platform:Database:MigratorConnectionString`) before the API starts (ADR-0021).
+- Seeders (`ISeeder`, registered with `services.AddSeeder<TSeeder>(order)`) run after every migration in the migrator and in every test database, ordered by `order` then type name; each must leave the same rows however often it runs.
 
 ## Test databases
 
 `SqlTestDatabase` in `Tests/Shared/Dewiride.Erp.Testing` is an xunit v3 assembly fixture, declared with `[assembly: AssemblyFixture(typeof(SqlTestDatabase))]` in every SQL-backed test project (`Tests/Host`, the SystemInfo integration tests, `Tests/Architecture`, the BuildingBlocks integration tests):
 
 - it reads `ERP_TEST_SQL_CONNECTION`, a server-level connection string with rights to create databases and no `Database=` part (on the owner's machine `Server=localhost;Integrated Security=True;Encrypt=True;TrustServerCertificate=True`), and fails with a message naming the variable and `docs/guides/testing.md` when it is missing;
-- it drops leftover databases named `ErpAiProTest_%` older than 24 hours, creates `ErpAiProTest_<yyyyMMddHHmmss>_<8 hex>` and migrates every catalogue context through `TestDatabaseHost`, a non-started host built with `AddErpPlatform`;
+- it drops leftover databases named `ErpAiProTest_%` older than 24 hours, creates `ErpAiProTest_<yyyyMMddHHmmss>_<8 hex>` and migrates every catalogue context and runs every seeder through `TestDatabaseHost`, a non-started host built with `AddErpPlatform`;
 - it exposes the static `Current`; on dispose it clears the connection pools, sets `SINGLE_USER WITH ROLLBACK IMMEDIATE` and drops the database.
 
 `ErpApiFactory` injects `Current.ConnectionString` as `Erp:Platform:Database:ConnectionString` unless the test supplied one with `WithConfiguration`, and throws a message naming the `AssemblyFixture` line when no test database exists, so a Development test host can never reach the developer's own `ErpAiPro` database through the user-secrets value. Every test host registers the readiness checks `self`, `database:platform_idempotency` and `database:platform_system_info`.
+
+The one exception is a test of the migration path itself: `Dewiride.Erp.Host.Migrator.IntegrationTests` declares no assembly fixture and references neither `SqlTestDatabase` nor `Hosts/Api`; each test creates an `EmptyTestDatabase` (same naming, server and drop rules, but no migration has touched it) and runs the migrator program against it.
 
 ## CI
 
@@ -116,9 +119,9 @@ The composite action `.github/actions/start-sql-server` runs `docker run` of `mc
 
 | Workflow | Use of the outputs |
 |---|---|
-| `ci-backend.yml` | `ERP_TEST_SQL_CONNECTION` on the test step; a `dotnet ef migrations has-pending-model-changes` step per context |
-| `e2e.yml` | `dotnet ef database update` before the API starts; `Erp__Platform__Database__ConnectionString` on both API starts (the normal pair and the gated pair) |
-| `docker-build.yml` | `dotnet ef database update` from the runner, then the compose secret file `infra/compose/secrets/Erp__Platform__Database__ConnectionString` written from `container-connection-string` before `compose config` and the smoke test |
+| `ci-backend.yml` | `ERP_TEST_SQL_CONNECTION` on the test step; `node scripts/ef/ef.ts pending --all --no-build` checks every discovered context |
+| `e2e.yml` | the migrator (`dotnet run --project Hosts/Migrator/Dewiride.Erp.Host.Migrator -- migrate`) before the API starts; `Erp__Platform__Database__ConnectionString` on the migrator and both API starts (the normal pair and the gated pair) |
+| `docker-build.yml` | the compose secret files `infra/compose/secrets/Erp__Platform__Database__ConnectionString` and `Erp__Platform__Database__MigratorConnectionString` written from `container-connection-string`; the stack's migrator container migrates the database and the smoke test asserts it exited 0 |
 
 ## Schema ownership
 

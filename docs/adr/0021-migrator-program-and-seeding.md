@@ -1,0 +1,31 @@
+# ADR-0021: The migrator program, migration tooling and seeding
+
+Status: accepted
+Date: 2026-09-26
+
+## Context
+
+ADR-0008 said production applies self-contained EF Core migration bundles through a one-shot migrator container. The roadmap asked for per-context `dotnet ef` wrapper scripts (`ef.ps1`, `ef.sh`), a pending-model-changes check for every context in CI, bundle builds per context, the one-shot migrator compose service and an idempotent ordered seeder framework. When the backend platform phase was planned, the owner chose one migrator program over bundles. Facts that shape the decision:
+
+- A bundle is one executable per context and carries no application code, so it cannot run seeders and every new context adds an artefact to build, publish and invoke in order. `DbContextCatalog` already lists every context in registration order, and `DatabaseMigrator.MigrateAllAsync` walks it.
+- Since EF Core 9, `Migrate`/`MigrateAsync` take a database-wide lock (`sp_getapplock` on SQL Server) so concurrent runs cannot corrupt the database, and EF Core 10 applies each migration in its own transaction. `MigrateAsync` throws when the model has changes no migration captures.
+- EF Core's documentation recommends a separate deployment identity with schema rights, while the running application keeps data rights only. The local container login used by the API holds `db_datareader` and `db_datawriter` only.
+- The owner's machine has no PowerShell 7, and the repository's scripts are Node 24 TypeScript with native type stripping and no dependencies.
+- The API image already publishes a second program (the health probe) next to the API.
+
+## Decision
+
+- **One migrator program.** `Hosts/Migrator/Dewiride.Erp.Host.Migrator` builds the same composition as the API (`AddErpPlatform`) without starting the host, so no module hosted service runs. `migrate` applies every catalogue context's migrations in catalogue order and then runs the seeders; `status` reports the pending migrations per schema. Exit codes: 0 succeeded, 1 failed or cancelled, 2 invalid configuration (anything that fails while composing the host, loading the configuration store and its Key Vault references, or validating options through `IStartupValidator`, reported on standard error because no logger exists yet), 3 migrations pending (`status`), 64 usage. SIGINT and SIGTERM cancel the run; the migration in progress rolls back. No per-context bundles are built. This supersedes the bundle sentence of ADR-0008.
+- **Its own connection.** `Erp:Platform:Database:MigratorConnectionString` (`MigratorDatabaseOptions`), when set, replaces `Erp:Platform:Database:ConnectionString` for the migrator only (`MigratorConnectionStringSetup`, an `IPostConfigureOptions<DatabaseOptions>`). Locally it is the compose secret file of the `erp_local_migrator` SQL login (`db_ddladmin` plus data roles on `ErpAiPro`); in production it is a Key Vault reference under the `production` label to the migrator's contained Entra user, created by the first-deployment database provisioning. A host process (`dotnet run`) falls back to the developer's Windows sign-in.
+- **Shipped in the API image.** `api.Dockerfile` publishes the migrator to `/app/migrator`; the compose `migrator` service runs that image with `entrypoint: dotnet /app/migrator/Dewiride.Erp.Host.Migrator.dll`, `command: migrate`, `restart: "no"`, no health check and `pull_policy: never`, and the `api` service waits for it with `condition: service_completed_successfully`. The migrator and the API therefore always come from the same build. `docker compose up` recreates a changed `api` container (stopping the running one) before it evaluates that condition, so a deployment pulls the images, runs `docker compose run --rm migrator` on its own, and rolls the stack with `up` only after it exited 0 (the runbook and the release pipeline follow this order). In production the migrator signs in as its own service principal (`MIGRATOR_AZURE_CLIENT_ID`, certificate `erp-migrator-client.pem`) with the same hardening as the API.
+- **Seeding.** `ISeeder` (`BuildingBlocks.Persistence/Seeding`) is registered with `services.AddSeeder<TSeeder>(order)`; `SeedRunner` runs the seeders after every migration, ordered by `order` then type name, each in its own scope, and refuses a seeder registered twice. A seeder must leave the same rows however often it runs (insert what is missing by its natural key, never overwrite what a person changed), because it runs on every migrator run. The test database host runs the same migrations and seeders, so tests see the data production sees.
+- **Tooling.** `node scripts/ef/ef.ts list | add | update | pending | script` wraps `dotnet ef` with the API host as startup project, discovering every `ModuleDbContext` subclass in a `Persistence` folder under `Modules` and `BuildingBlocks` (test projects excluded) and keying it by its kebab-case name (`system-info`, `idempotency`). It replaces the planned `ef.ps1`/`ef.sh`. CI checks pending model changes with `ef.ts pending --all --no-build`; `verify.ts` runs the same step.
+- **CI.** `docker-build.yml` no longer migrates from the runner: the compose stack's migrator container migrates the CI SQL Server, and the compose smoke test asserts that it exited 0 before checking the API. `e2e.yml` migrates with `dotnet run --project Hosts/Migrator -- migrate`.
+
+## Consequences
+
+- A new module context is picked up by the migrator (through the catalogue), the tooling and CI (through discovery) without any script change.
+- A deployment runs the migrator on its own before rolling the API, so a failed migrator leaves the running API untouched, and `status` tells an operator what is pending; `up` alone would already have stopped the running API. The runbook `docs/operations/runbooks/migrations.md` covers the procedure and recovery.
+- Schemas a migrator login creates are owned by that database user; the data roles still reach their tables because `db_datareader` and `db_datawriter` apply database-wide.
+- SQL for review or a DBA comes from `ef.ts script --idempotent`; the migrator never prints SQL.
+- A seeder that is not idempotent would duplicate rows on the next deployment; the seeding test pattern (run twice, compare rows) is the proof every seeder ships with.

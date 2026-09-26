@@ -6,7 +6,7 @@ import { repoRoot } from "./lib/walk.ts";
 
 const composeDirectory = join(repoRoot, "infra", "compose");
 const composeFiles = ["-f", "compose.yaml", "-f", "compose.override.yaml"];
-const databaseSecretFile = join(composeDirectory, "secrets", "Erp__Platform__Database__ConnectionString");
+const secretFiles = ["Erp__Platform__Database__ConnectionString", "Erp__Platform__Database__MigratorConnectionString"];
 const projectName = "erp-ai-pro-smoke";
 const apiBaseUrl = "http://127.0.0.1:5080";
 const webBaseUrl = "http://127.0.0.1:3000";
@@ -37,6 +37,17 @@ function compose(...args: string[]): void {
   if (result.status !== 0) throw new Error(`docker compose ${args.join(" ")} exited with ${result.status}`);
 }
 
+function migratorOutcome(): string | undefined {
+  const result = spawnSync("docker", ["compose", "-p", projectName, ...composeFiles, "ps", "--all", "--format", "{{.State}}:{{.ExitCode}}", "migrator"], {
+    cwd: composeDirectory,
+    encoding: "utf8",
+    shell: process.platform === "win32",
+    env: { ...process.env, IMAGE_TAG: process.env.IMAGE_TAG ?? "local" },
+  });
+  const outcome = result.stdout.trim();
+  return outcome === "exited:0" ? undefined : `migrator: expected "exited:0", got "${outcome || result.stderr.trim()}"`;
+}
+
 async function verify(check: Check): Promise<string | undefined> {
   const response = await fetch(check.url, { redirect: "manual" });
   if (response.status !== check.status) return `${check.name}: expected ${check.status}, got ${response.status}`;
@@ -52,15 +63,16 @@ async function verify(check: Check): Promise<string | undefined> {
   return undefined;
 }
 
-if (!existsSync(databaseSecretFile)) {
-  console.error("compose smoke: infra/compose/secrets/Erp__Platform__Database__ConnectionString is missing; create it as described in docs/guides/local-development.md");
+const missingSecrets = secretFiles.filter((name) => !existsSync(join(composeDirectory, "secrets", name)));
+if (missingSecrets.length > 0) {
+  console.error(`compose smoke: ${missingSecrets.map((name) => `infra/compose/secrets/${name}`).join(" and ")} missing; create them as described in docs/guides/local-development.md`);
   process.exit(1);
 }
 
 let failures: string[] = [];
 try {
   compose("up", "--detach", "--wait", "--wait-timeout", "180", "--no-build");
-  failures = (await Promise.all(checks.map(verify))).filter((f): f is string => f !== undefined);
+  failures = [migratorOutcome(), ...(await Promise.all(checks.map(verify)))].filter((f): f is string => f !== undefined);
 } finally {
   if (failures.length > 0) compose("logs", "--no-color", "--tail", "100");
   compose("down", "--remove-orphans", "--timeout", "10");
@@ -72,4 +84,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`compose smoke ok: ${checks.length} checks passed against the running stack`);
+console.log(`compose smoke ok: the migrator completed and ${checks.length} checks passed against the running stack`);

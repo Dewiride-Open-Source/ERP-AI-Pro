@@ -1,4 +1,31 @@
 services:
+  migrator:
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ERP_ENVIRONMENT: production
+      AZURE_TOKEN_CREDENTIALS: EnvironmentCredential
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
+      AZURE_CLIENT_ID: ${MIGRATOR_AZURE_CLIENT_ID:-}
+      AZURE_CLIENT_CERTIFICATE_PATH: /run/secrets/erp-migrator-client.pem
+    secrets:
+      - erp-migrator-client.pem
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: 20m
+        max-file: "5"
+
   api:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
@@ -48,3 +75,5 @@ services:
 secrets:
   erp-runtime-client.pem:
     file: ./secrets/erp-runtime-client.pem
+  erp-migrator-client.pem:
+    file: ./secrets/erp-migrator-client.pem

@@ -4,8 +4,8 @@
 |---|---|
 | [Roadmap](roadmap/ROADMAP.md) | generated view of `roadmap/roadmap.json`, the single source of truth for what is planned, in progress and done |
 | [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [persistence](architecture/persistence.md), [application pipeline](architecture/application-pipeline.md), [HTTP conventions](architecture/http-conventions.md), [request pipeline](architecture/request-pipeline.md), [AI capabilities](architecture/ai-capabilities.md) |
-| [Guides](guides/local-development.md) | [local development](guides/local-development.md), [testing](guides/testing.md), [adding a setting, flag or secret](guides/adding-a-setting.md), [comment policy](guides/comment-policy.md), [observability](guides/observability.md) |
-| [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md), [Azure bootstrap](operations/azure-bootstrap.md), [secrets runbook](operations/runbooks/secrets.md); deployment runbooks arrive with the first-deployment phase |
+| [Guides](guides/local-development.md) | [local development](guides/local-development.md), [testing](guides/testing.md), [adding a setting, flag or secret](guides/adding-a-setting.md), [comment policy](guides/comment-policy.md), [observability](guides/observability.md), [migrations and seeding](guides/migrations.md) |
+| [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md), [Azure bootstrap](operations/azure-bootstrap.md), [secrets runbook](operations/runbooks/secrets.md), [migrations runbook](operations/runbooks/migrations.md); the other deployment runbooks arrive with the first-deployment phase |
 | [Configuration register](configuration.md) | every configuration key, feature flag and secret name |
 | [Routing register](routing.md) | every API route group and web route |
 | [OpenAPI document](openapi/erp.json) | the committed contract of the API, refreshed by `OpenApiSnapshotTests` and the source of the generated web client |
@@ -34,5 +34,6 @@
 | [0018](adr/0018-transport-security-and-the-request-pipeline-order.md) | Transport security and the request pipeline order |
 | [0019](adr/0019-rate-limiting-reference-data-caching-and-health.md) | Rate limiting, reference-data caching and health checks |
 | [0020](adr/0020-observability-baseline.md) | Observability baseline |
+| [0021](adr/0021-migrator-program-and-seeding.md) | The migrator program, migration tooling and seeding |
 
 New decisions use [0000-template.md](adr/0000-template.md).

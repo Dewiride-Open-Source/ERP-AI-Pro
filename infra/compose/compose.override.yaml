@@ -1,4 +1,12 @@
 services:
+  migrator:
+    environment:
+      DOTNET_ENVIRONMENT: Development
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    secrets:
+      - Erp__Platform__Database__MigratorConnectionString
+
   api:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
@@ -32,3 +40,5 @@ services:
 secrets:
   Erp__Platform__Database__ConnectionString:
     file: ./secrets/Erp__Platform__Database__ConnectionString
+  Erp__Platform__Database__MigratorConnectionString:
+    file: ./secrets/Erp__Platform__Database__MigratorConnectionString

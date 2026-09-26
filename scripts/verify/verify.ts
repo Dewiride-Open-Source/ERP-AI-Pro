@@ -35,6 +35,7 @@ if (!values["skip-backend"]) {
     { name: "backend restore (locked)", cwd: backend, command: "dotnet", args: ["restore", "--locked-mode"] },
     { name: "backend build", cwd: backend, command: "dotnet", args: ["build", "--no-restore", "-warnaserror"] },
     { name: "backend format", cwd: backend, command: "dotnet", args: ["format", "--verify-no-changes", "--no-restore"] },
+    { name: "pending model changes", cwd: repoRoot, command: "node", args: ["scripts/ef/ef.ts", "pending", "--all", "--no-build"] },
     {
       name: "backend tests",
       cwd: backend,
@@ -53,6 +54,7 @@ steps.push(
   { name: "roadmap tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/roadmap/tests/*.test.ts"] },
   { name: "check tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/checks/tests/*.test.ts"] },
   { name: "api client tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/api-client/tests/*.test.ts"] },
+  { name: "ef script tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/ef/tests/*.test.ts"] },
   { name: "roadmap check", cwd: repoRoot, command: "node", args: ["scripts/roadmap/roadmap.ts", "check"] },
 );
 

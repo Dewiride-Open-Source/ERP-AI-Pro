@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
+using Dewiride.Erp.BuildingBlocks.Persistence.Seeding;
 using Dewiride.Erp.BuildingBlocks.Persistence.Telemetry;
 using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,7 @@ public static class PersistenceRegistration
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<DatabaseOptions>, DatabaseOptionsValidator>());
         services.TryAddSingleton(provider => new DbContextCatalog(provider.GetServices<DbContextRegistration>()));
         services.TryAddSingleton<DatabaseMigrator>();
+        services.TryAddSingleton<SeedRunner>();
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddScoped<IActorContext, SystemActorContext>();
         services.TryAddScoped<AuditingSaveChangesInterceptor>();

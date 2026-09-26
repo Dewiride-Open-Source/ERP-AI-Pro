@@ -7,6 +7,7 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | Variable | Used by | Purpose |
 |---|---|---|
 | `ASPNETCORE_ENVIRONMENT` | API | `Development` or `Production` framework behaviour |
+| `DOTNET_ENVIRONMENT` | migrator | `Development` or `Production` framework behaviour of the migrator, a generic host that ignores `ASPNETCORE_ENVIRONMENT`; `Development` locally (launch profiles, `compose.override.yaml`, `e2e.yml`), `Production` in the production stack |
 | `ASPNETCORE_HTTP_PORTS` | API container | listening port (8080 in containers) |
 | `ERP_ENVIRONMENT` | API | App Configuration label, `local-dev` or `production`; required, and validated, whenever `APPCONFIG_ENDPOINT` is set (`local-dev` from `launchSettings.json` on developer machines, `production` from `compose.production.yaml`) |
 | `APPCONFIG_ENDPOINT` | API | Azure App Configuration endpoint (`https://<store>.azconfig.io`); when set the API loads the store and its Key Vault references, when empty a Development host runs on `appsettings.json` plus user secrets and a Production host refuses to start; developers keep it in `dotnet user-secrets`, never in a committed file |
@@ -15,6 +16,7 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | `ERP_OPENAPI_SNAPSHOT` | `OpenApiSnapshotTests`, `scripts/api-client/generate.ts` | `update` makes the snapshot test rewrite `docs/openapi/erp.json` from the running test host instead of failing on a difference; unset everywhere else, never set in CI |
 | `AZURE_TOKEN_CREDENTIALS` | API | mandatory selector for `DefaultAzureCredential`: `AzureCliCredential` on developer machines (from `launchSettings.json`; only the `az login` session is used, never a Visual Studio or VS Code sign-in) and `EnvironmentCredential` in the api container (from `compose.production.yaml`); outside `Development` the credential factory rejects any other value at startup |
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | API container | tenant and application (client) id of the runtime service principal the container signs in as; both required in Production |
+| `AZURE_CLIENT_ID` (migrator) | migrator container (production) | application (client) id of the migrator service principal, from `MIGRATOR_AZURE_CLIENT_ID`; the migrator signs in with its own certificate `/run/secrets/erp-migrator-client.pem` (ADR-0021) |
 | `AZURE_APP_CONFIGURATION_FM_SCHEMA_COMPATIBILITY_DISABLED` | API (set by the API itself) | `true`, set by `AddErpConfiguration` in the process environment before the store is connected so the provider emits every feature flag in the Microsoft schema (ADR-0012); never set by hand |
 | `AZURE_CLIENT_CERTIFICATE_PATH` | API container | path of the runtime certificate secret file, `/run/secrets/erp-runtime-client.pem`, which the credential factory opens for reading at startup so an unreadable file fails with a message naming the fix; must name an existing `.pem` or `.pfx` file in Production, and `AZURE_CLIENT_SECRET` must not be set alongside it |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL` | API, web | OTLP exporter; telemetry export is off when the endpoint is unset. The API speaks gRPC. The web app validates both: the endpoint is an `http` or `https` base URL (a path prefix is allowed, credentials are not, trailing slashes are stripped) and the protocol is `http/protobuf` (default) or `http/json`; the web app builds its trace exporter from the validated values (`<endpoint>/v1/traces`) and consults no other `OTEL_EXPORTER_*` variable |
@@ -35,6 +37,7 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 | `COMPOSE_NETWORK_CIDR` | subnet of the compose network; the API trusts forwarded headers only from this range |
 | `APPCONFIG_ENDPOINT` | passed to the API as `APPCONFIG_ENDPOINT`; required by the production stack, which refuses to start without it; left empty on a developer machine because the local stack cannot sign in to Azure and runs on `appsettings.json` (`dotnet run` uses user secrets instead) |
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` | production stack only; passed to the api container as the runtime service principal's tenant and application (client) id (ids, never secrets; the certificate is the compose secret `erp-runtime-client.pem` from `infra/compose/secrets/`) |
+| `MIGRATOR_AZURE_CLIENT_ID` | production stack only; passed to the migrator container as `AZURE_CLIENT_ID` — the migrator service principal, whose contained database user holds the schema rights (an id, not a secret) |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`, `WEB_OTEL_EXPORTER_OTLP_ENDPOINT` | local Aspire dashboard endpoints for the API (gRPC) and the web app (OTLP/HTTP) |
 
 ### Compose secret files (`infra/compose/secrets/`, git-ignored)
@@ -44,7 +47,9 @@ A compose secret is a file, never an `.env` variable; the api container reads th
 | File | Stack | Purpose |
 |---|---|---|
 | `Erp__Platform__Database__ConnectionString` | local (`compose.override.yaml`), the `docker-build` smoke | lands on `Erp:Platform:Database:ConnectionString`; on the owner's machine `Server=host.docker.internal,1433;Database=ErpAiPro;User ID=<login>;Password=<password>;Encrypt=True;TrustServerCertificate=True`, a SQL login because a container cannot use Windows sign-in; the compose smoke script refuses to start without the file and names it |
+| `Erp__Platform__Database__MigratorConnectionString` | local (`compose.override.yaml`, migrator service only), the `docker-build` smoke | lands on `Erp:Platform:Database:MigratorConnectionString`; locally the `erp_local_migrator` SQL login (`db_ddladmin`, `db_datareader`, `db_datawriter` on `ErpAiPro`) at `host.docker.internal,1433`; in CI the run-time `sa` connection |
 | `erp-runtime-client.pem` | production (`compose.production.yaml`) | the runtime service principal's certificate, hidden from the key-per-file provider and read only through `AZURE_CLIENT_CERTIFICATE_PATH` |
+| `erp-migrator-client.pem` | production (`compose.production.yaml`) | the migrator service principal's certificate, opened at startup like the runtime certificate; created by the first-deployment database provisioning |
 
 ### Image build arguments (`infra/docker/web.Dockerfile`)
 
@@ -77,6 +82,7 @@ A compose secret is a file, never an `.env` variable; the api container reads th
 | `Erp:Platform:Database:CommandTimeout` | TimeSpan | `00:00:30` | command timeout on every module context (between 1 second and 10 minutes); seeded unlabelled from `infra/appconfig/defaults.json` |
 | `Erp:Platform:Database:MaxRetryCount` | int | `5` | `EnableRetryOnFailure` retry count (0 to 20); seeded unlabelled from `infra/appconfig/defaults.json` |
 | `Erp:Platform:Database:MaxRetryDelay` | TimeSpan | `00:00:10` | `EnableRetryOnFailure` maximum delay between retries (between 1 second and 2 minutes); seeded unlabelled from `infra/appconfig/defaults.json` |
+| `Erp:Platform:Database:MigratorConnectionString` | string (compose secret file locally; Key Vault reference under `production`) | — | connection the migrator uses instead of `ConnectionString` when set (`MigratorDatabaseOptions`, `MigratorConnectionStringSetup`): the deployment identity with schema rights, while the API keeps data rights only; unset for host processes, which fall back to the Windows sign-in; the production reference is added by the first-deployment database provisioning (ADR-0021) |
 | `Erp:Platform:Idempotency:RetentionPeriod` | TimeSpan | `1.00:00:00` | how long an `Idempotency-Key` stays recognised after its first use (between 5 minutes and 30 days); a repeat inside the window replays the stored response, after it the key is free again; `IdempotencyOptions`, seeded unlabelled from `infra/appconfig/defaults.json` |
 | `Erp:Platform:Idempotency:MaxStoredResponseBytes` | int | `1048576` | largest response body stored for replay (1 KiB to 16 MiB); a larger response is still sent to the first caller but a repeat answers 409 `idempotency.replay-unavailable`; seeded unlabelled from `infra/appconfig/defaults.json` |
 | `Erp:Platform:Idempotency:CleanupInterval` | TimeSpan | `01:00:00` | how often `IdempotencyCleanupService` deletes expired keys from `platform_idempotency.IdempotencyKeys` (between 1 minute and 1 day); seeded unlabelled from `infra/appconfig/defaults.json` |

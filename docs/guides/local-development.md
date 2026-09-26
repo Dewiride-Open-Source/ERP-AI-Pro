@@ -24,8 +24,7 @@ dotnet restore
 dotnet tool restore                                        # dotnet-ef and kiota from .config/dotnet-tools.json
 dotnet build --no-restore -warnaserror
 dotnet user-secrets set "Erp:Platform:Database:ConnectionString" "Server=localhost;Database=ErpAiPro;Integrated Security=True;Encrypt=True;TrustServerCertificate=True" --project Hosts/Api/Dewiride.Erp.Host.Api
-dotnet ef database update --context IdempotencyDbContext --project BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency --startup-project Hosts/Api/Dewiride.Erp.Host.Api   # creates ErpAiPro when it does not exist
-dotnet ef database update --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
+node ../scripts/ef/ef.ts update --all                     # every context; creates ErpAiPro when it does not exist (docs/guides/migrations.md)
 dotnet test --solution Dewiride.Erp.slnx                   # needs ERP_TEST_SQL_CONNECTION (section "Configuration and secrets")
 dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api      # http://localhost:5080
 
@@ -57,8 +56,9 @@ pnpm dev                                                   # builds @dewiride/er
 
 1. Enable TCP/IP for the instance on port 1433 (SQL Server Configuration Manager → SQL Server Network Configuration → Protocols → TCP/IP → Enabled, IPAll → TCP Port 1433) and restart the SQL Server service.
 2. Enable mixed-mode sign-in (SQL Server Management Studio → server Properties → Security → SQL Server and Windows Authentication mode) and restart the service.
-3. Create a SQL login and its user in `ErpAiPro` with `db_datareader` and `db_datawriter`: the api container only reads and writes rows, because migrations are applied from the host with `dotnet ef database update` (the migrator container of the migration-tooling sub-phase adds the schema right it needs).
+3. Create a SQL login and its user in `ErpAiPro` with `db_datareader` and `db_datawriter` for the api container, which only reads and writes rows, and a second login (`erp_local_migrator`) with `db_ddladmin` as well, for the `migrator` container that applies migrations and seeds before the api starts.
 4. Write the git-ignored file `infra/compose/secrets/Erp__Platform__Database__ConnectionString` holding `Server=host.docker.internal,1433;Database=ErpAiPro;User ID=<login>;Password=<password>;Encrypt=True;TrustServerCertificate=True`. `compose.override.yaml` mounts it as the compose secret `Erp__Platform__Database__ConnectionString` on the api service, the key-per-file provider reads `/run/secrets/Erp__Platform__Database__ConnectionString` as `Erp:Platform:Database:ConnectionString`, and the compose smoke script refuses to start without the file, naming it.
+5. Write the git-ignored file `infra/compose/secrets/Erp__Platform__Database__MigratorConnectionString` with the same shape for the migrator login. `compose.override.yaml` mounts it on the migrator service only, where it becomes `Erp:Platform:Database:MigratorConnectionString`; the api service starts only after the migrator exits with 0, and the smoke script checks that it did.
 
 ## Everyday commands
 
