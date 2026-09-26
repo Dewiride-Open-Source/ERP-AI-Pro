@@ -12,6 +12,7 @@ function Progress({ className, value, ...props }: React.ComponentProps<typeof Pr
         "relative flex h-1 w-full items-center overflow-x-hidden rounded-full bg-muted",
         className,
       )}
+      value={value}
       {...props}
     >
       <ProgressPrimitive.Indicator

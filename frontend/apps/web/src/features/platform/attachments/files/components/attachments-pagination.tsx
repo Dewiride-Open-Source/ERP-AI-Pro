@@ -12,7 +12,7 @@ export function AttachmentsPagination({ page, totalPages }: { page: number; tota
       data-testid="attachments-pagination"
     >
       <PageLink page={page - 1} disabled={page <= 1} direction="previous" />
-      <p className="text-sm text-muted-foreground" aria-current="page">
+      <p className="text-sm text-muted-foreground" aria-current="page" data-testid="attachments-page">
         Page {page} of {totalPages}
       </p>
       <PageLink page={page + 1} disabled={page >= totalPages} direction="next" />

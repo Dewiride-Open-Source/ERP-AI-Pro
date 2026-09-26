@@ -3,6 +3,9 @@
     "Platform": {
       "Host": {
         "ApplicationName": "ERP-AI-Pro (local-dev)"
+      },
+      "RateLimiting": {
+        "AnonymousPermitLimit": "6000"
       }
     }
   }

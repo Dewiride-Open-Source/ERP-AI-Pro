@@ -61,29 +61,27 @@ export function UploadPanel({
         onFileAccepted={(file) => void upload(file)}
         onFileRejected={reject}
       />
-      <div aria-live="polite" data-testid="upload-status" data-state={state.kind} className="min-h-6">
-        <Status state={state} />
+      <div data-testid="upload-status" data-state={state.kind} className="grid min-h-6 gap-2">
+        <div aria-live="polite">
+          <StatusMessage state={state} />
+        </div>
+        {state.kind === "uploading" ? (
+          <UploadProgress fileName={state.fileName} percent={state.percent} />
+        ) : null}
       </div>
     </div>
   );
 }
 
-function Status({ state }: { state: UploadState }) {
+function StatusMessage({ state }: { state: UploadState }) {
   switch (state.kind) {
     case "idle":
       return null;
     case "uploading":
       return (
-        <div className="grid gap-2">
-          <p className="text-sm">
-            Uploading <span className="font-medium">{state.fileName}</span>… {state.percent}%
-          </p>
-          <Progress
-            value={state.percent}
-            aria-label={`Uploading ${state.fileName}`}
-            data-testid="upload-progress"
-          />
-        </div>
+        <p className="text-sm">
+          Uploading <span className="font-medium">{state.fileName}</span>…
+        </p>
       );
     case "uploaded":
       return (
@@ -104,6 +102,22 @@ function Status({ state }: { state: UploadState }) {
         </p>
       );
   }
+}
+
+function UploadProgress({ fileName, percent }: { fileName: string; percent: number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <Progress
+        value={percent}
+        aria-label={`Uploading ${fileName}`}
+        className="flex-1"
+        data-testid="upload-progress"
+      />
+      <span className="w-10 text-right text-sm text-muted-foreground tabular-nums" aria-hidden>
+        {percent}%
+      </span>
+    </div>
+  );
 }
 
 function rejectionMessage(reason: FileRejection, maxSizeBytes: number): string {

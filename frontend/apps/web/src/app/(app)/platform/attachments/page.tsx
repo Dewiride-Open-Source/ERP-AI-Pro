@@ -8,7 +8,6 @@ export default async function AttachmentsPage({
   searchParams,
 }: Readonly<{ searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
   const { page } = await searchParams;
-  const requested = Number.parseInt(typeof page === "string" ? page : "", 10);
 
-  return <AttachmentsOverview page={Number.isInteger(requested) && requested > 0 ? requested : 1} />;
+  return <AttachmentsOverview pageParameter={page} />;
 }

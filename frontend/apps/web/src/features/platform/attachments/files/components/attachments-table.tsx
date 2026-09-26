@@ -17,7 +17,13 @@ import { contentTypeLabel } from "./content-types";
 
 const missing = "—";
 
-export function AttachmentsTable({ attachments }: { attachments: readonly AttachmentResponse[] }) {
+export function AttachmentsTable({
+  attachments,
+  focusAfterDeleteId,
+}: {
+  attachments: readonly AttachmentResponse[];
+  focusAfterDeleteId: string;
+}) {
   if (attachments.length === 0) {
     return (
       <p
@@ -67,7 +73,11 @@ export function AttachmentsTable({ attachments }: { attachments: readonly Attach
             </TableCell>
             <TableCell className="text-right">
               {attachment.id ? (
-                <AttachmentActions id={attachment.id} fileName={attachment.fileName ?? "this attachment"} />
+                <AttachmentActions
+                  id={attachment.id}
+                  fileName={attachment.fileName ?? "this attachment"}
+                  focusAfterDeleteId={focusAfterDeleteId}
+                />
               ) : null}
             </TableCell>
           </TableRow>

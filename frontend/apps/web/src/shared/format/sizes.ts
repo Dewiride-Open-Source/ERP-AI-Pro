@@ -2,6 +2,8 @@ const units = ["KB", "MB", "GB"] as const;
 
 const oneDecimal = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 1 });
 
+const oneDecimalUngrouped = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 1, useGrouping: false });
+
 export function formatBytes(bytes: number): string {
   if (!Number.isFinite(bytes) || bytes < 1024) {
     const whole = Math.max(0, Math.floor(Number.isFinite(bytes) ? bytes : 0));
@@ -10,7 +12,7 @@ export function formatBytes(bytes: number): string {
 
   let value = bytes / 1024;
   let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
+  while (Number(oneDecimalUngrouped.format(value)) >= 1024 && unit < units.length - 1) {
     value /= 1024;
     unit += 1;
   }

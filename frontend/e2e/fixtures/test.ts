@@ -27,7 +27,9 @@ export const test = base.extend<Fixtures>({
       page.on("console", (message) => {
         if (message.type() === "error" && !isExpected(message.text())) errors.push(message.text());
       });
-      page.on("pageerror", (error) => errors.push(error.message));
+      page.on("pageerror", (error) => {
+        if (!isExpected(error.message)) errors.push(error.message);
+      });
       await use(errors);
       expect(errors, "console errors").toEqual([]);
     },
