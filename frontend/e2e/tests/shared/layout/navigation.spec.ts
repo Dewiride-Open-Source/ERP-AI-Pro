@@ -12,6 +12,7 @@ test.describe("app shell navigation", () => {
     await expect(shell.primaryNavigation).toMatchAriaSnapshot(`
       - navigation "Primary":
         - link "System"
+        - link "Attachments"
     `);
     await shell.navigationLink("System").click();
     await expect(page).toHaveURL(/\/platform\/system-info$/);

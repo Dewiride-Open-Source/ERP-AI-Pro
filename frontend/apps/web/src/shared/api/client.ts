@@ -32,3 +32,11 @@ export async function callApi<T>(request: (client: ErpApiClient) => Promise<T | 
   if (value === undefined) throw new ApiError({ status: 502, title: "The API answered without a body." });
   return value;
 }
+
+export async function sendApi(request: (client: ErpApiClient) => Promise<unknown>): Promise<void> {
+  try {
+    await request(await apiClient());
+  } catch (error) {
+    throw toApiError(error);
+  }
+}

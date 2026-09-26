@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ApiError, toApiError } from "./problem-details.ts";
+import { ApiError, problemFromBody, toApiError } from "./problem-details.ts";
 
 const traceId = "0af7651916cd43dd8448eb211c80319c";
 
@@ -111,4 +111,31 @@ test("toApiError_ValueThatIsNotAnHttpFailure_IsReturnedUnchanged", () => {
 
 test("ApiError_WithoutATitle_DescribesTheStatus", () => {
   assert.equal(new ApiError({ status: 503 }).message, "API request failed with status 503");
+});
+
+test("problemFromBody_ProblemJsonReadByTheBrowser_KeepsEveryMemberAndTheFieldErrors", () => {
+  const body = {
+    type: "/problems/request.invalid",
+    title: "One or more validation errors occurred.",
+    status: 400,
+    instance: "/api/platform/attachments",
+    code: "request.invalid",
+    traceId,
+    errors: { link: ["The Link field is required."], ignored: [1] },
+  };
+
+  assert.deepEqual(problemFromBody(400, body), {
+    status: 400,
+    type: "/problems/request.invalid",
+    title: "One or more validation errors occurred.",
+    instance: "/api/platform/attachments",
+    code: "request.invalid",
+    traceId,
+    fields: { link: ["The Link field is required."] },
+  });
+});
+
+test("problemFromBody_BodyThatIsNotAProblem_KeepsOnlyTheStatus", () => {
+  assert.deepEqual(problemFromBody(502, "Bad Gateway"), { status: 502 });
+  assert.deepEqual(problemFromBody(0, undefined), { status: 0 });
 });

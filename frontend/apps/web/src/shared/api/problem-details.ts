@@ -40,6 +40,22 @@ export function toApiError(error: unknown): unknown {
   });
 }
 
+export function problemFromBody(status: number, body: unknown): Problem {
+  const members = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+  const fields = recordFields(members.errors);
+
+  return {
+    status,
+    ...optional("type", text(members.type)),
+    ...optional("title", text(members.title)),
+    ...optional("detail", text(members.detail)),
+    ...optional("instance", text(members.instance)),
+    ...optional("code", text(members.code)),
+    ...optional("traceId", text(members.traceId)),
+    ...(fields ? { fields } : {}),
+  };
+}
+
 function isHttpFailure(error: unknown): error is HttpFailure {
   return (
     typeof error === "object" &&
@@ -51,11 +67,14 @@ function isHttpFailure(error: unknown): error is HttpFailure {
 
 function validationFields(errors: unknown): Record<string, readonly string[]> | undefined {
   if (typeof errors !== "object" || errors === null || !("additionalData" in errors)) return undefined;
-  const { additionalData } = errors;
-  if (typeof additionalData !== "object" || additionalData === null) return undefined;
+  return recordFields(errors.additionalData);
+}
+
+function recordFields(value: unknown): Record<string, readonly string[]> | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
 
   const fields: Record<string, readonly string[]> = {};
-  for (const [name, messages] of Object.entries(additionalData)) {
+  for (const [name, messages] of Object.entries(value)) {
     if (Array.isArray(messages) && messages.every((message) => typeof message === "string")) {
       fields[name] = messages;
     }

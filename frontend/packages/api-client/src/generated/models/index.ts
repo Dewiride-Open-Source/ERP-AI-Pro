@@ -4,6 +4,59 @@
 // @ts-ignore
 import { type AdditionalDataHolder, type ApiError, type Guid, type Parsable, type ParseNode, type SerializationWriter } from '@microsoft/kiota-abstractions';
 
+export interface AttachmentResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The contentType property
+     */
+    contentType?: string | null;
+    /**
+     * The createdAt property
+     */
+    createdAt?: Date | null;
+    /**
+     * The createdBy property
+     */
+    createdBy?: Guid | null;
+    /**
+     * The fileName property
+     */
+    fileName?: string | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The scanStatus property
+     */
+    scanStatus?: AttachmentScanStatus | null;
+    /**
+     * The sha256 property
+     */
+    sha256?: string | null;
+    /**
+     * The sizeBytes property
+     */
+    sizeBytes?: number | null;
+}
+export type AttachmentScanStatus = (typeof AttachmentScanStatusObject)[keyof typeof AttachmentScanStatusObject];
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {AttachmentResponse}
+ */
+// @ts-ignore
+export function createAttachmentResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoAttachmentResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {DownloadLinkResponse}
+ */
+// @ts-ignore
+export function createDownloadLinkResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoDownloadLinkResponse;
+}
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
@@ -43,6 +96,15 @@ export function createHttpValidationProblemDetailsFromDiscriminatorValue(parseNo
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfAttachmentResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfAttachmentResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfAttachmentResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {ProblemDetails}
  */
 // @ts-ignore
@@ -75,6 +137,45 @@ export function createStartupResponseFromDiscriminatorValue(parseNode: ParseNode
 // @ts-ignore
 export function createSystemInfoResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoSystemInfoResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {UploadPolicyResponse}
+ */
+// @ts-ignore
+export function createUploadPolicyResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoUploadPolicyResponse;
+}
+/**
+ * The deserialization information for the current model
+ * @param AttachmentResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoAttachmentResponse(attachmentResponse: Partial<AttachmentResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "contentType": n => { attachmentResponse.contentType = n.getStringValue(); },
+        "createdAt": n => { attachmentResponse.createdAt = n.getDateValue(); },
+        "createdBy": n => { attachmentResponse.createdBy = n.getGuidValue(); },
+        "fileName": n => { attachmentResponse.fileName = n.getStringValue(); },
+        "id": n => { attachmentResponse.id = n.getGuidValue(); },
+        "scanStatus": n => { attachmentResponse.scanStatus = n.getEnumValue<AttachmentScanStatus>(AttachmentScanStatusObject); },
+        "sha256": n => { attachmentResponse.sha256 = n.getStringValue(); },
+        "sizeBytes": n => { attachmentResponse.sizeBytes = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param DownloadLinkResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoDownloadLinkResponse(downloadLinkResponse: Partial<DownloadLinkResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "expiresAt": n => { downloadLinkResponse.expiresAt = n.getDateValue(); },
+        "url": n => { downloadLinkResponse.url = n.getStringValue(); },
+    }
 }
 /**
  * The deserialization information for the current model
@@ -125,6 +226,21 @@ export function deserializeIntoHttpValidationProblemDetails(httpValidationProble
 // @ts-ignore
 export function deserializeIntoHttpValidationProblemDetails_errors(httpValidationProblemDetails_errors: Partial<HttpValidationProblemDetails_errors> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param PagedResponseOfAttachmentResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfAttachmentResponse(pagedResponseOfAttachmentResponse: Partial<PagedResponseOfAttachmentResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfAttachmentResponse.items = n.getCollectionOfObjectValues<AttachmentResponse>(createAttachmentResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfAttachmentResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfAttachmentResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfAttachmentResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfAttachmentResponse.totalPages = n.getNumberValue(); },
     }
 }
 /**
@@ -187,6 +303,28 @@ export function deserializeIntoSystemInfoResponse(systemInfoResponse: Partial<Sy
         "version": n => { systemInfoResponse.version = n.getStringValue(); },
     }
 }
+/**
+ * The deserialization information for the current model
+ * @param UploadPolicyResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoUploadPolicyResponse(uploadPolicyResponse: Partial<UploadPolicyResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "allowedContentTypes": n => { uploadPolicyResponse.allowedContentTypes = n.getCollectionOfPrimitiveValues<string>("string"); },
+        "maxSizeBytes": n => { uploadPolicyResponse.maxSizeBytes = n.getNumberValue(); },
+    }
+}
+export interface DownloadLinkResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The expiresAt property
+     */
+    expiresAt?: Date | null;
+    /**
+     * The url property
+     */
+    url?: string | null;
+}
 export interface FeaturesResponse extends AdditionalDataHolder, Parsable {
     /**
      * The features property
@@ -239,6 +377,28 @@ export interface HttpValidationProblemDetails extends AdditionalDataHolder, ApiE
 }
 export interface HttpValidationProblemDetails_errors extends AdditionalDataHolder, Parsable {
 }
+export interface PagedResponseOfAttachmentResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: AttachmentResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
+}
 export interface ProblemDetails extends AdditionalDataHolder, ApiError, Parsable {
     /**
      * Stable machine-readable error code; the type member is this code under /problems/.
@@ -274,6 +434,38 @@ export interface RecentStartupsResponse extends AdditionalDataHolder, Parsable {
      * The startups property
      */
     startups?: StartupResponse[] | null;
+}
+/**
+ * Serializes information the current object
+ * @param AttachmentResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeAttachmentResponse(writer: SerializationWriter, attachmentResponse: Partial<AttachmentResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!attachmentResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("contentType", attachmentResponse.contentType);
+    writer.writeDateValue("createdAt", attachmentResponse.createdAt);
+    writer.writeGuidValue("createdBy", attachmentResponse.createdBy);
+    writer.writeStringValue("fileName", attachmentResponse.fileName);
+    writer.writeGuidValue("id", attachmentResponse.id);
+    writer.writeEnumValue<AttachmentScanStatus>("scanStatus", attachmentResponse.scanStatus);
+    writer.writeStringValue("sha256", attachmentResponse.sha256);
+    writer.writeNumberValue("sizeBytes", attachmentResponse.sizeBytes);
+    writer.writeAdditionalData(attachmentResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param DownloadLinkResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeDownloadLinkResponse(writer: SerializationWriter, downloadLinkResponse: Partial<DownloadLinkResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!downloadLinkResponse || isSerializingDerivedType) { return; }
+    writer.writeDateValue("expiresAt", downloadLinkResponse.expiresAt);
+    writer.writeStringValue("url", downloadLinkResponse.url);
+    writer.writeAdditionalData(downloadLinkResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -329,6 +521,22 @@ export function serializeHttpValidationProblemDetails(writer: SerializationWrite
 export function serializeHttpValidationProblemDetails_errors(writer: SerializationWriter, httpValidationProblemDetails_errors: Partial<HttpValidationProblemDetails_errors> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
     if (!httpValidationProblemDetails_errors || isSerializingDerivedType) { return; }
     writer.writeAdditionalData(httpValidationProblemDetails_errors.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfAttachmentResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfAttachmentResponse(writer: SerializationWriter, pagedResponseOfAttachmentResponse: Partial<PagedResponseOfAttachmentResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfAttachmentResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<AttachmentResponse>("items", pagedResponseOfAttachmentResponse.items, serializeAttachmentResponse);
+    writer.writeNumberValue("page", pagedResponseOfAttachmentResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfAttachmentResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfAttachmentResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfAttachmentResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfAttachmentResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -394,6 +602,19 @@ export function serializeSystemInfoResponse(writer: SerializationWriter, systemI
     writer.writeStringValue("version", systemInfoResponse.version);
     writer.writeAdditionalData(systemInfoResponse.additionalData);
 }
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param UploadPolicyResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeUploadPolicyResponse(writer: SerializationWriter, uploadPolicyResponse: Partial<UploadPolicyResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!uploadPolicyResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfPrimitiveValues<string>("allowedContentTypes", uploadPolicyResponse.allowedContentTypes);
+    writer.writeNumberValue("maxSizeBytes", uploadPolicyResponse.maxSizeBytes);
+    writer.writeAdditionalData(uploadPolicyResponse.additionalData);
+}
 export interface StartupResponse extends AdditionalDataHolder, Parsable {
     /**
      * The applicationName property
@@ -446,5 +667,19 @@ export interface SystemInfoResponse extends AdditionalDataHolder, Parsable {
      */
     version?: string | null;
 }
+export interface UploadPolicyResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The allowedContentTypes property
+     */
+    allowedContentTypes?: string[] | null;
+    /**
+     * The maxSizeBytes property
+     */
+    maxSizeBytes?: number | null;
+}
+export const AttachmentScanStatusObject = {
+    NotScanned: "notScanned",
+    Clean: "clean",
+} as const;
 /* tslint:enable */
 /* eslint-enable */
