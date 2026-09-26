@@ -8,7 +8,7 @@ Every value the API reads comes from one of three places, and each place has one
 | `infra/appconfig/` (imported by `scripts/azure/seed.sh`) | the repository | every value the store holds: unlabelled defaults, per-label overrides, feature flags and Key Vault references |
 | Key Vault (`kv-erp-ai-pro-dev`, `kv-erp-ai-pro-prod`) | the operator | secret values, reached by the API only through the Key Vault references the seed writes |
 
-`scripts/azure/seed.sh` is the only writer of the seed files' keys. `Erp:Platform:Identity:TenantId` and `ClientId` are written by `entra.sh` and refused in a seed file. `Erp:Sentinel` is created under each label by `provision.sh` (which never changes an existing value), bumped by `seed.sh` on every run unless `--no-sentinel`, and bumped by hand as described below. `node --test "scripts/checks/tests/*.test.ts"` (run by `node scripts/verify/verify.ts` and CI) rejects a seed file that breaks the rules below.
+`scripts/azure/seed.sh` is the only writer of the seed files' keys. A key whose value identifies a provisioned resource is written by the script that creates the resource and refused in a seed file: `Erp:Platform:Identity:TenantId` and `ClientId` by `entra.sh`, and `Erp:Platform:Attachments:BlobServiceUri` (the development storage account's blob endpoint, label `local-dev`) by `provision.sh` from its deployment output. `Erp:Sentinel` is created under each label by `provision.sh` (which changes an existing value only to bump `local-dev` after it rewrote the blob endpoint), bumped by `seed.sh` on every run unless `--no-sentinel`, and bumped by hand as described below. `node --test "scripts/checks/tests/*.test.ts"` (run by `node scripts/verify/verify.ts` and CI) rejects a seed file that breaks the rules below.
 
 ## Naming
 
@@ -16,7 +16,7 @@ Every value the API reads comes from one of three places, and each place has one
 - Feature flag: `Erp.Modules.<Domain>.<Module>` for a module, `Erp.Modules.<Domain>.<Module>.<Capability>` for a capability (dots, because Microsoft.FeatureManagement forbids colons in a flag name).
 - Secret: `Erp--<Domain>--<Module>--<Name>` in Key Vault; the App Configuration key that references it follows the key rule (`Erp:Platform:Identity:ClientCertificate` → `Erp--Platform--Identity--ClientCertificate`).
 - Every value is a JSON string (`"8080"`, not `8080`), non-empty and free of control characters, so the repository's flattening and the CLI's agree byte for byte.
-- Never in a seed file: a store endpoint, a vault address, an Azure SQL host, a tenant, client or subscription id, a connection string or credential (`Server=`, `Password=`, `Secret=`, …), a key whose name ends in `Secret`, `Password`, `Token`, `ConnectionString`, `ApiKey`, `AccessKey`, `PrivateKey` or `Certificate` as a plain value (those are Key Vault references), an array (`Erp:Platform:Host:KnownNetworks` is host-local and comes from the compose file), any `Erp:Platform:Configuration:*` value (bootstrap-only, read before the store is connected), or the `Erp:Platform:Identity:TenantId` and `ClientId` keys `entra.sh` owns.
+- Never in a seed file: a store endpoint, a vault address, an Azure SQL host, a blob storage endpoint (`.blob.core.windows.net`), a tenant, client or subscription id, a connection string or credential (`Server=`, `Password=`, `Secret=`, …, also inside a query string such as a shared access signature's `?sv=…&sig=…`), a key whose name ends in `Secret`, `Password`, `Token`, `ConnectionString`, `ApiKey`, `AccessKey`, `PrivateKey`, `Certificate`, `EncryptionKey` or `EncryptionKeys` as a plain value (those are Key Vault references), an array (`Erp:Platform:Host:KnownNetworks` is host-local and comes from the compose file), a host-local value (`Erp:Platform:Attachments:EmulatorHost` is set only on the machine that runs the API: user secrets for a store-less `dotnet run`, the environment in tests and CI, the compose file for the local container stack), any `Erp:Platform:Configuration:*` value (bootstrap-only, read before the store is connected), the `Erp:Platform:Identity:TenantId` and `ClientId` keys `entra.sh` owns, or the `Erp:Platform:Attachments:BlobServiceUri` key `provision.sh` owns. An endpoint that `provision.sh` or `entra.sh` writes never goes into a seed file, not even under one label: the repository carries no identifier of a provisioned resource.
 
 ## Add a setting
 
@@ -46,8 +46,8 @@ A key that must differ per environment gets its unlabelled default in `defaults.
 1. Create the secret value in the vault of each environment that needs it, never in the repository. Put each value in a file first (with a text editor or `read -rs`, never as a command argument, so it reaches neither the shell history nor the process list), give each environment its own value, and delete the files afterwards:
 
    ```bash
-   az keyvault secret set --vault-name kv-erp-ai-pro-dev --name Erp--Finance--Gst--ApiKey --file ~/gst-api-key.dev --encoding utf-8
-   az keyvault secret set --vault-name kv-erp-ai-pro-prod --name Erp--Finance--Gst--ApiKey --file ~/gst-api-key.prod --encoding utf-8
+   az keyvault secret set --vault-name kv-erp-ai-pro-dev --name Erp--Finance--Gst--ApiKey --file ~/gst-api-key.dev --encoding utf-8 --output none
+   az keyvault secret set --vault-name kv-erp-ai-pro-prod --name Erp--Finance--Gst--ApiKey --file ~/gst-api-key.prod --encoding utf-8 --output none
    rm -f ~/gst-api-key.dev ~/gst-api-key.prod
    ```
 2. Add the reference to `infra/appconfig/key-vault-references.json`:

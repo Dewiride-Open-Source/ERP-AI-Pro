@@ -38,6 +38,8 @@ A handler therefore never calls `SaveChangesAsync`: it changes tracked entities 
 | `NotFound` | 404 |
 | `Conflict` | 409 |
 | `Forbidden` | 403 |
+| `TooLarge` | 413 (`Error.TooLarge`, for content a handler refuses after reading it, such as `attachment.too-large`) |
+| `UnsupportedType` | 415 (`Error.UnsupportedType`, such as `attachment.unsupported-type`, `attachment.extension-mismatch` and `attachment.content-mismatch`) |
 | `Failure` | 422 |
 
 ## Paging, sorting and filtering
@@ -56,7 +58,7 @@ Values are percent-encoded, so a value may itself contain `;`, `:` or `|`. A fie
 
 ## Idempotency
 
-A POST endpoint marked `.RequireIdempotencyKey()` demands an `Idempotency-Key` header carrying a UUID. `IdempotencyMiddleware` (after the feature gate, before the endpoint) fingerprints the request with SHA-256 over method, path, query, actor id and body, and claims the key in `platform_idempotency.IdempotencyKeys` keyed by (actor, key):
+A POST endpoint marked `.RequireIdempotencyKey()` demands an `Idempotency-Key` header carrying a UUID; every route that creates something is marked, except the attachments upload and `download-links` (ADR-0022: the middleware would buffer a whole upload and store a link's token in plain text). `IdempotencyMiddleware` (after the feature gate, before the endpoint) fingerprints the request with SHA-256 over method, path, query, actor id and body, and claims the key in `platform_idempotency.IdempotencyKeys` keyed by (actor, key):
 
 | Situation | Answer |
 |---|---|

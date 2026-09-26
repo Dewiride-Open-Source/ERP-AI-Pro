@@ -1,6 +1,6 @@
 # Azure bootstrap (operator guide)
 
-The scripts under `scripts/azure/` create and converge the only Azure resources this project uses: one App Configuration store, one Key Vault per environment and, from sub-phase `azure-configuration-entra-app-registration-scripts`, the Entra app registrations. Every script is idempotent: a second run with the same parameter file changes nothing, with one deliberate exception: `seed.sh` bumps the labelled `Erp:Sentinel` on every run unless `--no-sentinel` is given (section 5b). Nothing in this guide or in the scripts deletes or purges a resource.
+The scripts under `scripts/azure/` create and converge the only Azure resources this project uses: one App Configuration store, one Key Vault per environment, the development storage account that holds attachments (the production account belongs to the `first-deployment` phase) and, from sub-phase `azure-configuration-entra-app-registration-scripts`, the Entra app registrations. Every script is idempotent: a second run with the same parameter file changes nothing, with one deliberate exception: `seed.sh` bumps the labelled `Erp:Sentinel` on every run unless `--no-sentinel` is given (section 5b). Nothing in this guide or in the scripts deletes or purges a resource.
 
 ## 1. Purpose and resources
 
@@ -8,13 +8,18 @@ Resource names come from `scripts/azure/params.env`; the defaults below are the 
 
 | Resource | Default name | Purpose |
 |---|---|---|
-| Resource group | `rg-erp-ai-pro` | holds everything below; the group, the store and both vaults are tagged `project=erp-ai-pro`, `managedBy=scripts/azure` |
+| Resource group | `rg-erp-ai-pro` | holds everything below; the group, the store, both vaults and the storage account are tagged `project=erp-ai-pro`, `managedBy=scripts/azure` |
 | App Configuration store | `appcs-erp-ai-pro` | every non-secret setting and feature flag, unlabelled defaults overridden by the labels `local-dev` and `production`; local authentication disabled, Entra ID only |
 | Key Vault (development) | `kv-erp-ai-pro-dev` | secrets and certificates for `local-dev`, reached by the API only as App Configuration Key Vault references |
 | Key Vault (production) | `kv-erp-ai-pro-prod` | secrets and certificates for `production`, including the runtime certificate the server signs in with |
 | Data-protection key | `Erp--Platform--DataProtection--Key` in both vaults | RSA 2048 key with `wrapKey`/`unwrapKey`; the `authentication` phase protects the ASP.NET Core Data Protection key ring with it |
+| Storage account (development) | `sterpaiprodev` | attachment content for `dotnet run` and local Playwright runs against the `local-dev` label; `StorageV2`, `Standard_LRS`, access tier Hot, in the resource group's region |
+| Blob container | `attachments` in the development account | the only container; private (`publicAccess` `None`) and created by the template, so the API never needs the right to create containers |
+| Resource lock | `do-not-delete` (`CanNotDelete`) on the development account | blocks deletion of the account, which blob and container soft delete do not cover |
 
 Both vaults use RBAC authorization, soft delete with a 90-day retention and purge protection. The store runs on the Free tier by the owner's decision (ADR-0010); it has no soft delete, so the seed files in the repository are its recovery path.
+
+The storage account accepts Entra ID only: `allowSharedKeyAccess` is `false`, so no account key, connection string, account SAS or service SAS can authorize a request, and `defaultToOAuthAuthentication` makes the portal use Entra ID as well. Public blob access and cross-tenant object replication are disallowed, the minimum TLS version is 1.2, only HTTPS is accepted, and the hierarchical namespace, SFTP, NFS 3.0 and local users are off. The public endpoint stays reachable (`publicNetworkAccess` `Enabled`, network rule `defaultAction` `Allow`) because developer machines and the on-premises server have no virtual network to restrict to; every request still needs an Entra token and a data role. Blob soft delete and container soft delete keep deleted data for 7 days; versioning and the change feed are off, because the API writes each blob once under a new unique name (the version-7 id of its stored-content row) and never overwrites it. The API encrypts every attachment with its own AES-256-GCM envelope before upload (key in Key Vault as `Erp--Platform--Attachments--EncryptionKey`, [runbooks/secrets.md](runbooks/secrets.md) section 5f); Azure's server-side encryption with Microsoft-managed keys stays on underneath.
 
 ## 2. Prerequisites
 
@@ -24,7 +29,7 @@ Both vaults use RBAC authorization, soft delete with a 90-day retention and purg
 | Shell | Git Bash on Windows or bash on Ubuntu; the scripts set `MSYS_NO_PATHCONV=1` themselves |
 | openssl | on `PATH`; `export-runtime-certificate.sh` checks the exported PEM with it |
 | Node.js | 24 LTS (`node` parses deployment output; `jq` is never required) |
-| Subscription rights | Owner, or Contributor plus User Access Administrator, on the subscription or on the resource group once it exists |
+| Subscription rights | Owner, or Contributor plus User Access Administrator, on the subscription or on the resource group once it exists; the storage account lock needs `Microsoft.Authorization/locks/*`, which both combinations include |
 | Entra rights | Application Administrator or Cloud Application Administrator for `entra.sh`; Global Administrator only when the tenant refuses the delegated permission grant and the admin-consent fallback in section 5a is needed |
 
 ## 3. Parameter file
@@ -44,8 +49,9 @@ cp scripts/azure/params.env.example scripts/azure/params.env
 | `ERP_AZURE_APPCONFIG_NAME` | yes | `appcs-erp-ai-pro` | App Configuration store name (globally unique; the endpoint becomes `https://<name>.azconfig.io`) |
 | `ERP_AZURE_KEYVAULT_DEV_NAME` | yes | `kv-erp-ai-pro-dev` | development vault name (globally unique, 3–24 characters) |
 | `ERP_AZURE_KEYVAULT_PROD_NAME` | yes | `kv-erp-ai-pro-prod` | production vault name (globally unique, 3–24 characters) |
+| `ERP_AZURE_STORAGE_DEV_NAME` | no | `sterpaiprodev` | development storage account name (globally unique, 3–24 lowercase letters or digits; the blob endpoint becomes `https://<name>.blob.core.windows.net/`); while the account does not exist yet, `provision.sh` checks the name with `az storage account check-name` before the what-if and stops, naming this parameter, when the name is taken or invalid |
 | `ERP_AZURE_APPCONFIG_SKU` | no | `Free` | `Free`, `Developer`, `Standard` or `Premium`; purge protection is applied only for `Standard` and `Premium` |
-| `ERP_AZURE_DEVELOPERS_GROUP` | no | empty | display name or object id of an Entra security group whose members read the store and the development vault; empty skips those role assignments |
+| `ERP_AZURE_DEVELOPERS_GROUP` | no | empty | display name or object id of an Entra security group whose members read the store and the development vault and write blobs in the development `attachments` container; empty skips those role assignments |
 | `ERP_AZURE_PRODUCTION_WEB_ORIGIN` | no | empty | public origin of the production web app (`https://erp.example.com`); empty until the host name exists |
 | `ERP_AZURE_LOCAL_WEB_ORIGIN` | no | `http://localhost:3000` | origin of the local web app |
 | `ERP_AZURE_LOCAL_API_ORIGIN` | no | `http://localhost:5080` | origin of the local API |
@@ -60,18 +66,18 @@ Run every command from the repository root.
 | Step | Command | What it does |
 |---|---|---|
 | 1 | `bash scripts/azure/check.sh` | compiles the Bicep template with the linter and syntax-checks every script; no sign-in needed |
-| 2 | `bash scripts/azure/provision.sh --dry-run` | prints the `what-if` result and every data-plane command without writing anything |
-| 3 | `bash scripts/azure/provision.sh` | creates or converges the resource group, the store, both vaults, the data-protection keys, the role assignments and the two labelled `Erp:Sentinel` keys |
+| 2 | `bash scripts/azure/provision.sh --dry-run` | checks the storage account name (read-only), prints the `what-if` result and every data-plane command without writing anything |
+| 3 | `bash scripts/azure/provision.sh` | creates or converges the resource group, the store, both vaults, the data-protection keys, the development storage account with its `attachments` container and lock, the role assignments, the two labelled `Erp:Sentinel` keys and `Erp:Platform:Attachments:BlobServiceUri` under `local-dev` (section 5c) |
 | 4 | `bash scripts/azure/entra.sh --dry-run` | prints every Graph, Key Vault and App Configuration write it would make, with `<pending>` in place of the ids a create would produce; writes nothing |
 | 5 | `bash scripts/azure/entra.sh` | creates or converges the three app registrations, their service principals, app roles, Graph consent, certificates and key credentials, assigns the operator `Erp.Admin` and writes the identity ids to App Configuration (section 5a) |
 | 6 | `bash scripts/azure/provision.sh` | run again: grants the runtime service principal App Configuration Data Reader on the store and Key Vault Secrets User plus Crypto User on the production vault, which cannot exist before step 5 |
-| 7 | `bash scripts/azure/seed.sh --dry-run` | previews every import with the CLI's own `--dry-run` and prints every other write; writes nothing |
+| 7 | `bash scripts/azure/seed.sh --dry-run` | previews every import with the CLI's own `--dry-run` and prints every other write; writes nothing. Create `Erp--Platform--Attachments--EncryptionKey` in the development vault first ([runbooks/secrets.md](runbooks/secrets.md) section 5f): the `local-dev` reference to it stops the real run while the secret is missing |
 | 8 | `bash scripts/azure/seed.sh` | imports `infra/appconfig` (unlabelled defaults, each label file, feature flags, Key Vault references) and bumps the labelled sentinels (section 5b) |
-| 9 | `bash scripts/azure/verify.sh` | reads the provisioned resources back and prints `[ok]` or `[FAIL]` per assertion |
+| 9 | `bash scripts/azure/verify.sh` | reads the provisioned resources back and prints `[ok]` or `[FAIL]` per assertion; for the storage account it checks the account properties, the blob service settings, the private container, the lock, the container-scoped roles and a read-only blob listing signed in with Entra ID (`--auth-mode login`) |
 | 10 | `bash scripts/azure/verify.sh --entra` | reads the registrations, service principals, grants, certificates, key credentials and identity ids back |
-| 11 | `bash scripts/azure/verify.sh --labels` | reads every seeded value, flag and reference back and proves the `local-dev` label overrides the unlabelled default |
+| 11 | `bash scripts/azure/verify.sh --labels` | reads every seeded value, flag and reference back, proves the `local-dev` label overrides the unlabelled default and compares `Erp:Platform:Attachments:BlobServiceUri [local-dev]` with the account's blob endpoint |
 
-`provision.sh` ends by printing `APPCONFIG_ENDPOINT=https://<store>.azconfig.io` and both vault URIs. Keep the endpoint: developers put it in `dotnet user-secrets`, and the server puts it in `infra/compose/.env`, from which `compose.yaml` passes it to the api container as `APPCONFIG_ENDPOINT`.
+`provision.sh` ends by printing `APPCONFIG_ENDPOINT=https://<store>.azconfig.io`, both vault URIs and `ATTACHMENTS_BLOB_ENDPOINT_DEV=https://<account>.blob.core.windows.net/`. Keep the store endpoint: developers put it in `dotnet user-secrets`, and the server puts it in `infra/compose/.env`, from which `compose.yaml` passes it to the api container as `APPCONFIG_ENDPOINT`. The blob endpoint needs no copying when the API loads the store, because `provision.sh` writes it there itself (section 5c); a store-less `dotnet run` reads the same endpoint from `dotnet user-secrets` instead ([docs/guides/local-development.md](../guides/local-development.md), section "Attachments storage").
 
 ## 5. Access model
 
@@ -92,19 +98,23 @@ Role assignments are scoped to the individual resource and named deterministical
 | operator | production vault | Key Vault Crypto Officer | `14b46e9e-c2b7-41b4-b07b-48a6ebf60603` |
 | runtime service principal (optional) | production vault | Key Vault Secrets User | `4633458b-17de-408a-b874-0445c86b69e6` |
 | runtime service principal (optional) | production vault | Key Vault Crypto User | `12338af0-0e69-4776-bea7-57ae8d297424` |
+| operator | `attachments` container of the development account | Storage Blob Data Contributor | `ba92f5b4-2d11-453d-a403-e96b0029c9fe` |
+| developers group (optional) | `attachments` container of the development account | Storage Blob Data Contributor | `ba92f5b4-2d11-453d-a403-e96b0029c9fe` |
 
 Key Vault Certificate User is deliberately unassigned: the API reads sign-in certificates through the secret endpoint, which Key Vault Secrets User covers.
+
+The storage roles are scoped to the one container, not to the account, following Microsoft's advice to scope data roles as narrowly as possible. They are the developers group's first write permission in Azure: `dotnet run` and local Playwright runs upload, read and delete attachment blobs as the developer's own `az login` identity, so every member of the group can change development attachment data (never production data, which lives in a separate account). The runtime service principal and the migrator hold no role on the development account; the production account and the runtime service principal's role on its container come with the `first-deployment` phase. The scripts assign nobody Storage Account Contributor (it includes the account keys), Storage Blob Data Owner or Storage Blob Delegator: with Shared Key disabled no key or key-signed SAS works anyway, and the API streams every download itself, so no user delegation SAS is ever issued. A new or removed storage role takes up to 10 minutes to take effect on blob requests; a `403` from blob storage inside that window is expected.
 
 Sign-in each script needs:
 
 | Script | Sign-in |
 |---|---|
 | `check.sh` | none |
-| `provision.sh` | `az login --tenant <ERP_AZURE_TENANT_ID>` as the operator: the subscription rights above plus directory read access to resolve the developers group and the runtime service principal |
+| `provision.sh` | `az login --tenant <ERP_AZURE_TENANT_ID>` as the operator: the subscription rights above plus directory read access to resolve the developers group and the runtime service principal; App Configuration Data Owner on the store for `Erp:Platform:Attachments:BlobServiceUri` and the sentinels |
 | `entra.sh` | the same sign-in as Application Administrator or Cloud Application Administrator (Global Administrator only for the admin-consent fallback in section 5a), plus the operator's Key Vault Certificates Officer role on both vaults and App Configuration Data Owner on the store |
 | `export-runtime-certificate.sh` | the operator's Key Vault Secrets Officer role on the production vault |
 | `seed.sh` | the operator's roles on the store and both vaults |
-| `verify.sh` | read access to the resource group, App Configuration Data Reader or Owner on the store, and key read rights on both vaults (the operator's roles cover this); `--entra` additionally needs directory read access and certificate read rights on both vaults |
+| `verify.sh` | read access to the resource group, App Configuration Data Reader or Owner on the store, key read rights on both vaults and a blob data role on the development `attachments` container for the listing (the operator's roles cover this); `--entra` additionally needs directory read access and certificate read rights on both vaults |
 
 No script signs in or switches subscriptions itself. When the CLI context differs from `params.env`, the script stops and prints the exact `az login --tenant <id>` or `az account set --subscription <id>` command to run.
 
@@ -195,12 +205,21 @@ Nothing else: `Erp:Platform:Identity:Instance` and the Key Vault reference `Erp:
 - The sentinel bump is the only write an unchanged re-run performs; a running API reloads within `Erp:Platform:Configuration:RefreshInterval`, and restarting the api container applies the change at once.
 - How to add a setting, a flag or a secret: [docs/guides/adding-a-setting.md](../guides/adding-a-setting.md).
 
+## 5c. What provision.sh writes to App Configuration
+
+| Key | Label | Value |
+|---|---|---|
+| `Erp:Sentinel` | `local-dev` and `production` | a UTC timestamp, written when the key is absent; under `local-dev` also whenever the run changed the blob endpoint below |
+| `Erp:Platform:Attachments:BlobServiceUri` | `local-dev` | the development account's blob endpoint from the deployment output `developmentAttachmentsBlobEndpoint` (`https://<account>.blob.core.windows.net/`) |
+
+`provision.sh` writes the endpoint after every deployment, but only when the stored value differs, and bumps the `local-dev` sentinel only in that case, so a running API reloads the new endpoint while an unchanged re-run stays write-free. The endpoint names a provisioned resource, so it never appears in a seed file: `seed-files.ts` refuses the key and any value containing `.blob.core.windows.net`. Its `production` value is written by the `first-deployment` phase together with the production account. The API reads no other storage setting from the store that a script writes: the container name comes from `appsettings.json`, the tunables from `infra/appconfig/defaults.json` and the encryption key from its Key Vault reference.
+
 ## 6. Developer onboarding
 
-1. Ask the operator to add you to the developers group when `ERP_AZURE_DEVELOPERS_GROUP` is configured; otherwise the operator assigns App Configuration Data Reader on the store and Key Vault Secrets User plus Key Vault Crypto User on the development vault to your account by hand.
-2. `az login --tenant <tenant id>` on your machine.
-3. Store the endpoint the operator gives you: `cd backend && dotnet user-secrets set APPCONFIG_ENDPOINT https://<store>.azconfig.io --project Hosts/Api/Dewiride.Erp.Host.Api`. The next `dotnet run` loads the store with the `local-dev` label and its Key Vault references; without the value the API runs on `appsettings.json` plus user secrets.
-4. A new role assignment can take up to 15 minutes to propagate; a `403` from the store or the vault inside that window is expected.
+1. Ask the operator to add you to the developers group when `ERP_AZURE_DEVELOPERS_GROUP` is configured; otherwise the operator assigns App Configuration Data Reader on the store, Key Vault Secrets User plus Key Vault Crypto User on the development vault and Storage Blob Data Contributor on the `attachments` container of the development storage account (scope `/subscriptions/<subscription>/resourceGroups/<group>/providers/Microsoft.Storage/storageAccounts/<account>/blobServices/default/containers/attachments`, never the account) to your account by hand.
+2. `az login --tenant <tenant id>` on your machine; with several signed-in accounts, `az account set --subscription <subscription id>` selects the tenant the API's `AzureCliCredential` uses.
+3. Store the endpoint the operator gives you: `cd backend && dotnet user-secrets set APPCONFIG_ENDPOINT https://<store>.azconfig.io --project Hosts/Api/Dewiride.Erp.Host.Api`. The next `dotnet run` loads the store with the `local-dev` label and its Key Vault references, including the attachments blob endpoint and encryption key; without the value the API runs on `appsettings.json` plus user secrets.
+4. A new role assignment can take up to 15 minutes to propagate to the store and the vault and up to 10 minutes to blob storage; a `403` inside that window is expected.
 
 ## 7. Production server
 
@@ -214,7 +233,7 @@ The server signs in as the runtime service principal with the certificate export
 | `AZURE_CLIENT_CERTIFICATE_PATH` | `/run/secrets/erp-runtime-client.pem` | the compose secret mounted from `infra/compose/secrets/erp-runtime-client.pem` |
 | `APPCONFIG_ENDPOINT` | `https://<store>.azconfig.io` | printed by `provision.sh` |
 
-`ERP_ENVIRONMENT=production` selects the label. The placement of the certificate on the host is described in section 5a; the first deployment that uses these values belongs to the `first-deployment` phase.
+`ERP_ENVIRONMENT=production` selects the label. The placement of the certificate on the host is described in section 5a; the first deployment that uses these values belongs to the `first-deployment` phase. That phase also creates the production storage account with its own `attachments` container, grants the runtime service principal Storage Blob Data Contributor on that container only, writes `Erp:Platform:Attachments:BlobServiceUri` and the `Erp:Platform:Attachments:EncryptionKey` reference under `production`, and creates the production encryption key; nothing in this guide provisions them.
 
 ## 8. Re-running and recovery
 
@@ -225,9 +244,15 @@ The server signs in as the runtime service principal with the certificate export
 - Soft-deleted certificate (deleted in the portal to start over): `entra.sh` stops and prints `az keyvault certificate recover --vault-name <vault> --name <certificate>`; purge protection keeps the name reserved, so recovery is the only way forward.
 - Store on the Free tier: there is no soft delete, so a deleted store is recreated by `provision.sh` and repopulated by `seed.sh` (and `entra.sh`, which writes the identity ids). On `Standard` or `Premium` run `az appconfig recover --name <store>` first.
 - `NameUnavailable` on the store or `VaultAlreadyExists` on a vault means the name is taken globally, either by another subscription or by a soft-deleted vault of your own (`az keyvault list-deleted`). Recover your own vault as above or choose a new name in `params.env`.
-- A `403` immediately after a fresh role assignment is propagation delay: the scripts retry data-plane calls for about five minutes (20 attempts, 15 seconds apart) and then stop with a message that role assignments can take up to 15 minutes to propagate; re-run when it does.
+- `provision.sh` stopping with `storage account name '<name>' cannot be used (AlreadyExists: ...)` or `(AccountNameInvalid: ...)` means the name is taken by any Azure customer or breaks the naming rule; set another `ERP_AZURE_STORAGE_DEV_NAME` in `params.env`. The check runs only while the account is not in the resource group, so a converged account never trips it. When `az storage account check-name` itself fails with `MissingSubscriptionRegistration`, the subscription has never used storage: `az provider register --namespace Microsoft.Storage --wait` once, then re-run.
+- Storage account lock: `do-not-delete` makes deleting the development account, and deleting the resource group that holds it, fail until the lock is removed (`az lock delete --name do-not-delete --resource <account resource id>`). A `CanNotDelete` lock also blocks deleting role assignments at the account and its container, so removing a storage role assigned directly to a person, or the developers group's own assignment, means lifting the lock first and running `provision.sh` afterwards, which puts the lock back. Removing a person from the developers group is a group-membership change and works with the lock in place.
+- Deleted blob: blob soft delete keeps it for 7 days; restore it with `az storage blob undelete --account-name <account> --container-name attachments --name <blob name> --auth-mode login` (the blob name is the `Id` of its row in `files.StoredContents`, written as 32 hexadecimal digits without hyphens). A blob can only be restored while its container exists.
+- Deleted container: container soft delete keeps it, with every blob in it, for 7 days, but only while no container with the same name exists, so restore it before `provision.sh` runs again, because the template would create a new empty `attachments` container and make the deleted one unrestorable. Listing and restoring containers are account-level operations that the container-scoped roles do not cover: grant yourself Storage Blob Data Contributor on the account for the duration, find the version with `az storage container list --account-name <account> --prefix attachments --include-deleted --auth-mode login`, restore it with `az storage container restore --account-name <account> --name attachments --deleted-version <version> --auth-mode login`, then remove the temporary assignment (the lock must be lifted for that, as above).
+- Deleted storage account: the lock makes this a deliberate act. Microsoft recovers a deleted account on a best-effort basis for 14 days, from the portal's storage account list (**Restore**), only while no new account with the same name has been created and only into an existing resource group (recreate `rg-erp-ai-pro` with the same name first if it was deleted); the person restoring needs `Microsoft.Storage/storageAccounts/write`, which the operator's subscription rights include; run `provision.sh` afterwards to restore the lock and role assignments.
+- A `403` immediately after a fresh role assignment is propagation delay: the scripts retry data-plane calls for about five minutes (20 attempts, 15 seconds apart) and then stop with a message that role assignments can take up to 15 minutes to propagate; re-run when it does. Storage data roles take up to 10 minutes; `verify.sh` reports a failed blob listing inside that window with the same hint.
 
 ## 9. Never automated
 
-- Deleting or purging the resource group, the store, a vault, a key, a secret or a certificate is never scripted. Deletion is a deliberate owner action in the portal or with the CLI, and purge protection makes a purged vault impossible before the retention period ends.
-- A vault name stays reserved for the 90-day soft-delete retention after deletion; plan renames accordingly.
+- Deleting or purging the resource group, the store, a vault, a key, a secret, a certificate, the storage account, its container or its lock is never scripted. Deletion is a deliberate owner action in the portal or with the CLI, and purge protection makes a purged vault impossible before the retention period ends.
+- A vault name stays reserved for the 90-day soft-delete retention after deletion; plan renames accordingly. A storage account name carries no such guarantee: once the account is gone, anyone may create an account with that name, which also ends any chance of recovering it.
+- Changing `ERP_AZURE_STORAGE_DEV_NAME` after the account exists creates a second, empty account on the next run and points `Erp:Platform:Attachments:BlobServiceUri [local-dev]` at it; the old account and its lock stay behind for the owner to remove by hand once its data is no longer needed.

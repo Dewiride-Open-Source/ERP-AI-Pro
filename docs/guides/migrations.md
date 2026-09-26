@@ -4,7 +4,15 @@ How to change the database schema, apply it, check it and seed reference data. T
 
 ## The tooling: `scripts/ef/ef.ts`
 
-Every command runs from the repository root and wraps the pinned `dotnet ef` local tool (`cd backend && dotnet tool restore` once) with the API host as startup project. Contexts are discovered from the source tree: every class deriving from `ModuleDbContext` in a `Persistence` folder under `backend/Modules` or `backend/BuildingBlocks`, keyed by its name without `DbContext` in kebab case.
+Every command runs from the repository root and wraps the pinned `dotnet ef` local tool (`cd backend && dotnet tool restore` once) with the API host as startup project. Contexts are discovered from the source tree: every class deriving from `ModuleDbContext` in a `Persistence` folder under `backend/Modules` or `backend/BuildingBlocks`, keyed by its name without `DbContext` in kebab case. Today `list` prints three:
+
+| Key | Context | Project | Schema |
+|---|---|---|---|
+| `attachments` | `AttachmentsDbContext` | `BuildingBlocks/Attachments/Dewiride.Erp.BuildingBlocks.Attachments` | `files` (`Attachments`, `StoredContents`, `UploadReservations`, `DownloadLinks`, `DownloadRedemptions`) |
+| `idempotency` | `IdempotencyDbContext` | `BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency` | `platform_idempotency` |
+| `system-info` | `SystemInfoDbContext` | `Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo` | `platform_system_info` |
+
+The migrator applies them in catalogue order, `platform_idempotency`, `files`, `platform_system_info`, which is the order `AddErpPlatform` registers them in (building blocks first, then `Modules.All`). A key comes from the class name and a schema from the context, so the `attachments` key names the `files` schema.
 
 | Task | Command |
 |---|---|
@@ -43,6 +51,8 @@ The migrator program (`Hosts/Migrator/Dewiride.Erp.Host.Migrator`) applies every
 | anything else | 64 with the usage line |
 
 It uses `Erp:Platform:Database:MigratorConnectionString` when set, otherwise `Erp:Platform:Database:ConnectionString`. EF Core holds a database-wide lock while migrating, so two migrators never run at once, and each migration runs in its own transaction.
+
+The migrator creates the `files` schema but needs no `Erp:Platform:Attachments` setting: `AddErpAttachments` binds the attachment options without `ValidateOnStart()`, and only the API validates them, when its `AttachmentStorageInitializer` starts ([ADR-0022](../adr/0022-attachments-in-azure-blob-storage.md)). The compose `migrator` service therefore receives neither the storage emulator host nor the encryption key file, and `MigratorApplicationTests.RunAsync_MigrateWithoutAnyAttachmentSetting_SucceedsAndCreatesTheFilesTables` keeps it that way.
 
 ## Seeding reference data
 

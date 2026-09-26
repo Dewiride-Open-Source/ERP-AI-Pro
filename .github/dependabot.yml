@@ -117,7 +117,9 @@ updates:
     commit-message:
       prefix: "ci(deps)"
 
-  # The SQL Server image in .github/actions/start-sql-server/action.yml runs through docker run, which no ecosystem scans; its digest is bumped by hand
+  # The SQL Server image in .github/actions/start-sql-server/action.yml and the Azurite image in .github/actions/start-azurite/action.yml run
+  # through docker run, which no ecosystem scans, so their digests are bumped by hand; the Azurite reference follows the one the docker-compose
+  # ecosystem below bumps in infra/compose/compose.override.yaml, and scripts/checks/tests/azurite-pin.test.ts fails while the two differ
   - package-ecosystem: docker
     directory: /infra/docker
     schedule:
