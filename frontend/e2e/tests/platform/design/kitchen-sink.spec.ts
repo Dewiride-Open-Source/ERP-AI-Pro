@@ -748,6 +748,21 @@ test.describe("design system kitchen sink", () => {
       await capture("dialog-open", dialog);
       await dismissWithEscape(page, dialog, dialogTrigger);
       await dialogTrigger.click();
+      for (const [field, value] of [
+        ["Name", "Priya S."],
+        ["Email", "priya.s@example.com"],
+      ] as const) {
+        await dialog.getByRole("textbox", { name: field }).fill(value);
+        await expect(dialog.getByRole("textbox", { name: field })).toHaveValue(value);
+      }
+      await dialog.getByRole("button", { name: "Cancel" }).click();
+      await expect(dialog).toBeHidden();
+      await expect(dialogTrigger).toBeFocused();
+      await dialogTrigger.click();
+      await dialog.getByRole("button", { name: "Close" }).click();
+      await expect(dialog).toBeHidden();
+      await expect(dialogTrigger).toBeFocused();
+      await dialogTrigger.click();
       await dialog.getByRole("button", { name: "Save" }).click();
       await expect(dialog).toBeHidden();
       await expect(kitchenSink.toast("Contact saved")).toBeVisible();
@@ -789,6 +804,12 @@ test.describe("design system kitchen sink", () => {
     `);
       await capture("sheet-right-open", filters);
       await dismissWithEscape(page, filters, filtersTrigger);
+      await filtersTrigger.click();
+      await filters.getByRole("textbox", { name: "Client" }).fill("Acme");
+      await expect(filters.getByRole("textbox", { name: "Client" })).toHaveValue("Acme");
+      await filters.getByRole("button", { name: "Close" }).click();
+      await expect(filters).toBeHidden();
+      await expect(filtersTrigger).toBeFocused();
       await filtersTrigger.click();
       await filters.getByRole("button", { name: "Apply" }).click();
       await expect(filters).toBeHidden();
@@ -1120,11 +1141,12 @@ test.describe("design system kitchen sink", () => {
       const fileTrigger = kitchenSink.menubarTrigger("File");
       const editTrigger = kitchenSink.menubarTrigger("Edit");
       await expect(fileTrigger).toBeFocused();
-      await expect(fileTrigger).not.toHaveCSS("box-shadow", "none");
+      await expect(fileTrigger).toHaveCSS("outline-style", "solid");
+      await expect(fileTrigger).toHaveCSS("outline-width", "2px");
       await page.keyboard.press("ArrowRight");
       await expect(editTrigger).toBeFocused();
-      await expect(editTrigger).not.toHaveCSS("box-shadow", "none");
-      await expect(fileTrigger).toHaveCSS("box-shadow", "none");
+      await expect(editTrigger).toHaveCSS("outline-style", "solid");
+      await expect(fileTrigger).toHaveCSS("outline-style", "none");
 
       const editMenu = kitchenSink.menu("Edit");
       await page.keyboard.press("Enter");
@@ -1338,7 +1360,8 @@ test.describe("design system kitchen sink", () => {
         await tabs.getByRole("tab", { name: tab }).focus();
         await page.keyboard.press("Tab");
         await expect(tabs.getByRole("tabpanel")).toBeFocused();
-        await expect(tabs.getByRole("tabpanel")).not.toHaveCSS("box-shadow", "none");
+        await expect(tabs.getByRole("tabpanel")).toHaveCSS("outline-style", "solid");
+        await expect(tabs.getByRole("tabpanel")).toHaveCSS("outline-width", "2px");
       }
       const breadcrumb = navigation.getByRole("navigation", { name: "breadcrumb" });
       await breadcrumb.getByRole("link", { name: "Primitives" }).click();
@@ -1394,8 +1417,15 @@ test.describe("design system kitchen sink", () => {
       await expect(dataDisplay.getByText("Branch office, Pune")).toBeVisible();
       await moreAddresses.click();
       await expect(dataDisplay.getByText("Branch office, Pune")).toBeHidden();
-      await dataDisplay.getByRole("checkbox", { name: "Created by" }).click();
-      await expect(dataDisplay.getByRole("checkbox", { name: "Created by" })).toBeChecked();
+      const columns = dataDisplay.getByRole("group", { name: "Columns to show" }).getByRole("checkbox");
+      const columnCount = await columns.count();
+      expect(columnCount, "column checkboxes").toBeGreaterThan(1);
+      for (let index = 0; index < columnCount; index += 1) {
+        const column = columns.nth(index);
+        const wasChecked = await column.isChecked();
+        await column.click();
+        await expect(column).toBeChecked({ checked: !wasChecked });
+      }
       await clickEveryEnabledButton(dataDisplay.getByTestId("data-display-scroll-horizontal"));
       await dataDisplay.getByRole("link", { name: /^Link item/ }).click();
       await expect(page).toHaveURL(/#data-display$/);
@@ -1456,13 +1486,26 @@ test.describe("design system kitchen sink", () => {
     const header = await new AppShell(page).banner.boundingBox();
     expect(header, "header bounding box").not.toBeNull();
     const headerBottom = (header?.y ?? 0) + (header?.height ?? 0);
-    await expect(html(page)).toHaveCSS("scroll-padding-top", `${header?.height ?? 0}px`);
+    const ringExtent = await page.evaluate(() => {
+      const root = getComputedStyle(document.documentElement);
+      return (
+        Number.parseFloat(root.getPropertyValue("--focus-ring-width")) +
+        Number.parseFloat(root.getPropertyValue("--focus-ring-offset"))
+      );
+    });
+    expect(ringExtent, "focus ring width plus offset").toBeGreaterThan(0);
+    const scrollPadding = Number.parseFloat(
+      await html(page).evaluate((element) => getComputedStyle(element).scrollPaddingTop),
+    );
+    expect(scrollPadding, "scroll-padding-top").toBeGreaterThanOrEqual((header?.height ?? 0) + ringExtent);
 
     await kitchenSink.section("overlays").getByRole("button", { name: "Edit contact" }).focus();
     for (let stop = 1; stop <= 12; stop += 1) {
       await page.keyboard.press("Shift+Tab");
       const top = await page.evaluate(() => document.activeElement?.getBoundingClientRect().top ?? 0);
-      expect(top, `top of focus stop ${stop} before Edit contact`).toBeGreaterThanOrEqual(headerBottom);
+      expect(top - ringExtent, `focus ring of stop ${stop} before Edit contact`).toBeGreaterThanOrEqual(
+        headerBottom,
+      );
     }
   });
 
@@ -1484,12 +1527,20 @@ test.describe("design system kitchen sink", () => {
       await page.keyboard.press("Escape");
       await expect(kitchenSink.invoiceActionsMenu).toBeHidden();
 
-      await openContextMenu(kitchenSink.contextMenuArea, kitchenSink.contextMenu);
-      await expectInsideScreen(kitchenSink.contextMenu);
-      await kitchenSink.contextMenu.getByRole("menuitem", { name: "Move to" }).click();
-      await expectInsideScreen(kitchenSink.menu("Move to"));
-      await page.keyboard.press("Escape");
-      await expect(kitchenSink.contextMenu).toBeHidden();
+      const area = await kitchenSink.contextMenuArea.boundingBox();
+      expect(area, "context-menu area bounding box").not.toBeNull();
+      for (const x of [4, (area?.width ?? 0) / 2, (area?.width ?? 0) - 4]) {
+        await kitchenSink.contextMenuArea.click({
+          button: "right",
+          position: { x, y: (area?.height ?? 0) / 2 },
+        });
+        await expectInsideScreen(kitchenSink.contextMenu);
+        await kitchenSink.contextMenu.getByRole("menuitem", { name: "Move to" }).click();
+        await expectInsideScreen(kitchenSink.menu("Move to"));
+        await page.keyboard.press("Escape");
+        await page.keyboard.press("Escape");
+        await expect(kitchenSink.contextMenu).toBeHidden();
+      }
 
       for (const name of menubarMenus) {
         await kitchenSink.menubarTrigger(name).click();

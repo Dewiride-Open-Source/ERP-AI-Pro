@@ -170,7 +170,7 @@ function RowContextMenu() {
         </ContextMenuItem>
         <ContextMenuSub>
           <ContextMenuSubTrigger>Move to</ContextMenuSubTrigger>
-          <ContextMenuSubContent>
+          <ContextMenuSubContent className="max-w-(--radix-context-menu-content-available-width)">
             <ContextMenuItem>Pending approval</ContextMenuItem>
             <ContextMenuItem>Archived</ContextMenuItem>
           </ContextMenuSubContent>

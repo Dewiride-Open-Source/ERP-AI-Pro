@@ -8,7 +8,7 @@ import { cn, typeRoles } from "./utils.ts";
 
 function tokenNames(file: string, namespace: string): string[] {
   const css = readFileSync(new URL(`../styles/tokens/${file}`, import.meta.url), "utf8");
-  const declaration = new RegExp(`^\\s*--${namespace}-([a-z0-9]+):`, "gm");
+  const declaration = new RegExp(`^\\s*--${namespace}-([a-z0-9]+(?:-[a-z0-9]+)*):`, "gm");
 
   return [...css.matchAll(declaration)].map((match) => match[1] ?? "");
 }

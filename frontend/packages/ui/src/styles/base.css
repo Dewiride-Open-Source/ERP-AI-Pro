@@ -5,7 +5,7 @@
 
   html {
     color-scheme: light;
-    scroll-padding-top: var(--spacing-header);
+    scroll-padding-top: calc(var(--spacing-header) + var(--spacing) * 2);
   }
 
   html.dark {

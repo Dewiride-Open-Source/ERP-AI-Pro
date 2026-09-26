@@ -17,6 +17,8 @@ import { Slider } from "@dewiride/erp-ui/components/ui/slider";
 import { Switch } from "@dewiride/erp-ui/components/ui/switch";
 import { useState } from "react";
 
+import { formatRupees } from "@/shared/format/money";
+
 import { Specimen, SpecimenGrid } from "../specimen";
 
 const checkboxes = [
@@ -34,12 +36,6 @@ const checkboxes = [
     props: { disabled: true, defaultChecked: true },
   },
 ] as const;
-
-const rupees = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
 
 export function SelectionShowcase() {
   return (
@@ -171,7 +167,7 @@ function AmountRangeSlider() {
         <Slider value={range} onValueChange={setRange} max={100} step={5} />
       </div>
       <FieldDescription id="ks-slider-range-description">
-        From {rupees.format(from * 1000)} to {rupees.format(to * 1000)}.
+        From {formatRupees(from * 1000, { paise: false })} to {formatRupees(to * 1000, { paise: false })}.
       </FieldDescription>
     </Field>
   );

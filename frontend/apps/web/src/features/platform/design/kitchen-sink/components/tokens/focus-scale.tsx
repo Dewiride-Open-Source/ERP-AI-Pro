@@ -25,7 +25,8 @@ export function FocusScale() {
         <div className="grid gap-1">
           <h3 className="text-body font-medium">Sample</h3>
           <p className="text-caption text-muted-foreground">
-            Press Tab to reach the link. The preview beside it draws the same outline without focus.
+            Press Tab to reach the link (in Safari, Option+Tab, because Safari leaves links out of the Tab
+            order by default). The preview beside it draws the same outline without focus.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-6">
