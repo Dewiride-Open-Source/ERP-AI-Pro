@@ -21,6 +21,7 @@ namespace Dewiride.Erp.BuildingBlocks.Attachments.Service;
 internal sealed partial class AttachmentUploader(
     AttachmentsDbContext context,
     IDocumentStore store,
+    StoredContentVerifier verifier,
     KeyRing keys,
     IActorContext actor,
     TimeProvider time,
@@ -30,6 +31,8 @@ internal sealed partial class AttachmentUploader(
     IAttachmentScanner? scanner = null)
 {
     private const int ReadSize = 64 * 1024;
+
+    private const int ReuseCandidates = 3;
 
     private static readonly TimeSpan CleanupTimeout = TimeSpan.FromSeconds(30);
 
@@ -48,6 +51,11 @@ internal sealed partial class AttachmentUploader(
         if (!ContentTypes.TryParseAllowList(settings.AllowedContentTypes, out var allowed, out _) || !allowed.Contains(contentType))
         {
             return Reject(AttachmentErrors.UnsupportedType);
+        }
+
+        if (!ContentTypes.NameMatches(contentType, fileName))
+        {
+            return Reject(AttachmentErrors.ExtensionMismatch);
         }
 
         var head = new byte[ContentTypes.HeadLength];
@@ -71,7 +79,7 @@ internal sealed partial class AttachmentUploader(
         try
         {
             await using var documentUpload = store.BeginUpload(reservation.ContentId);
-            var written = await WriteEnvelopeAsync(new ReplayedHeadStream(head.AsMemory(0, headLength), upload.Content), documentUpload.Content, reservation.ContentId, settings.MaxSizeBytes, cancellationToken).ConfigureAwait(false);
+            var written = await WriteEnvelopeAsync(new ReplayedHeadStream(head.AsMemory(0, headLength), upload.Content), documentUpload.Content, reservation.ContentId, contentType, settings.MaxSizeBytes, cancellationToken).ConfigureAwait(false);
             if (written.IsFailure)
             {
                 return Reject(written.Error!);
@@ -79,13 +87,7 @@ internal sealed partial class AttachmentUploader(
 
             var (sha256, length, keyId, scanStatus) = written.Value;
 
-            // Only content some configured key can still open is reused; otherwise the upload keeps its own copy.
-            var openableKeyIds = keys.All.Select(key => key.Id).ToList();
-            var existing = await context.StoredContents
-                .Where(c => c.Sha256 == sha256 && c.Length == length && openableKeyIds.Contains(c.KeyId))
-                .OrderBy(c => c.StoredAt)
-                .FirstOrDefaultAsync(cancellationToken)
-                .ConfigureAwait(false);
+            var existing = await FindReusableAsync(sha256, length, cancellationToken).ConfigureAwait(false);
             var content = existing;
             if (content is null)
             {
@@ -119,7 +121,30 @@ internal sealed partial class AttachmentUploader(
         }
     }
 
-    private async Task<Result<WrittenEnvelope>> WriteEnvelopeAsync(Stream source, Stream destination, StoredContentId contentId, long maxSizeBytes, CancellationToken cancellationToken)
+    // Identical content is reused only when its blob opens under a configured key; newest first, and only the few newest, as
+    // each costs a ranged read. An upload matching none keeps its own copy. The key id filter narrows the candidates only:
+    // the column compares without regard to case, while key ids are matched ordinally when the header is opened.
+    private async Task<StoredContent?> FindReusableAsync(byte[] sha256, long length, CancellationToken cancellationToken)
+    {
+        var configuredKeyIds = keys.All.Select(key => key.Id).ToList();
+        var candidates = await context.StoredContents
+            .Where(c => c.Sha256 == sha256 && c.Length == length && configuredKeyIds.Contains(c.KeyId))
+            .OrderByDescending(c => c.StoredAt)
+            .Take(ReuseCandidates)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        foreach (var candidate in candidates)
+        {
+            if (await verifier.CanOpenAsync(candidate.Id, cancellationToken).ConfigureAwait(false))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<Result<WrittenEnvelope>> WriteEnvelopeAsync(Stream source, Stream destination, StoredContentId contentId, string contentType, long maxSizeBytes, CancellationToken cancellationToken)
     {
         var key = keys.Current;
         var dataKey = RandomNumberGenerator.GetBytes(EnvelopeHeader.DataKeySize);
@@ -132,6 +157,7 @@ internal sealed partial class AttachmentUploader(
             CryptographicOperations.ZeroMemory(dataKey);
             scan = scanner is null ? null : await scanner.StartAsync(cancellationToken).ConfigureAwait(false);
             using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            var text = ContentTypes.IsText(contentType) ? new Utf8TextValidator() : null;
             long length = 0;
             int read;
             while ((read = await source.ReadAsync(buffer.AsMemory(0, ReadSize), cancellationToken).ConfigureAwait(false)) > 0)
@@ -143,6 +169,11 @@ internal sealed partial class AttachmentUploader(
                 }
 
                 var chunk = buffer.AsMemory(0, read);
+                if (text is not null && !text.Append(chunk.Span))
+                {
+                    return AttachmentErrors.ContentMismatch;
+                }
+
                 hash.AppendData(chunk.Span);
                 if (scan is not null)
                 {
@@ -150,6 +181,11 @@ internal sealed partial class AttachmentUploader(
                 }
 
                 await writer.WriteAsync(chunk, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (text is not null && !text.Complete())
+            {
+                return AttachmentErrors.ContentMismatch;
             }
 
             await writer.CompleteAsync(cancellationToken).ConfigureAwait(false);

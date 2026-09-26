@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Dewiride.Erp.BuildingBlocks.Attachments.Storage.Blob;
 using Xunit;
 
 namespace Dewiride.Erp.Testing.Blob;
@@ -43,7 +44,7 @@ public sealed class BlobTestContainer : IAsyncLifetime
     public async ValueTask InitializeAsync()
     {
         EmulatorHost = ResolveEmulatorHost(Environment.GetEnvironmentVariable);
-        _service = new BlobServiceClient($"UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://{EmulatorHost}");
+        _service = new BlobServiceClient($"UseDevelopmentStorage=true;DevelopmentStorageProxyUri=http://{EmulatorHost}", new BlobClientOptions(AttachmentBlobClients.ServiceVersion));
         await DeleteLeftoversAsync(_service);
         ContainerName = $"{NamePrefix}{TimeProvider.System.GetUtcNow():yyyyMMddHHmmss}-{Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(4))}";
         await _service.CreateBlobContainerAsync(ContainerName, PublicAccessType.None);

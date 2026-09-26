@@ -12,6 +12,7 @@ internal sealed class DownloadLinkConfiguration : IEntityTypeConfiguration<Downl
         builder.HasKey(l => l.Id);
         builder.Property(l => l.TokenHash).HasMaxLength(DownloadLink.TokenHashLength).IsFixedLength();
         builder.HasIndex(l => l.TokenHash).IsUnique();
+        builder.HasIndex(l => l.ExpiresAt);
         builder.HasOne<Attachment>().WithMany().HasForeignKey(l => l.AttachmentId).OnDelete(DeleteBehavior.Restrict);
     }
 }

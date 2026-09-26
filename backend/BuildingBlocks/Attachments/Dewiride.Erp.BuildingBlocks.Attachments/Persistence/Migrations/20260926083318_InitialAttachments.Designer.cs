@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dewiride.Erp.BuildingBlocks.Attachments.Persistence.Migrations
 {
     [DbContext(typeof(AttachmentsDbContext))]
-    [Migration("20260926065018_InitialAttachments")]
+    [Migration("20260926083318_InitialAttachments")]
     partial class InitialAttachments
     {
         /// <inheritdoc />
@@ -104,6 +104,8 @@ namespace Dewiride.Erp.BuildingBlocks.Attachments.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AttachmentId");
+
+                    b.HasIndex("ExpiresAt");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();

@@ -40,15 +40,33 @@ public sealed class KeyRotationTests
     }
 
     [Fact]
-    public async Task OpenDownloadAsync_ContentStoredUnderAKeyNoLongerConfigured_ReturnsNotFound()
+    public async Task CreateDownloadLinkAsync_ContentStoredUnderAKeyNoLongerConfigured_ReturnsNotFound()
     {
         var details = await UploadUnderAsync(NewKey("forgotten"), TestFiles.Pdf(10_000));
         await using var rotated = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, NewKey("current"));
         await using var scope = rotated.Services.CreateAsyncScope();
-        var service = scope.ServiceProvider.GetRequiredService<IAttachmentService>();
-        var link = await service.CreateDownloadLinkAsync(details.Id, TestContext.Current.CancellationToken);
 
-        var opened = await service.OpenDownloadAsync(details.Id, link.Value.Token, TestContext.Current.CancellationToken);
+        var link = await scope.ServiceProvider.GetRequiredService<IAttachmentService>().CreateDownloadLinkAsync(details.Id, TestContext.Current.CancellationToken);
+
+        Assert.Equal("attachment.not-found", link.Error?.Code);
+    }
+
+    [Fact]
+    public async Task OpenDownloadAsync_LinkIssuedBeforeItsKeyWasRemoved_ReturnsNotFound()
+    {
+        AttachmentDetails details;
+        string token;
+        await using (var earlier = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, NewKey("dropped")))
+        {
+            details = await earlier.UploadAsync($"{TestFiles.Stamp()}-ledger.pdf", TestFiles.PdfType, TestFiles.Pdf(10_000));
+            await using var earlierScope = earlier.Services.CreateAsyncScope();
+            token = (await earlierScope.ServiceProvider.GetRequiredService<IAttachmentService>().CreateDownloadLinkAsync(details.Id, TestContext.Current.CancellationToken)).Value.Token;
+        }
+
+        await using var rotated = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, NewKey("current"));
+        await using var scope = rotated.Services.CreateAsyncScope();
+
+        var opened = await scope.ServiceProvider.GetRequiredService<IAttachmentService>().OpenDownloadAsync(details.Id, token, TestContext.Current.CancellationToken);
 
         Assert.Equal("attachment.not-found", opened.Error?.Code);
     }

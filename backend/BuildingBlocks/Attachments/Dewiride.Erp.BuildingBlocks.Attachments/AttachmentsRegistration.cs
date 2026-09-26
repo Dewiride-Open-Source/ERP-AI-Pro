@@ -35,11 +35,12 @@ public static class AttachmentsRegistration
         builder.Services.TryAddSingleton<KeyRing>();
         builder.Services.TryAddSingleton(AttachmentBlobClients.Create);
         builder.Services.TryAddSingleton<IDocumentStore, BlobDocumentStore>();
+        builder.Services.TryAddSingleton<StoredContentVerifier>();
         builder.Services.TryAddSingleton<AttachmentsMetrics>();
         builder.Services.TryAddScoped<AttachmentUploader>();
         builder.Services.TryAddScoped<IAttachmentService, AttachmentService>();
         builder.Services.AddHostedService<AttachmentStorageInitializer>();
-        builder.Services.AddHostedService<UploadReservationSweeper>();
+        builder.Services.AddHostedService<AttachmentsSweeper>();
         builder.Services.AddHealthChecks()
             .AddCheck<AttachmentStorageHealthCheck>(AttachmentStorageHealthCheck.Name, HealthStatus.Degraded, [HealthEndpoints.ReadyTag]);
         builder.Services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddSource(BlobActivitySources));

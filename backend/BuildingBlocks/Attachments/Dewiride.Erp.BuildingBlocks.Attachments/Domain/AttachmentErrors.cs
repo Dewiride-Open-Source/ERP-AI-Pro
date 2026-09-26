@@ -20,6 +20,8 @@ public static class AttachmentErrors
 
     public static readonly Error UnsupportedType = Error.UnsupportedType("attachment.unsupported-type", "Files of this type cannot be uploaded.");
 
+    public static readonly Error ExtensionMismatch = Error.UnsupportedType("attachment.extension-mismatch", "The file name's extension does not match its declared type.");
+
     public static readonly Error ContentMismatch = Error.UnsupportedType("attachment.content-mismatch", "The file's content does not match its declared type.");
 
     public static readonly Error Infected = Error.Failure("attachment.infected", "The virus scanner rejected the file.");

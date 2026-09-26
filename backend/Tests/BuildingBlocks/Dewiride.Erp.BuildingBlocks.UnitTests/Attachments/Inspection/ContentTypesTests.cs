@@ -6,6 +6,8 @@ namespace Dewiride.Erp.BuildingBlocks.UnitTests.Attachments.Inspection;
 
 public sealed class ContentTypesTests
 {
+    private static readonly string[] OneExtensionPerType = [".pdf", ".png", ".jpg", ".gif", ".webp", ".txt", ".csv", ".xlsx", ".docx"];
+
     [Theory]
     [InlineData("application/pdf", "application/pdf")]
     [InlineData("Application/PDF", "application/pdf")]
@@ -19,6 +21,57 @@ public sealed class ContentTypesTests
     public void Normalize_DeclaredType_DropsParametersCaseAndBlanks(string? declared, string expected)
     {
         Assert.Equal(expected, ContentTypes.Normalize(declared));
+    }
+
+    [Theory]
+    [InlineData(ContentTypes.Pdf, "statement.pdf")]
+    [InlineData(ContentTypes.Pdf, "STATEMENT.PDF")]
+    [InlineData(ContentTypes.Png, "pixel.png")]
+    [InlineData(ContentTypes.Jpeg, "photo.jpg")]
+    [InlineData(ContentTypes.Jpeg, "photo.jpeg")]
+    [InlineData(ContentTypes.Gif, "animation.gif")]
+    [InlineData(ContentTypes.Webp, "image.webp")]
+    [InlineData(ContentTypes.PlainText, "notes.txt")]
+    [InlineData(ContentTypes.PlainText, "release.notes.txt")]
+    [InlineData(ContentTypes.Csv, "rates.csv")]
+    [InlineData(ContentTypes.Xlsx, "ledger.xlsx")]
+    [InlineData(ContentTypes.Docx, "agreement.docx")]
+    public void NameMatches_ExtensionOfTheType_IsAccepted(string contentType, string fileName)
+    {
+        Assert.True(ContentTypes.NameMatches(contentType, fileName));
+    }
+
+    [Theory]
+    [InlineData(ContentTypes.PlainText, "payslip.hta")]
+    [InlineData(ContentTypes.PlainText, "script.js")]
+    [InlineData(ContentTypes.PlainText, "page.html")]
+    [InlineData(ContentTypes.PlainText, "notes")]
+    [InlineData(ContentTypes.PlainText, "notes.txt.")]
+    [InlineData(ContentTypes.PlainText, "notes.txt.url")]
+    [InlineData(ContentTypes.Pdf, "statement.pdf.exe")]
+    [InlineData(ContentTypes.Png, "pixel.jpg")]
+    [InlineData(ContentTypes.Docx, "macros.docm")]
+    [InlineData(ContentTypes.Xlsx, "tool.jar")]
+    [InlineData("application/zip", "archive.zip")]
+    public void NameMatches_OtherExtensionOrNone_IsRefused(string contentType, string fileName)
+    {
+        Assert.False(ContentTypes.NameMatches(contentType, fileName));
+    }
+
+    [Fact]
+    public void NameMatches_EveryKnownType_HasAnExtension()
+    {
+        Assert.All(ContentTypes.Known, contentType => Assert.Contains(OneExtensionPerType, extension => ContentTypes.NameMatches(contentType, $"file{extension}")));
+    }
+
+    [Theory]
+    [InlineData(ContentTypes.PlainText, true)]
+    [InlineData(ContentTypes.Csv, true)]
+    [InlineData(ContentTypes.Pdf, false)]
+    [InlineData(ContentTypes.Docx, false)]
+    public void IsText_KnownType_IsTrueOnlyForTheTextTypes(string contentType, bool expected)
+    {
+        Assert.Equal(expected, ContentTypes.IsText(contentType));
     }
 
     [Fact]

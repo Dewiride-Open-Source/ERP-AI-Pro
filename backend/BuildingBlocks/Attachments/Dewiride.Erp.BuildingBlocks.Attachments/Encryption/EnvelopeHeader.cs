@@ -23,6 +23,8 @@ internal sealed class EnvelopeHeader
 
     public const int NoncePrefixSize = 7;
 
+    public const int MaxLength = LeadSize + EncryptionKey.MaxIdLength + TrailSize;
+
     private const int LeadSize = 6;
 
     private const int ContentIdSize = 16;
@@ -125,6 +127,21 @@ internal sealed class EnvelopeHeader
         offset += ChunkSizeFieldSize;
 
         return new EnvelopeHeader(keyId, contentId, bytes, offset, offset + NoncePrefixSize);
+    }
+
+    // The content id binds the header to its StoredContent row, so a blob copied under another name is refused.
+    public byte[] OpenDataKey(KeyRing keys, StoredContentId expectedContentId)
+    {
+        ArgumentNullException.ThrowIfNull(keys);
+
+        if (ContentId != expectedContentId)
+        {
+            throw new EnvelopeFormatException($"The stored file belongs to content {ContentId.Value}, not {expectedContentId.Value}.");
+        }
+
+        var key = keys.Find(KeyId) ?? throw new EnvelopeFormatException($"No configured attachment encryption key has the id '{KeyId}'.");
+
+        return UnwrapDataKey(key);
     }
 
     public byte[] UnwrapDataKey(EncryptionKey key)

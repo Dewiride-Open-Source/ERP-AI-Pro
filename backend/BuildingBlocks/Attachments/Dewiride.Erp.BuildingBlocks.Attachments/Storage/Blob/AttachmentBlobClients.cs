@@ -10,7 +10,7 @@ namespace Dewiride.Erp.BuildingBlocks.Attachments.Storage.Blob;
 internal sealed class AttachmentBlobClients
 {
     // Pinned so a client library upgrade cannot send a service version newer than the Azurite image the tests run against
-    // understands; the pin and the image digest move together.
+    // understands; the pin and the image digest move together, and the test fixture's own client uses it too.
     public const BlobClientOptions.ServiceVersion ServiceVersion = BlobClientOptions.ServiceVersion.V2026_06_06;
 
     private AttachmentBlobClients(BlobContainerClient container, BlobContainerClient probe, bool usesEmulator)

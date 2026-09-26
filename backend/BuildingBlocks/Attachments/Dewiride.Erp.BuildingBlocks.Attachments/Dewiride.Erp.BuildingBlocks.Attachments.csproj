@@ -3,6 +3,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Dewiride.Erp.BuildingBlocks.UnitTests" />
     <InternalsVisibleTo Include="Dewiride.Erp.BuildingBlocks.IntegrationTests" />
+    <InternalsVisibleTo Include="Dewiride.Erp.Testing" />
   </ItemGroup>
 
   <ItemGroup>

@@ -133,6 +133,48 @@ public sealed class BlockStagingStreamTests
         Assert.Equal("application/octet-stream", options.HttpHeaders.ContentType);
     }
 
+    [Theory]
+    [InlineData(409, "BlobAlreadyExists")]
+    [InlineData(412, "ConditionNotMet")]
+    public async Task CommitAsync_RetryMeetsTheBlobItsOwnAttemptCommitted_Succeeds(int status, string errorCode)
+    {
+        await using var stream = new BlockStagingStream(_blob);
+        await stream.WriteAsync(RandomNumberGenerator.GetBytes(BlockSize + 100), TestContext.Current.CancellationToken);
+        _blob.CommitFailure = new RequestFailedException(status, "The blob exists.", errorCode, null);
+        _blob.CommittedBlockIds = [BlockId(0), BlockId(1)];
+
+        await stream.CommitAsync(TestContext.Current.CancellationToken);
+
+        Assert.False(stream.CanWrite);
+    }
+
+    [Fact]
+    public async Task CommitAsync_ExistingBlobHoldsOtherBlocks_Throws()
+    {
+        await using var stream = new BlockStagingStream(_blob);
+        await stream.WriteAsync(RandomNumberGenerator.GetBytes(100), TestContext.Current.CancellationToken);
+        _blob.CommitFailure = new RequestFailedException(409, "The blob exists.", "BlobAlreadyExists", null);
+        _blob.CommittedBlockIds = [BlockId(0), BlockId(1)];
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => stream.CommitAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal("BlobAlreadyExists", exception.ErrorCode);
+    }
+
+    [Fact]
+    public async Task CommitAsync_OtherFailureWhileTheBlocksMatch_Throws()
+    {
+        await using var stream = new BlockStagingStream(_blob);
+        await stream.WriteAsync(RandomNumberGenerator.GetBytes(100), TestContext.Current.CancellationToken);
+        _blob.CommitFailure = new RequestFailedException(500, "Server busy.", "ServerBusy", null);
+        _blob.CommittedBlockIds = [BlockId(0)];
+
+        var exception = await Assert.ThrowsAsync<RequestFailedException>(() => stream.CommitAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal("ServerBusy", exception.ErrorCode);
+        Assert.True(stream.CanWrite);
+    }
+
     [Fact]
     public async Task FlushAndFlushAsync_BufferedData_StageAndCommitNothing()
     {
@@ -185,5 +227,13 @@ public sealed class BlockStagingStreamTests
         Assert.Throws<NotSupportedException>(() => stream.Seek(0, SeekOrigin.Begin));
         Assert.Throws<NotSupportedException>(() => stream.Length);
         Assert.Throws<NotSupportedException>(() => stream.Position);
+    }
+
+    private static string BlockId(int index)
+    {
+        var bytes = new byte[sizeof(int)];
+        BinaryPrimitives.WriteInt32BigEndian(bytes, index);
+
+        return Convert.ToBase64String(bytes);
     }
 }

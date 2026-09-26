@@ -74,14 +74,27 @@ internal sealed class BlockStagingStream(BlockBlobClient blob) : Stream
             await StageAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        await blob.CommitBlockListAsync(
-            _blockIds,
-            new CommitBlockListOptions
+        try
+        {
+            await blob.CommitBlockListAsync(
+                _blockIds,
+                new CommitBlockListOptions
+                {
+                    HttpHeaders = new BlobHttpHeaders { ContentType = ContentType },
+                    Conditions = new BlobRequestConditions { IfNoneMatch = ETag.All },
+                },
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (RequestFailedException exception) when (exception.ErrorCode == BlobErrorCode.BlobAlreadyExists || exception.ErrorCode == BlobErrorCode.ConditionNotMet)
+        {
+            // The client library retries a commit whose response was lost, and the retry then meets the blob its own first
+            // attempt created; no other writer uses this random name, so a committed list equal to ours is that attempt.
+            if (!await IsCommittedAsync(cancellationToken).ConfigureAwait(false))
             {
-                HttpHeaders = new BlobHttpHeaders { ContentType = ContentType },
-                Conditions = new BlobRequestConditions { IfNoneMatch = ETag.All },
-            },
-            cancellationToken).ConfigureAwait(false);
+                throw;
+            }
+        }
+
         _committed = true;
         ReturnBuffer();
     }
@@ -109,6 +122,13 @@ internal sealed class BlockStagingStream(BlockBlobClient blob) : Stream
         BinaryPrimitives.WriteInt32BigEndian(bytes, index);
 
         return Convert.ToBase64String(bytes);
+    }
+
+    private async Task<bool> IsCommittedAsync(CancellationToken cancellationToken)
+    {
+        var blocks = await blob.GetBlockListAsync(BlockListTypes.Committed, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+        return blocks.Value.CommittedBlocks.Select(block => block.Name).SequenceEqual(_blockIds, StringComparer.Ordinal);
     }
 
     private async Task StageAsync(CancellationToken cancellationToken)

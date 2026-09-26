@@ -147,6 +147,12 @@ namespace Dewiride.Erp.BuildingBlocks.Attachments.Persistence.Migrations
                 column: "AttachmentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DownloadLinks_ExpiresAt",
+                schema: "files",
+                table: "DownloadLinks",
+                column: "ExpiresAt");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DownloadLinks_TokenHash",
                 schema: "files",
                 table: "DownloadLinks",

@@ -127,14 +127,14 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     }
 
     [Theory]
-    [InlineData(SampleFiles.PngType)]
-    [InlineData(SampleFiles.PdfType)]
-    [InlineData("image/jpeg")]
-    public async Task Post_TextDeclaredAsABinaryType_AnswersContentMismatch(string contentType)
+    [InlineData(SampleFiles.PngType, "disguised.png")]
+    [InlineData(SampleFiles.PdfType, "disguised.pdf")]
+    [InlineData("image/jpeg", "disguised.jpg")]
+    public async Task Post_TextDeclaredAsABinaryType_AnswersContentMismatch(string contentType, string fileName)
     {
         using var client = factory.CreateClient();
 
-        using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.Text("this is plain text, not an image"), contentType, "disguised.png");
+        using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.Text("this is plain text, not an image"), contentType, fileName);
 
         await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.UnsupportedMediaType, "attachment.content-mismatch");
     }
@@ -147,6 +147,51 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.OnePixelPng(), SampleFiles.TextType, "pixel.txt");
 
         await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.UnsupportedMediaType, "attachment.content-mismatch");
+    }
+
+    [Theory]
+    [InlineData(0x00)]
+    [InlineData(0xFF)]
+    public async Task Post_TextWithANonTextByteAfterTheLeadingBytes_AnswersContentMismatch(byte stray)
+    {
+        using var client = factory.CreateClient();
+        byte[] bytes = [.. SampleFiles.Text(new string('a', 20_000)), stray, .. SampleFiles.Text(" " + AttachmentsApi.UniqueToken())];
+
+        using var response = await AttachmentsApi.PostFileAsync(client, bytes, SampleFiles.TextType, "late-binary.txt");
+
+        await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.UnsupportedMediaType, AttachmentErrors.ContentMismatch.Code);
+    }
+
+    [Fact]
+    public async Task Post_LargeTextOfMultibyteCharacters_IsStoredWhole()
+    {
+        using var client = factory.CreateClient();
+        var text = SampleFiles.Text(string.Concat(Enumerable.Repeat("\u00e9\u20ac\ud834\udd1e ", 50_000)) + AttachmentsApi.UniqueToken());
+
+        var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "multibyte.txt");
+
+        Assert.Equal(text.Length, attachment.SizeBytes);
+    }
+
+    [Theory]
+    [InlineData(SampleFiles.TextType, "payslip.hta")]
+    [InlineData(SampleFiles.TextType, "notes")]
+    [InlineData(SampleFiles.TextType, "notes.txt.")]
+    [InlineData(SampleFiles.PdfType, "statement.pdf.exe")]
+    [InlineData(SampleFiles.PngType, "pixel.jpg")]
+    public async Task Post_FileNameWithoutAnExtensionOfTheDeclaredType_AnswersExtensionMismatch(string contentType, string fileName)
+    {
+        using var client = factory.CreateClient();
+        var bytes = contentType switch
+        {
+            SampleFiles.PdfType => SampleFiles.Pdf(AttachmentsApi.UniqueToken()),
+            SampleFiles.PngType => SampleFiles.OnePixelPng(),
+            _ => SampleFiles.Text(AttachmentsApi.UniqueToken()),
+        };
+
+        using var response = await AttachmentsApi.PostFileAsync(client, bytes, contentType, fileName);
+
+        await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.UnsupportedMediaType, AttachmentErrors.ExtensionMismatch.Code);
     }
 
     [Theory]

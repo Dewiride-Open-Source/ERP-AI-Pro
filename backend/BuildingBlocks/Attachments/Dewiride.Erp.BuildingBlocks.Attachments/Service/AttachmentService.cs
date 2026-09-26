@@ -22,6 +22,7 @@ internal sealed partial class AttachmentService(
     AttachmentsDbContext context,
     AttachmentUploader uploader,
     IDocumentStore store,
+    StoredContentVerifier verifier,
     KeyRing keys,
     IActorContext actor,
     TimeProvider time,
@@ -105,9 +106,16 @@ internal sealed partial class AttachmentService(
         return Result.Success();
     }
 
+    // A link to content that cannot be opened would fail only when followed, after the person has left the page, so the
+    // stored file is checked before the link is issued.
     public async Task<Result<DownloadLinkDetails>> CreateDownloadLinkAsync(AttachmentId id, CancellationToken cancellationToken)
     {
-        if (!await context.Attachments.AnyAsync(a => a.Id == id, cancellationToken).ConfigureAwait(false))
+        var attachment = await context.Attachments
+            .Where(a => a.Id == id)
+            .Select(a => new { a.ContentId })
+            .SingleOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (attachment is null || !await verifier.CanOpenAsync(attachment.ContentId, cancellationToken).ConfigureAwait(false))
         {
             return AttachmentErrors.NotFound;
         }

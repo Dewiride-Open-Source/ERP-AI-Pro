@@ -9,5 +9,7 @@ internal interface IDocumentStore
 
     Task<Stream> OpenReadAsync(StoredContentId contentId, CancellationToken cancellationToken);
 
+    Task<Stream> OpenHeadAsync(StoredContentId contentId, int length, CancellationToken cancellationToken);
+
     Task DeleteAsync(StoredContentId contentId, CancellationToken cancellationToken);
 }

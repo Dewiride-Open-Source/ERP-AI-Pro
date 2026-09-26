@@ -75,6 +75,19 @@ public sealed class AttachmentsMetricsTests : IDisposable
     }
 
     [Fact]
+    public void LinksPurged_Count_IsAddedWithoutTags()
+    {
+        using var purged = Collect("erp.attachments.links.purged");
+        var metrics = new AttachmentsMetrics(MeterFactory);
+
+        metrics.LinksPurged(4);
+
+        var measurement = Assert.Single(purged.GetMeasurementSnapshot());
+        Assert.Equal(4, measurement.Value);
+        Assert.Empty(measurement.Tags);
+    }
+
+    [Fact]
     public void MeterName_TelemetryBaseline_ExportsIt()
     {
         Assert.Contains(TelemetryMeters.Names, name => name.EndsWith(".*", StringComparison.Ordinal)

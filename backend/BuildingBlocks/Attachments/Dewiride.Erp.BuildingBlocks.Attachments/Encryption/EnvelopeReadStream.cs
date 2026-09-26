@@ -51,13 +51,7 @@ internal sealed class EnvelopeReadStream : Stream
         ArgumentNullException.ThrowIfNull(keys);
 
         var header = await EnvelopeHeader.ReadAsync(source, cancellationToken).ConfigureAwait(false);
-        if (header.ContentId != expectedContentId)
-        {
-            throw new EnvelopeFormatException($"The stored file belongs to content {header.ContentId.Value}, not {expectedContentId.Value}.");
-        }
-
-        var key = keys.Find(header.KeyId) ?? throw new EnvelopeFormatException($"No configured attachment encryption key has the id '{header.KeyId}'.");
-        var dataKey = header.UnwrapDataKey(key);
+        var dataKey = header.OpenDataKey(keys, expectedContentId);
         EnvelopeReadStream stream;
         try
         {

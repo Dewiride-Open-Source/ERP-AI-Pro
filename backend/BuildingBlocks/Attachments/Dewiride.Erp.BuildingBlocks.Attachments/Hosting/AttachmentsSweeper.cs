@@ -9,18 +9,22 @@ using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.BuildingBlocks.Attachments.Hosting;
 
-// Works from this database's reservations, never from a blob listing, so several developers sharing one storage account
-// never remove each other's files.
-internal sealed partial class UploadReservationSweeper(
+// Works from this database's rows, never from a blob listing, so several developers sharing one storage account never remove
+// each other's files.
+internal sealed partial class AttachmentsSweeper(
     IServiceScopeFactory scopes,
     IOptions<AttachmentsOptions> options,
     TimeProvider time,
     AttachmentsMetrics metrics,
-    ILogger<UploadReservationSweeper> logger) : BackgroundService
+    ILogger<AttachmentsSweeper> logger) : BackgroundService
 {
     public const int BatchSize = 100;
 
-    public async Task<int> SweepOnceAsync(CancellationToken cancellationToken)
+    // A link followed in the moment before it expired records its redemption just after, so it outlives its expiry by this
+    // much before an unredeemed link counts as unused.
+    public static readonly TimeSpan LinkGracePeriod = TimeSpan.FromHours(1);
+
+    public async Task<int> SweepReservationsAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<AttachmentsDbContext>();
@@ -54,17 +58,37 @@ internal sealed partial class UploadReservationSweeper(
         return removed;
     }
 
+    // A redeemed link stays for good: its redemptions, the record of who read the file, reference it.
+    public async Task<int> PurgeUnusedLinksAsync(CancellationToken cancellationToken)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<AttachmentsDbContext>();
+        var cutoff = time.GetUtcNow() - LinkGracePeriod;
+        var purged = await context.DownloadLinks
+            .Where(l => l.ExpiresAt < cutoff && !context.DownloadRedemptions.Any(r => r.LinkId == l.Id))
+            .ExecuteDeleteAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (purged > 0)
+        {
+            metrics.LinksPurged(purged);
+        }
+
+        return purged;
+    }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var timer = new PeriodicTimer(options.Value.ReservationSweepInterval, time);
+        using var timer = new PeriodicTimer(options.Value.SweepInterval, time);
         while (await timer.WaitForNextTickAsync(stoppingToken).ConfigureAwait(false))
         {
             try
             {
-                var removed = await SweepOnceAsync(stoppingToken).ConfigureAwait(false);
-                if (removed > 0)
+                var removed = await SweepReservationsAsync(stoppingToken).ConfigureAwait(false);
+                var purged = await PurgeUnusedLinksAsync(stoppingToken).ConfigureAwait(false);
+                if (removed > 0 || purged > 0)
                 {
-                    LogSwept(logger, removed);
+                    LogSwept(logger, removed, purged);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -78,9 +102,9 @@ internal sealed partial class UploadReservationSweeper(
         }
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Removed the blobs of {Count} abandoned attachment uploads")]
-    private static partial void LogSwept(ILogger logger, int count);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Removed the blobs of {Removed} abandoned attachment uploads and {Purged} unused download links")]
+    private static partial void LogSwept(ILogger logger, int removed, int purged);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "The attachment upload sweep failed; it runs again at the next interval")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "The attachments sweep failed; it runs again at the next interval")]
     private static partial void LogSweepFailed(ILogger logger, Exception exception);
 }

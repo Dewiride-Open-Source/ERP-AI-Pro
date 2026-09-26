@@ -37,7 +37,11 @@ public sealed class AttachmentsOptions
     public TimeSpan UploadReservationLifetime { get; set; } = TimeSpan.FromHours(1);
 
     [Range(typeof(TimeSpan), "00:01:00", "1.00:00:00")]
-    public TimeSpan ReservationSweepInterval { get; set; } = TimeSpan.FromMinutes(15);
+    public TimeSpan SweepInterval { get; set; } = TimeSpan.FromMinutes(15);
+
+    // Each upload in flight holds a staging block in memory for its whole transfer, however slowly its body arrives.
+    [Range(1, 1024)]
+    public int MaxConcurrentUploads { get; set; } = 16;
 
     public string? EncryptionKey { get; set; }
 

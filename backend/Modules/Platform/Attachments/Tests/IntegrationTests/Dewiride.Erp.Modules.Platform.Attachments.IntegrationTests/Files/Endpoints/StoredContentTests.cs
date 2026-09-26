@@ -79,6 +79,94 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
         Assert.Equal(text, await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
     }
 
+    [Fact]
+    public async Task Post_ContentMatchingStoredBytesWhoseBlobIsMissing_StoresItsOwnCopy()
+    {
+        using var client = factory.CreateClient();
+        var text = SampleFiles.Text($"blob lost {AttachmentsApi.UniqueToken()}");
+        var lost = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "lost.txt");
+        await (await BlobOfAsync(lost.Id)).DeleteAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        var again = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "uploaded-again.txt");
+
+        Assert.Equal(text, await DownloadAsync(client, again.Id));
+    }
+
+    [Fact]
+    public async Task Post_ContentMatchingBytesStoredUnderTheSameKeyIdWithOtherMaterial_StoresItsOwnCopy()
+    {
+        var token = AttachmentsApi.UniqueToken();
+        var text = SampleFiles.Text($"key id reused {token}");
+        using (var earlier = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"reused-{token}")))
+        {
+            using var earlierClient = earlier.CreateClient();
+            await AttachmentsApi.UploadAsync(earlierClient, text, SampleFiles.TextType, "under-the-earlier-material.txt");
+        }
+
+        using var current = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"reused-{token}"));
+        using var client = current.CreateClient();
+        var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "under-the-current-material.txt");
+
+        Assert.Equal(text, await DownloadAsync(client, attachment.Id));
+    }
+
+    [Fact]
+    public async Task Post_ContentMatchingBytesStoredUnderAKeyIdDifferingOnlyInCase_StoresItsOwnCopy()
+    {
+        var token = AttachmentsApi.UniqueToken();
+        var text = SampleFiles.Text($"key id case {token}");
+        using (var lower = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"archive-{token}")))
+        {
+            using var lowerClient = lower.CreateClient();
+            await AttachmentsApi.UploadAsync(lowerClient, text, SampleFiles.TextType, "under-the-lower-case-id.txt");
+        }
+
+        using var upper = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"ARCHIVE-{token.ToUpperInvariant()}"));
+        using var client = upper.CreateClient();
+        var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "under-the-upper-case-id.txt");
+
+        Assert.Equal(text, await DownloadAsync(client, attachment.Id));
+    }
+
+    [Fact]
+    public async Task PostDownloadLink_ContentWhoseStoredBytesAreMissing_AnswersNotFound()
+    {
+        using var client = factory.CreateClient();
+        var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"no link {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "no-link.txt");
+        await (await BlobOfAsync(attachment.Id)).DeleteAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        using var response = await client.PostAsync(AttachmentsApi.Path($"/{attachment.Id}/download-links"), content: null, TestContext.Current.CancellationToken);
+
+        await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.NotFound, AttachmentErrors.NotFound.Code);
+    }
+
+    [Fact]
+    public async Task PostDownloadLink_ContentWhoseKeyIsNoLongerConfigured_AnswersNotFound()
+    {
+        var token = AttachmentsApi.UniqueToken();
+        Guid id;
+        using (var removed = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"gone-{token}")))
+        {
+            using var removedClient = removed.CreateClient();
+            id = (await AttachmentsApi.UploadAsync(removedClient, SampleFiles.Text($"key gone {token}"), SampleFiles.TextType, "key-gone.txt")).Id;
+        }
+
+        using var current = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"now-{token}"));
+        using var client = current.CreateClient();
+        using var response = await client.PostAsync(AttachmentsApi.Path($"/{id}/download-links"), content: null, TestContext.Current.CancellationToken);
+
+        await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.NotFound, AttachmentErrors.NotFound.Code);
+    }
+
+    private static async Task<byte[]> DownloadAsync(HttpClient client, Guid id)
+    {
+        var link = await AttachmentsApi.CreateDownloadLinkAsync(client, id);
+        using var response = await client.GetAsync(new Uri(link.Url, UriKind.Relative), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        return await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
+    }
+
     private static string EncryptionKey(string id) => $"{id}:{Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))}";
 
     private static async Task<BlobClient> BlobOfAsync(Guid attachmentId)

@@ -12,11 +12,26 @@ internal sealed class BlobDocumentStore(AttachmentBlobClients clients) : IDocume
     public IDocumentUpload BeginUpload(StoredContentId contentId) =>
         new BlobDocumentUpload(new BlockStagingStream(clients.Container.GetBlockBlobClient(BlobName(contentId))));
 
-    public async Task<Stream> OpenReadAsync(StoredContentId contentId, CancellationToken cancellationToken)
+    public Task<Stream> OpenReadAsync(StoredContentId contentId, CancellationToken cancellationToken) =>
+        OpenAsync(contentId, default, cancellationToken);
+
+    public Task<Stream> OpenHeadAsync(StoredContentId contentId, int length, CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
+
+        return OpenAsync(contentId, new HttpRange(0, length), cancellationToken);
+    }
+
+    public async Task DeleteAsync(StoredContentId contentId, CancellationToken cancellationToken) =>
+        await clients.Container.GetBlobClient(BlobName(contentId)).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+    public static string BlobName(StoredContentId contentId) => contentId.Value.ToString("N");
+
+    private async Task<Stream> OpenAsync(StoredContentId contentId, HttpRange range, CancellationToken cancellationToken)
     {
         try
         {
-            var response = await clients.Container.GetBlobClient(BlobName(contentId)).DownloadStreamingAsync(new BlobDownloadOptions(), cancellationToken).ConfigureAwait(false);
+            var response = await clients.Container.GetBlobClient(BlobName(contentId)).DownloadStreamingAsync(new BlobDownloadOptions { Range = range }, cancellationToken).ConfigureAwait(false);
 
             return response.Value.Content;
         }
@@ -25,11 +40,6 @@ internal sealed class BlobDocumentStore(AttachmentBlobClients clients) : IDocume
             throw new StoredContentMissingException($"Stored content {contentId.Value} has no blob in container '{clients.Container.Name}'.", exception);
         }
     }
-
-    public async Task DeleteAsync(StoredContentId contentId, CancellationToken cancellationToken) =>
-        await clients.Container.GetBlobClient(BlobName(contentId)).DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: cancellationToken).ConfigureAwait(false);
-
-    public static string BlobName(StoredContentId contentId) => contentId.Value.ToString("N");
 
     private sealed class BlobDocumentUpload(BlockStagingStream content) : IDocumentUpload
     {

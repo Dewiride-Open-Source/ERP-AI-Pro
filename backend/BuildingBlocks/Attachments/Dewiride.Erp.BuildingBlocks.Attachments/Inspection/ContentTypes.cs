@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Unicode;
 
@@ -34,6 +35,19 @@ internal static class ContentTypes
     private static ReadOnlySpan<byte> ZipSignature => [0x50, 0x4B, 0x03, 0x04];
 
     public static IReadOnlyList<string> Known { get; } = [Pdf, Png, Jpeg, Gif, Webp, PlainText, Csv, Xlsx, Docx];
+
+    private static FrozenDictionary<string, string[]> Extensions { get; } = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        [Pdf] = [".pdf"],
+        [Png] = [".png"],
+        [Jpeg] = [".jpg", ".jpeg"],
+        [Gif] = [".gif"],
+        [Webp] = [".webp"],
+        [PlainText] = [".txt"],
+        [Csv] = [".csv"],
+        [Xlsx] = [".xlsx"],
+        [Docx] = [".docx"],
+    }.ToFrozenDictionary(StringComparer.Ordinal);
 
     public static string Normalize(string? declared)
     {
@@ -90,6 +104,14 @@ internal static class ContentTypes
             PlainText or Csv => IsUtf8Text(head, isWholeFile),
             _ => false,
         };
+
+    // A downloaded file is opened by whatever program its extension names, so the name must carry an extension of the checked
+    // type: text saved as .hta or .js, or a ZIP saved as .jar, would otherwise run as a program on the reader's computer.
+    public static bool NameMatches(string contentType, string fileName) =>
+        Extensions.TryGetValue(contentType, out var extensions)
+        && extensions.Contains(Path.GetExtension(fileName), StringComparer.OrdinalIgnoreCase);
+
+    public static bool IsText(string contentType) => contentType is PlainText or Csv;
 
     private static bool IsUtf8Text(ReadOnlySpan<byte> head, bool isWholeFile)
     {

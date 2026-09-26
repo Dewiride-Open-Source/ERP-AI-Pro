@@ -11,6 +11,10 @@ internal sealed class RecordingBlockBlobClient : BlockBlobClient
 
     public List<(IReadOnlyList<string> BlockIds, CommitBlockListOptions Options)> Commits { get; } = [];
 
+    public RequestFailedException? CommitFailure { get; set; }
+
+    public IReadOnlyList<string> CommittedBlockIds { get; set; } = [];
+
     public override async Task<Response<BlockInfo>> StageBlockAsync(string base64BlockId, Stream content, BlockBlobStageBlockOptions options, CancellationToken cancellationToken = default)
     {
         using var copy = new MemoryStream();
@@ -23,7 +27,14 @@ internal sealed class RecordingBlockBlobClient : BlockBlobClient
     public override Task<Response<BlobContentInfo>> CommitBlockListAsync(IEnumerable<string> base64BlockIds, CommitBlockListOptions options, CancellationToken cancellationToken = default)
     {
         Commits.Add(([.. base64BlockIds], options));
+        if (CommitFailure is not null)
+        {
+            throw CommitFailure;
+        }
 
         return Task.FromResult(Response.FromValue(BlobsModelFactory.BlobContentInfo(new ETag("\"0x1\""), DateTimeOffset.UnixEpoch, null, null, null, null, 0), new FakeResponse()));
     }
+
+    public override Task<Response<BlockList>> GetBlockListAsync(BlockListTypes blockListTypes = BlockListTypes.All, string? snapshot = null, BlobRequestConditions? conditions = null, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Response.FromValue(BlobsModelFactory.BlockList(CommittedBlockIds.Select(id => BlobsModelFactory.BlobBlock(id, 0L)), []), new FakeResponse()));
 }

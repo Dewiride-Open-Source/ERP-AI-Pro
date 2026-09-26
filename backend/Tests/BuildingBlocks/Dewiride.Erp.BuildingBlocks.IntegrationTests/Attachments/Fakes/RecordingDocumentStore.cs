@@ -20,5 +20,7 @@ internal sealed class RecordingDocumentStore(IDocumentStore inner) : IDocumentSt
 
     public Task<Stream> OpenReadAsync(StoredContentId contentId, CancellationToken cancellationToken) => inner.OpenReadAsync(contentId, cancellationToken);
 
+    public Task<Stream> OpenHeadAsync(StoredContentId contentId, int length, CancellationToken cancellationToken) => inner.OpenHeadAsync(contentId, length, cancellationToken);
+
     public Task DeleteAsync(StoredContentId contentId, CancellationToken cancellationToken) => inner.DeleteAsync(contentId, cancellationToken);
 }

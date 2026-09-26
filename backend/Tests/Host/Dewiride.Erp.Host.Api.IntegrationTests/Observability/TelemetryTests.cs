@@ -87,12 +87,16 @@ public sealed class TelemetryTests
     }
 
     [Fact]
-    public async Task Get_AttachmentContent_ExportsNoSpanCarryingTheLinkToken()
+    public async Task Get_AttachmentContent_ExportsNoSpanOrLogCarryingTheLinkToken()
     {
         var spans = new ExportedItemCollection<Activity>();
+        var logs = new ExportedItemCollection<LogRecord>();
         await using var factory = new ErpApiFactory();
         using var traced = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
-            services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans))));
+        {
+            services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans));
+            services.ConfigureOpenTelemetryLoggerProvider(logging => logging.AddInMemoryExporter(logs));
+        }));
         using var client = traced.CreateClient();
         var text = UniqueText();
         using var upload = await UploadAsync(client, text);
@@ -113,6 +117,8 @@ public sealed class TelemetryTests
         Assert.NotNull(server.GetTagItem("url.query"));
         Assert.Contains(spans, span => span.Kind == ActivityKind.Client && span.TraceId.ToHexString() == traceId);
         Assert.DoesNotContain(spans, span => Carries(span, token));
+        WaitFor(logs, record => record.TraceId == server.TraceId);
+        Assert.DoesNotContain(logs, record => Carries(record, token));
     }
 
     private static async Task<HttpResponseMessage> UploadAsync(HttpClient client, string text)
@@ -136,6 +142,12 @@ public sealed class TelemetryTests
         || span.Events.Any(item => item.Name.Contains(value, StringComparison.Ordinal) || item.Tags.Any(tag => Mentions(tag.Value, value)))
         || span.Links.Any(item => item.Tags?.Any(tag => Mentions(tag.Value, value)) ?? false)
         || span.Baggage.Any(item => Mentions(item.Value, value));
+
+    private static bool Carries(LogRecord record, string value) =>
+        (record.FormattedMessage?.Contains(value, StringComparison.Ordinal) ?? false)
+        || (record.Body?.Contains(value, StringComparison.Ordinal) ?? false)
+        || (record.Attributes?.Any(attribute => Mentions(attribute.Value, value)) ?? false)
+        || (record.Exception?.ToString().Contains(value, StringComparison.Ordinal) ?? false);
 
     private static bool Mentions(object? tagValue, string value) =>
         tagValue switch

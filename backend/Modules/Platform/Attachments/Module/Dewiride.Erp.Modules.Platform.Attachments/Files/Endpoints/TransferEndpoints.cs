@@ -1,12 +1,11 @@
 using Dewiride.Erp.BuildingBlocks.Application.Commands;
-using Dewiride.Erp.BuildingBlocks.Application.Queries;
 using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.BuildingBlocks.Attachments.Service;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Commands.CreateDownloadLink;
+using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Commands.RedeemDownloadLink;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Commands.UploadAttachment;
-using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Queries.OpenAttachmentContent;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Requests;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Responses;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Uploads;
@@ -24,6 +23,8 @@ internal static class TransferEndpoints
 {
     public const string TimeoutPolicy = "platform.attachments.transfer";
 
+    public const string UploadConcurrencyPolicy = "platform.attachments.uploads";
+
     public const string DownloadRouteName = "Platform.Attachments.Download";
 
     private const string FormData = "multipart/form-data";
@@ -34,9 +35,11 @@ internal static class TransferEndpoints
             .WithName("Platform.Attachments.Upload")
             .WithSummary("Stores one file sent as a multipart/form-data part with a file name.")
             .WithRequestTimeout(TimeoutPolicy)
+            .RequireRateLimiting(UploadConcurrencyPolicy)
             .ProducesProblem(StatusCodes.Status413PayloadTooLarge)
             .ProducesProblem(StatusCodes.Status415UnsupportedMediaType)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
             .AddOpenApiOperationTransformer((operation, _, _) =>
             {
                 operation.RequestBody = new OpenApiRequestBody
@@ -70,7 +73,7 @@ internal static class TransferEndpoints
             .WithSummary("Creates a short-lived link that downloads the attachment for the person asking.")
             .AllowAnonymous();
 
-        group.MapGet("/{id:guid}/content", OpenContentAsync)
+        group.MapGet("/{id:guid}/content", RedeemDownloadLinkAsync)
             .WithName(DownloadRouteName)
             .WithSummary("Streams the original file for a valid, unexpired link of the person asking.")
             .Produces<Stream>(StatusCodes.Status200OK, "application/octet-stream")
@@ -124,14 +127,14 @@ internal static class TransferEndpoints
         return TypedResults.Ok(new DownloadLinkResponse(url, result.Value.ExpiresAt));
     }
 
-    private static async Task<Results<FileStreamHttpResult, ProblemHttpResult>> OpenContentAsync(
+    private static async Task<Results<FileStreamHttpResult, ProblemHttpResult>> RedeemDownloadLinkAsync(
         Guid id,
-        [AsParameters] OpenContentRequest link,
+        [AsParameters] RedeemDownloadLinkRequest link,
         HttpResponse response,
-        IQueryHandler<OpenAttachmentContentQuery, AttachmentDownload> handler,
+        ICommandHandler<RedeemDownloadLinkCommand, AttachmentDownload> handler,
         CancellationToken cancellationToken)
     {
-        var result = await handler.HandleAsync(new OpenAttachmentContentQuery(AttachmentId.From(id), link.Link), cancellationToken);
+        var result = await handler.HandleAsync(new RedeemDownloadLinkCommand(AttachmentId.From(id), link.Link), cancellationToken);
         if (result.IsFailure)
         {
             return result.Error!.ToProblem();

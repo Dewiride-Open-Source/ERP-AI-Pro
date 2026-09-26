@@ -102,6 +102,8 @@ namespace Dewiride.Erp.BuildingBlocks.Attachments.Persistence.Migrations
 
                     b.HasIndex("AttachmentId");
 
+                    b.HasIndex("ExpiresAt");
+
                     b.HasIndex("TokenHash")
                         .IsUnique();
 
