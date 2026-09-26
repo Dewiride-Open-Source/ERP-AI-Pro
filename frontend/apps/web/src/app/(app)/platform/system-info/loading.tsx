@@ -7,7 +7,7 @@ const startupRows = ["first", "second", "third", "fourth", "fifth"];
 export default function SystemInfoLoading() {
   return (
     <div
-      className="grid gap-6"
+      className="grid gap-section"
       role="status"
       aria-label="Loading system information"
       data-testid="system-info-loading"

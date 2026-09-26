@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./globals.css": "./src/styles/globals.css",
+    "./theme.css": "./src/styles/theme.css",
     "./postcss.config": "./postcss.config.mjs",
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx"
@@ -20,6 +21,7 @@
     "lucide-react": "catalog:",
     "next-themes": "catalog:",
     "radix-ui": "catalog:",
+    "sonner": "catalog:",
     "tw-animate-css": "catalog:"
   },
   "peerDependencies": {

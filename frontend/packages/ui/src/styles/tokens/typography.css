@@ -1,0 +1,29 @@
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans--font-feature-settings: "cv11", "ss01", "tnum";
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-heading: var(--font-sans);
+}
+
+@theme {
+  --text-title: 1.875rem;
+  --text-title--line-height: calc(2.25 / 1.875);
+  --text-title--letter-spacing: -0.025em;
+  --text-title--font-weight: 600;
+
+  --text-heading: 1.25rem;
+  --text-heading--line-height: calc(1.75 / 1.25);
+  --text-heading--letter-spacing: -0.025em;
+  --text-heading--font-weight: 600;
+
+  --text-body: 0.875rem;
+  --text-body--line-height: calc(1.25 / 0.875);
+
+  --text-caption: 0.75rem;
+  --text-caption--line-height: calc(1 / 0.75);
+
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: calc(1 / 0.75);
+  --text-eyebrow--letter-spacing: 0.1em;
+  --text-eyebrow--font-weight: 600;
+}

@@ -1,0 +1,12 @@
+:root {
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}
+
+@utility focus-ring {
+  outline-offset: var(--focus-ring-offset);
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--ring);
+  }
+}

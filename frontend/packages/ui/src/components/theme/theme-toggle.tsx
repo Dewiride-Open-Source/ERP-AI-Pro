@@ -2,6 +2,7 @@
 
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
+import { RadioGroup } from "radix-ui";
 import { useSyncExternalStore } from "react";
 
 import { cn } from "@dewiride/erp-ui/lib/utils";
@@ -23,8 +24,10 @@ export function ThemeToggle({ className }: { className?: string }) {
   );
 
   return (
-    <div
-      role="radiogroup"
+    <RadioGroup.Root
+      value={mounted ? (theme ?? "") : ""}
+      onValueChange={setTheme}
+      orientation="horizontal"
       aria-label="Colour theme"
       data-testid="theme-toggle"
       className={cn(
@@ -32,29 +35,18 @@ export function ThemeToggle({ className }: { className?: string }) {
         className,
       )}
     >
-      {options.map(({ value, label, Icon }) => {
-        const active = mounted && theme === value;
-        return (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            aria-label={label}
-            title={label}
-            data-testid={`theme-${value}`}
-            onClick={() => setTheme(value)}
-            className={cn(
-              "inline-flex size-8 items-center justify-center rounded-full transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none",
-              active
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Icon className="size-4" aria-hidden />
-          </button>
-        );
-      })}
-    </div>
+      {options.map(({ value, label, Icon }) => (
+        <RadioGroup.Item
+          key={value}
+          value={value}
+          aria-label={label}
+          title={label}
+          data-testid={`theme-${value}`}
+          className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground focus-ring transition-all duration-(--motion-duration-normal) ease-standard hover:text-foreground data-[state=checked]:bg-background data-[state=checked]:text-foreground data-[state=checked]:shadow-sm"
+        >
+          <Icon className="size-4" aria-hidden />
+        </RadioGroup.Item>
+      ))}
+    </RadioGroup.Root>
   );
 }

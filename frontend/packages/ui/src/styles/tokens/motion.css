@@ -1,0 +1,65 @@
+:root {
+  --motion-duration-fast: 150ms;
+  --motion-duration-normal: 200ms;
+  --motion-duration-slow: 300ms;
+  --motion-duration-ambient: 6s;
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-fast: 0.01ms;
+    --motion-duration-normal: 0.01ms;
+    --motion-duration-slow: 0.01ms;
+  }
+}
+
+@theme inline {
+  --default-transition-duration: var(--motion-duration-fast);
+  --default-transition-timing-function: var(--motion-ease-standard);
+  --ease-standard: var(--motion-ease-standard);
+  --ease-enter: var(--motion-ease-enter);
+  --animate-fade-up: fade-up var(--motion-duration-slow) var(--motion-ease-enter) both;
+  --animate-glow: glow var(--motion-duration-ambient) ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes glow {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 0.55;
+    }
+    50% {
+      transform: translate3d(2rem, -1.5rem, 0) scale(1.08);
+      opacity: 0.8;
+    }
+  }
+}
+
+@utility glow-offset {
+  animation-delay: calc(var(--motion-duration-ambient) / -2);
+}
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
