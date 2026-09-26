@@ -808,7 +808,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): create the migrator service principal (certificate file erp-migrator-client.pem, id in MIGRATOR_AZURE_CLIENT_ID) with App Configuration Data Reader and Key Vault Secrets User on the production store and vault, its contained database user with the schema role, the secret Erp--Platform--Database--MigratorConnectionString in kv-erp-ai-pro-prod and its production-label reference Erp:Platform:Database:MigratorConnectionString; compose.production.yaml already runs the migrator service with that identity."
         },
         {
           "id": "first-deployment-host-bootstrap-runbook-and-scripts",
@@ -836,7 +837,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): the migrator ships inside the api image at /app/migrator and the compose migrator service runs it before the api (condition service_completed_successfully), so deploy.sh migrates by running the stack; migrator exit codes are 0 succeeded, 1 failed, 2 invalid configuration, 3 pending (status), 64 usage, and docs/operations/runbooks/migrations.md covers review and recovery."
         },
         {
           "id": "first-deployment-health-probes-and-uptime-monitoring",

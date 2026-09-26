@@ -32,16 +32,17 @@ jobs:
       - name: Start SQL Server
         id: sql
         uses: ./.github/actions/start-sql-server
-      - name: Build API
+      - name: Build API and migrator
         working-directory: backend
-        run: dotnet build Hosts/Api/Dewiride.Erp.Host.Api --no-restore -c Release
-      - name: Apply migrations
+        run: |
+          dotnet build Hosts/Api/Dewiride.Erp.Host.Api --no-restore -c Release
+          dotnet build Hosts/Migrator/Dewiride.Erp.Host.Migrator --no-restore -c Release
+      - name: Migrate the database
         working-directory: backend
         env:
+          DOTNET_ENVIRONMENT: Development
           Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
-        run: |
-          dotnet ef database update --no-build --configuration Release --context IdempotencyDbContext --project BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency --startup-project Hosts/Api/Dewiride.Erp.Host.Api
-          dotnet ef database update --no-build --configuration Release --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
+        run: dotnet run --project Hosts/Migrator/Dewiride.Erp.Host.Migrator --no-build -c Release --no-launch-profile -- migrate
       - name: Build web app
         working-directory: frontend
         run: pnpm build

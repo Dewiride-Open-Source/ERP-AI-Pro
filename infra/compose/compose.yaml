@@ -1,6 +1,21 @@
 name: erp-ai-pro
 
 services:
+  migrator:
+    image: ghcr.io/dewiride-open-source/erp-ai-pro/api:${IMAGE_TAG:-local}
+    pull_policy: never
+    entrypoint: ["dotnet", "/app/migrator/Dewiride.Erp.Host.Migrator.dll"]
+    command: ["migrate"]
+    environment:
+      DOTNET_ENVIRONMENT: ${DOTNET_ENVIRONMENT:-Production}
+      ERP_ENVIRONMENT: ${ERP_ENVIRONMENT:-local-dev}
+      APPCONFIG_ENDPOINT: ${APPCONFIG_ENDPOINT:-}
+    healthcheck:
+      disable: true
+    networks:
+      - erp
+    restart: "no"
+
   api:
     image: ghcr.io/dewiride-open-source/erp-ai-pro/api:${IMAGE_TAG:-local}
     build:
@@ -12,6 +27,9 @@ services:
       ERP_ENVIRONMENT: ${ERP_ENVIRONMENT:-local-dev}
       APPCONFIG_ENDPOINT: ${APPCONFIG_ENDPOINT:-}
       Erp__Platform__Host__KnownNetworks__0: ${COMPOSE_NETWORK_CIDR:-172.28.0.0/16}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
     networks:
       - erp
     expose:

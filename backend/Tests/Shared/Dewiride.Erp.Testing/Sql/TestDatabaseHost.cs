@@ -1,6 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
+using Dewiride.Erp.BuildingBlocks.Persistence.Seeding;
 using Dewiride.Erp.Host.Composition;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,5 +35,6 @@ public static class TestDatabaseHost
     {
         using var host = Build(connectionString);
         await host.Services.GetRequiredService<DatabaseMigrator>().MigrateAllAsync(CancellationToken.None);
+        await host.Services.GetRequiredService<SeedRunner>().RunAsync(CancellationToken.None);
     }
 }

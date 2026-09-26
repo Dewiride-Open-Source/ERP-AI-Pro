@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../../../Hosts/Migrator/Dewiride.Erp.Host.Migrator/Dewiride.Erp.Host.Migrator.csproj" />
+    <ProjectReference Include="../../Shared/Dewiride.Erp.Testing/Dewiride.Erp.Testing.csproj" />
+  </ItemGroup>
+
+</Project>

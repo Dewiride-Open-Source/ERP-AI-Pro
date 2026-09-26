@@ -19,6 +19,19 @@ public sealed partial class DatabaseMigrator(IServiceScopeFactory scopeFactory, 
         }
     }
 
+    public async Task<IReadOnlyList<PendingMigrations>> GetPendingMigrationsAsync(CancellationToken cancellationToken)
+    {
+        var pending = new List<PendingMigrations>();
+        foreach (var registration in catalog.Registrations)
+        {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var context = (DbContext)scope.ServiceProvider.GetRequiredService(registration.ContextType);
+            pending.Add(new PendingMigrations(registration.Schema, [.. await context.Database.GetPendingMigrationsAsync(cancellationToken)]));
+        }
+
+        return pending;
+    }
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Schema {Schema} is up to date after applying {AppliedCount} migration(s).")]
     private partial void LogMigrated(string schema, int appliedCount);
 }

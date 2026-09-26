@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "migrate": {
+      "commandName": "Project",
+      "commandLineArgs": "migrate",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "ERP_ENVIRONMENT": "local-dev",
+        "AZURE_TOKEN_CREDENTIALS": "AzureCliCredential"
+      }
+    },
+    "status": {
+      "commandName": "Project",
+      "commandLineArgs": "status",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "ERP_ENVIRONMENT": "local-dev",
+        "AZURE_TOKEN_CREDENTIALS": "AzureCliCredential"
+      }
+    }
+  }
+}

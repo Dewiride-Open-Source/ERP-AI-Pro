@@ -34,10 +34,7 @@ jobs:
         working-directory: backend
         run: dotnet build --no-restore -warnaserror -p:ContinuousIntegrationBuild=true
       - name: Pending model changes
-        working-directory: backend
-        run: |
-          dotnet ef migrations has-pending-model-changes --no-build --context IdempotencyDbContext --project BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency --startup-project Hosts/Api/Dewiride.Erp.Host.Api
-          dotnet ef migrations has-pending-model-changes --no-build --context SystemInfoDbContext --project Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo --startup-project Hosts/Api/Dewiride.Erp.Host.Api
+        run: node scripts/ef/ef.ts pending --all --no-build
       - name: Verify formatting
         working-directory: backend
         run: dotnet format --verify-no-changes --no-restore
@@ -58,6 +55,8 @@ jobs:
         run: bash scripts/azure/check.sh
       - name: Repository check tests
         run: node --test "scripts/checks/tests/*.test.ts"
+      - name: Migration script tests
+        run: node --test "scripts/ef/tests/*.test.ts"
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

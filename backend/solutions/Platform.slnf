@@ -14,6 +14,7 @@
       "Hosts\\Api\\Dewiride.Erp.Host.Api\\Dewiride.Erp.Host.Api.csproj",
       "Hosts\\Composition\\Dewiride.Erp.Host.Composition\\Dewiride.Erp.Host.Composition.csproj",
       "Hosts\\HealthProbe\\Dewiride.Erp.Host.HealthProbe\\Dewiride.Erp.Host.HealthProbe.csproj",
+      "Hosts\\Migrator\\Dewiride.Erp.Host.Migrator\\Dewiride.Erp.Host.Migrator.csproj",
       "Modules\\Platform\\SystemInfo\\Contracts\\Dewiride.Erp.Modules.Platform.SystemInfo.Contracts\\Dewiride.Erp.Modules.Platform.SystemInfo.Contracts.csproj",
       "Modules\\Platform\\SystemInfo\\Module\\Dewiride.Erp.Modules.Platform.SystemInfo\\Dewiride.Erp.Modules.Platform.SystemInfo.csproj",
       "Modules\\Platform\\SystemInfo\\Tests\\IntegrationTests\\Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests\\Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.csproj",
@@ -22,6 +23,7 @@
       "Tests\\BuildingBlocks\\Dewiride.Erp.BuildingBlocks.IntegrationTests\\Dewiride.Erp.BuildingBlocks.IntegrationTests.csproj",
       "Tests\\BuildingBlocks\\Dewiride.Erp.BuildingBlocks.UnitTests\\Dewiride.Erp.BuildingBlocks.UnitTests.csproj",
       "Tests\\Host\\Dewiride.Erp.Host.Api.IntegrationTests\\Dewiride.Erp.Host.Api.IntegrationTests.csproj",
+      "Tests\\Host\\Dewiride.Erp.Host.Migrator.IntegrationTests\\Dewiride.Erp.Host.Migrator.IntegrationTests.csproj",
       "Tests\\Shared\\Dewiride.Erp.Testing\\Dewiride.Erp.Testing.csproj"
     ]
   }
