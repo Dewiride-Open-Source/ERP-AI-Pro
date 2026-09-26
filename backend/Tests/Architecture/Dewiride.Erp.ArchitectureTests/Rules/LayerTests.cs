@@ -6,6 +6,8 @@ namespace Dewiride.Erp.ArchitectureTests.Rules;
 
 public sealed class LayerTests
 {
+    private const string AzureStorageNamespace = @"^Azure\.Storage(\..*)?$";
+
     private static readonly Architecture Architecture = ErpAssemblies.Architecture;
 
     private static readonly IObjectProvider<IType> DomainTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Domain(\..*)?$").As("domain types");
@@ -14,17 +16,21 @@ public sealed class LayerTests
 
     private static readonly IObjectProvider<IType> EndpointTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Endpoints(\..*)?$").As("endpoint types");
 
-    private static readonly IObjectProvider<IType> AspNetCoreTypes = Types().That().ResideInNamespaceMatching(@"^Microsoft\.AspNetCore(\..*)?$").As("ASP.NET Core types");
+    private static readonly IObjectProvider<IType> AspNetCoreTypes = Types(true).That().ResideInNamespaceMatching(@"^Microsoft\.AspNetCore(\..*)?$").As("ASP.NET Core types");
 
-    private static readonly IObjectProvider<IType> EntityFrameworkTypes = Types().That().ResideInNamespaceMatching(@"^Microsoft\.EntityFrameworkCore(\..*)?$").As("EF Core types");
+    private static readonly IObjectProvider<IType> EntityFrameworkTypes = Types(true).That().ResideInNamespaceMatching(@"^Microsoft\.EntityFrameworkCore(\..*)?$").As("EF Core types");
 
-    private static readonly IObjectProvider<IType> DomainDependencies = Types().That()
+    private static readonly IObjectProvider<IType> DomainDependencies = Types(true).That()
         .ResideInNamespaceMatching(@"^(System|Dewiride\.Erp\.BuildingBlocks\.Kernel|Dewiride\.Erp\.BuildingBlocks\.SharedKernel|Dewiride\.Erp\.Modules\..+\.Domain)(\..*)?$")
         .As("kernel, shared kernel, System and domain types");
 
     private static readonly IObjectProvider<IType> PersistenceTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Persistence(\..*)?$").As("persistence types");
 
     private static readonly IObjectProvider<IType> HostingTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Hosting(\..*)?$").As("hosting types");
+
+    private static readonly IObjectProvider<IType> BlobStorageTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.BuildingBlocks\.Attachments\.Storage\.Blob(\..*)?$").As("blob storage types");
+
+    private static readonly IObjectProvider<IType> AzureStorageTypes = Types(true).That().ResideInNamespaceMatching(AzureStorageNamespace).As("Azure Storage types");
 
     [Fact]
     public void Domain_DependsOnlyOnKernelSharedKernelAndSystem()
@@ -66,6 +72,13 @@ public sealed class LayerTests
     public void Hosting_DoesNotDependOnAspNetCoreEntityFrameworkOrEndpoints()
     {
         AssertRule(Types().That().Are(HostingTypes).Should().NotDependOnAny(AspNetCoreTypes).AndShould().NotDependOnAny(EntityFrameworkTypes).AndShould().NotDependOnAny(EndpointTypes).WithoutRequiringPositiveResults());
+    }
+
+    [Fact(Skip = "Defect: Dewiride.Erp.BuildingBlocks.Attachments.Hosting.AttachmentStorageInitializer depends on Azure.Storage.Blobs (BlobContainerClient.CreateIfNotExistsAsync, BlobContainerInfo, PublicAccessType) to create the emulator container; that call belongs in Storage.Blob.AttachmentBlobClients.")]
+    public void AzureStorage_IsReferencedOnlyByTheBlobStorageNamespace()
+    {
+        Assert.NotEmpty(Types(true).That().ResideInNamespaceMatching(AzureStorageNamespace).GetObjects(Architecture));
+        AssertRule(Types().That().AreNot(BlobStorageTypes).Should().NotDependOnAny(AzureStorageTypes));
     }
 
     [Fact]

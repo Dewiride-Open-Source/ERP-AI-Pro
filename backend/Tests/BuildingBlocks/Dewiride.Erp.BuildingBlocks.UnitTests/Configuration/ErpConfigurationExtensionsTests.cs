@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Azure.Core;
+using Azure.Identity;
 using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Configuration.AppConfiguration;
 using Dewiride.Erp.BuildingBlocks.Configuration.Credentials;
@@ -44,6 +46,62 @@ public sealed class ErpConfigurationExtensionsTests
         using var provider = builder.Services.BuildServiceProvider();
         var refresher = Assert.Single(provider.GetRequiredService<IConfigurationRefresherProvider>().Refreshers);
         Assert.Equal(Endpoint, refresher.AppConfigurationEndpoint);
+    }
+
+    [Fact]
+    public void AddErpConfiguration_EndpointSet_RegistersTheCredentialCreatedForTheStoreAsTheOnlyTokenCredential()
+    {
+        var variables = new RecordingVariables(AzureCredentialFactory.DevelopmentSelection);
+        var builder = CreateBuilder(
+            Environments.Development,
+            (ErpConfigurationSourceResolver.EndpointVariable, Endpoint.AbsoluteUri),
+            (ErpEnvironmentNames.VariableName, ErpEnvironmentNames.LocalDev));
+
+        builder.AddErpConfiguration(
+            typeof(ErpConfigurationExtensionsTests).Assembly,
+            variables.Read,
+            options => options.SetClientFactory(new FakeConfigurationClientFactory(new FakeConfigurationClient())));
+
+        var descriptor = Assert.Single(builder.Services, d => d.ServiceType == typeof(TokenCredential));
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
+        var credential = Assert.IsType<DefaultAzureCredential>(descriptor.ImplementationInstance);
+        using var provider = builder.Services.BuildServiceProvider();
+        Assert.Same(credential, provider.GetRequiredService<TokenCredential>());
+        Assert.Equal(1, variables.Reads);
+    }
+
+    [Theory]
+    [InlineData(ErpConfigurationSourceResolver.InMemorySource)]
+    [InlineData(ErpConfigurationSourceResolver.LocalDevelopmentSource)]
+    public void AddErpConfiguration_SourceOtherThanTheStore_RegistersOneTokenCredentialThatBuildingTheHostDoesNotCreate(string source)
+    {
+        var variables = new RecordingVariables(selection: null);
+        var builder = CreateBuilder(Environments.Production, (ErpConfigurationSourceResolver.SourceSetting, source));
+
+        builder.AddErpConfiguration(typeof(ErpConfigurationExtensionsTests).Assembly, variables.Read, configureProvider: null);
+        using var host = builder.Build();
+
+        var descriptor = Assert.Single(builder.Services, d => d.ServiceType == typeof(TokenCredential));
+        Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
+        Assert.Null(descriptor.ImplementationInstance);
+        Assert.NotNull(descriptor.ImplementationFactory);
+        Assert.Equal(0, variables.Reads);
+    }
+
+    [Fact]
+    public void AddErpConfiguration_CredentialResolvedOutsideDevelopmentWithoutSelection_ThrowsTheFactoryMessage()
+    {
+        var builder = CreateBuilder(
+            Environments.Production,
+            (ErpConfigurationSourceResolver.SourceSetting, ErpConfigurationSourceResolver.InMemorySource));
+        builder.AddErpConfiguration(typeof(ErpConfigurationExtensionsTests).Assembly, _ => null, configureProvider: null);
+        using var host = builder.Build();
+        var expected = Assert.Throws<InvalidOperationException>(() => AzureCredentialFactory.Create(new FakeHostEnvironment(Environments.Production), _ => null));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => host.Services.GetRequiredService<TokenCredential>());
+
+        Assert.Equal(expected.Message, exception.Message);
+        Assert.Contains(AzureCredentialFactory.SelectionVariable, exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -250,5 +308,17 @@ public sealed class ErpConfigurationExtensionsTests
         Assert.Equal(ServiceLifetime.Singleton, descriptor.Lifetime);
 
         return Assert.IsType<ErpConfigurationInfo>(descriptor.ImplementationInstance);
+    }
+
+    private sealed class RecordingVariables(string? selection)
+    {
+        public int Reads { get; private set; }
+
+        public string? Read(string name)
+        {
+            Reads++;
+
+            return name == AzureCredentialFactory.SelectionVariable ? selection : null;
+        }
     }
 }
