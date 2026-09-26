@@ -14,7 +14,7 @@ Every command runs from the repository root and wraps the pinned `dotnet ef` loc
 | Check for model changes no migration captures | `node scripts/ef/ef.ts pending --all` (CI and `verify.ts` run it with `--no-build`) |
 | Script SQL for review | `node scripts/ef/ef.ts script --context <key> --idempotent --output <file>` (`--from <A>`, `--to <B>`) |
 
-`--no-build` and `--configuration <Debug|Release>` pass through. Design time is always offline: the API host reads the connection string from `dotnet user-secrets` (`Erp:Platform:Database:ConnectionString`), never from App Configuration. `--connection <string>` exists for `update`, but it puts the string on the command line; prefer user secrets.
+`--no-build` and `--configuration <Debug|Release>` pass through. Design time is always offline: the API host reads the connection string from `dotnet user-secrets` (`Erp:Platform:Database:ConnectionString`), never from App Configuration. `--connection <string>` for `update` hands the string to `dotnet ef` through the `Erp__Platform__Database__ConnectionString` environment variable of the child process, so it never appears in a process list or in the echoed command; user secrets remain the everyday source. A relative `--output` for `script` is relative to the directory you run the command from.
 
 ## Writing a migration
 
@@ -32,13 +32,13 @@ Every command runs from the repository root and wraps the pinned `dotnet ef` loc
 | Local containers | the compose `migrator` service runs before the `api` service on every `up`, signing in as the `erp_local_migrator` SQL login ([local development](local-development.md)) |
 | Tests | the `SqlTestDatabase` assembly fixture migrates and seeds a fresh database per test process through the same composition |
 | CI | `e2e.yml` runs the migrator; `docker-build.yml` runs the compose stack, whose migrator container migrates the CI SQL Server |
-| Production | the compose `migrator` service before the API is rolled ([runbook](../operations/runbooks/migrations.md)) |
+| Production | `docker compose run --rm migrator` on its own, then `up` to roll the API only after it exited 0 ([runbook](../operations/runbooks/migrations.md)) |
 
 The migrator program (`Hosts/Migrator/Dewiride.Erp.Host.Migrator`) applies every context in catalogue order and then runs the seeders. Commands and exit codes:
 
 | Command | Exit code |
 |---|---|
-| `migrate` | 0 when every schema is migrated and every seeder ran; 1 on a failure or cancellation; 2 when the configuration is invalid (for example no connection string) |
+| `migrate` | 0 when every schema is migrated and every seeder ran; 1 on a failure or cancellation; 2 when the configuration cannot be loaded or is invalid (for example no connection string, an unconvertible value, an unresolvable Key Vault reference) |
 | `status` | 0 when nothing is pending; 3 when a schema has pending migrations |
 | anything else | 64 with the usage line |
 

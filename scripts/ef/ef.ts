@@ -1,7 +1,8 @@
 import { spawnSync } from "node:child_process";
+import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-import { addArguments, pendingArguments, scriptArguments, updateArguments } from "./lib/commands.ts";
+import { addArguments, connectionEnvironment, pendingArguments, scriptArguments, updateArguments } from "./lib/commands.ts";
 import { backendRoot, type DbContextEntry, discoverContexts } from "./lib/contexts.ts";
 
 const usage = `Usage: node scripts/ef/ef.ts <command> [options]
@@ -13,7 +14,7 @@ Commands:
   pending --context <key> | --all        fail when the model has changes no migration captures
   script --context <key>                 write the SQL of [--from <A>] [--to <B>] [--idempotent] [--output <file>]
 
-Options: --no-build, --configuration <Debug|Release>, --connection <string> (update only; prefer user secrets).`;
+Options: --no-build, --configuration <Debug|Release>, --connection <string> (update only; passed to dotnet ef through the environment).`;
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
@@ -50,7 +51,7 @@ switch (command) {
     run(addArguments(single(), name));
     break;
   case "update":
-    for (const context of selected()) run(updateArguments(context, { ...build, migration: values.migration, connection: values.connection }));
+    for (const context of selected()) run(updateArguments(context, { ...build, migration: values.migration }), connectionEnvironment(values.connection));
     break;
   case "pending": {
     const failed = selected().filter((context) => !succeeds(pendingArguments(context, build)));
@@ -58,7 +59,7 @@ switch (command) {
     break;
   }
   case "script":
-    run(scriptArguments(single(), { ...build, from: values.from, to: values.to, idempotent: values.idempotent, output: values.output }));
+    run(scriptArguments(single(), { ...build, from: values.from, to: values.to, idempotent: values.idempotent, output: values.output ? resolve(values.output) : undefined }));
     break;
   default:
     fail(`unknown command "${command}".\n\n${usage}`);
@@ -81,13 +82,13 @@ function find(key: string | undefined): DbContextEntry {
   return context;
 }
 
-function run(args: string[]): void {
-  if (!succeeds(args)) fail(`dotnet ${args.slice(0, 3).join(" ")} failed.`);
+function run(args: string[], environment: Record<string, string> = {}): void {
+  if (!succeeds(args, environment)) fail(`dotnet ${args.slice(0, 3).join(" ")} failed.`);
 }
 
-function succeeds(args: string[]): boolean {
+function succeeds(args: string[], environment: Record<string, string> = {}): boolean {
   console.log(`▶ dotnet ${args.join(" ")}`);
-  return spawnSync("dotnet", args, { cwd: backendRoot, stdio: "inherit" }).status === 0;
+  return spawnSync("dotnet", args, { cwd: backendRoot, stdio: "inherit", env: { ...process.env, ...environment } }).status === 0;
 }
 
 function fail(message: string): never {

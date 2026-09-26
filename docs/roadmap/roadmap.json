@@ -525,7 +525,7 @@
           "id": "backend-platform-migration-tooling-and-seeding",
           "title": "Migration tooling and seeding",
           "scope": "Provide per-context `dotnet ef` wrapper scripts (scripts/ef.ps1 and ef.sh), a CI step running `migrations has-pending-model-changes` for every context, self-contained migration bundle builds per context in CI, the one-shot migrator compose service pattern, and an idempotent ordered seeder framework verified by a test that runs seeding twice.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "node scripts/ef/ef.ts list, add, update, pending and script run dotnet ef for any discovered module or building-block DbContext from the repository root on Windows and Linux, discovering contexts from the source tree so a new context needs no script change, and node --test covers discovery and argument composition.",
             "ci-backend.yml fails when any discovered context has pending model changes, through a single ef.ts pending --all step.",
@@ -535,7 +535,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-09-26"
+          "startedOn": "2026-09-26",
+          "completedOn": "2026-09-26",
+          "notes": "Hosts/Migrator (migrate | status; exit 0/1/2/3/64; SIGINT/SIGTERM cancel) applies every catalogue context in order and then the ISeeder seeders (AddSeeder, SeedRunner), with its own schema-rights connection Erp:Platform:Database:MigratorConnectionString; it ships inside the api image and runs as the compose migrator service, and production runs it with docker compose run --rm migrator before up. node scripts/ef/ef.ts list | add | update | pending | script discovers every ModuleDbContext; CI and verify.ts check pending model changes for all contexts; docker-build.yml proves the migrator container migrates the CI SQL Server before the API starts. Deviations: no per-context bundles and no ef.ps1/ef.sh (ADR-0021); the local erp_local_migrator SQL login was created with the owner's consent."
         },
         {
           "id": "backend-platform-attachments-building-block",
@@ -838,7 +840,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): the migrator ships inside the api image at /app/migrator and the compose migrator service runs it before the api (condition service_completed_successfully), so deploy.sh migrates by running the stack; migrator exit codes are 0 succeeded, 1 failed, 2 invalid configuration, 3 pending (status), 64 usage, and docs/operations/runbooks/migrations.md covers review and recovery."
+          "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): the migrator ships inside the api image at /app/migrator as the compose migrator service (pull_policy never, restart no). docker compose up recreates a changed api container before it evaluates the api depends_on condition service_completed_successfully, so deploy.sh must pull api and web, run docker compose run --rm migrator on its own, stop and keep the running api when it exits non-zero, and only then run up -d --remove-orphans --wait. Migrator exit codes: 0 succeeded, 1 failed or cancelled, 2 configuration could not be loaded or is invalid, 3 migrations pending (status), 64 usage. docs/operations/runbooks/migrations.md is the manual form of this sequence."
         },
         {
           "id": "first-deployment-health-probes-and-uptime-monitoring",
@@ -912,7 +914,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): reference rows (countries, states and UTs, currencies) are seeded by ISeeder classes registered with services.AddSeeder<TSeeder>(order) in the module AddServices, never by seed migrations; each seeder inserts what is missing by natural key and ships a run-twice test (the SeedingTests pattern), and the migrator and the test database host run it after every migration."
         },
         {
           "id": "business-building-blocks-statutory-parameter-store-and-gst-datasets",

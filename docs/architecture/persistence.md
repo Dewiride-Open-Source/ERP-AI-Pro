@@ -111,6 +111,8 @@ node scripts/ef/ef.ts pending --all
 
 `ErpApiFactory` injects `Current.ConnectionString` as `Erp:Platform:Database:ConnectionString` unless the test supplied one with `WithConfiguration`, and throws a message naming the `AssemblyFixture` line when no test database exists, so a Development test host can never reach the developer's own `ErpAiPro` database through the user-secrets value. Every test host registers the readiness checks `self`, `database:platform_idempotency` and `database:platform_system_info`.
 
+The one exception is a test of the migration path itself: `Dewiride.Erp.Host.Migrator.IntegrationTests` declares no assembly fixture and references neither `SqlTestDatabase` nor `Hosts/Api`; each test creates an `EmptyTestDatabase` (same naming, server and drop rules, but no migration has touched it) and runs the migrator program against it.
+
 ## CI
 
 The composite action `.github/actions/start-sql-server` runs `docker run` of `mcr.microsoft.com/mssql/server:2025-CU9-ubuntu-24.04@sha256:2b5b581621126574f3d1f75e78d3eebe8d05aedb59ad0cfdf9aa42cb0634d726` with an `sa` password generated at run time and masked in the log, and outputs `server-connection-string`, `database-connection-string` (`Database=ErpAiPro`) and `container-connection-string` (`Server=host.docker.internal,1433;Database=ErpAiPro;...`). ADR-0013 records why a composite `docker run` action is used rather than a `services:` container.

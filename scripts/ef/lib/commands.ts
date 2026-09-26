@@ -2,6 +2,7 @@ import type { DbContextEntry } from "./contexts.ts";
 
 export const startupProject = "Hosts/Api/Dewiride.Erp.Host.Api";
 export const migrationsDirectory = "Persistence/Migrations";
+export const connectionStringVariable = "Erp__Platform__Database__ConnectionString";
 
 export type BuildOptions = {
   noBuild?: boolean;
@@ -10,7 +11,6 @@ export type BuildOptions = {
 
 export type UpdateOptions = BuildOptions & {
   migration?: string;
-  connection?: string;
 };
 
 export type ScriptOptions = BuildOptions & {
@@ -31,9 +31,14 @@ export function updateArguments(context: DbContextEntry, options: UpdateOptions 
     "update",
     ...(options.migration ? [options.migration] : []),
     ...target(context),
-    ...(options.connection ? ["--connection", options.connection] : []),
     ...build(options),
   ];
+}
+
+// The design-time API host reads its connection string from the environment, so a connection given on the command line
+// reaches dotnet ef that way and never appears in a process list or in the echoed command.
+export function connectionEnvironment(connection: string | undefined): Record<string, string> {
+  return connection ? { [connectionStringVariable]: connection } : {};
 }
 
 export function pendingArguments(context: DbContextEntry, options: BuildOptions = {}): string[] {

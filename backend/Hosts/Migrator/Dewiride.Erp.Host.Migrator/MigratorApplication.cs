@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 namespace Dewiride.Erp.Host.Migrator;
 
 // The host is built but never started: starting it would run the modules' hosted services, which belong to the API.
-public static partial class MigratorApplication
+internal static partial class MigratorApplication
 {
     public const string MigrateCommand = "migrate";
 
@@ -29,23 +29,23 @@ public static partial class MigratorApplication
             return MigratorExitCodes.Usage;
         }
 
-        var builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = [.. args.Skip(1)], ContentRootPath = AppContext.BaseDirectory });
-        configure?.Invoke(builder);
-        builder.AddErpPlatform(typeof(MigratorApplication).Assembly);
-        builder.Services.AddOptions<MigratorDatabaseOptions>().BindConfiguration(MigratorDatabaseOptions.SectionName);
-        builder.Services.AddSingleton<IPostConfigureOptions<DatabaseOptions>, MigratorConnectionStringSetup>();
-
-        using var host = builder.Build();
-        var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(MigratorApplication).FullName!);
+        IHost? built = null;
         try
         {
-            host.Services.GetRequiredService<IStartupValidator>().Validate();
+            built = BuildHost(args, configure);
+            built.Services.GetRequiredService<IStartupValidator>().Validate();
         }
-        catch (Exception exception) when (exception is OptionsValidationException or AggregateException)
+        catch (Exception exception)
         {
-            LogInvalidConfiguration(logger, exception.Message);
+            // Nothing has touched the database yet, so whatever failed while composing, loading the configuration store and its
+            // Key Vault references or validating options is a configuration problem; no logger exists before the host does.
+            built?.Dispose();
+            await Console.Error.WriteLineAsync($"The migrator configuration is invalid: {exception}").ConfigureAwait(false);
             return MigratorExitCodes.InvalidConfiguration;
         }
+
+        using var host = built;
+        var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(MigratorApplication).FullName!);
 
         try
         {
@@ -63,6 +63,17 @@ public static partial class MigratorApplication
             LogFailed(logger, exception);
             return MigratorExitCodes.Failed;
         }
+    }
+
+    private static IHost BuildHost(IReadOnlyList<string> args, Action<HostApplicationBuilder>? configure)
+    {
+        var builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = [.. args.Skip(1)], ContentRootPath = AppContext.BaseDirectory });
+        configure?.Invoke(builder);
+        builder.AddErpPlatform(typeof(MigratorApplication).Assembly);
+        builder.Services.AddOptions<MigratorDatabaseOptions>().BindConfiguration(MigratorDatabaseOptions.SectionName);
+        builder.Services.AddSingleton<IPostConfigureOptions<DatabaseOptions>, MigratorConnectionStringSetup>();
+
+        return builder.Build();
     }
 
     private static async Task<int> MigrateAsync(IServiceProvider services, ILogger logger, CancellationToken cancellationToken)
@@ -86,16 +97,13 @@ public static partial class MigratorApplication
         return pending.Any(schema => schema.Migrations.Count > 0) ? MigratorExitCodes.MigrationsPending : MigratorExitCodes.Succeeded;
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "The migrator configuration is invalid: {Reason}")]
-    private static partial void LogInvalidConfiguration(ILogger logger, string reason);
-
     [LoggerMessage(Level = LogLevel.Information, Message = "Every schema is migrated and {SeederCount} seeder(s) ran.")]
     private static partial void LogMigrated(ILogger logger, int seederCount);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Schema {Schema} has {PendingCount} pending migration(s): {Migrations}")]
     private static partial void LogSchemaStatus(ILogger logger, string schema, int pendingCount, IReadOnlyList<string> migrations);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "The migrator was cancelled before it finished; the migration in progress was rolled back.")]
+    [LoggerMessage(Level = LogLevel.Warning, Message = "The migrator was cancelled before it finished.")]
     private static partial void LogCancelled(ILogger logger);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "The migrator failed.")]

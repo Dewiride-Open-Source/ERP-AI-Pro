@@ -26,6 +26,7 @@ How secrets are named, stored, refreshed, rotated and revoked. Every command run
 | `Erp--Platform--DataProtection--Key` (key) | both vaults | `scripts/azure/provision.sh` (RSA 2048) | the Data Protection key ring from the authentication phase | that phase's runbook |
 | `Erp--Platform--Database--ConnectionString` | `kv-erp-ai-pro-dev` (`kv-erp-ai-pro-prod` from the first-deployment phase) | `az keyvault secret set --file` in the session that introduced the key, with the owner's consent; the local-dev value is the Windows sign-in string `Server=localhost;Database=ErpAiPro;Integrated Security=True;Encrypt=True;TrustServerCertificate=True` and holds no credential | `dotnet run` with the store through the reference `Erp:Platform:Database:ConnectionString` (label `local-dev`; the same value sits in `dotnet user-secrets` for `dotnet ef`); the container stack reads the file secret `Erp__Platform__Database__ConnectionString` instead (a SQL login, never a reference) | section 5d |
 | `Erp--Platform--Database--MigratorConnectionString` | `kv-erp-ai-pro-prod` (from the first-deployment database provisioning) | that phase, with the owner's consent; `Authentication="Active Directory Default"`, so it holds no password | the migrator container through the `production` reference `Erp:Platform:Database:MigratorConnectionString` (ADR-0021); locally the migrator reads the compose secret file instead | section 5d, step 3 |
+| the migrator service principal's certificate | `kv-erp-ai-pro-prod` (from the first-deployment database provisioning) | that phase, with the owner's consent (self-signed, 12 months) | the migrator container as the compose secret file `erp-migrator-client.pem` (never a reference) | section 5c, applied to the migrator service principal and its file |
 
 ## 4. Refresh intervals
 
@@ -94,4 +95,4 @@ Order: revoke, rotate, investigate — never investigate first.
 - `bash scripts/azure/verify.sh --entra` warns about a certificate that expires within 30 days; rotate it (section 5b or 5c) before it does.
 - `bash scripts/azure/verify.sh` confirms the role matrix (operator, developers group, runtime service principal); remove people who left the developers group in Entra.
 - Confirm in GitHub → Settings → Code security that secret scanning and push protection are still enabled and that no open alert exists.
-- Confirm `infra/compose/secrets/` on the server holds only `erp-runtime-client.pem` with owner 1654 and mode 0400.
+- Confirm `infra/compose/secrets/` on the server holds only `erp-runtime-client.pem` and, once the first-deployment database provisioning created it, `erp-migrator-client.pem`, each with owner 1654 (the api image user, which the migrator shares) and mode 0400.

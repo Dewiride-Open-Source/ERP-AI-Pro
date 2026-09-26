@@ -1,6 +1,6 @@
 namespace Dewiride.Erp.Host.Migrator;
 
-public static class MigratorExitCodes
+internal static class MigratorExitCodes
 {
     public const int Succeeded = 0;
 
