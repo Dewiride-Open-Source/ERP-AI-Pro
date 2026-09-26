@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Configuration.AppConfiguration;
+using Dewiride.Erp.BuildingBlocks.Configuration.Credentials;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.UnitTests.Configuration.AppConfiguration.Fakes;

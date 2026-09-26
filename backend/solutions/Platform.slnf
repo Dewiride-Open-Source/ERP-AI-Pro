@@ -3,6 +3,7 @@
     "path": "..\\Dewiride.Erp.slnx",
     "projects": [
       "BuildingBlocks\\Application\\Dewiride.Erp.BuildingBlocks.Application\\Dewiride.Erp.BuildingBlocks.Application.csproj",
+      "BuildingBlocks\\Attachments\\Dewiride.Erp.BuildingBlocks.Attachments\\Dewiride.Erp.BuildingBlocks.Attachments.csproj",
       "BuildingBlocks\\Caching\\Dewiride.Erp.BuildingBlocks.Caching\\Dewiride.Erp.BuildingBlocks.Caching.csproj",
       "BuildingBlocks\\Configuration\\Dewiride.Erp.BuildingBlocks.Configuration\\Dewiride.Erp.BuildingBlocks.Configuration.csproj",
       "BuildingBlocks\\Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints.csproj",
@@ -15,6 +16,10 @@
       "Hosts\\Composition\\Dewiride.Erp.Host.Composition\\Dewiride.Erp.Host.Composition.csproj",
       "Hosts\\HealthProbe\\Dewiride.Erp.Host.HealthProbe\\Dewiride.Erp.Host.HealthProbe.csproj",
       "Hosts\\Migrator\\Dewiride.Erp.Host.Migrator\\Dewiride.Erp.Host.Migrator.csproj",
+      "Modules\\Platform\\Attachments\\Contracts\\Dewiride.Erp.Modules.Platform.Attachments.Contracts\\Dewiride.Erp.Modules.Platform.Attachments.Contracts.csproj",
+      "Modules\\Platform\\Attachments\\Module\\Dewiride.Erp.Modules.Platform.Attachments\\Dewiride.Erp.Modules.Platform.Attachments.csproj",
+      "Modules\\Platform\\Attachments\\Tests\\IntegrationTests\\Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests\\Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.csproj",
+      "Modules\\Platform\\Attachments\\Tests\\UnitTests\\Dewiride.Erp.Modules.Platform.Attachments.UnitTests\\Dewiride.Erp.Modules.Platform.Attachments.UnitTests.csproj",
       "Modules\\Platform\\SystemInfo\\Contracts\\Dewiride.Erp.Modules.Platform.SystemInfo.Contracts\\Dewiride.Erp.Modules.Platform.SystemInfo.Contracts.csproj",
       "Modules\\Platform\\SystemInfo\\Module\\Dewiride.Erp.Modules.Platform.SystemInfo\\Dewiride.Erp.Modules.Platform.SystemInfo.csproj",
       "Modules\\Platform\\SystemInfo\\Tests\\IntegrationTests\\Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests\\Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.csproj",

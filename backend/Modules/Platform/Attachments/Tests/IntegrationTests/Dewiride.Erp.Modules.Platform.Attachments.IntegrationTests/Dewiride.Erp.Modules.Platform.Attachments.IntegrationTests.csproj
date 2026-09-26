@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="../../../Module/Dewiride.Erp.Modules.Platform.Attachments/Dewiride.Erp.Modules.Platform.Attachments.csproj" />
+    <ProjectReference Include="../../../../../../Hosts/Api/Dewiride.Erp.Host.Api/Dewiride.Erp.Host.Api.csproj" />
+    <ProjectReference Include="../../../../../../Tests/Shared/Dewiride.Erp.Testing/Dewiride.Erp.Testing.csproj" />
+  </ItemGroup>
+
+</Project>

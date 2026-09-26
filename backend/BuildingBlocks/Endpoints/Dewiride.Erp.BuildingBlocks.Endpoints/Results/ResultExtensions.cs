@@ -46,6 +46,8 @@ public static class ResultExtensions
             ErrorKind.NotFound => StatusCodes.Status404NotFound,
             ErrorKind.Conflict => StatusCodes.Status409Conflict,
             ErrorKind.Forbidden => StatusCodes.Status403Forbidden,
+            ErrorKind.TooLarge => StatusCodes.Status413PayloadTooLarge,
+            ErrorKind.UnsupportedType => StatusCodes.Status415UnsupportedMediaType,
             _ => StatusCodes.Status422UnprocessableEntity,
         };
 }

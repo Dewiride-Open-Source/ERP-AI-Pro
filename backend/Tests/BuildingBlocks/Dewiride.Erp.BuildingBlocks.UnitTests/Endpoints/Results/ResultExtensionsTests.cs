@@ -12,6 +12,8 @@ public sealed class ResultExtensionsTests
     [InlineData(ErrorKind.NotFound, StatusCodes.Status404NotFound)]
     [InlineData(ErrorKind.Conflict, StatusCodes.Status409Conflict)]
     [InlineData(ErrorKind.Forbidden, StatusCodes.Status403Forbidden)]
+    [InlineData(ErrorKind.TooLarge, StatusCodes.Status413PayloadTooLarge)]
+    [InlineData(ErrorKind.UnsupportedType, StatusCodes.Status415UnsupportedMediaType)]
     [InlineData(ErrorKind.Failure, StatusCodes.Status422UnprocessableEntity)]
     public void ToProblem_MapsEveryKindToAStatusAndCarriesTheCode(ErrorKind kind, int expectedStatus)
     {

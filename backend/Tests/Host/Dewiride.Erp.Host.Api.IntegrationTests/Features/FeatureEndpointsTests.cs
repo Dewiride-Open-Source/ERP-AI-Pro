@@ -7,6 +7,9 @@ namespace Dewiride.Erp.Host.Api.IntegrationTests.Features;
 public sealed class FeatureEndpointsTests
 {
     private const string SystemInfoFlag = "Erp.Modules.Platform.SystemInfo";
+
+    private const string AttachmentsFlag = "Erp.Modules.Platform.Attachments";
+
     private static readonly Uri FeaturesPath = new("/api/platform/features", UriKind.Relative);
     private static readonly Uri SystemInfoPath = new("/api/platform/system-info", UriKind.Relative);
 
@@ -21,9 +24,9 @@ public sealed class FeatureEndpointsTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
-        var feature = Assert.Single(body.RootElement.GetProperty("features").EnumerateArray());
-        Assert.Equal(SystemInfoFlag, feature.GetProperty("name").GetString());
-        Assert.True(feature.GetProperty("enabled").GetBoolean());
+        var features = body.RootElement.GetProperty("features").EnumerateArray().ToList();
+        Assert.Equal([AttachmentsFlag, SystemInfoFlag], features.Select(f => f.GetProperty("name").GetString()).Order(StringComparer.Ordinal));
+        Assert.All(features, f => Assert.True(f.GetProperty("enabled").GetBoolean()));
     }
 
     [Fact]
@@ -36,8 +39,9 @@ public sealed class FeatureEndpointsTests
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var feature = Assert.Single(body.RootElement.GetProperty("features").EnumerateArray());
-        Assert.False(feature.GetProperty("enabled").GetBoolean());
+        var features = body.RootElement.GetProperty("features").EnumerateArray().ToDictionary(f => f.GetProperty("name").GetString()!, f => f.GetProperty("enabled").GetBoolean(), StringComparer.Ordinal);
+        Assert.False(features[SystemInfoFlag]);
+        Assert.True(features[AttachmentsFlag]);
     }
 
     [Fact]

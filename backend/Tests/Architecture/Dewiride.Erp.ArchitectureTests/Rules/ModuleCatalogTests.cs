@@ -13,6 +13,11 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         "/healthz/ready",
         "/api/platform/system-info",
         "/api/platform/system-info/startups",
+        "/api/platform/attachments",
+        "/api/platform/attachments/policy",
+        "/api/platform/attachments/{id:guid}",
+        "/api/platform/attachments/{id:guid}/download-links",
+        "/api/platform/attachments/{id:guid}/content",
         "/api/platform/features",
         "/openapi/{documentName}.json",
     ];

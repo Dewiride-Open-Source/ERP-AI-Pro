@@ -1,4 +1,7 @@
+using System.Security.Cryptography;
+using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
+using Dewiride.Erp.Testing.Blob;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -18,6 +21,14 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
     public const string InMemorySource = "InMemory";
 
     public const string DatabaseConnectionKey = $"{DatabaseOptions.SectionName}:ConnectionString";
+
+    public const string AttachmentsBlobServiceUriKey = $"{AttachmentsOptions.SectionName}:BlobServiceUri";
+
+    public const string AttachmentsEmulatorHostKey = $"{AttachmentsOptions.SectionName}:EmulatorHost";
+
+    public const string AttachmentsContainerNameKey = $"{AttachmentsOptions.SectionName}:ContainerName";
+
+    public const string AttachmentsEncryptionKeyKey = $"{AttachmentsOptions.SectionName}:EncryptionKey";
 
     private const string FeatureFlagsSection = "feature_management:feature_flags:";
 
@@ -111,6 +122,21 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         if (!_configuration.ContainsKey(DatabaseConnectionKey))
         {
             builder.UseSetting(DatabaseConnectionKey, SqlTestDatabase.Current.ConnectionString);
+        }
+
+        if (!_configuration.ContainsKey(AttachmentsEmulatorHostKey) && !_configuration.ContainsKey(AttachmentsBlobServiceUriKey))
+        {
+            builder.UseSetting(AttachmentsBlobServiceUriKey, string.Empty);
+            builder.UseSetting(AttachmentsEmulatorHostKey, BlobTestContainer.Current.EmulatorHost);
+            if (!_configuration.ContainsKey(AttachmentsContainerNameKey))
+            {
+                builder.UseSetting(AttachmentsContainerNameKey, BlobTestContainer.Current.ContainerName);
+            }
+        }
+
+        if (!_configuration.ContainsKey(AttachmentsEncryptionKeyKey))
+        {
+            builder.UseSetting(AttachmentsEncryptionKeyKey, $"test:{Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))}");
         }
 
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);

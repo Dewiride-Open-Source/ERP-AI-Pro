@@ -53,6 +53,15 @@
           "Azure.Core": "1.46.2"
         }
       },
+      "Azure.Storage.Common": {
+        "type": "Transitive",
+        "resolved": "12.28.0",
+        "contentHash": "5l8YhNrks38zKLGFW2BBFLwieyamH/xauABSASsdpZv79G0f+n2n22IjkRmUqCmALSupkwRHh2LOhbW3yj5Qgw==",
+        "dependencies": {
+          "Azure.Core": "1.55.0",
+          "System.IO.Hashing": "10.0.3"
+        }
+      },
       "DnsClient": {
         "type": "Transitive",
         "resolved": "1.7.0",
@@ -317,6 +326,11 @@
           "Microsoft.IdentityModel.Tokens": "8.16.0"
         }
       },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "10.0.3",
+        "contentHash": "La6ICwsdTKhVX+LKN+pvFjQRR3LhLwq3uKdi2knjLzRyPYBSydF4cjXidYxIiTcDD6XVYdsBWQEI8ZxiZ/OdIg=="
+      },
       "System.Memory.Data": {
         "type": "Transitive",
         "resolved": "10.0.9",
@@ -336,6 +350,15 @@
         "type": "Project",
         "dependencies": {
           "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.buildingblocks.attachments": {
+        "type": "Project",
+        "dependencies": {
+          "Azure.Storage.Blobs": "[12.29.2, )",
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )"
         }
       },
       "dewiride.erp.buildingblocks.caching": {
@@ -406,12 +429,31 @@
       "dewiride.erp.host.composition": {
         "type": "Project",
         "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Attachments": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Caching": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Configuration": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Idempotency": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Attachments": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.SystemInfo": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.attachments": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Attachments": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Attachments.Contracts": "[1.0.0, )",
+          "Microsoft.AspNetCore.OpenApi": "[10.0.12, )"
+        }
+      },
+      "dewiride.erp.modules.platform.attachments.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
         }
       },
       "dewiride.erp.modules.platform.systeminfo": {
@@ -438,6 +480,16 @@
         "contentHash": "GeFv8sGwRKvDKwI2WFy8r0mhmlxEVZg24Sit2NogTjiSO8RVjllWM65OT6e1sKjOvG8V74y7hAbaELUUPjZQSw==",
         "dependencies": {
           "Azure.Core": "1.53.0"
+        }
+      },
+      "Azure.Storage.Blobs": {
+        "type": "CentralTransitive",
+        "requested": "[12.29.2, )",
+        "resolved": "12.29.2",
+        "contentHash": "NeZmk7bphspT2BYn8XaNCTV4/9vQG+ea79F85MBTi2o2WiXIIJNsRBtFyeBrzK2HIk476rfSqLNwPt4vXgOEkQ==",
+        "dependencies": {
+          "Azure.Core": "1.55.0",
+          "Azure.Storage.Common": "12.28.0"
         }
       },
       "Microsoft.AspNetCore.OpenApi": {
