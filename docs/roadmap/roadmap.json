@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-25",
+  "updatedOn": "2026-09-26",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -491,11 +491,18 @@
           "id": "backend-platform-rate-limiting-output-caching-and-health",
           "title": "Rate limiting, output caching and health checks",
           "scope": "Add a global per-IP limiter chained to a per-user sliding-window policy bound from configuration returning 429 with Retry-After, output caching restricted to explicitly tagged reference-data endpoints, and /healthz/live plus /healthz/ready (SQL, App Configuration) with integration tests for each limiter and probe.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "done",
+          "acceptance": [
+            "Anonymous requests are limited per client address with a fixed window and signed-in requests per actor with a sliding window, both bound from Erp:Platform:RateLimiting; a request over its limit answers 429 application/problem+json with code rate-limit.exceeded and a Retry-After header; clients forwarded by a trusted proxy get separate partitions, IPv6 clients are grouped by their /64 prefix, and Enabled=false applies no limit; proven by unit tests over the limiter and integration tests over the real pipeline.",
+            "The health endpoints are exempt from rate limiting and from HTTP request metrics; /healthz/live answers 200 without touching any dependency; /healthz/ready runs every readiness check under a 2-second timeout and answers 503 service.unavailable, naming no check, within that bound when SQL Server is unreachable; an App Configuration store that cannot be reached after startup degrades readiness instead of failing it.",
+            "No output caching middleware is used: a GET endpoint marked with WithReferenceDataCaching answers a successful response with Cache-Control: private, max-age=<seconds> while every other response keeps no-store; HybridCache is registered for every host from Erp:Platform:Caching and a test proves that concurrent callers of one key share a single factory execution.",
+            "docs/architecture/request-pipeline.md places the rate limiter after routing, request timeouts and database cancellation and records that authentication runs before it; integration tests prove it runs after forwarded headers and before the feature gate; the web app's server-side API calls forward the browser's address (the last X-Forwarded-For entry) so production partitions per visitor; ADR-0019 is accepted and the new configuration keys are seeded so both labels resolve them."
+          ],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-http-and-openapi-conventions: /healthz/ready already answers 503 application/problem+json with code service.unavailable and names no check (HealthEndpoints.WriteAsync), and ProblemTypes.DefaultCode maps 429 to rate-limit.exceeded. The planned JSON health report must keep that problem contract for the 503 case (for example a problem carrying the check list as an extension) or record the exception in the ADR of this sub-phase."
+          "startedOn": "2026-09-26",
+          "completedOn": "2026-09-26",
+          "notes": "One global limiter (GlobalRateLimiter, ADR-0019): anonymous requests per client address with a fixed window (IPv4-mapped as IPv4, IPv6 by /64), signed-in requests per actor with a sliding window and never per address, replacing the roadmap's per-IP-chained-to-per-user wording because an office behind one connection would share one allowance; Erp:Platform:RateLimiting (600 per minute each, 6 segments) seeded unlabelled; 429 rate-limit.exceeded with Retry-After (the lease's wait, or one actor segment because a rejected sliding-window lease reports none in .NET 10), declared on every module group; UseErpRateLimiting after UseErpEndpointPipeline and before the feature gate, with authentication reserved ahead of it. The web app forwards the last X-Forwarded-For entry so server-rendered pages are limited per visitor. Readiness checks run under a 2-second timeout (an unreachable SQL Server answered after 30 s before), the App Configuration check only degrades, health endpoints are exempt from rate limiting and request metrics, and the readiness body still names no check. No output caching: WithReferenceDataCaching(maxAge) gives successful GETs Cache-Control: private, max-age. BuildingBlocks.Caching registers HybridCache (Microsoft.Extensions.Caching.Hybrid 10.10.0, in process) from Erp:Platform:Caching inside AddErpPlatform."
         },
         {
           "id": "backend-platform-observability-baseline",
@@ -608,7 +615,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-rate-limiting-output-caching-and-health (ADR-0019): call UseAuthentication() explicitly between UseErpEndpointPipeline() and UseErpRateLimiting(), and UseAuthorization() and UseAntiforgery() after it, so a signed-in caller is rate-limited per actor instead of per address; no named rate-limit policy exists yet, so decide there whether the sign-in endpoints need a stricter one."
         },
         {
           "id": "authentication-token-cache-and-data-protection-key",
@@ -803,7 +811,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From backend-platform-rate-limiting-output-caching-and-health (ADR-0019): the edge proxy must append the client address to X-Forwarded-For on requests it passes to both the API and the web container, because the web container forwards the last entry on its server-side API calls and the API rate-limits anonymous callers by it; the web container must be reachable only through the proxy."
         },
         {
           "id": "first-deployment-release-and-deploy-pipeline",

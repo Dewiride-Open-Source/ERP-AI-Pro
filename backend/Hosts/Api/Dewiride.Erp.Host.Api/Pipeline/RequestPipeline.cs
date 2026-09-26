@@ -54,6 +54,7 @@ internal static class RequestPipeline
         app.UseForwardedHeaders();
         app.UseErpConfigurationRefresh();
         app.UseErpEndpointPipeline();
+        app.UseErpRateLimiting();
         app.UseFeatureGate();
         app.UseErpIdempotency();
 

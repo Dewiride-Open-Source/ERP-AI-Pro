@@ -1,7 +1,6 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.Testing;
-using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Transport;
 
@@ -62,20 +61,6 @@ public sealed class ForwardedHeadersTests
         Assert.Equal("203.0.113.7", client.Remote);
         Assert.NotEqual("evil.example", client.Host);
         Assert.StartsWith("127.0.0.1:", client.Host, StringComparison.Ordinal);
-    }
-
-    [Theory]
-    [InlineData("not-a-network")]
-    [InlineData("172.28.0.5/16")]
-    public async Task Start_WithAKnownNetworkThatIsNotANetwork_FailsNamingTheEntry(string network)
-    {
-        await using var factory = new ErpApiFactory().WithConfiguration(NetworksKey, network);
-
-        var failure = Record.Exception(() => factory.CreateClient());
-
-        var validation = Assert.IsType<OptionsValidationException>(failure);
-        Assert.Contains(NetworksKey, validation.Message, StringComparison.Ordinal);
-        Assert.Contains(network, validation.Message, StringComparison.Ordinal);
     }
 
     private static async Task<ObservedClient> ObserveAsync(string? knownNetwork, params (string Name, string Value)[] headers)

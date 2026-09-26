@@ -10,7 +10,7 @@ namespace Dewiride.Erp.BuildingBlocks.UnitTests.Observability.Health;
 public sealed class HealthEndpointsTests
 {
     [Fact]
-    public void AddErpHealthChecks_AppConfigurationSource_RegistersTheStoreCheckAsReady()
+    public void AddErpHealthChecks_AppConfigurationSource_RegistersTheStoreCheckAsReadyThatOnlyDegrades()
     {
         var builder = CreateBuilder(new ErpConfigurationInfo(ErpConfigurationSource.AppConfiguration, ErpEnvironmentNames.LocalDev, new Uri("https://example.azconfig.io")));
 
@@ -19,6 +19,25 @@ public sealed class HealthEndpointsTests
         var registrations = Registrations(builder);
         Assert.Equal(["self", "app-configuration"], registrations.Select(r => r.Name));
         Assert.All(registrations, r => Assert.Contains(HealthEndpoints.ReadyTag, r.Tags));
+        Assert.Equal(HealthStatus.Degraded, registrations.Single(r => r.Name == "app-configuration").FailureStatus);
+    }
+
+    [Fact]
+    public void AddErpHealthChecks_ChecksWithoutATimeout_GetTheCheckTimeoutWhileAnExplicitTimeoutIsKept()
+    {
+        var builder = CreateBuilder(new ErpConfigurationInfo(ErpConfigurationSource.InMemory, null, null));
+        builder.Services.AddHealthChecks()
+            .AddCheck("registered-earlier", () => HealthCheckResult.Healthy(), tags: [HealthEndpoints.ReadyTag])
+            .AddCheck("explicit", () => HealthCheckResult.Healthy(), tags: [HealthEndpoints.ReadyTag], timeout: TimeSpan.FromSeconds(1));
+
+        builder.AddErpHealthChecks();
+        builder.Services.AddHealthChecks().AddCheck("registered-later", () => HealthCheckResult.Healthy(), tags: [HealthEndpoints.ReadyTag]);
+
+        var timeouts = Registrations(builder).ToDictionary(r => r.Name, r => r.Timeout);
+        Assert.Equal(HealthEndpoints.CheckTimeout, timeouts["self"]);
+        Assert.Equal(HealthEndpoints.CheckTimeout, timeouts["registered-earlier"]);
+        Assert.Equal(HealthEndpoints.CheckTimeout, timeouts["registered-later"]);
+        Assert.Equal(TimeSpan.FromSeconds(1), timeouts["explicit"]);
     }
 
     [Theory]

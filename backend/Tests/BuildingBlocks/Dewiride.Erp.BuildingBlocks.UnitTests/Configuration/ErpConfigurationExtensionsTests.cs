@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Configuration.AppConfiguration;
+using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.UnitTests.Configuration.AppConfiguration.Fakes;
 using Microsoft.AspNetCore.Builder;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Dewiride.Erp.BuildingBlocks.UnitTests.Configuration;
@@ -188,6 +190,25 @@ public sealed class ErpConfigurationExtensionsTests
 
         Assert.True(reachedTerminal);
         Assert.Equal(1, refresher.Calls);
+    }
+
+    [Theory]
+    [InlineData("not-a-network")]
+    [InlineData("172.28.0.5/16")]
+    public async Task StartAsync_KnownNetworkThatIsNotANetwork_FailsNamingTheEntry(string network)
+    {
+        const string entry = $"{ErpHostOptions.SectionName}:KnownNetworks:0";
+        var builder = CreateBuilder(
+            Environments.Production,
+            (ErpConfigurationSourceResolver.SourceSetting, ErpConfigurationSourceResolver.InMemorySource),
+            (entry, network));
+        builder.AddErpConfiguration(typeof(ErpConfigurationExtensionsTests).Assembly);
+        using var host = builder.Build();
+
+        var failure = await Assert.ThrowsAsync<OptionsValidationException>(() => host.StartAsync(TestContext.Current.CancellationToken));
+
+        Assert.Contains(entry, failure.Message, StringComparison.Ordinal);
+        Assert.Contains(network, failure.Message, StringComparison.Ordinal);
     }
 
     [Fact]

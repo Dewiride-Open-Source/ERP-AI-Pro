@@ -5,6 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -37,7 +38,10 @@ public static class ModuleDbContextRegistration
         {
             Configure(options, provider.GetRequiredService<IOptions<DatabaseOptions>>().Value, schema)
                 .AddInterceptors(provider.GetRequiredService<AuditingSaveChangesInterceptor>(), provider.GetRequiredService<BulkWriteGuardInterceptor>());
-            if (provider.GetService<ErpConfigurationInfo>()?.Source == ErpConfigurationSource.InMemory)
+            // Test hosts are built many times per process, each with its own interceptor instances, so EF Core's
+            // many-internal-providers warning is expected there; the raw setting still marks a test host whose test swaps in
+            // another ErpConfigurationInfo.
+            if (string.Equals(provider.GetService<IConfiguration>()?[ErpConfigurationSourceResolver.SourceSetting], ErpConfigurationSourceResolver.InMemorySource, StringComparison.OrdinalIgnoreCase))
             {
                 options.ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning));
             }

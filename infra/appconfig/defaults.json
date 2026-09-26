@@ -7,6 +7,18 @@
         "MaxRequestBodyBytes": "1048576",
         "RequestTimeout": "00:00:30"
       },
+      "RateLimiting": {
+        "Enabled": "true",
+        "AnonymousPermitLimit": "600",
+        "AnonymousWindow": "00:01:00",
+        "ActorPermitLimit": "600",
+        "ActorWindow": "00:01:00",
+        "ActorSegmentsPerWindow": "6"
+      },
+      "Caching": {
+        "DefaultExpiration": "00:05:00",
+        "MaximumPayloadBytes": "1048576"
+      },
       "Identity": {
         "Instance": "https://login.microsoftonline.com/"
       },

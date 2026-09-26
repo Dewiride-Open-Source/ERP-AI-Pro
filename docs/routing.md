@@ -2,14 +2,14 @@
 
 Every API route group and web route in the system. API routes follow `/api/<domain>/<module>/<resource>`; web routes mirror them without the `/api` prefix. Exempt prefixes: `/api/auth/*`, `/api/platform/*`, `/healthz/*`.
 
-Every API response carries `X-Correlation-ID`, and every non-2xx body is `application/problem+json` with `type` (`/problems/<code>`), `code`, `status`, `title`, `instance` and `traceId` (the correlation id); validation problems add `errors`. Every module route also documents 400 (validation), 404 (unknown resource or disabled module), 500 and 504 (timeout). Any route may also answer 400 `request.host-not-allowed` (a `Host` outside `Erp:Platform:Host:AllowedHosts`), 413 `request.too-large` (a body over `Erp:Platform:Host:MaxRequestBodyBytes`) and 504 `request.timeout` (a request running past `Erp:Platform:Host:RequestTimeout`); see [request pipeline](architecture/request-pipeline.md). The committed contract of these routes is [`docs/openapi/erp.json`](openapi/erp.json); the rules are in [HTTP conventions](architecture/http-conventions.md).
+Every API response carries `X-Correlation-ID`, and every non-2xx body is `application/problem+json` with `type` (`/problems/<code>`), `code`, `status`, `title`, `instance` and `traceId` (the correlation id); validation problems add `errors`. Every module route also documents 400 (validation), 404 (unknown resource or disabled module), 429 (rate limit), 500 and 504 (timeout). Any route except `/healthz/*` may answer 429 `rate-limit.exceeded` with `Retry-After` (anonymous callers are counted per client address, signed-in callers per actor; `Erp:Platform:RateLimiting`). Any route may also answer 400 `request.host-not-allowed` (a `Host` outside `Erp:Platform:Host:AllowedHosts`), 413 `request.too-large` (a body over `Erp:Platform:Host:MaxRequestBodyBytes`) and 504 `request.timeout` (a request running past `Erp:Platform:Host:RequestTimeout`); see [request pipeline](architecture/request-pipeline.md). The committed contract of these routes is [`docs/openapi/erp.json`](openapi/erp.json); the rules are in [HTTP conventions](architecture/http-conventions.md).
 
 ## Host endpoints
 
 | Route | Auth | Purpose |
 |---|---|---|
-| `GET /healthz/live` | anonymous | process liveness (container health check) |
-| `GET /healthz/ready` | anonymous | readiness including dependencies: `200 text/plain` `Healthy` or `Degraded`, or `503 application/problem+json` `service.unavailable` naming no check |
+| `GET /healthz/live` | anonymous | process liveness (container health check); runs no check; never rate limited and left out of request metrics |
+| `GET /healthz/ready` | anonymous | readiness including dependencies (`self`, `database:<schema>` per catalogue context, `app-configuration` with the App Configuration source, which only degrades), each check limited to 2 seconds: `200 text/plain` `Healthy` or `Degraded`, or `503 application/problem+json` `service.unavailable` naming no check; never rate limited and left out of request metrics |
 | `GET /openapi/erp.json` | anonymous, Development only | OpenAPI 3.1 document, identical to the committed [`docs/openapi/erp.json`](openapi/erp.json) apart from formatting |
 | `GET /scalar` | anonymous, Development only | API reference UI |
 | `GET /api/platform/features` | anonymous until the authentication phase | every feature flag of the catalog with its evaluated state (`{ features: [{ name, enabled }] }`), read by the web shell to hide disabled modules |

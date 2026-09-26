@@ -4,12 +4,15 @@ using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Actors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
+using Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Security;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.BuildingBlocks.Endpoints;
 
@@ -32,6 +35,12 @@ public static class ErpEndpointsExtensions
             options.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
         });
         builder.Services.AddRequestTimeouts();
+        builder.Services.AddOptions<RateLimitingOptions>()
+            .BindConfiguration(RateLimitingOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        builder.Services.AddRateLimiter(static _ => { });
+        builder.Services.AddSingleton<IConfigureOptions<RateLimiterOptions>, RateLimiterOptionsSetup>();
         builder.Services.AddOptions<AllowedHostsOptions>();
         builder.Services.AddHttpContextAccessor();
         builder.Services.Replace(ServiceDescriptor.Scoped<IActorContext, HttpActorContext>());
@@ -53,5 +62,12 @@ public static class ErpEndpointsExtensions
         app.UseMiddleware<DatabaseCancellationMiddleware>();
 
         return app;
+    }
+
+    public static IApplicationBuilder UseErpRateLimiting(this IApplicationBuilder app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        return app.UseRateLimiter();
     }
 }
