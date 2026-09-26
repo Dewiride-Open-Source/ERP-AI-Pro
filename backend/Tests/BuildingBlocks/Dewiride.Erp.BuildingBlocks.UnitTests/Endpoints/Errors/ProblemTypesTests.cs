@@ -20,10 +20,10 @@ public sealed class ProblemTypesTests
     [InlineData(StatusCodes.Status415UnsupportedMediaType, ProblemTypes.RequestUnsupportedMediaType)]
     [InlineData(StatusCodes.Status422UnprocessableEntity, ProblemTypes.RequestRejected)]
     [InlineData(StatusCodes.Status429TooManyRequests, ProblemTypes.RateLimitExceeded)]
-    [InlineData(StatusCodes.Status499ClientClosedRequest, ProblemTypes.RequestCancelled)]
     [InlineData(StatusCodes.Status500InternalServerError, ProblemTypes.ServerError)]
     [InlineData(StatusCodes.Status502BadGateway, ProblemTypes.ServerError)]
     [InlineData(StatusCodes.Status503ServiceUnavailable, ProblemTypes.ServiceUnavailable)]
+    [InlineData(StatusCodes.Status504GatewayTimeout, ProblemTypes.RequestTimeout)]
     public void DefaultCode_Status_IsTheCodeOfThatStatus(int status, string expected) =>
         Assert.Equal(expected, ProblemTypes.DefaultCode(status));
 
@@ -36,7 +36,8 @@ public sealed class ProblemTypesTests
     [InlineData(ProblemTypes.RequestTooLarge)]
     [InlineData(ProblemTypes.RequestUnsupportedMediaType)]
     [InlineData(ProblemTypes.RequestRejected)]
-    [InlineData(ProblemTypes.RequestCancelled)]
+    [InlineData(ProblemTypes.RequestHostNotAllowed)]
+    [InlineData(ProblemTypes.RequestTimeout)]
     [InlineData(ProblemTypes.RateLimitExceeded)]
     [InlineData(ProblemTypes.ResourceNotFound)]
     [InlineData(ProblemTypes.ServiceUnavailable)]

@@ -19,7 +19,7 @@ public static class IdempotencyProblems
     {
         context.Response.StatusCode = statusCode;
 
-        return problemDetails.WriteAsync(new ProblemDetailsContext
+        return problemDetails.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = context,
             ProblemDetails = new ProblemDetails

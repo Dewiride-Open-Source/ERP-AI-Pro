@@ -12,6 +12,8 @@ public static class ProblemTypes
 
     public const string RequestMalformed = "request.malformed";
 
+    public const string RequestHostNotAllowed = "request.host-not-allowed";
+
     public const string RequestUnauthenticated = "request.unauthenticated";
 
     public const string RequestForbidden = "request.forbidden";
@@ -24,7 +26,7 @@ public static class ProblemTypes
 
     public const string RequestRejected = "request.rejected";
 
-    public const string RequestCancelled = "request.cancelled";
+    public const string RequestTimeout = "request.timeout";
 
     public const string RateLimitExceeded = "rate-limit.exceeded";
 
@@ -47,8 +49,8 @@ public static class ProblemTypes
             StatusCodes.Status413PayloadTooLarge => RequestTooLarge,
             StatusCodes.Status415UnsupportedMediaType => RequestUnsupportedMediaType,
             StatusCodes.Status429TooManyRequests => RateLimitExceeded,
-            StatusCodes.Status499ClientClosedRequest => RequestCancelled,
             StatusCodes.Status503ServiceUnavailable => ServiceUnavailable,
+            StatusCodes.Status504GatewayTimeout => RequestTimeout,
             >= StatusCodes.Status400BadRequest and < StatusCodes.Status500InternalServerError => RequestRejected,
             _ => ServerError,
         };

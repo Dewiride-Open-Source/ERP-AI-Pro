@@ -64,6 +64,20 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
             .WithConfiguration($"{FeatureFlagsSection}{index}:enabled", enabled ? "true" : "false");
     }
 
+    // TestServer has no client address and ignores Kestrel limits, so transport tests run on a real listener; port 0 lets
+    // parallel test classes bind distinct ports. Never combine it with WithWebHostBuilder, which does not carry Kestrel over.
+    public ErpApiFactory WithKestrel()
+    {
+        if (_hostCreated)
+        {
+            throw new InvalidOperationException("WithKestrel must be called before the first client or service is requested from the factory.");
+        }
+
+        UseKestrel(0);
+
+        return this;
+    }
+
     public ErpApiFactory WithTestEndpoints(Action<IEndpointRouteBuilder> map)
     {
         ArgumentNullException.ThrowIfNull(map);

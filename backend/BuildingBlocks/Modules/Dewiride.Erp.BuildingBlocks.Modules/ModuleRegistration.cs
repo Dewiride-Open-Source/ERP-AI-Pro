@@ -40,7 +40,8 @@ public static class ModuleRegistration
                 .RequireFeature(descriptor.FeatureFlag)
                 .ProducesValidationProblem()
                 .ProducesProblem(StatusCodes.Status404NotFound)
-                .ProducesProblem(StatusCodes.Status500InternalServerError);
+                .ProducesProblem(StatusCodes.Status500InternalServerError)
+                .ProducesProblem(StatusCodes.Status504GatewayTimeout);
             module.MapEndpoints(group);
         }
 

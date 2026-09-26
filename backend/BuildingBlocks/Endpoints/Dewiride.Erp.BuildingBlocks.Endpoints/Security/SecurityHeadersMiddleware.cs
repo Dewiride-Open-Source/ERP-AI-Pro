@@ -15,6 +15,9 @@ internal sealed class SecurityHeadersMiddleware(RequestDelegate next)
             headers.XContentTypeOptions = "nosniff";
             headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
             headers["Permissions-Policy"] = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
+            headers["Cross-Origin-Resource-Policy"] = "same-origin";
+            headers["Cross-Origin-Opener-Policy"] = "same-origin";
+            headers["X-Permitted-Cross-Domain-Policies"] = "none";
             headers.CacheControl = "no-store";
             if (!httpContext.Request.Path.StartsWithSegments(ApiReferencePath))
             {

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
@@ -54,6 +55,7 @@ public static class ErpConfigurationExtensions
             .BindConfiguration(ErpHostOptions.SectionName)
             .ValidateDataAnnotations()
             .ValidateOnStart();
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<ErpHostOptions>, ErpHostOptionsValidator>());
 
         builder.Services.AddSingleton(refresh);
         builder.Services.AddSingleton(info);

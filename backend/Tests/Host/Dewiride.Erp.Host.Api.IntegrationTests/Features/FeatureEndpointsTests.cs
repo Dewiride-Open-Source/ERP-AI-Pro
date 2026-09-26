@@ -56,6 +56,22 @@ public sealed class FeatureEndpointsTests
         Assert.False(string.IsNullOrEmpty(body.RootElement.GetProperty("traceId").GetString()));
     }
 
+    [Theory]
+    [InlineData("text/html")]
+    [InlineData("application/xml")]
+    public async Task Get_ModuleRoute_WithTheModuleDisabledForAClientThatAcceptsNoJson_ReturnsNotFoundAsPlainText(string accept)
+    {
+        using var factory = new ErpApiFactory().WithFeature(SystemInfoFlag, enabled: false);
+        using var client = factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, SystemInfoPath);
+        request.Headers.Accept.ParseAdd(accept);
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("text/plain", response.Content.Headers.ContentType?.MediaType);
+    }
+
     [Fact]
     public async Task Get_ModuleRoute_WithTheModuleReenabledLater_Serves()
     {

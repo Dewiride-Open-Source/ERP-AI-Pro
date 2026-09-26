@@ -62,6 +62,27 @@ test("toApiError_FieldErrorsThatAreNotStringLists_AreLeftOut", () => {
   assert.equal(error.problem.fields, undefined);
 });
 
+test("toApiError_TimeoutProblem_KeepsTheCodeAndTraceId", () => {
+  const thrown = {
+    responseStatusCode: 504,
+    responseHeaders: {},
+    message: "Gateway Timeout",
+    type: "/problems/request.timeout",
+    title: "Gateway Timeout",
+    status: 504,
+    instance: "/api/platform/system-info/startups",
+    code: "request.timeout",
+    traceId,
+  };
+
+  const error = toApiError(thrown);
+
+  assert.ok(error instanceof ApiError);
+  assert.equal(error.status, 504);
+  assert.equal(error.problem.code, "request.timeout");
+  assert.equal(error.problem.traceId, traceId);
+});
+
 test("toApiError_StatusWithoutAProblemBody_UsesTheClientMessageAsTheTitle", () => {
   const thrown = Object.assign(new Error("the server returned an unexpected status code 502"), {
     responseStatusCode: 502,
