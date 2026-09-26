@@ -11,9 +11,6 @@ import {
   ContextMenuRadioItem,
   ContextMenuSeparator,
   ContextMenuShortcut,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@dewiride/erp-ui/components/ui/context-menu";
 import {
@@ -168,13 +165,8 @@ function RowContextMenu() {
           Copy link
           <ContextMenuShortcut>Ctrl C</ContextMenuShortcut>
         </ContextMenuItem>
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>Move to</ContextMenuSubTrigger>
-          <ContextMenuSubContent className="max-w-(--radix-context-menu-content-available-width)">
-            <ContextMenuItem>Pending approval</ContextMenuItem>
-            <ContextMenuItem>Archived</ContextMenuItem>
-          </ContextMenuSubContent>
-        </ContextMenuSub>
+        <ContextMenuItem>Move to pending approval</ContextMenuItem>
+        <ContextMenuItem>Move to archive</ContextMenuItem>
         <ContextMenuItem disabled>Restore (nothing deleted)</ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuCheckboxItem checked={pinned} onCheckedChange={setPinned}>

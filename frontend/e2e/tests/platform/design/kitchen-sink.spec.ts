@@ -957,7 +957,8 @@ test.describe("design system kitchen sink", () => {
       - menu:
         - menuitem "Open Enter"
         - menuitem "Copy link Ctrl C"
-        - menuitem "Move to"
+        - menuitem "Move to pending approval"
+        - menuitem "Move to archive"
         - menuitem "Restore (nothing deleted)" [disabled]
         - separator
         - menuitemcheckbox "Pin to top"
@@ -984,16 +985,11 @@ test.describe("design system kitchen sink", () => {
         "aria-checked",
         "true",
       );
-      const moveMenu = kitchenSink.menu("Move to");
-      for (const destination of ["Pending approval", "Archived"]) {
-        await contextMenu.getByRole("menuitem", { name: "Move to" }).click();
-        await moveMenu.getByRole("menuitem", { name: destination }).click();
-        await expect(contextMenu).toBeHidden();
-        await openContextMenu(contextTrigger, contextMenu);
-      }
       const contextItems: MenuItemChoice[] = [
         { name: "Open", variant: "default" },
         { name: "Copy link", variant: "default" },
+        { name: "Move to pending approval", variant: "default" },
+        { name: "Move to archive", variant: "default" },
         { name: "Remove", variant: "destructive" },
       ];
       for (const item of contextItems) {
@@ -1535,9 +1531,6 @@ test.describe("design system kitchen sink", () => {
           position: { x, y: (area?.height ?? 0) / 2 },
         });
         await expectInsideScreen(kitchenSink.contextMenu);
-        await kitchenSink.contextMenu.getByRole("menuitem", { name: "Move to" }).click();
-        await expectInsideScreen(kitchenSink.menu("Move to"));
-        await page.keyboard.press("Escape");
         await page.keyboard.press("Escape");
         await expect(kitchenSink.contextMenu).toBeHidden();
       }
