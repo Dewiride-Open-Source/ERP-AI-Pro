@@ -47,7 +47,7 @@ export function ExampleForm() {
         <FieldDescription id={descriptionId}>Required. Shown on documents you issue.</FieldDescription>
         {invalid ? <FieldError id={errorId}>{error}</FieldError> : null}
       </Field>
-      <Button type="submit" className="w-fit" data-testid="example-form-submit">
+      <Button type="submit" className="w-fit">
         Save
       </Button>
     </form>

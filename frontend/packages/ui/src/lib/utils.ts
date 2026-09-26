@@ -1,7 +1,16 @@
 import { createCn } from "cn/config";
 
-// The type roles are font sizes, but the default merge tables read an unknown text-* class as a colour: text-title would
-// stay beside text-base and lose to it, and drop a text colour instead.
+export const typeRoles = ["title", "heading", "body", "caption", "eyebrow"] as const;
+
+// The merge tables know only Tailwind's own scales: a named token such as text-title or px-gutter would otherwise be read
+// as a colour or an unknown class, kept beside the utility it should replace, and win or lose by stylesheet order.
 export const cn = createCn({
-  extend: { classGroups: { "font-size": [{ text: ["title", "heading", "body", "caption", "eyebrow"] }] } },
+  extend: {
+    theme: {
+      spacing: ["gutter", "section", "header"],
+      container: ["page"],
+      ease: ["standard", "enter"],
+    },
+    classGroups: { "font-size": [{ text: [...typeRoles] }] },
+  },
 });

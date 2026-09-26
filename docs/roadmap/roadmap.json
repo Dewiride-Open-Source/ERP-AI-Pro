@@ -601,7 +601,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-attachments-building-block: frontend/packages/ui/src/components/upload/file-drop-zone.tsx (FileDropZone, checkFile) and frontend/apps/web/src/shared/api/upload.ts already provide the drop zone and the progress upload; the forms kit wraps them rather than adding a second file input."
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): field, input, input-group, textarea, native-select, select, checkbox, radio-group, switch, slider and label primitives are installed; the radix-nova combobox imports @base-ui/react and is excluded, so this item decides between an in-house Radix popover combobox and cmdk (owner approval); calendar and the date picker need react-day-picker and date-fns (owner approval) and are not installed; type-role classes go on plain elements only (ESLint rule from @dewiride/erp-config/eslint/type-roles)."
         },
         {
           "id": "web-foundation-data-table-kit-core",
@@ -619,7 +619,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): Toaster (sonner) and TooltipProvider are already mounted once in the root layout and the web app depends on sonner, so toast patterns build on that mount; app/global-error.tsx is not styled yet (Next.js renders it without the global stylesheet and fonts) and belongs here; the axe step should cover /design/kitchen-sink, whose findings of 2026-09-26 (Item lists, focusable tables, menubar and tab-panel focus, hover contrast) were fixed there; motion tokens and the reduced-motion safety net live in packages/ui/src/styles/tokens/motion.css."
         },
         {
           "id": "web-foundation-e2e-harness-matrix",
@@ -705,7 +706,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): the shadcn sidebar primitive is not installed because its generated hooks/use-mobile.ts fails react-hooks/set-state-in-effect; this item installs it and resolves that (a useSyncExternalStore media-query hook, recorded in the patch register of docs/architecture/design-system.md) and adds the ./hooks/* export of @dewiride/erp-ui. The shell keeps the tokens h-header, px-gutter, max-w-page and z-(--layer-sticky), and html scroll-padding-top already reserves the header height for focus and anchors."
         },
         {
           "id": "authentication-login-hardening",
@@ -1219,7 +1221,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): the shadcn chat items (attachment, bubble, marker, message; message-scroller and questionnaire need @shadcn/react) are not installed; this item decides them, and the name attachment collides with the attachments module."
         },
         {
           "id": "ai-platform-evaluation-and-safety",
@@ -2733,7 +2736,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): the light-theme chart-2 and chart-3 colours fall below 3:1 against the background as graphical objects; they are decorative today and are validated and adjusted when charts arrive, with the contrast test in packages/ui extended to the chart colours; the chart primitive needs recharts (owner approval)."
         },
         {
           "id": "reporting-ai-analytics-assistant",

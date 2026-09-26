@@ -15,6 +15,12 @@ interface Theme {
   readonly name: "light" | "dark";
   readonly tokens: ReadonlyMap<string, OklchColour>;
   readonly tintAlpha: number;
+  readonly hoverTintAlpha: number;
+}
+
+interface Backdrop {
+  readonly name: string;
+  readonly colour: SrgbColour;
 }
 
 interface ContrastCheck {
@@ -59,11 +65,16 @@ const darkTokens = new Map([
   ...oklchCustomProperties(topLevelRuleBodies(stylesheet, ".dark")),
 ]);
 
-// The generated primitives tint a status surface with bg-<intent>/10, raised to dark:bg-<intent>/20 in dark.
+// The generated primitives tint a status surface with bg-<intent>/10 (dark:bg-<intent>/20) and deepen the destructive
+// button to hover:bg-destructive/20 (dark:hover:bg-destructive/30); the default button hovers at bg-primary/80.
 const themes: readonly Theme[] = [
-  { name: "light", tokens: lightTokens, tintAlpha: 0.1 },
-  { name: "dark", tokens: darkTokens, tintAlpha: 0.2 },
+  { name: "light", tokens: lightTokens, tintAlpha: 0.1, hoverTintAlpha: 0.2 },
+  { name: "dark", tokens: darkTokens, tintAlpha: 0.2, hoverTintAlpha: 0.3 },
 ];
+
+const primaryHoverAlpha = 0.8;
+
+const footerMutedAlpha = 0.5;
 
 function topLevelRuleBodies(css: string, selector: string): string[] {
   const bodies: string[] = [];
@@ -142,9 +153,22 @@ function surface(theme: Theme, name: string): SrgbColour {
   return paint(theme, name, page(theme));
 }
 
-function tint(theme: Theme, name: string): SrgbColour {
+function over(theme: Theme, name: string, alpha: number, backdrop: SrgbColour): SrgbColour {
   const colour = token(theme, name);
-  return composite(toSrgb(colour).colour, colour.alpha * theme.tintAlpha, page(theme));
+  return composite(toSrgb(colour).colour, colour.alpha * alpha, backdrop);
+}
+
+// Every surface a control sits on: the page, cards, popovers and dialogs, and the muted/50 footers of cards and dialogs.
+function backdrops(theme: Theme): Backdrop[] {
+  const card = surface(theme, "card");
+  const popover = surface(theme, "popover");
+  return [
+    { name: "background", colour: page(theme) },
+    { name: "card", colour: card },
+    { name: "popover", colour: popover },
+    { name: "card footer", colour: over(theme, "muted", footerMutedAlpha, card) },
+    { name: "dialog footer", colour: over(theme, "muted", footerMutedAlpha, popover) },
+  ];
 }
 
 function foregroundPairs(theme: Theme): string[] {
@@ -226,14 +250,48 @@ test("IntentText_OnBackgroundAndCard_MeetsAa", () => {
   );
 });
 
-test("IntentText_OnItsOwnTint_MeetsAa", () => {
+test("IntentText_OnItsOwnTintOverEveryBackdrop_MeetsAa", () => {
   assertMinimums(
     themes.flatMap((theme) =>
-      intents.map((intent) => {
-        const background = tint(theme, intent);
+      intents.flatMap((intent) =>
+        backdrops(theme).map((backdrop) => {
+          const background = over(theme, intent, theme.tintAlpha, backdrop.colour);
+          return {
+            label: `${theme.name}: ${intent} text on ${intent} at ${Math.round(theme.tintAlpha * 100)}% over ${backdrop.name}`,
+            foreground: paint(theme, intent, background),
+            background,
+            minimum: textMinimum,
+          };
+        }),
+      ),
+    ),
+  );
+});
+
+test("DestructiveText_OnItsHoverTintOverEveryBackdrop_MeetsAa", () => {
+  assertMinimums(
+    themes.flatMap((theme) =>
+      backdrops(theme).map((backdrop) => {
+        const background = over(theme, "destructive", theme.hoverTintAlpha, backdrop.colour);
         return {
-          label: `${theme.name}: ${intent} text on ${intent} at ${Math.round(theme.tintAlpha * 100)}% over background`,
-          foreground: paint(theme, intent, background),
+          label: `${theme.name}: destructive text on destructive at ${Math.round(theme.hoverTintAlpha * 100)}% over ${backdrop.name}`,
+          foreground: paint(theme, "destructive", background),
+          background,
+          minimum: textMinimum,
+        };
+      }),
+    ),
+  );
+});
+
+test("PrimaryForeground_OnTheHoveredPrimaryOverEveryBackdrop_MeetsAa", () => {
+  assertMinimums(
+    themes.flatMap((theme) =>
+      backdrops(theme).map((backdrop) => {
+        const background = over(theme, "primary", primaryHoverAlpha, backdrop.colour);
+        return {
+          label: `${theme.name}: primary-foreground on primary at ${primaryHoverAlpha * 100}% over ${backdrop.name}`,
+          foreground: paint(theme, "primary-foreground", background),
           background,
           minimum: textMinimum,
         };

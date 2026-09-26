@@ -50,7 +50,8 @@ const excludedPrimitives: readonly {
   },
   {
     primitives: "calendar, date-picker",
-    needs: "react-day-picker and date-fns, which are not approved packages.",
+    needs:
+      "react-day-picker and date-fns, which are not approved packages. date-picker is not a registry item but a recipe: calendar inside a popover.",
     decidedIn: formsKit,
   },
   { primitives: "command", needs: "cmdk, which is not an approved package.", decidedIn: authenticatedShell },
@@ -97,7 +98,8 @@ const excludedPrimitives: readonly {
   },
   {
     primitives: "toast",
-    needs: "Exists for Base UI only; toasts come from sonner.",
+    needs:
+      "Not a radix-nova item: the registry has toast only in the Base UI styles. Toasts come from sonner.",
     decidedIn: themePackage,
   },
 ];
@@ -105,31 +107,32 @@ const excludedPrimitives: readonly {
 export function ExcludedPrimitives() {
   return (
     <div className="min-w-0 rounded-xl border bg-card p-4">
-      <Table data-testid="excluded-primitives">
-        <TableCaption>Registry primitives that are not installed in the design system.</TableCaption>
+      <Table>
+        <TableCaption>Registry items and recipes that are not installed in the design system.</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead>Primitive</TableHead>
-            <TableHead>Why it is not installed</TableHead>
-            <TableHead>Decided in</TableHead>
+            <TableHead className="whitespace-normal">Item</TableHead>
+            <TableHead className="whitespace-normal">
+              Why it is not installed, and where it is decided
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {excludedPrimitives.map((entry) => (
             <TableRow key={entry.primitives}>
               <TableCell className="align-top font-mono whitespace-normal">{entry.primitives}</TableCell>
-              <TableCell className="align-top whitespace-normal">{entry.needs}</TableCell>
               <TableCell className="align-top whitespace-normal">
-                {entry.decidedIn ? (
-                  <>
-                    {entry.decidedIn.title}
-                    <code className="block font-mono text-caption break-all text-muted-foreground">
-                      {entry.decidedIn.id}
-                    </code>
-                  </>
-                ) : (
-                  <span className="text-muted-foreground">Not planned</span>
-                )}
+                <p>{entry.needs}</p>
+                <p className="mt-1 text-caption text-muted-foreground">
+                  {entry.decidedIn ? (
+                    <>
+                      Decided in {entry.decidedIn.title}
+                      <code className="block font-mono break-all">{entry.decidedIn.id}</code>
+                    </>
+                  ) : (
+                    "Not planned"
+                  )}
+                </p>
               </TableCell>
             </TableRow>
           ))}

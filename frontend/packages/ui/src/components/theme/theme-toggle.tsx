@@ -27,7 +27,6 @@ export function ThemeToggle({ className }: { className?: string }) {
     <RadioGroup.Root
       value={mounted ? (theme ?? "") : ""}
       onValueChange={setTheme}
-      orientation="horizontal"
       aria-label="Colour theme"
       data-testid="theme-toggle"
       className={cn(
@@ -42,7 +41,7 @@ export function ThemeToggle({ className }: { className?: string }) {
           aria-label={label}
           title={label}
           data-testid={`theme-${value}`}
-          className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground focus-ring transition-all duration-(--motion-duration-normal) ease-standard hover:text-foreground data-[state=checked]:bg-background data-[state=checked]:text-foreground data-[state=checked]:shadow-sm"
+          className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground focus-ring transition-all duration-(--motion-duration-normal) ease-standard hover:text-foreground data-[state=checked]:bg-background data-[state=checked]:text-foreground data-[state=checked]:shadow-sm forced-colors:data-[state=checked]:outline-2"
         >
           <Icon className="size-4" aria-hidden />
         </RadioGroup.Item>

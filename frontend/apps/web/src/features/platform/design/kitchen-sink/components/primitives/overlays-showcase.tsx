@@ -50,7 +50,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@dewiride/erp-ui/compon
 import { SaveIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
-import { Specimen, SpecimenGrid, SpecimenRow } from "../components/specimen";
+import { Specimen, SpecimenGrid, SpecimenRow } from "../specimen";
 
 export function OverlaysShowcase() {
   return (
@@ -59,11 +59,11 @@ export function OverlaysShowcase() {
         <SpecimenRow>
           <Dialog>
             <DialogTrigger asChild>
-              <Button type="button" variant="outline" data-testid="overlay-dialog-trigger">
+              <Button type="button" variant="outline">
                 Edit contact
               </Button>
             </DialogTrigger>
-            <DialogContent data-testid="overlay-dialog">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Edit contact</DialogTitle>
                 <DialogDescription>Changes apply to invoices issued from now on.</DialogDescription>
@@ -102,12 +102,12 @@ export function OverlaysShowcase() {
         <SpecimenRow>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button type="button" variant="destructive" data-testid="overlay-alert-dialog-trigger">
+              <Button type="button" variant="destructive">
                 <Trash2Icon data-icon="inline-start" aria-hidden />
                 Delete draft
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent data-testid="overlay-alert-dialog">
+            <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogMedia>
                   <Trash2Icon aria-hidden />
@@ -132,11 +132,11 @@ export function OverlaysShowcase() {
         <SpecimenRow>
           <Sheet>
             <SheetTrigger asChild>
-              <Button type="button" variant="outline" data-testid="overlay-sheet-right-trigger">
+              <Button type="button" variant="outline">
                 Open filters
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" data-testid="overlay-sheet-right">
+            <SheetContent side="right">
               <SheetHeader>
                 <SheetTitle>Filters</SheetTitle>
                 <SheetDescription>Narrow the invoice list.</SheetDescription>
@@ -156,11 +156,11 @@ export function OverlaysShowcase() {
           </Sheet>
           <Sheet>
             <SheetTrigger asChild>
-              <Button type="button" variant="outline" data-testid="overlay-sheet-bottom-trigger">
+              <Button type="button" variant="outline">
                 Show totals
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" data-testid="overlay-sheet-bottom">
+            <SheetContent side="bottom">
               <SheetHeader>
                 <SheetTitle>Totals</SheetTitle>
                 <SheetDescription>
@@ -176,15 +176,11 @@ export function OverlaysShowcase() {
         <SpecimenRow>
           <Popover>
             <PopoverTrigger asChild>
-              <Button type="button" variant="outline" data-testid="overlay-popover-trigger">
+              <Button type="button" variant="outline">
                 Tax breakdown
               </Button>
             </PopoverTrigger>
-            <PopoverContent
-              data-testid="overlay-popover"
-              aria-labelledby="ks-popover-title"
-              aria-describedby="ks-popover-description"
-            >
+            <PopoverContent aria-labelledby="ks-popover-title" aria-describedby="ks-popover-description">
               <PopoverHeader>
                 <PopoverTitle id="ks-popover-title">Tax breakdown</PopoverTitle>
                 <PopoverDescription id="ks-popover-description">
@@ -206,7 +202,7 @@ export function OverlaysShowcase() {
         <SpecimenRow>
           <HoverCard>
             <HoverCardTrigger asChild>
-              <Button type="button" variant="link" data-testid="overlay-hover-card-trigger">
+              <Button type="button" variant="link">
                 Acme Private Limited
               </Button>
             </HoverCardTrigger>
@@ -229,13 +225,7 @@ export function OverlaysShowcase() {
         <SpecimenRow>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="Save"
-                data-testid="overlay-tooltip-trigger"
-              >
+              <Button type="button" variant="outline" size="icon" aria-label="Save">
                 <SaveIcon aria-hidden />
               </Button>
             </TooltipTrigger>

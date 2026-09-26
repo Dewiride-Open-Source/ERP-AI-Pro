@@ -11,6 +11,8 @@ const primitiveSections = kitchenSinkSections.filter((section) => section.group 
 
 const reducedMotionSeconds = 0.01 / 1000;
 
+const narrowestScreen = { width: 320, height: 720 };
+
 const typeRoles = [
   { role: "title", fontSize: 30, lineHeight: 36, fontWeight: "600", letterSpacing: -0.75 },
   { role: "heading", fontSize: 20, lineHeight: 28, fontWeight: "600", letterSpacing: -0.5 },
@@ -21,9 +23,13 @@ const typeRoles = [
 
 const shadowTokens = ["2xs", "xs", "sm", "md", "lg", "xl", "2xl"] as const;
 
+const menubarMenus = ["File", "Edit", "View", "Taxes", "Help"] as const;
+
 const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 type ChosenFile = { name: string; mimeType: string; buffer: Buffer };
+
+type MenuItemChoice = { name: string; variant: "default" | "destructive" };
 
 function html(page: Page): Locator {
   return page.locator("html");
@@ -64,6 +70,48 @@ async function hasHorizontalOverflow(page: Page): Promise<boolean> {
   return page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
 }
 
+async function overflowingTables(page: Page): Promise<string[]> {
+  return page.getByRole("table").evaluateAll((tables) =>
+    tables
+      .filter((table) => {
+        const container = table.parentElement;
+        const wider = container !== null && container.scrollWidth > container.clientWidth;
+        return wider || table.getBoundingClientRect().right > document.documentElement.clientWidth;
+      })
+      .map((table) => table.querySelector("caption")?.textContent ?? table.outerHTML.slice(0, 80)),
+  );
+}
+
+async function expectInsideScreen(menu: Locator): Promise<void> {
+  await expect(menu).toBeVisible();
+  // Radix rounds a menu's position to whole device pixels while its width stays fractional, so the edge of a menu that fits
+  // can sit a fraction of a pixel past the screen; the edges are read once the opening zoom, which starts smaller, has ended.
+  const edges = await menu.evaluate(async (element) => {
+    await Promise.all(
+      element.getAnimations({ subtree: true }).map((animation) => animation.finished.catch(() => undefined)),
+    );
+    const bounds = element.getBoundingClientRect();
+    return {
+      left: Math.round(bounds.left),
+      right: Math.round(bounds.right),
+      screen: document.documentElement.clientWidth,
+    };
+  });
+  expect(edges.left, "left edge").toBeGreaterThanOrEqual(0);
+  expect(edges.right, "right edge").toBeLessThanOrEqual(edges.screen);
+}
+
+async function ringColour(page: Page): Promise<string> {
+  return page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--ring)";
+    document.body.append(probe);
+    const colour = getComputedStyle(probe).color;
+    probe.remove();
+    return colour;
+  });
+}
+
 async function isTopmostAtCentre(target: Locator): Promise<boolean> {
   return target.evaluate((element) => {
     const box = element.getBoundingClientRect();
@@ -99,6 +147,16 @@ async function reveal(trigger: Locator, isMobile: boolean): Promise<void> {
   else await trigger.hover();
 }
 
+async function tabOntoLink(page: Page, link: Locator): Promise<void> {
+  await link.focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect(link).not.toBeFocused();
+  // WebKit leaves links out of the Tab order unless Safari's "Press Tab to highlight each item" is on, so there the link is
+  // focused from script right after a key press, which :focus-visible treats as keyboard focus.
+  if (page.context().browser()?.browserType().name() === "webkit") await link.focus();
+  else await page.keyboard.press("Tab");
+}
+
 async function dismissWithEscape(page: Page, overlay: Locator, trigger: Locator): Promise<void> {
   await page.keyboard.press("Escape");
   await expect(overlay).toBeHidden();
@@ -123,6 +181,13 @@ async function openContextMenu(trigger: Locator, menu: Locator): Promise<void> {
   await expect(menu).toBeVisible();
 }
 
+async function chooseMenuItem(menu: Locator, { name, variant }: MenuItemChoice): Promise<void> {
+  const item = menu.getByRole("menuitem", { name });
+  await expect(item).toHaveAttribute("data-variant", variant);
+  await item.click();
+  await expect(menu).toBeHidden();
+}
+
 async function chooseFile(page: Page, button: Locator, file: ChosenFile): Promise<void> {
   const chooser = page.waitForEvent("filechooser");
   await button.click();
@@ -144,10 +209,16 @@ async function clickEveryEnabledButton(container: Locator): Promise<void> {
 }
 
 test.describe("design system kitchen sink", () => {
-  test.slow(
-    ({ browserName }) => browserName === "webkit",
-    "WebKit takes about twice as long per action, and each test here drives a whole section of controls",
-  );
+  test.beforeEach(({ browserName }) => {
+    test.slow(
+      browserName === "webkit",
+      "WebKit takes about twice as long per action, and each test here drives a whole section of controls",
+    );
+  });
+
+  test("triples the timeout on WebKit only", ({ browserName }) => {
+    expect(test.info().timeout).toBe(test.info().project.timeout * (browserName === "webkit" ? 3 : 1));
+  });
 
   forEachTheme("renders every token group", async ({ page, capture, theme }, isMobile) => {
     const kitchenSink = new KitchenSinkPage(page);
@@ -206,6 +277,9 @@ test.describe("design system kitchen sink", () => {
             - link "Layers":
               - /url: "#layers"
           - listitem:
+            - link "Focus":
+              - /url: "#focus"
+          - listitem:
             - link "Motion":
               - /url: "#motion"
         - paragraph: Primitives
@@ -242,10 +316,35 @@ test.describe("design system kitchen sink", () => {
               - /url: "#excluded"
     `);
 
+    await expect(kitchenSink.section("focus")).toMatchAriaSnapshot(`
+      - region "Focus":
+        - heading "Focus" [level=2]
+        - heading "Tokens and utility" [level=3]
+        - term: "--focus-ring-width"
+        - definition: 2px · Thickness of the outline
+        - term: "--focus-ring-offset"
+        - definition: 2px · Gap between the element and the outline
+        - term: focus-ring
+        - definition: /^Draws the outline on :focus-visible in the ring colour/
+        - heading "Sample" [level=3]
+        - link "Link with the focus ring":
+          - /url: "#focus"
+        - text: Focus ring preview
+    `);
+
     for (const { id } of tokenSections) {
       await expect(kitchenSink.section(id)).toBeVisible();
       await capture(`section-${id}`, kitchenSink.section(id));
     }
+
+    await tabOntoLink(page, kitchenSink.focusSample);
+    await expect(kitchenSink.focusSample).toBeFocused();
+    await expect(kitchenSink.focusSample).toHaveCSS("outline-style", "solid");
+    await expect(kitchenSink.focusSample).toHaveCSS("outline-width", "2px");
+    await expect(kitchenSink.focusSample).toHaveCSS("outline-offset", "2px");
+    await expect(kitchenSink.focusSample).toHaveCSS("outline-color", await ringColour(page));
+    await capture("focus-ring-keyboard", kitchenSink.section("focus"));
+
     // At three device pixels per CSS pixel the phone-width page is taller than the 16,384 pixels a browser paints into one
     // capture, which leaves most of the image blank; there the section captures cover the page instead.
     if (!isMobile) await capture("page");
@@ -260,10 +359,9 @@ test.describe("design system kitchen sink", () => {
     await expect(actions.getByRole("button", { name: "Disabled", exact: true })).toBeDisabled();
     await expect(actions.getByRole("button", { name: "Disabled outline" })).toBeDisabled();
     await expect(actions.getByRole("button", { name: "Invalid" })).toHaveAttribute("aria-invalid", "true");
-    const loadingButton = actions.getByRole("button", { name: /Saving$/ });
+    const loadingButton = actions.getByRole("button", { name: "Saving", exact: true });
     await expect(loadingButton).toBeDisabled();
     await expect(loadingButton).toHaveAttribute("aria-busy", "true");
-    await expect(loadingButton.getByRole("status", { name: "Loading" })).toBeVisible();
     await expect(actions.getByRole("button", { name: "Bold (disabled)" })).toBeDisabled();
     await expect(
       kitchenSink.specimen("Toggle").getByRole("button", { name: "Bold", exact: true }),
@@ -299,6 +397,9 @@ test.describe("design system kitchen sink", () => {
       .all()) {
       await expect(thumb).toBeDisabled();
     }
+    await expect(
+      selection.getByRole("group", { name: "Invoice amount (₹ thousand)" }),
+    ).toHaveAccessibleDescription("From ₹20,000 to ₹80,000.");
 
     const feedback = kitchenSink.section("feedback");
     for (const value of ["0", "45", "100"]) {
@@ -323,12 +424,25 @@ test.describe("design system kitchen sink", () => {
     ).toBeDisabled();
 
     const excluded = kitchenSink.excludedPrimitives;
+    await expect(excluded.getByRole("columnheader")).toHaveText([
+      "Item",
+      "Why it is not installed, and where it is decided",
+    ]);
     await expect(excluded.getByRole("row")).toHaveCount(15);
+    await expect(excluded.getByRole("row", { name: /^sidebar / })).toContainText(
+      "Decided in Authenticated application shell",
+    );
     await expect(excluded.getByRole("row", { name: /^sidebar / })).toContainText(
       "authentication-authenticated-application-shell",
     );
     await expect(excluded.getByRole("row", { name: /^combobox / })).toContainText("@base-ui/react");
+    await expect(excluded.getByRole("row", { name: /^calendar, date-picker / })).toContainText(
+      "calendar inside a popover",
+    );
     await expect(excluded.getByRole("row", { name: /^toast / })).toContainText("sonner");
+    await expect(excluded.getByRole("row", { name: /^toast / })).toContainText(
+      "web-foundation-design-tokens-and-theme-package",
+    );
     await expect(excluded.getByRole("row", { name: /^carousel / })).toContainText("Not planned");
 
     await expect(inputs).toMatchAriaSnapshot(`
@@ -551,21 +665,24 @@ test.describe("design system kitchen sink", () => {
         - img "Dewiride"
         - heading "Item" [level=3]
         - list:
-          - text: Acme Private Limited
-          - paragraph: GSTIN 29AAACA1234A1Z5 · Bengaluru
-          - button "Open"
-          - text: INV-2026-00042
-          - paragraph: Due on 26 Oct 2026
-          - text: Sent
-          - link "Link item The whole item is one link.":
-            - /url: "#data-display"
+          - listitem:
+            - text: Acme Private Limited
+            - paragraph: GSTIN 29AAACA1234A1Z5 · Bengaluru
+            - button "Open"
+          - listitem:
+            - text: INV-2026-00042
+            - paragraph: Due on 26 Oct 2026
+            - text: Sent
+          - listitem:
+            - link "Link item The whole item is one link.":
+              - /url: "#data-display"
         - heading "Accordion" [level=3]
-        - heading "Payment terms" [level=3]:
+        - heading "Payment terms" [level=4]:
           - button "Payment terms" [expanded]
         - region "Payment terms": Payment is due within 30 days of the invoice date.
-        - heading "Bank details" [level=3]:
+        - heading "Bank details" [level=4]:
           - button "Bank details"
-        - heading "Late fee (not configured)" [level=3]:
+        - heading "Late fee (not configured)" [level=4]:
           - button "Late fee (not configured)" [disabled]
         - heading "Collapsible and separator" [level=3]
         - button "Show more addresses"
@@ -743,10 +860,9 @@ test.describe("design system kitchen sink", () => {
     forEachTheme("dropdown and context menus", async ({ page, capture }) => {
       const kitchenSink = new KitchenSinkPage(page);
       await kitchenSink.goto();
-      const menus = kitchenSink.section("menus");
 
-      const dropdownTrigger = menus.getByRole("button", { name: "Invoice actions", exact: true });
-      const dropdown = page.getByRole("menu", { name: "Invoice actions", exact: true });
+      const dropdownTrigger = kitchenSink.invoiceActions;
+      const dropdown = kitchenSink.invoiceActionsMenu;
       await dropdownTrigger.click();
       await expect(dropdown).toMatchAriaSnapshot(`
       - menu "Invoice actions":
@@ -783,18 +899,38 @@ test.describe("design system kitchen sink", () => {
         "true",
       );
       await dropdown.getByRole("menuitem", { name: "Download" }).click();
-      const downloadMenu = page.getByRole("menu", { name: "Download" });
-      await expect(downloadMenu.getByRole("menuitem", { name: "PDF" })).toBeVisible();
+      const downloadMenu = kitchenSink.menu("Download");
+      await expect(downloadMenu).toMatchAriaSnapshot(`
+      - menu "Download":
+        - menuitem "PDF"
+        - menuitem "E-invoice JSON"
+    `);
       await capture("dropdown-submenu-open", downloadMenu);
       await downloadMenu.getByRole("menuitem", { name: "PDF" }).click();
       await expect(dropdown).toBeHidden();
       await expect(dropdownTrigger).toBeFocused();
+      await dropdownTrigger.click();
+      await dropdown.getByRole("menuitem", { name: "Download" }).click();
+      await downloadMenu.getByRole("menuitem", { name: "E-invoice JSON" }).click();
+      await expect(dropdown).toBeHidden();
+      const dropdownItems: MenuItemChoice[] = [
+        { name: "Edit", variant: "default" },
+        { name: "Duplicate", variant: "default" },
+        { name: "Delete draft", variant: "destructive" },
+      ];
+      for (const item of dropdownItems) {
+        await dropdownTrigger.click();
+        await chooseMenuItem(dropdown, item);
+        await expect(dropdownTrigger).toBeFocused();
+      }
       await dropdownTrigger.press("Enter");
       await expect(dropdown).toBeVisible();
       await dismissWithEscape(page, dropdown, dropdownTrigger);
 
-      const contextTrigger = menus.getByTestId("menus-context-trigger");
-      const contextMenu = page.getByTestId("menus-context");
+      const contextTrigger = kitchenSink.contextMenuArea;
+      const contextMenu = kitchenSink.contextMenu;
+      await expect(contextTrigger).toHaveRole("group");
+      await expect(contextTrigger).toHaveAccessibleName("Invoice row with a context menu");
       await openContextMenu(contextTrigger, contextMenu);
       await expect(contextMenu).toMatchAriaSnapshot(`
       - menu:
@@ -827,31 +963,71 @@ test.describe("design system kitchen sink", () => {
         "aria-checked",
         "true",
       );
-      await contextMenu.getByRole("menuitem", { name: "Move to" }).click();
-      const moveMenu = page.getByRole("menu", { name: "Move to" });
-      await moveMenu.getByRole("menuitem", { name: "Archived" }).click();
-      await expect(contextMenu).toBeHidden();
-      await openContextMenu(contextTrigger, contextMenu);
+      const moveMenu = kitchenSink.menu("Move to");
+      for (const destination of ["Pending approval", "Archived"]) {
+        await contextMenu.getByRole("menuitem", { name: "Move to" }).click();
+        await moveMenu.getByRole("menuitem", { name: destination }).click();
+        await expect(contextMenu).toBeHidden();
+        await openContextMenu(contextTrigger, contextMenu);
+      }
+      const contextItems: MenuItemChoice[] = [
+        { name: "Open", variant: "default" },
+        { name: "Copy link", variant: "default" },
+        { name: "Remove", variant: "destructive" },
+      ];
+      for (const item of contextItems) {
+        await chooseMenuItem(contextMenu, item);
+        await openContextMenu(contextTrigger, contextMenu);
+      }
       await page.keyboard.press("Escape");
       await expect(contextMenu).toBeHidden();
     });
 
-    forEachTheme("menu bar, navigation menu and selects", async ({ page, capture }, isMobile) => {
+    forEachTheme("menu bar", async ({ page, capture }) => {
       const kitchenSink = new KitchenSinkPage(page);
       await kitchenSink.goto();
 
-      const menubar = page.getByRole("menubar");
-      const fileMenu = page.getByRole("menu", { name: "File", exact: true });
-      await menubar.getByRole("menuitem", { name: "File", exact: true }).click();
+      const fileTrigger = kitchenSink.menubarTrigger("File");
+      const fileMenu = kitchenSink.menu("File");
+      const exportMenu = kitchenSink.menu("Export");
+      await fileTrigger.click();
       await fileMenu.getByRole("menuitem", { name: "Export" }).click();
-      const exportMenu = page.getByRole("menu", { name: "Export" });
       await expect(exportMenu.getByRole("menuitem", { name: "Spreadsheet" })).toBeVisible();
       await capture("menubar-open", fileMenu);
       await exportMenu.getByRole("menuitem", { name: "Spreadsheet" }).click();
       await expect(fileMenu).toBeHidden();
+      await fileTrigger.click();
+      await fileMenu.getByRole("menuitem", { name: "Export" }).click();
+      await exportMenu.getByRole("menuitem", { name: "PDF" }).click();
+      await expect(fileMenu).toBeHidden();
 
-      const viewTrigger = menubar.getByRole("menuitem", { name: "View", exact: true });
-      const viewMenu = page.getByRole("menu", { name: "View", exact: true });
+      await kitchenSink.menubarTrigger("Edit").click();
+      await expect(kitchenSink.menu("Edit")).toMatchAriaSnapshot(`
+      - menu "Edit":
+        - menuitem "Undo Ctrl Z"
+        - menuitem "Redo Ctrl Y"
+        - separator
+        - menuitem "Clear lines"
+    `);
+      await capture("menubar-edit-open", kitchenSink.menu("Edit"));
+      await page.keyboard.press("Escape");
+      await expect(kitchenSink.menu("Edit")).toBeHidden();
+      const menubarItems: (MenuItemChoice & { menu: (typeof menubarMenus)[number] })[] = [
+        { menu: "File", name: "New invoice", variant: "default" },
+        { menu: "Edit", name: "Undo", variant: "default" },
+        { menu: "Edit", name: "Redo", variant: "default" },
+        { menu: "Edit", name: "Clear lines", variant: "destructive" },
+        { menu: "Taxes", name: "Recalculate GST", variant: "default" },
+        { menu: "Taxes", name: "Apply TDS", variant: "default" },
+        { menu: "Help", name: "Keyboard shortcuts", variant: "default" },
+      ];
+      for (const { menu, ...item } of menubarItems) {
+        await kitchenSink.menubarTrigger(menu).click();
+        await chooseMenuItem(kitchenSink.menu(menu), item);
+      }
+
+      const viewTrigger = kitchenSink.menubarTrigger("View");
+      const viewMenu = kitchenSink.menu("View");
       await viewTrigger.click();
       await viewMenu.getByRole("menuitemcheckbox", { name: "Show grid lines" }).click();
       await expect(viewMenu).toBeHidden();
@@ -860,19 +1036,29 @@ test.describe("design system kitchen sink", () => {
         "aria-checked",
         "false",
       );
-      await viewMenu.getByRole("menuitemradio", { name: "125 %" }).click();
-      await expect(viewMenu).toBeHidden();
-      await viewTrigger.click();
-      await expect(viewMenu.getByRole("menuitemradio", { name: "125 %" })).toHaveAttribute(
-        "aria-checked",
-        "true",
-      );
+      for (const zoom of ["75 %", "100 %", "125 %"]) {
+        await viewMenu.getByRole("menuitemradio", { name: zoom }).click();
+        await expect(viewMenu).toBeHidden();
+        await viewTrigger.click();
+        await expect(viewMenu.getByRole("menuitemradio", { name: zoom })).toHaveAttribute(
+          "aria-checked",
+          "true",
+        );
+      }
       await page.keyboard.press("ArrowRight");
-      const taxesMenu = page.getByRole("menu", { name: "Taxes" });
+      const taxesMenu = kitchenSink.menu("Taxes");
       await expect(taxesMenu.getByRole("menuitem", { name: "Recalculate GST" })).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(taxesMenu).toBeHidden();
-      await expect(menubar.getByRole("menuitem", { name: "Taxes" })).toBeFocused();
+      await expect(kitchenSink.menubarTrigger("Taxes")).toBeFocused();
+    });
+
+    forEachTheme("navigation menu and selects", async ({ page, capture }, isMobile) => {
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+      // A mouse click leaves a pointer position behind, and after a scroll the browser reports that pointer leaving the
+      // navigation menu, which starts Radix's close timer; a tap that opens a menu does not cancel it. So on a touch device
+      // this page is tapped before anything is clicked, and the menu bar's clicks run on a page of their own.
 
       const navigationMenu = kitchenSink.section("navigation").getByRole("navigation", { name: "Main" });
       const tokensTrigger = navigationMenu.getByRole("button", { name: "Tokens" });
@@ -882,9 +1068,26 @@ test.describe("design system kitchen sink", () => {
       await page.keyboard.press("Escape");
       await expect(navigationMenu.getByRole("link", { name: /^Colours/ })).toBeHidden();
       await expect(tokensTrigger).toHaveAttribute("aria-expanded", "false");
-      await openNavigationMenuItem(navigationMenu.getByRole("button", { name: "Primitives" }), isMobile);
-      await followNavigationMenuLink(navigationMenu.getByRole("link", { name: /^Overlays/ }), isMobile);
-      await expect(page).toHaveURL(/#overlays$/);
+      const navigationLinks = [
+        { group: "Primitives", link: "Actions", section: "actions" },
+        { group: "Primitives", link: "Inputs", section: "inputs" },
+        { group: "Primitives", link: "Overlays", section: "overlays" },
+        { group: "Tokens", link: "Colours", section: "colours" },
+        { group: "Tokens", link: "Typography", section: "typography" },
+        { group: "Tokens", link: "Motion", section: "motion" },
+      ] as const;
+      for (const { group, link, section } of navigationLinks) {
+        const trigger = navigationMenu.getByRole("button", { name: group });
+        await openNavigationMenuItem(trigger, isMobile);
+        await followNavigationMenuLink(
+          navigationMenu.getByRole("link", { name: new RegExp(`^${link}`) }),
+          isMobile,
+        );
+        await expect(page).toHaveURL(new RegExp(`#${section}$`));
+        await expect(trigger).toHaveAttribute("aria-expanded", "false");
+      }
+      await followNavigationMenuLink(navigationMenu.getByRole("link", { name: "Excluded" }), isMobile);
+      await expect(page).toHaveURL(/#excluded$/);
 
       const inputs = kitchenSink.section("inputs");
       const quarter = inputs.getByRole("combobox", { name: "Financial quarter" });
@@ -901,6 +1104,54 @@ test.describe("design system kitchen sink", () => {
       await taxRate.click();
       await listbox.getByRole("option", { name: "GST 18 %" }).click();
       await expect(taxRate).toHaveText("GST 18 %");
+    });
+
+    test("reaches the context menu area and the menu bar with the keyboard", async ({ page }) => {
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+
+      await kitchenSink.invoiceActions.focus();
+      await page.keyboard.press("Tab");
+      await expect(kitchenSink.contextMenuArea).toBeFocused();
+      await expect(kitchenSink.contextMenuArea).toHaveCSS("outline-style", "solid");
+      await expect(kitchenSink.contextMenuArea).toHaveCSS("outline-width", "2px");
+
+      await page.keyboard.press("Tab");
+      const fileTrigger = kitchenSink.menubarTrigger("File");
+      const editTrigger = kitchenSink.menubarTrigger("Edit");
+      await expect(fileTrigger).toBeFocused();
+      await expect(fileTrigger).not.toHaveCSS("box-shadow", "none");
+      await page.keyboard.press("ArrowRight");
+      await expect(editTrigger).toBeFocused();
+      await expect(editTrigger).not.toHaveCSS("box-shadow", "none");
+      await expect(fileTrigger).toHaveCSS("box-shadow", "none");
+
+      const editMenu = kitchenSink.menu("Edit");
+      await page.keyboard.press("Enter");
+      await expect(editMenu.getByRole("menuitem", { name: "Undo" })).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(editMenu).toBeHidden();
+      await expect(editTrigger).toBeFocused();
+    });
+
+    test("opens the context menu with the context-menu key", async ({ page, browserName }) => {
+      test.skip(
+        browserName !== "chromium",
+        "Only Chromium turns a key press Playwright sends into a contextmenu event; Firefox and WebKit raise it from the operating system's own key handling, which synthesised keys bypass",
+      );
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+
+      for (const key of ["Shift+F10", "ContextMenu"]) {
+        await kitchenSink.contextMenuArea.focus();
+        await page.keyboard.press(key);
+        await expect(kitchenSink.contextMenu.getByRole("menuitem", { name: "Open" })).toBeFocused();
+        await page.keyboard.press("ArrowDown");
+        await expect(kitchenSink.contextMenu.getByRole("menuitem", { name: "Copy link" })).toBeFocused();
+        await page.keyboard.press("Escape");
+        await expect(kitchenSink.contextMenu).toBeHidden();
+        await expect(kitchenSink.contextMenuArea).toBeFocused();
+      }
     });
   });
 
@@ -925,9 +1176,13 @@ test.describe("design system kitchen sink", () => {
       await expect(toggleGroups.getByRole("radio", { name: "Align centre" })).toBeChecked();
       await expect(toggleGroups.getByRole("radio", { name: "Align left" })).not.toBeChecked();
       const textStyle = toggleGroups.getByRole("toolbar", { name: "Text style" });
-      await textStyle.getByRole("button", { name: "Italic" }).click();
-      await expect(textStyle.getByRole("button", { name: "Italic" })).toHaveAttribute("aria-pressed", "true");
+      for (const name of ["Italic", "Underline"]) {
+        await textStyle.getByRole("button", { name }).click();
+        await expect(textStyle.getByRole("button", { name })).toHaveAttribute("aria-pressed", "true");
+      }
       await expect(textStyle.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "true");
+      await textStyle.getByRole("button", { name: "Bold" }).click();
+      await expect(textStyle.getByRole("button", { name: "Bold" })).toHaveAttribute("aria-pressed", "false");
     });
 
     forEachTheme("inputs, including the example form's validation failure", async ({ page, capture }) => {
@@ -935,14 +1190,20 @@ test.describe("design system kitchen sink", () => {
       await kitchenSink.goto();
 
       const inputs = kitchenSink.section("inputs");
-      await inputs.getByRole("textbox", { name: "Client name" }).fill("Acme Private Limited");
-      await expect(inputs.getByRole("textbox", { name: "Client name" })).toHaveValue("Acme Private Limited");
-      await inputs.getByRole("textbox", { name: "Notes to the client" }).fill("Thank you for the order.");
-      await expect(inputs.getByRole("textbox", { name: "Notes to the client" })).toHaveValue(
-        "Thank you for the order.",
-      );
-      await inputs.getByRole("textbox", { name: "Amount" }).fill("1250.50");
-      await expect(inputs.getByRole("textbox", { name: "Amount" })).toHaveValue("1250.50");
+      const entries = [
+        { role: "textbox", name: "Client name", value: "Acme Private Limited" },
+        { role: "textbox", name: "GSTIN", value: "27AAACD1234E1Z5" },
+        { role: "textbox", name: "Notes to the client", value: "Thank you for the order." },
+        { role: "textbox", name: "Reason for the credit note", value: "The rate on line 2 was wrong." },
+        { role: "textbox", name: "Amount", value: "1250.50" },
+        { role: "textbox", name: "Discount", value: "10" },
+        { role: "searchbox", name: "Search clients", value: "Globex" },
+      ] as const;
+      for (const { role, name, value } of entries) {
+        const field = inputs.getByRole(role, { name, exact: true });
+        await field.fill(value);
+        await expect(field).toHaveValue(value);
+      }
       await inputs.getByRole("combobox", { name: "State", exact: true }).selectOption("RJ");
       await expect(inputs.getByRole("combobox", { name: "State", exact: true })).toHaveValue("RJ");
       await inputs.getByRole("combobox", { name: "Billing state" }).selectOption("KA");
@@ -974,9 +1235,16 @@ test.describe("design system kitchen sink", () => {
       await kitchenSink.goto();
 
       const selection = kitchenSink.section("selection");
-      for (const name of ["Unchecked", "Some rows selected", "I confirm the bank details are correct"]) {
-        await selection.getByRole("checkbox", { name }).click();
-        await expect(selection.getByRole("checkbox", { name })).toBeChecked();
+      const checkboxes = [
+        { name: "Unchecked", checked: true },
+        { name: "Checked", checked: false },
+        { name: "Some rows selected", checked: true },
+        { name: "I confirm the bank details are correct", checked: true },
+      ] as const;
+      for (const { name, checked } of checkboxes) {
+        const checkbox = selection.getByRole("checkbox", { name, exact: true });
+        await checkbox.click();
+        await expect(checkbox).toBeChecked({ checked });
       }
       const paymentTerms = selection.getByRole("radiogroup", { name: "Payment terms" });
       await paymentTerms.getByRole("radio", { name: "Net 30 days" }).focus();
@@ -993,19 +1261,33 @@ test.describe("design system kitchen sink", () => {
       );
       await pressArrowUntilChecked(page, "ArrowUp", paymentTerms.getByRole("radio", { name: "Net 45 days" }));
       await expect(paymentTerms.getByRole("radio", { name: "Net 30 days" })).not.toBeChecked();
+      const invoiceCopy = selection.getByRole("radiogroup", { name: "Invoice copy" });
       await selection.getByText("Duplicate for transporter").click();
-      await expect(selection.getByRole("radio", { name: "Duplicate for transporter" })).toBeChecked();
-      await selection.getByRole("switch", { name: "Email notifications" }).click();
-      await expect(selection.getByRole("switch", { name: "Email notifications" })).toBeChecked();
+      await expect(invoiceCopy.getByRole("radio", { name: "Duplicate for transporter" })).toBeChecked();
+      await invoiceCopy.getByRole("radio", { name: "Original for recipient" }).click();
+      await expect(invoiceCopy.getByRole("radio", { name: "Original for recipient" })).toBeChecked();
+      await expect(invoiceCopy.getByRole("radio", { name: "Duplicate for transporter" })).not.toBeChecked();
+      const switches = [
+        { name: "Email notifications", checked: true },
+        { name: "Compact rows", checked: false },
+        { name: "Accept the data processing terms", checked: true },
+      ] as const;
+      for (const { name, checked } of switches) {
+        const control = selection.getByRole("switch", { name });
+        await control.click();
+        await expect(control).toBeChecked({ checked });
+      }
       await selection.getByText("Round off totals").click();
       await expect(selection.getByRole("switch", { name: "Round off totals" })).not.toBeChecked();
       const range = selection.getByRole("group", { name: "Invoice amount (₹ thousand)" });
+      await expect(range).toHaveAccessibleDescription("From ₹20,000 to ₹80,000.");
       await range.getByRole("slider", { name: "Minimum" }).focus();
       await page.keyboard.press("ArrowRight");
       await expect(range.getByRole("slider", { name: "Minimum" })).toHaveAttribute("aria-valuenow", "25");
       await range.getByRole("slider", { name: "Maximum" }).focus();
       await page.keyboard.press("ArrowLeft");
       await expect(range.getByRole("slider", { name: "Maximum" })).toHaveAttribute("aria-valuenow", "75");
+      await expect(range).toHaveAccessibleDescription("From ₹25,000 to ₹75,000.");
       await capture("selection-operated", selection);
 
       const feedback = kitchenSink.section("feedback");
@@ -1048,6 +1330,15 @@ test.describe("design system kitchen sink", () => {
         await tabs.getByRole("tab", { name: tab }).click();
         await expect(tabs.getByRole("tab", { name: tab })).toHaveAttribute("aria-selected", "true");
         await expect(tabs.getByRole("tabpanel")).toHaveText(panel);
+      }
+      for (const { tabs, tab } of [
+        { tabs: defaultTabs, tab: "Overview" },
+        { tabs: lineTabs, tab: "Details" },
+      ]) {
+        await tabs.getByRole("tab", { name: tab }).focus();
+        await page.keyboard.press("Tab");
+        await expect(tabs.getByRole("tabpanel")).toBeFocused();
+        await expect(tabs.getByRole("tabpanel")).not.toHaveCSS("box-shadow", "none");
       }
       const breadcrumb = navigation.getByRole("navigation", { name: "breadcrumb" });
       await breadcrumb.getByRole("link", { name: "Primitives" }).click();
@@ -1157,6 +1448,61 @@ test.describe("design system kitchen sink", () => {
         .poll(() => isTopmostAtCentre(kitchenSink.sectionHeading(id)), { message: `${id} heading` })
         .toBe(true);
     }
+  });
+
+  test("keeps keyboard focus clear of the sticky header", async ({ page }) => {
+    const kitchenSink = new KitchenSinkPage(page);
+    await kitchenSink.goto();
+    const header = await new AppShell(page).banner.boundingBox();
+    expect(header, "header bounding box").not.toBeNull();
+    const headerBottom = (header?.y ?? 0) + (header?.height ?? 0);
+    await expect(html(page)).toHaveCSS("scroll-padding-top", `${header?.height ?? 0}px`);
+
+    await kitchenSink.section("overlays").getByRole("button", { name: "Edit contact" }).focus();
+    for (let stop = 1; stop <= 12; stop += 1) {
+      await page.keyboard.press("Shift+Tab");
+      const top = await page.evaluate(() => document.activeElement?.getBoundingClientRect().top ?? 0);
+      expect(top, `top of focus stop ${stop} before Edit contact`).toBeGreaterThanOrEqual(headerBottom);
+    }
+  });
+
+  test.describe("on the narrowest screen", () => {
+    test.use({ viewport: narrowestScreen });
+
+    test("keeps every table and menu inside the screen", async ({ page }) => {
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+
+      expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
+      await expect(page.getByRole("table")).toHaveCount(4);
+      expect(await overflowingTables(page), "tables wider than their container").toEqual([]);
+
+      await kitchenSink.invoiceActions.click();
+      await expectInsideScreen(kitchenSink.invoiceActionsMenu);
+      await kitchenSink.invoiceActionsMenu.getByRole("menuitem", { name: "Download" }).click();
+      await expectInsideScreen(kitchenSink.menu("Download"));
+      await page.keyboard.press("Escape");
+      await expect(kitchenSink.invoiceActionsMenu).toBeHidden();
+
+      await openContextMenu(kitchenSink.contextMenuArea, kitchenSink.contextMenu);
+      await expectInsideScreen(kitchenSink.contextMenu);
+      await kitchenSink.contextMenu.getByRole("menuitem", { name: "Move to" }).click();
+      await expectInsideScreen(kitchenSink.menu("Move to"));
+      await page.keyboard.press("Escape");
+      await expect(kitchenSink.contextMenu).toBeHidden();
+
+      for (const name of menubarMenus) {
+        await kitchenSink.menubarTrigger(name).click();
+        await expectInsideScreen(kitchenSink.menu(name));
+        if (name === "File") {
+          await kitchenSink.menu(name).getByRole("menuitem", { name: "Export" }).click();
+          await expectInsideScreen(kitchenSink.menu("Export"));
+        }
+        await page.keyboard.press("Escape");
+        await expect(kitchenSink.menu(name)).toBeHidden();
+      }
+      expect(await hasHorizontalOverflow(page), "horizontal overflow with the menus used").toBe(false);
+    });
   });
 
   test.describe("motion", () => {

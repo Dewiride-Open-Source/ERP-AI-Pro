@@ -11,7 +11,6 @@ export function ToastTriggers() {
       <Button
         type="button"
         variant="outline"
-        data-testid="toast-trigger-success"
         onClick={() =>
           toast.success("Invoice sent", { description: "INV-2026-00042 was emailed to the client." })
         }
@@ -21,7 +20,6 @@ export function ToastTriggers() {
       <Button
         type="button"
         variant="outline"
-        data-testid="toast-trigger-info"
         onClick={() =>
           toast.info("Rates updated", { description: "GST rates changed on 22 September 2026." })
         }
@@ -31,7 +29,6 @@ export function ToastTriggers() {
       <Button
         type="button"
         variant="outline"
-        data-testid="toast-trigger-warning"
         onClick={() =>
           toast.warning("Due date passed", {
             description: "Three invoices are overdue by more than 30 days.",
@@ -43,7 +40,6 @@ export function ToastTriggers() {
       <Button
         type="button"
         variant="outline"
-        data-testid="toast-trigger-error"
         onClick={() => toast.error("Payment failed", { description: "The bank declined the transfer." })}
       >
         Error
@@ -51,7 +47,6 @@ export function ToastTriggers() {
       <Button
         type="button"
         variant="outline"
-        data-testid="toast-trigger-loading"
         onClick={() =>
           toast.loading("Preparing the export", {
             id: exportToastId,

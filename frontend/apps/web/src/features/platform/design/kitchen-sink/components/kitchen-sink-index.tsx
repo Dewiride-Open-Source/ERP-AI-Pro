@@ -4,11 +4,7 @@ import { kitchenSinkGroups, kitchenSinkSections } from "./sections";
 
 export function KitchenSinkIndex() {
   return (
-    <nav
-      aria-label="Design system sections"
-      data-testid="kitchen-sink-index"
-      className="grid gap-4 rounded-xl border bg-card p-4"
-    >
+    <nav aria-label="Design system sections" className="grid gap-4 rounded-xl border bg-card p-4">
       {kitchenSinkGroups.map((group) => {
         const labelId = `kitchen-sink-index-${group.id}`;
         return (

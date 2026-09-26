@@ -14,7 +14,7 @@ import { Skeleton } from "@dewiride/erp-ui/components/ui/skeleton";
 import { Spinner } from "@dewiride/erp-ui/components/ui/spinner";
 import { CircleAlertIcon, FileTextIcon, InfoIcon, PlusIcon } from "lucide-react";
 
-import { Specimen, SpecimenGrid, SpecimenRow } from "../components/specimen";
+import { Specimen, SpecimenGrid, SpecimenRow } from "../specimen";
 
 import { ToastTriggers } from "./toast-triggers";
 
@@ -78,7 +78,6 @@ export function FeedbackShowcase() {
           aria-label="Loading client details"
           aria-busy="true"
           className="flex items-center gap-3"
-          data-testid="feedback-skeleton"
         >
           <Skeleton className="size-10 rounded-full" />
           <div className="grid flex-1 gap-2">

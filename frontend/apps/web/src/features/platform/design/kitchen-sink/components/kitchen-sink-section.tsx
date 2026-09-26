@@ -16,12 +16,7 @@ export function KitchenSinkSection({
   const headingId = `${id}-heading`;
 
   return (
-    <section
-      id={id}
-      aria-labelledby={headingId}
-      data-testid={`kitchen-sink-section-${id}`}
-      className="grid min-w-0 scroll-mt-header grid-cols-1 gap-4"
-    >
+    <section id={id} aria-labelledby={headingId} className="grid min-w-0 grid-cols-1 gap-4">
       <header className="grid gap-1">
         <h2 id={headingId} className="text-heading">
           {title}

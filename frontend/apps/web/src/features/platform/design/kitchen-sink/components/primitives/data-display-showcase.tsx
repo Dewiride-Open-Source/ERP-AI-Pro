@@ -54,7 +54,7 @@ import {
 } from "@dewiride/erp-ui/components/ui/table";
 import { BuildingIcon, ChevronsUpDownIcon, ImageIcon, ReceiptIcon } from "lucide-react";
 
-import { Specimen, SpecimenGrid, SpecimenRow } from "../components/specimen";
+import { Specimen, SpecimenGrid, SpecimenRow } from "../specimen";
 
 const invoices = [
   { number: "INV-040", client: "Acme", amount: "₹59,000.00" },
@@ -119,7 +119,7 @@ export function DataDisplayShowcase() {
       </Specimen>
 
       <Specimen title="Table" description="With a caption and a totals footer.">
-        <Table data-testid="data-display-table">
+        <Table>
           <TableCaption>Invoices issued in September 2026</TableCaption>
           <TableHeader>
             <TableRow>
@@ -184,7 +184,7 @@ export function DataDisplayShowcase() {
 
       <Specimen title="Item" description="Default, outline and muted items with media, text and actions.">
         <ItemGroup>
-          <Item>
+          <Item role="listitem">
             <ItemMedia variant="icon">
               <BuildingIcon aria-hidden />
             </ItemMedia>
@@ -198,7 +198,7 @@ export function DataDisplayShowcase() {
               </Button>
             </ItemActions>
           </Item>
-          <Item variant="outline">
+          <Item variant="outline" role="listitem">
             <ItemMedia variant="icon">
               <ReceiptIcon aria-hidden />
             </ItemMedia>
@@ -210,29 +210,31 @@ export function DataDisplayShowcase() {
               <Badge variant="secondary">Sent</Badge>
             </ItemActions>
           </Item>
-          <Item variant="muted" asChild>
-            <a href="#data-display">
-              <ItemContent>
-                <ItemTitle>Link item</ItemTitle>
-                <ItemDescription>The whole item is one link.</ItemDescription>
-              </ItemContent>
-            </a>
-          </Item>
+          <div role="listitem">
+            <Item variant="muted" asChild>
+              <a href="#data-display">
+                <ItemContent>
+                  <ItemTitle>Link item</ItemTitle>
+                  <ItemDescription>The whole item is one link.</ItemDescription>
+                </ItemContent>
+              </a>
+            </Item>
+          </div>
         </ItemGroup>
       </Specimen>
 
       <Specimen title="Accordion" description="One panel open at a time; the last one is disabled.">
         <Accordion type="single" collapsible defaultValue="terms" data-testid="data-display-accordion">
           <AccordionItem value="terms">
-            <AccordionTrigger>Payment terms</AccordionTrigger>
+            <AccordionTrigger headingLevel={4}>Payment terms</AccordionTrigger>
             <AccordionContent>Payment is due within 30 days of the invoice date.</AccordionContent>
           </AccordionItem>
           <AccordionItem value="bank">
-            <AccordionTrigger>Bank details</AccordionTrigger>
+            <AccordionTrigger headingLevel={4}>Bank details</AccordionTrigger>
             <AccordionContent>Pay by NEFT or RTGS to the account printed on the invoice.</AccordionContent>
           </AccordionItem>
           <AccordionItem value="late-fee" disabled>
-            <AccordionTrigger>Late fee (not configured)</AccordionTrigger>
+            <AccordionTrigger headingLevel={4}>Late fee (not configured)</AccordionTrigger>
             <AccordionContent>No late fee applies.</AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -242,7 +244,7 @@ export function DataDisplayShowcase() {
         title="Collapsible and separator"
         description="Content that expands in place; separators divide groups."
       >
-        <Collapsible className="grid gap-2" data-testid="data-display-collapsible">
+        <Collapsible className="grid gap-2">
           <div className="flex items-center justify-between gap-3">
             <p className="text-body font-medium">Two more addresses</p>
             <CollapsibleTrigger asChild>
@@ -271,7 +273,7 @@ export function DataDisplayShowcase() {
         title="Scroll area"
         description="A vertical list and a horizontal row that scroll inside a fixed box."
       >
-        <ScrollArea className="h-40 rounded-lg border" data-testid="data-display-scroll-vertical">
+        <ScrollArea className="h-40 rounded-lg border">
           <fieldset className="grid gap-2 p-3">
             <legend className="text-caption text-muted-foreground">Columns to show</legend>
             {columns.map((column, index) => {
@@ -298,7 +300,7 @@ export function DataDisplayShowcase() {
       </Specimen>
 
       <Specimen title="Aspect ratio" description="Keeps media at a fixed shape at every width.">
-        <AspectRatio ratio={16 / 9} data-testid="data-display-aspect-ratio">
+        <AspectRatio ratio={16 / 9}>
           <div className="flex size-full flex-col items-center justify-center gap-2 rounded-lg border bg-muted text-caption text-muted-foreground">
             <ImageIcon className="size-6" aria-hidden />
             16 : 9

@@ -30,7 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dewiride/erp-ui/components/ui/tabs";
 import { useState, type MouseEvent } from "react";
 
-import { Specimen, SpecimenGrid, SpecimenRow } from "../components/specimen";
+import { Specimen, SpecimenGrid, SpecimenRow } from "../specimen";
 
 const lastPage = 5;
 
@@ -86,7 +86,7 @@ export function NavigationShowcase() {
       </Specimen>
 
       <Specimen title="Breadcrumb" description="Where the page sits; the middle levels can collapse.">
-        <Breadcrumb data-testid="navigation-breadcrumb">
+        <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink href="#colours">Tokens</BreadcrumbLink>
@@ -112,7 +112,7 @@ export function NavigationShowcase() {
       </Specimen>
 
       <Specimen title="Navigation menu" description="Menus of links that open on hover, click or keyboard.">
-        <NavigationMenu data-testid="navigation-menu">
+        <NavigationMenu>
           <NavigationMenuList>
             {menuGroups.map((group) => (
               <NavigationMenuItem key={group.title}>
@@ -155,7 +155,7 @@ function PagedList() {
 
   return (
     <div className="grid gap-3">
-      <Pagination data-testid="navigation-pagination">
+      <Pagination>
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious

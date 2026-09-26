@@ -9,6 +9,7 @@ export const kitchenSinkSections = [
   { id: "radius", group: "tokens", title: "Radius" },
   { id: "elevation", group: "tokens", title: "Elevation" },
   { id: "layers", group: "tokens", title: "Layers" },
+  { id: "focus", group: "tokens", title: "Focus" },
   { id: "motion", group: "tokens", title: "Motion" },
   { id: "actions", group: "primitives", title: "Actions" },
   { id: "inputs", group: "primitives", title: "Inputs" },
@@ -31,7 +32,6 @@ export class KitchenSinkPage {
   readonly heading: Locator;
   readonly index: Locator;
   readonly swatches: Locator;
-  readonly motionDemo: Locator;
   readonly motionPreference: Locator;
   readonly motionReplay: Locator;
   readonly motionAnimated: Locator;
@@ -42,13 +42,18 @@ export class KitchenSinkPage {
   readonly exampleFormSubmit: Locator;
   readonly excludedPrimitives: Locator;
   readonly notifications: Locator;
+  readonly invoiceActions: Locator;
+  readonly invoiceActionsMenu: Locator;
+  readonly contextMenuArea: Locator;
+  readonly contextMenu: Locator;
+  readonly menubar: Locator;
+  readonly focusSample: Locator;
 
   constructor(private readonly page: Page) {
     this.root = page.getByTestId("kitchen-sink");
     this.heading = page.getByRole("heading", { name: "Design system", level: 1 });
     this.index = page.getByRole("navigation", { name: "Design system sections" });
     this.swatches = page.getByTestId(/^token-swatch-/);
-    this.motionDemo = page.getByTestId("motion-demo");
     this.motionPreference = page.getByTestId("motion-demo-preference");
     this.motionReplay = page.getByRole("button", { name: "Replay entrance" });
     this.motionAnimated = page.getByTestId("motion-demo-animated");
@@ -58,14 +63,23 @@ export class KitchenSinkPage {
     this.exampleFormName = this.exampleForm.getByRole("textbox", { name: "Name" });
     this.exampleFormSubmit = this.exampleForm.getByRole("button", { name: "Save" });
     this.excludedPrimitives = page.getByRole("table", {
-      name: "Registry primitives that are not installed in the design system.",
+      name: "Registry items and recipes that are not installed in the design system.",
     });
     this.notifications = page.getByRole("region", { name: /^Notifications/ });
+    this.invoiceActions = this.section("menus").getByRole("button", { name: "Invoice actions", exact: true });
+    this.invoiceActionsMenu = this.menu("Invoice actions");
+    this.contextMenuArea = page.getByTestId("menus-context-trigger");
+    this.contextMenu = page.getByTestId("menus-context");
+    this.menubar = page.getByRole("menubar");
+    this.focusSample = this.section("focus").getByRole("link", { name: "Link with the focus ring" });
   }
 
   async goto(): Promise<void> {
     await this.page.goto(kitchenSinkPath);
     await expect(this.heading).toBeVisible();
+    // A pointer move before React hydrates the page opens nothing; the motion demo sets data-reduced-motion only in the
+    // browser, so the attribute marks the page as interactive.
+    await expect(this.motionPreference).toHaveAttribute("data-reduced-motion", /^(true|false)$/);
   }
 
   section(id: KitchenSinkSectionId): Locator {
@@ -76,16 +90,20 @@ export class KitchenSinkPage {
     return this.section(id).getByRole("heading", { level: 2 });
   }
 
+  menubarTrigger(name: string): Locator {
+    return this.menubar.getByRole("menuitem", { name, exact: true });
+  }
+
+  menu(name: string): Locator {
+    return this.page.getByRole("menu", { name, exact: true });
+  }
+
   indexLink(id: KitchenSinkSectionId): Locator {
     return this.index.getByRole("link", { name: sectionTitle(id), exact: true });
   }
 
   specimen(title: string): Locator {
     return this.root.getByRole("heading", { name: title, exact: true, level: 3 }).locator("xpath=../..");
-  }
-
-  swatch(token: string): Locator {
-    return this.page.getByTestId(`token-swatch-${token}`);
   }
 
   typeRole(role: string): Locator {

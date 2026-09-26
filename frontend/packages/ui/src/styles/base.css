@@ -5,6 +5,7 @@
 
   html {
     color-scheme: light;
+    scroll-padding-top: var(--spacing-header);
   }
 
   html.dark {
@@ -14,4 +15,8 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+}
+
+html [data-sonner-toaster] {
+  font-family: var(--font-sans);
 }

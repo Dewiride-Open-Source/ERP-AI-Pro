@@ -1,3 +1,5 @@
+"use client";
+
 import { Checkbox } from "@dewiride/erp-ui/components/ui/checkbox";
 import {
   Field,
@@ -13,8 +15,9 @@ import { Label } from "@dewiride/erp-ui/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@dewiride/erp-ui/components/ui/radio-group";
 import { Slider } from "@dewiride/erp-ui/components/ui/slider";
 import { Switch } from "@dewiride/erp-ui/components/ui/switch";
+import { useState } from "react";
 
-import { Specimen, SpecimenGrid } from "../components/specimen";
+import { Specimen, SpecimenGrid } from "../specimen";
 
 const checkboxes = [
   { id: "ks-checkbox-unchecked", label: "Unchecked", props: {} },
@@ -31,6 +34,12 @@ const checkboxes = [
     props: { disabled: true, defaultChecked: true },
   },
 ] as const;
+
+const rupees = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  maximumFractionDigits: 0,
+});
 
 export function SelectionShowcase() {
   return (
@@ -62,11 +71,7 @@ export function SelectionShowcase() {
           <FieldLegend id="ks-radio-terms-legend" variant="label">
             Payment terms
           </FieldLegend>
-          <RadioGroup
-            defaultValue="net-30"
-            aria-labelledby="ks-radio-terms-legend"
-            data-testid="selection-radio-group"
-          >
+          <RadioGroup defaultValue="net-30" aria-labelledby="ks-radio-terms-legend">
             <div className="flex items-center gap-2">
               <RadioGroupItem value="immediate" id="ks-radio-immediate" />
               <Label htmlFor="ks-radio-immediate">Due on receipt</Label>
@@ -139,13 +144,7 @@ export function SelectionShowcase() {
         title="Slider"
         description="A range with a thumb for each end; arrow keys move the focused thumb."
       >
-        <Field>
-          <FieldTitle id="ks-slider-range-label">Invoice amount (₹ thousand)</FieldTitle>
-          <div role="group" aria-labelledby="ks-slider-range-label">
-            <Slider defaultValue={[20, 80]} max={100} step={5} data-testid="selection-slider" />
-          </div>
-          <FieldDescription>From ₹20,000 to ₹80,000.</FieldDescription>
-        </Field>
+        <AmountRangeSlider />
         <Field data-disabled="true">
           <FieldTitle id="ks-slider-disabled-label">Credit limit (₹ lakh)</FieldTitle>
           <div role="group" aria-labelledby="ks-slider-disabled-label">
@@ -154,5 +153,26 @@ export function SelectionShowcase() {
         </Field>
       </Specimen>
     </SpecimenGrid>
+  );
+}
+
+function AmountRangeSlider() {
+  const [range, setRange] = useState([20, 80]);
+  const [from = 0, to = 0] = range;
+
+  return (
+    <Field>
+      <FieldTitle id="ks-slider-range-label">Invoice amount (₹ thousand)</FieldTitle>
+      <div
+        role="group"
+        aria-labelledby="ks-slider-range-label"
+        aria-describedby="ks-slider-range-description"
+      >
+        <Slider value={range} onValueChange={setRange} max={100} step={5} />
+      </div>
+      <FieldDescription id="ks-slider-range-description">
+        From {rupees.format(from * 1000)} to {rupees.format(to * 1000)}.
+      </FieldDescription>
+    </Field>
   );
 }

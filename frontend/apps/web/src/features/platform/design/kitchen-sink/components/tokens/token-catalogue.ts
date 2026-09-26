@@ -226,8 +226,8 @@ export const namedSpacing = [
     name: "header",
     className: "w-header",
     value: "3.5rem",
-    utilities: "h-header, scroll-mt-header",
-    use: "Height of the app header and the offset of linked sections",
+    utilities: "h-header",
+    use: "Height of the app header, reserved for focus and anchors by the scroll-padding-top of html",
   },
   {
     name: "page",
@@ -278,52 +278,64 @@ export const layers = [
     name: "toasts",
     token: "Set by sonner",
     value: "999999999",
-    utility: "Inline style of the toast region",
+    utility: "The [data-sonner-toaster] rule of the stylesheet sonner injects",
     use: "Toast notifications, above everything else",
   },
 ] as const;
 
+export const focusTokens = [
+  {
+    token: "--focus-ring-width",
+    value: "2px",
+    use: "Thickness of the outline",
+  },
+  {
+    token: "--focus-ring-offset",
+    value: "2px",
+    use: "Gap between the element and the outline",
+  },
+] as const;
+
+export const focusUtility = {
+  utility: "focus-ring",
+  use: "Draws the outline on :focus-visible in the ring colour, so keyboard focus shows it and a click on a link or button does not",
+} as const;
+
 export const motionDurations = [
   {
-    name: "fast",
     token: "--motion-duration-fast",
     value: "150ms",
     utility: "duration-(--motion-duration-fast)",
     use: "Default of every transition utility: hover, focus and colour changes",
   },
   {
-    name: "normal",
     token: "--motion-duration-normal",
     value: "200ms",
     utility: "duration-(--motion-duration-normal)",
     use: "Toggles and short movements",
   },
   {
-    name: "slow",
     token: "--motion-duration-slow",
     value: "300ms",
     utility: "duration-(--motion-duration-slow)",
     use: "Entrances such as animate-fade-up",
   },
   {
-    name: "ambient",
     token: "--motion-duration-ambient",
     value: "6s",
-    utility: "animate-glow",
-    use: "The looping background glow of the sign-in page; plays once under reduced motion",
+    utility: "animate-glow, glow-offset",
+    use: "The looping background glow of the sign-in page; glow-offset starts a second glow half a cycle later. Plays once under reduced motion",
   },
 ] as const;
 
 export const motionEasings = [
   {
-    name: "standard",
     token: "--motion-ease-standard",
     value: "cubic-bezier(0.2, 0, 0, 1)",
     utility: "ease-standard",
     use: "Default curve of every transition utility",
   },
   {
-    name: "enter",
     token: "--motion-ease-enter",
     value: "cubic-bezier(0.16, 1, 0.3, 1)",
     utility: "ease-enter",

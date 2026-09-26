@@ -51,7 +51,9 @@ import { ScrollArea, ScrollBar } from "@dewiride/erp-ui/components/ui/scroll-are
 import { ChevronDownIcon, CopyIcon, DownloadIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 
-import { Specimen, SpecimenGrid } from "../components/specimen";
+import { Specimen, SpecimenGrid } from "../specimen";
+
+const contextLabelId = "ks-context-menu-label";
 
 export function MenusShowcase() {
   return (
@@ -62,7 +64,10 @@ export function MenusShowcase() {
       >
         <InvoiceDropdownMenu />
       </Specimen>
-      <Specimen title="Context menu" description="Right-click the area, or press the context-menu key on it.">
+      <Specimen
+        title="Context menu"
+        description="Right-click or long-press the area. With a keyboard on Windows or Linux, focus it and press the context-menu key or Shift+F10."
+      >
         <RowContextMenu />
       </Specimen>
       <Specimen
@@ -83,12 +88,12 @@ function InvoiceDropdownMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className="w-fit" data-testid="menus-dropdown-trigger">
+        <Button type="button" variant="outline" className="w-fit">
           Invoice actions
           <ChevronDownIcon data-icon="inline-end" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" data-testid="menus-dropdown">
+      <DropdownMenuContent className="w-48 max-w-(--radix-dropdown-menu-content-available-width) sm:w-56">
         <DropdownMenuLabel>INV-2026-00042</DropdownMenuLabel>
         <DropdownMenuGroup>
           <DropdownMenuItem>
@@ -106,9 +111,9 @@ function InvoiceDropdownMenu() {
               <DownloadIcon aria-hidden />
               Download
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
+            <DropdownMenuSubContent className="max-w-(--radix-dropdown-menu-content-available-width)">
               <DropdownMenuItem>PDF</DropdownMenuItem>
-              <DropdownMenuItem>JSON for the e-invoice portal</DropdownMenuItem>
+              <DropdownMenuItem>E-invoice JSON</DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
           <DropdownMenuItem disabled>Cancel e-invoice (after 24 hours)</DropdownMenuItem>
@@ -141,12 +146,20 @@ function RowContextMenu() {
   return (
     <ContextMenu>
       <ContextMenuTrigger
+        role="group"
+        tabIndex={0}
+        aria-labelledby={contextLabelId}
         data-testid="menus-context-trigger"
-        className="flex h-28 items-center justify-center rounded-lg border border-dashed bg-muted/40 p-4 text-center"
+        className="flex h-28 items-center justify-center rounded-lg border border-dashed bg-muted/40 p-4 text-center focus-ring"
       >
-        <span className="text-body text-muted-foreground">Right-click here</span>
+        <span id={contextLabelId} className="text-body text-muted-foreground">
+          Invoice row with a context menu
+        </span>
       </ContextMenuTrigger>
-      <ContextMenuContent className="w-56" data-testid="menus-context">
+      <ContextMenuContent
+        className="w-56 max-w-(--radix-context-menu-content-available-width)"
+        data-testid="menus-context"
+      >
         <ContextMenuItem>
           Open
           <ContextMenuShortcut>Enter</ContextMenuShortcut>
@@ -185,9 +198,9 @@ function EditorMenubar() {
   const [zoom, setZoom] = useState("100");
 
   return (
-    <ScrollArea className="w-full" data-testid="menus-menubar-scroll">
+    <ScrollArea className="w-full">
       <div className="w-max pb-3">
-        <Menubar data-testid="menus-menubar">
+        <Menubar>
           <MenubarMenu>
             <MenubarTrigger>File</MenubarTrigger>
             <MenubarContent>

@@ -28,8 +28,8 @@ function Swatch({ token }: { token: ColourToken }) {
     <figure data-testid={`token-swatch-${token.name}`} data-token={token.name} className="grid gap-2">
       <div data-slot="token-swatch-fill" className={`h-14 rounded-lg border ${token.fill}`} />
       <figcaption className="grid min-w-0 gap-0.5">
-        <span className="truncate text-body font-medium">{token.name}</span>
-        <code className="truncate font-mono text-caption text-muted-foreground">--{token.name}</code>
+        <span className="text-body font-medium wrap-anywhere">{token.name}</span>
+        <code className="font-mono text-caption wrap-anywhere text-muted-foreground">--{token.name}</code>
       </figcaption>
     </figure>
   );
@@ -47,11 +47,7 @@ function IntentPairings() {
       </div>
       <ul className="grid gap-3">
         {intentPairings.map((pairing) => (
-          <li
-            key={pairing.name}
-            data-testid={`token-pairing-${pairing.name}`}
-            className="grid min-w-0 gap-2 sm:grid-cols-4 sm:items-center"
-          >
+          <li key={pairing.name} className="grid min-w-0 gap-2 sm:grid-cols-4 sm:items-center">
             <span className="text-body font-medium">{pairing.name}</span>
             <span className={`rounded-lg px-3 py-2 text-body font-medium ${pairing.solid}`}>
               Solid · ₹1,250.00

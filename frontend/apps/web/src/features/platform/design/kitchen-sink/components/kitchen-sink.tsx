@@ -1,27 +1,27 @@
 import type { ReactNode } from "react";
 
-import { ActionsShowcase } from "../primitives/actions-showcase";
-import { CompositesShowcase } from "../primitives/composites-showcase";
-import { DataDisplayShowcase } from "../primitives/data-display-showcase";
-import { FeedbackShowcase } from "../primitives/feedback-showcase";
-import { InputsShowcase } from "../primitives/inputs-showcase";
-import { MenusShowcase } from "../primitives/menus-showcase";
-import { NavigationShowcase } from "../primitives/navigation-showcase";
-import { OverlaysShowcase } from "../primitives/overlays-showcase";
-import { SelectionShowcase } from "../primitives/selection-showcase";
-import { ColourSwatches } from "../tokens/colour-swatches";
-import { ElevationScale } from "../tokens/elevation-scale";
-import { LayerScale } from "../tokens/layer-scale";
-import { MotionDemo } from "../tokens/motion-demo";
-import { MotionScale } from "../tokens/motion-scale";
-import { RadiusScale } from "../tokens/radius-scale";
-import { SpacingScale } from "../tokens/spacing-scale";
-import { TypographyScale } from "../tokens/typography-scale";
-
 import { ExcludedPrimitives } from "./excluded-primitives";
 import { KitchenSinkIndex } from "./kitchen-sink-index";
 import { KitchenSinkSection } from "./kitchen-sink-section";
+import { ActionsShowcase } from "./primitives/actions-showcase";
+import { CompositesShowcase } from "./primitives/composites-showcase";
+import { DataDisplayShowcase } from "./primitives/data-display-showcase";
+import { FeedbackShowcase } from "./primitives/feedback-showcase";
+import { InputsShowcase } from "./primitives/inputs-showcase";
+import { MenusShowcase } from "./primitives/menus-showcase";
+import { NavigationShowcase } from "./primitives/navigation-showcase";
+import { OverlaysShowcase } from "./primitives/overlays-showcase";
+import { SelectionShowcase } from "./primitives/selection-showcase";
 import { kitchenSinkSections, type KitchenSinkSectionId } from "./sections";
+import { ColourSwatches } from "./tokens/colour-swatches";
+import { ElevationScale } from "./tokens/elevation-scale";
+import { FocusScale } from "./tokens/focus-scale";
+import { LayerScale } from "./tokens/layer-scale";
+import { MotionDemo } from "./tokens/motion-demo";
+import { MotionScale } from "./tokens/motion-scale";
+import { RadiusScale } from "./tokens/radius-scale";
+import { SpacingScale } from "./tokens/spacing-scale";
+import { TypographyScale } from "./tokens/typography-scale";
 
 export function KitchenSink() {
   const content: Record<KitchenSinkSectionId, ReactNode> = {
@@ -31,6 +31,7 @@ export function KitchenSink() {
     radius: <RadiusScale />,
     elevation: <ElevationScale />,
     layers: <LayerScale />,
+    focus: <FocusScale />,
     motion: (
       <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
         <MotionScale />

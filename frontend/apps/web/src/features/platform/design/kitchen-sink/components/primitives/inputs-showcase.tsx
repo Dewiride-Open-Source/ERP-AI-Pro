@@ -34,7 +34,7 @@ import { Switch } from "@dewiride/erp-ui/components/ui/switch";
 import { Textarea } from "@dewiride/erp-ui/components/ui/textarea";
 import { SearchIcon } from "lucide-react";
 
-import { Specimen, SpecimenGrid } from "../components/specimen";
+import { Specimen, SpecimenGrid } from "../specimen";
 
 import { ExampleForm } from "./example-form";
 
@@ -200,7 +200,7 @@ export function InputsShowcase() {
           <Field>
             <FieldLabel htmlFor="ks-select-default">Financial quarter</FieldLabel>
             <Select defaultValue="q2">
-              <SelectTrigger id="ks-select-default" data-testid="inputs-select">
+              <SelectTrigger id="ks-select-default">
                 <SelectValue placeholder="Choose a quarter" />
               </SelectTrigger>
               <SelectContent>

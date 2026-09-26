@@ -21,7 +21,7 @@ import {
   UnderlineIcon,
 } from "lucide-react";
 
-import { Specimen, SpecimenGrid, SpecimenRow } from "../components/specimen";
+import { Specimen, SpecimenGrid, SpecimenRow } from "../specimen";
 
 const buttonVariantNames = ["default", "outline", "secondary", "ghost", "destructive", "link"] as const;
 const buttonSizes = ["xs", "sm", "default", "lg"] as const;
@@ -64,8 +64,8 @@ export function ActionsShowcase() {
           <Button type="button" variant="outline" aria-invalid="true">
             Invalid
           </Button>
-          <Button type="button" disabled aria-busy="true" data-testid="actions-loading-button">
-            <Spinner data-icon="inline-start" />
+          <Button type="button" disabled aria-busy="true">
+            <Spinner data-icon="inline-start" aria-hidden="true" />
             Saving
           </Button>
         </SpecimenRow>

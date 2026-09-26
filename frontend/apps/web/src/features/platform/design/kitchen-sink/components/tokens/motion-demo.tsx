@@ -43,7 +43,7 @@ export function MotionDemo() {
   const [moved, setMoved] = useState(false);
 
   return (
-    <div data-testid="motion-demo" className="grid min-w-0 gap-4 rounded-xl border bg-card p-4">
+    <div className="grid min-w-0 gap-4 rounded-xl border bg-card p-4">
       <div className="grid gap-1">
         <h3 className="text-body font-medium">Live demo</h3>
         <p
@@ -67,7 +67,6 @@ export function MotionDemo() {
             type="button"
             variant="outline"
             className="w-fit"
-            data-testid="motion-demo-replay"
             onClick={() => setReplays((count) => count + 1)}
           >
             <RotateCcwIcon data-icon="inline-start" aria-hidden />
@@ -84,12 +83,7 @@ export function MotionDemo() {
 
         <div className="grid content-start gap-3">
           <div className="flex items-center gap-2">
-            <Switch
-              id="motion-demo-transition-toggle"
-              checked={moved}
-              onCheckedChange={setMoved}
-              data-testid="motion-demo-transition-toggle"
-            />
+            <Switch id="motion-demo-transition-toggle" checked={moved} onCheckedChange={setMoved} />
             <Label htmlFor="motion-demo-transition-toggle">Slide the sample</Label>
           </div>
           <div className="overflow-hidden rounded-lg border bg-muted/40 p-1">

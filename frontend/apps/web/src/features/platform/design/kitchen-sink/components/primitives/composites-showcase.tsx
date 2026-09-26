@@ -4,7 +4,7 @@ import { ThemeToggle } from "@dewiride/erp-ui/components/theme/theme-toggle";
 import { FileDropZone, type FileRejection } from "@dewiride/erp-ui/components/upload/file-drop-zone";
 import { toast } from "sonner";
 
-import { Specimen, SpecimenGrid } from "../components/specimen";
+import { Specimen, SpecimenGrid } from "../specimen";
 
 const accept = ["image/png"] as const;
 const maxSizeBytes = 1024 * 1024;

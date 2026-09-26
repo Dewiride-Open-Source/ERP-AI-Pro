@@ -15,19 +15,17 @@ export function MotionScale() {
       <Table data-testid="motion-tokens">
         <TableHeader>
           <TableRow>
-            <TableHead>Token</TableHead>
-            <TableHead>Value</TableHead>
-            <TableHead>Used by</TableHead>
+            <TableHead className="whitespace-normal">Token and value</TableHead>
+            <TableHead className="whitespace-normal">Used by</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {[...motionDurations, ...motionEasings].map((token) => (
             <TableRow key={token.token}>
               <TableCell className="align-top whitespace-normal">
-                <code className="font-mono">{token.token}</code>
+                <code className="font-mono">{token.token}</code> · {token.value}
                 <span className="block text-caption text-muted-foreground">{token.utility}</span>
               </TableCell>
-              <TableCell className="align-top whitespace-normal">{token.value}</TableCell>
               <TableCell className="align-top whitespace-normal">{token.use}</TableCell>
             </TableRow>
           ))}

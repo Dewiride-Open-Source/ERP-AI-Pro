@@ -108,7 +108,9 @@ async function captureElement(target: Locator, file: string): Promise<void> {
 
 function screenshotPath(testInfo: TestInfo, name: string, theme: Theme): string {
   const spec = (testInfo.titlePath[0] ?? "unknown").replaceAll("\\", "/").replace(/\.spec\.ts$/, "");
-  return join(screenshotsRoot, spec, `${slug(name)}--${testInfo.project.name}--${theme}.png`);
+  // --repeat-each runs the copies of a test side by side, and two of them writing one file fail with EBUSY on Windows.
+  const repeat = testInfo.repeatEachIndex > 0 ? `--repeat${testInfo.repeatEachIndex}` : "";
+  return join(screenshotsRoot, spec, `${slug(name)}--${testInfo.project.name}--${theme}${repeat}.png`);
 }
 
 function slug(value: string): string {

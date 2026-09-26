@@ -43,6 +43,13 @@ export const kitchenSinkSections = [
     description: "The stacking order of sticky, overlay and notification layers.",
   },
   {
+    id: "focus",
+    group: "tokens",
+    title: "Focus",
+    description:
+      "The keyboard focus indicator of every control the design system does not generate: an outline in the ring colour, drawn outside the element.",
+  },
+  {
     id: "motion",
     group: "tokens",
     title: "Motion",
@@ -111,7 +118,7 @@ export const kitchenSinkSections = [
     group: "primitives",
     title: "Excluded primitives",
     description:
-      "Registry primitives that are not installed, why, and the roadmap item that decides whether they arrive.",
+      "Registry items and recipes that are not installed, why, and the roadmap item that decides whether they arrive.",
   },
 ] as const;
 

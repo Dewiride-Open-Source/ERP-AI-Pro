@@ -2,13 +2,23 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { typeRoles } from "@dewiride/erp-config/eslint/type-roles";
+import { typeRoles as lintedTypeRoles } from "@dewiride/erp-config/eslint/type-roles";
 
-import { cn } from "./utils.ts";
+import { cn, typeRoles } from "./utils.ts";
 
-const typography = readFileSync(new URL("../styles/tokens/typography.css", import.meta.url), "utf8");
+function tokenNames(file: string, namespace: string): string[] {
+  const css = readFileSync(new URL(`../styles/tokens/${file}`, import.meta.url), "utf8");
+  const declaration = new RegExp(`^\\s*--${namespace}-([a-z0-9]+):`, "gm");
 
-const declaredRoles = [...typography.matchAll(/^\s*--text-([a-z]+):/gm)].map((match) => match[1]);
+  return [...css.matchAll(declaration)].map((match) => match[1] ?? "");
+}
+
+const declaredRoles = tokenNames("typography.css", "text");
+
+test("TypeRoles_TypographyTokensCnAndLintRule_NameTheSameRoles", () => {
+  assert.deepEqual([...typeRoles].sort(), [...declaredRoles].sort());
+  assert.deepEqual([...lintedTypeRoles].sort(), [...declaredRoles].sort());
+});
 
 test("cn_TypeRoleAfterASize_ReplacesTheSize", () => {
   for (const role of declaredRoles) {
@@ -17,7 +27,9 @@ test("cn_TypeRoleAfterASize_ReplacesTheSize", () => {
 });
 
 test("cn_SizeAfterATypeRole_ReplacesTheRole", () => {
-  assert.equal(cn("text-title", "text-sm"), "text-sm");
+  for (const role of declaredRoles) {
+    assert.equal(cn(`text-${role}`, "text-sm"), "text-sm");
+  }
 });
 
 test("cn_TypeRoleBesideATextColour_KeepsBoth", () => {
@@ -26,6 +38,30 @@ test("cn_TypeRoleBesideATextColour_KeepsBoth", () => {
   }
 });
 
-test("TypeRoles_TypographyTokensAndLintRule_NameTheSameRoles", () => {
-  assert.deepEqual([...declaredRoles].sort(), [...typeRoles].sort());
+test("cn_NamedSpacingTokens_MergeWithTheNumericScale", () => {
+  const names = tokenNames("layout.css", "spacing");
+  assert.ok(names.length > 0);
+  for (const name of names) {
+    assert.equal(cn(`px-${name}`, "px-4"), "px-4");
+    assert.equal(cn("gap-4", `gap-${name}`), `gap-${name}`);
+    assert.equal(cn(`h-${name}`, "h-auto"), "h-auto");
+  }
+});
+
+test("cn_NamedContainerTokens_MergeWithTheMaxWidthScale", () => {
+  const names = tokenNames("layout.css", "container");
+  assert.ok(names.length > 0);
+  for (const name of names) {
+    assert.equal(cn(`max-w-${name}`, "max-w-6xl"), "max-w-6xl");
+    assert.equal(cn("max-w-6xl", `max-w-${name}`), `max-w-${name}`);
+  }
+});
+
+test("cn_NamedEasingTokens_MergeWithTheEasingScale", () => {
+  const names = tokenNames("motion.css", "ease");
+  assert.ok(names.length > 0);
+  for (const name of names) {
+    assert.equal(cn(`ease-${name}`, "ease-in-out"), "ease-in-out");
+    assert.equal(cn("ease-linear", `ease-${name}`), `ease-${name}`);
+  }
 });

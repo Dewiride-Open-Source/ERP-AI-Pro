@@ -7,11 +7,7 @@ export function TypographyScale() {
         <h3 className="text-body font-medium">Families and weights</h3>
         <ul className="grid gap-3">
           {fontFamilies.map((family) => (
-            <li
-              key={family.name}
-              data-testid={`font-family-${family.name}`}
-              className="grid min-w-0 gap-2 rounded-xl border bg-card p-4"
-            >
+            <li key={family.name} className="grid min-w-0 gap-2 rounded-xl border bg-card p-4">
               <p className="text-caption text-muted-foreground">
                 <code className="font-mono">{family.className}</code> · {family.use}
               </p>
@@ -53,10 +49,7 @@ export function TypographyScale() {
             The sans family turns on tabular figures, so amounts line up digit for digit in columns.
           </p>
         </div>
-        <ul
-          data-testid="type-tabular-numerals"
-          className="grid w-fit gap-1 rounded-xl border bg-card p-4 text-right text-body"
-        >
+        <ul className="grid w-fit gap-1 rounded-xl border bg-card p-4 text-right text-body">
           {tabularAmounts.map((amount) => (
             <li key={amount}>{amount}</li>
           ))}
