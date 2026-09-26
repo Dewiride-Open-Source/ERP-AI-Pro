@@ -9,7 +9,8 @@ internal sealed class RateLimiterOptionsSetup(IOptions<RateLimitingOptions> opti
     public void Configure(RateLimiterOptions limiter)
     {
         limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-        limiter.OnRejected = (context, _) => RateLimitRejection.WriteAsync(context);
+        var actorSegment = options.Value.ActorWindow / options.Value.ActorSegmentsPerWindow;
+        limiter.OnRejected = (context, _) => RateLimitRejection.WriteAsync(context, actorSegment);
         if (options.Value.Enabled)
         {
             limiter.GlobalLimiter = GlobalRateLimiter.Create(options.Value);

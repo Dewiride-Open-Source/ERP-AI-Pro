@@ -7,15 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
 
+// A rejected sliding-window lease in .NET 10 carries no RetryAfter, so the caller supplies an estimate used when the lease reports none.
 internal static class RateLimitRejection
 {
-    public static async ValueTask WriteAsync(OnRejectedContext context)
+    public static async ValueTask WriteAsync(OnRejectedContext context, TimeSpan estimatedRetryAfter)
     {
         var httpContext = context.HttpContext;
-        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-        {
-            httpContext.Response.Headers.RetryAfter = RetryAfterSeconds(retryAfter).ToString(CultureInfo.InvariantCulture);
-        }
+        var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var reported) ? reported : estimatedRetryAfter;
+        httpContext.Response.Headers.RetryAfter = RetryAfterSeconds(retryAfter).ToString(CultureInfo.InvariantCulture);
 
         await httpContext.RequestServices.GetRequiredService<IProblemDetailsService>().TryWriteAsync(new ProblemDetailsContext
         {
