@@ -7,6 +7,7 @@ import { backendRoot, fail, generate, generatedRoot, lockFileName, logFileName, 
 
 const snapshotProject = "Tests/Host/Dewiride.Erp.Host.Api.IntegrationTests/Dewiride.Erp.Host.Api.IntegrationTests.csproj";
 const snapshotFilter = "*OpenApiSnapshotTests";
+const testHostVariables = ["ERP_TEST_SQL_CONNECTION", "ERP_TEST_BLOB_EMULATOR_HOST"];
 
 const { values } = parseArgs({
   options: {
@@ -21,8 +22,11 @@ if (values.help) {
 }
 
 if (!values["skip-snapshot"]) {
-  if (!process.env.ERP_TEST_SQL_CONNECTION) {
-    fail("ERP_TEST_SQL_CONNECTION is not set, so the API test host cannot start to refresh docs/openapi/erp.json. Set it (see docs/guides/testing.md) or pass --skip-snapshot.");
+  const missing = testHostVariables.filter((name) => !process.env[name]);
+  if (missing.length > 0) {
+    fail(
+      `${new Intl.ListFormat("en", { type: "conjunction" }).format(missing)} ${missing.length === 1 ? "is" : "are"} not set, so the API test host cannot start to refresh docs/openapi/erp.json. Set ${missing.length === 1 ? "it" : "them"} (see docs/guides/testing.md) or pass --skip-snapshot.`,
+    );
   }
 
   console.log("▶ refreshing docs/openapi/erp.json from the API test host");

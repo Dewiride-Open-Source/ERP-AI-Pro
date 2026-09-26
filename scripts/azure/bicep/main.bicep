@@ -19,6 +19,18 @@ param developmentKeyVaultName string
 @maxLength(24)
 param productionKeyVaultName string
 
+@minLength(3)
+@maxLength(24)
+param developmentStorageAccountName string
+
+@minLength(3)
+@maxLength(63)
+param attachmentsContainerName string = 'attachments'
+
+@minValue(7)
+@maxValue(365)
+param developmentStorageDeleteRetentionDays int = 7
+
 @minLength(36)
 @maxLength(36)
 param operatorPrincipalId string
@@ -40,6 +52,7 @@ var roleDefinitionIds = {
   keyVaultCryptoUser: '12338af0-0e69-4776-bea7-57ae8d297424'
   keyVaultCryptoOfficer: '14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
   keyVaultCertificatesOfficer: 'a4417e6f-fecd-4de8-b567-7b0420556985'
+  storageBlobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 }
 
 var configurationStoreRoleAssignments RoleAssignment[] = concat(
@@ -126,6 +139,25 @@ var productionKeyVaultRoleAssignments RoleAssignment[] = concat(
       ]
 )
 
+var developmentStorageRoleAssignments RoleAssignment[] = concat(
+  [
+    {
+      principalId: operatorPrincipalId
+      principalType: 'User'
+      roleDefinitionId: roleDefinitionIds.storageBlobDataContributor
+    }
+  ],
+  empty(developersGroupPrincipalId)
+    ? []
+    : [
+        {
+          principalId: developersGroupPrincipalId
+          principalType: 'Group'
+          roleDefinitionId: roleDefinitionIds.storageBlobDataContributor
+        }
+      ]
+)
+
 module configurationStore 'modules/configuration-store.bicep' = {
   name: 'configuration-store'
   params: {
@@ -157,7 +189,23 @@ module productionKeyVault 'modules/key-vault.bicep' = {
   }
 }
 
+module developmentStorageAccount 'modules/storage-account.bicep' = {
+  name: 'storage-account-development'
+  params: {
+    name: developmentStorageAccountName
+    location: location
+    sku: 'Standard_LRS'
+    tags: tags
+    containerName: attachmentsContainerName
+    deleteRetentionDays: developmentStorageDeleteRetentionDays
+    roleAssignments: developmentStorageRoleAssignments
+  }
+}
+
 output configurationStoreEndpoint string = configurationStore.outputs.endpoint
 output configurationStoreId string = configurationStore.outputs.id
 output developmentKeyVaultUri string = developmentKeyVault.outputs.uri
 output productionKeyVaultUri string = productionKeyVault.outputs.uri
+output developmentAttachmentsBlobEndpoint string = developmentStorageAccount.outputs.blobEndpoint
+output developmentStorageAccountId string = developmentStorageAccount.outputs.id
+output developmentAttachmentsContainerId string = developmentStorageAccount.outputs.containerId

@@ -7,5 +7,10 @@
     "key": "Erp:Platform:Database:ConnectionString",
     "secret": "Erp--Platform--Database--ConnectionString",
     "labels": ["local-dev"]
+  },
+  {
+    "key": "Erp:Platform:Attachments:EncryptionKey",
+    "secret": "Erp--Platform--Attachments--EncryptionKey",
+    "labels": ["local-dev"]
   }
 ]

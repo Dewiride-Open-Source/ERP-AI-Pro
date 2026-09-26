@@ -13,20 +13,28 @@ export const flagPattern = /^Erp\.Modules\.[A-Z][A-Za-z0-9]*\.[A-Z][A-Za-z0-9]*(
 export const secretPattern = /^Erp--[A-Z][A-Za-z0-9]*--[A-Z][A-Za-z0-9]*--[A-Z][A-Za-z0-9]*$/;
 
 const bootstrapOnlyPrefix = "Erp:Platform:Configuration:";
-const hostLocalKeys = new Set(["Erp:Platform:Host:KnownNetworks"]);
-const entraOwnedKeys = new Set(["Erp:Platform:Identity:TenantId", "Erp:Platform:Identity:ClientId"]);
-const secretLikeSettingPattern = /(Secret|Password|Pwd|Token|ConnectionString|ApiKey|AccessKey|PrivateKey|Certificate)$/i;
+const hostLocalKeys = new Set(["Erp:Platform:Host:KnownNetworks", "Erp:Platform:Attachments:EmulatorHost"]);
+const scriptOwnedKeys: { script: string; keys: ReadonlySet<string> }[] = [
+  { script: "scripts/azure/entra.sh", keys: new Set(["Erp:Platform:Identity:TenantId", "Erp:Platform:Identity:ClientId"]) },
+  { script: "scripts/azure/provision.sh", keys: new Set(["Erp:Platform:Attachments:BlobServiceUri"]) },
+];
+const secretLikeSettingPattern = /(Secret|Password|Pwd|Token|ConnectionString|ApiKey|AccessKey|PrivateKey|Certificate|EncryptionKeys?)$/i;
 const controlCharacterPattern = /[\u0000-\u001f\u007f]/;
 const azureHostSuffixes: { name: string; suffix: string }[] = [
   { name: "a store endpoint", suffix: ".azconfig.io" },
   { name: "a vault address", suffix: ".vault.azure.net" },
   { name: "an Azure SQL host", suffix: ".database.windows.net" },
+  { name: "a blob endpoint", suffix: ".blob.core.windows.net" },
 ];
 const identifierPatterns: { name: string; pattern: RegExp }[] = [
   { name: "a connection string", pattern: /(^|[;\s])(Endpoint|Server|Data Source|AccountKey|SharedAccessKey)=/i },
-  { name: "a credential", pattern: /(^|[;\s])(Password|Pwd|Secret|ClientSecret|ApiKey|Token|sig)=/i },
+  { name: "a credential", pattern: /(^|[;\s&?])(Password|Pwd|Secret|ClientSecret|ApiKey|Token|sig)=/i },
   { name: "a GUID", pattern: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i },
 ];
+
+function owningScript(key: string): string | undefined {
+  return scriptOwnedKeys.find(({ keys }) => keys.has(key))?.script;
+}
 
 function carriedIdentifier(value: string): string | undefined {
   const lowered = value.toLowerCase();
@@ -121,7 +129,8 @@ function validateSetting(file: string, key: string, value: string, problems: str
   if (!keyPattern.test(key)) problems.push(`${file}: key '${key}' is not Erp:<Domain>:<Module>:<Setting>`);
   if (key.startsWith(bootstrapOnlyPrefix)) problems.push(`${file}: key '${key}' is bootstrap-only and must not be seeded`);
   if (hostLocalKeys.has(key)) problems.push(`${file}: key '${key}' is host-local and must not be seeded`);
-  if (entraOwnedKeys.has(key)) problems.push(`${file}: key '${key}' is written by scripts/azure/entra.sh and must not be seeded`);
+  const owner = owningScript(key);
+  if (owner) problems.push(`${file}: key '${key}' is written by ${owner} and must not be seeded`);
   if (secretLikeSettingPattern.test(key.slice(key.lastIndexOf(":") + 1))) {
     problems.push(`${file}: key '${key}' names a secret; seed it as a Key Vault reference, never as a plain value`);
   }
@@ -163,7 +172,8 @@ function validateReferences(references: KeyVaultReferenceSeed[], files: SettingF
     const secret = typeof reference?.secret === "string" ? reference.secret : "";
     if (!keyPattern.test(key)) problems.push(`key-vault-references.json: key '${key}' is not Erp:<Domain>:<Module>:<Setting>`);
     if (!secretPattern.test(secret)) problems.push(`key-vault-references.json: secret '${secret}' is not Erp--<Domain>--<Module>--<Name>`);
-    if (entraOwnedKeys.has(key)) problems.push(`key-vault-references.json: key '${key}' is written by scripts/azure/entra.sh and must not be seeded`);
+    const owner = owningScript(key);
+    if (owner) problems.push(`key-vault-references.json: key '${key}' is written by ${owner} and must not be seeded`);
     if (reference?.labels !== undefined && !isLabelList(reference.labels)) {
       problems.push(`key-vault-references.json: labels of '${key}' must list ${labels.join(" and/or ")}`);
     }

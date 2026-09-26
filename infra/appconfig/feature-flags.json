@@ -6,6 +6,13 @@
         "local-dev": true,
         "production": true
       }
+    },
+    {
+      "id": "Erp.Modules.Platform.Attachments",
+      "enabled": {
+        "local-dev": true,
+        "production": true
+      }
     }
   ]
 }

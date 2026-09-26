@@ -26,6 +26,9 @@ jobs:
       - name: Start SQL Server
         id: sql
         uses: ./.github/actions/start-sql-server
+      - name: Start Azurite
+        id: azurite
+        uses: ./.github/actions/start-azurite
       - name: Set up Node.js for repository checks
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -42,6 +45,7 @@ jobs:
         working-directory: backend
         env:
           ERP_TEST_SQL_CONNECTION: ${{ steps.sql.outputs.server-connection-string }}
+          ERP_TEST_BLOB_EMULATOR_HOST: ${{ steps.azurite.outputs.emulator-host }}
         run: dotnet test --solution Dewiride.Erp.slnx --no-build --report-trx --coverage --coverage-output-format cobertura
       - name: Coverage gate
         run: node scripts/checks/coverage-gate.ts

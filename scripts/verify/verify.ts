@@ -8,6 +8,7 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const backend = join(repoRoot, "backend");
 const frontend = join(repoRoot, "frontend");
 const isWindows = process.platform === "win32";
+const backendTestVariables = ["ERP_TEST_SQL_CONNECTION", "ERP_TEST_BLOB_EMULATOR_HOST"];
 const bash = isWindows ? gitBashPath() : "bash";
 
 const { values } = parseArgs({
@@ -30,6 +31,14 @@ type Step = { name: string; cwd: string; command: string; args: string[]; env?: 
 const steps: Step[] = [];
 
 if (!values["skip-backend"]) {
+  const missing = backendTestVariables.filter((name) => !process.env[name]);
+  if (missing.length > 0) {
+    console.error(
+      `✖ ${new Intl.ListFormat("en", { type: "conjunction" }).format(missing)} ${missing.length === 1 ? "is" : "are"} not set, so the backend tests cannot create their test database and storage container. Set ${missing.length === 1 ? "it" : "them"} (see docs/guides/testing.md) or pass --skip-backend.`,
+    );
+    process.exit(1);
+  }
+
   rmSync(join(backend, "artifacts", "TestResults"), { recursive: true, force: true });
   steps.push(
     { name: "backend restore (locked)", cwd: backend, command: "dotnet", args: ["restore", "--locked-mode"] },
