@@ -1,5 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
+using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Persistence;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Storage;
 using Dewiride.Erp.BuildingBlocks.Persistence;
@@ -25,8 +26,15 @@ public sealed class SampleDatabase : IAsyncLifetime
     public async ValueTask InitializeAsync()
     {
         var services = new ServiceCollection();
+
+        // Marked as a test host, as ErpApiFactory marks its hosts: every fixture and factory in the process builds its own EF Core
+        // internal service provider, and ModuleDbContextRegistration lets only a test host log, not throw, the warning raised past twenty.
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { [$"{DatabaseOptions.SectionName}:ConnectionString"] = ConnectionString })
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"{DatabaseOptions.SectionName}:ConnectionString"] = ConnectionString,
+                [ErpConfigurationSourceResolver.SourceSetting] = ErpConfigurationSourceResolver.InMemorySource,
+            })
             .Build());
         services.AddLogging();
         services.AddSingleton<TimeProvider>(Clock);

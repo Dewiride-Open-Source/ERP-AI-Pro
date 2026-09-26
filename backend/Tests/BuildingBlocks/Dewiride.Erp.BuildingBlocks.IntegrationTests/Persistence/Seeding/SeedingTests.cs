@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
@@ -31,7 +32,11 @@ public sealed class SeedingTests(SampleDatabase database) : IClassFixture<Sample
     {
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { [$"{DatabaseOptions.SectionName}:ConnectionString"] = SqlTestDatabase.Current.ConnectionString })
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [$"{DatabaseOptions.SectionName}:ConnectionString"] = SqlTestDatabase.Current.ConnectionString,
+                [ErpConfigurationSourceResolver.SourceSetting] = ErpConfigurationSourceResolver.InMemorySource,
+            })
             .Build());
         services.AddLogging();
         services.AddErpPersistenceCore();
