@@ -3,7 +3,9 @@
   "compilerOptions": {
     "paths": {
       "@dewiride/erp-ui/*": ["./src/*"]
-    }
+    },
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
   },
   "include": ["src", "eslint.config.mjs", "postcss.config.mjs"],
   "exclude": ["node_modules"]

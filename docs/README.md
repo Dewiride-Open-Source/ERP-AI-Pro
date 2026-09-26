@@ -3,7 +3,7 @@
 | Section | Contents |
 |---|---|
 | [Roadmap](roadmap/ROADMAP.md) | generated view of `roadmap/roadmap.json`, the single source of truth for what is planned, in progress and done |
-| [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [persistence](architecture/persistence.md), [application pipeline](architecture/application-pipeline.md), [HTTP conventions](architecture/http-conventions.md), [request pipeline](architecture/request-pipeline.md), [attachments](architecture/attachments.md), [AI capabilities](architecture/ai-capabilities.md) |
+| [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [persistence](architecture/persistence.md), [application pipeline](architecture/application-pipeline.md), [HTTP conventions](architecture/http-conventions.md), [request pipeline](architecture/request-pipeline.md), [attachments](architecture/attachments.md), [design system](architecture/design-system.md), [AI capabilities](architecture/ai-capabilities.md) |
 | [Guides](guides/local-development.md) | [local development](guides/local-development.md), [testing](guides/testing.md), [adding a setting, flag or secret](guides/adding-a-setting.md), [comment policy](guides/comment-policy.md), [observability](guides/observability.md), [migrations and seeding](guides/migrations.md) |
 | [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md), [Azure bootstrap](operations/azure-bootstrap.md), [secrets runbook](operations/runbooks/secrets.md), [migrations runbook](operations/runbooks/migrations.md); the other deployment runbooks arrive with the first-deployment phase |
 | [Configuration register](configuration.md) | every configuration key, feature flag and secret name |
@@ -36,5 +36,6 @@
 | [0020](adr/0020-observability-baseline.md) | Observability baseline |
 | [0021](adr/0021-migrator-program-and-seeding.md) | The migrator program, migration tooling and seeding |
 | [0022](adr/0022-attachments-in-azure-blob-storage.md) | Attachments in Azure Blob Storage behind an application encryption envelope |
+| [0023](adr/0023-design-tokens-shared-theme-and-generated-primitives.md) | Design tokens, the shared theme stylesheet and generated primitives |
 
 New decisions use [0000-template.md](adr/0000-template.md).

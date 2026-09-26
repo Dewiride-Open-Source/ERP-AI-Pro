@@ -4,7 +4,7 @@ import { SystemInfoCard } from "./system-info-card";
 
 export function SystemInfoOverview() {
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-section">
       <SystemInfoCard />
       <RecentStartupsTable />
     </div>

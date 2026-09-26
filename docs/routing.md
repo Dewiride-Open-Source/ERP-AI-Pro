@@ -44,3 +44,4 @@ Every module route group is gated by its module flag: when the flag is disabled 
 | `/` | redirects to `/login` |
 | `/login` | sign-in card (starts `/api/auth/login` once authentication exists) |
 | `/healthz` | web container health check |
+| `/design/kitchen-sink` | design-system reference ([design system](architecture/design-system.md#kitchen-sink)): every token group, every colour token as a swatch and every installed primitive in its states, in the active theme; inside the app shell but in no navigation; available in every environment, anonymous until the authentication phase and signed-in only from then on; the page fetches no data (the shell around it still reads `GET /api/platform/features`) |

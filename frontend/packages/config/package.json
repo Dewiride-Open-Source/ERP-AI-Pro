@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "erp-unit-tests": "./cli/run-unit-tests.mjs"
+  },
   "exports": {
     "./tsconfig/base": "./tsconfig/base.json",
     "./tsconfig/nextjs": "./tsconfig/nextjs.json",
@@ -11,6 +14,10 @@
     "./eslint/next": "./eslint/next.mjs",
     "./eslint/react-library": "./eslint/react-library.mjs",
     "./eslint/node": "./eslint/node.mjs",
+    "./eslint/type-roles": {
+      "types": "./eslint/type-roles.d.mts",
+      "default": "./eslint/type-roles.mjs"
+    },
     "./prettier": "./prettier.mjs"
   },
   "dependencies": {
