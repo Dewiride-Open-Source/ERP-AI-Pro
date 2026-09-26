@@ -525,10 +525,17 @@
           "id": "backend-platform-migration-tooling-and-seeding",
           "title": "Migration tooling and seeding",
           "scope": "Provide per-context `dotnet ef` wrapper scripts (scripts/ef.ps1 and ef.sh), a CI step running `migrations has-pending-model-changes` for every context, self-contained migration bundle builds per context in CI, the one-shot migrator compose service pattern, and an idempotent ordered seeder framework verified by a test that runs seeding twice.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "node scripts/ef/ef.ts list, add, update, pending and script run dotnet ef for any discovered module or building-block DbContext from the repository root on Windows and Linux, discovering contexts from the source tree so a new context needs no script change, and node --test covers discovery and argument composition.",
+            "ci-backend.yml fails when any discovered context has pending model changes, through a single ef.ts pending --all step.",
+            "The Hosts/Migrator program applies every catalogue context's migrations in catalogue order and then runs the registered seeders; its status command exits non-zero while migrations are pending; it uses Erp:Platform:Database:MigratorConnectionString when set; integration tests prove a fresh database is migrated, a second run changes nothing and the exit codes.",
+            "The compose migrator service runs the migrator once from the API image with its own schema-rights connection and the API starts only after it completes successfully, proven by docker-build.yml against the CI SQL Server and locally by the compose smoke test; e2e.yml prepares its database with the same program.",
+            "Seeders run in declared order after all migrations and a test proves that seeding twice leaves the same rows; ADR-0021 replaces migration bundles with the migrator program and every CLAUDE.md and document sentence about bundles is updated."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-26"
         },
         {
           "id": "backend-platform-attachments-building-block",
