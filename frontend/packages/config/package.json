@@ -20,6 +20,9 @@
     },
     "./prettier": "./prettier.mjs"
   },
+  "scripts": {
+    "test:unit": "node cli/run-unit-tests.mjs \"eslint/*.test.mjs\""
+  },
   "dependencies": {
     "eslint-config-next": "catalog:",
     "eslint-config-prettier": "catalog:",

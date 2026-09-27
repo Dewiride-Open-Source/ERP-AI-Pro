@@ -37,5 +37,6 @@
 | [0021](adr/0021-migrator-program-and-seeding.md) | The migrator program, migration tooling and seeding |
 | [0022](adr/0022-attachments-in-azure-blob-storage.md) | Attachments in Azure Blob Storage behind an application encryption envelope |
 | [0023](adr/0023-design-tokens-shared-theme-and-generated-primitives.md) | Design tokens, the shared theme stylesheet and generated primitives |
+| [0024](adr/0024-frontend-structure-and-import-boundaries.md) | Frontend structure and import boundaries |
 
 New decisions use [0000-template.md](adr/0000-template.md).

@@ -48,10 +48,7 @@ function PageLink({
 
   return (
     <Button variant="outline" size="sm" asChild>
-      <Link
-        href={{ pathname: "/platform/attachments", query: { page } }}
-        data-testid={`attachments-${direction}`}
-      >
+      <Link href={`/platform/attachments?page=${page}`} data-testid={`attachments-${direction}`}>
         {content}
       </Link>
     </Button>

@@ -706,7 +706,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Owner expectation of 2026-09-27: every page in the (app) group becomes signed-in only when this item lands, including /platform/system-info, /platform/attachments and /design/kitchen-sink, which are public today only because no sign-in exists; an unauthenticated visit to any of them redirects to /login (returnUrl a local path), and the navigation shows System information and Attachments only to people holding their read permissions (platform.system-info.* and platform.attachments.files.read), with the API enforcing the same permissions."
         },
         {
           "id": "authentication-authenticated-application-shell",

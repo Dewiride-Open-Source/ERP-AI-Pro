@@ -2,12 +2,19 @@ import { ThemeToggle } from "@dewiride/erp-ui/components/theme/theme-toggle";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { navigation } from "@/features/registry";
 import { Wordmark } from "@/shared/brand/wordmark";
 import { isFeatureEnabled } from "@/shared/feature-flags/feature-flags";
 import { getFeatureFlags } from "@/shared/feature-flags/queries";
 
-export async function AppShell({ children }: { children: ReactNode }) {
+import type { NavigationEntry } from "./navigation-entry";
+
+export async function AppShell({
+  navigation,
+  children,
+}: {
+  navigation: readonly NavigationEntry[];
+  children: ReactNode;
+}) {
   const flags = await getFeatureFlags();
   const entries = navigation.filter((item) => isFeatureEnabled(flags, item.featureFlag));
   return (

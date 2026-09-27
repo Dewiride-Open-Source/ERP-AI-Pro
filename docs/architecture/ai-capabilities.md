@@ -9,7 +9,7 @@ AI is a capability of every module, not a separate product. The rules below appl
 | Pipeline | `backend/BuildingBlocks/Ai` | builds the single `IChatClient` (Azure OpenAI through `Microsoft.Extensions.AI`: function invocation, OpenTelemetry with sensitive data off, logging, optional distributed cache), `PromptLoader` for embedded `*.prompt.md` files, structured-output helpers, usage metering and audit abstractions, PII redaction |
 | Platform module | `backend/Modules/Ai/*` | assistant sessions and streaming, prompt catalogue, tool registry aggregated from module contracts, usage and cost ledger, evaluation datasets |
 | Domain AI | `backend/Modules/<Domain>/<Module>/<Feature>/Ai/<Capability>/` | one folder per capability: command or query + handler + prompt file; uses `IChatClient` only |
-| Web | `features/<domain>/<module>/<feature>/ai/` and `features/ai/` | review forms for AI suggestions, the assistant panel, per-field confidence display |
+| Web | `features/<domain>/<module>/<feature>/ai/<capability>/`, created with the capability's first file, and the AI platform's own modules under `features/ai/<module>/` | review forms for AI suggestions, the assistant panel, per-field confidence display |
 
 ## Rules
 
