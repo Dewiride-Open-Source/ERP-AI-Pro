@@ -65,3 +65,12 @@ test("cn_NamedEasingTokens_MergeWithTheEasingScale", () => {
     assert.equal(cn("ease-linear", `ease-${name}`), `ease-${name}`);
   }
 });
+
+test("cn_NamedAnimationTokens_MergeWithTheAnimationScale", () => {
+  const names = tokenNames("motion.css", "animate");
+  assert.ok(names.length > 0);
+  for (const name of names) {
+    assert.equal(cn(`animate-${name}`, "animate-none"), "animate-none");
+    assert.equal(cn("animate-spin", `animate-${name}`), `animate-${name}`);
+  }
+});

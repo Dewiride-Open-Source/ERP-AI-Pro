@@ -328,7 +328,7 @@ export function Combobox({
       <PopoverContent
         role="presentation"
         align="start"
-        className="max-h-(--radix-popover-content-available-height) w-(--radix-popover-trigger-width) gap-0 p-1 data-closed:animate-none"
+        className="max-h-(--radix-popover-content-available-height) w-(--radix-popover-trigger-width) gap-0 p-1 data-closed:animate-none!"
         onOpenAutoFocus={(event) => event.preventDefault()}
         onCloseAutoFocus={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
