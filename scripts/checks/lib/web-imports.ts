@@ -24,8 +24,8 @@ type Problem = { readonly rule: WebRule; readonly message: string };
 
 const serverOrFormsFolder = new Set(["server", "forms"]);
 
-const staticImport = /(?:^|[\n;])\s*(?:import|export)\b[^;]*?\bfrom\s*(["'])([^"']+)\1/g;
-const sideEffectImport = /(?:^|[\n;])\s*import\s*(["'])([^"']+)\1/g;
+const staticImport = /(?:^|[\n;])\s*(?:import|export)\b[^;]*?\bfrom\s*(["'])([^"'\r\n]+)\1/g;
+const sideEffectImport = /(?:^|[\n;])\s*import\s*(["'])([^"'\r\n]+)\1/g;
 const dynamicImport = /\bimport\s*\(\s*(["'`])((?:(?!\1|\$\{)[^\\\s])+)\1\s*[,)]/g;
 
 export function importViolations(files: readonly WebSourceFile[]): WebViolation[] {

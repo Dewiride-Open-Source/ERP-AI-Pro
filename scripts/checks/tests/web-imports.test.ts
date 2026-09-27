@@ -119,6 +119,30 @@ const cases: readonly Case[] = [
     expected: ["I1"],
   },
   {
+    condition: "DynamicImportAfterAMediaTypeWildcardInJsxText",
+    source: systemInfoComponent,
+    content: [
+      "export function UploadHint() {",
+      "  return <p>Accepted: image/*, */* and src/*.ts up to 25 MB.</p>;",
+      "}",
+      `export const loadQueries = () => import("${attachmentsQueries}");`,
+      "",
+    ].join("\n"),
+    expected: ["I1"],
+  },
+  {
+    condition: "ImportAfterAStringEndingWithFrom",
+    source: systemInfoComponent,
+    content: `export const columns = [\n  { header: "Valid from" },\n];\nimport { listAttachments } from "${attachmentsQueries}";\n`,
+    expected: ["I1"],
+  },
+  {
+    condition: "ReExportAfterAStringEndingWithFrom",
+    source: systemInfoComponent,
+    content: `export const hint = "Copy from";\nexport * from "${attachmentsQueries}";\n`,
+    expected: ["I1"],
+  },
+  {
     condition: "IndexReExportingItsOwnQueries",
     source: "features/platform/attachments/index.ts",
     content: 'export { listAttachments } from "./files/server/queries";\n',

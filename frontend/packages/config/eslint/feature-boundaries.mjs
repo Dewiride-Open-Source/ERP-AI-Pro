@@ -115,10 +115,17 @@ const httpPropertyRestrictions = ["globalThis", "window", "self"].flatMap((objec
   httpGlobals.map((property) => ({ object, property, message: httpMessage })),
 );
 
-const objectHrefs = [
-  'JSXAttribute[name.name="href"] > JSXExpressionContainer > ObjectExpression',
-  'JSXAttribute[name.name="href"] > JSXExpressionContainer :matches(TSAsExpression, TSSatisfiesExpression, TSNonNullExpression, ConditionalExpression, LogicalExpression) > ObjectExpression',
-].map((selector) => ({
+const hrefWrapper =
+  ":matches(TSAsExpression, TSSatisfiesExpression, TSNonNullExpression, ConditionalExpression, LogicalExpression)";
+const deepestHrefWrapping = 3;
+
+const objectHrefs = Array.from({ length: deepestHrefWrapping + 1 }, (_, wrapping) =>
+  [
+    'JSXAttribute[name.name="href"] > JSXExpressionContainer',
+    ...Array.from({ length: wrapping }, () => hrefWrapper),
+    "ObjectExpression",
+  ].join(" > "),
+).map((selector) => ({
   selector,
   message: "Write href as a route string so typed routes check it; an object href is not checked.",
 }));

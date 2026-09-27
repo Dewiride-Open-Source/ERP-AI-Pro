@@ -1,6 +1,7 @@
 type ScanState = { braceDepth: number; readonly templateBraceDepths: number[] };
 
 const regexAfterPunctuation = new Set("(,=:[!&|?{};+-*%<>~^");
+const blockCommentAfterPunctuation = new Set("{([,;=!&|?");
 const regexAfterKeyword = /(?:^|[^\w$])(?:return|typeof|instanceof|in|of|new|delete|void|throw|case|do|else|yield|await)$/;
 
 export function withoutComments(source: string): string {
@@ -23,11 +24,15 @@ function endOfComment(source: string, index: number): number | undefined {
     const end = source.indexOf("\n", index);
     return end === -1 ? source.length : end;
   }
-  if (source[index + 1] === "*") {
+  if (source[index + 1] === "*" && opensBlockComment(source[index - 1])) {
     const end = source.indexOf("*/", index + 2);
     return end === -1 ? source.length : end + 2;
   }
   return undefined;
+}
+
+function opensBlockComment(preceding: string | undefined): boolean {
+  return preceding === undefined || /\s/.test(preceding) || blockCommentAfterPunctuation.has(preceding);
 }
 
 function endOfToken(source: string, index: number, preceding: string, state: ScanState): number {
