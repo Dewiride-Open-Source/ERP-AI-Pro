@@ -589,10 +589,19 @@
           "id": "web-foundation-feature-folder-conventions-and-routing",
           "title": "Feature folder conventions and routing",
           "scope": "Establish frontend/apps/web/src/features/<domain>/<module>/<feature>/{components,server,forms,ai} with app/ kept routing-only under (auth) and (app) route groups, typedRoutes, a proxy.ts scaffold, a fetch wrapper skeleton over frontend/packages/api-client with ProblemDetails mapping, and an ESLint boundary rule that fails on cross-feature deep imports.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "done",
+          "acceptance": [
+            "node scripts/checks/feature-boundaries.ts fails, naming the file and the rule, on a non-special file or a private folder under apps/web/src/app, a page or layout outside the (auth) and (app) groups other than the root layout and the root redirect, a module-root file other than index.ts and nav.ts, a feature subfolder outside components, server, forms, hooks and ai, a server/actions.ts without a leading use server or a server/queries.ts without server-only, a module index.ts exporting from its server or forms folders, and any static, re-export, side-effect or dynamic import that breaks the import matrix (another module's internals, a domain _shared from another domain, app/ importing anything but a module index, the registry or shared, shared importing features, anything importing app/); node --test proves each case and the check passes on the tree",
+            "pnpm lint fails on a deep alias import into another module, a relative import that leaves its module other than into its domain _shared, an app/ import outside its allow-list, an HTML element rendered by an app/ file other than html and body in the root layout and global error, a value import from the API client or a fetch or XMLHttpRequest reference outside src/shared/api, an object href, and a packages/ui import of apps/web; unit tests in @dewiride/erp-config prove each case through the full preset",
+            "pnpm typecheck generates the route types before compiling, so on a checkout without .next a link, redirect or router push naming a route that app/ does not define fails; the attachments pagination link is a checked string and the attachments page is typed with PageProps",
+            "Every file under apps/web/src/app only composes: loading skeletons, the sign-in frame and the error, global-error and root not-found content come from a module index or shared/layout, shared/ imports nothing from features/, and the Playwright specs for login, navigation, system information, attachments and the kitchen sink pass unchanged on Chromium and one mobile project",
+            "The content security policy and forwarded-header handling of proxy.ts are pure modules with unit tests: unsafe-eval only in development, upgrade-insecure-requests only for https or forwarded https, and every client-sent x-forwarded and forwarded header removed from the headers the API rewrite forwards; ADR-0024 records the structure and import boundaries"
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-27",
+          "completedOn": "2026-09-27",
+          "notes": "Delivered (ADR-0024): scripts/checks/feature-boundaries.ts over lib/web-source.ts (git ls-files listing), lib/code-text.ts (comment blanking), lib/web-structure.ts (S1-S6) and lib/web-imports.ts (I1-I7, import() forms included), proven by scripts/checks/tests/web-{structure,imports,source}.test.ts; ESLint featureBoundaryConfigs() in packages/config/eslint/feature-boundaries.mjs (L1-L5, X1-X2 incl. import() of the API client and in app/) plus L6 in react-library, proven through the full presets by feature-boundaries.test.mjs; app/ reduced to composition (module skeletons, AuthShell, ErrorPage, NotFoundPage, ApplicationFailure; AppShell takes navigation as a prop); typecheck = next typegen && tsc --noEmit; PageProps and a string pagination href; proxy.ts CSP and forwarded-header stripping in pure unit-tested modules; both error boundaries use the stable retry prop and global-error loads the global stylesheet and fonts. Scope reading: the proxy.ts scaffold and the fetch wrapper with ProblemDetails mapping already existed (client.ts and problem-details.ts from ADR-0017, upload.ts from ADR-0022), so only their tests were added; the import boundary is the module, not each feature folder (ADR-0007). Follow-ups recorded on web-foundation-feedback-motion-and-accessibility-baseline (theme in global-error, error-page and skeleton specs)."
         },
         {
           "id": "web-foundation-forms-and-validation-kit",
@@ -621,7 +630,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): Toaster (sonner) and TooltipProvider are already mounted once in the root layout and the web app depends on sonner, so toast patterns build on that mount; app/global-error.tsx is not styled yet (Next.js renders it without the global stylesheet and fonts) and belongs here; the axe step should cover /design/kitchen-sink, whose findings of 2026-09-26 (Item lists, focusable tables, menubar and tab-panel focus, hover contrast) were fixed there; motion tokens and the reduced-motion safety net live in packages/ui/src/styles/tokens/motion.css."
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): Toaster (sonner) and TooltipProvider are already mounted once in the root layout and the web app depends on sonner, so toast patterns build on that mount; the axe step should cover /design/kitchen-sink, whose findings of 2026-09-26 (Item lists, focusable tables, menubar and tab-panel focus, hover contrast) were fixed there; motion tokens and the reduced-motion safety net live in packages/ui/src/styles/tokens/motion.css. From web-foundation-feature-folder-conventions-and-routing (ADR-0024): app/global-error.tsx now imports the global stylesheet and the Geist fonts but runs without the theme provider, so it renders in the light theme for everyone; applying the person's chosen theme there, restyling ErrorPage, ApplicationFailure and the two loading skeletons, adding the (app)-level error.tsx and loading.tsx, and Playwright specs for the error pages and skeletons (no spec reaches them yet) belong here."
         },
         {
           "id": "web-foundation-e2e-harness-matrix",
@@ -698,7 +707,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Owner expectation of 2026-09-27: every page in the (app) group becomes signed-in only when this item lands, including /platform/system-info, /platform/attachments and /design/kitchen-sink, which are public today only because no sign-in exists; an unauthenticated visit to any of them redirects to /login (returnUrl a local path), and the navigation shows System information and Attachments only to people holding their read permissions (platform.system-info.* and platform.attachments.files.read), with the API enforcing the same permissions."
         },
         {
           "id": "authentication-authenticated-application-shell",

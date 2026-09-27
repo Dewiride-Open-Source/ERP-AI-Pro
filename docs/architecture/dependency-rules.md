@@ -1,6 +1,6 @@
 # Dependency rules
 
-Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backend/build/BannedPackages.targets` and `scripts/checks/feature-boundaries.ts`.
+Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backend/build/BannedPackages.targets`, `scripts/checks/feature-boundaries.ts` and the ESLint rules of `frontend/packages/config/eslint/feature-boundaries.mjs` and `react-library.mjs`.
 
 ## Backend assemblies
 
@@ -67,7 +67,56 @@ The object providers for framework namespaces (`Microsoft.AspNetCore`, `Microsof
 
 ## Frontend
 
-- `src/app/**` imports only `@/features/<domain>/<module>` (the module `index.ts`) and `@/shared/**`.
-- `src/features/<domain>/<module>/**` never imports another module's internals; cross-module UI goes through the other module's `index.ts`.
-- `packages/ui` never imports from `apps/web`.
-- `packages/api-client/src/generated` is written only by `scripts/api-client/generate.ts`; `scripts/api-client/drift.ts` fails when it differs from what `docs/openapi/erp.json` generates.
+Decided in ADR-0024. Paths are relative to `frontend/apps/web/src/`. The boundary unit is the module, `features/<domain>/<module>/`: its `index.ts` is its public surface and re-exports the components `app/` renders (page components, loading skeletons) and the `nav` manifest, never Server Functions, queries or schemas (I7). The features of one module import each other by relative path.
+
+### Who may import what
+
+| From ↓ · To → | a module's public surface `@/features/<d>/<m>` | another module's internals | `features/registry.ts` | a domain's `_shared/` | `shared/**` | `app/**` | packages |
+|---|---|---|---|---|---|---|---|
+| `app/**` | yes | no | yes | no | yes | no | `next`, `next/*`, `react`; the root `app/layout.tsx` and `app/global-error.tsx` also `@dewiride/erp-ui/*` and `geist/*`. Every import, `import()` included, uses the `@/` alias, never a relative path |
+| a module's files `features/<d>/<m>/**` | yes, through the alias | no; its own files by relative path only | no | its own domain's, by relative path | yes | no | approved packages |
+| `features/<d>/_shared/**` | yes | no | no | its own files | yes | no | approved packages |
+| `features/registry.ts` | yes | no | – | no | yes | no | approved packages |
+| `shared/**` | no | no | no | no | yes | no | approved packages |
+| `proxy.ts`, `instrumentation.ts`, `instrumentation.node.ts` | no | no | no | no | yes | no | approved packages |
+
+Outside `shared/api/**` no file imports a value from `@dewiride/erp-api-client` (types only) or uses `fetch`, `XMLHttpRequest` or `EventSource`, so `shared/api/client.ts` and `shared/api/upload.ts` stay the only code that calls the API. `packages/ui` never imports from `apps/web`.
+
+### Rule register
+
+Two enforcers share this register, and the test tables follow it:
+
+- **Script**: `node scripts/checks/feature-boundaries.ts` (`scripts/checks/lib/web-source.ts` lists the files, `scripts/checks/lib/web-structure.ts` checks S1–S6, `scripts/checks/lib/web-imports.ts` checks I1–I7, `scripts/checks/lib/code-text.ts` blanks comments first), the authority, run by the "Feature boundaries" step of `ci-frontend.yml` and by `scripts/verify/verify.ts`. It reads every file under `frontend/apps/web/src` that git tracks or would add (`git ls-files --cached --others --exclude-standard`; no folder name is skipped, non-code files are included), resolves `@/` and relative specifiers to normalised paths with case ignored, reads static imports, re-exports, `export *`, side-effect imports, `import()` (a quoted or substitution-free template specifier, with or without an options argument) and `typeof import()` (package specifiers are left to ESLint), prints `<path>: <rule> <message>` for each finding and exits 1. Proven by `scripts/checks/tests/web-structure.test.ts` and `web-imports.test.ts` over in-memory file lists and `web-source.test.ts` over a temporary git repository.
+- **ESLint**: the named objects `erp/feature-boundaries/{source, module-depth-0 … module-depth-8, shared, shared-api, app, app-document}` that `featureBoundaryConfigs()` (`frontend/packages/config/eslint/feature-boundaries.mjs`) adds to the `next` preset after its base rules, and the `no-restricted-imports` entry of the `react-library` preset; core `no-restricted-imports`, `no-restricted-syntax`, `no-restricted-globals` and `no-restricted-properties` only, over the literal text of each specifier and the syntax tree. `pnpm lint` fails on them and editors show them as the code is typed. A later flat-config object replaces a rule's options instead of merging them, so every object carries the complete option lists of its scope, the type-role restrictions of ADR-0023 included. Proven by `frontend/packages/config/eslint/feature-boundaries.test.mjs`, which lints in-memory code with ESLint's `Linter` through the full `next` and `react-library` presets.
+
+A new or changed rule changes this register, its enforcer and the matching test table in the same change.
+
+| Id | Rule | Enforced by |
+|---|---|---|
+| S1 | A file in `app/` is a stable Next.js special file: `layout`, `page`, `loading`, `error`, `not-found`, `template` or `default` as `.tsx`, `route.ts`, or a metadata file (`icon`, `apple-icon`, `opengraph-image` and `twitter-image` with their `.alt.txt`, and `sitemap`, in any segment; `favicon.ico`, `robots` and `manifest` at the root only); `global-error.tsx` at the root only. Any other file, a wrong extension (`page.ts`, `route.tsx`) and the experimental `forbidden`, `unauthorized` and `global-not-found` (refused until an ADR adopts them) fail. | script |
+| S2 | A folder in `app/` is a route segment: a static name, `(group)`, `[param]`, `[...param]`, `[[...param]]` or `@slot`; no private `_folder` and no intercepting route (`(.)segment`). | script |
+| S3 | The root of `app/` holds only `layout.tsx`, the redirect `page.tsx`, `error.tsx`, `global-error.tsx`, `not-found.tsx`, metadata files, the route groups `(auth)` and `(app)` (the only groups at the root; further groups may nest inside them) and folders that hold only `route.ts` files (`healthz/`), so every page and layout below the root, and every file that renders UI around them, lives inside a group. | script |
+| S4 | `features/` holds `registry.ts` and domain folders; a domain holds module folders and an optional `_shared/`; a module root holds `index.ts` (required), `nav.ts` (optional) and feature folders; a feature holds only `components/`, `server/`, `forms/`, `hooks/` and `ai/`, and no loose files. | script |
+| S5 | `server/` holds only `actions.ts`, whose code opens with the `"use server"` directive (leading comments allowed), and `queries.ts`, which contains `import "server-only"`; `forms/` holds only `<name>.schema.ts` files and their `<name>.schema.test.ts`; `hooks/` holds only `use-<name>.ts` or `use-<name>.tsx` files and their `use-<name>.test.ts`; a test needs its subject beside it; `ai/` holds only `<capability>/` folders. | script |
+| S6 | Folders and files under `features/` are kebab-case (`_shared` only directly under a domain); in `app/`, static segment, group and slot names are kebab-case and dynamic segment names camelCase (`[invoiceId]`); the root of `shared/` holds only concern folders. | script |
+| I1 | A module's internals are imported only from inside that module; everything else imports `@/features/<domain>/<module>` (or its `/index`). | script; ESLint L1 (alias) and L2 (relative) |
+| I2 | A domain's `_shared/` is imported only from that domain's modules and from itself. | script; ESLint L1 refuses the alias form everywhere and L2 lets a module reach its own domain's `_shared/` by relative path only |
+| I3 | `app/` imports, inside `src/`, only a module's public surface, `@/features/registry` and `@/shared/**`, through the `@/` alias and never by a relative path. | script; ESLint L4 |
+| I4 | `features/registry.ts` is imported only from `app/`. | script; ESLint L3 (from `shared/`) |
+| I5 | `shared/**` and every file outside `app/`, `features/` and `shared/` (`proxy.ts`, `instrumentation.ts`, `instrumentation.node.ts`) import nothing from `features/`. | script; ESLint L3 (for `shared/**`) |
+| I6 | Nothing outside `app/` imports `app/**`. | script; ESLint L1 (the `@/app` alias) and L2 (a relative path out of a module) |
+| I7 | A module's `index.ts` imports and re-exports nothing from its own `server/` or `forms/` folders, so no Server Function, query or schema becomes part of its public surface. | script |
+| L1 | In all of `src/`: `@/features/<d>/<m>/` followed by anything but `index`, `@/features/<d>/_shared/**`, `@/app/**`, any specifier with a `..` detour (`../a/../b`, `@/features/a/b/../c`) and any specifier with a `./` segment after its start (`.././x`, `a/./b`) are reported, so a module imports its own files by relative path, never through the alias. | ESLint `source`, `module-depth-*` |
+| L2 | A file `k` folders below a module root (`k` from 0 to 8) imports no relative path that climbs more than `k` levels, except exactly `k + 1` levels into its domain's `_shared/` (the folder itself or a file in it). A deeper file gets L1 only; the script still checks it. | ESLint `module-depth-0` … `module-depth-8` |
+| L3 | `shared/**` imports neither `@/features/**` nor a relative path into `features/`. | ESLint `shared`, `shared-api` |
+| L4 | `app/**` imports only `next`, `next/*`, `react`, `@/shared/**`, `@/features/registry` and `@/features/<domain>/<module>` or its `/index` (kebab-case names, matched case-sensitively), never a relative path, and the same list binds `import()`, whose specifier must be a plain string; the root `app/layout.tsx` and `app/global-error.tsx` may also import `@dewiride/erp-ui/*` and `geist/*` (the global stylesheet, fonts and providers; `global-error` loads the stylesheet and fonts itself because it replaces the root layout). | ESLint `app`, `app-document` (`no-restricted-imports`, and `no-restricted-syntax` on `ImportExpression`) |
+| L5 | Outside `shared/api/**`: `@dewiride/erp-api-client` only as type imports (`import type`, inline `type` or `typeof import()`), never a value `import()`, and no `fetch`, `XMLHttpRequest` or `EventSource`, neither as globals nor as properties of `globalThis`, `window` or `self`. | ESLint `source` (the client's `import()` through `no-restricted-syntax`), `module-depth-*` and `shared`; in `app/` L4 refuses the client and the globals rules of `source` still apply; `shared-api` lifts all of it |
+| L6 | `packages/ui` imports neither `@dewiride/erp-web` or its subpaths nor a relative path into `apps/web`. | ESLint `react-library` preset |
+| X1 | A file in `app/` renders no HTML element (no lower-case JSX name such as `<div>` or `<main>`); the root `layout.tsx` and `global-error.tsx` render only `<html>` and `<body>`. | ESLint `app`, `app-document` (`no-restricted-syntax`) |
+| X2 | No `href` is an object literal (`{ pathname, query }`), directly or as the value of up to three nested `as`, `satisfies`, `!`, conditional or logical expressions (an object passed to a function that builds the route string is fine), which typed routes never check; an `href` is a route string. | ESLint `no-restricted-syntax`, all of `src/` |
+
+Route strings are also checked by the compiler: the web app's `pnpm typecheck` runs `next typegen && tsc --noEmit` (ADR-0024, "Route types are generated before the compiler runs").
+
+### Generated client
+
+`packages/api-client/src/generated` is written only by `scripts/api-client/generate.ts`; `scripts/api-client/drift.ts` fails when it differs from what `docs/openapi/erp.json` generates.

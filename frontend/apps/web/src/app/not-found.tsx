@@ -1,9 +1,5 @@
-import { NotFoundMessage } from "@/shared/layout/not-found-message";
+import { NotFoundPage } from "@/shared/layout/not-found-page";
 
 export default function NotFound() {
-  return (
-    <main className="flex min-h-dvh flex-col items-center justify-center">
-      <NotFoundMessage />
-    </main>
-  );
+  return <NotFoundPage />;
 }

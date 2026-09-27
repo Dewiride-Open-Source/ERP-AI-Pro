@@ -54,22 +54,32 @@ Rules that keep the shape honest:
 ## Frontend
 
 ```
-frontend/apps/web/src/features/finance/sales/
-├── index.ts                      public surface: the only file app/ may import
-├── nav.ts                        navigation manifest { id, title, icon, basePath, featureFlag, permission, items }
-├── invoices/
-│   ├── components/{invoice-table.tsx, invoice-form.tsx, invoice-lines-editor.tsx, invoice-status-badge.tsx}
-│   ├── server/{actions.ts, queries.ts}
-│   ├── forms/invoice-form.schema.ts
-│   ├── hooks/use-invoice-draft.ts
-│   └── ai/{invoice-extraction/, sac-suggestion/}
-├── credit-notes/  receipts/  reports/gstr1/   same shape
-└── _shared/                      finance-wide UI, importable only from features/finance/**
+frontend/apps/web/src/features/finance/
+├── _shared/                          finance-wide UI and helpers, imported by relative path from features/finance/** only
+└── sales/
+    ├── index.ts                      public surface: the only file app/ and other modules import
+    ├── nav.ts                        navigation manifest salesNavigation { id, title, basePath, featureFlag, permission? }
+    ├── invoices/
+    │   ├── components/{invoice-table.tsx, invoice-form.tsx, invoice-lines-editor.tsx, invoice-status-badge.tsx, invoices-overview-skeleton.tsx}
+    │   ├── server/{actions.ts, queries.ts}
+    │   ├── forms/invoice-form.schema.ts
+    │   ├── hooks/use-invoice-draft.ts
+    │   └── ai/{invoice-extraction/, sac-suggestion/}
+    └── credit-notes/  receipts/  gstr1-report/   same shape
 
-frontend/apps/web/src/app/(app)/finance/sales/layout.tsx                                                 gates the segment with requireFeature
-frontend/apps/web/src/app/(app)/finance/sales/invoices/{page.tsx, new/page.tsx, [invoiceId]/page.tsx}   routes only
-frontend/e2e/tests/finance/sales/invoices.spec.ts                                                        one spec per feature
+frontend/apps/web/src/app/(app)/finance/sales/layout.tsx                                                              gates the segment with requireFeature
+frontend/apps/web/src/app/(app)/finance/sales/invoices/{page.tsx, loading.tsx, new/page.tsx, [invoiceId]/page.tsx}   compose only
+frontend/e2e/tests/finance/sales/invoices.spec.ts                                                                     one spec per feature
 ```
+
+Rules that keep the shape honest (ADR-0024; the full register with its enforcers is in `dependency-rules.md`, checked by `node scripts/checks/feature-boundaries.ts` and `pnpm lint`):
+
+- `index.ts` re-exports what `app/` renders (page components, loading skeletons) and the `nav` manifest, never Server Functions, queries or schemas (rule I7: it imports nothing from `server/` or `forms/`). Another module imports only `@/features/finance/sales`; inside the module, features import each other by relative path, never through the alias.
+- `nav.ts` exports one `as const` object of the `NavigationEntry` shape (`shared/layout/navigation-entry.ts`: `id`, `title`, `basePath` typed `Route`, `featureFlag`, optional `permission`), re-exported by `index.ts` and listed in `features/registry.ts`, which only `app/` imports.
+- A module root holds `index.ts`, `nav.ts` and feature folders; a feature holds only `components/`, `server/`, `forms/`, `hooks/` and `ai/`. `forms/`, `hooks/` and `ai/` are created with their first real file (the forms kit brings the first `*.schema.ts`, the first AI capability behind its own flag the first `ai/<capability>/`), never as empty folders; the modules today use `components/` and `server/`.
+- `server/actions.ts` opens with `"use server"`; `server/queries.ts` imports `"server-only"`; `forms/` holds `<name>.schema.ts` files and `hooks/` `use-<name>.ts(x)` files, plus a `.test.ts` only beside the file it tests.
+- Route files only compose. A page renders one export of the module's `index.ts`; the segment `layout.tsx` gates it with `requireFeature`; `loading.tsx` renders the module's skeleton (`<InvoicesOverviewSkeleton />`, from `components/invoices-overview-skeleton.tsx`, exported through `index.ts`). Any other UI a segment needs lives in the feature and is exported the same way, because a file in `app/` renders no HTML element.
+- A page or layout that reads `params` or `searchParams` types its props with the generated `PageProps<"/finance/sales/invoices/[invoiceId]">` or `LayoutProps<…>`.
 
 ## Identity of a module
 

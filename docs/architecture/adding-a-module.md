@@ -24,10 +24,11 @@ Use `backend/Modules/Platform/SystemInfo` as the reference implementation. A sca
 
 ## Frontend
 
-1. Create `frontend/apps/web/src/features/<domain>/<module>/` with `index.ts` (public surface) and `nav.ts` (navigation manifest with the `featureFlag` that reveals it and, from the authentication phase, the permission). Gate the module's route segment with `await requireFeature(<module>Navigation.featureFlag)` in its `layout.tsx`, so a disabled module renders the in-shell not-found page.
-2. Register the manifest in `features/registry.ts`.
-3. Add routes under `app/(app)/<domain>/<module>/...` that import only from the module `index.ts`.
-4. Add page objects and specs under `frontend/e2e/{pages,tests}/<domain>/<module>/`.
+1. Create `frontend/apps/web/src/features/<domain>/<module>/` with `index.ts` (the public surface: the components `app/` renders and the `nav` manifest, never Server Functions, queries or schemas) and `nav.ts` (an `as const` `<module>Navigation` object of the `NavigationEntry` shape with the `featureFlag` that reveals it and, from the authentication phase, the permission). Put each feature in its own folder holding only `components/`, `server/`, `forms/`, `hooks/` and `ai/` (`module-anatomy.md`); features of the module import each other by relative path.
+2. Register the manifest in `features/registry.ts`, importing it from the module's `index.ts`.
+3. Add routes under `app/(app)/<domain>/<module>/...`. Route files only compose and import only the module's `index.ts`, `@/features/registry`, `@/shared/**`, `next` and `react`: gate the segment with `await requireFeature(<module>Navigation.featureFlag)` in its `layout.tsx`, so a disabled module renders the in-shell not-found page; each `page.tsx` renders one export of the module's `index.ts`; `loading.tsx` renders the module's skeleton (`components/<name>-skeleton.tsx`, exported through `index.ts`); any other UI a segment needs lives in the feature and is exported the same way. A page or layout that reads `params` or `searchParams` types its props with `PageProps<"/<route>">` or `LayoutProps<"/<route>">`.
+4. Run `node scripts/checks/feature-boundaries.ts` from the repository root and `pnpm lint` and `pnpm typecheck` from `frontend/`: they check the module's folders and files, its imports in both directions and every route it links to (the rule register is in `dependency-rules.md`).
+5. Add page objects and specs under `frontend/e2e/{pages,tests}/<domain>/<module>/`.
 
 ## Splitting a module
 

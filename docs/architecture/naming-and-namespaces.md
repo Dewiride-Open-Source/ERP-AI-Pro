@@ -45,12 +45,16 @@ Route exemptions: `/api/auth/*` (authentication endpoints owned by the host) and
 |---|---|---|
 | Workspace package | `@dewiride/erp-<name>` | `@dewiride/erp-web`, `@dewiride/erp-ui` |
 | Feature folder | `features/<domain>/<module>/<feature>/` kebab-case | `features/finance/sales/invoices/` |
-| Route folder | mirrors the API resource | `app/(app)/finance/sales/invoices/[invoiceId]/page.tsx` |
+| Domain shared folder | `features/<domain>/_shared/` | `features/finance/_shared/` |
+| Navigation manifest | `nav.ts` exporting `<module>Navigation` | `attachmentsNavigation`, `systemInfoNavigation` |
+| Route folder | mirrors the API resource; kebab-case segments, camelCase dynamic segments | `app/(app)/finance/sales/invoices/[invoiceId]/page.tsx` |
 | Component file | kebab-case, PascalCase export | `invoice-table.tsx` → `InvoiceTable` |
+| Loading skeleton | `components/<name>-skeleton.tsx`, exported through the module `index.ts` and rendered by the segment's `loading.tsx` | `attachments-overview-skeleton.tsx` → `AttachmentsOverviewSkeleton` |
 | Server Function file | `server/actions.ts` (one exported function per mutation) | `issueInvoice` |
 | Query file | `server/queries.ts` | `getInvoice`, `listInvoices` |
 | Schema file | `forms/<name>.schema.ts` | `invoice-form.schema.ts` |
-| Hook | `use-<name>.ts` | `use-invoice-draft.ts` |
+| Hook | `hooks/use-<name>.ts` or `.tsx` | `use-invoice-draft.ts` |
+| AI capability folder | `<feature>/ai/<capability>/` kebab-case | `invoices/ai/invoice-extraction/` |
 | Playwright spec | `e2e/tests/<domain>/<module>/<feature>.spec.ts` | `e2e/tests/finance/sales/invoices.spec.ts` |
 | Page object | `e2e/pages/<domain>/<module>/<feature>.page.ts` | `e2e/pages/finance/sales/invoices.page.ts` |
 

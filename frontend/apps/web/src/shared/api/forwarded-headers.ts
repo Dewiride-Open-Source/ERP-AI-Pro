@@ -16,3 +16,11 @@ export function forwardedHeaders(incoming: { get(name: string): string | null })
 
   return headers;
 }
+
+export function withoutForwardedHeaders(incoming: Headers): Headers {
+  const headers = new Headers(incoming);
+  for (const name of [...headers.keys()]) {
+    if (name.startsWith("x-forwarded-") || name === "forwarded") headers.delete(name);
+  }
+  return headers;
+}

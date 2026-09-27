@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Attachments" };
 
 export default async function AttachmentsPage({
   searchParams,
-}: Readonly<{ searchParams: Promise<Record<string, string | string[] | undefined>> }>) {
+}: Readonly<PageProps<"/platform/attachments">>) {
   const { page } = await searchParams;
 
   return <AttachmentsOverview pageParameter={page} />;
