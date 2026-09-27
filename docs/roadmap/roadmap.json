@@ -589,10 +589,18 @@
           "id": "web-foundation-feature-folder-conventions-and-routing",
           "title": "Feature folder conventions and routing",
           "scope": "Establish frontend/apps/web/src/features/<domain>/<module>/<feature>/{components,server,forms,ai} with app/ kept routing-only under (auth) and (app) route groups, typedRoutes, a proxy.ts scaffold, a fetch wrapper skeleton over frontend/packages/api-client with ProblemDetails mapping, and an ESLint boundary rule that fails on cross-feature deep imports.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "node scripts/checks/feature-boundaries.ts fails, naming the file and the rule, on a non-special file or a private folder under apps/web/src/app, a page or layout outside the (auth) and (app) groups other than the root redirect, a module-root file other than index.ts and nav.ts, a feature subfolder outside components, server, forms, hooks and ai, a server/actions.ts without a leading use server or a server/queries.ts without server-only, and any static, re-export, side-effect or dynamic import that breaks the import matrix (another module's internals, a domain _shared from another domain, app/ importing anything but a module index, the registry or shared, shared importing features, anything importing app/); node --test proves each case and the check passes on the tree",
+            "pnpm lint fails on a deep alias import into another module, a relative import that leaves its module other than into its domain _shared, an app/ import outside its allow-list, an HTML element rendered by an app/ file other than html and body in the root layout and global error, a value import from the API client or a fetch or XMLHttpRequest reference outside src/shared/api, an object href, and a packages/ui import of apps/web; unit tests in @dewiride/erp-config prove each case through the full preset",
+            "pnpm typecheck generates the route types before compiling, so on a checkout without .next a link, redirect or router push naming a route that app/ does not define fails; the attachments pagination link is a checked string and the attachments page is typed with PageProps",
+            "Every file under apps/web/src/app only composes: loading skeletons, the sign-in frame and the error, global-error and root not-found content come from a module index or shared/layout, shared/ imports nothing from features/, and the Playwright specs for login, navigation, system information, attachments and the kitchen sink pass unchanged on Chromium and one mobile project",
+            "The content security policy and forwarded-header handling of proxy.ts are pure modules with unit tests: unsafe-eval only in development, upgrade-insecure-requests only for https or forwarded https, and every x-forwarded and forwarded header removed from rewritten API requests; ADR-0024 records the structure and import boundaries"
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-27",
+          "notes": "Scope reading of 2026-09-27: the proxy.ts scaffold and the fetch wrapper with ProblemDetails mapping were delivered earlier (ADR-0017: shared/api/client.ts, problem-details.ts, upload.ts; proxy.ts with the /api rewrite and nonce CSP), so this item adds their unit tests only (a scaffold would break the no-stub rule); field-error mapping stays with the forms kit, X-XSRF-TOKEN with antiforgery and the session redirect with the login page item. The import boundary is the module (features/<domain>/<module>), as ADR-0007 records, not each feature folder: a module's features may share code relatively, other modules reach it only through its index.ts."
         },
         {
           "id": "web-foundation-forms-and-validation-kit",
