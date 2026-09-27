@@ -78,11 +78,23 @@ public sealed class CatalogFeatureDefinitionProviderTests
     }
 
     [Fact]
-    public async Task GetFeatureDefinitionAsync_MicrosoftSchemaInAnEarlierProviderAndDotnetSchemaLater_MicrosoftSchemaWins()
+    public async Task GetFeatureDefinitionAsync_MicrosoftSchemaInAnEarlierProviderAndDotnetSchemaLater_LaterProviderWins()
     {
         using var provider = Create(
             Flags((ModuleFlag, false)),
             new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase) { [$"FeatureManagement:{ModuleFlag}"] = "true" });
+
+        var definition = await provider.GetFeatureDefinitionAsync(ModuleFlag);
+
+        Assert.Equal(FeatureStatus.Conditional, definition.Status);
+    }
+
+    [Fact]
+    public async Task GetFeatureDefinitionAsync_DotnetSchemaInAnEarlierProviderAndMicrosoftSchemaLater_LaterProviderWins()
+    {
+        using var provider = Create(
+            new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase) { [$"FeatureManagement:{ModuleFlag}"] = "true" },
+            Flags((ModuleFlag, false)));
 
         var definition = await provider.GetFeatureDefinitionAsync(ModuleFlag);
 

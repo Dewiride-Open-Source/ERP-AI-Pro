@@ -9,8 +9,8 @@ internal static class AppConfigurationSetup
 
     public const string FeatureFlagSchemaVariable = "AZURE_APP_CONFIGURATION_FM_SCHEMA_COMPATIBILITY_DISABLED";
 
-    // Microsoft.FeatureManagement consults the Microsoft schema before the .NET schema regardless of provider order,
-    // so a store flag mapped to the .NET schema could never outrank an environment or appsettings override (ADR-0012).
+    // Every other source defines flags in the Microsoft schema (ADR-0012); without this switch the store maps a plain flag
+    // to the .NET schema, so the same flag would read differently depending on where it is defined.
     // The provider offers this switch only as a process environment variable, read when its options are constructed.
     public static void RequireMicrosoftFeatureFlagSchema() => Environment.SetEnvironmentVariable(FeatureFlagSchemaVariable, "true");
 
