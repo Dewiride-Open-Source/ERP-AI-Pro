@@ -44,6 +44,9 @@ catalog:
   "@opentelemetry/instrumentation": 0.222.0
   "@playwright/test": 1.63.0
   zod: 4.6.5
+  react-hook-form: 7.89.0
+  react-day-picker: 10.0.1
+  date-fns: 4.4.0
   "@microsoft/kiota-abstractions": 1.0.0-preview.108
   "@microsoft/kiota-http-fetchlibrary": 1.0.0-preview.108
   "@microsoft/kiota-serialization-json": 1.0.0-preview.108
