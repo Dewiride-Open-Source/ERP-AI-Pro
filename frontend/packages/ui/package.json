@@ -19,7 +19,6 @@
   "dependencies": {
     "class-variance-authority": "catalog:",
     "cn": "catalog:",
-    "date-fns": "catalog:",
     "lucide-react": "catalog:",
     "next-themes": "catalog:",
     "radix-ui": "catalog:",
