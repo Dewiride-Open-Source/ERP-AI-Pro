@@ -20,6 +20,7 @@ export const kitchenSinkSections = [
   { id: "navigation", group: "primitives", title: "Navigation" },
   { id: "data-display", group: "primitives", title: "Data display" },
   { id: "composites", group: "primitives", title: "Composites" },
+  { id: "forms", group: "primitives", title: "Forms" },
   { id: "excluded", group: "primitives", title: "Excluded primitives" },
 ] as const;
 

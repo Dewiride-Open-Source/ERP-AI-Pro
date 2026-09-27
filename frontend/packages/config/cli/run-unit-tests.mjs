@@ -16,5 +16,9 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-const result = spawnSync(process.execPath, ["--test", ...files], { stdio: "inherit" });
+const sourceAliasHooks = new URL("./resolve-source-alias.mjs", import.meta.url).href;
+
+const result = spawnSync(process.execPath, ["--import", sourceAliasHooks, "--test", ...files], {
+  stdio: "inherit",
+});
 process.exit(result.status ?? 1);

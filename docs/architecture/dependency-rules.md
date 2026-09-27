@@ -78,7 +78,7 @@ Decided in ADR-0024. Paths are relative to `frontend/apps/web/src/`. The boundar
 | `features/<d>/_shared/**` | yes | no | no | its own files | yes | no | approved packages |
 | `features/registry.ts` | yes | no | – | no | yes | no | approved packages |
 | `shared/**` | no | no | no | no | yes | no | approved packages |
-| `proxy.ts`, `instrumentation.ts`, `instrumentation.node.ts` | no | no | no | no | yes | no | approved packages |
+| `proxy.ts`, `instrumentation.ts`, `instrumentation.node.ts`, `instrumentation-client.ts` | no | no | no | no | yes | no | approved packages |
 
 Outside `shared/api/**` no file imports a value from `@dewiride/erp-api-client` (types only) or uses `fetch`, `XMLHttpRequest` or `EventSource`, so `shared/api/client.ts` and `shared/api/upload.ts` stay the only code that calls the API. `packages/ui` never imports from `apps/web`.
 
@@ -103,7 +103,7 @@ A new or changed rule changes this register, its enforcer and the matching test 
 | I2 | A domain's `_shared/` is imported only from that domain's modules and from itself. | script; ESLint L1 refuses the alias form everywhere and L2 lets a module reach its own domain's `_shared/` by relative path only |
 | I3 | `app/` imports, inside `src/`, only a module's public surface, `@/features/registry` and `@/shared/**`, through the `@/` alias and never by a relative path. | script; ESLint L4 |
 | I4 | `features/registry.ts` is imported only from `app/`. | script; ESLint L3 (from `shared/`) |
-| I5 | `shared/**` and every file outside `app/`, `features/` and `shared/` (`proxy.ts`, `instrumentation.ts`, `instrumentation.node.ts`) import nothing from `features/`. | script; ESLint L3 (for `shared/**`) |
+| I5 | `shared/**` and every file outside `app/`, `features/` and `shared/` (`proxy.ts`, `instrumentation.ts`, `instrumentation.node.ts`, `instrumentation-client.ts`) import nothing from `features/`. | script; ESLint L3 (for `shared/**`) |
 | I6 | Nothing outside `app/` imports `app/**`. | script; ESLint L1 (the `@/app` alias) and L2 (a relative path out of a module) |
 | I7 | A module's `index.ts` imports and re-exports nothing from its own `server/` or `forms/` folders, so no Server Function, query or schema becomes part of its public surface. | script |
 | L1 | In all of `src/`: `@/features/<d>/<m>/` followed by anything but `index`, `@/features/<d>/_shared/**`, `@/app/**`, any specifier with a `..` detour (`../a/../b`, `@/features/a/b/../c`) and any specifier with a `./` segment after its start (`.././x`, `a/./b`) are reported, so a module imports its own files by relative path, never through the alias. | ESLint `source`, `module-depth-*` |

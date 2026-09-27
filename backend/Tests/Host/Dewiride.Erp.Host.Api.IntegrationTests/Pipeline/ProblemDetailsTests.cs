@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
@@ -11,6 +12,8 @@ namespace Dewiride.Erp.Host.Api.IntegrationTests.Pipeline;
 public sealed class ProblemDetailsTests : IClassFixture<ProblemDetailsTests.Fixture>
 {
     private const string ProblemEndpoint = "/__test/conflict";
+
+    private const string ValidationEndpoint = "/__test/invalid-order";
 
     private readonly HttpClient _client;
 
@@ -75,6 +78,28 @@ public sealed class ProblemDetailsTests : IClassFixture<ProblemDetailsTests.Fixt
         Assert.Equal(Assert.Single(response.Headers.GetValues(CorrelationId.HeaderName)), problem.Extensions["traceId"]?.ToString());
     }
 
+    [Fact]
+    public async Task Get_EndpointReturningAValidationErrorOnNestedMembers_AnswersCamelCaseMemberPaths()
+    {
+        using var response = await _client.GetAsync(new Uri(ValidationEndpoint, UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        using var body = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(TestContext.Current.CancellationToken), cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal("/problems/request.invalid", body.RootElement.GetProperty("type").GetString());
+        var errors = body.RootElement.GetProperty("errors").EnumerateObject().ToDictionary(
+            member => member.Name,
+            member => member.Value.EnumerateArray().Select(message => message.GetString()).ToArray(),
+            StringComparer.Ordinal);
+        Assert.Equal(
+            ["", "customer.shippingAddress.street", "gstin", "orderItems[0].description"],
+            errors.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(["Enter the street."], errors["customer.shippingAddress.street"]);
+        Assert.Equal(["Enter a description."], errors["orderItems[0].description"]);
+        Assert.Equal(["Enter a GSTIN."], errors["gstin"]);
+        Assert.Equal(["The order is empty."], errors[""]);
+    }
+
     private static async Task<ProblemDetails> ReadAsync(HttpResponseMessage response)
     {
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
@@ -88,7 +113,16 @@ public sealed class ProblemDetailsTests : IClassFixture<ProblemDetailsTests.Fixt
         public Fixture()
         {
             Factory = new ErpApiFactory().WithTestEndpoints(routes =>
-                routes.MapGet(ProblemEndpoint, () => Error.Conflict("invoice.already-issued", "The invoice was already issued.").ToProblem()));
+            {
+                routes.MapGet(ProblemEndpoint, () => Error.Conflict("invoice.already-issued", "The invoice was already issued.").ToProblem());
+                routes.MapGet(ValidationEndpoint, () => Error.Validation(ProblemTypes.RequestInvalid, "OrderRequest is invalid.", new Dictionary<string, string[]>(StringComparer.Ordinal)
+                {
+                    ["Customer.ShippingAddress.Street"] = ["Enter the street."],
+                    ["OrderItems[0].Description"] = ["Enter a description."],
+                    ["GSTIN"] = ["Enter a GSTIN."],
+                    [""] = ["The order is empty."],
+                }).ToProblem());
+            });
         }
 
         public ErpApiFactory Factory { get; }
