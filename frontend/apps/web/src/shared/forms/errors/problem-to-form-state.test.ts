@@ -235,7 +235,18 @@ test("problemToFormState_SuccessWithoutABody_IsAServerFailure", () => {
 });
 
 test("problemToFormState_ApiUnreachable_SaysTheServiceDidNotRespond", () => {
-  assert.deepEqual(problemToFormState(new TypeError("fetch failed")), {
+  const refused = Object.assign(new Error("connect ECONNREFUSED 127.0.0.1:5080"), { code: "ECONNREFUSED" });
+  const unknownHost = Object.assign(new Error("getaddrinfo ENOTFOUND api.internal"), { code: "ENOTFOUND" });
+  const reset = Object.assign(new Error("other side closed"), { code: "UND_ERR_SOCKET" });
+
+  for (const cause of [refused, unknownHost, reset]) {
+    assert.deepEqual(
+      problemToFormState(new TypeError("fetch failed", { cause })),
+      { status: "failed", message: formMessages.unreachable },
+      cause.message,
+    );
+  }
+  assert.deepEqual(problemToFormState(new TypeError("terminated", { cause: reset })), {
     status: "failed",
     message: formMessages.unreachable,
   });
@@ -246,6 +257,24 @@ test("problemToFormState_ApiUnreachable_SaysTheServiceDidNotRespond", () => {
       message: formMessages.unreachable,
     },
   );
+});
+
+test("problemToFormState_TypeErrorThatIsNotAFetchFailure_IsRethrown", () => {
+  const programmingErrors = [
+    new TypeError("Cannot read properties of undefined (reading 'amount')"),
+    new TypeError("Failed to parse URL from not a url", { cause: new TypeError("Invalid URL") }),
+    new TypeError("fetch failed"),
+    new TypeError("fetch failed", { cause: "bad port" }),
+    new TypeError("fetch failed", { cause: new Error("unexpected redirect") }),
+  ];
+
+  for (const error of programmingErrors) {
+    assert.throws(
+      () => problemToFormState(error),
+      (thrown) => thrown === error,
+      error.message,
+    );
+  }
 });
 
 test("problemToFormState_ErrorItDoesNotKnow_IsRethrown", () => {

@@ -21,6 +21,11 @@ export type CalendarDateRange = {
   to: string;
 };
 
+export type DateRangeEndState = {
+  invalid: boolean;
+  describedBy: string | undefined;
+};
+
 export type DateRangeInputProps = {
   value: CalendarDateRange;
   onValueChange: (value: CalendarDateRange) => void;
@@ -36,6 +41,7 @@ export type DateRangeInputProps = {
   onBlur?: ((event: FocusEvent<HTMLInputElement>) => void) | undefined;
   ref?: Ref<HTMLInputElement> | undefined;
   toRef?: Ref<HTMLInputElement> | undefined;
+  ends?: Readonly<Record<keyof CalendarDateRange, DateRangeEndState>> | undefined;
   "aria-labelledby"?: string | undefined;
   "aria-describedby"?: string | undefined;
   "aria-invalid"?: boolean | "true" | "false" | undefined;
@@ -70,6 +76,7 @@ export function DateRangeInput({
   onBlur,
   ref,
   toRef,
+  ends,
   "aria-labelledby": labelledBy,
   "aria-describedby": describedBy,
   "aria-invalid": invalid,
@@ -105,39 +112,38 @@ export function DateRangeInput({
     setDraft(range);
   };
 
-  const renderPart = (
-    partId: string,
-    labelId: string,
-    label: string,
-    partValue: string,
-    key: keyof CalendarDateRange,
-  ) => (
-    <div className="grid min-w-0 gap-1.5">
-      <label id={labelId} htmlFor={partId} className="text-caption text-muted-foreground">
-        {label}
-      </label>
-      <InputGroup>
-        <DateTextInput
-          id={partId}
-          ref={key === "from" ? ref : toRef}
-          value={partValue}
-          onValueChange={(next) => onValueChange({ ...value, [key]: next })}
-          onBlur={onBlur}
-          disabled={disabled}
-          readOnly={readOnly}
-          aria-labelledby={fieldLabelId === undefined ? labelId : `${fieldLabelId} ${labelId}`}
-          aria-describedby={describedBy}
-          aria-invalid={invalid}
-          aria-required={required}
-        />
-      </InputGroup>
-    </div>
-  );
+  const renderPart = (partId: string, labelId: string, label: string, key: keyof CalendarDateRange) => {
+    const end = ends?.[key];
+    return (
+      <div className="grid min-w-0 gap-1.5">
+        <label id={labelId} htmlFor={partId} className="text-caption text-muted-foreground">
+          {label}
+        </label>
+        <InputGroup>
+          <DateTextInput
+            id={partId}
+            ref={key === "from" ? ref : toRef}
+            value={value[key]}
+            onValueChange={(next) => onValueChange({ ...value, [key]: next })}
+            onBlur={onBlur}
+            disabled={disabled}
+            readOnly={readOnly}
+            aria-labelledby={fieldLabelId === undefined ? labelId : `${fieldLabelId} ${labelId}`}
+            aria-describedby={end === undefined ? describedBy : end.describedBy}
+            aria-invalid={end === undefined ? invalid : end.invalid || undefined}
+            aria-required={required}
+          />
+        </InputGroup>
+      </div>
+    );
+  };
 
   return (
-    <div className={cn("grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-2", className)}>
-      {renderPart(fromId, `${fromId}-from-label`, fromLabel, value.from, "from")}
-      {renderPart(toId, `${toId}-label`, toLabel, value.to, "to")}
+    <div className={cn("grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2", className)}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-2">
+        {renderPart(fromId, `${fromId}-from-label`, fromLabel, "from")}
+        {renderPart(toId, `${toId}-label`, toLabel, "to")}
+      </div>
       <Popover open={open} onOpenChange={onOpenChange} modal>
         <PopoverTrigger asChild>
           <Button

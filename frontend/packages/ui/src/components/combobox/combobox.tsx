@@ -2,6 +2,7 @@
 
 import { ChevronDownIcon, XIcon } from "lucide-react";
 import {
+  useEffect,
   useId,
   useImperativeHandle,
   useRef,
@@ -23,10 +24,12 @@ import { Popover, PopoverAnchor, PopoverContent } from "@dewiride/erp-ui/compone
 
 import { ComboboxList } from "./combobox-list";
 import {
+  chosenOptionLabel,
   filterComboboxOptions,
   firstEnabledIndex,
   lastEnabledIndex,
   nextEnabledIndex,
+  rememberChosenOption,
   type ComboboxDirection,
   type ComboboxOption,
 } from "./combobox-options";
@@ -61,23 +64,28 @@ export type ComboboxProps = Omit<
 
 type Activation = "first" | "last" | "none";
 
+type ButtonName = { "aria-label": string; "aria-labelledby"?: string };
+
+const caretKeys = new Set(["ArrowLeft", "ArrowRight", "Home", "End"]);
+
 function keepFocusOnTheInput(event: MouseEvent): void {
   event.preventDefault();
 }
 
-function findSelected(
-  options: readonly ComboboxOption[],
-  value: string | null,
-  remembered: ComboboxOption | null,
-): ComboboxOption | undefined {
-  if (value === null) return undefined;
-  const listed = options.find((option) => option.value === value);
-  if (listed) return listed;
-  return remembered?.value === value ? remembered : undefined;
-}
-
 function labelIdOf(input: HTMLInputElement | null): string | undefined {
   return input?.labels?.[0]?.id || undefined;
+}
+
+function fieldButtonName(
+  buttonId: string,
+  action: string,
+  fieldLabelId: string | undefined,
+  fieldName: string | undefined,
+): ButtonName {
+  if (fieldLabelId !== undefined) {
+    return { "aria-label": action, "aria-labelledby": `${buttonId} ${fieldLabelId}` };
+  }
+  return { "aria-label": fieldName ? `${action} ${fieldName}` : action };
 }
 
 export function Combobox({
@@ -104,6 +112,8 @@ export function Combobox({
 }: ComboboxProps) {
   const baseId = useId();
   const listboxId = `${baseId}-listbox`;
+  const clearButtonId = `${baseId}-clear`;
+  const toggleButtonId = `${baseId}-toggle`;
   const optionId = (index: number) => `${baseId}-option-${index}`;
   const inputRef = useRef<HTMLInputElement>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
@@ -115,7 +125,15 @@ export function Combobox({
   const [remembered, setRemembered] = useState<ComboboxOption | null>(null);
   const [labelLookup, setLabelLookup] = useState<string | undefined>(undefined);
 
-  const selectedLabel = findSelected(options, value, remembered)?.label ?? "";
+  const controlId = inputProps.id;
+  useEffect(() => {
+    setLabelLookup(labelIdOf(inputRef.current));
+  }, [controlId]);
+
+  const chosen = rememberChosenOption(options, value, remembered);
+  if (chosen !== remembered) setRemembered(chosen);
+
+  const selectedLabel = chosenOptionLabel(value, chosen);
   const text = inputValue ?? typed ?? selectedLabel;
   const visibleOptions =
     onInputValueChange === undefined ? filterComboboxOptions(options, typed ?? "") : options;
@@ -124,6 +142,7 @@ export function Combobox({
   const locked = disabled || readOnly;
   const popupOpen = open && !locked;
   const listed = popupOpen && !loading && visibleOptions.length > 0;
+  const fieldLabelId = ariaLabelledBy ?? labelLookup;
 
   let status = "";
   if (popupOpen && loading) status = loadingMessage;
@@ -133,13 +152,8 @@ export function Combobox({
     if (onInputValueChange && next !== text) onInputValueChange(next);
   };
 
-  const showPopup = () => {
-    setLabelLookup(labelIdOf(inputRef.current));
-    setOpen(true);
-  };
-
   const openPopup = (activation: Activation) => {
-    showPopup();
+    setOpen(true);
     if (activation === "none") {
       setActiveValue(null);
       return;
@@ -195,7 +209,7 @@ export function Combobox({
     setActiveValue(null);
     reportText(next);
     if (next === "" && value !== null) onValueChange(null);
-    if (!open) showPopup();
+    if (!open) setOpen(true);
   };
 
   const handleVerticalArrow = (event: KeyboardEvent<HTMLInputElement>, direction: ComboboxDirection) => {
@@ -235,7 +249,7 @@ export function Combobox({
     else if (event.key === "ArrowUp") handleVerticalArrow(event, -1);
     else if (event.key === "Enter") handleEnter(event);
     else if (event.key === "Escape") handleEscape(event);
-    else if ((event.key === "Home" || event.key === "End") && activeValue !== null) setActiveValue(null);
+    else if (caretKeys.has(event.key) && activeValue !== null) setActiveValue(null);
   };
 
   const handleClick = (event: MouseEvent<HTMLInputElement>) => {
@@ -282,9 +296,10 @@ export function Combobox({
           <InputGroupAddon align="inline-end">
             {!locked && (value !== null || text !== "") ? (
               <InputGroupButton
+                id={clearButtonId}
+                {...fieldButtonName(clearButtonId, clearLabel, fieldLabelId, ariaLabel)}
                 size="icon-xs"
                 tabIndex={-1}
-                aria-label={clearLabel}
                 onMouseDown={keepFocusOnTheInput}
                 onClick={clear}
               >
@@ -292,9 +307,10 @@ export function Combobox({
               </InputGroupButton>
             ) : null}
             <InputGroupButton
+              id={toggleButtonId}
+              {...fieldButtonName(toggleButtonId, toggleLabel, fieldLabelId, ariaLabel)}
               size="icon-xs"
               tabIndex={-1}
-              aria-label={toggleLabel}
               aria-expanded={listed}
               aria-controls={listed ? listboxId : undefined}
               disabled={locked}
@@ -312,7 +328,7 @@ export function Combobox({
       <PopoverContent
         role="presentation"
         align="start"
-        className="w-(--radix-popover-trigger-width) gap-0 p-1"
+        className="max-h-(--radix-popover-content-available-height) w-(--radix-popover-trigger-width) gap-0 p-1 data-closed:animate-none"
         onOpenAutoFocus={(event) => event.preventDefault()}
         onCloseAutoFocus={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => event.preventDefault()}
@@ -334,7 +350,7 @@ export function Combobox({
           optionId={optionId}
           onSelect={select}
           onActivate={(option) => setActiveValue(option.value)}
-          aria-labelledby={ariaLabelledBy ?? labelLookup}
+          aria-labelledby={fieldLabelId}
           aria-label={ariaLabel}
         />
       </PopoverContent>

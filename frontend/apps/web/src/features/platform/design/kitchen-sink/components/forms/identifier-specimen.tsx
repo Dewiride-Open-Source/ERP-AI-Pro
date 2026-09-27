@@ -4,8 +4,8 @@ import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { IdentifierInput } from "@dewiride/erp-ui/components/inputs/identifier-input";
 import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
 import { useState } from "react";
-import type { z } from "zod";
 
+import { optionalInput } from "@/shared/forms/schemas/field-schemas";
 import {
   gstinSchema,
   identifierLengths,
@@ -15,11 +15,11 @@ import {
 
 import { Specimen } from "../specimen";
 
-function problemsOf(schema: z.ZodType, value: string): readonly string[] | undefined {
-  if (value === "") return undefined;
-  const result = schema.safeParse(value);
-  return result.success ? undefined : result.error.issues.map((issue) => issue.message);
-}
+import { schemaProblems } from "./schema-problems";
+
+const gstinWhenEntered = optionalInput(gstinSchema);
+const panWhenEntered = optionalInput(panSchema);
+const ifscWhenEntered = optionalInput(ifscSchema);
 
 export function IdentifierSpecimen() {
   const [gstin, setGstin] = useState("");
@@ -36,7 +36,7 @@ export function IdentifierSpecimen() {
           id="ks-forms-gstin"
           label="GSTIN"
           description="Paste it with spaces or in lower case."
-          errors={problemsOf(gstinSchema, gstin)}
+          errors={schemaProblems(gstinWhenEntered, gstin)}
         >
           {(frame) => (
             <IdentifierInput
@@ -50,7 +50,7 @@ export function IdentifierSpecimen() {
         <p className="text-caption text-muted-foreground" data-testid="forms-gstin-value">
           Value: <span className="font-mono">{gstin === "" ? "(empty)" : gstin}</span>
         </p>
-        <FormField id="ks-forms-pan" label="PAN" required errors={problemsOf(panSchema, pan)}>
+        <FormField id="ks-forms-pan" label="PAN" required errors={schemaProblems(panWhenEntered, pan)}>
           {(frame) => (
             <IdentifierInput
               {...frame}
@@ -60,7 +60,7 @@ export function IdentifierSpecimen() {
             />
           )}
         </FormField>
-        <FormField id="ks-forms-ifsc" label="IFSC" errors={problemsOf(ifscSchema, ifsc)}>
+        <FormField id="ks-forms-ifsc" label="IFSC" errors={schemaProblems(ifscWhenEntered, ifsc)}>
           {(frame) => (
             <IdentifierInput
               {...frame}

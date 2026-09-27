@@ -1,14 +1,12 @@
-import { randomUUID } from "node:crypto";
-
 import type { Locator, Page, Request, Response } from "@playwright/test";
 
-import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { png } from "../../../fixtures/files";
+import { expect, forEachTheme, tabOntoLink, test } from "../../../fixtures/test";
 import {
   FormKitPage,
   formKitPath,
   isSaveRequest,
   validSupplier,
-  type DroppedFile,
 } from "../../../pages/platform/design/form-kit.page";
 
 const attachmentsApi = "/api/platform/attachments";
@@ -17,18 +15,9 @@ const exampleReference = "4bf92f3577b34da6a3ce929d0e0e4736";
 
 const savedMessage = "Saved as an example. Nothing was stored.";
 
-const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const unreachableMessage = "The ERP service did not respond. Try again.";
 
-const filler = Buffer.from(Array.from({ length: 251 }, (_, index) => index));
-
-// The bytes match the attachments spec's 256-byte PNG and only the name is unique, so every run deduplicates to one stored file.
-function png(): DroppedFile {
-  return {
-    name: `e2e-${randomUUID().slice(-12)}.png`,
-    mimeType: "image/png",
-    buffer: Buffer.concat([pngSignature, Buffer.alloc(256 - pngSignature.length, filler)]),
-  };
-}
+const gstinPanMismatch = "The PAN does not match the GSTIN, whose 3rd to 12th characters are the PAN.";
 
 function isUploadRequest(request: Request): boolean {
   return request.method() === "POST" && new URL(request.url()).pathname === attachmentsApi;
@@ -73,6 +62,28 @@ async function expectFieldError(field: Locator, message: RegExp): Promise<void> 
 
 async function hasHorizontalOverflow(page: Page): Promise<boolean> {
   return page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+}
+
+async function selection(input: Locator): Promise<{ start: number | null; end: number | null }> {
+  return input.evaluate((element) =>
+    element instanceof HTMLInputElement
+      ? { start: element.selectionStart, end: element.selectionEnd }
+      : { start: null, end: null },
+  );
+}
+
+async function showsItsWholeText(input: Locator): Promise<boolean> {
+  return input.evaluate((element) => element.scrollWidth <= element.clientWidth);
+}
+
+async function verticalCentre(target: Locator): Promise<number> {
+  const bounds = await target.boundingBox();
+  expect(bounds, "bounding box").not.toBeNull();
+  return (bounds?.y ?? 0) + (bounds?.height ?? 0) / 2;
+}
+
+function focused(page: Page, target: Locator): Locator {
+  return target.and(page.locator(":focus"));
 }
 
 test.describe("form kit", () => {
@@ -136,7 +147,7 @@ test.describe("form kit", () => {
           - group:
             - combobox "Category"
             - group:
-              - button "Show options"
+              - button "Show options Category"
             - status
           - paragraph: Type to narrow the list.
         - group:
@@ -180,6 +191,10 @@ test.describe("form kit", () => {
         - status
         - paragraph: No idempotency key sent yet.
     `);
+      await expect(formKit.legalName).toHaveAccessibleName("Legal name");
+      await expect(formKit.legalName).toHaveAttribute("aria-required", "true");
+      await expect(formKit.fieldOf(formKit.legalName).getByText("(required)", { exact: true })).toBeVisible();
+      await expect(formKit.fieldOf(formKit.openingBalance).getByText("(required)")).toHaveCount(0);
       await capture("form-empty", formKit.form);
 
       await formKit.save.click();
@@ -215,17 +230,51 @@ test.describe("form kit", () => {
       await formKit.openingBalance.blur();
       await expect(formKit.openingBalance).toHaveValue("10,00,00,000.01");
       await expectFieldError(formKit.openingBalance, /Enter an amount of at most ₹10,00,00,000\.00\.$/);
+      const realDate = /Enter a real date as day-month-year, for example 31-03-2026\.$/;
       await formKit.agreementStart.fill("31-02-2026");
       await formKit.agreementStart.blur();
-      await expectFieldError(
-        formKit.agreementStart,
-        /Enter a real date as day-month-year, for example 31-03-2026\.$/,
-      );
+      await expectFieldError(formKit.agreementStart, realDate);
+      await formKit.agreementStart.fill("");
+      await formKit.agreementStart.pressSequentially("15-06-0000");
+      await formKit.agreementStart.blur();
+      await expect(formKit.agreementStart).toHaveValue("15-06-0000");
+      await expectFieldError(formKit.agreementStart, realDate);
       await formKit.validityFrom.fill("01-04-2027");
       await formKit.validityTo.fill("31-03-2027");
       await formKit.validityTo.blur();
       await expectFieldError(formKit.validityTo, /The end date must be on or after the start date\.$/);
+      await expect(formKit.validityFrom).not.toHaveAttribute("aria-invalid");
       expect(saves.count(), "Server Function calls").toBe(0);
+    },
+  );
+
+  forEachTheme(
+    "shows a rule that names no field in the focused summary without sending the form",
+    async ({ page, capture }) => {
+      const formKit = new FormKitPage(page);
+      const saves = watch(page, isSaveRequest);
+      await formKit.goto();
+      await formKit.fill({ ...validSupplier, pan: "aabch1234k" });
+
+      await formKit.save.click();
+      await expect(formKit.summary).toBeFocused();
+      await expect(formKit.summary).toMatchAriaSnapshot(`
+      - alert:
+        - text: Some details need attention.
+        - list:
+          - listitem: ${gstinPanMismatch}
+    `);
+      await expect(formKit.summary.getByRole("link")).toHaveCount(0);
+      await expect(formKit.gstin).not.toHaveAttribute("aria-invalid");
+      await expect(formKit.pan).not.toHaveAttribute("aria-invalid");
+      await capture("form-level-error", formKit.summary);
+      expect(saves.count(), "Server Function calls").toBe(0);
+
+      await formKit.pan.fill(validSupplier.pan);
+      await formKit.save.click();
+      await expect(formKit.outcome).toHaveText(savedMessage);
+      await expect(formKit.summary).toHaveCount(0);
+      expect(saves.count(), "Server Function calls").toBe(1);
     },
   );
 
@@ -254,7 +303,8 @@ test.describe("form kit", () => {
       await expectFieldError(formKit.legalName, /A supplier with this legal name is already registered\.$/);
       await capture("server-field-error", formKit.form);
 
-      await formKit.summaryLink("A supplier with this legal name is already registered.").click();
+      await tabOntoLink(page, formKit.summaryLink("A supplier with this legal name is already registered."));
+      await page.keyboard.press("Enter");
       await expect(formKit.legalName).toBeFocused();
       await formKit.legalName.fill("Globex Cloud Services (India) Private Limited");
       await expect(formKit.legalName).not.toHaveAttribute("aria-invalid");
@@ -301,6 +351,7 @@ test.describe("form kit", () => {
         formKit.validityTo,
         /The agreement must run until at least the end of the financial year\.$/,
       );
+      await expect(formKit.validityFrom).not.toHaveAttribute("aria-invalid");
       await expect(formKit.legalName).not.toHaveAttribute("aria-invalid");
       await capture("nested-problem", formKit.form);
       expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
@@ -340,7 +391,7 @@ test.describe("form kit", () => {
 
       await formKit.answerWith("Do not respond (API unreachable)");
       await formKit.save.click();
-      await expect(formKit.summary).toHaveText("The ERP service did not respond. Try again.");
+      await expect(formKit.summary).toHaveText(unreachableMessage);
       await expect(formKit.summary).toBeFocused();
       expect(await formKit.idempotencyKeySuffix(), "key after an unreachable API").toBe(undecided);
 
@@ -369,34 +420,105 @@ test.describe("form kit", () => {
     },
   );
 
-  forEachTheme("shows the pending save and then the success", async ({ page, capture }) => {
-    const formKit = new FormKitPage(page);
-    const saves = watch(page, isSaveRequest);
-    await formKit.goto();
-    await formKit.fill(validSupplier);
+  test.describe("when the Server Function call itself fails", () => {
+    test.use({ expectedConsoleError: /^Failed to load resource/ });
 
-    const release = await hold(page, `**${formKitPath}`, isSaveRequest);
-    const sent = page.waitForRequest(isSaveRequest);
-    await formKit.save.click();
-    const request = await sent;
+    forEachTheme(
+      "keeps the form, its values and the idempotency key and says the service did not respond",
+      async ({ page, capture }) => {
+        const formKit = new FormKitPage(page);
+        const saves = watch(page, isSaveRequest);
+        await formKit.goto();
+        await formKit.fill(validSupplier);
+        const pattern = `**${formKitPath}`;
 
-    await expect(formKit.save).toHaveAttribute("aria-busy", "true");
-    await expect(formKit.save).toBeDisabled();
-    await expect(formKit.save).toHaveAccessibleName("Save");
-    await formKit.legalName.press("Enter");
-    await capture("pending", formKit.form);
-    const body = request.postData() ?? "";
-    expect(body, "the values sent").toContain(validSupplier.legalName);
-    expect(body, "the idempotency key sent").toMatch(
-      new RegExp(`"[0-9a-f-]{28}${await formKit.idempotencyKeySuffix()}"`),
+        await page.route(pattern, (route) =>
+          isSaveRequest(route.request()) ? route.abort("connectionreset") : route.fallback(),
+        );
+        await formKit.save.click();
+        await expect(formKit.summary).toHaveText(unreachableMessage);
+        await expect(formKit.summary).toBeFocused();
+        await capture("call-failed", formKit.summary);
+        const kept = await formKit.idempotencyKeySuffix();
+        await page.unroute(pattern);
+
+        await page.route(pattern, (route) =>
+          isSaveRequest(route.request())
+            ? route.fulfill({
+                status: 502,
+                contentType: "text/html",
+                body: "<html><body><h1>502 Bad Gateway</h1></body></html>",
+              })
+            : route.fallback(),
+        );
+        await formKit.save.click();
+        await expect(formKit.summary).toHaveText(unreachableMessage);
+        await expect(formKit.summary).toBeFocused();
+        expect(await formKit.idempotencyKeySuffix(), "key after a gateway page").toBe(kept);
+        await page.unroute(pattern);
+
+        await expect(formKit.legalName).toHaveValue(validSupplier.legalName);
+        await expect(formKit.gstin).toHaveValue("29AABCG1234K1Z5");
+        await expect(formKit.state).toHaveText(validSupplier.state);
+        await expect(formKit.category).toHaveValue(validSupplier.category);
+        await expect(formKit.openingBalance).toHaveValue("1,25,000.50");
+        await expect(formKit.agreementStart).toHaveValue(validSupplier.agreementStart);
+        await expect(formKit.validityFrom).toHaveValue(validSupplier.validityFrom);
+        await expect(formKit.validityTo).toHaveValue(validSupplier.validityTo);
+
+        const sent = page.waitForRequest(isSaveRequest);
+        await formKit.save.click();
+        expect((await sent).postData() ?? "", "the kept key sent again").toContain(kept);
+        await expect(formKit.outcome).toHaveText(savedMessage);
+        await expect(formKit.summary).toHaveCount(0);
+        expect(await formKit.idempotencyKeySuffix(), "key after the answer").toBe(kept);
+        expect(saves.count(), "Server Function calls").toBe(3);
+      },
     );
-    release();
-
-    await expect(formKit.outcome).toHaveText(savedMessage);
-    await expect(formKit.save).not.toHaveAttribute("aria-busy");
-    await expect(formKit.save).toBeEnabled();
-    expect(saves.count(), "Server Function calls").toBe(1);
   });
+
+  forEachTheme(
+    "keeps Save focused through a pending save and refuses a second one",
+    async ({ page, capture }) => {
+      const formKit = new FormKitPage(page);
+      const saves = watch(page, isSaveRequest);
+      await formKit.goto();
+      await formKit.fill(validSupplier);
+
+      const release = await hold(page, `**${formKitPath}`, isSaveRequest);
+      const sent = page.waitForRequest(isSaveRequest);
+      await formKit.save.focus();
+      await page.keyboard.press("Enter");
+      const request = await sent;
+
+      await expect(formKit.save).toHaveAttribute("aria-busy", "true");
+      await expect(formKit.save).toHaveAttribute("aria-disabled", "true");
+      await expect(formKit.save).not.toHaveAttribute("disabled");
+      await expect(formKit.save).toBeDisabled();
+      await expect(formKit.save).toBeFocused();
+      await expect(formKit.save).toHaveAccessibleName("Save");
+      await formKit.legalName.press("Enter");
+      await formKit.save.click({ force: true });
+      await formKit.save.focus();
+      await page.keyboard.press("Space");
+      await page.keyboard.press("Enter");
+      await expect(formKit.save).toBeFocused();
+      await capture("pending", formKit.form);
+      const body = request.postData() ?? "";
+      expect(body, "the values sent").toContain(validSupplier.legalName);
+      expect(body, "the idempotency key sent").toMatch(
+        new RegExp(`"[0-9a-f-]{28}${await formKit.idempotencyKeySuffix()}"`),
+      );
+      release();
+
+      await expect(formKit.outcome).toHaveText(savedMessage);
+      await expect(formKit.save).not.toHaveAttribute("aria-busy");
+      await expect(formKit.save).not.toHaveAttribute("aria-disabled");
+      await expect(formKit.save).toBeEnabled();
+      await expect(formKit.save).toBeFocused();
+      expect(saves.count(), "Server Function calls").toBe(1);
+    },
+  );
 
   forEachTheme(
     "attaches the agreement dropped on the drop zone and sends its id with the form",
@@ -464,6 +586,58 @@ test.describe("form kit", () => {
     },
   );
 
+  forEachTheme("types the identifiers and the opening balance with the keyboard", async ({ page }) => {
+    const formKit = new FormKitPage(page);
+    await formKit.goto();
+
+    await formKit.gstin.focus();
+    await page.keyboard.type("29 aabcg 1234k 1z5");
+    await expect(formKit.gstin).toHaveValue("29AABCG1234K1Z5");
+    await page.keyboard.press("Tab");
+    await expect(formKit.pan).toBeFocused();
+    await page.keyboard.type("aabcg-1234k");
+    await expect(formKit.pan).toHaveValue("AABCG1234K");
+    await page.keyboard.press("Tab");
+    await expect(formKit.ifsc).toBeFocused();
+    await page.keyboard.type("hdfc 0001234");
+    await expect(formKit.ifsc).toHaveValue("HDFC0001234");
+    await page.keyboard.press("Tab");
+    await expect(formKit.state).toBeFocused();
+    for (const field of [formKit.gstin, formKit.pan, formKit.ifsc]) {
+      await expect(field).not.toHaveAttribute("aria-invalid");
+    }
+
+    await formKit.category.focus();
+    await page.keyboard.press("Tab");
+    await expect(formKit.openingBalance).toBeFocused();
+    await page.keyboard.type("125000.5");
+    await expect(formKit.openingBalance).toHaveValue("125000.5");
+    await page.keyboard.press("Tab");
+    await expect(formKit.agreementStart).toBeFocused();
+    await expect(formKit.openingBalance).toHaveValue("1,25,000.50");
+    await expect(formKit.openingBalance).not.toHaveAttribute("aria-invalid");
+
+    await page.keyboard.press("Shift+Tab");
+    await expect(formKit.openingBalance).toBeFocused();
+    await expect(formKit.openingBalance).toHaveValue("125000.5");
+    expect(await selection(formKit.openingBalance), "selection after tabbing in").toEqual({
+      start: 0,
+      end: 8,
+    });
+    await page.keyboard.type("99");
+    await expect(formKit.openingBalance).toHaveValue("99");
+    await page.keyboard.press("Home");
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.type("0");
+    await expect(formKit.openingBalance).toHaveValue("909");
+    expect(await selection(formKit.openingBalance), "caret after the inserted digit").toEqual({
+      start: 2,
+      end: 2,
+    });
+    await page.keyboard.press("Tab");
+    await expect(formKit.openingBalance).toHaveValue("909.00");
+  });
+
   forEachTheme("chooses the category and the dates with the keyboard", async ({ page, capture }) => {
     const formKit = new FormKitPage(page);
     await formKit.goto();
@@ -484,9 +658,13 @@ test.describe("form kit", () => {
     await page.keyboard.type("cafe");
     await expect(categories.getByRole("option")).toHaveText(["Café and pantry"]);
     await page.keyboard.press("ArrowDown");
-    await expect(categories.getByRole("option", { name: "Café and pantry" })).toHaveAttribute(
-      "aria-selected",
-      "true",
+    await expect(categories).toMatchAriaSnapshot(`
+      - listbox "Category":
+        - option "Café and pantry" [selected]
+    `);
+    await expect(formKit.category).toHaveAttribute(
+      "aria-activedescendant",
+      (await categories.getByRole("option", { name: "Café and pantry" }).getAttribute("id")) ?? "",
     );
     await capture("category-filtered", categories);
     await page.keyboard.press("Enter");
@@ -509,6 +687,20 @@ test.describe("form kit", () => {
     await expect(calendar).toBeVisible();
     await expect(formKit.agreementStartTrigger).toHaveAttribute("aria-expanded", "true");
     await expect(calendar.getByRole("button", { name: /\b15 June 2026/ })).toBeFocused();
+    await expect(calendar).toMatchAriaSnapshot(`
+      - dialog "Choose date":
+        - navigation "Navigation bar":
+          - button "Go to the Previous Month"
+          - button "Go to the Next Month"
+        - combobox "Choose the Month"
+        - combobox "Choose the Year"
+        - status: June 2026
+        - grid "June 2026":
+          - rowgroup:
+            - row /15 June 2026, selected/:
+              - gridcell "Monday, 15 June 2026, selected" [selected]:
+                - button "Monday, 15 June 2026, selected": "15"
+    `);
     await capture("agreement-start-calendar", calendar);
     await page.keyboard.press("ArrowRight");
     await expect(calendar.getByRole("button", { name: /\b16 June 2026/ })).toBeFocused();
@@ -536,6 +728,99 @@ test.describe("form kit", () => {
     await expect(formKit.validityTrigger).toBeFocused();
   });
 
+  forEachTheme("checks a date field only once focus leaves it and its open calendar", async ({ page }) => {
+    const formKit = new FormKitPage(page);
+    await formKit.goto();
+    const calendar = formKit.calendar("Choose date");
+    const years = calendar.getByRole("combobox", { name: "Choose the Year" });
+    const months = calendar.getByRole("combobox", { name: "Choose the Month" });
+
+    await formKit.agreementStartTrigger.click();
+    await expect(calendar).toBeVisible();
+    await calendar.getByRole("button", { name: "Go to the Next Month" }).click();
+    await years.click();
+    await years.selectOption("2027");
+    await calendar.getByRole("button", { name: "Go to the Previous Month" }).click();
+    await expect(calendar).toBeVisible();
+    await expect(formKit.agreementStart).not.toHaveAttribute("aria-invalid");
+    await page.keyboard.press("Escape");
+    await expect(calendar).toBeHidden();
+    await expect(formKit.agreementStartTrigger).toBeFocused();
+
+    await page.keyboard.press("Enter");
+    await expect(calendar).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(formKit.agreementStart).not.toHaveAttribute("aria-invalid");
+    await page.keyboard.press("Shift+Tab");
+    await expect(years).toBeFocused();
+    await expect(calendar).toBeVisible();
+    await page.keyboard.press("Shift+Tab");
+    await expect(months).toBeFocused();
+    await years.selectOption("2028");
+    await expect(calendar).toBeVisible();
+    await expect(calendar.getByRole("status")).toHaveText(/2028$/);
+    await expect(formKit.agreementStart).not.toHaveAttribute("aria-invalid");
+    await page.keyboard.press("Escape");
+    await expect(calendar).toBeHidden();
+    // WebKit returns focus to the trigger a moment after the calendar closes, and a Tab pressed before then starts from the page.
+    await expect(formKit.agreementStartTrigger).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expectFieldError(formKit.agreementStart, /Enter the date the agreement starts\.$/);
+
+    const rangeCalendar = formKit.calendar("Choose dates");
+    const rangeDays = rangeCalendar.getByRole("gridcell").getByRole("button");
+    await formKit.validityTrigger.focus();
+    await page.keyboard.press("Enter");
+    await expect(rangeCalendar).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("Shift+Tab");
+    await expect(focused(page, rangeCalendar.getByRole("combobox", { name: "Choose the Year" }))).toHaveCount(
+      1,
+    );
+    await page.keyboard.press("Tab");
+    await expect(focused(page, rangeDays)).toHaveCount(1);
+    await page.keyboard.press("Enter");
+    await expect(rangeCalendar).toBeVisible();
+    await expect(focused(page, rangeDays)).toHaveCount(1);
+    await expect(formKit.validityFrom).not.toHaveAttribute("aria-invalid");
+    await expect(formKit.validityTo).not.toHaveAttribute("aria-invalid");
+    await page.keyboard.press("Escape");
+    await expect(rangeCalendar).toBeHidden();
+    await expect(formKit.validityTrigger).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expectFieldError(formKit.validityFrom, /Enter the start date\./);
+    await expectFieldError(formKit.validityTo, /Enter the end date\./);
+  });
+
+  forEachTheme("marks only the end of the validity range that is wrong", async ({ page }) => {
+    const formKit = new FormKitPage(page);
+    await formKit.goto();
+
+    await formKit.validityFrom.fill("01-04-2026");
+    await formKit.validityFrom.blur();
+    await expectFieldError(formKit.validityTo, /Enter the end date\.$/);
+    await expect(formKit.validityFrom).not.toHaveAttribute("aria-invalid");
+    await expect(formKit.validityFrom).toHaveAccessibleDescription(
+      "The first and the last day the agreement applies.",
+    );
+
+    await formKit.validityTo.fill("31-03-2026");
+    await formKit.validityTo.blur();
+    await expectFieldError(formKit.validityTo, /The end date must be on or after the start date\.$/);
+    await expect(formKit.validityFrom).not.toHaveAttribute("aria-invalid");
+    await expect(formKit.validityFrom).toHaveAccessibleDescription(
+      "The first and the last day the agreement applies.",
+    );
+
+    await formKit.validityFrom.fill("31-02-2026");
+    await formKit.validityFrom.blur();
+    await expectFieldError(
+      formKit.validityFrom,
+      /Enter a real date as day-month-year, for example 31-03-2026\.$/,
+    );
+    await expect(formKit.validityTo).not.toHaveAttribute("aria-invalid");
+  });
+
   test.describe("on the narrowest screen", () => {
     test.use({ viewport: { width: 320, height: 720 } });
 
@@ -554,6 +839,29 @@ test.describe("form kit", () => {
       await formKit.save.click();
       await expect(formKit.summary).toContainText(`Reference: ${exampleReference}`);
       expect(await hasHorizontalOverflow(page), "horizontal overflow with a reference").toBe(false);
+    });
+
+    test("stacks the validity dates so each shows its whole date", async ({ page }) => {
+      const formKit = new FormKitPage(page);
+      await formKit.goto();
+
+      for (const input of [formKit.validityFrom, formKit.validityTo]) {
+        expect(await showsItsWholeText(input), "empty date box shows its placeholder").toBe(true);
+        await input.fill("27-09-2026");
+        expect(await showsItsWholeText(input), "filled date box shows its date").toBe(true);
+      }
+      const from = await formKit.validityFrom.boundingBox();
+      const to = await formKit.validityTo.boundingBox();
+      expect(from, "From bounding box").not.toBeNull();
+      expect(to, "To bounding box").not.toBeNull();
+      expect(to?.y ?? 0, "To below From").toBeGreaterThanOrEqual((from?.y ?? 0) + (from?.height ?? 0));
+      expect(
+        Math.abs(
+          (await verticalCentre(formKit.validityTrigger)) - (await verticalCentre(formKit.validityTo)),
+        ),
+        "Choose dates level with To",
+      ).toBeLessThanOrEqual(2);
+      expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
     });
   });
 });

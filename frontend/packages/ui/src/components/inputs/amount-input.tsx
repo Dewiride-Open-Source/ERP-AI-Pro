@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, type ChangeEvent, type ComponentProps, type FocusEvent } from "react";
+import {
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ComponentProps,
+  type FocusEvent,
+  type MouseEvent,
+} from "react";
 
 import {
   InputGroup,
@@ -41,11 +48,14 @@ export function AmountInput({
   className,
   onFocus,
   onBlur,
+  onMouseDown,
   ...inputProps
 }: AmountInputProps) {
   const format: AmountFormat = { scale, allowNegative };
   const [draft, setDraft] = useState<string | null>(null);
-  let shown = groupIndian(value, scale);
+  const pressedToFocus = useRef(false);
+  const grouped = groupIndian(value, scale);
+  let shown = grouped;
   if (draft !== null) shown = canonicalOf(draft, format) === value ? draft : value;
 
   const onChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -55,28 +65,41 @@ export function AmountInput({
     if (canonical !== value) onValueChange(canonical);
   };
 
-  // The grouped text is swapped for the plain one only after the focus event, and before React renders, so a selection
-  // made while focusing (select all when tabbing in, select() focusing the input first) carries over to the plain text.
+  const showPlainText = (input: HTMLInputElement) => {
+    if (input.ownerDocument.activeElement !== input || input.value !== grouped) return;
+    if (grouped !== value) {
+      const start = input.selectionStart ?? grouped.length;
+      const end = input.selectionEnd ?? grouped.length;
+      input.value = value;
+      if (start === 0 && end === grouped.length) {
+        input.select();
+      } else {
+        input.setSelectionRange(ungroupedOffset(grouped, start, value), ungroupedOffset(grouped, end, value));
+      }
+    }
+    setDraft(value);
+  };
+
+  // A pressed pointer places the caret in the grouped text only after the focus event, so the swap waits for the
+  // release; any other focus swaps before React renders, so a selection made while focusing carries over.
+  const handleMouseDown = (event: MouseEvent<HTMLInputElement>) => {
+    onMouseDown?.(event);
+    const input = event.currentTarget;
+    if (event.defaultPrevented || input.ownerDocument.activeElement === input) return;
+    pressedToFocus.current = true;
+    input.ownerDocument.addEventListener(
+      "mouseup",
+      () => {
+        pressedToFocus.current = false;
+        showPlainText(input);
+      },
+      { capture: true, once: true },
+    );
+  };
+
   const handleFocus = (event: FocusEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
-    queueMicrotask(() => {
-      if (input.ownerDocument.activeElement !== input) return;
-      const grouped = input.value;
-      if (grouped !== value) {
-        const start = input.selectionStart ?? grouped.length;
-        const end = input.selectionEnd ?? grouped.length;
-        input.value = value;
-        if (start === 0 && end === grouped.length) {
-          input.select();
-        } else {
-          input.setSelectionRange(
-            ungroupedOffset(grouped, start, value),
-            ungroupedOffset(grouped, end, value),
-          );
-        }
-      }
-      setDraft(value);
-    });
+    if (!pressedToFocus.current) queueMicrotask(() => showPlainText(input));
     onFocus?.(event);
   };
 
@@ -99,6 +122,7 @@ export function AmountInput({
         autoComplete={inputProps.autoComplete ?? "off"}
         value={shown}
         onChange={onChange}
+        onMouseDown={handleMouseDown}
         onFocus={handleFocus}
         onBlur={handleBlur}
       />

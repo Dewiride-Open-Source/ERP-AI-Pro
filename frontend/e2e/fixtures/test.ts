@@ -48,9 +48,11 @@ export const test = base.extend<Fixtures>({
       const file = screenshotPath(testInfo, name, theme);
       mkdirSync(dirname(file), { recursive: true });
       if (target === undefined) {
+        const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+        await expectOneCapture(page, pageHeight, name);
         await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
       } else {
-        await captureElement(target, file);
+        await captureElement(target, file, name);
       }
       await testInfo.attach(`${name}--${theme}`, { path: file, contentType: "image/png" });
     });
@@ -84,9 +86,34 @@ export async function pressArrowUntilChecked(page: Page, key: string, radio: Loc
   }
 }
 
+export async function tabOntoLink(page: Page, link: Locator): Promise<void> {
+  await link.focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect(link).not.toBeFocused();
+  // WebKit leaves links out of the Tab order unless Safari's "Press Tab to highlight each item" is on, so there the link is
+  // focused from script right after a key press, which :focus-visible treats as keyboard focus.
+  if (page.context().browser()?.browserType().name() === "webkit") await link.focus();
+  else await page.keyboard.press("Tab");
+  await expect(link).toBeFocused();
+}
+
+// Chromium paints at most 16,384 device pixels of a capture's height and leaves the rest blank, and WebKit refuses a capture
+// taller than 32,767, so a capture that would be cut fails here instead of being kept as incomplete evidence.
+const maxCaptureDevicePixels = 16_384;
+
+async function expectOneCapture(page: Page, cssHeight: number, name: string): Promise<void> {
+  const devicePixelRatio = await page.evaluate(() => window.devicePixelRatio);
+  expect(Math.ceil(cssHeight * devicePixelRatio), `height of ${name} in device pixels`).toBeLessThanOrEqual(
+    maxCaptureDevicePixels,
+  );
+}
+
 // An element taller than the viewport is captured from a scrolled page, where a sticky element outside it (the app header)
 // would be painted across the middle of the image; hiding those for the capture keeps the image to the element alone.
-async function captureElement(target: Locator, file: string): Promise<void> {
+async function captureElement(target: Locator, file: string, name: string): Promise<void> {
+  const bounds = await target.boundingBox();
+  expect(bounds, `bounding box of ${name}`).not.toBeNull();
+  await expectOneCapture(target.page(), bounds?.height ?? 0, name);
   await target.evaluate((element, attribute) => {
     for (const candidate of element.ownerDocument.body.querySelectorAll("*")) {
       if (candidate.contains(element) || element.contains(candidate)) continue;

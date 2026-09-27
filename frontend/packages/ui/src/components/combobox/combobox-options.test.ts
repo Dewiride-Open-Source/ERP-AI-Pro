@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  chosenOptionLabel,
   filterComboboxOptions,
   firstEnabledIndex,
   lastEnabledIndex,
   nextEnabledIndex,
+  rememberChosenOption,
   searchText,
   type ComboboxOption,
 } from "./combobox-options.ts";
@@ -95,4 +97,39 @@ test("firstEnabledIndex_DisabledFirstOption_ReturnsTheFirstEnabledOne", () => {
 
 test("lastEnabledIndex_DisabledLastOption_ReturnsTheLastEnabledOne", () => {
   assert.equal(lastEnabledIndex(disabledEnds), 2);
+});
+
+const acme: ComboboxOption = { value: "c-42", label: "Acme Ltd" };
+const beta: ComboboxOption = { value: "c-7", label: "Beta Traders" };
+
+test("rememberChosenOption_ChosenOptionListed_RemembersIt", () => {
+  assert.equal(rememberChosenOption([beta, acme], "c-42", null), acme);
+  assert.equal(rememberChosenOption([acme], "c-42", beta), acme);
+});
+
+test("rememberChosenOption_ChosenOptionMissingFromASearchResult_KeepsTheRememberedOne", () => {
+  const remembered = rememberChosenOption([acme], "c-42", null);
+  assert.equal(rememberChosenOption([beta], "c-42", remembered), acme);
+  assert.equal(chosenOptionLabel("c-42", rememberChosenOption([], "c-42", remembered)), "Acme Ltd");
+});
+
+test("rememberChosenOption_SameValueAndLabelInANewObject_KeepsTheRememberedObject", () => {
+  assert.equal(rememberChosenOption([{ value: "c-42", label: "Acme Ltd" }], "c-42", acme), acme);
+});
+
+test("rememberChosenOption_ListedLabelChanged_RemembersTheNewLabel", () => {
+  const renamed: ComboboxOption = { value: "c-42", label: "Acme Private Limited" };
+  assert.equal(rememberChosenOption([renamed], "c-42", acme), renamed);
+});
+
+test("rememberChosenOption_NoValue_KeepsTheRememberedOne", () => {
+  assert.equal(rememberChosenOption([acme], null, beta), beta);
+  assert.equal(rememberChosenOption([acme], null, null), null);
+});
+
+test("chosenOptionLabel_RememberedOptionOfAnotherValueOrNoValue_IsEmpty", () => {
+  assert.equal(chosenOptionLabel("c-42", acme), "Acme Ltd");
+  assert.equal(chosenOptionLabel("c-7", acme), "");
+  assert.equal(chosenOptionLabel(null, acme), "");
+  assert.equal(chosenOptionLabel("c-42", null), "");
 });

@@ -24,10 +24,11 @@ export type ComboboxListProps = {
 };
 
 function keepInView(list: HTMLElement, option: HTMLElement): void {
-  const top = option.offsetTop;
-  const bottom = top + option.offsetHeight;
-  if (top < list.scrollTop) list.scrollTop = top;
-  else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+  const shown = list.getBoundingClientRect();
+  const wanted = option.getBoundingClientRect();
+  const scale = shown.height / Number.parseFloat(getComputedStyle(list).height) || 1;
+  if (wanted.top < shown.top) list.scrollTop -= Math.ceil((shown.top - wanted.top) / scale);
+  else if (wanted.bottom > shown.bottom) list.scrollTop += Math.ceil((wanted.bottom - shown.bottom) / scale);
 }
 
 export function ComboboxList({
@@ -46,11 +47,20 @@ export function ComboboxList({
   "aria-label": label,
 }: ComboboxListProps) {
   // Only the list scrolls: the popup is still being positioned when an option first becomes active, and scrolling the
-  // option into view through the page would move the page instead.
+  // option into view through the page would move the page instead. Radix caps the popup at the space it measured only
+  // after that first placement, so the option is kept in view again whenever the list's own height changes. The list
+  // fits inside that space less the popup's padding, rounded down to whole pixels: Chromium rounds a scroll range to
+  // whole pixels, so a list of fractional height could never show its last option in full. Options follow the reader's
+  // font size and can still sit at fractional offsets, so each is measured on screen and divided by the scale of the
+  // popup's opening animation to get back to the list's own pixels.
   const listRef = useCallback(
     (list: HTMLUListElement | null) => {
       const option = activeIndex < 0 ? null : list?.children.item(activeIndex);
-      if (list && option instanceof HTMLElement) keepInView(list, option);
+      if (!list || !(option instanceof HTMLElement)) return undefined;
+      keepInView(list, option);
+      const resizes = new ResizeObserver(() => keepInView(list, option));
+      resizes.observe(list);
+      return () => resizes.disconnect();
     },
     [activeIndex],
   );
@@ -71,7 +81,7 @@ export function ComboboxList({
       role="listbox"
       aria-labelledby={labelledBy}
       aria-label={labelledBy === undefined ? label : undefined}
-      className="relative max-h-72 overflow-y-auto"
+      className="relative max-h-[round(down,min(--spacing(72),var(--radix-popover-content-available-height)_-_--spacing(2)),1px)] min-h-0 overflow-y-auto"
     >
       {options.map((option, index) => {
         const active = index === activeIndex;

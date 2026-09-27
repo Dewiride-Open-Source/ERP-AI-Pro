@@ -1,15 +1,10 @@
+import type { FormAlertMessage, FormAlertProps } from "@dewiride/erp-ui/components/forms/form-alert";
 import type { FieldError } from "react-hook-form";
 
 import { formMessages } from "../errors/form-messages.ts";
 import type { FormState } from "../state/form-state.ts";
 
-export type FormAlertMessage = { readonly message: string; readonly fieldId?: string };
-
-export type FormAlertContent = {
-  readonly title: string;
-  readonly messages: readonly FormAlertMessage[];
-  readonly reference?: string;
-};
+export type FormAlertContent = Readonly<Pick<FormAlertProps, "title" | "messages" | "reference">>;
 
 export type FieldLookup = {
   readonly standing: (path: string) => boolean;
@@ -40,6 +35,16 @@ export function formAlertContent(
     case "succeeded":
       return undefined;
   }
+}
+
+export function formErrorAlertContent(message: string | undefined): FormAlertContent | undefined {
+  return message === undefined || message === ""
+    ? undefined
+    : { title: formMessages.detailsNeedAttention, messages: [{ message }] };
+}
+
+export function hasFieldErrors(errors: object): boolean {
+  return Object.keys(errors).some((name) => name !== "root");
 }
 
 export function serverErrorMessage(state: FormState): string | undefined {

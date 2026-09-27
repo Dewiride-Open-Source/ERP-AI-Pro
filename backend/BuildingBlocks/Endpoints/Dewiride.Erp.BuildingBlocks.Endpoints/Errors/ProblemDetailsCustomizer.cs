@@ -32,70 +32,71 @@ internal static class ProblemDetailsCustomizer
 
         if (problem is HttpValidationProblemDetails validation)
         {
-            CamelCaseMemberPaths(validation.Errors);
+            CamelCaseMemberPaths(validation);
         }
     }
 
     // Validation names a nested member by its CLR path (Customer.ShippingAddress.Street, OrderItems[0].Description), and the
-    // serializer's DictionaryKeyPolicy converts only the start of a key, so each member name is converted here instead.
-    private static void CamelCaseMemberPaths(IDictionary<string, string[]> errors)
+    // serializer's DictionaryKeyPolicy converts only the start of a key, so each member name is converted here instead. A
+    // request body yields a key per failing collection element, so keys merge through one ordinal hash lookup each, in the
+    // order validation reported them.
+    private static void CamelCaseMemberPaths(HttpValidationProblemDetails validation)
     {
-        var converted = new List<KeyValuePair<string, string[]>>(errors.Count);
+        var converted = new OrderedDictionary<string, string[]>(validation.Errors.Count, StringComparer.Ordinal);
         var changed = false;
-        foreach (var (key, messages) in errors)
+        foreach (var (key, messages) in validation.Errors)
         {
             var path = ToMemberPath(key);
             changed |= !string.Equals(path, key, StringComparison.Ordinal);
-            var index = converted.FindIndex(entry => string.Equals(entry.Key, path, StringComparison.Ordinal));
-            if (index < 0)
+            if (!converted.TryAdd(path, messages, out var index))
             {
-                converted.Add(new(path, messages));
-            }
-            else
-            {
-                converted[index] = new(path, [.. converted[index].Value, .. messages]);
+                converted.SetAt(index, [.. converted.GetAt(index).Value, .. messages]);
             }
         }
 
-        if (!changed)
+        if (changed)
         {
-            return;
-        }
-
-        errors.Clear();
-        foreach (var (path, messages) in converted)
-        {
-            errors.Add(path, messages);
+            validation.Errors = converted;
         }
     }
 
     private static string ToMemberPath(string key)
     {
-        var path = new StringBuilder(key.Length);
+        StringBuilder? path = null;
         var position = 0;
         while (position < key.Length)
         {
-            if (key[position] == '.')
+            var end = SegmentEnd(key, position);
+            if (char.IsUpper(key[position]))
             {
-                path.Append('.');
-                position++;
-            }
-            else if (key[position] == '[')
-            {
-                var close = key.IndexOf(']', position);
-                var end = close < 0 ? key.Length : close + 1;
-                path.Append(key, position, end - position);
-                position = end;
+                path ??= new StringBuilder(key.Length).Append(key, 0, position);
+                path.Append(JsonNamingPolicy.CamelCase.ConvertName(key[position..end]));
             }
             else
             {
-                var length = key.AsSpan(position).IndexOfAny(MemberNameEnd);
-                var name = key.Substring(position, length < 0 ? key.Length - position : length);
-                path.Append(JsonNamingPolicy.CamelCase.ConvertName(name));
-                position += name.Length;
+                path?.Append(key, position, end - position);
             }
+
+            position = end;
         }
 
-        return path.ToString();
+        return path?.ToString() ?? key;
+    }
+
+    private static int SegmentEnd(string key, int start)
+    {
+        if (key[start] == '.')
+        {
+            return start + 1;
+        }
+
+        if (key[start] == '[')
+        {
+            var close = key.IndexOf(']', start);
+            return close < 0 ? key.Length : close + 1;
+        }
+
+        var length = key.AsSpan(start).IndexOfAny(MemberNameEnd);
+        return length < 0 ? key.Length : start + length;
     }
 }

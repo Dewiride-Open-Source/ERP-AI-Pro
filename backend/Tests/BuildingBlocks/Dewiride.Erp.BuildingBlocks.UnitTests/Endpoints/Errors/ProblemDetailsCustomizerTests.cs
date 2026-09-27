@@ -10,6 +10,10 @@ public sealed class ProblemDetailsCustomizerTests
 {
     private const string CorrelationValue = "0199a1b2c3d4e5f60718293a4b5c6d7e";
 
+    private const int ManyKeys = 100_000;
+
+    private const int ManyKeysTimeoutMilliseconds = 5_000;
+
     [Fact]
     public void Customize_ProblemCarryingACode_TakesTheTypeFromThatCode()
     {
@@ -159,6 +163,57 @@ public sealed class ProblemDetailsCustomizerTests
         var field = Assert.Single(problem.Errors);
         Assert.Equal("customer.name", field.Key);
         Assert.Equal(["Enter the name.", "The name is already registered."], field.Value.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Customize_ValidationProblem_KeepsTheKeysInTheOrderValidationReportedThem()
+    {
+        var problem = ValidationProblem(new(StringComparer.Ordinal)
+        {
+            ["OrderItems[1].Description"] = ["Enter a description."],
+            ["gstin"] = ["Enter a GSTIN."],
+            [""] = ["The order is empty."],
+            ["Customer.Name"] = ["Enter the name."],
+        });
+
+        ProblemDetailsCustomizer.Customize(Context(problem));
+
+        Assert.Equal(["orderItems[1].description", "gstin", "", "customer.name"], problem.Errors.Keys);
+    }
+
+    [Fact]
+    public void Customize_ValidationProblemWhoseKeysFollowTheGrammar_KeepsItsErrors()
+    {
+        var problem = ValidationProblem(new(StringComparer.Ordinal)
+        {
+            ["take"] = ["must be between 1 and 100"],
+            ["orderItems[0].description"] = ["Enter a description."],
+            [""] = ["The order is empty."],
+        });
+        var errors = problem.Errors;
+
+        ProblemDetailsCustomizer.Customize(Context(problem));
+
+        Assert.Same(errors, problem.Errors);
+    }
+
+#pragma warning disable xUnit1069 // Customize is synchronous and takes no token; the timeout exists to fail the test when the conversion outgrows linear time.
+    [Fact(Timeout = ManyKeysTimeoutMilliseconds)]
+#pragma warning restore xUnit1069
+    public void Customize_ValidationProblemWithAKeyForEachOfManyElements_ConvertsEveryKeyInOrderWithinTheTimeout()
+    {
+        var errors = new Dictionary<string, string[]>(ManyKeys, StringComparer.Ordinal);
+        for (var index = 0; index < ManyKeys; index++)
+        {
+            errors[$"Lines[{index}].Description"] = ["Enter a description."];
+        }
+
+        var problem = ValidationProblem(errors);
+
+        ProblemDetailsCustomizer.Customize(Context(problem));
+
+        Assert.Equal(Enumerable.Range(0, ManyKeys).Select(index => $"lines[{index}].description"), problem.Errors.Keys);
+        Assert.All(problem.Errors.Values, messages => Assert.Equal(["Enter a description."], messages));
     }
 
     private static HttpValidationProblemDetails ValidationProblem(Dictionary<string, string[]> errors) =>

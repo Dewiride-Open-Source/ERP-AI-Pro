@@ -3,30 +3,13 @@ import { readFile } from "node:fs/promises";
 
 import type { APIRequestContext, Page, Request, Response } from "@playwright/test";
 
+import { png, type FileUpload } from "../../../fixtures/files";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
-import {
-  AttachmentsPage,
-  attachmentsPath,
-  type UploadFile,
-} from "../../../pages/platform/attachments/files.page";
+import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
 
 const attachmentsApi = "/api/platform/attachments";
 
 const listPageSize = 20;
-
-const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-
-const filler = Buffer.from(Array.from({ length: 251 }, (_, index) => index));
-
-// Content is fixed per size and only the name is unique, so repeated runs deduplicate to one stored file each.
-function png(size = 256): UploadFile {
-  const name = `e2e-${randomUUID().slice(-12)}.png`;
-  return {
-    name,
-    mimeType: "image/png",
-    buffer: Buffer.concat([pngSignature, Buffer.alloc(size - pngSignature.length, filler)]),
-  };
-}
 
 function isUploadRequest(request: Request): boolean {
   return request.method() === "POST" && new URL(request.url()).pathname === attachmentsApi;
@@ -218,7 +201,7 @@ test.describe("attachments page", () => {
 
     forEachTheme("shows the API's reason for refusing the upload", async ({ page, capture }) => {
       const attachments = new AttachmentsPage(page);
-      const file: UploadFile = {
+      const file: FileUpload = {
         name: `fake-${randomUUID().slice(-12)}.png`,
         mimeType: "image/png",
         buffer: Buffer.from("not a png"),
@@ -245,7 +228,7 @@ test.describe("attachments page", () => {
     const uploads = watchUploads(page);
     await attachments.goto();
 
-    await attachments.upload(png(25 * 1024 * 1024 + 1));
+    await attachments.upload(png({ size: 25 * 1024 * 1024 + 1 }));
 
     await expect(attachments.uploadError).toContainText("the file is larger than 25 MB.");
     expect(uploads.count()).toBe(0);
@@ -258,7 +241,7 @@ test.describe("attachments page", () => {
   }) => {
     test.skip(browserName !== "chromium" || isMobile, "one engine is enough for a 12 MB transfer");
     const attachments = new AttachmentsPage(page);
-    const file = png(12 * 1024 * 1024);
+    const file = png({ size: 12 * 1024 * 1024 });
     await attachments.goto();
 
     await attachments.upload(file);

@@ -3,19 +3,22 @@
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { DateRangeInput, type CalendarDateRange } from "@dewiride/erp-ui/components/pickers/date-range-input";
 import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
-import { compareIsoDates, isIsoDate } from "@dewiride/erp-ui/lib/calendar-date";
 import { useState } from "react";
 
+import { dateRangeSchema } from "@/shared/forms/schemas/field-schemas";
+
+import { rangeEndState } from "../../../form-kit/components/range-end-state";
 import { Specimen } from "../specimen";
 
-function orderProblem({ from, to }: CalendarDateRange): readonly string[] | undefined {
-  const reversed = isIsoDate(from) && isIsoDate(to) && compareIsoDates(to, from) < 0;
-  return reversed ? ["The end date must be on or after the start date."] : undefined;
-}
+import { schemaProblems } from "./schema-problems";
+
+const contractPeriodSchema = dateRangeSchema({ required: false });
 
 export function DateRangeSpecimen() {
   const [statement, setStatement] = useState<CalendarDateRange>({ from: "2026-04-01", to: "2026-06-30" });
   const [contract, setContract] = useState<CalendarDateRange>({ from: "2026-06-30", to: "2026-04-01" });
+  const contractFromProblems = schemaProblems(contractPeriodSchema, contract, ["from"]);
+  const contractToProblems = schemaProblems(contractPeriodSchema, contract, ["to"]);
 
   return (
     <Specimen
@@ -33,8 +36,22 @@ export function DateRangeSpecimen() {
             {statement.to === "" ? "(empty)" : statement.to}
           </span>
         </p>
-        <FormField id="ks-forms-contract-period" label="Contract period" errors={orderProblem(contract)}>
-          {(frame) => <DateRangeInput {...frame} value={contract} onValueChange={setContract} />}
+        <FormField
+          id="ks-forms-contract-period"
+          label="Contract period"
+          errors={[...(contractFromProblems ?? []), ...(contractToProblems ?? [])]}
+        >
+          {(frame) => (
+            <DateRangeInput
+              {...frame}
+              ends={{
+                from: rangeEndState(frame, contractFromProblems),
+                to: rangeEndState(frame, contractToProblems),
+              }}
+              value={contract}
+              onValueChange={setContract}
+            />
+          )}
         </FormField>
         <FormField
           id="ks-forms-locked-period"

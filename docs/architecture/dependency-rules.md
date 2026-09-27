@@ -69,6 +69,8 @@ The object providers for framework namespaces (`Microsoft.AspNetCore`, `Microsof
 
 Decided in ADR-0024. Paths are relative to `frontend/apps/web/src/`. The boundary unit is the module, `features/<domain>/<module>/`: its `index.ts` is its public surface and re-exports the components `app/` renders (page components, loading skeletons) and the `nav` manifest, never Server Functions, queries or schemas (I7). The features of one module import each other by relative path.
 
+`apps/web/package.json` declares `"sideEffects": ["./src/instrumentation-client.ts", "*.css"]` (ADR-0025), so Turbopack treats every other web source file as free of side effects: it follows a re-export in a module's `index.ts` to the file that defines the imported name and skips the rest, and a page, or `features/registry.ts` reading each module's `nav`, bundles only the client components of what it imports. Without the declaration Turbopack keeps every re-export whose target imports client or package code, so each page would load the client components of every page its module exports and every `(app)` page those of every registered module. A file whose evaluation does more than define exports (a module-level call, a stylesheet) is added to that list in the same change, or a page that imports none of its exports drops the effect; no check enforces this yet. `tests/smoke/web-bundles.spec.ts` fails when a route's scripts carry another module's client code.
+
 ### Who may import what
 
 | From ↓ · To → | a module's public surface `@/features/<d>/<m>` | another module's internals | `features/registry.ts` | a domain's `_shared/` | `shared/**` | `app/**` | packages |

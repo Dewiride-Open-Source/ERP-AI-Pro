@@ -15,11 +15,15 @@ const sendingFaults: ReadonlySet<string> = new Set([
   problemCodes.idempotencyKeyInvalid,
 ]);
 
+const nodeFetchFailures: ReadonlySet<string> = new Set(["fetch failed", "terminated"]);
+
+const refusedRedirect = "unexpected redirect";
+
 export function problemToFormState(
   error: unknown,
   { aliases = {}, messages = {} }: ProblemMapping = {},
 ): InvalidFormState | FailedFormState {
-  if (error instanceof TypeError) return formFailed(formMessages.unreachable);
+  if (isFetchFailure(error)) return formFailed(formMessages.unreachable);
   if (!(error instanceof ApiError)) throw error;
 
   const { status, problem } = error;
@@ -42,6 +46,15 @@ export function problemToFormState(
   const mapped =
     problem.code !== undefined && Object.hasOwn(messages, problem.code) ? messages[problem.code] : undefined;
   return formFailed(mapped ?? refusal(status, problem), { code: problem.code, reference: problem.traceId });
+}
+
+function isFetchFailure(error: unknown): boolean {
+  return (
+    error instanceof TypeError &&
+    nodeFetchFailures.has(error.message) &&
+    error.cause instanceof Error &&
+    error.cause.message !== refusedRedirect
+  );
 }
 
 function refusal(status: number, problem: Problem): string {

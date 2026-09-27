@@ -38,6 +38,23 @@ export function nextEnabledIndex(
   return -1;
 }
 
+export function rememberChosenOption(
+  options: readonly ComboboxOption[],
+  value: string | null,
+  remembered: ComboboxOption | null,
+): ComboboxOption | null {
+  const listed = value === null ? undefined : options.find((option) => option.value === value);
+  if (listed === undefined) return remembered;
+  if (remembered !== null && remembered.value === listed.value && remembered.label === listed.label) {
+    return remembered;
+  }
+  return listed;
+}
+
+export function chosenOptionLabel(value: string | null, remembered: ComboboxOption | null): string {
+  return value !== null && remembered?.value === value ? remembered.label : "";
+}
+
 export function firstEnabledIndex(options: readonly ComboboxOption[]): number {
   return nextEnabledIndex(options, -1, 1);
 }

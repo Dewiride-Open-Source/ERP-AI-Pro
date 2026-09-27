@@ -43,6 +43,14 @@ function clampYear(year: number): number {
   return Math.min(lastYear, Math.max(firstYear, year));
 }
 
+function paddedYear(year: number): string {
+  return String(clampYear(year)).padStart(4, "0");
+}
+
+function validIsoDate(text: string | undefined): string | undefined {
+  return text !== undefined && isIsoDate(text) ? text : undefined;
+}
+
 export function isIsoDate(text: string): boolean {
   const match = isoDatePattern.exec(text);
   return match !== null && isoFromParts(Number(match[1]), Number(match[2]), Number(match[3])) === text;
@@ -106,14 +114,15 @@ export function calendarNavigationBounds(
   today: string,
   { min, max, selected }: CalendarNavigationOptions = {},
 ): CalendarNavigationBounds {
-  const chosen = selected !== undefined && isIsoDate(selected) ? yearOf(selected) : yearOf(today);
-  const start =
-    min !== undefined && isIsoDate(min)
-      ? min
-      : `${String(clampYear(Math.min(yearOf(today) - calendarYearsBack, chosen))).padStart(4, "0")}-01-01`;
-  const end =
-    max !== undefined && isIsoDate(max)
-      ? max
-      : `${String(clampYear(Math.max(yearOf(today) + calendarYearsAhead, chosen))).padStart(4, "0")}-12-31`;
-  return { start, end };
+  const earliest = validIsoDate(min);
+  const latest = validIsoDate(max);
+  const chosen = yearOf(validIsoDate(selected) ?? today);
+  const startYears = [yearOf(today) - calendarYearsBack, chosen];
+  const endYears = [yearOf(today) + calendarYearsAhead, chosen];
+  if (latest !== undefined) startYears.push(yearOf(latest));
+  if (earliest !== undefined) endYears.push(yearOf(earliest));
+  return {
+    start: earliest ?? `${paddedYear(Math.min(...startYears))}-01-01`,
+    end: latest ?? `${paddedYear(Math.max(...endYears))}-12-31`,
+  };
 }

@@ -61,7 +61,9 @@ function rehearsedFailure(answer: ServerAnswer): Error | undefined {
         traceId: exampleTraceId,
       });
     case "unreachable":
-      return new TypeError("fetch failed");
+      return new TypeError("fetch failed", {
+        cause: Object.assign(new Error("connect ECONNREFUSED 127.0.0.1:5080"), { code: "ECONNREFUSED" }),
+      });
   }
 }
 

@@ -1,3 +1,11 @@
+import { compareIsoDates, formatDisplayDate, isIsoDate } from "@dewiride/erp-ui/lib/calendar-date";
+import {
+  groupIndian,
+  maxAmountIntegerDigits,
+  maxAmountScale,
+  normaliseAmount,
+  type AmountFormat,
+} from "@dewiride/erp-ui/lib/indian-number";
 import { z } from "zod";
 
 export type TextFieldSchema<TRequired extends boolean> = z.ZodType<
@@ -27,22 +35,31 @@ export type DateRangeOptions<TRequired extends boolean> = {
   readonly max?: string | undefined;
 };
 
-export const amountIntegerDigits = 15;
+type AmountParts = { readonly negative: boolean; readonly integer: string; readonly fraction: string };
 
-export const amountMaximumScale = 4;
+type AmountBound = { readonly parts: AmountParts; readonly shown: string };
+
+type AmountRules = {
+  readonly format: AmountFormat;
+  readonly min: AmountBound | undefined;
+  readonly max: AmountBound | undefined;
+  readonly requiredMessage: string;
+};
 
 const amountDecoration = /[\s,₹]/g;
-const decimalText = /^(-?)(\d*)(?:\.(\d*))?$/;
-const canonicalDecimal = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/;
-const isoDate = z.iso.date();
+const amountFigures = /^(-?)(\d+)(?:\.(\d+))?$/;
+const leadingZeros = /^0+(?=\d)/;
+const anyAmount: AmountFormat = { scale: maxAmountScale, allowNegative: true };
+const realDateMessage = "Enter a real date as day-month-year, for example 31-03-2026.";
 
 export function optionalInput<TOutput>(
   schema: z.ZodType<TOutput, string>,
 ): z.ZodType<TOutput | undefined, string> {
   return z
     .string()
-    .transform((value) => (value.trim() === "" ? undefined : value))
-    .pipe(schema.optional());
+    .nullish()
+    .transform((value) => (value === undefined || value === null || value.trim() === "" ? undefined : value))
+    .pipe(schema.optional()) as z.ZodType<TOutput | undefined, string>;
 }
 
 export function requiredText(
@@ -65,14 +82,26 @@ export function requiredText(
 export function amountSchema<TRequired extends boolean>(
   options: AmountOptions<TRequired>,
 ): TextFieldSchema<TRequired> {
-  const { scale, min, max, allowNegative = false, requiredMessage = "Enter an amount." } = options;
-  assertAmountOptions(scale, min, max, allowNegative);
+  const { scale, allowNegative = false, requiredMessage = "Enter an amount." } = options;
+  if (!Number.isInteger(scale) || scale < 0 || scale > maxAmountScale) {
+    throw new RangeError(
+      `An amount's scale is a whole number from 0 to ${maxAmountScale}; received ${scale}.`,
+    );
+  }
 
+  const format: AmountFormat = { scale, allowNegative };
+  const min = amountBound(options.min, format);
+  const max = amountBound(options.max, format);
+  if (min !== undefined && max !== undefined && compareAmounts(min.parts, max.parts) > 0) {
+    throw new RangeError(`The amount bounds are reversed: ${options.min} is above ${options.max}.`);
+  }
+
+  const rules: AmountRules = { format, min, max, requiredMessage };
   const amount = z
     .string({ error: requiredMessage })
-    .overwrite((text) => canonicalAmount(text))
+    .overwrite(canonicalAmount)
     .superRefine((value, context) => {
-      const problem = amountProblem(value, { scale, min, max, allowNegative, requiredMessage });
+      const problem = amountProblem(value, rules);
       if (problem !== undefined) context.addIssue({ code: "custom", message: problem });
     });
   return (options.required ? amount : optionalInput(amount)) as TextFieldSchema<TRequired>;
@@ -102,7 +131,11 @@ export function dateRangeSchema<TRequired extends boolean>(options: DateRangeOpt
       to: calendarDateSchema({ ...bounds, requiredMessage: "Enter the end date." }),
     })
     .superRefine((range, context) => {
-      if (isCalendarDate(range.from) && isCalendarDate(range.to) && range.to < range.from) {
+      if (
+        isCalendarDate(range.from) &&
+        isCalendarDate(range.to) &&
+        compareIsoDates(range.to, range.from) < 0
+      ) {
         context.addIssue({
           code: "custom",
           path: ["to"],
@@ -114,48 +147,72 @@ export function dateRangeSchema<TRequired extends boolean>(options: DateRangeOpt
 
 function canonicalAmount(text: string): string {
   const bare = text.replace(amountDecoration, "");
-  const match = decimalText.exec(bare);
-  if (match === null) return bare;
-
-  const [, sign = "", integerText = "", fraction] = match;
-  if (integerText === "" && (fraction === undefined || fraction === "")) return bare;
-
-  const integer = integerText.replace(/^0+(?=\d)/, "") || "0";
-  const zero = integer === "0" && /^0*$/.test(fraction ?? "");
-  return `${zero ? "" : sign}${integer}${fraction ? `.${fraction}` : ""}`;
+  const normalised = normaliseAmount(bare, anyAmount);
+  return "canonical" in normalised && normalised.canonical !== "" ? normalised.canonical : bare;
 }
 
 function amountProblem(
   value: string,
-  options: {
-    readonly scale: number;
-    readonly min: string | undefined;
-    readonly max: string | undefined;
-    readonly allowNegative: boolean;
-    readonly requiredMessage: string;
-  },
+  { format, min, max, requiredMessage }: AmountRules,
 ): string | undefined {
-  const { scale, min, max, allowNegative, requiredMessage } = options;
   if (value === "") return requiredMessage;
-  if (!canonicalDecimal.test(value)) return "Enter the amount in figures, for example 1250.50.";
 
-  const { negative, integer, fraction } = decimalParts(value);
-  if (integer.length > amountIntegerDigits) {
-    return `Enter an amount with at most ${amountIntegerDigits} digits before the decimal point.`;
+  const parts = amountParts(value);
+  if (parts === undefined) return "Enter the amount in figures, for example 1250.50.";
+  if (parts.integer.replace(leadingZeros, "").length > maxAmountIntegerDigits) {
+    return `Enter an amount with at most ${maxAmountIntegerDigits} digits before the decimal point.`;
   }
-  if (fraction.length > scale) {
-    return scale === 0
+  if (parts.fraction.length > format.scale) {
+    return format.scale === 0
       ? "Enter a whole amount, without paise."
-      : `Enter at most ${scale} digits after the decimal point.`;
+      : `Enter at most ${format.scale} digits after the decimal point.`;
   }
-  if (negative && !allowNegative) return "Enter an amount of zero or more.";
-  if (min !== undefined && compareAmounts(value, min) < 0) {
-    return `Enter an amount of at least ${rupees(min, scale)}.`;
-  }
-  if (max !== undefined && compareAmounts(value, max) > 0) {
-    return `Enter an amount of at most ${rupees(max, scale)}.`;
-  }
+  if (parts.negative && !format.allowNegative) return "Enter an amount of zero or more.";
+  if (min !== undefined && compareAmounts(parts, min.parts) < 0)
+    return `Enter an amount of at least ${min.shown}.`;
+  if (max !== undefined && compareAmounts(parts, max.parts) > 0)
+    return `Enter an amount of at most ${max.shown}.`;
   return undefined;
+}
+
+function amountBound(bound: string | undefined, format: AmountFormat): AmountBound | undefined {
+  if (bound === undefined) return undefined;
+
+  const parts = amountParts(bound);
+  const normalised = normaliseAmount(bound, format);
+  if (parts === undefined || !("canonical" in normalised) || normalised.canonical !== bound) {
+    throw new RangeError(`The amount bound ${bound} is not an amount this field accepts.`);
+  }
+
+  const grouped = groupIndian(
+    parts.fraction === "" ? parts.integer : `${parts.integer}.${parts.fraction}`,
+    format.scale,
+  );
+  return { parts, shown: `${parts.negative ? "-" : ""}₹${grouped}` };
+}
+
+function amountParts(value: string): AmountParts | undefined {
+  const match = amountFigures.exec(value);
+  if (match === null) return undefined;
+
+  const [, sign = "", integer = "", fraction = ""] = match;
+  return { negative: sign !== "", integer, fraction };
+}
+
+function compareAmounts(a: AmountParts, b: AmountParts): number {
+  if (a.negative !== b.negative) return a.negative ? -1 : 1;
+  const magnitude = compareMagnitudes(a, b);
+  return a.negative ? -magnitude : magnitude;
+}
+
+function compareMagnitudes(a: AmountParts, b: AmountParts): number {
+  if (a.integer.length !== b.integer.length) return a.integer.length < b.integer.length ? -1 : 1;
+  if (a.integer !== b.integer) return a.integer < b.integer ? -1 : 1;
+  const length = Math.max(a.fraction.length, b.fraction.length);
+  const fractionA = a.fraction.padEnd(length, "0");
+  const fractionB = b.fraction.padEnd(length, "0");
+  if (fractionA === fractionB) return 0;
+  return fractionA < fractionB ? -1 : 1;
 }
 
 function dateProblem(
@@ -168,92 +225,27 @@ function dateProblem(
 ): string | undefined {
   const { min, max, requiredMessage } = options;
   if (value === "") return requiredMessage;
-  if (!isCalendarDate(value)) return "Enter a real date as day-month-year, for example 31-03-2026.";
-  if (min !== undefined && value < min) return `Enter a date on or after ${displayDate(min)}.`;
-  if (max !== undefined && value > max) return `Enter a date on or before ${displayDate(max)}.`;
+  if (!isIsoDate(value)) return realDateMessage;
+  if (min !== undefined && compareIsoDates(value, min) < 0) {
+    return `Enter a date on or after ${formatDisplayDate(min)}.`;
+  }
+  if (max !== undefined && compareIsoDates(value, max) > 0) {
+    return `Enter a date on or before ${formatDisplayDate(max)}.`;
+  }
   return undefined;
 }
 
 function isCalendarDate(value: string | undefined): value is string {
-  return value !== undefined && isoDate.safeParse(value).success;
-}
-
-function displayDate(isoValue: string): string {
-  const [year, month, day] = isoValue.split("-");
-  return `${day}-${month}-${year}`;
-}
-
-function decimalParts(value: string): {
-  readonly negative: boolean;
-  readonly integer: string;
-  readonly fraction: string;
-} {
-  const negative = value.startsWith("-");
-  const [integer = "", fraction = ""] = (negative ? value.slice(1) : value).split(".");
-  return { negative, integer, fraction };
-}
-
-function compareAmounts(left: string, right: string): number {
-  const a = decimalParts(left);
-  const b = decimalParts(right);
-  if (a.negative !== b.negative) return a.negative ? -1 : 1;
-  const magnitude = compareMagnitudes(a, b);
-  return a.negative ? -magnitude : magnitude;
-}
-
-function compareMagnitudes(
-  a: { readonly integer: string; readonly fraction: string },
-  b: { readonly integer: string; readonly fraction: string },
-): number {
-  if (a.integer.length !== b.integer.length) return a.integer.length < b.integer.length ? -1 : 1;
-  if (a.integer !== b.integer) return a.integer < b.integer ? -1 : 1;
-  const length = Math.max(a.fraction.length, b.fraction.length);
-  const fractionA = a.fraction.padEnd(length, "0");
-  const fractionB = b.fraction.padEnd(length, "0");
-  if (fractionA === fractionB) return 0;
-  return fractionA < fractionB ? -1 : 1;
-}
-
-function rupees(amount: string, scale: number): string {
-  const { negative, integer, fraction } = decimalParts(amount);
-  const head = integer.slice(0, -3);
-  const grouped = head === "" ? integer : `${head.replace(/\B(?=(\d{2})+$)/g, ",")},${integer.slice(-3)}`;
-  const paise = scale > 0 ? `.${fraction.padEnd(scale, "0")}` : "";
-  return `${negative ? "-" : ""}₹${grouped}${paise}`;
-}
-
-function assertAmountOptions(
-  scale: number,
-  min: string | undefined,
-  max: string | undefined,
-  allowNegative: boolean,
-): void {
-  if (!Number.isInteger(scale) || scale < 0 || scale > amountMaximumScale) {
-    throw new RangeError(
-      `An amount's scale is a whole number from 0 to ${amountMaximumScale}; received ${scale}.`,
-    );
-  }
-  for (const bound of [min, max]) {
-    if (bound === undefined) continue;
-    const { negative, integer, fraction } = decimalParts(bound);
-    const fits =
-      canonicalDecimal.test(bound) && integer.length <= amountIntegerDigits && fraction.length <= scale;
-    if (!fits || (negative && !allowNegative)) {
-      throw new RangeError(`The amount bound ${bound} is not an amount this field accepts.`);
-    }
-  }
-  if (min !== undefined && max !== undefined && compareAmounts(min, max) > 0) {
-    throw new RangeError(`The amount bounds are reversed: ${min} is above ${max}.`);
-  }
+  return value !== undefined && isIsoDate(value);
 }
 
 function assertDateBounds(min: string | undefined, max: string | undefined): void {
   for (const bound of [min, max]) {
-    if (bound !== undefined && !isCalendarDate(bound)) {
+    if (bound !== undefined && !isIsoDate(bound)) {
       throw new RangeError(`The date bound ${bound} is not a yyyy-MM-dd calendar date.`);
     }
   }
-  if (min !== undefined && max !== undefined && min > max) {
+  if (min !== undefined && max !== undefined && compareIsoDates(min, max) > 0) {
     throw new RangeError(`The date bounds are reversed: ${min} is after ${max}.`);
   }
 }

@@ -3,12 +3,15 @@
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { DateInput } from "@dewiride/erp-ui/components/pickers/date-input";
 import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
-import { isIsoDate } from "@dewiride/erp-ui/lib/calendar-date";
 import { useState } from "react";
+
+import { calendarDateSchema } from "@/shared/forms/schemas/field-schemas";
 
 import { Specimen } from "../specimen";
 
-const realDateMessage = "Enter a real date as day-month-year, for example 31-03-2026.";
+import { schemaProblems } from "./schema-problems";
+
+const deliveryDateSchema = calendarDateSchema({ required: false });
 
 export function DateSpecimen() {
   const [invoiceDate, setInvoiceDate] = useState("2026-03-31");
@@ -45,7 +48,7 @@ export function DateSpecimen() {
         <FormField
           id="ks-forms-delivery-date"
           label="Delivery date"
-          errors={deliveryDate === "" || isIsoDate(deliveryDate) ? undefined : [realDateMessage]}
+          errors={schemaProblems(deliveryDateSchema, deliveryDate)}
         >
           {(frame) => <DateInput {...frame} value={deliveryDate} onValueChange={setDeliveryDate} />}
         </FormField>

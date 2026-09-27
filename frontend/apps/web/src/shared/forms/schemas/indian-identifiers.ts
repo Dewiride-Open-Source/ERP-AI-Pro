@@ -1,8 +1,7 @@
+import { normaliseIdentifier } from "@dewiride/erp-ui/lib/identifiers";
 import { z } from "zod";
 
 export const identifierLengths = { gstin: 15, pan: 10, ifsc: 11 } as const;
-
-const outsideIdentifier = /[^0-9A-Z]/g;
 
 // GST Council, "Registration under GST Law" (first two digits the State code), and CBIC, "FAQs: Registration" Q2.1
 // (a 15-character GSTIN); shape only, because no allow-listed source publishes the check character.
@@ -29,7 +28,7 @@ export const ifscSchema = identifierSchema(
 function identifierSchema(required: string, shape: RegExp, malformed: string) {
   return z
     .string({ error: required })
-    .overwrite((value) => value.toUpperCase().replace(outsideIdentifier, ""))
+    .overwrite((value) => normaliseIdentifier(value, Math.max(value.length, 1)))
     .min(1, { error: required, abort: true })
     .regex(shape, { error: malformed });
 }

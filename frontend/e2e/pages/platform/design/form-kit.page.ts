@@ -1,5 +1,7 @@
 import { expect, type JSHandle, type Locator, type Page, type Request } from "@playwright/test";
 
+import type { FileUpload } from "../../../fixtures/files";
+
 export const formKitPath = "/design/form-kit";
 
 export type ServerAnswer =
@@ -9,8 +11,6 @@ export type ServerAnswer =
   | "Report the supplier as already registered"
   | "Fail with a server error"
   | "Do not respond (API unreachable)";
-
-export type DroppedFile = { name: string; mimeType: string; buffer: Buffer };
 
 export type SupplierDetails = {
   legalName: string;
@@ -46,7 +46,6 @@ export const validSupplier: SupplierDetails = {
 };
 
 export class FormKitPage {
-  readonly root: Locator;
   readonly heading: Locator;
   readonly form: Locator;
   readonly summary: Locator;
@@ -75,7 +74,6 @@ export class FormKitPage {
   readonly idempotencyKey: Locator;
 
   constructor(private readonly page: Page) {
-    this.root = page.getByTestId("form-kit");
     this.heading = page.getByRole("heading", { name: "Form kit", level: 1 });
     this.form = page.getByRole("form", { name: "Register a supplier (example)" });
     this.summary = this.form.locator("[data-slot='alert']");
@@ -86,13 +84,13 @@ export class FormKitPage {
     this.state = this.form.getByRole("combobox", { name: "State of the registered office" });
     this.category = this.form.getByRole("combobox", { name: "Category" });
     this.openingBalance = this.form.getByRole("textbox", { name: "Opening balance" });
-    this.agreementStart = this.form.getByRole("textbox", { name: "Agreement starts on" });
-    // While a calendar is open the rest of the page is hidden from assistive technology, so the triggers are found by test id
-    // and label attribute rather than by role.
+    // While a calendar is open the rest of the page is hidden from assistive technology, so the date boxes and their
+    // triggers are found by test id and by the end of the field id or by label attribute rather than by role.
     const formElement = page.getByTestId("supplier-example-form");
+    this.agreementStart = formElement.locator("input[id$='-agreementStart']");
     this.agreementStartTrigger = formElement.locator("button[aria-label='Choose date']");
-    this.validityFrom = this.form.getByRole("textbox", { name: "Validity From" });
-    this.validityTo = this.form.getByRole("textbox", { name: "Validity To" });
+    this.validityFrom = formElement.locator("input[id$='-validity-from']");
+    this.validityTo = formElement.locator("input[id$='-validity-to']");
     this.validityTrigger = formElement.locator("button[aria-label='Choose dates']");
     this.document = this.form.getByTestId("agreement-document");
     this.dropZone = this.document.getByTestId("file-drop-zone");
@@ -124,6 +122,10 @@ export class FormKitPage {
 
   summaryLink(message: string): Locator {
     return this.summary.getByRole("link", { name: message, exact: true });
+  }
+
+  fieldOf(control: Locator): Locator {
+    return control.locator("xpath=ancestor::*[@data-slot='field'][1]");
   }
 
   async choose(select: Locator, option: string): Promise<void> {
@@ -171,7 +173,7 @@ export class FormKitPage {
     return suffix ?? "";
   }
 
-  async transferOf(file: DroppedFile): Promise<JSHandle<DataTransfer>> {
+  async transferOf(file: FileUpload): Promise<JSHandle<DataTransfer>> {
     return this.page.evaluateHandle(
       ({ name, mimeType, bytes }) => {
         const transfer = new DataTransfer();

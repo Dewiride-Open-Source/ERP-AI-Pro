@@ -19,7 +19,7 @@ A step implements `IPipelineStep` and declares its `PipelineStage`. The order co
 | Stage | Step | What it does |
 |---|---|---|
 | `Logging` | `LoggingStep` | starts an activity on the source `Dewiride.Erp.Application` named after the request, tags it with the request, handler and kind, logs the outcome (commands at information, queries at debug; a failed result logs its error code, an exception logs a warning and is rethrown) |
-| `Validation` | `ValidationStep` | `Validator.TryValidateObject(validateAllProperties: true)` over the request, including `IValidatableObject`; a failure returns `Error.Validation("request.invalid", …)` whose `Fields` carry one message list per member, so nothing reaches the database |
+| `Validation` | `ValidationStep` | `Validator.TryValidateObject(validateAllProperties: true)` over the request's top-level properties (a nested object is not validated), then its class-level attributes and `IValidatableObject`; a failure returns `Error.Validation("request.invalid", …)` whose `Fields` carry one message list per member name the results carry, and `""` for a result that names no member ([HTTP conventions](http-conventions.md)), so nothing reaches the database |
 | `UnitOfWork` | `UnitOfWorkStep` (`BuildingBlocks.Persistence`) | commands only, and only when the handler's assembly owns a context in the `DbContextCatalog`: runs the handler inside `EfUnitOfWork.RunAsync` on that context; queries pass straight through |
 
 ## Unit of work

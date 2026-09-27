@@ -3,6 +3,7 @@ import { test } from "node:test";
 
 import {
   defaultSupplierExampleValues,
+  gstinPanMismatch,
   legalNameMaxLength,
   supplierExampleFieldAliases,
   supplierExampleSchema,
@@ -121,6 +122,19 @@ test("supplierExampleSchema_OneFieldRefused_ReportsOnlyThatField", () => {
   for (const { change, expected } of refusals) {
     assert.deepEqual(reported({ ...complete, ...change }), [expected], JSON.stringify(change));
   }
+});
+
+test("supplierExampleSchema_PanOutsideTheGstin_ReportsOneIssueWithoutAPath", () => {
+  assert.deepEqual(reported({ ...complete, pan: "AABCH1234K" }), [`: ${gstinPanMismatch}`]);
+  assert.deepEqual(reported({ ...complete, gstin: "29AABCH1234K1Z5" }), [`: ${gstinPanMismatch}`]);
+});
+
+test("supplierExampleSchema_GstinOrPanRefusedOnItsOwn_LeavesOutTheMatchCheck", () => {
+  assert.deepEqual(reported({ ...complete, gstin: "", pan: "AABCH1234K" }), ["gstin: Enter the GSTIN."]);
+  assert.deepEqual(reported({ ...complete, pan: "" }), ["pan: Enter the PAN."]);
+  assert.deepEqual(reported({ ...complete, gstin: "29AABCG1234K1Z", pan: "AABCH1234K" }), [
+    "gstin: Enter a 15-character GSTIN: two digits, then 13 letters or digits.",
+  ]);
 });
 
 test("supplierExampleFieldAliases_EveryTarget_IsAFieldOfTheForm", () => {

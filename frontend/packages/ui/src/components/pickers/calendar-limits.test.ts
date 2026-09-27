@@ -43,3 +43,14 @@ test("calendarLimits_MinAndMax_DisableTheDaysOutsideThemAndBoundTheNavigation", 
   assert.ok(after && typeof after === "object" && "after" in after);
   assert.equal(isoOf(after.after), "2027-03-31");
 });
+
+test("calendarLimits_LoneLimitBeyondTheDefaultSpan_NavigatesWithinItsYear", () => {
+  const future = calendarLimits("2026-09-27", { min: "2060-04-01" });
+  assert.equal(isoOf(future.defaultMonth), "2060-04-01");
+  assert.equal(isoOf(future.startMonth), "2060-04-01");
+  assert.equal(isoOf(future.endMonth), "2060-12-31");
+  const past = calendarLimits("2026-09-27", { max: "1900-03-31" });
+  assert.equal(isoOf(past.defaultMonth), "1900-03-31");
+  assert.equal(isoOf(past.startMonth), "1900-01-01");
+  assert.equal(isoOf(past.endMonth), "1900-03-31");
+});

@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "./src/instrumentation-client.ts",
+    "*.css"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",

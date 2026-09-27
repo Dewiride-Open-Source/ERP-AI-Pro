@@ -71,8 +71,8 @@ export function FormField({
     <FieldLabel id={formFieldLabelId(controlId)} htmlFor={controlId}>
       {label}
       {required ? (
-        <span aria-hidden="true" className="text-muted-foreground">
-          *
+        <span aria-hidden="true" className="font-normal text-muted-foreground">
+          (required)
         </span>
       ) : null}
     </FieldLabel>

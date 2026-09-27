@@ -38,10 +38,23 @@ const branches: readonly ComboboxOption[] = [
   { value: "pune", label: "Pune" },
 ];
 
+const suppliers: readonly ComboboxOption[] = [
+  { value: "globex", label: "Globex Cloud Services" },
+  { value: "initech", label: "Initech Software" },
+  { value: "umbrella", label: "Umbrella Logistics" },
+];
+
+function searchSuppliers(text: string): readonly ComboboxOption[] {
+  const query = text.trim().toLowerCase();
+  return suppliers.filter((supplier) => supplier.label.toLowerCase().includes(query));
+}
+
 export function ComboboxSpecimen() {
   const [account, setAccount] = useState<string | null>(null);
   const [defaultAccount, setDefaultAccount] = useState<string | null>("professional-fees");
   const [costCentre, setCostCentre] = useState<string | null>(null);
+  const [supplier, setSupplier] = useState<string | null>("globex");
+  const [supplierSearch, setSupplierSearch] = useState("Globex Cloud Services");
   const [clientSearch, setClientSearch] = useState("Acme");
 
   return (
@@ -108,6 +121,26 @@ export function ComboboxSpecimen() {
             />
           )}
         </FormField>
+        <FormField
+          id="ks-forms-supplier-search"
+          label="Supplier"
+          description="Searched on the server: each answer lists only the matches, so the chosen supplier can drop out of it."
+        >
+          {(frame) => (
+            <Combobox
+              {...frame}
+              options={searchSuppliers(supplierSearch)}
+              value={supplier}
+              onValueChange={setSupplier}
+              inputValue={supplierSearch}
+              onInputValueChange={setSupplierSearch}
+              emptyMessage="No supplier matches."
+            />
+          )}
+        </FormField>
+        <p className="text-caption text-muted-foreground" data-testid="forms-supplier-value">
+          Value: <span className="font-mono">{supplier ?? "(none)"}</span>
+        </p>
         <FormField
           id="ks-forms-client-search"
           label="Client"

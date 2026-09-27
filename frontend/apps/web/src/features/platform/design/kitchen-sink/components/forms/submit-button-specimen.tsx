@@ -20,12 +20,7 @@ export function SubmitButtonSpecimen() {
       description="Disabled until the page is interactive and while a save runs, with a spinner beside a label that never changes."
     >
       <SpecimenRow label="Ready; pressing it starts a save">
-        <form
-          noValidate
-          onSubmit={onSubmit}
-          data-testid="forms-submit-example"
-          className="flex flex-wrap gap-3"
-        >
+        <form noValidate onSubmit={onSubmit} className="flex flex-wrap gap-3">
           <SubmitButton pending={pending} ready>
             Save
           </SubmitButton>

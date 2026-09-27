@@ -51,6 +51,13 @@ test("optionalInput_EmptyOrBlank_IsAbsent", () => {
   assert.equal(schema.parse("   "), undefined);
 });
 
+test("optionalInput_AbsentValue_IsAbsent", () => {
+  const schema = optionalInput(requiredText(10));
+
+  assert.equal(schema.parse(undefined), undefined);
+  assert.equal(schema.parse(null), undefined);
+});
+
 test("optionalInput_AnyOtherText_MustSatisfyTheSchema", () => {
   const schema = optionalInput(requiredText(3));
 
@@ -102,6 +109,15 @@ test("amountSchema_TooManyDigitsBeforeThePoint_IsRefused", () => {
   ]);
 });
 
+test("amountSchema_TooManyDigitsBehindLeadingZeros_NamesTheDigitLimit", () => {
+  assert.deepEqual(messages(amountSchema({ scale: 2, required: true }), "0001000000000000000"), [
+    "Enter an amount with at most 15 digits before the decimal point.",
+  ]);
+  assert.deepEqual(messages(amountSchema({ scale: 2, required: true }), "0012.34567"), [
+    "Enter at most 2 digits after the decimal point.",
+  ]);
+});
+
 test("amountSchema_TooManyDigitsAfterThePoint_NamesTheScale", () => {
   assert.deepEqual(messages(amountSchema({ scale: 2, required: true }), "1.234"), [
     "Enter at most 2 digits after the decimal point.",
@@ -135,6 +151,30 @@ test("amountSchema_NegativeBound_IsShownWithItsSign", () => {
   assert.equal(schema.parse("-500"), "-500");
 });
 
+test("amountSchema_AmountAndBoundOfOppositeSigns_AreComparedBySignFirst", () => {
+  const aboveNegativeMinimum = amountSchema({ scale: 2, required: true, allowNegative: true, min: "-500" });
+  const acrossZero = amountSchema({ scale: 2, required: true, allowNegative: true, min: "-10", max: "10" });
+
+  assert.equal(aboveNegativeMinimum.parse("100"), "100");
+  assert.equal(aboveNegativeMinimum.parse("0"), "0");
+  assert.equal(acrossZero.parse("0"), "0");
+  assert.equal(acrossZero.parse("-0"), "0");
+  assert.equal(acrossZero.parse("-9.99"), "-9.99");
+  assert.equal(acrossZero.parse("10"), "10");
+  assert.deepEqual(messages(acrossZero, "10.01"), ["Enter an amount of at most ₹10.00."]);
+  assert.deepEqual(messages(acrossZero, "-10.01"), ["Enter an amount of at least -₹10.00."]);
+});
+
+test("amountSchema_BoundsOfOppositeSigns_AreCheckedForOrderWhenTheSchemaIsBuilt", () => {
+  assert.doesNotThrow(() =>
+    amountSchema({ scale: 2, required: true, allowNegative: true, min: "-5", max: "5" }),
+  );
+  assert.throws(
+    () => amountSchema({ scale: 2, required: true, allowNegative: true, min: "5", max: "-5" }),
+    RangeError,
+  );
+});
+
 test("amountSchema_BoundsBeyondTheExactRangeOfNumbers_AreComparedExactly", () => {
   const schema = amountSchema({ scale: 2, required: true, max: "12345678901234.5" });
 
@@ -152,6 +192,18 @@ test("amountSchema_Optional_IsAbsentWhenEmpty", () => {
   assert.equal(schema.parse("  "), undefined);
   assert.equal(schema.parse("12.50"), "12.50");
   assert.deepEqual(messages(schema, "twelve"), ["Enter the amount in figures, for example 1250.50."]);
+});
+
+test("amountSchema_OptionalAndAbsent_IsAbsent", () => {
+  const schema = amountSchema({ scale: 2, required: false, max: "100" });
+
+  assert.equal(schema.parse(undefined), undefined);
+  assert.equal(schema.parse(null), undefined);
+});
+
+test("amountSchema_RequiredAndAbsent_AsksForTheAmount", () => {
+  assert.deepEqual(messages(amountSchema({ scale: 2, required: true }), undefined), ["Enter an amount."]);
+  assert.deepEqual(messages(amountSchema({ scale: 2, required: true }), null), ["Enter an amount."]);
 });
 
 test("amountSchema_OptionsThatCannotDescribeAnAmount_AreRefusedWhenTheSchemaIsBuilt", () => {
@@ -183,6 +235,9 @@ test("calendarDateSchema_DateThatDoesNotExist_AsksForARealDate", () => {
     "2026-00-10",
     "2026-01-00",
     "2026-1-5",
+    "0000-01-01",
+    "0000-02-29",
+    "0000-06-15",
   ]) {
     assert.deepEqual(
       messages(schema, date),
@@ -222,9 +277,28 @@ test("calendarDateSchema_Optional_IsAbsentWhenEmpty", () => {
   assert.equal(schema.parse("2026-04-01"), "2026-04-01");
 });
 
+test("calendarDateSchema_OptionalAndAbsent_IsAbsent", () => {
+  const schema = calendarDateSchema({ required: false, min: "2026-04-01" });
+
+  assert.equal(schema.parse(undefined), undefined);
+  assert.equal(schema.parse(null), undefined);
+});
+
+test("calendarDateSchema_RequiredAndAbsent_AsksForTheDate", () => {
+  assert.deepEqual(messages(calendarDateSchema({ required: true }), undefined), ["Enter a date."]);
+});
+
+test("dateRangeSchema_OptionalRangeWithAbsentEnds_IsAbsent", () => {
+  assert.deepEqual(dateRangeSchema({ required: false }).parse({ from: undefined, to: null }), {
+    from: undefined,
+    to: undefined,
+  });
+});
+
 test("calendarDateSchema_BoundsThatAreNotDates_AreRefusedWhenTheSchemaIsBuilt", () => {
   assert.throws(() => calendarDateSchema({ required: true, min: "2026-02-30" }), RangeError);
   assert.throws(() => calendarDateSchema({ required: true, max: "31-03-2027" }), RangeError);
+  assert.throws(() => calendarDateSchema({ required: true, min: "0000-01-01" }), RangeError);
   assert.throws(
     () => calendarDateSchema({ required: true, min: "2027-01-01", max: "2026-12-31" }),
     RangeError,

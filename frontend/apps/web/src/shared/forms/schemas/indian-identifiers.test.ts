@@ -15,6 +15,19 @@ test("gstinSchema_TypedWithSpacesAndLowerCase_IsTheCanonicalGstin", () => {
   assert.equal(gstinSchema.parse("29-AAAAA-1303-P1ZV"), "29AAAAA1303P1ZV");
 });
 
+test("gstinSchema_LetterOutsideBasicLatin_IsDroppedLikeTheInputDropsIt", () => {
+  const dotlessI = String.fromCodePoint(0x131);
+  const sharpS = String.fromCodePoint(0xdf);
+
+  assert.deepEqual(messages(gstinSchema, `27abcde1234f1z${dotlessI}`), [
+    "Enter a 15-character GSTIN: two digits, then 13 letters or digits.",
+  ]);
+  assert.deepEqual(messages(gstinSchema, `27abcde1234f1${sharpS}`), [
+    "Enter a 15-character GSTIN: two digits, then 13 letters or digits.",
+  ]);
+  assert.equal(gstinSchema.parse(`27abcde1234f1z${dotlessI}5`), "27ABCDE1234F1Z5");
+});
+
 test("gstinSchema_AnyEntityCodeAndCheckCharacter_IsAccepted", () => {
   for (const gstin of ["29AAAAA1303P1ZV", "07ABCDE1234F2DX", "99ABCDE1234F9X9", "0512345678901AB"]) {
     assert.equal(gstinSchema.parse(gstin), gstin);

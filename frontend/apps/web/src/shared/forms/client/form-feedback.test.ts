@@ -1,17 +1,24 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { z } from "zod";
+
 import { formMessages } from "../errors/form-messages.ts";
+import { schemaResolver } from "../schemas/schema-resolver.ts";
 import { formFailed, formInvalid, formSucceeded, idleFormState } from "../state/form-state.ts";
 import {
   fieldErrorMessages,
   formAlertContent,
+  formErrorAlertContent,
   formFieldId,
+  hasFieldErrors,
   serverErrorMessage,
   type FieldLookup,
 } from "./form-feedback.ts";
 
 const traceId = "0af7651916cd43dd8448eb211c80319c";
+
+const resolverOptions = { fields: {}, shouldUseNativeValidation: undefined };
 
 const everyFieldStanding: FieldLookup = { standing: () => true, fieldId: (path) => `supplier-${path}` };
 
@@ -67,6 +74,39 @@ test("formAlertContent_FailedState_IsTitledWithItsMessageAndCarriesTheReference"
 test("formAlertContent_IdleOrSucceededState_ShowsNoAlert", () => {
   assert.equal(formAlertContent(idleFormState, everyFieldStanding), undefined);
   assert.equal(formAlertContent(formSucceeded("Saved."), everyFieldStanding), undefined);
+});
+
+test("formErrorAlertContent_FormLevelMessage_IsListedUnderTheAttentionTitle", () => {
+  assert.deepEqual(formErrorAlertContent("Choose two different accounts."), {
+    title: formMessages.detailsNeedAttention,
+    messages: [{ message: "Choose two different accounts." }],
+  });
+});
+
+test("formErrorAlertContent_NoMessage_ShowsNoAlert", () => {
+  assert.equal(formErrorAlertContent(undefined), undefined);
+  assert.equal(formErrorAlertContent(""), undefined);
+});
+
+test("formErrorAlertContent_SchemaIssueWithoutAPath_ReachesTheSummaryWithNoFieldToFocus", async () => {
+  const schema = z
+    .object({ from: z.string(), to: z.string() })
+    .refine((value) => value.from !== value.to, "Choose two different accounts.");
+
+  const { errors } = await schemaResolver(schema)({ from: "cash", to: "cash" }, undefined, resolverOptions);
+
+  assert.equal(hasFieldErrors(errors), false);
+  assert.deepEqual(formErrorAlertContent(errors.root?.message), {
+    title: formMessages.detailsNeedAttention,
+    messages: [{ message: "Choose two different accounts." }],
+  });
+});
+
+test("hasFieldErrors_ErrorsOnFieldsOrOnlyOnTheForm_TellsThemApart", () => {
+  assert.equal(hasFieldErrors({}), false);
+  assert.equal(hasFieldErrors({ root: { type: "custom", message: "Check the form." } }), false);
+  assert.equal(hasFieldErrors({ legalName: { type: "too_small" } }), true);
+  assert.equal(hasFieldErrors({ root: { type: "custom" }, lines: { root: { type: "too_small" } } }), true);
 });
 
 test("serverErrorMessage_EachState_IsTheFormLevelMessageOrNothing", () => {

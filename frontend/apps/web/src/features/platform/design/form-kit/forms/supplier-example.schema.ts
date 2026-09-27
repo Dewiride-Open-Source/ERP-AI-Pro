@@ -61,26 +61,37 @@ const categoryMissing = "Choose a category from the list.";
 
 const serverAnswerMissing = "Choose how the server answers.";
 
-export const supplierExampleSchema = z.object({
-  legalName: requiredText(legalNameMaxLength, { required: "Enter the supplier's legal name." }),
-  gstin: gstinSchema,
-  pan: panSchema,
-  ifsc: ifscSchema,
-  state: z.string({ error: stateMissing }).pipe(z.enum(supplierStates, { error: stateMissing })),
-  category: z.string({ error: categoryMissing }).pipe(z.enum(supplierCategories, { error: categoryMissing })),
-  openingBalance: amountSchema({ scale: 2, required: false, max: openingBalanceMaximum }),
-  agreementStart: calendarDateSchema({
-    required: true,
-    min: agreementStartEarliest,
-    max: agreementStartLatest,
-    requiredMessage: "Enter the date the agreement starts.",
-  }),
-  validity: dateRangeSchema({ required: true }),
-  agreementDocumentId: optionalInput(z.uuid({ error: "Upload the agreement document again." })),
-  serverAnswer: z
-    .string({ error: serverAnswerMissing })
-    .pipe(z.enum(serverAnswers, { error: serverAnswerMissing })),
-});
+export const gstinPanMismatch = "The PAN does not match the GSTIN, whose 3rd to 12th characters are the PAN.";
+
+export const supplierExampleSchema = z
+  .object({
+    legalName: requiredText(legalNameMaxLength, { required: "Enter the supplier's legal name." }),
+    gstin: gstinSchema,
+    pan: panSchema,
+    ifsc: ifscSchema,
+    state: z.string({ error: stateMissing }).pipe(z.enum(supplierStates, { error: stateMissing })),
+    category: z
+      .string({ error: categoryMissing })
+      .pipe(z.enum(supplierCategories, { error: categoryMissing })),
+    openingBalance: amountSchema({ scale: 2, required: false, max: openingBalanceMaximum }),
+    agreementStart: calendarDateSchema({
+      required: true,
+      min: agreementStartEarliest,
+      max: agreementStartLatest,
+      requiredMessage: "Enter the date the agreement starts.",
+    }),
+    validity: dateRangeSchema({ required: true }),
+    agreementDocumentId: optionalInput(z.uuid({ error: "Upload the agreement document again." })),
+    serverAnswer: z
+      .string({ error: serverAnswerMissing })
+      .pipe(z.enum(serverAnswers, { error: serverAnswerMissing })),
+  })
+  // GST Council, "Registration under GST Law": the 10 characters after a GSTIN's State code are the PAN of the legal
+  // entity. The issue names no field because either one may be the mistyped one, and it waits until both are well formed.
+  .refine((supplier) => supplier.gstin.slice(2, 12) === supplier.pan, {
+    error: gstinPanMismatch,
+    when: ({ issues }) => !issues.some(({ path }) => path?.[0] === "gstin" || path?.[0] === "pan"),
+  });
 
 export type SupplierExampleValues = z.input<typeof supplierExampleSchema>;
 

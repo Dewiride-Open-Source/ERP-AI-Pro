@@ -118,10 +118,11 @@ test("localDateToIsoDate_InvalidDate_Throws", () => {
   assert.throws(() => localDateToIsoDate(new Date(10000, 0, 1)), RangeError);
 });
 
-test("isoDateToLocalDate_RoundTripInEveryTimeZone_KeepsTheCalendarDay", () => {
+test("isoDateToLocalDate_EveryDayOf2026InEveryTimeZoneOfTheRuntime_RoundTripsTheCalendarDay", () => {
   const original = process.env.TZ;
+  let skippedMidnights = 0;
   try {
-    for (const zone of ["Asia/Kolkata", "UTC", "America/Santiago", "America/Sao_Paulo", "Pacific/Apia"]) {
+    for (const zone of Intl.supportedValuesOf("timeZone")) {
       process.env.TZ = zone;
       for (
         let day = new Date(Date.UTC(2026, 0, 1));
@@ -132,12 +133,16 @@ test("isoDateToLocalDate_RoundTripInEveryTimeZone_KeepsTheCalendarDay", () => {
         const local = isoDateToLocalDate(isoDate);
         assert.ok(local, isoDate);
         assert.equal(localDateToIsoDate(local), isoDate, `${zone} ${isoDate}`);
+        if (new Date(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate()).getHours() !== 0) {
+          skippedMidnights += 1;
+        }
       }
     }
   } finally {
     if (original === undefined) delete process.env.TZ;
     else process.env.TZ = original;
   }
+  assert.ok(skippedMidnights > 0, "no zone of the runtime skips a midnight in 2026");
 });
 
 test("compareIsoDates_TwoDates_OrdersThemChronologically", () => {
@@ -174,6 +179,41 @@ test("calendarNavigationBounds_SelectedDateOutsideTheDefaultSpan_WidensIt", () =
     start: "1926-01-01",
     end: "2099-12-31",
   });
+});
+
+test("calendarNavigationBounds_LoneMinBeyondTheDefaultSpan_EndsInTheYearOfTheMin", () => {
+  assert.deepEqual(calendarNavigationBounds("2026-09-27", { min: "2060-04-01" }), {
+    start: "2060-04-01",
+    end: "2060-12-31",
+  });
+  assert.deepEqual(calendarNavigationBounds("2026-09-27", { min: "2057-01-01" }), {
+    start: "2057-01-01",
+    end: "2057-12-31",
+  });
+});
+
+test("calendarNavigationBounds_LoneMaxBeforeTheDefaultSpan_StartsInTheYearOfTheMax", () => {
+  assert.deepEqual(calendarNavigationBounds("2026-09-27", { max: "1900-03-31" }), {
+    start: "1900-01-01",
+    end: "1900-03-31",
+  });
+  assert.deepEqual(calendarNavigationBounds("2026-09-27", { max: "1925-12-31" }), {
+    start: "1925-01-01",
+    end: "1925-12-31",
+  });
+});
+
+test("calendarNavigationBounds_AnyLoneLimit_NeverStartsAfterItEnds", () => {
+  for (let year = 1; year <= 9999; year += 37) {
+    const limit = `${String(year).padStart(4, "0")}-06-15`;
+    for (const options of [{ min: limit }, { max: limit }, { min: limit, selected: "1950-01-01" }]) {
+      const bounds = calendarNavigationBounds("2026-09-27", options);
+      assert.ok(
+        compareIsoDates(bounds.start, bounds.end) <= 0,
+        `${JSON.stringify(options)} ${JSON.stringify(bounds)}`,
+      );
+    }
+  }
 });
 
 test("calendarNavigationBounds_SpanPastTheDateOnlyRange_StopsAtItsEnds", () => {

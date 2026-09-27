@@ -3,7 +3,6 @@ import { test } from "node:test";
 
 import {
   groupIndian,
-  isCanonicalAmount,
   maxAmountScale,
   normaliseAmount,
   sanitiseAmountText,
@@ -14,6 +13,17 @@ import {
 const rupees: AmountFormat = { scale: 2, allowNegative: false };
 const signedRupees: AmountFormat = { scale: 2, allowNegative: true };
 const wholeUnits: AmountFormat = { scale: 0, allowNegative: false };
+
+const minusSign = String.fromCodePoint(0x2212);
+const enDash = String.fromCodePoint(0x2013);
+const smallHyphenMinus = String.fromCodePoint(0xfe63);
+const fullwidthHyphenMinus = String.fromCodePoint(0xff0d);
+
+function typeIntoAmount(keys: string, format: AmountFormat): string {
+  let text = "";
+  for (const key of keys) text = sanitiseAmountText(text + key, format);
+  return text;
+}
 
 test("sanitiseAmountText_PastedGroupedRupees_KeepsDigitsAndThePoint", () => {
   assert.equal(sanitiseAmountText("₹ 1,23,45,678.90", rupees), "12345678.90");
@@ -41,27 +51,64 @@ test("sanitiseAmountText_MoreDecimalsThanTheScale_AreDropped", () => {
   assert.equal(sanitiseAmountText("0.12345", { scale: 4, allowNegative: false }), "0.1234");
 });
 
-test("sanitiseAmountText_ScaleZero_DropsThePoint", () => {
-  assert.equal(sanitiseAmountText("1500.75", wholeUnits), "150075");
+test("sanitiseAmountText_ScaleZero_KeepsThePointAndDropsTheFraction", () => {
+  assert.equal(sanitiseAmountText("1500.75", wholeUnits), "1500.");
+  assert.equal(sanitiseAmountText("₹25,00,000.00", wholeUnits), "2500000.");
+  assert.deepEqual(normaliseAmount(sanitiseAmountText("₹25,00,000.00", wholeUnits), wholeUnits), {
+    canonical: "2500000",
+  });
 });
 
-test("sanitiseAmountText_MinusWhenNegativesAreAllowed_KeepsOnlyALeadingMinus", () => {
-  assert.equal(sanitiseAmountText("-1500", signedRupees), "-1500");
+test("sanitiseAmountText_TypedOneKeyAtATime_KeepsTheSizeOfTheAmount", () => {
+  assert.equal(typeIntoAmount("1500.50", wholeUnits), "1500.");
+  assert.equal(typeIntoAmount("1500.505", rupees), "1500.50");
+  assert.equal(typeIntoAmount(`${minusSign}25.5`, signedRupees), "-25.5");
+});
+
+test("sanitiseAmountText_MinusSignsAndParentheses_BecomeALeadingMinus", () => {
+  const cases: [string, string][] = [
+    ["-1500", "-1500"],
+    [`${minusSign}2,500.00`, "-2500.00"],
+    [`${enDash}2,500.00`, "-2500.00"],
+    [`${smallHyphenMinus}2,500.00`, "-2500.00"],
+    [`${fullwidthHyphenMinus}2,500.00`, "-2500.00"],
+    ["(2,500.00)", "-2500.00"],
+    ["₹(2,500.00)", "-2500.00"],
+    [`₹ ${minusSign}2,500`, "-2500"],
+    ["Rs. (2,500)", "-2500"],
+  ];
+  for (const [text, expected] of cases) {
+    assert.equal(sanitiseAmountText(text, signedRupees), expected, JSON.stringify(text));
+    assert.deepEqual(normaliseAmount(expected, signedRupees), { canonical: expected }, JSON.stringify(text));
+  }
+});
+
+test("sanitiseAmountText_MinusAfterADigitOrASecondMinus_IsDropped", () => {
   assert.equal(sanitiseAmountText("--15-00", signedRupees), "-1500");
   assert.equal(sanitiseAmountText("15-00", signedRupees), "1500");
+  assert.equal(sanitiseAmountText("(-2500)", signedRupees), "-2500");
+  assert.equal(sanitiseAmountText(`2500${minusSign}`, signedRupees), "2500");
 });
 
-test("sanitiseAmountText_MinusWhenNegativesAreRefused_IsDropped", () => {
-  assert.equal(sanitiseAmountText("-1500", rupees), "1500");
+test("sanitiseAmountText_MinusWhenNegativesAreRefused_IsKeptSoTheAmountIsInvalid", () => {
+  for (const text of ["-1500", `${minusSign}1,500`, "(1,500.00)"]) {
+    const sanitised = sanitiseAmountText(text, rupees);
+    assert.ok(sanitised.startsWith("-"), JSON.stringify(text));
+    assert.deepEqual(normaliseAmount(sanitised, rupees), { invalid: true }, JSON.stringify(text));
+  }
 });
 
-test("sanitiseAmountText_MoreThanFifteenSignificantIntegerDigits_StopsAtFifteen", () => {
-  assert.equal(sanitiseAmountText("1234567890123456789", rupees), "123456789012345");
-  assert.equal(sanitiseAmountText("0001234567890123456", rupees), "000123456789012345");
+test("sanitiseAmountText_MoreThanFifteenIntegerDigits_KeepsThemSoTheAmountIsInvalid", () => {
+  const pasted = sanitiseAmountText("1,23,45,67,89,01,23,456.00", rupees);
+  assert.equal(pasted, "1234567890123456.00");
+  assert.deepEqual(normaliseAmount(pasted, rupees), { invalid: true });
+  assert.equal(sanitiseAmountText("1234567890123456789", rupees), "1234567890123456789");
+  assert.equal(sanitiseAmountText("000999999999999999", rupees), "000999999999999999");
+  assert.deepEqual(normaliseAmount("000999999999999999", rupees), { canonical: "999999999999999" });
 });
 
 test("sanitiseAmountText_AnyPrefix_SanitisesToAPrefixOfTheWhole", () => {
-  const alphabet = "0123456789.-,₹ ae";
+  const alphabet = `0123456789.-,₹ ae()${minusSign}${enDash}`;
   let seed = 20260927;
   const next = () => {
     seed = (seed * 1103515245 + 12345) % 2147483648;
@@ -111,6 +158,7 @@ test("normaliseAmount_TypedText_ReturnsTheCanonicalDecimal", () => {
     ["999999999999999.99", rupees, "999999999999999.99"],
     ["0000999999999999999", rupees, "999999999999999"],
     ["1500", wholeUnits, "1500"],
+    ["1500.", wholeUnits, "1500"],
   ];
   for (const [text, format, canonical] of cases) {
     assert.deepEqual(normaliseAmount(text, format), { canonical }, JSON.stringify(text));
@@ -126,6 +174,7 @@ test("normaliseAmount_TextOutsideTheGrammar_IsInvalid", () => {
     ["1.2.3", rupees],
     ["--1", signedRupees],
     ["1-", signedRupees],
+    ["-", rupees],
     ["-1", rupees],
     ["12.345", rupees],
     ["12.5", wholeUnits],
@@ -134,16 +183,6 @@ test("normaliseAmount_TextOutsideTheGrammar_IsInvalid", () => {
   for (const [text, format] of cases) {
     assert.deepEqual(normaliseAmount(text, format), { invalid: true }, JSON.stringify(text));
   }
-});
-
-test("isCanonicalAmount_OnlyTheNormalisedForm_IsCanonical", () => {
-  assert.equal(isCanonicalAmount("1234567.50", rupees), true);
-  assert.equal(isCanonicalAmount("-12", signedRupees), true);
-  assert.equal(isCanonicalAmount("", rupees), true);
-  assert.equal(isCanonicalAmount("012", rupees), false);
-  assert.equal(isCanonicalAmount("12.", rupees), false);
-  assert.equal(isCanonicalAmount("-0", signedRupees), false);
-  assert.equal(isCanonicalAmount("1,234", rupees), false);
 });
 
 test("groupIndian_CanonicalAmount_GroupsInLakhsAndCrores", () => {

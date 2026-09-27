@@ -12,9 +12,12 @@ export const maxAmountScale = 4;
 interface SanitisedAmount {
   text: string;
   pointSeen: boolean;
-  significantIntegerDigits: number;
   fractionDigits: number;
 }
+
+// Text copied from documents and spreadsheets writes a minus as U+2212 MINUS SIGN, U+2013 EN DASH, U+FE63 SMALL
+// HYPHEN-MINUS or U+FF0D FULLWIDTH HYPHEN-MINUS, and an accounting negative in parentheses: "(2,500.00)".
+const minusCharacters = new Set(["-", "(", ...String.fromCodePoint(0x2212, 0x2013, 0xfe63, 0xff0d)]);
 
 const amountPattern = /^(-?)(\d*)(?:\.(\d*))?$/;
 const canonicalAmountPattern = /^(-?)(\d+)(?:\.(\d+))?$/;
@@ -32,43 +35,31 @@ function isDigit(character: string): boolean {
 }
 
 // A point straight after a letter ends an abbreviation such as "Rs.", so it never becomes the decimal point.
-function acceptsPoint(amount: SanitisedAmount, previous: string, format: AmountFormat): boolean {
-  return !amount.pointSeen && format.scale > 0 && !letterPattern.test(previous);
+function acceptsPoint(amount: SanitisedAmount, previous: string): boolean {
+  return !amount.pointSeen && !letterPattern.test(previous);
 }
 
 function appendDigit(amount: SanitisedAmount, digit: string, format: AmountFormat): void {
-  if (amount.pointSeen) {
-    if (amount.fractionDigits < format.scale) {
-      amount.fractionDigits += 1;
-      amount.text += digit;
-    }
-    return;
-  }
-  if (amount.significantIntegerDigits === 0 && digit === "0") {
+  if (!amount.pointSeen) {
     amount.text += digit;
-  } else if (amount.significantIntegerDigits < maxAmountIntegerDigits) {
-    amount.significantIntegerDigits += 1;
+  } else if (amount.fractionDigits < format.scale) {
+    amount.fractionDigits += 1;
     amount.text += digit;
   }
 }
 
 export function sanitiseAmountText(text: string, format: AmountFormat): string {
   assertScale(format.scale);
-  const amount: SanitisedAmount = {
-    text: "",
-    pointSeen: false,
-    significantIntegerDigits: 0,
-    fractionDigits: 0,
-  };
+  const amount: SanitisedAmount = { text: "", pointSeen: false, fractionDigits: 0 };
   let previous = "";
 
   for (const character of text) {
     if (isDigit(character)) {
       appendDigit(amount, character, format);
-    } else if (character === "." && acceptsPoint(amount, previous, format)) {
+    } else if (character === "." && acceptsPoint(amount, previous)) {
       amount.pointSeen = true;
       amount.text += ".";
-    } else if (character === "-" && format.allowNegative && amount.text === "") {
+    } else if (minusCharacters.has(character) && amount.text === "") {
       amount.text = "-";
     }
     previous = character;
@@ -93,11 +84,6 @@ export function normaliseAmount(text: string, format: AmountFormat): AmountNorma
   const digits = fraction === "" ? significantInteger || "0" : `${significantInteger || "0"}.${fraction}`;
   const zero = significantInteger === "" && /^0*$/.test(fraction);
   return { canonical: sign !== "" && !zero ? `-${digits}` : digits };
-}
-
-export function isCanonicalAmount(text: string, format: AmountFormat): boolean {
-  const normalised = normaliseAmount(text, format);
-  return "canonical" in normalised && normalised.canonical === text;
 }
 
 function groupIntegerDigits(integer: string): string {

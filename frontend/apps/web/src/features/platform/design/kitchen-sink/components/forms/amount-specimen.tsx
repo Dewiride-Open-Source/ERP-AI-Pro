@@ -3,12 +3,15 @@
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { AmountInput } from "@dewiride/erp-ui/components/inputs/amount-input";
 import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
-import { groupIndian } from "@dewiride/erp-ui/lib/indian-number";
 import { useState } from "react";
+
+import { amountSchema } from "@/shared/forms/schemas/field-schemas";
 
 import { Specimen } from "../specimen";
 
-const discountLimit = "100000";
+import { schemaProblems } from "./schema-problems";
+
+const discountSchema = amountSchema({ scale: 2, required: false, max: "100000" });
 
 export function AmountSpecimen() {
   const [invoiceAmount, setInvoiceAmount] = useState("12345678.5");
@@ -52,15 +55,7 @@ export function AmountSpecimen() {
             <AmountInput {...frame} value={adjustment} onValueChange={setAdjustment} allowNegative />
           )}
         </FormField>
-        <FormField
-          id="ks-forms-discount"
-          label="Discount"
-          errors={
-            Number(discount) > Number(discountLimit)
-              ? [`Enter an amount of at most ₹${groupIndian(discountLimit, 2)}.`]
-              : undefined
-          }
-        >
+        <FormField id="ks-forms-discount" label="Discount" errors={schemaProblems(discountSchema, discount)}>
           {(frame) => <AmountInput {...frame} value={discount} onValueChange={setDiscount} />}
         </FormField>
         <FormField id="ks-forms-rate" label="Rate" disabled>
