@@ -41,3 +41,7 @@ These settings live outside the repository and must be applied by the owner in *
 - [ ] Default branch `main`; merge button: squash only; automatically delete head branches.
 - [ ] Issues enabled with the templates in `.github/ISSUE_TEMPLATE/`; Discussions optional.
 - [ ] Packages: GitHub Container Registry visibility for `ghcr.io/dewiride-open-source/erp-ai-pro/*` is set when the first image is published.
+
+## Labels
+
+- [ ] Labels `dependencies`, `backend`, `frontend`, `ci` and `infra` exist (`gh label create <name>`): `.github/dependabot.yml` applies them to every update pull request, and Dependabot posts a comment instead of labelling when one is missing.
