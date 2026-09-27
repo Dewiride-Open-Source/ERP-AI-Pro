@@ -27,6 +27,12 @@ const detour = {
   message: "Write the import path without a '..' detour; the boundary rules check the normalised path.",
 };
 
+const currentFolderDetour = {
+  regex: String.raw`.+/\.(?:/|$)`,
+  message:
+    "Write the import path without a './' after its start; the boundary rules check the normalised path.",
+};
+
 const featuresFromShared = [
   { regex: "^@/features(?:/|$)" },
   { regex: String.raw`^(?:\./)?(?:\.\./)+(?:[^/]+/)*features(?:/|$)` },
@@ -42,14 +48,16 @@ const relativeFromApp = {
 
 function moduleEscape(depth) {
   return {
-    regex: String.raw`^(?:\./)?(?:\.\.(?:/|$)){${depth + 1}}(?!_shared/)`,
+    regex: String.raw`^(?:\./)?(?:\.\.(?:/|$)){${depth + 1}}(?!_shared(?:/|$))`,
     message:
       "A relative import stays inside its module or reaches its domain's _shared folder; import another module through @/features/<domain>/<module>.",
   };
 }
 
-function routeAllowList(extraSpecifiers, message) {
-  const allowed = [
+const selectorRegexSlash = String.raw`\u` + "002F";
+
+function routeSpecifiers(extraSpecifiers) {
+  return [
     `next(?:/${pathSegment})*`,
     "react",
     `@/shared(?:/${pathSegment})+`,
@@ -57,26 +65,44 @@ function routeAllowList(extraSpecifiers, message) {
     `@/features/${kebabSegment}/${kebabSegment}(?:/index)?`,
     ...extraSpecifiers,
   ];
-
-  return { regex: String.raw`^(?!\.)(?!(?:${allowed.join("|")})$)`, caseSensitive: true, message };
 }
 
-const routeImports = routeAllowList(
-  [],
-  "Route files import only next, react, @/shared/*, @/features/registry and a module's public surface @/features/<domain>/<module>; move anything else into the feature or shared/.",
-);
+function routeAllowList(specifiers, message) {
+  return { regex: String.raw`^(?!\.)(?!(?:${specifiers.join("|")})$)`, caseSensitive: true, message };
+}
 
-const rootLayoutImports = routeAllowList(
-  [`@dewiride/erp-ui(?:/${pathSegment})+`, `geist(?:/${pathSegment})+`],
-  "The root layout imports only next, react, @dewiride/erp-ui/*, geist/*, @/shared/*, @/features/registry and a module's public surface @/features/<domain>/<module>.",
-);
+function dynamicRouteAllowList(specifiers, message) {
+  const allowed = specifiers.join("|").replaceAll("/", selectorRegexSlash);
+  return [
+    { selector: 'ImportExpression[source.type!="Literal"]', message },
+    { selector: `ImportExpression[source.type="Literal"][source.value!=/^(?:${allowed})$/]`, message },
+  ];
+}
+
+const routeImportSpecifiers = routeSpecifiers([]);
+const routeImportsMessage =
+  "Route files import only next, react, @/shared/*, @/features/registry and a module's public surface @/features/<domain>/<module>; move anything else into the feature or shared/.";
+
+const documentImportSpecifiers = routeSpecifiers([
+  `@dewiride/erp-ui(?:/${pathSegment})+`,
+  `geist(?:/${pathSegment})+`,
+]);
+const documentImportsMessage =
+  "The root layout and the global error import only next, react, @dewiride/erp-ui/*, geist/*, @/shared/*, @/features/registry and a module's public surface @/features/<domain>/<module>.";
+
+const apiClientMessage =
+  "Only shared/api calls the API: import @dewiride/erp-api-client types with `import type` and send requests through shared/api/client.ts.";
 
 const apiClientValues = {
   name: "@dewiride/erp-api-client",
   allowTypeImports: true,
-  message:
-    "Only shared/api calls the API: import @dewiride/erp-api-client types with `import type` and send requests through shared/api/client.ts.",
+  message: apiClientMessage,
 };
+
+const apiClientDynamicImports = [
+  `ImportExpression[source.value="${apiClientValues.name}"]`,
+  `ImportExpression[source.type="TemplateLiteral"] TemplateElement[value.cooked="${apiClientValues.name}"]`,
+].map((selector) => ({ selector, message: apiClientMessage }));
 
 const httpMessage =
   "Only shared/api sends HTTP requests: call the API through callApi or sendApi (shared/api/client.ts), or uploadFile (shared/api/upload.ts).";
@@ -89,10 +115,13 @@ const httpPropertyRestrictions = ["globalThis", "window", "self"].flatMap((objec
   httpGlobals.map((property) => ({ object, property, message: httpMessage })),
 );
 
-const objectHref = {
-  selector: 'JSXAttribute[name.name="href"] > JSXExpressionContainer > ObjectExpression',
+const objectHrefs = [
+  'JSXAttribute[name.name="href"] > JSXExpressionContainer > ObjectExpression',
+  'JSXAttribute[name.name="href"] > JSXExpressionContainer :matches(TSAsExpression, TSSatisfiesExpression, TSNonNullExpression, ConditionalExpression, LogicalExpression) > ObjectExpression',
+].map((selector) => ({
+  selector,
   message: "Write href as a route string so typed routes check it; an object href is not checked.",
-};
+}));
 
 const routeMarkup = {
   selector: 'JSXOpeningElement[name.type="JSXIdentifier"][name.name=/^[a-z]/]',
@@ -111,11 +140,11 @@ function restrictedImports(patterns, { apiClient = true } = {}) {
 }
 
 function restrictedSyntax(...restrictions) {
-  return ["error", ...typeRoleRestrictions, objectHref, ...restrictions];
+  return ["error", ...typeRoleRestrictions, ...objectHrefs, ...restrictions];
 }
 
-const sourceImports = [moduleInternals, domainSharedAlias, appAlias, detour];
-const sharedImports = [appAlias, detour, ...featuresFromShared];
+const sourceImports = [moduleInternals, domainSharedAlias, appAlias, detour, currentFolderDetour];
+const sharedImports = [appAlias, detour, currentFolderDetour, ...featuresFromShared];
 
 export function featureBoundaryConfigs() {
   return [
@@ -124,7 +153,7 @@ export function featureBoundaryConfigs() {
       files: [`src/**/*.${sourceExtensions}`],
       rules: {
         "no-restricted-imports": restrictedImports(sourceImports),
-        "no-restricted-syntax": restrictedSyntax(),
+        "no-restricted-syntax": restrictedSyntax(...apiClientDynamicImports),
         "no-restricted-globals": ["error", ...httpGlobalRestrictions],
         "no-restricted-properties": ["error", ...httpPropertyRestrictions],
       },
@@ -148,6 +177,7 @@ export function featureBoundaryConfigs() {
       files: [`src/shared/api/**/*.${sourceExtensions}`],
       rules: {
         "no-restricted-imports": restrictedImports(sharedImports, { apiClient: false }),
+        "no-restricted-syntax": restrictedSyntax(),
         "no-restricted-globals": "off",
         "no-restricted-properties": "off",
       },
@@ -156,25 +186,28 @@ export function featureBoundaryConfigs() {
       name: "erp/feature-boundaries/app",
       files: [`src/app/**/*.${sourceExtensions}`],
       rules: {
-        "no-restricted-imports": restrictedImports([relativeFromApp, routeImports], { apiClient: false }),
-        "no-restricted-syntax": restrictedSyntax(routeMarkup),
+        "no-restricted-imports": restrictedImports(
+          [relativeFromApp, routeAllowList(routeImportSpecifiers, routeImportsMessage)],
+          { apiClient: false },
+        ),
+        "no-restricted-syntax": restrictedSyntax(
+          routeMarkup,
+          ...dynamicRouteAllowList(routeImportSpecifiers, routeImportsMessage),
+        ),
       },
     },
     {
-      name: "erp/feature-boundaries/app-root-layout",
-      files: [`src/app/layout.${sourceExtensions}`],
+      name: "erp/feature-boundaries/app-document",
+      files: [`src/app/layout.${sourceExtensions}`, `src/app/global-error.${sourceExtensions}`],
       rules: {
-        "no-restricted-imports": restrictedImports([relativeFromApp, rootLayoutImports], {
-          apiClient: false,
-        }),
-        "no-restricted-syntax": restrictedSyntax(documentMarkup),
-      },
-    },
-    {
-      name: "erp/feature-boundaries/app-global-error",
-      files: [`src/app/global-error.${sourceExtensions}`],
-      rules: {
-        "no-restricted-syntax": restrictedSyntax(documentMarkup),
+        "no-restricted-imports": restrictedImports(
+          [relativeFromApp, routeAllowList(documentImportSpecifiers, documentImportsMessage)],
+          { apiClient: false },
+        ),
+        "no-restricted-syntax": restrictedSyntax(
+          documentMarkup,
+          ...dynamicRouteAllowList(documentImportSpecifiers, documentImportsMessage),
+        ),
       },
     },
   ];

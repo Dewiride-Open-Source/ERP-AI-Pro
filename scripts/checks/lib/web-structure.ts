@@ -1,3 +1,4 @@
+import { withoutComments } from "./code-text.ts";
 import { byLocation, type WebRule, type WebSourceFile, type WebViolation } from "./web-source.ts";
 
 type Report = (path: string, rule: WebRule, message: string) => void;
@@ -31,7 +32,6 @@ const camelCaseName = /^[a-z][A-Za-z0-9]*$/;
 const featureSubfolders = new Set(["components", "server", "forms", "hooks", "ai"]);
 const schemaFile = /^([a-z][a-z0-9]*(?:-[a-z0-9]+)*)\.schema(\.test)?\.ts$/;
 const hookFile = /^(use-[a-z0-9]+(?:-[a-z0-9]+)*)(?:\.tsx?|(\.test)\.ts)$/;
-const leadingTrivia = /^(?:\s+|\/\/[^\n]*|\/\*[\s\S]*?\*\/)*/;
 const useServerDirective = /^(["'])use server\1[ \t]*(?:;|\r?\n|$)/;
 const serverOnlyImport = /^[ \t]*import[ \t]+(["'])server-only\1[ \t]*;?[ \t]*\r?$/m;
 
@@ -91,7 +91,7 @@ function checkApp(segments: readonly string[], report: Report): void {
   const top = directories[0] ?? "";
   if (routeGroups.has(top)) return;
   if (group.test(top)) {
-    report(folder(segments, 2), "S3", "the only route groups are (auth) and (app)");
+    report(folder(segments, 2), "S3", "the only route groups at the root of app/ are (auth) and (app)");
   } else if (name !== "route.ts") {
     report(path, "S3", "outside (auth) and (app) a folder holds only route.ts files; pages, layouts and their UI live inside the groups");
   }
@@ -175,11 +175,11 @@ function checkServerFile(file: WebSourceFile, inside: readonly string[], report:
     report(file.path, "S5", "server/ holds only actions.ts and queries.ts");
     return;
   }
-  const code = file.content.replace(leadingTrivia, "");
-  if (name === "actions.ts" && !useServerDirective.test(code)) {
+  const code = withoutComments(file.content.replace(/^﻿/, ""));
+  if (name === "actions.ts" && !useServerDirective.test(code.trimStart())) {
     report(file.path, "S5", 'server/actions.ts starts with the "use server" directive');
   }
-  if (name === "queries.ts" && !serverOnlyImport.test(file.content)) {
+  if (name === "queries.ts" && !serverOnlyImport.test(code)) {
     report(file.path, "S5", 'server/queries.ts imports "server-only"');
   }
 }

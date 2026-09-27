@@ -24,13 +24,20 @@ const moduleInternals = ["no-restricted-imports", /only through its public surfa
 const domainSharedAlias = ["no-restricted-imports", /_shared code with a relative path/];
 const appAlias = ["no-restricted-imports", /Nothing imports from app\//];
 const detour = ["no-restricted-imports", /without a '\.\.' detour/];
+const currentFolderDetour = ["no-restricted-imports", /without a '\.\/' after its start/];
 const moduleEscape = ["no-restricted-imports", /stays inside its module/];
 const featuresFromShared = ["no-restricted-imports", /shared\/ never imports features\//];
 const relativeFromApp = ["no-restricted-imports", /never a relative path/];
 const routeImports = ["no-restricted-imports", /Route files import only /];
-const rootLayoutImports = ["no-restricted-imports", /The root layout imports only /];
+const routeDynamicImports = ["no-restricted-syntax", /Route files import only /];
+const documentImports = ["no-restricted-imports", /The root layout and the global error import only /];
+const documentDynamicImports = ["no-restricted-syntax", /The root layout and the global error import only /];
 const apiClientValues = [
   "no-restricted-imports",
+  /import @dewiride\/erp-api-client types with `import type`/,
+];
+const apiClientDynamicImport = [
+  "no-restricted-syntax",
   /import @dewiride\/erp-api-client types with `import type`/,
 ];
 const httpGlobal = ["no-restricted-globals", /Only shared\/api sends HTTP requests/];
@@ -69,6 +76,18 @@ const cases = [
     expected: [],
   },
   {
+    title: "nextConfig_ModuleImportsItsDomainSharedFolderIndex_IsAllowed",
+    file: startupsConsumer,
+    code: 'import { formatRupees } from "../../../_shared";',
+    expected: [],
+  },
+  {
+    title: "nextConfig_ModuleImportsASiblingNamedLikeDomainShared_IsReported",
+    file: startupsConsumer,
+    code: 'import { formatRupees } from "../../../_sharedx";',
+    expected: [moduleEscape],
+  },
+  {
     title: "nextConfig_ModuleImportsItsDomainSharedByAlias_IsReported",
     file: startupsConsumer,
     code: 'import { formatRupees } from "@/features/platform/_shared/money";',
@@ -77,7 +96,7 @@ const cases = [
   {
     title: "nextConfig_SourceImportsAPathThatOnlyStartsWithApp_IsAllowed",
     file: componentFile,
-    code: 'import { AppShell } from "@/shared/layout/app-shell";',
+    code: 'import { settings } from "@/application/settings";\nimport { AppShell } from "@/app-shell/frame";',
     expected: [],
   },
   {
@@ -97,6 +116,24 @@ const cases = [
     file: componentFile,
     code: 'import { contentTypeLabel } from "./parts/../content-types";\nimport { formatBytes } from "@/shared/api/../format/sizes";',
     expected: [detour, detour],
+  },
+  {
+    title: "nextConfig_RelativePathWithACurrentFolderSegmentAfterItsStart_IsReported",
+    file: componentFile,
+    code: 'import { SystemInfoOverview } from ".././../system-info";\nimport { contentTypeLabel } from "././content-types";',
+    expected: [currentFolderDetour, currentFolderDetour],
+  },
+  {
+    title: "nextConfig_SourceOnlyFileImportsAModulesSurfaceAndClientTypes_IsAllowed",
+    file: "src/proxy.ts",
+    code: 'import type { ErpApiClient } from "@dewiride/erp-api-client";\nimport { attachmentsNavigation } from "@/features/platform/attachments";\nimport { apiBasePath } from "./shared/api/base-path";',
+    expected: [],
+  },
+  {
+    title: "nextConfig_SourceOnlyFileImportsModuleInternalsAndClientValues_IsReported",
+    file: "src/proxy.ts",
+    code: 'import { attachmentsNavigation } from "@/features/platform/attachments/nav";\nimport { connect } from "@dewiride/erp-api-client";',
+    expected: [moduleInternals, apiClientValues],
   },
   {
     title: "nextConfig_ModuleIndexReExportsItsOwnFeature_IsAllowed",
@@ -171,6 +208,18 @@ const cases = [
     expected: [featuresFromShared, featuresFromShared, featuresFromShared],
   },
   {
+    title: "nextConfig_SharedImportsAppOrADetour_IsReported",
+    file: "src/shared/layout/app-shell.tsx",
+    code: 'import RootLayout from "@/app/layout";\nimport { Wordmark } from "./parts/../wordmark";\nimport { NotFoundMessage } from "../layout/./not-found-message";',
+    expected: [appAlias, detour, currentFolderDetour],
+  },
+  {
+    title: "nextConfig_SharedApiImportsAppOrADetour_IsReported",
+    file: "src/shared/api/client.ts",
+    code: 'import RootLayout from "@/app/layout";\nimport { apiBasePath } from "./parts/../base-path";',
+    expected: [appAlias, detour],
+  },
+  {
     title: "nextConfig_SharedApiImportsFeatures_IsReported",
     file: "src/shared/api/client.ts",
     code: 'import { navigation } from "@/features/registry";',
@@ -237,13 +286,55 @@ const cases = [
     title: "nextConfig_RootLayoutImportsOutsideItsAllowList_IsReported",
     file: "src/app/layout.tsx",
     code: 'import { ShieldIcon } from "lucide-react";\nimport { Skeleton } from "./skeleton";',
-    expected: [rootLayoutImports, relativeFromApp],
+    expected: [documentImports, relativeFromApp],
   },
   {
-    title: "nextConfig_GlobalErrorImportsTheDesignSystem_IsReported",
+    title: "nextConfig_GlobalErrorImportsTheGlobalStylesheetAndFonts_IsAllowed",
     file: "src/app/global-error.tsx",
-    code: 'import { Button } from "@dewiride/erp-ui/components/ui/button";',
-    expected: [routeImports],
+    code: [
+      '"use client";',
+      'import "@dewiride/erp-ui/globals.css";',
+      'import { cn } from "@dewiride/erp-ui/lib/utils";',
+      'import { GeistSans } from "geist/font/sans";',
+      'import { ApplicationFailure } from "@/shared/layout/application-failure";',
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_GlobalErrorImportsOutsideItsAllowList_IsReported",
+    file: "src/app/global-error.tsx",
+    code: 'import { ShieldIcon } from "lucide-react";\nimport { attachmentsNavigation } from "@/features/platform/attachments/nav";',
+    expected: [documentImports, documentImports],
+  },
+  {
+    title: "nextConfig_RouteImportsItsAllowListDynamically_IsAllowed",
+    file: pageFile,
+    code: 'export const overview = () => import("@/features/platform/attachments");\nexport const navigation = () => import("next/navigation");',
+    expected: [],
+  },
+  {
+    title: "nextConfig_RouteImportsOutsideItsAllowListDynamically_IsReported",
+    file: loadingFile,
+    code: [
+      'export const nav = () => import("@/features/platform/attachments/nav");',
+      'export const icons = () => import("lucide-react");',
+      "export const shared = () => import(`@/shared/format/money`);",
+      'export const skeleton = () => import("./skeleton");',
+      'export const client = () => import("@dewiride/erp-api-client");',
+    ].join("\n"),
+    expected: [
+      routeDynamicImports,
+      routeDynamicImports,
+      routeDynamicImports,
+      routeDynamicImports,
+      routeDynamicImports,
+    ],
+  },
+  {
+    title: "nextConfig_GlobalErrorImportsOutsideItsAllowListDynamically_IsReported",
+    file: "src/app/global-error.tsx",
+    code: 'export const icons = () => import("lucide-react");\nexport const styles = () => import("@dewiride/erp-ui/globals.css");',
+    expected: [documentDynamicImports],
   },
   {
     title: "nextConfig_TypeImportFromTheApiClientOutsideSharedApi_IsAllowed",
@@ -256,6 +347,42 @@ const cases = [
     file: "src/shared/format/money.ts",
     code: 'import { connect, type ErpApiClient } from "@dewiride/erp-api-client";\nimport "@dewiride/erp-api-client";',
     expected: [apiClientValues, apiClientValues],
+  },
+  {
+    title: "nextConfig_ValueImportFromTheApiClientInAModule_IsReported",
+    file: componentFile,
+    code: 'import { connect } from "@dewiride/erp-api-client";',
+    expected: [apiClientValues],
+  },
+  {
+    title: "nextConfig_ValueImportFromTheApiClientInADomainShared_IsReported",
+    file: domainSharedFile,
+    code: 'import { connect } from "@dewiride/erp-api-client";',
+    expected: [apiClientValues],
+  },
+  {
+    title: "nextConfig_DynamicImportOfTheApiClientOutsideSharedApi_IsReported",
+    file: componentFile,
+    code: 'export const load = () => import("@dewiride/erp-api-client");\nexport const loadTemplate = () => import(`@dewiride/erp-api-client`);',
+    expected: [apiClientDynamicImport, apiClientDynamicImport],
+  },
+  {
+    title: "nextConfig_DynamicImportOfTheApiClientInShared_IsReported",
+    file: "src/shared/format/money.ts",
+    code: 'export const load = () => import("@dewiride/erp-api-client");',
+    expected: [apiClientDynamicImport],
+  },
+  {
+    title: "nextConfig_TypeOfADynamicImportOfTheApiClient_IsAllowed",
+    file: componentFile,
+    code: 'export type Client = typeof import("@dewiride/erp-api-client");',
+    expected: [],
+  },
+  {
+    title: "nextConfig_DynamicImportOfTheApiClientInSharedApi_IsAllowed",
+    file: "src/shared/api/client.ts",
+    code: 'export const load = () => import("@dewiride/erp-api-client");',
+    expected: [],
   },
   {
     title: "nextConfig_SharedApiUsesTheApiClientAndHttpGlobals_IsAllowed",
@@ -341,6 +468,36 @@ const cases = [
     title: "nextConfig_ObjectHref_IsReported",
     file: componentFile,
     code: 'import Link from "next/link";\nexport function Pager({ page }: { page: number }) {\n  return <Link href={{ pathname: "/platform/attachments", query: { page } }}>Next</Link>;\n}',
+    expected: [objectHref],
+  },
+  {
+    title: "nextConfig_WrappedObjectHref_IsReported",
+    file: componentFile,
+    code: [
+      'import Link from "next/link";',
+      "export function Pager({ open }: { open: boolean }) {",
+      "  return (",
+      "    <>",
+      '      <Link href={{ pathname: "/a" } as Route}>A</Link>',
+      '      <Link href={{ pathname: "/a" } satisfies UrlObject}>B</Link>',
+      '      <Link href={open ? { pathname: "/a" } : "/b"}>C</Link>',
+      '      <Link href={open && { pathname: "/a" }}>D</Link>',
+      "    </>",
+      "  );",
+      "}",
+    ].join("\n"),
+    expected: [objectHref, objectHref, objectHref, objectHref],
+  },
+  {
+    title: "nextConfig_HrefBuiltFromAnObjectArgument_IsAllowed",
+    file: componentFile,
+    code: 'import Link from "next/link";\nexport function Pager({ open, page }: { open: boolean; page: number }) {\n  return <Link href={open ? pageHref({ page }) : "/b"}>Next</Link>;\n}',
+    expected: [],
+  },
+  {
+    title: "nextConfig_ObjectHrefInARoute_IsReported",
+    file: pageFile,
+    code: 'import Link from "next/link";\nexport default function Page() {\n  return <Link href={{ pathname: "/platform/attachments" }}>Attachments</Link>;\n}',
     expected: [objectHref],
   },
   {

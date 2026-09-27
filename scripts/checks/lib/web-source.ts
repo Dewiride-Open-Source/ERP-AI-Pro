@@ -1,9 +1,10 @@
-import { readFileSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
-import { repoRoot, walk } from "./walk.ts";
+import { repoRoot } from "./walk.ts";
 
-export type WebRule = "S1" | "S2" | "S3" | "S4" | "S5" | "S6" | "I1" | "I2" | "I3" | "I4" | "I5" | "I6";
+export type WebRule = "S1" | "S2" | "S3" | "S4" | "S5" | "S6" | "I1" | "I2" | "I3" | "I4" | "I5" | "I6" | "I7";
 
 export interface WebSourceFile {
   readonly path: string;
@@ -29,10 +30,12 @@ export function stripCodeExtension(path: string): string {
 }
 
 export function readWebSource(root: string = webSourceRoot): WebSourceFile[] {
-  return walk(root, () => true).map((file) => {
-    const path = relative(root, file).split(sep).join("/");
-    return { path, content: isCodeFile(path) ? readFileSync(file, "utf8") : "" };
+  const listed = execFileSync("git", ["-C", root, "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "."], {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
   });
+  const paths = [...new Set(listed.split("\0"))].filter((path) => path !== "" && existsSync(join(root, path)));
+  return paths.map((path) => ({ path, content: isCodeFile(path) ? readFileSync(join(root, path), "utf8") : "" }));
 }
 
 export function byLocation(a: WebViolation, b: WebViolation): number {

@@ -142,6 +142,11 @@ const cases: readonly Case[] = [
     expected: ["S3 app/(marketing)/"],
   },
   {
+    condition: "RouteGroupNestedInsideAGroup",
+    files: [file("app/(app)/(finance)/finance/sales/page.tsx"), file("app/(app)/(finance)/layout.tsx")],
+    expected: [],
+  },
+  {
     condition: "EveryFeatureSubfolderADomainSharedAndAModuleWithoutNav",
     files: [
       file(`${featureRoot}/components/table/attachments-table.tsx`),
@@ -235,6 +240,21 @@ const cases: readonly Case[] = [
     condition: "QueriesWithoutServerOnly",
     files: [file(`${featureRoot}/server/queries.ts`, 'import { cache } from "react";\n')],
     expected: [`S5 ${featureRoot}/server/queries.ts`],
+  },
+  {
+    condition: "ServerOnlyImportWithATrailingComment",
+    files: [file(`${featureRoot}/server/queries.ts`, 'import "server-only"; // The API client carries the cookie.\n')],
+    expected: [],
+  },
+  {
+    condition: "ServerOnlyImportInsideABlockComment",
+    files: [file(`${featureRoot}/server/queries.ts`, '/*\nimport "server-only";\n*/\nimport { cache } from "react";\n')],
+    expected: [`S5 ${featureRoot}/server/queries.ts`],
+  },
+  {
+    condition: "UseServerInsideALeadingBlockComment",
+    files: [file(`${featureRoot}/server/actions.ts`, '/* "use server"; */\nimport { z } from "zod";\n')],
+    expected: [`S5 ${featureRoot}/server/actions.ts`],
   },
   {
     condition: "FormsFileThatIsNotASchema",
