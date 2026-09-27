@@ -1,10 +1,12 @@
 import "@dewiride/erp-ui/globals.css";
 
 import { ThemeProvider } from "@dewiride/erp-ui/components/theme/theme-provider";
+import { Toaster } from "@dewiride/erp-ui/components/ui/sonner";
+import { TooltipProvider } from "@dewiride/erp-ui/components/ui/tooltip";
 import { cn } from "@dewiride/erp-ui/lib/utils";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
@@ -19,6 +21,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+export const viewport: Viewport = {
+  colorScheme: "light dark",
+};
+
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
 
@@ -29,7 +35,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={cn("font-sans antialiased", GeistSans.variable, GeistMono.variable)}
     >
       <body className="min-h-dvh">
-        <ThemeProvider {...(nonce === undefined ? {} : { nonce })}>{children}</ThemeProvider>
+        <ThemeProvider {...(nonce === undefined ? {} : { nonce })}>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

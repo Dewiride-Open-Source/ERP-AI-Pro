@@ -1,0 +1,19 @@
+@theme {
+  --spacing-section: 1.5rem;
+  --spacing-header: 3.5rem;
+  --container-page: 72rem;
+}
+
+@theme inline {
+  --spacing-gutter: var(--layout-gutter);
+}
+
+:root {
+  --layout-gutter: 1rem;
+  --layer-sticky: 40;
+  --layer-overlay: 50;
+
+  @variant sm {
+    --layout-gutter: 1.5rem;
+  }
+}

@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-26",
+  "updatedOn": "2026-09-27",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -572,10 +572,18 @@
           "id": "web-foundation-design-tokens-and-theme-package",
           "title": "Design tokens and theme package",
           "scope": "Build frontend/packages/ui with OKLch light/dark colour, typography, spacing, radius and motion tokens, shadcn init (Base UI primitives, cssVariables, tw-animate-css, lucide) wired to next-themes class strategy, an @import-able theme CSS shared across the workspace, and a /design/kitchen-sink route rendering every primitive in both themes that Playwright screenshots at desktop and mobile widths.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "done",
+          "acceptance": [
+            "@dewiride/erp-ui exports theme.css, holding the colour, typography, spacing, radius, elevation, layer, focus and motion tokens without importing Tailwind, and globals.css, which imports Tailwind once and then the theme, so the web build carries a single preflight; a unit test proves every declared foreground/background pair and status colour on its tint meets 4.5:1 and input borders and the focus ring meet 3:1 in light and dark",
+            "Motion durations and easings are tokens that collapse to 0.01 ms under prefers-reduced-motion in one place backed by one global safety net; a Playwright test with reduced motion emulated measures the demo animation, a token-driven transition and a generated primitive's literal duration at 0.01 ms or less, and without the preference measures the token durations",
+            "/design/kitchen-sink, available in every environment and outside the navigation, renders every colour token as a swatch, every token group, every primitive installed in packages/ui in its default, disabled, invalid and loading states where it has them, and the primitives left out with the reason for each; Playwright captures each section in light and dark on desktop and mobile, takes ARIA snapshots, operates every control including one validation failure, and finds no horizontal overflow and no console errors",
+            "The theme toggle is a radio group operable with the arrow keys, the document declares color-scheme light dark, primitives come only from the radix-nova registry through the shadcn CLI with every local change recorded in the design-system register, and the lockfile holds no @base-ui package or unapproved package; ADR-0023 records the token architecture and the rule for generated primitives"
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-26",
+          "completedOn": "2026-09-27",
+          "notes": "Delivered (ADR-0023, docs/architecture/design-system.md): packages/ui/src/styles split into globals.css (Tailwind once) and theme.css plus tokens/{typography,layout,elevation,focus,motion}.css and base.css, exported as @dewiride/erp-ui/theme.css; 38 radix-nova primitives (45 installed) with a register of minimal patches; cn built with createCn for the type roles and named tokens, with an ESLint rule keeping role classes off components; contrast unit tests for pairs, tints over every backdrop and hover fills; /design/kitchen-sink rendering every token and primitive, covered by Playwright on five projects in both themes. Proof: verify.ts --docker green (1668 .NET tests, 96 web unit tests), Playwright whole suite 311 passed on all five projects, design and layout specs 390 passed twice-repeated with no flakes; verification review 40 findings (39 confirmed, all fixed) and a second pass of 10 (9 confirmed, all fixed)."
         },
         {
           "id": "web-foundation-feature-folder-conventions-and-routing",
@@ -594,7 +602,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-attachments-building-block: frontend/packages/ui/src/components/upload/file-drop-zone.tsx (FileDropZone, checkFile) and frontend/apps/web/src/shared/api/upload.ts already provide the drop zone and the progress upload; the forms kit wraps them rather than adding a second file input."
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): field, input, input-group, textarea, native-select, select, checkbox, radio-group, switch, slider and label primitives are installed; the radix-nova combobox imports @base-ui/react and is excluded, so this item decides between an in-house Radix popover combobox and cmdk (owner approval); calendar and the date picker need react-day-picker and date-fns (owner approval) and are not installed; type-role classes go on plain elements only (ESLint rule from @dewiride/erp-config/eslint/type-roles)."
         },
         {
           "id": "web-foundation-data-table-kit-core",
@@ -612,7 +620,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): Toaster (sonner) and TooltipProvider are already mounted once in the root layout and the web app depends on sonner, so toast patterns build on that mount; app/global-error.tsx is not styled yet (Next.js renders it without the global stylesheet and fonts) and belongs here; the axe step should cover /design/kitchen-sink, whose findings of 2026-09-26 (Item lists, focusable tables, menubar and tab-panel focus, hover contrast) were fixed there; motion tokens and the reduced-motion safety net live in packages/ui/src/styles/tokens/motion.css."
         },
         {
           "id": "web-foundation-e2e-harness-matrix",
@@ -698,7 +707,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): the shadcn sidebar primitive is not installed because its generated hooks/use-mobile.ts fails react-hooks/set-state-in-effect; this item installs it and resolves that (a useSyncExternalStore media-query hook, recorded in the patch register of docs/architecture/design-system.md) and adds the ./hooks/* export of @dewiride/erp-ui. The shell keeps the tokens h-header, px-gutter, max-w-page and z-(--layer-sticky), and html scroll-padding-top already reserves the header height for focus and anchors."
         },
         {
           "id": "authentication-login-hardening",
@@ -1212,7 +1222,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): the shadcn chat items (attachment, bubble, marker, message; message-scroller and questionnaire need @shadcn/react) are not installed; this item decides them, and the name attachment collides with the attachments module."
         },
         {
           "id": "ai-platform-evaluation-and-safety",
@@ -2726,7 +2737,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): the light-theme chart-2 and chart-3 colours fall below 3:1 against the background as graphical objects; they are decorative today and are validated and adjusted when charts arrive, with the contrast test in packages/ui extended to the chart colours; the chart primitive needs recharts (owner approval)."
         },
         {
           "id": "reporting-ai-analytics-assistant",

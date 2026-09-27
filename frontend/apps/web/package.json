@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test:unit": "node scripts/run-unit-tests.ts"
+    "test:unit": "erp-unit-tests"
   },
   "dependencies": {
     "@dewiride/erp-api-client": "workspace:*",
@@ -25,6 +25,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "server-only": "catalog:",
+    "sonner": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

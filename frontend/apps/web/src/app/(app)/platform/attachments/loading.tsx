@@ -6,7 +6,7 @@ const rows = ["first", "second", "third", "fourth", "fifth"];
 export default function AttachmentsLoading() {
   return (
     <div
-      className="grid gap-6"
+      className="grid gap-section"
       role="status"
       aria-label="Loading attachments"
       data-testid="attachments-loading"

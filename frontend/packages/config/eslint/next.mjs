@@ -3,6 +3,8 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
 
+import { typeRoleRestrictions } from "./type-roles.mjs";
+
 export const nextConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -14,6 +16,7 @@ export const nextConfig = defineConfig([
         { prefer: "type-imports", fixStyle: "inline-type-imports" },
       ],
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "no-restricted-syntax": ["error", ...typeRoleRestrictions],
       "no-restricted-imports": [
         "error",
         {

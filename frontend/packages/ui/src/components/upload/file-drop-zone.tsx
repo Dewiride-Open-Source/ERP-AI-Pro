@@ -76,7 +76,7 @@ export function FileDropZone({
       onDragLeave={() => setDragging(false)}
       onDrop={onDrop}
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-muted/30 p-6 text-center transition-colors duration-200 ease-out motion-reduce:transition-none",
+        "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-muted/30 p-6 text-center transition-colors duration-(--motion-duration-normal) ease-standard",
         dragging ? "border-primary bg-primary/5" : "border-border",
         disabled && "opacity-60",
         className,

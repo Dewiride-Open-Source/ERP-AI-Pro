@@ -35,10 +35,10 @@ export async function AttachmentsOverview({
   }
 
   return (
-    <div className="grid animate-fade-up gap-6">
+    <div className="grid animate-fade-up gap-section">
       <header>
-        <p className="text-xs font-semibold tracking-widest text-primary uppercase">Platform</p>
-        <h1 className="text-3xl font-semibold tracking-tight">Attachments</h1>
+        <p className="text-eyebrow text-primary uppercase">Platform</p>
+        <h1 className="text-title">Attachments</h1>
       </header>
 
       <Card data-testid="attachments-upload-card">

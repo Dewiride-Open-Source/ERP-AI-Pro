@@ -31,11 +31,11 @@ export async function SystemInfoCard() {
   }
 
   return (
-    <section className="grid animate-fade-up gap-6">
+    <section className="grid animate-fade-up gap-section">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold tracking-widest text-primary uppercase">Platform</p>
-          <h1 className="text-3xl font-semibold tracking-tight">System information</h1>
+          <p className="text-eyebrow text-primary uppercase">Platform</p>
+          <h1 className="text-title">System information</h1>
         </div>
         <RefreshButton />
       </header>

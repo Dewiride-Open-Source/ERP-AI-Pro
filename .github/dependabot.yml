@@ -71,6 +71,7 @@ updates:
           - radix-ui
           - lucide-react
           - next-themes
+          - sonner
           - tw-animate-css
           - class-variance-authority
           - cn
