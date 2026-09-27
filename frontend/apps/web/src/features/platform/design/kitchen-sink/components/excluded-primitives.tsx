@@ -45,13 +45,14 @@ const excludedPrimitives: readonly {
   },
   {
     primitives: "combobox",
-    needs: "@base-ui/react; the design system builds on Radix only.",
+    needs:
+      "@base-ui/react; the design system builds on Radix only, so the combobox under Forms is built in-house on the popover.",
     decidedIn: formsKit,
   },
   {
-    primitives: "calendar, date-picker",
+    primitives: "date-picker",
     needs:
-      "react-day-picker and date-fns, which are not approved packages. date-picker is not a registry item but a recipe: calendar inside a popover.",
+      "Not a registry item but a recipe: calendar inside a popover. The date and date-range inputs under Forms are built that way.",
     decidedIn: formsKit,
   },
   { primitives: "command", needs: "cmdk, which is not an approved package.", decidedIn: authenticatedShell },
@@ -93,7 +94,8 @@ const excludedPrimitives: readonly {
   },
   {
     primitives: "form",
-    needs: "An empty registry item; forms are built from field and a form library.",
+    needs:
+      "An empty registry item; forms are built from field and react-hook-form, with the field frame under Forms.",
     decidedIn: formsKit,
   },
   {

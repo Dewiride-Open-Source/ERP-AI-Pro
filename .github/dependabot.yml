@@ -65,7 +65,7 @@ updates:
       tooling:
         patterns: ["eslint*", "prettier*", "typescript", "@types/node"]
       validation:
-        patterns: ["zod"]
+        patterns: ["zod", "react-hook-form"]
       ui:
         patterns:
           - radix-ui
@@ -80,6 +80,7 @@ updates:
           - "@tailwindcss/*"
           - postcss
           - geist
+          - react-day-picker
       playwright:
         patterns: ["@playwright/*"]
       opentelemetry:

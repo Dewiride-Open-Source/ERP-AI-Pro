@@ -1,13 +1,22 @@
 import type { Locator, Page } from "@playwright/test";
 
-import { expect, forEachTheme, pressArrowUntilChecked, test } from "../../../fixtures/test";
+import { png, type FileUpload } from "../../../fixtures/files";
+import { expect, forEachTheme, pressArrowUntilChecked, tabOntoLink, test } from "../../../fixtures/test";
 import { LoginPage } from "../../../pages/identity/auth/login.page";
-import { KitchenSinkPage, kitchenSinkSections } from "../../../pages/platform/design/kitchen-sink.page";
+import {
+  KitchenSinkPage,
+  kitchenSinkSections,
+  type KitchenSinkSectionId,
+} from "../../../pages/platform/design/kitchen-sink.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 const tokenSections = kitchenSinkSections.filter((section) => section.group === "tokens");
 
 const primitiveSections = kitchenSinkSections.filter((section) => section.group === "primitives");
+
+// On a phone with a device pixel ratio of 3 these sections are taller than the 16,384 device pixels one capture holds, so
+// each of their specimens is captured on its own.
+const capturedBySpecimen: ReadonlySet<KitchenSinkSectionId> = new Set(["forms"]);
 
 const reducedMotionSeconds = 0.01 / 1000;
 
@@ -25,9 +34,7 @@ const shadowTokens = ["2xs", "xs", "sm", "md", "lg", "xl", "2xl"] as const;
 
 const menubarMenus = ["File", "Edit", "View", "Taxes", "Help"] as const;
 
-const pngSignature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-
-type ChosenFile = { name: string; mimeType: string; buffer: Buffer };
+const minusSign = String.fromCodePoint(0x2212);
 
 type MenuItemChoice = { name: string; variant: "default" | "destructive" };
 
@@ -147,16 +154,6 @@ async function reveal(trigger: Locator, isMobile: boolean): Promise<void> {
   else await trigger.hover();
 }
 
-async function tabOntoLink(page: Page, link: Locator): Promise<void> {
-  await link.focus();
-  await page.keyboard.press("Shift+Tab");
-  await expect(link).not.toBeFocused();
-  // WebKit leaves links out of the Tab order unless Safari's "Press Tab to highlight each item" is on, so there the link is
-  // focused from script right after a key press, which :focus-visible treats as keyboard focus.
-  if (page.context().browser()?.browserType().name() === "webkit") await link.focus();
-  else await page.keyboard.press("Tab");
-}
-
 async function dismissWithEscape(page: Page, overlay: Locator, trigger: Locator): Promise<void> {
   await page.keyboard.press("Escape");
   await expect(overlay).toBeHidden();
@@ -171,9 +168,24 @@ async function openNavigationMenuItem(trigger: Locator, isMobile: boolean): Prom
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
 }
 
-async function followNavigationMenuLink(link: Locator, isMobile: boolean): Promise<void> {
-  if (isMobile) await link.tap();
-  else await link.click();
+// Playwright's WebKit ends a tap that no touch handler cancels with a mouse move, press and release at the tapped point, so
+// about 100 ms after a tapped link has scrolled the page WebKit reports that mouse leaving the still-closing menu, and Radix
+// starts its 150 ms close timer; a menu the next tap opens before the timer fires closes again. So on a touch device the
+// tap that opens the menu and the tap on its link are retried together, and the trigger is tapped only while it is closed,
+// because a tap on an open trigger closes it.
+async function followNavigationMenuItem(trigger: Locator, link: Locator, isMobile: boolean): Promise<void> {
+  if (!isMobile) {
+    await openNavigationMenuItem(trigger, isMobile);
+    await link.click();
+    return;
+  }
+  await expect(async () => {
+    if ((await trigger.getAttribute("aria-expanded", { timeout: 1_000 })) !== "true") {
+      await trigger.tap({ timeout: 1_000 });
+    }
+    await expect(trigger).toHaveAttribute("aria-expanded", "true", { timeout: 1_000 });
+    await link.tap({ timeout: 1_000 });
+  }).toPass();
 }
 
 async function openContextMenu(trigger: Locator, menu: Locator): Promise<void> {
@@ -188,18 +200,101 @@ async function chooseMenuItem(menu: Locator, { name, variant }: MenuItemChoice):
   await expect(menu).toBeHidden();
 }
 
-async function chooseFile(page: Page, button: Locator, file: ChosenFile): Promise<void> {
+async function chooseFile(page: Page, button: Locator, file: FileUpload): Promise<void> {
   const chooser = page.waitForEvent("filechooser");
   await button.click();
   await (await chooser).setFiles(file);
 }
 
-function png(name: string, size: number): ChosenFile {
-  return {
-    name,
-    mimeType: "image/png",
-    buffer: Buffer.concat([pngSignature, Buffer.alloc(size - pngSignature.length, 0x2a)]),
-  };
+function fieldOf(container: Locator, control: Locator): Locator {
+  return container.locator("[data-slot='field']").filter({ has: control });
+}
+
+async function selection(input: Locator): Promise<{ start: number | null; end: number | null }> {
+  return input.evaluate((element) =>
+    element instanceof HTMLInputElement
+      ? { start: element.selectionStart, end: element.selectionEnd }
+      : { start: null, end: null },
+  );
+}
+
+// A pointer puts the caret at the character edge nearest to it, so the point returned lies three quarters into the last
+// character of the given leading text. Widths are measured on a copy of the text carrying every property of the field that
+// sets how wide characters are, read one by one because the computed font shorthand can be empty, and the text starts after
+// the computed border and padding, because Firefox reports an input's padding in clientLeft.
+async function textOffsetPoint(input: Locator, before: string): Promise<{ x: number; y: number }> {
+  return input.evaluate((element, text) => {
+    const style = getComputedStyle(element);
+    const probe = element.ownerDocument.createElement("span");
+    probe.textContent = text.slice(0, -1);
+    probe.style.position = "absolute";
+    probe.style.visibility = "hidden";
+    probe.style.whiteSpace = "pre";
+    for (const property of [
+      "fontFamily",
+      "fontSize",
+      "fontWeight",
+      "fontStyle",
+      "fontStretch",
+      "fontVariantNumeric",
+      "fontVariantLigatures",
+      "fontFeatureSettings",
+      "fontVariationSettings",
+      "fontKerning",
+      "letterSpacing",
+    ] as const) {
+      probe.style[property] = style[property];
+    }
+    element.ownerDocument.body.append(probe);
+    const leading = probe.getBoundingClientRect().width;
+    probe.textContent = text;
+    const whole = probe.getBoundingClientRect().width;
+    probe.remove();
+    const bounds = element.getBoundingClientRect();
+    const textStart =
+      bounds.left + Number.parseFloat(style.borderLeftWidth) + Number.parseFloat(style.paddingLeft);
+    return {
+      x: textStart - element.scrollLeft + leading + (whole - leading) * 0.75,
+      y: bounds.top + bounds.height / 2,
+    };
+  }, before);
+}
+
+// Records every time the popup shows the empty message while the list is expected to hold matches, which a list that
+// recomputes its content as it closes would do during a closing animation.
+async function watchEmptyMessage(page: Page, message: string): Promise<() => Promise<number>> {
+  await page.evaluate((text) => {
+    const seen = { count: 0 };
+    const observer = new MutationObserver(() => {
+      const shown = [...document.querySelectorAll("[data-slot='popover-content']")].some((content) =>
+        content.textContent?.includes(text),
+      );
+      if (shown) seen.count += 1;
+    });
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    Object.assign(window, { emptyMessageWatch: { seen, observer } });
+  }, message);
+  return () =>
+    page.evaluate(() => {
+      const watch = (
+        window as unknown as { emptyMessageWatch: { seen: { count: number }; observer: MutationObserver } }
+      ).emptyMessageWatch;
+      watch.observer.disconnect();
+      return watch.seen.count;
+    });
+}
+
+async function listboxCount(page: Page): Promise<number> {
+  return page.evaluate(() => document.querySelectorAll("[role='listbox']").length);
+}
+
+async function expectPendingSave(save: Locator): Promise<void> {
+  await expect(save).toHaveAttribute("aria-busy", "true");
+  await expect(save).toHaveAttribute("aria-disabled", "true");
+  await expect(save).not.toHaveAttribute("disabled");
+  await expect(save).toBeDisabled();
+  await expect(save).toBeFocused();
+  await expect(save).toHaveAccessibleName("Save");
 }
 
 async function clickEveryEnabledButton(container: Locator): Promise<void> {
@@ -220,7 +315,7 @@ test.describe("design system kitchen sink", () => {
     expect(test.info().timeout).toBe(test.info().project.timeout * (browserName === "webkit" ? 3 : 1));
   });
 
-  forEachTheme("renders every token group", async ({ page, capture, theme }, isMobile) => {
+  forEachTheme("renders every token group", async ({ page, capture, theme }) => {
     const kitchenSink = new KitchenSinkPage(page);
     await kitchenSink.goto();
 
@@ -312,6 +407,9 @@ test.describe("design system kitchen sink", () => {
             - link "Composites":
               - /url: "#composites"
           - listitem:
+            - link "Forms":
+              - /url: "#forms"
+          - listitem:
             - link "Excluded primitives":
               - /url: "#excluded"
     `);
@@ -332,6 +430,8 @@ test.describe("design system kitchen sink", () => {
         - text: Focus ring preview
     `);
 
+    // The page is taller than the 16,384 device pixels a browser paints into one capture, so each section is captured on its
+    // own, and the capture fixture fails any capture that would still be cut.
     for (const { id } of tokenSections) {
       await expect(kitchenSink.section(id)).toBeVisible();
       await capture(`section-${id}`, kitchenSink.section(id));
@@ -345,9 +445,6 @@ test.describe("design system kitchen sink", () => {
     await expect(kitchenSink.focusSample).toHaveCSS("outline-color", await ringColour(page));
     await capture("focus-ring-keyboard", kitchenSink.section("focus"));
 
-    // At three device pixels per CSS pixel the phone-width page is taller than the 16,384 pixels a browser paints into one
-    // capture, which leaves most of the image blank; there the section captures cover the page instead.
-    if (!isMobile) await capture("page");
     expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
   });
 
@@ -436,9 +533,12 @@ test.describe("design system kitchen sink", () => {
       "authentication-authenticated-application-shell",
     );
     await expect(excluded.getByRole("row", { name: /^combobox / })).toContainText("@base-ui/react");
-    await expect(excluded.getByRole("row", { name: /^calendar, date-picker / })).toContainText(
+    await expect(excluded.getByRole("row", { name: /^combobox / })).toContainText("built in-house");
+    await expect(excluded.getByRole("row", { name: /^date-picker / })).toContainText(
       "calendar inside a popover",
     );
+    await expect(excluded.getByRole("row", { name: /^calendar/ })).toHaveCount(0);
+    await expect(excluded.getByRole("row", { name: /^form / })).toContainText("react-hook-form");
     await expect(excluded.getByRole("row", { name: /^toast / })).toContainText("sonner");
     await expect(excluded.getByRole("row", { name: /^toast / })).toContainText(
       "web-foundation-design-tokens-and-theme-package",
@@ -699,6 +799,261 @@ test.describe("design system kitchen sink", () => {
         - text: "16 : 9"
     `);
 
+    const forms = kitchenSink.section("forms");
+    await expect(forms.getByRole("textbox", { name: "Legal name" })).toHaveAttribute("aria-required", "true");
+    await expect(
+      forms.getByRole("textbox", { name: "Email for remittance advice" }),
+    ).toHaveAccessibleDescription("Enter an email address such as accounts@acme.in.");
+    await expect(forms.getByRole("textbox", { name: "Invoice amount" })).toHaveValue("1,23,45,678.50");
+    await expect(forms.getByRole("textbox", { name: "Rounded total" })).toHaveValue("15,00,000");
+    await expect(forms.getByRole("textbox", { name: "Rate" })).toBeDisabled();
+    await expect(forms.getByRole("textbox", { name: "IFSC" })).toHaveAttribute("aria-invalid", "true");
+    await expect(forms.getByRole("textbox", { name: "Delivery date" })).toHaveValue("31-02-2026");
+    await expect(forms.getByRole("textbox", { name: "Contract period To" })).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(forms.getByRole("combobox", { name: "Branch" })).toBeDisabled();
+    await expect(forms.getByRole("button", { name: "Save draft" })).toHaveAttribute("aria-busy", "true");
+    await expect(forms.getByRole("button", { name: "Send for approval" })).toBeDisabled();
+    await expect(forms.getByRole("button", { name: /\b20 September 2026/ }).first()).toBeDisabled();
+    await expect(forms).toMatchAriaSnapshot(`
+      - region "Forms":
+        - heading "Forms" [level=2]
+        - heading "Field frame" [level=3]
+        - group:
+          - text: Client name
+          - textbox "Client name": Acme Private Limited
+          - paragraph: Shown on every invoice.
+        - group:
+          - text: Legal name
+          - textbox "Legal name"
+          - paragraph: As printed on the PAN card.
+        - group:
+          - text: Email for remittance advice
+          - textbox "Email for remittance advice" [invalid]: accounts@
+          - alert: Enter an email address such as accounts@acme.in.
+        - group:
+          - text: Company PAN
+          - textbox "Company PAN" [disabled]: AAACD1234E
+          - paragraph: Set by the administrator.
+        - group:
+          - text: Payment reminders
+          - paragraph: Remind the client 3 days before the due date.
+          - switch "Payment reminders" [checked]
+        - group:
+          - text: Credit days
+          - paragraph: Label and control sit side by side where the group is wide enough.
+          - textbox "Credit days": "30"
+        - heading "Error summary" [level=3]
+        - alert:
+          - text: Some details need attention.
+          - list:
+            - listitem: Check these details against the registration certificate.
+            - listitem:
+              - link "Enter the supplier's legal name.":
+                - /url: "#ks-forms-legal-name"
+            - listitem:
+              - link "Enter an email address such as accounts@acme.in.":
+                - /url: "#ks-forms-email"
+          - paragraph: "Reference: 4bf92f3577b34da6a3ce929d0e0e4736"
+        - alert:
+          - text: The server could not finish this. Try again.
+          - paragraph: "Reference: 4bf92f3577b34da6a3ce929d0e0e4736"
+        - heading "Submit button" [level=3]
+        - button "Save"
+        - button "Finish saving" [disabled]
+        - button "Save draft" [disabled]
+        - button "Send for approval" [disabled]
+        - heading "Amount" [level=3]
+        - group:
+          - text: Invoice amount
+          - group:
+            - group: ₹
+            - textbox "Invoice amount": 1,23,45,678.50
+          - paragraph: Up to 15 digits before the decimal point.
+        - paragraph: "Value: 12345678.5"
+        - group:
+          - text: Opening balance
+          - group:
+            - group: ₹
+            - textbox "Opening balance":
+              - /placeholder: "0.00"
+        - group:
+          - text: Adjustment
+          - group:
+            - group: ₹
+            - textbox "Adjustment": "-2,500.00"
+        - group:
+          - text: Discount
+          - group:
+            - group: ₹
+            - textbox "Discount" [invalid]: 1,50,000.00
+          - alert: Enter an amount of at most ₹1,00,000.00.
+        - group:
+          - text: Rate
+          - group:
+            - group: ₹
+            - textbox "Rate" [disabled]: 2,500.00
+        - group:
+          - text: Rounded total
+          - group:
+            - group: ₹
+            - textbox "Rounded total": 15,00,000
+          - paragraph: Whole rupees, without paise.
+        - heading "GSTIN, PAN and IFSC" [level=3]
+        - group:
+          - text: GSTIN
+          - textbox "GSTIN"
+          - paragraph: Paste it with spaces or in lower case.
+        - paragraph: "Value: (empty)"
+        - group:
+          - text: PAN
+          - textbox "PAN": AAACD1234E
+        - group:
+          - text: IFSC
+          - textbox "IFSC" [invalid]: HDFC000123
+          - alert: "Enter an 11-character IFSC: four letters, a zero, then six letters or digits."
+        - group:
+          - text: Branch GSTIN
+          - textbox "Branch GSTIN" [disabled]: 29AAACD1234E1Z3
+        - heading "Date" [level=3]
+        - group:
+          - text: Invoice date
+          - group:
+            - textbox "Invoice date":
+              - /placeholder: dd-mm-yyyy
+              - text: 31-03-2026
+            - group:
+              - button "Choose date"
+          - paragraph: Within the financial year 2025–26; the calendar disables every other day.
+        - paragraph: "Value: 2026-03-31"
+        - group:
+          - text: Due date
+          - group:
+            - textbox "Due date":
+              - /placeholder: dd-mm-yyyy
+            - group:
+              - button "Choose date"
+        - group:
+          - text: Delivery date
+          - group:
+            - textbox "Delivery date" [invalid]:
+              - /placeholder: dd-mm-yyyy
+              - text: 31-02-2026
+            - group:
+              - button "Choose date"
+          - alert: Enter a real date as day-month-year, for example 31-03-2026.
+        - group:
+          - text: Posting date
+          - group:
+            - textbox "Posting date" [disabled]:
+              - /placeholder: dd-mm-yyyy
+              - text: 01-04-2026
+            - group:
+              - button "Choose date" [disabled]
+        - heading "Date range" [level=3]
+        - group:
+          - text: Statement period From
+          - group:
+            - textbox "Statement period From":
+              - /placeholder: dd-mm-yyyy
+              - text: 01-04-2026
+          - text: To
+          - group:
+            - textbox "Statement period To":
+              - /placeholder: dd-mm-yyyy
+              - text: 30-06-2026
+          - button "Choose dates"
+        - paragraph: "Value: 2026-04-01 to 2026-06-30"
+        - group:
+          - text: Contract period From
+          - group:
+            - textbox "Contract period From":
+              - /placeholder: dd-mm-yyyy
+              - text: 30-06-2026
+          - text: To
+          - group:
+            - textbox "Contract period To" [invalid]:
+              - /placeholder: dd-mm-yyyy
+              - text: 01-04-2026
+          - button "Choose dates"
+          - alert: The end date must be on or after the start date.
+        - group:
+          - text: Locked period From
+          - group:
+            - textbox "Locked period From" [disabled]:
+              - /placeholder: dd-mm-yyyy
+              - text: 01-04-2025
+          - text: To
+          - group:
+            - textbox "Locked period To" [disabled]:
+              - /placeholder: dd-mm-yyyy
+              - text: 31-03-2026
+          - button "Choose dates" [disabled]
+        - heading "Combobox" [level=3]
+        - group:
+          - text: Expense account
+          - group:
+            - combobox "Expense account"
+            - group:
+              - button "Show options Expense account"
+            - status
+          - paragraph: "Accents are ignored: cafe finds Café."
+        - paragraph: "Value: (none)"
+        - group:
+          - text: Default expense account
+          - group:
+            - combobox "Default expense account": Professional fees
+            - group:
+              - button "Clear Default expense account"
+              - button "Show options Default expense account"
+            - status
+        - group:
+          - text: Cost centre
+          - group:
+            - combobox "Cost centre" [invalid]
+            - group:
+              - button "Show options Cost centre"
+            - status
+          - alert: Choose a cost centre from the list.
+        - group:
+          - text: Branch
+          - group:
+            - combobox "Branch" [disabled]: Bengaluru
+            - group:
+              - button "Show options Branch" [disabled]
+            - status
+        - group:
+          - text: Supplier
+          - group:
+            - combobox "Supplier": Globex Cloud Services
+            - group:
+              - button "Clear Supplier"
+              - button "Show options Supplier"
+            - status
+        - paragraph: "Value: globex"
+        - group:
+          - text: Client
+          - group:
+            - combobox "Client": Acme
+            - group:
+              - button "Clear Client"
+              - button "Show options Client"
+            - status
+        - heading "Calendar" [level=3]
+        - paragraph: One day, with Sundays disabled
+        - navigation "Navigation bar":
+          - button "Go to the Previous Month"
+          - button "Go to the Next Month"
+        - status: September 2026
+        - grid "September 2026"
+        - paragraph: "Selected: 15-09-2026"
+        - paragraph: A range of days
+        - grid "September 2026"
+        - paragraph: "Range: 08-09-2026 to 12-09-2026"
+    `);
+
     const buttons = kitchenSink.specimen("Button");
     await buttons.getByRole("button", { name: "Default · xs" }).focus();
     await page.keyboard.press("Tab");
@@ -717,7 +1072,16 @@ test.describe("design system kitchen sink", () => {
     }
 
     for (const { id } of primitiveSections) {
-      await capture(`section-${id}`, kitchenSink.section(id));
+      if (!capturedBySpecimen.has(id)) {
+        await capture(`section-${id}`, kitchenSink.section(id));
+        continue;
+      }
+      for (const title of await kitchenSink
+        .section(id)
+        .getByRole("heading", { level: 3 })
+        .allTextContents()) {
+        await capture(`section-${id}-${title}`, kitchenSink.specimen(title));
+      }
     }
     expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
   });
@@ -1073,9 +1437,10 @@ test.describe("design system kitchen sink", () => {
     forEachTheme("navigation menu and selects", async ({ page, capture }, isMobile) => {
       const kitchenSink = new KitchenSinkPage(page);
       await kitchenSink.goto();
-      // A mouse click leaves a pointer position behind, and after a scroll the browser reports that pointer leaving the
-      // navigation menu, which starts Radix's close timer; a tap that opens a menu does not cancel it. So on a touch device
-      // this page is tapped before anything is clicked, and the menu bar's clicks run on a page of their own.
+      // A mouse click, and in Playwright's WebKit a tap too, leaves a pointer position behind, and after a scroll the
+      // browser reports that pointer leaving the navigation menu, which starts Radix's close timer that a tap opening a
+      // menu does not cancel. So on a touch device this page is tapped before anything is clicked, the menu bar's clicks
+      // run on a page of their own, and each menu is opened and its link followed as one retried step.
 
       const navigationMenu = kitchenSink.section("navigation").getByRole("navigation", { name: "Main" });
       const tokensTrigger = navigationMenu.getByRole("button", { name: "Tokens" });
@@ -1095,15 +1460,17 @@ test.describe("design system kitchen sink", () => {
       ] as const;
       for (const { group, link, section } of navigationLinks) {
         const trigger = navigationMenu.getByRole("button", { name: group });
-        await openNavigationMenuItem(trigger, isMobile);
-        await followNavigationMenuLink(
+        await followNavigationMenuItem(
+          trigger,
           navigationMenu.getByRole("link", { name: new RegExp(`^${link}`) }),
           isMobile,
         );
         await expect(page).toHaveURL(new RegExp(`#${section}$`));
         await expect(trigger).toHaveAttribute("aria-expanded", "false");
       }
-      await followNavigationMenuLink(navigationMenu.getByRole("link", { name: "Excluded" }), isMobile);
+      const excludedLink = navigationMenu.getByRole("link", { name: "Excluded" });
+      if (isMobile) await excludedLink.tap();
+      else await excludedLink.click();
       await expect(page).toHaveURL(/#excluded$/);
 
       const inputs = kitchenSink.section("inputs");
@@ -1435,7 +1802,7 @@ test.describe("design system kitchen sink", () => {
 
       const composites = kitchenSink.section("composites");
       const chooseButton = composites.getByRole("button", { name: "Choose a file" });
-      await chooseFile(page, chooseButton, png("logo.png", 512));
+      await chooseFile(page, chooseButton, png({ name: "logo.png", size: 512 }));
       await expect(kitchenSink.toast("logo.png passed the checks.")).toBeVisible();
       await chooseFile(page, chooseButton, {
         name: "notes.txt",
@@ -1443,7 +1810,7 @@ test.describe("design system kitchen sink", () => {
         buffer: Buffer.from("GST"),
       });
       await expect(kitchenSink.toast("notes.txt: Only PNG images are accepted here.")).toBeVisible();
-      await chooseFile(page, chooseButton, png("scan.png", 1024 * 1024 + 1));
+      await chooseFile(page, chooseButton, png({ name: "scan.png", size: 1024 * 1024 + 1 }));
       await expect(kitchenSink.toast("scan.png: The file is larger than 1 MiB.")).toBeVisible();
 
       const sectionToggle = composites.getByRole("radiogroup", { name: "Colour theme" });
@@ -1458,6 +1825,444 @@ test.describe("design system kitchen sink", () => {
       await expect(headerToggle.getByRole("radio", { name: "System" })).toBeChecked();
       await expectTheme(page, theme);
 
+      expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
+    });
+
+    forEachTheme(
+      "the field frame, error summary and submit button with the keyboard",
+      async ({ page, capture }) => {
+        const kitchenSink = new KitchenSinkPage(page);
+        await kitchenSink.goto();
+        const forms = kitchenSink.section("forms");
+
+        const email = forms.getByRole("textbox", { name: "Email for remittance advice" });
+        await expect(email).toHaveAttribute("aria-invalid", "true");
+        await email.fill("accounts@acme.in");
+        await expect(email).not.toHaveAttribute("aria-invalid");
+        await expect(email).not.toHaveAttribute("aria-describedby");
+        const legalName = forms.getByRole("textbox", { name: "Legal name" });
+        await expect(legalName).toHaveAccessibleName("Legal name");
+        await expect(legalName).toHaveAttribute("aria-required", "true");
+        await expect(
+          fieldOf(forms, page.getByRole("textbox", { name: "Legal name" })).getByText("(required)", {
+            exact: true,
+          }),
+        ).toBeVisible();
+        await expect(legalName).toHaveAccessibleDescription("As printed on the PAN card.");
+        await legalName.focus();
+        await page.keyboard.type("Acme Private Limited");
+        await expect(legalName).toHaveValue("Acme Private Limited");
+        const reminders = forms.getByRole("switch", { name: "Payment reminders" });
+        await expect(reminders).toHaveAccessibleDescription("Remind the client 3 days before the due date.");
+        await reminders.focus();
+        await page.keyboard.press("Space");
+        await expect(reminders).not.toBeChecked();
+        const creditDays = forms.getByRole("textbox", { name: "Credit days" });
+        await creditDays.selectText();
+        await page.keyboard.type("45");
+        await expect(creditDays).toHaveValue("45");
+        await capture("forms-field-frame-operated", kitchenSink.specimen("Field frame"));
+
+        const summary = kitchenSink.specimen("Error summary");
+        await tabOntoLink(page, summary.getByRole("link", { name: "Enter the supplier's legal name." }));
+        await page.keyboard.press("Enter");
+        await expect(legalName).toBeFocused();
+        await summary.getByRole("link", { name: "Enter an email address such as accounts@acme.in." }).click();
+        await expect(email).toBeFocused();
+
+        const submit = kitchenSink.specimen("Submit button");
+        const save = submit.getByRole("button", { name: "Save", exact: true });
+        const finish = submit.getByRole("button", { name: "Finish saving" });
+        await expect(finish).toBeDisabled();
+        await save.focus();
+        await page.keyboard.press("Enter");
+        await expectPendingSave(save);
+        await capture("forms-submit-pending", submit);
+        await page.keyboard.press("Space");
+        await expectPendingSave(save);
+        await page.keyboard.press("Tab");
+        await expect(finish).toBeFocused();
+        await page.keyboard.press("Space");
+        await expect(save).not.toHaveAttribute("aria-busy");
+        await expect(save).not.toHaveAttribute("aria-disabled");
+        await expect(save).toBeEnabled();
+        await expect(finish).toBeDisabled();
+        await save.focus();
+        await page.keyboard.press("Space");
+        await expectPendingSave(save);
+        await finish.click();
+        await expect(save).not.toHaveAttribute("aria-busy");
+      },
+    );
+
+    forEachTheme(
+      "the amount and identifier inputs with the keyboard and the pointer",
+      async ({ page, capture }, isMobile) => {
+        const kitchenSink = new KitchenSinkPage(page);
+        await kitchenSink.goto();
+        const forms = kitchenSink.section("forms");
+        const amountValue = forms.getByTestId("forms-amount-value");
+
+        const invoiceAmount = forms.getByRole("textbox", { name: "Invoice amount" });
+        await expect(invoiceAmount).toHaveValue("1,23,45,678.50");
+        await invoiceAmount.scrollIntoViewIfNeeded();
+        const afterFirstFive = await textOffsetPoint(invoiceAmount, "1,23,45");
+        if (isMobile) await page.touchscreen.tap(afterFirstFive.x, afterFirstFive.y);
+        else await page.mouse.click(afterFirstFive.x, afterFirstFive.y);
+        await expect(invoiceAmount).toBeFocused();
+        await expect(invoiceAmount).toHaveValue("12345678.5");
+        expect(await selection(invoiceAmount), "caret after the digit pointed at").toEqual({
+          start: 5,
+          end: 5,
+        });
+        await page.keyboard.type("4");
+        await expect(invoiceAmount).toHaveValue("123454678.5");
+        await expect(amountValue).toHaveText("Value: 123454678.5");
+        await invoiceAmount.blur();
+        await expect(invoiceAmount).toHaveValue("12,34,54,678.50");
+        if (!isMobile) {
+          const start = await textOffsetPoint(invoiceAmount, "12");
+          const end = await textOffsetPoint(invoiceAmount, "12,34,54");
+          await page.mouse.move(start.x, start.y);
+          await page.mouse.down();
+          await page.mouse.move(end.x, end.y, { steps: 5 });
+          await page.mouse.up();
+          await expect(invoiceAmount).toHaveValue("123454678.5");
+          expect(await selection(invoiceAmount), "digits dragged over").toEqual({ start: 2, end: 6 });
+          await page.keyboard.type("0");
+          await expect(invoiceAmount).toHaveValue("120678.5");
+          await expect(amountValue).toHaveText("Value: 120678.5");
+
+          await invoiceAmount.blur();
+          await expect(invoiceAmount).toHaveValue("1,20,678.50");
+          const afterThirdDigit = await textOffsetPoint(invoiceAmount, "1,20");
+          await page.mouse.move(afterThirdDigit.x, afterThirdDigit.y);
+          await page.mouse.down();
+          await expect(invoiceAmount).toBeFocused();
+          await expect(invoiceAmount).toHaveValue("1,20,678.50");
+          await page.keyboard.press("Tab");
+          await expect(invoiceAmount).not.toBeFocused();
+          await page.keyboard.press("Shift+Tab");
+          await expect(invoiceAmount).toBeFocused();
+          await expect(invoiceAmount).toHaveValue("120678.5");
+          expect(await selection(invoiceAmount), "selection after tabbing back during the press").toEqual({
+            start: 0,
+            end: 8,
+          });
+          await page.mouse.up();
+          await expect(invoiceAmount).toHaveValue("120678.5");
+
+          await invoiceAmount.blur();
+          await expect(invoiceAmount).toHaveValue("1,20,678.50");
+          await page.mouse.down();
+          await expect(invoiceAmount).toBeFocused();
+          await expect(invoiceAmount).toHaveValue("1,20,678.50");
+          await invoiceAmount.dispatchEvent("contextmenu");
+          await expect(invoiceAmount).toHaveValue("120678.5");
+          expect(await selection(invoiceAmount), "caret after a press a context menu ended").toEqual({
+            start: 3,
+            end: 3,
+          });
+          await page.mouse.up();
+          await expect(invoiceAmount).toHaveValue("120678.5");
+        }
+        await invoiceAmount.fill("-1500");
+        await expect(invoiceAmount).toHaveValue("-1500");
+        await expect(amountValue).toHaveText("Value: -1500");
+        await invoiceAmount.fill("1234567890123456");
+        await expect(invoiceAmount).toHaveValue("1234567890123456");
+        await expect(amountValue).toHaveText("Value: 1234567890123456");
+        await invoiceAmount.fill("₹ 1,23,45,678.9");
+        await expect(invoiceAmount).toHaveValue("12345678.9");
+        await expect(amountValue).toHaveText("Value: 12345678.9");
+        await invoiceAmount.blur();
+        await expect(invoiceAmount).toHaveValue("1,23,45,678.90");
+
+        const openingBalance = forms.getByRole("textbox", { name: "Opening balance" });
+        const adjustment = forms.getByRole("textbox", { name: "Adjustment" });
+        await openingBalance.focus();
+        await page.keyboard.press("Tab");
+        await expect(adjustment).toBeFocused();
+        await expect(adjustment).toHaveValue("-2500");
+        expect(await selection(adjustment), "selection after tabbing in").toEqual({ start: 0, end: 5 });
+        await page.keyboard.type("-1500.5");
+        await expect(adjustment).toHaveValue("-1500.5");
+        for (let step = 0; step < 5; step += 1) await page.keyboard.press("ArrowLeft");
+        await page.keyboard.type("2");
+        await expect(adjustment).toHaveValue("-12500.5");
+        expect(await selection(adjustment), "caret after the inserted digit").toEqual({ start: 3, end: 3 });
+        await page.keyboard.press("Tab");
+        await expect(adjustment).not.toBeFocused();
+        await expect(adjustment).toHaveValue("-12,500.50");
+        await adjustment.fill(`${minusSign}2,500.00`);
+        await adjustment.blur();
+        await expect(adjustment).toHaveValue("-2,500.00");
+        await adjustment.fill("(1,500.50)");
+        await adjustment.blur();
+        await expect(adjustment).toHaveValue("-1,500.50");
+        const discount = forms.getByRole("textbox", { name: "Discount" });
+        await expect(discount).toHaveAccessibleDescription("Enter an amount of at most ₹1,00,000.00.");
+        await discount.fill("99999.99");
+        await expect(discount).not.toHaveAttribute("aria-invalid");
+        const rounded = forms.getByRole("textbox", { name: "Rounded total" });
+        await rounded.fill("₹25,00,000.00");
+        await expect(rounded).toHaveValue("2500000.");
+        await rounded.blur();
+        await expect(rounded).toHaveValue("25,00,000");
+
+        const gstin = forms.getByRole("textbox", { name: "GSTIN", exact: true });
+        await gstin.focus();
+        await page.keyboard.type("27 aaacd 1234e 1z5 99");
+        await expect(gstin).toHaveValue("27AAACD1234E1Z5");
+        await expect(forms.getByTestId("forms-gstin-value")).toHaveText("Value: 27AAACD1234E1Z5");
+        await expect(gstin).not.toHaveAttribute("aria-invalid");
+        const pan = forms.getByRole("textbox", { name: "PAN", exact: true });
+        await pan.selectText();
+        await page.keyboard.type("aaacd-1234");
+        await expect(pan).toHaveValue("AAACD1234");
+        await expect(pan).toHaveAccessibleDescription(
+          "Enter a 10-character PAN: five letters, four digits, then a letter.",
+        );
+        const ifsc = forms.getByRole("textbox", { name: "IFSC" });
+        await ifsc.selectText();
+        await page.keyboard.type("hdfc0001234");
+        await expect(ifsc).toHaveValue("HDFC0001234");
+        await expect(ifsc).not.toHaveAttribute("aria-invalid");
+        await capture("forms-inputs-operated", kitchenSink.specimen("GSTIN, PAN and IFSC"));
+        expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
+      },
+    );
+
+    forEachTheme("the date, date-range and combobox inputs and the calendar", async ({ page, capture }) => {
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+      const forms = kitchenSink.section("forms");
+
+      const dates = kitchenSink.specimen("Date");
+      const dueDate = dates.getByRole("textbox", { name: "Due date" });
+      await dueDate.fill("1/4/2026");
+      await expect(dueDate).toHaveValue("1/4/2026");
+      await dueDate.blur();
+      await expect(dueDate).toHaveValue("01-04-2026");
+      const delivery = dates.getByRole("textbox", { name: "Delivery date" });
+      await delivery.fill("28.02.2026");
+      await delivery.blur();
+      await expect(delivery).toHaveValue("28-02-2026");
+      await expect(delivery).not.toHaveAttribute("aria-invalid");
+
+      const invoiceDate = dates.getByRole("textbox", { name: "Invoice date" });
+      // While its calendar is open the rest of the page is hidden from assistive technology, so the trigger is found by
+      // the id of its field's input and its label attribute rather than by role.
+      const invoiceCalendarButton = page.locator(
+        "[data-slot='field']:has(#ks-forms-invoice-date) button[aria-label='Choose date']",
+      );
+      const calendar = page.getByRole("dialog", { name: "Choose date", exact: true });
+      await invoiceCalendarButton.focus();
+      await page.keyboard.press("Enter");
+      await expect(calendar).toBeVisible();
+      await expect(invoiceCalendarButton).toHaveAttribute("aria-expanded", "true");
+      await expect(calendar.getByRole("button", { name: /\b31 March 2026/ })).toBeFocused();
+      await expect(calendar.locator("[data-disabled]")).not.toHaveCount(0);
+      await expect(calendar).toMatchAriaSnapshot(`
+        - dialog "Choose date":
+          - navigation "Navigation bar":
+            - button "Go to the Previous Month"
+            - button "Go to the Next Month" [disabled]
+          - combobox "Choose the Month"
+          - combobox "Choose the Year"
+          - status: March 2026
+          - grid "March 2026":
+            - rowgroup:
+              - row /31 March 2026, selected/:
+                - gridcell "Tuesday, 31 March 2026, selected" [selected]:
+                  - button "Tuesday, 31 March 2026, selected": "31"
+      `);
+      await capture("forms-date-calendar", calendar);
+      await page.keyboard.press("ArrowLeft");
+      await expect(calendar.getByRole("button", { name: /\b30 March 2026/ })).toBeFocused();
+      await page.keyboard.press("Enter");
+      await expect(calendar).toBeHidden();
+      await expect(invoiceDate).toHaveValue("30-03-2026");
+      await expect(forms.getByTestId("forms-date-value")).toHaveText("Value: 2026-03-30");
+      await expect(invoiceCalendarButton).toBeFocused();
+      await page.keyboard.press("Enter");
+      await expect(calendar).toBeVisible();
+      await page.keyboard.press("Escape");
+      await expect(calendar).toBeHidden();
+      await expect(invoiceCalendarButton).toBeFocused();
+
+      const ranges = kitchenSink.specimen("Date range");
+      const rangeCalendar = page.getByRole("dialog", { name: "Choose dates", exact: true });
+      await fieldOf(ranges, page.getByRole("textbox", { name: "Statement period From" }))
+        .getByRole("button", { name: "Choose dates" })
+        .click();
+      await expect(rangeCalendar).toBeVisible();
+      await capture("forms-date-range-calendar", rangeCalendar);
+      const rangeRoot = await rangeCalendar.locator("[data-slot='calendar']").elementHandle();
+      const rangeMonth = await rangeCalendar
+        .getByRole("combobox", { name: "Choose the Month" })
+        .first()
+        .elementHandle();
+      await rangeCalendar.getByRole("button", { name: /\b10 April 2026/ }).click();
+      await expect(rangeCalendar).toBeVisible();
+      await expect(rangeCalendar.getByRole("gridcell", { name: /\b10 April 2026/ })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+      expect(await rangeRoot.evaluate((element) => element.isConnected), "calendar kept").toBe(true);
+      expect(await rangeMonth.evaluate((element) => element.isConnected), "month dropdown kept").toBe(true);
+      await rangeRoot.dispose();
+      await rangeMonth.dispose();
+      await rangeCalendar.getByRole("button", { name: /\b20 April 2026/ }).click();
+      await expect(rangeCalendar).toBeHidden();
+      await expect(forms.getByTestId("forms-date-range-value")).toHaveText("Value: 2026-04-10 to 2026-04-20");
+      await expect(ranges.getByRole("textbox", { name: "Statement period To" })).toHaveValue("20-04-2026");
+      const contractFrom = ranges.getByRole("textbox", { name: "Contract period From" });
+      const contractTo = ranges.getByRole("textbox", { name: "Contract period To" });
+      await expect(contractFrom).not.toHaveAttribute("aria-invalid");
+      await expect(contractTo).toHaveAttribute("aria-invalid", "true");
+      await contractTo.fill("31-12-2026");
+      await expect(contractTo).not.toHaveAttribute("aria-invalid");
+      await contractFrom.fill("31-02-2026");
+      await contractFrom.blur();
+      await expect(contractFrom).toHaveAttribute("aria-invalid", "true");
+      await expect(contractFrom).toHaveAccessibleDescription(
+        "Enter a real date as day-month-year, for example 31-03-2026.",
+      );
+      await expect(contractTo).not.toHaveAttribute("aria-invalid");
+      await contractFrom.fill("01-04-2026");
+      await expect(contractFrom).not.toHaveAttribute("aria-invalid");
+
+      const combos = kitchenSink.specimen("Combobox");
+      const account = combos.getByRole("combobox", { name: "Expense account", exact: true });
+      const accounts = page.getByRole("listbox", { name: "Expense account", exact: true });
+      const accountValue = forms.getByTestId("forms-combobox-value");
+      await account.click();
+      await expect(accounts).toBeVisible();
+      await expect(account).toHaveAttribute("aria-expanded", "true");
+      await expect(account).not.toHaveAttribute("aria-activedescendant");
+      await capture("forms-combobox-open", accounts);
+      await account.pressSequentially("cafe");
+      await expect(accounts.getByRole("option")).toHaveText(["Café and pantry"]);
+      await account.press("ArrowDown");
+      await expect(accounts).toMatchAriaSnapshot(`
+        - listbox "Expense account":
+          - option "Café and pantry" [selected]
+      `);
+
+      const emptyMessageShown = await watchEmptyMessage(page, "No account matches.");
+      await account.press("Enter");
+      expect(await listboxCount(page), "lists open right after Enter chose").toBe(0);
+      await expect(account).toHaveValue("Café and pantry");
+      await expect(accountValue).toHaveText("Value: cafe");
+      await account.click();
+      await accounts.getByRole("option", { name: "Conveyance" }).click();
+      expect(await listboxCount(page), "lists open right after a click chose").toBe(0);
+      await expect(account).toHaveValue("Conveyance");
+      await account.fill("ele");
+      await expect(accounts.getByRole("option")).toHaveText(["Electricity"]);
+      await account.press("Escape");
+      expect(await listboxCount(page), "lists open right after Escape").toBe(0);
+      await account.fill("tra");
+      await expect(accounts.getByRole("option")).toHaveText(["Travel"]);
+      await page.keyboard.press("Tab");
+      expect(await listboxCount(page), "lists open right after Tab").toBe(0);
+      await expect(account).toHaveValue("Conveyance");
+      expect(await emptyMessageShown(), "times the empty message showed while a list closed").toBe(0);
+
+      await account.fill("ca");
+      for (const { key, caret } of [
+        { key: "ArrowLeft", caret: 1 },
+        { key: "Home", caret: 0 },
+        { key: "ArrowRight", caret: 1 },
+        { key: "End", caret: 2 },
+      ]) {
+        await account.press("ArrowDown");
+        await expect(account).toHaveAttribute("aria-activedescendant", /-option-/);
+        await account.press(key);
+        await expect(accounts).toBeVisible();
+        await expect(account).toHaveAttribute("aria-expanded", "true");
+        await expect(account).not.toHaveAttribute("aria-activedescendant");
+        await expect(accounts.locator("[aria-selected='true']")).toHaveCount(0);
+        expect(await selection(account), `caret after ${key}`).toEqual({ start: caret, end: caret });
+      }
+      await account.press("Enter");
+      await expect(accounts).toBeHidden();
+      await expect(accountValue).toHaveText("Value: conveyance");
+      await account.press("Escape");
+      await expect(account).toHaveValue("Conveyance");
+
+      await account.fill("conv");
+      await account.press("ArrowDown");
+      await account.press("Enter");
+      await expect(account).toHaveValue("Conveyance");
+      await account.press("ArrowDown");
+      await expect(accounts.getByRole("option", { name: "Conveyance" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+      await account.press("ArrowDown");
+      await expect(accounts.getByRole("option", { name: "Electricity" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+      await account.press("Enter");
+      await expect(accountValue).toHaveText("Value: electricity");
+      await account.fill("zzz");
+      await expect(combos.getByRole("status").filter({ hasText: "No account matches." })).toHaveCount(1);
+      await expect(account).toHaveAttribute("aria-expanded", "false");
+      await account.press("Escape");
+      await account.press("Escape");
+      await expect(account).toHaveValue("Electricity");
+      await fieldOf(combos, page.getByRole("combobox", { name: "Expense account", exact: true }))
+        .getByRole("button", { name: "Clear Expense account" })
+        .click();
+      await expect(account).toHaveValue("");
+      await expect(accountValue).toHaveText("Value: (none)");
+      await expect(account).toBeFocused();
+
+      const supplier = combos.getByRole("combobox", { name: "Supplier", exact: true });
+      const suppliers = page.getByRole("listbox", { name: "Supplier", exact: true });
+      const supplierValue = forms.getByTestId("forms-supplier-value");
+      await expect(supplier).toHaveValue("Globex Cloud Services");
+      await expect(supplierValue).toHaveText("Value: globex");
+      await supplier.fill("ini");
+      await expect(suppliers.getByRole("option")).toHaveText(["Initech Software"]);
+      await supplier.press("Escape");
+      await expect(suppliers).toBeHidden();
+      await supplier.press("Escape");
+      await expect(supplier).toHaveValue("Globex Cloud Services");
+      await supplier.fill("umb");
+      await expect(suppliers.getByRole("option")).toHaveText(["Umbrella Logistics"]);
+      await page.keyboard.press("Tab");
+      await expect(supplier).not.toBeFocused();
+      await expect(supplier).toHaveValue("Globex Cloud Services");
+      await expect(supplierValue).toHaveText("Value: globex");
+
+      const costCentre = combos.getByRole("combobox", { name: "Cost centre" });
+      await costCentre.click();
+      await page.getByRole("listbox", { name: "Cost centre" }).getByRole("option", { name: "Sales" }).click();
+      await expect(costCentre).toHaveValue("Sales");
+      await expect(costCentre).not.toHaveAttribute("aria-invalid");
+      const client = combos.getByRole("combobox", { name: "Client" });
+      await client.click();
+      await expect(combos.getByRole("status").filter({ hasText: "Searching…" })).toHaveCount(1);
+      await expect(client).toHaveAttribute("aria-expanded", "false");
+      await client.press("Escape");
+
+      const calendars = kitchenSink.specimen("Calendar");
+      const singleDay = calendars.getByRole("grid").nth(0);
+      const dayRange = calendars.getByRole("grid").nth(1);
+      await singleDay.getByRole("button", { name: /\b17 September 2026/ }).click();
+      await expect(calendars.getByTestId("forms-calendar-day")).toHaveText("Selected: 17-09-2026");
+      await dayRange.getByRole("button", { name: /\b21 September 2026/ }).click();
+      await dayRange.getByRole("button", { name: /\b25 September 2026/ }).click();
+      await expect(calendars.getByTestId("forms-calendar-range")).toHaveText(
+        "Range: 21-09-2026 to 25-09-2026",
+      );
+      await calendars.getByRole("button", { name: "Go to the Next Month" }).first().click();
+      await expect(calendars.getByRole("grid", { name: "October 2026" })).toBeVisible();
+      await capture("forms-calendar-operated", calendars);
       expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
     });
   });
@@ -1552,6 +2357,33 @@ test.describe("design system kitchen sink", () => {
         await expect(kitchenSink.menu(name)).toBeHidden();
       }
       expect(await hasHorizontalOverflow(page), "horizontal overflow with the menus used").toBe(false);
+    });
+  });
+
+  test.describe("on a screen 180 pixels tall", () => {
+    test.use({ viewport: { width: narrowestScreen.width, height: 180 } });
+
+    test("keeps the combobox list inside the screen with its active option in view", async ({ page }) => {
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+      const account = kitchenSink
+        .specimen("Combobox")
+        .getByRole("combobox", { name: "Expense account", exact: true });
+      const accounts = page.getByRole("listbox", { name: "Expense account", exact: true });
+      const popup = page.locator("[data-slot='popover-content']").filter({ has: accounts });
+
+      await account.focus();
+      for (const { key, option } of [
+        { key: "ArrowUp", option: "Travel" },
+        { key: "ArrowDown", option: "Advertising" },
+        { key: "ArrowUp", option: "Travel" },
+      ]) {
+        await page.keyboard.press(key);
+        await expect(accounts.getByRole("option", { name: option })).toHaveAttribute("aria-selected", "true");
+        await expect(accounts.getByRole("option", { name: option })).toBeInViewport({ ratio: 1 });
+      }
+      await expect(popup).toBeInViewport({ ratio: 1 });
+      expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
     });
   });
 

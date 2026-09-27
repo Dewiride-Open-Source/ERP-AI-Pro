@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { ExcludedPrimitives } from "./excluded-primitives";
+import { FormsShowcase } from "./forms/forms-showcase";
 import { KitchenSinkIndex } from "./kitchen-sink-index";
 import { KitchenSinkSection } from "./kitchen-sink-section";
 import { ActionsShowcase } from "./primitives/actions-showcase";
@@ -47,6 +48,7 @@ export function KitchenSink() {
     navigation: <NavigationShowcase />,
     "data-display": <DataDisplayShowcase />,
     composites: <CompositesShowcase />,
+    forms: <FormsShowcase />,
     excluded: <ExcludedPrimitives />,
   };
 

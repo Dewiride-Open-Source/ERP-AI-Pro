@@ -1,6 +1,6 @@
 import { expect, type JSHandle, type Locator, type Page } from "@playwright/test";
 
-export type UploadFile = { name: string; mimeType: string; buffer: Buffer };
+import type { FileUpload } from "../../../fixtures/files";
 
 export const attachmentsPath = "/platform/attachments";
 
@@ -64,17 +64,17 @@ export class AttachmentsPage {
     });
   }
 
-  async upload(file: UploadFile): Promise<void> {
+  async upload(file: FileUpload): Promise<void> {
     await this.fileInput.setInputFiles(file);
   }
 
-  async chooseAndUpload(file: UploadFile): Promise<void> {
+  async chooseAndUpload(file: FileUpload): Promise<void> {
     const chooser = this.page.waitForEvent("filechooser");
     await this.chooseFile.click();
     await (await chooser).setFiles(file);
   }
 
-  async transferOf(file: UploadFile): Promise<JSHandle<DataTransfer>> {
+  async transferOf(file: FileUpload): Promise<JSHandle<DataTransfer>> {
     return this.page.evaluateHandle(
       ({ name, mimeType, bytes }) => {
         const transfer = new DataTransfer();

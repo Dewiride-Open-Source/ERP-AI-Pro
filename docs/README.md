@@ -38,5 +38,6 @@
 | [0022](adr/0022-attachments-in-azure-blob-storage.md) | Attachments in Azure Blob Storage behind an application encryption envelope |
 | [0023](adr/0023-design-tokens-shared-theme-and-generated-primitives.md) | Design tokens, the shared theme stylesheet and generated primitives |
 | [0024](adr/0024-frontend-structure-and-import-boundaries.md) | Frontend structure and import boundaries |
+| [0025](adr/0025-forms-typed-submissions-and-form-composites.md) | Forms: typed submissions, one schema, field-error mapping and the form composites |
 
 New decisions use [0000-template.md](adr/0000-template.md).

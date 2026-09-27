@@ -114,6 +114,13 @@ export const kitchenSinkSections = [
       "Components the design system builds from primitives: the theme switch and the file drop zone.",
   },
   {
+    id: "forms",
+    group: "primitives",
+    title: "Forms",
+    description:
+      "The form composites in each state: the field frame, the error summary, the submit button, amount, GSTIN, PAN and IFSC inputs, date and date-range inputs, the calendar and the search-as-you-type combobox.",
+  },
+  {
     id: "excluded",
     group: "primitives",
     title: "Excluded primitives",
