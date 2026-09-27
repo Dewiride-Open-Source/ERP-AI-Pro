@@ -42,7 +42,9 @@ function rehearsedFailure(answer: ServerAnswer): Error | undefined {
         "": ["Check these details against the supplier's registration certificate."],
         "Registration.Gstin": ["This GSTIN is registered to a different PAN."],
         "bankAccount.Ifsc": ["No bank branch uses this IFSC."],
+        contact: ["Give the contact person's phone number or email address."],
         "balances[0].Amount": ["The opening balance is above the credit limit agreed with the supplier."],
+        "balances[1]": ["Give the second opening balance an amount or a reason for leaving it at nil."],
         "agreement.Validity.To": ["The agreement must run until at least the end of the financial year."],
       });
     case "conflict":

@@ -7,23 +7,41 @@ import type { FormState } from "../state/form-state.ts";
 export type FormAlertContent = Readonly<Pick<FormAlertProps, "title" | "messages" | "reference">>;
 
 export type FieldLookup = {
+  readonly rendered: (path: string) => boolean;
   readonly standing: (path: string) => boolean;
   readonly fieldId: (path: string) => string;
 };
 
+// A server message belongs to a field only when the form held a control with that field's id when it was sent; a key on an
+// object or a collection element (customer, orderItems.1) or on a member no control carries has no field to show it, focus
+// or clear it, so it stays in the summary, unlinked, until the next submission.
+export function renderedField(formId: string, controlIds: ReadonlySet<string>): (path: string) => boolean {
+  return (path) => controlIds.has(formFieldId(formId, path));
+}
+
+export function renderedFieldErrors(
+  state: FormState,
+  rendered: (path: string) => boolean,
+): readonly (readonly [path: string, message: string])[] {
+  return state.status === "invalid"
+    ? Object.entries(state.fieldErrors)
+        .filter(([path]) => rendered(path))
+        .map(([path, messages]) => [path, messages.join(" ")] as const)
+    : [];
+}
+
 export function formAlertContent(
   state: FormState,
-  { standing, fieldId }: FieldLookup,
+  { rendered, standing, fieldId }: FieldLookup,
 ): FormAlertContent | undefined {
   switch (state.status) {
     case "invalid": {
       const messages: FormAlertMessage[] = [
         ...state.formErrors.map((message) => ({ message })),
-        ...Object.entries(state.fieldErrors)
-          .filter(([path]) => standing(path))
-          .flatMap(([path, fieldMessages]) =>
-            fieldMessages.map((message) => ({ message, fieldId: fieldId(path) })),
-          ),
+        ...Object.entries(state.fieldErrors).flatMap(([path, fieldMessages]) => {
+          if (!rendered(path)) return fieldMessages.map((message) => ({ message }));
+          return standing(path) ? fieldMessages.map((message) => ({ message, fieldId: fieldId(path) })) : [];
+        }),
       ];
       return messages.length === 0 ? undefined : { title: formMessages.detailsNeedAttention, messages };
     }

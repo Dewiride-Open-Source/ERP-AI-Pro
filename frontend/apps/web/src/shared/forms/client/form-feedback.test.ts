@@ -12,6 +12,8 @@ import {
   formErrorAlertContent,
   formFieldId,
   hasFieldErrors,
+  renderedField,
+  renderedFieldErrors,
   serverErrorMessage,
   type FieldLookup,
 } from "./form-feedback.ts";
@@ -20,7 +22,25 @@ const traceId = "0af7651916cd43dd8448eb211c80319c";
 
 const resolverOptions = { fields: {}, shouldUseNativeValidation: undefined };
 
-const everyFieldStanding: FieldLookup = { standing: () => true, fieldId: (path) => `supplier-${path}` };
+const everyFieldStanding: FieldLookup = {
+  rendered: () => true,
+  standing: () => true,
+  fieldId: (path) => `supplier-${path}`,
+};
+
+const formId = "_R_1b_";
+
+const renderedControlIds: ReadonlySet<string> = new Set([
+  formFieldId(formId, "legalName"),
+  formFieldId(formId, "validity.to"),
+  formFieldId(formId, "agreementDocumentId"),
+]);
+
+const onlyRenderedControls: FieldLookup = {
+  rendered: renderedField(formId, renderedControlIds),
+  standing: () => true,
+  fieldId: (path) => formFieldId(formId, path),
+};
 
 test("formAlertContent_InvalidState_ListsFormErrorsThenFieldErrorsLinkedToTheirFields", () => {
   const state = formInvalid({
@@ -48,6 +68,39 @@ test("formAlertContent_FieldErrorThePersonHasFixed_IsLeftOut", () => {
   const content = formAlertContent(state, { ...everyFieldStanding, standing: (path) => path === "gstin" });
 
   assert.deepEqual(content?.messages, [{ message: "Wrong State.", fieldId: "supplier-gstin" }]);
+});
+
+test("formAlertContent_ServerErrorOnAPathNoRenderedControlCarries_IsListedWithoutALinkInTheAnswersOrder", () => {
+  const state = formInvalid({
+    fieldErrors: {
+      customer: ["The customer is blocked."],
+      legalName: ["This name is already registered."],
+      "orderItems.1": ["Each product can appear on one line only."],
+      "validity.to": ["The agreement must run until the end of the financial year."],
+      validity: ["The validity overlaps another agreement."],
+    },
+    formErrors: ["Check these details against the registration certificate."],
+  });
+
+  assert.deepEqual(formAlertContent(state, onlyRenderedControls)?.messages, [
+    { message: "Check these details against the registration certificate." },
+    { message: "The customer is blocked." },
+    { message: "This name is already registered.", fieldId: "_R_1b_-legalName" },
+    { message: "Each product can appear on one line only." },
+    { message: "The agreement must run until the end of the financial year.", fieldId: "_R_1b_-validity-to" },
+    { message: "The validity overlaps another agreement." },
+  ]);
+});
+
+test("formAlertContent_UnlinkedMessageAfterEveryRenderedFieldIsFixed_StaysInTheSummary", () => {
+  const state = formInvalid({
+    fieldErrors: { legalName: ["Taken."], "orderItems.1": ["Each product can appear on one line only."] },
+  });
+
+  assert.deepEqual(formAlertContent(state, { ...onlyRenderedControls, standing: () => false }), {
+    title: formMessages.detailsNeedAttention,
+    messages: [{ message: "Each product can appear on one line only." }],
+  });
 });
 
 test("formAlertContent_EveryFieldErrorFixedAndNoFormError_ShowsNoAlert", () => {
@@ -100,6 +153,45 @@ test("formErrorAlertContent_SchemaIssueWithoutAPath_ReachesTheSummaryWithNoField
     title: formMessages.detailsNeedAttention,
     messages: [{ message: "Choose two different accounts." }],
   });
+});
+
+test("renderedField_ControlIdsOfTheSentForm_OwnExactlyThePathsOfTheirControls", () => {
+  const rendered = renderedField(formId, renderedControlIds);
+
+  assert.equal(rendered("legalName"), true);
+  assert.equal(rendered("validity.to"), true);
+  assert.equal(rendered("agreementDocumentId"), true);
+  assert.equal(rendered("validity"), false);
+  assert.equal(rendered("customer"), false);
+  assert.equal(rendered("orderItems.1"), false);
+  assert.equal(rendered("legalName.description"), false);
+});
+
+test("renderedField_ControlOfAnotherForm_OwnsNoPath", () => {
+  assert.equal(renderedField("_R_2c_", renderedControlIds)("legalName"), false);
+});
+
+test("renderedFieldErrors_InvalidState_JoinsTheMessagesOfRenderedPathsOnly", () => {
+  const state = formInvalid({
+    fieldErrors: {
+      customer: ["The customer is blocked."],
+      legalName: ["This name is already registered.", "Use the name on the PAN card."],
+      "validity.to": ["The agreement must run until the end of the financial year."],
+    },
+  });
+
+  assert.deepEqual(renderedFieldErrors(state, renderedField(formId, renderedControlIds)), [
+    ["legalName", "This name is already registered. Use the name on the PAN card."],
+    ["validity.to", "The agreement must run until the end of the financial year."],
+  ]);
+});
+
+test("renderedFieldErrors_StateOtherThanInvalid_SetsNoFieldError", () => {
+  const rendered = () => true;
+
+  assert.deepEqual(renderedFieldErrors(idleFormState, rendered), []);
+  assert.deepEqual(renderedFieldErrors(formFailed(formMessages.unreachable), rendered), []);
+  assert.deepEqual(renderedFieldErrors(formSucceeded(), rendered), []);
 });
 
 test("hasFieldErrors_ErrorsOnFieldsOrOnlyOnTheForm_TellsThemApart", () => {

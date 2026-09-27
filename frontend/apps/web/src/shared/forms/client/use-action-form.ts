@@ -1,6 +1,6 @@
 "use client";
 
-import { unstable_rethrow } from "next/navigation";
+import { unstable_isUnrecognizedActionError, unstable_rethrow } from "next/navigation";
 import {
   startTransition,
   useActionState,
@@ -34,6 +34,8 @@ import {
   formErrorAlertContent,
   formFieldId,
   hasFieldErrors,
+  renderedField,
+  renderedFieldErrors,
   serverErrorMessage,
   type FormAlertContent,
 } from "./form-feedback.ts";
@@ -63,6 +65,15 @@ export type ActionForm<TValues extends FieldValues, TOutput> = {
   readonly idempotencyKey: string | undefined;
 };
 
+type Sending<TValues> = {
+  readonly submission: FormSubmission<TValues>;
+  readonly controlIds: ReadonlySet<string>;
+};
+
+type Answer = { readonly state: FormState; readonly controlIds: ReadonlySet<string> };
+
+const noAnswer: Answer = { state: idleFormState, controlIds: new Set() };
+
 const serverErrorName = "root.server";
 
 const subscribeToNothing = () => () => {};
@@ -84,17 +95,18 @@ export function useActionForm<TSchema extends z.ZodType<unknown, FieldValues>>({
     shouldFocusError: true,
   });
   const settle = useCallback(
-    async (previous: FormState, submission: FormSubmission<z.input<TSchema>>): Promise<FormState> => {
+    async (previous: Answer, { submission, controlIds }: Sending<z.input<TSchema>>): Promise<Answer> => {
       try {
-        return await action(previous, submission);
+        return { state: await action(previous.state, submission), controlIds };
       } catch (error) {
         unstable_rethrow(error);
-        return rejectedActionState(error);
+        return { state: rejectedActionState(error, unstable_isUnrecognizedActionError), controlIds };
       }
     },
     [action],
   );
-  const [state, dispatch, pending] = useActionState(settle, idleFormState);
+  const [answer, dispatch, pending] = useActionState(settle, noAnswer);
+  const { state } = answer;
   const ready = useSyncExternalStore(subscribeToNothing, hydrated, notHydrated);
   const formId = useId();
   const alertRef = useRef<HTMLDivElement>(null);
@@ -106,15 +118,14 @@ export function useActionForm<TSchema extends z.ZodType<unknown, FieldValues>>({
     formState: { errors },
   } = form;
 
+  const rendered = useMemo(() => renderedField(formId, answer.controlIds), [formId, answer.controlIds]);
   useEffect(() => {
-    if (state.status === "invalid") {
-      for (const [path, messages] of Object.entries(state.fieldErrors)) {
-        setError(path as FieldPath<z.input<TSchema>>, { type: "server", message: messages.join(" ") });
-      }
+    for (const [path, message] of renderedFieldErrors(state, rendered)) {
+      setError(path as FieldPath<z.input<TSchema>>, { type: "server", message });
     }
     const message = serverErrorMessage(state);
     if (message !== undefined) setError(serverErrorName, { type: "server", message });
-  }, [state, setError]);
+  }, [state, rendered, setError]);
 
   const serverError = errors.root?.server;
   useEffect(() => {
@@ -133,23 +144,24 @@ export function useActionForm<TSchema extends z.ZodType<unknown, FieldValues>>({
     serverError === undefined
       ? formErrorAlertContent(rootError?.message)
       : formAlertContent(state, {
+          rendered,
           standing: (path) =>
             (get(errors, path) as { readonly type?: unknown } | undefined)?.type === "server",
           fieldId,
         });
 
-  const send = () => {
+  const send = (controlIds: ReadonlySet<string>) => {
     alertAwaitsFocus.current = false;
     const values = form.getValues();
     if (!idempotent) {
-      startTransition(() => dispatch({ values }));
+      startTransition(() => dispatch({ submission: { values }, controlIds }));
       return;
     }
 
     const sent = idempotencyKeyToSend(lastSentKey.current, state, () => crypto.randomUUID());
     lastSentKey.current = sent;
     setIdempotencyKey(sent.key);
-    startTransition(() => dispatch({ values, idempotencyKey: sent.key }));
+    startTransition(() => dispatch({ submission: { values, idempotencyKey: sent.key }, controlIds }));
   };
 
   const refuse = (invalid: FieldErrors<z.input<TSchema>>) => {
@@ -161,8 +173,13 @@ export function useActionForm<TSchema extends z.ZodType<unknown, FieldValues>>({
       event.preventDefault();
       return;
     }
-    void form.handleSubmit(send, refuse)(event);
+    const controlIds = formControlIds(event.currentTarget);
+    void form.handleSubmit(() => send(controlIds), refuse)(event);
   };
 
   return { form, state, pending, ready, onSubmit, alertRef, alert, fieldId, idempotencyKey };
+}
+
+function formControlIds(form: HTMLFormElement): ReadonlySet<string> {
+  return new Set(Array.from(form.elements, (control) => control.id).filter((id) => id !== ""));
 }

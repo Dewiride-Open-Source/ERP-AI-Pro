@@ -180,7 +180,9 @@ async function followNavigationMenuItem(trigger: Locator, link: Locator, isMobil
     return;
   }
   await expect(async () => {
-    if ((await trigger.getAttribute("aria-expanded")) !== "true") await trigger.tap();
+    if ((await trigger.getAttribute("aria-expanded", { timeout: 1_000 })) !== "true") {
+      await trigger.tap({ timeout: 1_000 });
+    }
     await expect(trigger).toHaveAttribute("aria-expanded", "true", { timeout: 1_000 });
     await link.tap({ timeout: 1_000 });
   }).toPass();
@@ -1930,6 +1932,39 @@ test.describe("design system kitchen sink", () => {
           await page.keyboard.type("0");
           await expect(invoiceAmount).toHaveValue("120678.5");
           await expect(amountValue).toHaveText("Value: 120678.5");
+
+          await invoiceAmount.blur();
+          await expect(invoiceAmount).toHaveValue("1,20,678.50");
+          const afterThirdDigit = await textOffsetPoint(invoiceAmount, "1,20");
+          await page.mouse.move(afterThirdDigit.x, afterThirdDigit.y);
+          await page.mouse.down();
+          await expect(invoiceAmount).toBeFocused();
+          await expect(invoiceAmount).toHaveValue("1,20,678.50");
+          await page.keyboard.press("Tab");
+          await expect(invoiceAmount).not.toBeFocused();
+          await page.keyboard.press("Shift+Tab");
+          await expect(invoiceAmount).toBeFocused();
+          await expect(invoiceAmount).toHaveValue("120678.5");
+          expect(await selection(invoiceAmount), "selection after tabbing back during the press").toEqual({
+            start: 0,
+            end: 8,
+          });
+          await page.mouse.up();
+          await expect(invoiceAmount).toHaveValue("120678.5");
+
+          await invoiceAmount.blur();
+          await expect(invoiceAmount).toHaveValue("1,20,678.50");
+          await page.mouse.down();
+          await expect(invoiceAmount).toBeFocused();
+          await expect(invoiceAmount).toHaveValue("1,20,678.50");
+          await invoiceAmount.dispatchEvent("contextmenu");
+          await expect(invoiceAmount).toHaveValue("120678.5");
+          expect(await selection(invoiceAmount), "caret after a press a context menu ended").toEqual({
+            start: 3,
+            end: 3,
+          });
+          await page.mouse.up();
+          await expect(invoiceAmount).toHaveValue("120678.5");
         }
         await invoiceAmount.fill("-1500");
         await expect(invoiceAmount).toHaveValue("-1500");
@@ -2063,8 +2098,21 @@ test.describe("design system kitchen sink", () => {
         .click();
       await expect(rangeCalendar).toBeVisible();
       await capture("forms-date-range-calendar", rangeCalendar);
+      const rangeRoot = await rangeCalendar.locator("[data-slot='calendar']").elementHandle();
+      const rangeMonth = await rangeCalendar
+        .getByRole("combobox", { name: "Choose the Month" })
+        .first()
+        .elementHandle();
       await rangeCalendar.getByRole("button", { name: /\b10 April 2026/ }).click();
       await expect(rangeCalendar).toBeVisible();
+      await expect(rangeCalendar.getByRole("gridcell", { name: /\b10 April 2026/ })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+      expect(await rangeRoot.evaluate((element) => element.isConnected), "calendar kept").toBe(true);
+      expect(await rangeMonth.evaluate((element) => element.isConnected), "month dropdown kept").toBe(true);
+      await rangeRoot.dispose();
+      await rangeMonth.dispose();
       await rangeCalendar.getByRole("button", { name: /\b20 April 2026/ }).click();
       await expect(rangeCalendar).toBeHidden();
       await expect(forms.getByTestId("forms-date-range-value")).toHaveText("Value: 2026-04-10 to 2026-04-20");
@@ -2122,13 +2170,21 @@ test.describe("design system kitchen sink", () => {
       await expect(account).toHaveValue("Conveyance");
       expect(await emptyMessageShown(), "times the empty message showed while a list closed").toBe(0);
 
-      await account.fill("a");
-      for (const key of ["ArrowLeft", "ArrowRight"]) {
+      await account.fill("ca");
+      for (const { key, caret } of [
+        { key: "ArrowLeft", caret: 1 },
+        { key: "Home", caret: 0 },
+        { key: "ArrowRight", caret: 1 },
+        { key: "End", caret: 2 },
+      ]) {
         await account.press("ArrowDown");
         await expect(account).toHaveAttribute("aria-activedescendant", /-option-/);
         await account.press(key);
+        await expect(accounts).toBeVisible();
+        await expect(account).toHaveAttribute("aria-expanded", "true");
         await expect(account).not.toHaveAttribute("aria-activedescendant");
         await expect(accounts.locator("[aria-selected='true']")).toHaveCount(0);
+        expect(await selection(account), `caret after ${key}`).toEqual({ start: caret, end: caret });
       }
       await account.press("Enter");
       await expect(accounts).toBeHidden();

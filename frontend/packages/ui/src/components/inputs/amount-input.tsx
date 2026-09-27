@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  useRef,
+  useEffect,
   useState,
   type ChangeEvent,
   type ComponentProps,
@@ -23,6 +23,7 @@ import {
   type AmountFormat,
 } from "@dewiride/erp-ui/lib/indian-number";
 
+import { createPressWatch } from "./press-watch";
 import { replaceInputText } from "./replace-input-text";
 
 export type AmountInputProps = Omit<
@@ -53,7 +54,8 @@ export function AmountInput({
 }: AmountInputProps) {
   const format: AmountFormat = { scale, allowNegative };
   const [draft, setDraft] = useState<string | null>(null);
-  const pressedToFocus = useRef(false);
+  const [press] = useState(createPressWatch);
+  useEffect(() => () => press.cancel(), [press]);
   const grouped = groupIndian(value, scale);
   let shown = grouped;
   if (draft !== null) shown = canonicalOf(draft, format) === value ? draft : value;
@@ -80,30 +82,25 @@ export function AmountInput({
     setDraft(value);
   };
 
-  // A pressed pointer places the caret in the grouped text only after the focus event, so the swap waits for the
-  // release; any other focus swaps before React renders, so a selection made while focusing carries over.
+  // A primary-button press, the one that places the caret for typing, sets it in the grouped text only after the focus
+  // event, so the swap waits for the press to end; any other focus swaps before React renders, so a selection made
+  // while focusing carries over. Losing focus ends the wait, so a press whose end never reached the page cannot hold
+  // back the swap of a later focus.
   const handleMouseDown = (event: MouseEvent<HTMLInputElement>) => {
     onMouseDown?.(event);
     const input = event.currentTarget;
-    if (event.defaultPrevented || input.ownerDocument.activeElement === input) return;
-    pressedToFocus.current = true;
-    input.ownerDocument.addEventListener(
-      "mouseup",
-      () => {
-        pressedToFocus.current = false;
-        showPlainText(input);
-      },
-      { capture: true, once: true },
-    );
+    if (event.defaultPrevented || event.button !== 0 || input.ownerDocument.activeElement === input) return;
+    press.start(input.ownerDocument, () => showPlainText(input));
   };
 
   const handleFocus = (event: FocusEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
-    if (!pressedToFocus.current) queueMicrotask(() => showPlainText(input));
+    if (!press.pending) queueMicrotask(() => showPlainText(input));
     onFocus?.(event);
   };
 
   const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
+    press.cancel();
     setDraft(null);
     const canonical = canonicalOf(value, format);
     if (canonical !== value) onValueChange(canonical);

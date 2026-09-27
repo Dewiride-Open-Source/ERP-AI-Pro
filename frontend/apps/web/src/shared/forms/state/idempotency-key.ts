@@ -10,9 +10,10 @@ const createAlreadyRan: ReadonlySet<string> = new Set([
 
 // A failure without a code leaves the outcome unknown: the web server or the API did not answer, the API answered 5xx or
 // a 4xx whose problem the generated client could not read, or the Server Function threw, so the API may have created the
-// record or released the key (keeping a key the API never saw is harmless). The two codes mean a create already ran under
-// the key. Sending the same key again lets the API replay or finish that create instead of making a second one
-// (docs/architecture/application-pipeline.md, "Idempotency").
+// record or released the key. Keeping a key the API never saw is harmless, which also covers the one failure without a
+// code whose outcome is known: a call the web server refused because the page is out of date ran nothing. The two codes
+// mean a create already ran under the key. Sending the same key again lets the API replay or finish that create instead
+// of making a second one (docs/architecture/application-pipeline.md, "Idempotency").
 export function keepsIdempotencyKey(outcome: FormState): boolean {
   return outcome.status === "failed" && (outcome.code === undefined || createAlreadyRan.has(outcome.code));
 }

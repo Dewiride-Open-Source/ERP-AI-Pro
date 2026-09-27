@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { Linter } from "eslint";
 
+import { sideEffectFiles } from "./feature-boundaries.mjs";
 import { nextConfig } from "./next.mjs";
 import { reactLibraryConfig } from "./react-library.mjs";
 
@@ -47,6 +49,8 @@ const documentMarkup = ["no-restricted-syntax", /render only <html> and <body>/]
 const objectHref = ["no-restricted-syntax", /an object href is not checked/];
 const typeRole = ["no-restricted-syntax", /Put a type-role class/];
 const webAppFromPackage = ["no-restricted-imports", /never imports from apps\/web/];
+const moduleStatement = ["no-restricted-syntax", /A web source file only defines exports/];
+const bareLocalImport = ["no-restricted-syntax", /Import a name this file exports instead of the whole file/];
 
 const componentFile = "src/features/platform/attachments/files/components/upload-panel.tsx";
 const startupsConsumer = "src/features/platform/system-info/info/components/system-info-overview.tsx";
@@ -67,7 +71,7 @@ const cases = [
     title: "nextConfig_ModuleImportsAnotherModulesInternalsByAlias_IsReported",
     file: componentFile,
     code: 'import { getSystemInfo } from "@/features/platform/system-info/info/server/queries";\nexport { systemInfoNavigation } from "@/features/platform/system-info/nav";\nimport type { Startup } from "@/features/platform/system-info/startups/server/queries";\nimport "@/features/platform/system-info/index/extra";',
-    expected: [moduleInternals, moduleInternals, moduleInternals, moduleInternals],
+    expected: [moduleInternals, moduleInternals, moduleInternals, moduleInternals, bareLocalImport],
   },
   {
     title: "nextConfig_ModuleImportsItsDomainSharedRelatively_IsAllowed",
@@ -540,6 +544,133 @@ const cases = [
     expected: [typeRole],
   },
   {
+    title: "nextConfig_ModuleLevelStatementInAWebSourceFile_IsReported",
+    file: componentFile,
+    code: [
+      'import { register } from "./register";',
+      "register();",
+      "if (register.ready) register();",
+      "switch (register.mode) {",
+      "  default:",
+      "    register();",
+      "}",
+      "try {",
+      "  register();",
+      "} catch {}",
+      "{",
+      "  register();",
+      "}",
+      "setup: register();",
+      'throw new Error("Not configured.");',
+      "for (let index = 0; index < 2; index++) register();",
+      "for (const name in register) register(name);",
+      "for (const name of register.names) register(name);",
+      "while (register.pending) register();",
+      "do register();",
+      "while (register.pending);",
+    ].join("\n"),
+    expected: Array.from({ length: 12 }, () => moduleStatement),
+  },
+  {
+    title: "nextConfig_ModuleLevelStatementInARoute_IsReported",
+    file: pageFile,
+    code: 'import { notFound } from "next/navigation";\nnotFound();',
+    expected: [moduleStatement],
+  },
+  {
+    title: "nextConfig_ModuleLevelStatementInSharedApi_IsReported",
+    file: "src/shared/api/client.ts",
+    code: 'import { connect } from "@dewiride/erp-api-client";\nvoid connect({ fetch });',
+    expected: [moduleStatement],
+  },
+  {
+    title: "nextConfig_DirectiveAfterAnImport_IsReportedAsAModuleStatement",
+    file: componentFile,
+    code: 'import { Button } from "@dewiride/erp-ui/components/ui/button";\n"use client";\nexport { Button };',
+    expected: [moduleStatement],
+  },
+  {
+    title: "nextConfig_DirectiveDeclarationsAndStatementsInsideFunctions_AreAllowed",
+    file: "src/features/platform/attachments/files/server/actions.ts",
+    code: [
+      '"use server";',
+      'import { z } from "zod";',
+      "const removal = z.object({ id: z.uuid() });",
+      "export type Removal = z.infer<typeof removal>;",
+      "interface Removed {",
+      "  readonly id: string;",
+      "}",
+      "export class RemovalRefused extends Error {}",
+      "export async function removeAttachment(input: unknown): Promise<Removed> {",
+      "  const { id } = removal.parse(input);",
+      '  if (id === "") throw new RemovalRefused();',
+      "  await Promise.resolve();",
+      "  return { id };",
+      "}",
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_PackageStylesheetAndTypeOnlyBareImports_AreAllowed",
+    file: "src/features/platform/attachments/files/server/queries.ts",
+    code: [
+      'import "server-only";',
+      'import "@dewiride/erp-ui/globals.css";',
+      'import "./print.css";',
+      'import "@/shared/styles/print.css";',
+      'import type {} from "./content-types";',
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_BareImportOfALocalFile_IsReported",
+    file: componentFile,
+    code: [
+      'import "./register-icons";',
+      'import "../../nav";',
+      'import "@/shared/telemetry/setup";',
+      'import {} from "./content-types";',
+    ].join("\n"),
+    expected: [bareLocalImport, bareLocalImport, bareLocalImport, bareLocalImport],
+  },
+  {
+    title: "nextConfig_ListedSideEffectFileRunsAModuleLevelStatement_IsAllowed",
+    file: "src/instrumentation-client.ts",
+    code: 'import { config } from "zod";\nimport "./shared/telemetry/setup";\nconfig({ jitless: true });',
+    expected: [],
+  },
+  {
+    title: "nextConfig_ListedSideEffectFileBreaksAnotherRuleOfItsScope_IsReported",
+    file: "src/instrumentation-client.ts",
+    code: 'import { config } from "zod";\nconfig({ jitless: true });\nexport const load = () => import("@dewiride/erp-api-client");',
+    expected: [apiClientDynamicImport],
+  },
+  {
+    title: "nextConfig_UnitTestInSharedApiRunsItsTestsAtModuleLevel_IsAllowed",
+    file: "src/shared/api/paging.test.ts",
+    code: [
+      'import assert from "node:assert/strict";',
+      'import { test } from "node:test";',
+      'export const load = () => import("@dewiride/erp-api-client");',
+      'test("load_Called_ReturnsTheClient", async () => {',
+      "  assert.ok(await load());",
+      "});",
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_UnitTestInAModuleBreaksAnotherRuleOfItsScope_IsReported",
+    file: "src/features/platform/design/form-kit/forms/supplier-example.schema.test.ts",
+    code: [
+      'import { test } from "node:test";',
+      'export const load = () => import("@dewiride/erp-api-client");',
+      'test("load_Called_ReturnsTheClient", async () => {',
+      "  await load();",
+      "});",
+    ].join("\n"),
+    expected: [apiClientDynamicImport],
+  },
+  {
     title: "reactLibraryConfig_PackageImportsItsOwnCode_IsAllowed",
     preset: "ui",
     file: "src/components/upload/file-drop-zone.tsx",
@@ -566,6 +697,13 @@ function restrictedMessages(presetKey, file, code) {
 
   return messages.filter((message) => restrictedRules.has(message.ruleId));
 }
+
+test("nextConfig_SideEffectFiles_AreTheSourceFilesTheWebAppDeclaresWithSideEffects", () => {
+  const { sideEffects } = JSON.parse(readFileSync(join(presets.web.root, "package.json"), "utf8"));
+
+  assert.deepEqual(sideEffects, [...sideEffectFiles.map((file) => `./${file}`), "*.css"]);
+  for (const file of sideEffectFiles) assert.ok(existsSync(join(presets.web.root, file)), file);
+});
 
 for (const { title, preset = "web", file, code, expected } of cases) {
   test(title, () => {

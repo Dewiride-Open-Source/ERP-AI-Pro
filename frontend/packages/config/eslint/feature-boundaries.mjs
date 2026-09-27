@@ -142,13 +142,78 @@ const documentMarkup = {
     "The root layout and the global error render only <html> and <body>; put anything else in a shared/layout component.",
 };
 
+export const sideEffectFiles = ["src/instrumentation-client.ts"];
+
+const moduleEffectFiles = [...sideEffectFiles, `src/**/*.test.${sourceExtensions}`];
+
+const executableStatements = [
+  "ExpressionStatement:not([directive])",
+  "IfStatement",
+  "SwitchStatement",
+  "TryStatement",
+  "BlockStatement",
+  "LabeledStatement",
+  "ThrowStatement",
+  "ForStatement",
+  "ForInStatement",
+  "ForOfStatement",
+  "WhileStatement",
+  "DoWhileStatement",
+];
+
+const moduleEffects = [
+  {
+    selector: `Program > :matches(${executableStatements.join(", ")})`,
+    message:
+      "A web source file only defines exports, because apps/web/package.json declares it free of side effects: move this statement into a function, or list the file both under sideEffects there and in sideEffectFiles of packages/config/eslint/feature-boundaries.mjs (ADR-0025, rule X3).",
+  },
+  {
+    selector: [
+      "ImportDeclaration[specifiers.length=0]",
+      ':not([importKind="type"])',
+      String.raw`[source.value=/^(?:\.|@` + selectorRegexSlash + ")/]",
+      String.raw`[source.value!=/\.css$/]`,
+    ].join(""),
+    message:
+      "Import a name this file exports instead of the whole file: apps/web/package.json declares web source files free of side effects, so a bare import of one may be dropped (ADR-0025).",
+  },
+];
+
 function restrictedImports(patterns, { apiClient = true } = {}) {
   return ["error", apiClient ? { paths: [apiClientValues], patterns } : { patterns }];
 }
 
-function restrictedSyntax(...restrictions) {
-  return ["error", ...typeRoleRestrictions, ...objectHrefs, ...restrictions];
+function restrictedSyntax(restrictions, { moduleEffectsAllowed = false } = {}) {
+  return [
+    "error",
+    ...typeRoleRestrictions,
+    ...objectHrefs,
+    ...(moduleEffectsAllowed ? [] : moduleEffects),
+    ...restrictions,
+  ];
 }
+
+const syntaxScopes = {
+  source: {
+    files: [`src/**/*.${sourceExtensions}`],
+    restrictions: apiClientDynamicImports,
+  },
+  "shared-api": {
+    files: [`src/shared/api/**/*.${sourceExtensions}`],
+    restrictions: [],
+  },
+  app: {
+    files: [`src/app/**/*.${sourceExtensions}`],
+    restrictions: [routeMarkup, ...dynamicRouteAllowList(routeImportSpecifiers, routeImportsMessage)],
+  },
+  "app-document": {
+    files: [`src/app/layout.${sourceExtensions}`, `src/app/global-error.${sourceExtensions}`],
+    restrictions: [
+      documentMarkup,
+      ...dynamicRouteAllowList(documentImportSpecifiers, documentImportsMessage),
+    ],
+  },
+};
 
 const sourceImports = [moduleInternals, domainSharedAlias, appAlias, detour, currentFolderDetour];
 const sharedImports = [appAlias, detour, currentFolderDetour, ...featuresFromShared];
@@ -157,10 +222,10 @@ export function featureBoundaryConfigs() {
   return [
     {
       name: "erp/feature-boundaries/source",
-      files: [`src/**/*.${sourceExtensions}`],
+      files: syntaxScopes.source.files,
       rules: {
         "no-restricted-imports": restrictedImports(sourceImports),
-        "no-restricted-syntax": restrictedSyntax(...apiClientDynamicImports),
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes.source.restrictions),
         "no-restricted-globals": ["error", ...httpGlobalRestrictions],
         "no-restricted-properties": ["error", ...httpPropertyRestrictions],
       },
@@ -181,41 +246,42 @@ export function featureBoundaryConfigs() {
     },
     {
       name: "erp/feature-boundaries/shared-api",
-      files: [`src/shared/api/**/*.${sourceExtensions}`],
+      files: syntaxScopes["shared-api"].files,
       rules: {
         "no-restricted-imports": restrictedImports(sharedImports, { apiClient: false }),
-        "no-restricted-syntax": restrictedSyntax(),
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes["shared-api"].restrictions),
         "no-restricted-globals": "off",
         "no-restricted-properties": "off",
       },
     },
     {
       name: "erp/feature-boundaries/app",
-      files: [`src/app/**/*.${sourceExtensions}`],
+      files: syntaxScopes.app.files,
       rules: {
         "no-restricted-imports": restrictedImports(
           [relativeFromApp, routeAllowList(routeImportSpecifiers, routeImportsMessage)],
           { apiClient: false },
         ),
-        "no-restricted-syntax": restrictedSyntax(
-          routeMarkup,
-          ...dynamicRouteAllowList(routeImportSpecifiers, routeImportsMessage),
-        ),
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes.app.restrictions),
       },
     },
     {
       name: "erp/feature-boundaries/app-document",
-      files: [`src/app/layout.${sourceExtensions}`, `src/app/global-error.${sourceExtensions}`],
+      files: syntaxScopes["app-document"].files,
       rules: {
         "no-restricted-imports": restrictedImports(
           [relativeFromApp, routeAllowList(documentImportSpecifiers, documentImportsMessage)],
           { apiClient: false },
         ),
-        "no-restricted-syntax": restrictedSyntax(
-          documentMarkup,
-          ...dynamicRouteAllowList(documentImportSpecifiers, documentImportsMessage),
-        ),
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes["app-document"].restrictions),
       },
     },
+    ...Object.entries(syntaxScopes).map(([scope, { files, restrictions }]) => ({
+      name: `erp/feature-boundaries/${scope}-module-effects`,
+      files: files.flatMap((scopeFiles) => moduleEffectFiles.map((effectFiles) => [scopeFiles, effectFiles])),
+      rules: {
+        "no-restricted-syntax": restrictedSyntax(restrictions, { moduleEffectsAllowed: true }),
+      },
+    })),
   ];
 }

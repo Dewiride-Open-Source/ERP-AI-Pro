@@ -2,6 +2,7 @@ export const formMessages = {
   detailsNeedAttention: "Some details need attention.",
   notSent: "The form could not be sent. Try again.",
   unreachable: "The ERP service did not respond. Try again.",
+  pageOutOfDate: "This page is out of date. Reload the page, then send the form again.",
   serverFailed: "The server could not finish this. Try again.",
   sessionEnded: "Your session has ended. Sign in again.",
   forbidden: "You do not have permission to do this.",

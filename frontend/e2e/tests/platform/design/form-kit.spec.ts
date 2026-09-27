@@ -17,7 +17,17 @@ const savedMessage = "Saved as an example. Nothing was stored.";
 
 const unreachableMessage = "The ERP service did not respond. Try again.";
 
+const pageOutOfDateMessage = "This page is out of date. Reload the page, then send the form again.";
+
+// Next.js names a Server Function by 42 hexadecimal characters; this name is shaped like one but no build produces it, as
+// a page another deployment served would send.
+const unknownServerFunctionId = "0".repeat(42);
+
 const gstinPanMismatch = "The PAN does not match the GSTIN, whose 3rd to 12th characters are the PAN.";
+
+const contactUnlinked = "Give the contact person's phone number or email address.";
+
+const secondBalanceUnlinked = "Give the second opening balance an amount or a reason for leaving it at nil.";
 
 function isUploadRequest(request: Request): boolean {
   return request.method() === "POST" && new URL(request.url()).pathname === attachmentsApi;
@@ -76,6 +86,20 @@ async function showsItsWholeText(input: Locator): Promise<boolean> {
   return input.evaluate((element) => element.scrollWidth <= element.clientWidth);
 }
 
+// No browser counts a placeholder in an input's scrollWidth, so the placeholder is measured as the input's own text and the
+// empty value put back, without an input event, so the form never sees it.
+async function showsItsWholePlaceholder(input: Locator): Promise<boolean> {
+  return input.evaluate((element) => {
+    if (!(element instanceof HTMLInputElement) || element.value !== "" || element.placeholder === "") {
+      return false;
+    }
+    element.value = element.placeholder;
+    const fits = element.scrollWidth <= element.clientWidth;
+    element.value = "";
+    return fits;
+  });
+}
+
 async function verticalCentre(target: Locator): Promise<number> {
   const bounds = await target.boundingBox();
   expect(bounds, "bounding box").not.toBeNull();
@@ -84,6 +108,19 @@ async function verticalCentre(target: Locator): Promise<number> {
 
 function focused(page: Page, target: Locator): Locator {
   return target.and(page.locator(":focus"));
+}
+
+async function expectValidSupplierKept(formKit: FormKitPage): Promise<void> {
+  await expect(formKit.legalName).toHaveValue(validSupplier.legalName);
+  await expect(formKit.gstin).toHaveValue("29AABCG1234K1Z5");
+  await expect(formKit.pan).toHaveValue("AABCG1234K");
+  await expect(formKit.ifsc).toHaveValue("HDFC0001234");
+  await expect(formKit.state).toHaveText(validSupplier.state);
+  await expect(formKit.category).toHaveValue(validSupplier.category);
+  await expect(formKit.openingBalance).toHaveValue("1,25,000.50");
+  await expect(formKit.agreementStart).toHaveValue(validSupplier.agreementStart);
+  await expect(formKit.validityFrom).toHaveValue(validSupplier.validityFrom);
+  await expect(formKit.validityTo).toHaveValue(validSupplier.validityTo);
 }
 
 test.describe("form kit", () => {
@@ -327,6 +364,7 @@ test.describe("form kit", () => {
       - alert:
         - text: Some details need attention.
         - list:
+          - /children: equal
           - listitem: Check these details against the supplier's registration certificate.
           - listitem:
             - link "This GSTIN is registered to a different PAN.":
@@ -334,13 +372,21 @@ test.describe("form kit", () => {
           - listitem:
             - link "No bank branch uses this IFSC.":
               - /url: /^#.+-ifsc$/
+          - listitem: ${contactUnlinked}
           - listitem:
             - link "The opening balance is above the credit limit agreed with the supplier.":
               - /url: /^#.+-openingBalance$/
+          - listitem: ${secondBalanceUnlinked}
           - listitem:
             - link "The agreement must run until at least the end of the financial year.":
               - /url: /^#.+-validity-to$/
     `);
+      for (const message of [contactUnlinked, secondBalanceUnlinked]) {
+        await expect(formKit.summary.getByText(message, { exact: true })).toBeVisible();
+        await expect(formKit.summary.getByRole("link", { name: message })).toHaveCount(0);
+      }
+      await expect(formKit.summary.getByRole("link")).toHaveCount(4);
+      await expect(formKit.form.locator("[aria-invalid='true']")).toHaveCount(4);
       await expectFieldError(formKit.gstin, /This GSTIN is registered to a different PAN\.$/);
       await expectFieldError(formKit.ifsc, /No bank branch uses this IFSC\.$/);
       await expectFieldError(
@@ -367,6 +413,16 @@ test.describe("form kit", () => {
       await expect(formKit.ifsc).not.toHaveAttribute("aria-invalid");
       await expect(formKit.summaryLink("No bank branch uses this IFSC.")).toHaveCount(0);
       await expect(formKit.summaryLink("This GSTIN is registered to a different PAN.")).toBeVisible();
+      for (const message of [contactUnlinked, secondBalanceUnlinked]) {
+        await expect(formKit.summary.getByText(message, { exact: true })).toBeVisible();
+      }
+      await expect(formKit.form.locator("[aria-invalid='true']")).toHaveCount(3);
+
+      await formKit.answerWith("Accept the supplier");
+      await formKit.save.click();
+      await expect(formKit.outcome).toHaveText(savedMessage);
+      await expect(formKit.summary).toHaveCount(0);
+      await expect(formKit.form.locator("[aria-invalid='true']")).toHaveCount(0);
     },
   );
 
@@ -421,7 +477,11 @@ test.describe("form kit", () => {
   );
 
   test.describe("when the Server Function call itself fails", () => {
-    test.use({ expectedConsoleError: /^Failed to load resource/ });
+    // Chromium logs both provoked failures, WebKit only the 502 and Firefox neither.
+    test.use({
+      expectedConsoleError:
+        /^Failed to load resource: (net::ERR_CONNECTION_RESET|the server responded with a status of 502 \(Bad Gateway\))$/,
+    });
 
     forEachTheme(
       "keeps the form, its values and the idempotency key and says the service did not respond",
@@ -457,15 +517,7 @@ test.describe("form kit", () => {
         expect(await formKit.idempotencyKeySuffix(), "key after a gateway page").toBe(kept);
         await page.unroute(pattern);
 
-        await expect(formKit.legalName).toHaveValue(validSupplier.legalName);
-        await expect(formKit.gstin).toHaveValue("29AABCG1234K1Z5");
-        await expect(formKit.state).toHaveText(validSupplier.state);
-        await expect(formKit.category).toHaveValue(validSupplier.category);
-        await expect(formKit.openingBalance).toHaveValue("1,25,000.50");
-        await expect(formKit.agreementStart).toHaveValue(validSupplier.agreementStart);
-        await expect(formKit.validityFrom).toHaveValue(validSupplier.validityFrom);
-        await expect(formKit.validityTo).toHaveValue(validSupplier.validityTo);
-
+        await expectValidSupplierKept(formKit);
         const sent = page.waitForRequest(isSaveRequest);
         await formKit.save.click();
         expect((await sent).postData() ?? "", "the kept key sent again").toContain(kept);
@@ -473,6 +525,51 @@ test.describe("form kit", () => {
         await expect(formKit.summary).toHaveCount(0);
         expect(await formKit.idempotencyKeySuffix(), "key after the answer").toBe(kept);
         expect(saves.count(), "Server Function calls").toBe(3);
+      },
+    );
+  });
+
+  test.describe("when the server does not have the page's Server Function", () => {
+    test.use({
+      expectedConsoleError:
+        /^Failed to load resource: the server responded with a status of 404 \(Not Found\)$/,
+    });
+
+    forEachTheme(
+      "keeps the form, its values and the idempotency key and asks for a reload",
+      async ({ page, capture }) => {
+        const formKit = new FormKitPage(page);
+        const saves = watch(page, isSaveRequest);
+        await formKit.goto();
+        await formKit.fill(validSupplier);
+        const pattern = `**${formKitPath}`;
+
+        await page.route(pattern, (route) => {
+          const request = route.request();
+          return isSaveRequest(request)
+            ? route.continue({ headers: { ...request.headers(), "next-action": unknownServerFunctionId } })
+            : route.fallback();
+        });
+        const refused = page.waitForResponse((response) => isSaveRequest(response.request()));
+        await formKit.save.click();
+        const response = await refused;
+        expect(response.status(), "status of the refused call").toBe(404);
+        expect(await response.headerValue("x-nextjs-action-not-found"), "refusal marker").toBe("1");
+        await expect(formKit.summary).toHaveText(pageOutOfDateMessage);
+        await expect(formKit.summary).toBeFocused();
+        await capture("page-out-of-date", formKit.summary);
+        const kept = await formKit.idempotencyKeySuffix();
+        expect(response.request().postData() ?? "", "the key of the refused call").toContain(kept);
+        await page.unroute(pattern);
+
+        await expectValidSupplierKept(formKit);
+        const sent = page.waitForRequest(isSaveRequest);
+        await formKit.save.click();
+        expect((await sent).postData() ?? "", "the kept key sent again").toContain(kept);
+        await expect(formKit.outcome).toHaveText(savedMessage);
+        await expect(formKit.summary).toHaveCount(0);
+        expect(await formKit.idempotencyKeySuffix(), "key after the answer").toBe(kept);
+        expect(saves.count(), "Server Function calls").toBe(2);
       },
     );
   });
@@ -779,9 +876,17 @@ test.describe("form kit", () => {
     );
     await page.keyboard.press("Tab");
     await expect(focused(page, rangeDays)).toHaveCount(1);
+    const firstEnd = await page.evaluateHandle(() => document.activeElement);
     await page.keyboard.press("Enter");
     await expect(rangeCalendar).toBeVisible();
-    await expect(focused(page, rangeDays)).toHaveCount(1);
+    await expect(focused(page, rangeDays)).toHaveAccessibleName(/, selected$/);
+    expect(
+      await firstEnd.evaluate(
+        (element) => element !== null && element.isConnected && element === document.activeElement,
+      ),
+      "the day picked as the first end is the same element and still focused",
+    ).toBe(true);
+    await firstEnd.dispose();
     await expect(formKit.validityFrom).not.toHaveAttribute("aria-invalid");
     await expect(formKit.validityTo).not.toHaveAttribute("aria-invalid");
     await page.keyboard.press("Escape");
@@ -846,7 +951,9 @@ test.describe("form kit", () => {
       await formKit.goto();
 
       for (const input of [formKit.validityFrom, formKit.validityTo]) {
-        expect(await showsItsWholeText(input), "empty date box shows its placeholder").toBe(true);
+        await expect(input).toHaveAttribute("placeholder", "dd-mm-yyyy");
+        expect(await showsItsWholePlaceholder(input), "empty date box shows its placeholder").toBe(true);
+        await expect(input).toHaveValue("");
         await input.fill("27-09-2026");
         expect(await showsItsWholeText(input), "filled date box shows its date").toBe(true);
       }
