@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-27",
+  "updatedOn": "2026-09-28",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -625,10 +625,16 @@
           "id": "web-foundation-data-table-kit-core",
           "title": "Data table kit (core)",
           "scope": "Build a server-driven table (TanStack Table + TanStack Query over the generated API client, licences verified) with sorting, filtering, pagination, column visibility, row selection and a mobile card layout backed by the `backend-platform-application-layer-primitives` paginated-query contract; saved views, bulk actions, CSV export and virtualisation follow in `business-building-blocks-web-shared-kit-extensions`.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "`@dewiride/erp-ui` exposes a `DataTable` built on TanStack Table 9 whose sortable headers carry `aria-sort` and sort on the server, with a column-visibility menu, page-scoped row selection with a select-all checkbox, a pagination bar whose page controls are links, loading, pending and empty states, and a card list of the same rows below its container breakpoint; Playwright component tests on `/design/data-table` prove the keyboard path, ARIA snapshots and every control on all five projects in light and dark.",
+            "A list's page, page size, sort, filters and hidden columns live in URL search parameters that `apps/web/src/shared/lists` parses against a per-list definition and maps onto the API's `page`, `pageSize`, `sort` and `filter` grammar (values percent-encoded, date ranges on IST day boundaries); a malformed or non-canonical address redirects to its canonical form, and `node --test` covers parsing, serialisation, canonical addresses and the encoding.",
+            "The attachments page lists files through the kit against the real API: sorting by name, type, size and upload time, filtering by name, type and upload date, links for pages, hidden columns, and its empty, unavailable, loading and pending states; the hand-written table and pagination are deleted.",
+            "An ADR records TanStack Table 9.2.4 with its transitive dependencies and licences, the owner's decision of 2026-09-28 to keep list reads on the server with the view in the address instead of TanStack Query, and the card layout; `design-system.md`, `frontend/CLAUDE.md` and `docs/routing.md` describe the kit."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-28"
         },
         {
           "id": "web-foundation-feedback-motion-and-accessibility-baseline",
