@@ -660,10 +660,16 @@
           "id": "web-foundation-e2e-harness-matrix",
           "title": "E2E harness matrix",
           "scope": "Extend Playwright with per-viewport projects crossed with light/dark, a screenshot naming convention, a nav-crawl helper that visits every registered navigation entry and asserts zero console errors, blob reporter with sharding and merge in CI, and HTML report artifacts; the authentication fixture slot is filled by `authentication-test-authentication-infrastructure`.",
-          "status": "planned",
-          "acceptance": [],
+          "status": "in-progress",
+          "acceptance": [
+            "Playwright runs a desktop, a tablet and a phone viewport: desktop Chromium, Firefox and WebKit, the owner-approved iPad (gen 11) as tablet-ios, and the newest Pixel and iPhone, with every visual test in light and dark through forEachTheme and every capture named <spec>/<name>--<project>--<theme>.png; the whole suite passes on all six projects.",
+            "A navigation crawl reads every entry the shell's primary navigation renders from the module registry, visits each in light and dark on every project, and fails on a console error, a missing page heading or a serious accessibility violation, naming the page.",
+            "The e2e workflow splits each project into shards that write blob reports, and one Playwright job merges them into a single HTML report artifact and fails when any shard failed, so the required checks name that one job; pull requests run chromium and mobile-android, main all six projects.",
+            "The testing guide, the repository-settings guide and an ADR record the matrix, the naming, the crawl, the sharding and the merged report, and leave the signed-in session to the authentication phase."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-09-29"
         }
       ]
     },
