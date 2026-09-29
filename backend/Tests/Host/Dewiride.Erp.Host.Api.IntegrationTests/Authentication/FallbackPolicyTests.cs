@@ -6,6 +6,7 @@ using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 
@@ -17,6 +18,10 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
 
     private const string UnknownPath = "/api/platform/does-not-exist";
 
+    private const string SelectedEndpointHeader = "X-Test-Selected-Endpoint";
+
+    private const string NoEndpoint = "none";
+
     [Fact]
     public async Task Send_AnonymousRequestToEveryRouteThatIsNotAnonymous_AnswersUnauthenticatedWithoutALocation()
     {
@@ -25,15 +30,19 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
             .OfType<RouteEndpoint>()
             .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is null)
             .SelectMany(endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? [HttpMethods.Get])
-                .Select(method => (Method: method, Path: SamplePath(endpoint.RoutePattern.RawText!))))
+                .Select(method => (Endpoint: endpoint, Method: method, Path: SamplePath(endpoint.RoutePattern.RawText!))))
             .ToList();
-        Assert.Contains((HttpMethods.Post, "/api/auth/logout"), protectedRoutes);
+        Assert.Contains(protectedRoutes, route => route.Method == HttpMethods.Post && route.Path == "/api/auth/logout");
 
-        foreach (var (method, path) in protectedRoutes)
+        foreach (var (endpoint, method, path) in protectedRoutes)
         {
             using var request = new HttpRequestMessage(new HttpMethod(method), path);
             using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
+            var selected = Uri.UnescapeDataString(Assert.Single(response.Headers.GetValues(SelectedEndpointHeader)));
+            Assert.True(
+                selected == DescriptionOf(endpoint),
+                $"{method} {path} reached '{selected}' instead of '{DescriptionOf(endpoint)}'; give SamplePath a value the route's constraints accept.");
             await AssertUnauthenticatedAsync(response, $"{method} {path}");
         }
     }
@@ -151,6 +160,9 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
         return problem;
     }
 
+    private static string DescriptionOf(RouteEndpoint endpoint) =>
+        $"{string.Join(',', endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? [])} {endpoint.RoutePattern.RawText} {endpoint.DisplayName}";
+
     private static string SamplePath(string pattern) =>
         RouteParameter().Replace(pattern, match => match.Value.Contains(":guid", StringComparison.Ordinal) ? Guid.CreateVersion7().ToString("D") : "sample");
 
@@ -159,12 +171,42 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
 
     public sealed class Fixture : IAsyncDisposable
     {
-        public ErpApiFactory Factory { get; } = new ErpApiFactory().WithTestEndpoints(routes =>
+        private readonly ErpApiFactory _root = new ErpApiFactory().WithTestEndpoints(routes =>
         {
             routes.MapGet(SignedInPath, () => Results.Ok());
             routes.MapGet(AdministratorsPath, () => Results.Ok()).RequireAuthorization(policy => policy.RequireRole(TestUsers.AdminRole));
         });
 
-        public ValueTask DisposeAsync() => Factory.DisposeAsync();
+        public Fixture()
+        {
+            Factory = _root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddTransient<IStartupFilter, SelectedEndpointStartupFilter>()));
+        }
+
+        public WebApplicationFactory<Program> Factory { get; }
+
+        public async ValueTask DisposeAsync()
+        {
+            await Factory.DisposeAsync();
+            await _root.DisposeAsync();
+        }
+    }
+
+    private sealed class SelectedEndpointStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+        {
+            app.Use((context, pipeline) =>
+            {
+                context.Response.OnStarting(() =>
+                {
+                    context.Response.Headers[SelectedEndpointHeader] = context.GetEndpoint() is RouteEndpoint endpoint ? Uri.EscapeDataString(DescriptionOf(endpoint)) : NoEndpoint;
+
+                    return Task.CompletedTask;
+                });
+
+                return pipeline(context);
+            });
+            next(app);
+        };
     }
 }

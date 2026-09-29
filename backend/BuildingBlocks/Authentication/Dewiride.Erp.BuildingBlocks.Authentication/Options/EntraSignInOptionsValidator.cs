@@ -39,9 +39,9 @@ internal sealed partial class EntraSignInOptionsValidator(TimeProvider timeProvi
         {
             failures.Add($"{Section}:{key} is required: {meaning}.");
         }
-        else if (!Guid.TryParse(value, out var id) || id == Guid.Empty)
+        else if (!Guid.TryParseExact(value, "D", out var id) || id == Guid.Empty)
         {
-            failures.Add($"{Section}:{key} must be a GUID: {meaning}.");
+            failures.Add($"{Section}:{key} must be a GUID written as 8-4-4-4-12 hexadecimal digits without braces: {meaning}.");
         }
     }
 

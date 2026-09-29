@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Identity.Client;
 
 namespace Dewiride.Erp.Testing;
 
@@ -172,6 +173,8 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
             services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, null);
             services.PostConfigure<AuthenticationOptions>(options => options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName);
             services.PostConfigure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, TestIdentityProvider.Configure);
+            services.AddSingleton<TestTokenEndpoint>();
+            services.AddSingleton<IMsalHttpClientFactory>(provider => provider.GetRequiredService<TestTokenEndpoint>());
             services.AddTransient<IStartupFilter, ThrowingRouteStartupFilter>();
             services.AddTransient<IStartupFilter>(_ => new TestEndpointsStartupFilter(_testEndpoints));
         });

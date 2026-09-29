@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 namespace Dewiride.Erp.Testing.Authentication;
 
 // The handler would otherwise download the discovery document of the tenant on its first challenge; a fixed document
-// keeps every test host off the network, so no test can reach Entra.
+// keeps the handler off the network, and TestTokenEndpoint keeps MSAL off it, so no test can reach Entra.
 public static class TestIdentityProvider
 {
     public const string TenantId = "5d7c3b9a-1e2f-4a6b-8c0d-9e8f7a6b5c4d";

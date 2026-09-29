@@ -58,7 +58,7 @@ public sealed class AuthenticationSchemeTests(ErpApiFactory factory) : IClassFix
         Assert.Equal(["offline_access", "openid", "profile"], options.Scope.Order(StringComparer.Ordinal));
         Assert.Equal(AuthPaths.SignInCallback, options.CallbackPath);
         Assert.Equal(AuthPaths.SignedOutCallback, options.SignedOutCallbackPath);
-        Assert.Equal(AuthPaths.RemoteSignOut, options.RemoteSignOutPath);
+        Assert.False(options.RemoteSignOutPath.HasValue);
         Assert.Equal(AuthPaths.LoginPage, options.SignedOutRedirectUri);
         Assert.Equal("roles", options.TokenValidationParameters.RoleClaimType);
         Assert.Equal("preferred_username", options.TokenValidationParameters.NameClaimType);
@@ -114,5 +114,20 @@ public sealed class AuthenticationSchemeTests(ErpApiFactory factory) : IClassFix
         var options = factory.Services.GetRequiredService<IOptions<MsalMemoryTokenCacheOptions>>().Value;
 
         Assert.Equal(TimeSpan.FromHours(12), options.AbsoluteExpirationRelativeToNow);
+    }
+
+    [Fact]
+    public async Task SessionOptions_Configured_SetTheCookieWindowAndTheTokenCacheExpiration()
+    {
+        await using var configured = new ErpApiFactory()
+            .WithConfiguration(ErpApiFactory.IdentitySessionIdleTimeoutKey, "00:10:00")
+            .WithConfiguration(ErpApiFactory.IdentitySessionLifetimeKey, "02:00:00");
+
+        var cookie = configured.Services.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>().Get(Cookies);
+        var cache = configured.Services.GetRequiredService<IOptions<MsalMemoryTokenCacheOptions>>().Value;
+
+        Assert.Equal(TimeSpan.FromMinutes(10), cookie.ExpireTimeSpan);
+        Assert.True(cookie.SlidingExpiration);
+        Assert.Equal(TimeSpan.FromHours(2), cache.AbsoluteExpirationRelativeToNow);
     }
 }

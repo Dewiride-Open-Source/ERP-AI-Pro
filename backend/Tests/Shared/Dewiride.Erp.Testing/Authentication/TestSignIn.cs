@@ -1,17 +1,22 @@
 using System.Net;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Web.Extensibility;
 using Xunit;
 
 namespace Dewiride.Erp.Testing.Authentication;
 
-// Signs a test user in through the product cookie scheme, which is what a completed Entra callback does, so a test gets
-// the real session cookie without a round trip to Entra. The cookie is Secure, so the client talks https to the test server,
-// and it follows no redirect, since a sign-in or sign-out redirects to Entra.
+// Signs a test user in the way a completed Entra callback does: MSAL redeems a code for the person, at the test token
+// endpoint, which puts their account in the token cache, and the cookie scheme issues the real session cookie, so a test
+// gets a session the product accepts without a round trip to Entra. The cookie is Secure, so the client talks https to the
+// test server, and it follows no redirect, since a sign-in or sign-out redirects to Entra.
 public static class TestSignIn
 {
     public const string PathPrefix = "/__test/sign-in";
@@ -30,6 +35,8 @@ public static class TestSignIn
                 return Results.NotFound();
             }
 
+            var application = await ApplicationAsync(context.RequestServices);
+            await application.AcquireTokenByAuthorizationCode([], TestTokenEndpoint.CodeFor(user)).ExecuteAsync(context.RequestAborted);
             await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user.ToPrincipal(CookieAuthenticationDefaults.AuthenticationScheme));
 
             return Results.NoContent();
@@ -61,4 +68,31 @@ public static class TestSignIn
 
         throw new InvalidOperationException($"The test sign-in of {user.UserName} answered {status}; map it with ErpApiFactory.WithTestEndpoints(TestSignIn.Map).");
     }
+
+    public static async Task<bool> IsAccountCachedAsync(IServiceProvider services, TestUser user)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(user);
+
+        using var scope = services.CreateScope();
+        var application = await ApplicationAsync(scope.ServiceProvider).ConfigureAwait(false);
+
+        return await application.GetAccountAsync(user.AccountId).ConfigureAwait(false) is not null;
+    }
+
+    public static async Task ForgetAccountAsync(IServiceProvider services, TestUser user)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(user);
+
+        using var scope = services.CreateScope();
+        var application = await ApplicationAsync(scope.ServiceProvider).ConfigureAwait(false);
+        var account = await application.GetAccountAsync(user.AccountId).ConfigureAwait(false)
+            ?? throw new InvalidOperationException($"The token cache holds no account for {user.UserName}; sign the person in with TestSignIn first.");
+
+        await application.RemoveAsync(account).ConfigureAwait(false);
+    }
+
+    private static Task<IConfidentialClientApplication> ApplicationAsync(IServiceProvider services) =>
+        services.GetRequiredService<IConfidentialClientApplicationProvider>().GetConfidentialClientApplicationAsync(OpenIdConnectDefaults.AuthenticationScheme);
 }

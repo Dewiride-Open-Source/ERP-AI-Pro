@@ -3,7 +3,8 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Dewiride.Erp.Testing.Authentication;
 
-// One throwaway self-signed certificate per test process; no test redeems a code, so Entra never sees it.
+// One throwaway self-signed certificate per test process; MSAL signs client assertions with it only for the test token
+// endpoint, so Entra never sees it.
 public static class TestSignInCertificate
 {
     private static readonly Lazy<string> Current = new(() =>

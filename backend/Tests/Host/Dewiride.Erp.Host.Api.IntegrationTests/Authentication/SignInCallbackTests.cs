@@ -1,4 +1,8 @@
+using System.Buffers.Text;
 using System.Net;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.Testing;
@@ -6,6 +10,9 @@ using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging.Testing;
+using Microsoft.Extensions.Primitives;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 
@@ -15,11 +22,14 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
 
     private const string Description = "AADSTS65004: User declined to consent to access the app.";
 
+    private const string RefusedCode = "code-that-entra-refuses";
+
     private readonly Fixture _fixture;
 
     public SignInCallbackTests(Fixture fixture)
     {
         _fixture = fixture;
+        _fixture.Logs.Clear();
     }
 
     [Fact]
@@ -30,7 +40,7 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         using var response = await PostCallbackAsync(client, ("code", "stolen-code"));
 
         AssertSignInFailed(response);
-        AssertLogged(SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
+        AssertLogged(_fixture.Logs.GetSnapshot(), SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
     }
 
     [Fact]
@@ -41,55 +51,102 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         using var response = await PostCallbackAsync(client, ("state", "forged-state"), ("code", "stolen-code"));
 
         AssertSignInFailed(response);
-        AssertLogged(SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
+        AssertLogged(_fixture.Logs.GetSnapshot(), SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
     }
 
     [Fact]
     public async Task Post_CallbackWithAValidStateButNoCorrelationCookie_LandsOnTheSignInFailedPage()
     {
         using var challenger = TestSignIn.CreateClient(_fixture.Factory);
-        var state = await ChallengeAsync(challenger);
+        var authorize = await ChallengeAsync(challenger);
         using var client = TestSignIn.CreateClient(_fixture.Factory);
 
-        using var response = await PostCallbackAsync(client, ("state", state), ("code", "stolen-code"));
+        using var response = await PostCallbackAsync(client, ("state", Single(authorize, "state")), ("code", "stolen-code"));
 
         AssertSignInFailed(response);
-        AssertLogged(SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
+        AssertLogged(_fixture.Logs.GetSnapshot(), SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
     }
 
     [Fact]
     public async Task Post_CallbackWhereThePersonDeclined_LandsOnTheSignInFailedPageAndLogsOnlyTheErrorCode()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
-        var state = await ChallengeAsync(client);
+        var state = Single(await ChallengeAsync(client), "state");
 
         using var response = await PostCallbackAsync(client, ("state", state), ("error", "access_denied"), ("error_description", Description));
 
         AssertSignInFailed(response);
-        var record = AssertLogged(SignInEvents.IdentityProviderFailure, "access_denied");
+        var records = _fixture.Logs.GetSnapshot();
+        var record = AssertLogged(records, SignInEvents.IdentityProviderFailure, "access_denied");
         Assert.DoesNotContain("AADSTS65004", record.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(state, record.Message, StringComparison.Ordinal);
+        AssertNoRecordContains(records, Description);
     }
 
     [Fact]
     public async Task Post_CallbackWithAnErrorOutsideTheOAuthGrammar_LogsItAsUnrecognised()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
-        var state = await ChallengeAsync(client);
+        var state = Single(await ChallengeAsync(client), "state");
 
         using var response = await PostCallbackAsync(client, ("state", state), ("error", "<script>alert(1)</script>"));
 
         AssertSignInFailed(response);
-        AssertLogged(SignInEvents.IdentityProviderFailure, SignInEvents.UnrecognisedOAuthError);
+        AssertLogged(_fixture.Logs.GetSnapshot(), SignInEvents.IdentityProviderFailure, SignInEvents.UnrecognisedOAuthError);
     }
 
-    private static async Task<string> ChallengeAsync(HttpClient client)
+    [Fact]
+    public async Task Post_CallbackWithACodeEntraRefuses_RedeemsItWithTheCertificateAndPkceAndLandsOnTheSignInFailedPage()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var authorize = await ChallengeAsync(client);
+
+        using var response = await PostCallbackAsync(client, ("state", Single(authorize, "state")), ("code", RefusedCode));
+
+        AssertSignInFailed(response);
+        var redemption = Assert.Single(_fixture.TokenEndpoint.Requests, request => request.Form.GetValueOrDefault("code") == RefusedCode);
+        Assert.Equal(TestIdentityProvider.TokenEndpoint.AbsoluteUri, redemption.Address.GetLeftPart(UriPartial.Path));
+        Assert.Equal("authorization_code", redemption.Form["grant_type"]);
+        Assert.Equal(TestIdentityProvider.ClientId, redemption.Form["client_id"]);
+        Assert.Equal($"{TestIdentityProvider.WebOrigin}{AuthPaths.SignInCallback}", redemption.Form["redirect_uri"]);
+        Assert.Equal(Single(authorize, "code_challenge"), Base64Url.EncodeToString(SHA256.HashData(Encoding.ASCII.GetBytes(redemption.Form["code_verifier"]))));
+        Assert.Equal("urn:ietf:params:oauth:client-assertion-type:jwt-bearer", redemption.Form["client_assertion_type"]);
+        Assert.DoesNotContain("client_secret", redemption.Form.Keys);
+        await AssertSignedWithTheSignInCertificateAsync(redemption.Form["client_assertion"]);
+        var records = _fixture.Logs.GetSnapshot();
+        AssertLogged(records, SignInEvents.CodeRedemptionFailure, TestTokenEndpoint.RefusedCodeError);
+        AssertNoRecordContains(records, TestTokenEndpoint.RefusedCodeDescription);
+    }
+
+    [Fact]
+    public async Task Post_FailedCallbacks_WriteNoErrorDescriptionEvenWhenConfigurationLogsEveryLevelOfTheIdentityLibraries()
+    {
+        await using var root = new ErpApiFactory()
+            .WithConfiguration("Logging:LogLevel:Microsoft.Identity.Web", "Trace")
+            .WithConfiguration("Logging:LogLevel:Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectHandler", "Trace");
+        await using var factory = root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddFakeLogging()));
+        using var client = TestSignIn.CreateClient(factory);
+
+        using var declined = await PostCallbackAsync(client, ("state", Single(await ChallengeAsync(client), "state")), ("error", "access_denied"), ("error_description", Description));
+        using var refused = await PostCallbackAsync(client, ("state", Single(await ChallengeAsync(client), "state")), ("code", RefusedCode));
+
+        AssertSignInFailed(declined);
+        AssertSignInFailed(refused);
+        var records = factory.Services.GetRequiredService<FakeLogCollector>().GetSnapshot();
+        Assert.Contains(records, record => record.Category == typeof(SignInEvents).FullName);
+        AssertNoRecordContains(records, Description);
+        AssertNoRecordContains(records, TestTokenEndpoint.RefusedCodeDescription);
+    }
+
+    private static async Task<Dictionary<string, StringValues>> ChallengeAsync(HttpClient client)
     {
         using var response = await client.GetAsync(new Uri($"{AuthPaths.Login}?returnUrl=%2F", UriKind.Relative), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
 
-        return Assert.Single(QueryHelpers.ParseQuery(response.Headers.Location!.Query)["state"])!;
+        return QueryHelpers.ParseQuery(response.Headers.Location!.Query);
     }
+
+    private static string Single(Dictionary<string, StringValues> query, string name) => Assert.Single(query[name])!;
 
     private static async Task<HttpResponseMessage> PostCallbackAsync(HttpClient client, params (string Name, string Value)[] fields)
     {
@@ -106,14 +163,42 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         Assert.DoesNotContain(cookies, cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
     }
 
-    private FakeLogRecord AssertLogged(string failure, string oAuthError)
+    private static FakeLogRecord AssertLogged(IReadOnlyList<FakeLogRecord> records, string failure, string oAuthError)
     {
-        var record = Assert.Single(_fixture.Logs.GetSnapshot(clear: true), entry => entry.Category == typeof(SignInEvents).FullName);
+        var record = Assert.Single(records, entry => entry.Category == typeof(SignInEvents).FullName);
         Assert.Equal(LogLevel.Warning, record.Level);
         Assert.Equal(failure, record.GetStructuredStateValue("Failure"));
         Assert.Equal(oAuthError, record.GetStructuredStateValue("OAuthError"));
 
         return record;
+    }
+
+    private static void AssertNoRecordContains(IReadOnlyList<FakeLogRecord> records, string text)
+    {
+        var leaks = records
+            .Where(record => record.Message.Contains(text, StringComparison.Ordinal)
+                || (record.Exception?.ToString().Contains(text, StringComparison.Ordinal) ?? false)
+                || (record.StructuredState?.Any(pair => pair.Value?.Contains(text, StringComparison.Ordinal) ?? false) ?? false))
+            .Select(record => $"{record.Category} ({record.Level})")
+            .ToList();
+
+        Assert.Empty(leaks);
+    }
+
+    private static async Task AssertSignedWithTheSignInCertificateAsync(string assertion)
+    {
+        using var certificate = X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(TestSignInCertificate.Base64), password: null);
+
+        var result = await new JsonWebTokenHandler().ValidateTokenAsync(assertion, new TokenValidationParameters
+        {
+            IssuerSigningKey = new X509SecurityKey(certificate),
+            ValidIssuer = TestIdentityProvider.ClientId,
+            ValidAudience = TestIdentityProvider.TokenEndpoint.AbsoluteUri,
+            ValidateIssuerSigningKey = true,
+        });
+
+        Assert.True(result.IsValid, result.Exception?.Message);
+        Assert.Equal(TestIdentityProvider.ClientId, result.Claims["sub"]);
     }
 
     public sealed class Fixture : IDisposable
@@ -124,11 +209,14 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         {
             Factory = _root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddFakeLogging()));
             Logs = Factory.Services.GetRequiredService<FakeLogCollector>();
+            TokenEndpoint = Factory.Services.GetRequiredService<TestTokenEndpoint>();
         }
 
         public WebApplicationFactory<Program> Factory { get; }
 
         public FakeLogCollector Logs { get; }
+
+        public TestTokenEndpoint TokenEndpoint { get; }
 
         public void Dispose()
         {

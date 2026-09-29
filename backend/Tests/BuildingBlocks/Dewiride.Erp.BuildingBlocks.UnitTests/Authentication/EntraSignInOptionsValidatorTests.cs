@@ -31,6 +31,9 @@ public sealed class EntraSignInOptionsValidatorTests
     [InlineData("consumers", "must be a GUID")]
     [InlineData("contoso.onmicrosoft.com", "must be a GUID")]
     [InlineData("00000000-0000-0000-0000-000000000000", "must be a GUID")]
+    [InlineData("{5d7c3b9a-1e2f-4a6b-8c0d-9e8f7a6b5c4d}", "must be a GUID")]
+    [InlineData("(5d7c3b9a-1e2f-4a6b-8c0d-9e8f7a6b5c4d)", "must be a GUID")]
+    [InlineData("5d7c3b9a1e2f4a6b8c0d9e8f7a6b5c4d", "must be a GUID")]
     public void Validate_TenantIdNotADirectoryId_FailsNamingTheSetting(string? tenantId, string rule)
     {
         var options = ValidOptions();
@@ -47,6 +50,8 @@ public sealed class EntraSignInOptionsValidatorTests
     [InlineData(null, "is required")]
     [InlineData("erp-web", "must be a GUID")]
     [InlineData("00000000-0000-0000-0000-000000000000", "must be a GUID")]
+    [InlineData("{0e9d8c7b-6a5f-4e3d-8c1b-0a9f8e7d6c5b}", "must be a GUID")]
+    [InlineData("0e9d8c7b6a5f4e3d8c1b0a9f8e7d6c5b", "must be a GUID")]
     public void Validate_ClientIdNotAnApplicationId_FailsNamingTheSetting(string? clientId, string rule)
     {
         var options = ValidOptions();
@@ -75,6 +80,8 @@ public sealed class EntraSignInOptionsValidatorTests
     [InlineData("https://login.microsoftonline.com/?tenant=contoso")]
     [InlineData("login.microsoftonline.com")]
     [InlineData("")]
+    [InlineData("https://admin@login.microsoftonline.com/")]
+    [InlineData("https://login.microsoftonline.com/#tenant")]
     public void Validate_InstanceNotAnHttpsCloudAddress_Fails(string instance)
     {
         var options = ValidOptions();
@@ -174,6 +181,36 @@ public sealed class EntraSignInOptionsValidatorTests
         clock.Advance(TimeSpan.FromDays(366));
 
         Assert.Contains($"{Section}:ClientCertificate is not valid now", validator.Validate(null, options).FailureMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Validate_CertificateAtItsLastValidSecond_SucceedsAndFailsOnceItsExpiryIsReached()
+    {
+        var notAfter = Now.AddDays(1);
+        var options = ValidOptions();
+        options.ClientCertificate = RsaCertificate(Now.AddDays(-1), notAfter);
+        var clock = new FakeTimeProvider(notAfter.AddSeconds(-1));
+        var validator = new EntraSignInOptionsValidator(clock, new FakeHostEnvironment(Environments.Development));
+        var lastValidSecond = validator.Validate(null, options);
+
+        clock.Advance(TimeSpan.FromSeconds(1));
+        var expired = validator.Validate(null, options);
+
+        Assert.True(lastValidSecond.Succeeded, lastValidSecond.FailureMessage);
+        Assert.True(expired.Failed);
+        Assert.Contains($"{Section}:ClientCertificate is not valid now", expired.FailureMessage, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Validate_SessionLifetimeEqualToTheIdleTimeout_Succeeds()
+    {
+        var options = ValidOptions();
+        options.SessionIdleTimeout = TimeSpan.FromHours(1);
+        options.SessionLifetime = TimeSpan.FromHours(1);
+
+        var result = Validator(Environments.Development).Validate(null, options);
+
+        Assert.True(result.Succeeded, result.FailureMessage);
     }
 
     [Fact]

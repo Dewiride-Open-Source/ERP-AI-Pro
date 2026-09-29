@@ -19,7 +19,12 @@ public sealed partial class RedirectPathsTests
         var registered = match.Groups["paths"].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         Assert.Equal([AuthPaths.SignInCallback, AuthPaths.SignedOutCallback], registered);
-        Assert.DoesNotContain(AuthPaths.RemoteSignOut, registered);
+    }
+
+    [Fact]
+    public void Registration_DeclaresNoFrontChannelLogoutUrl()
+    {
+        Assert.DoesNotContain("logoutUrl", GraphScript, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]

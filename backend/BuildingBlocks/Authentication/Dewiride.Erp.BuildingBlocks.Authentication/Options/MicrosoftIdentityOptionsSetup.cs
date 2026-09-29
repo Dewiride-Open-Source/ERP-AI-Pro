@@ -32,8 +32,11 @@ internal sealed class MicrosoftIdentityOptionsSetup(IOptions<EntraSignInOptions>
 
         options.CallbackPath = AuthPaths.SignInCallback;
         options.SignedOutCallbackPath = AuthPaths.SignedOutCallback;
-        options.RemoteSignOutPath = AuthPaths.RemoteSignOut;
         options.SignedOutRedirectUri = AuthPaths.LoginPage;
+
+        // The app registrations have no front-channel logout URL, so Entra never calls one; a path left to answer would
+        // let any site sign a person out by pointing the browser at it.
+        options.RemoteSignOutPath = PathString.Empty;
 
         options.ResponseType = OpenIdConnectResponseType.Code;
         options.ResponseMode = OpenIdConnectResponseMode.FormPost;

@@ -17,16 +17,20 @@ public sealed class LogoutEndpointTests(LogoutEndpointTests.Fixture fixture) : I
 
     private const string SignedInPath = "/__test/signed-in";
 
+    private const string RemoteSignOutPath = "/api/auth/signout-oidc";
+
     [Fact]
     public async Task Post_LogoutWithASession_ClearsTheCookieAndRedirectsToTheEndSessionEndpoint()
     {
         using var client = TestSignIn.CreateClient(fixture.Factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
         await AssertStatusAsync(client, HttpStatusCode.OK);
+        Assert.True(await TestSignIn.IsAccountCachedAsync(fixture.Factory.Services, TestUsers.Accountant));
 
         using var response = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.False(await TestSignIn.IsAccountCachedAsync(fixture.Factory.Services, TestUsers.Accountant));
         var location = response.Headers.Location;
         Assert.NotNull(location);
         Assert.Equal(TestIdentityProvider.EndSessionEndpoint.AbsoluteUri, location.GetLeftPart(UriPartial.Path));
@@ -64,6 +68,23 @@ public sealed class LogoutEndpointTests(LogoutEndpointTests.Fixture fixture) : I
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal(AuthPaths.LoginPage, response.Headers.Location?.OriginalString);
+    }
+
+    [Fact]
+    public async Task Get_RemoteSignOutPathOfTheHandlerWithASession_LeavesThePersonSignedIn()
+    {
+        using var client = TestSignIn.CreateClient(fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
+
+        using var response = await client.GetAsync(new Uri(RemoteSignOutPath, UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+        Assert.Equal(ProblemTypes.ResourceNotFound, problem!.Extensions["code"]?.ToString());
+        var cookies = response.Headers.TryGetValues("Set-Cookie", out var values) ? values : [];
+        Assert.DoesNotContain(cookies, cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
+        await AssertStatusAsync(client, HttpStatusCode.OK);
+        Assert.True(await TestSignIn.IsAccountCachedAsync(fixture.Factory.Services, TestUsers.Administrator));
     }
 
     private AuthenticationProperties? StateOf(string state) =>

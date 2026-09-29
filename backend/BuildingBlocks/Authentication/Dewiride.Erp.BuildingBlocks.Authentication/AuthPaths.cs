@@ -1,7 +1,7 @@
 namespace Dewiride.Erp.BuildingBlocks.Authentication;
 
 // The callback paths are registered as redirect URIs of the Entra app registrations by scripts/azure/lib/graph.sh
-// (REDIRECT_PATHS); RemoteSignOut is the front-channel logout URL, a separate registration property.
+// (REDIRECT_PATHS).
 public static class AuthPaths
 {
     public const string Prefix = "/api/auth";
@@ -13,8 +13,6 @@ public static class AuthPaths
     public const string SignInCallback = Prefix + "/signin-oidc";
 
     public const string SignedOutCallback = Prefix + "/signout-callback-oidc";
-
-    public const string RemoteSignOut = Prefix + "/signout-oidc";
 
     public const string LoginPage = "/login";
 

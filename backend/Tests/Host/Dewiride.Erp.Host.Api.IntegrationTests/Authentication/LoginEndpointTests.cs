@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
@@ -100,6 +101,60 @@ public sealed class LoginEndpointTests(ErpApiFactory factory) : IClassFixture<Er
         await AssertReturnUrlProblemAsync(response);
     }
 
+    [Theory]
+    [InlineData("navigate", "document")]
+    [InlineData("navigate", null)]
+    [InlineData(null, "document")]
+    public async Task Get_LoginAsAPageTheBrowserOpens_ChallengesTheIdentityProvider(string? mode, string? destination)
+    {
+        using var client = CreateClient();
+
+        using var request = FetchRequest(ReturnPath, mode, destination);
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(TestIdentityProvider.AuthorizationEndpoint.GetLeftPart(UriPartial.Path), response.Headers.Location?.GetLeftPart(UriPartial.Path));
+        Assert.Equal(2, response.Headers.GetValues("Set-Cookie").Count());
+    }
+
+    [Theory]
+    [InlineData("no-cors", "image")]
+    [InlineData("no-cors", "script")]
+    [InlineData("no-cors", "style")]
+    [InlineData("cors", "empty")]
+    [InlineData("same-origin", "empty")]
+    [InlineData("navigate", "iframe")]
+    [InlineData("navigate", "frame")]
+    [InlineData("navigate", "object")]
+    [InlineData("nested-navigate", "iframe")]
+    [InlineData("websocket", "websocket")]
+    [InlineData("same-origin", "document")]
+    [InlineData("no-cors", null)]
+    [InlineData("NAVIGATE", null)]
+    [InlineData(null, "image")]
+    [InlineData(null, "iframe")]
+    [InlineData(null, "Document")]
+    public async Task Get_LoginFromAnythingButAPageTheBrowserOpens_AnswersAProblemAndSetsNoCookie(string? mode, string? destination)
+    {
+        using var client = CreateClient();
+
+        using var request = FetchRequest(ReturnPath, mode, destination);
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        await AssertNotAPageProblemAsync(response);
+    }
+
+    [Fact]
+    public async Task Get_LoginSignedInFromAnImage_AnswersAProblemInsteadOfRedirecting()
+    {
+        using var client = CreateClient().AsUser(TestUsers.Accountant);
+
+        using var request = FetchRequest(ReturnPath, "no-cors", "image");
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        await AssertNotAPageProblemAsync(response);
+    }
+
     [Fact]
     public async Task Get_LoginWhenAlreadySignedIn_RedirectsStraightToTheReturnPath()
     {
@@ -116,6 +171,36 @@ public sealed class LoginEndpointTests(ErpApiFactory factory) : IClassFixture<Er
 
     private static Uri LoginUri(string? returnUrl) =>
         new(returnUrl is null ? AuthPaths.Login : $"{AuthPaths.Login}?returnUrl={Uri.EscapeDataString(returnUrl)}", UriKind.Relative);
+
+    private static HttpRequestMessage FetchRequest(string returnUrl, string? mode, string? destination)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, LoginUri(returnUrl));
+        if (mode is not null)
+        {
+            request.Headers.Add(AuthEndpoints.FetchModeHeader, mode);
+        }
+
+        if (destination is not null)
+        {
+            request.Headers.Add(AuthEndpoints.FetchDestinationHeader, destination);
+        }
+
+        return request;
+    }
+
+    private static async Task AssertNotAPageProblemAsync(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Null(response.Headers.Location);
+        Assert.False(response.Headers.Contains("Set-Cookie"));
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.Equal("/problems/request.invalid", body.RootElement.GetProperty("type").GetString());
+        Assert.Equal("request.invalid", body.RootElement.GetProperty("code").GetString());
+        Assert.Equal(AuthEndpoints.NotAPageMessage, body.RootElement.GetProperty("detail").GetString());
+        Assert.Equal(AuthPaths.Login, body.RootElement.GetProperty("instance").GetString());
+        Assert.False(body.RootElement.TryGetProperty("errors", out _));
+    }
 
     private static string Single(Dictionary<string, StringValues> query, string name) => Assert.Single(query[name])!;
 

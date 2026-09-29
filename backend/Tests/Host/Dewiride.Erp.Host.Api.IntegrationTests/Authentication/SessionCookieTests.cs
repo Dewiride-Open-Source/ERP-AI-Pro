@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Net;
+using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -12,7 +14,9 @@ public sealed class SessionCookieTests
 
     private const string ObjectIdPath = "/__test/object-id";
 
-    private static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(30);
+    private const string ClearedCookie = "expires=Thu, 01 Jan 1970";
+
+    private static readonly TimeSpan DefaultIdleTimeout = TimeSpan.FromMinutes(30);
 
     [Fact]
     public async Task Post_SignIn_IssuesAHostPrefixedHttpOnlySecureLaxSessionCookieThatExpiresWithTheBrowser()
@@ -45,14 +49,40 @@ public sealed class SessionCookieTests
     }
 
     [Fact]
-    public async Task Get_AfterMoreThanHalfTheIdleTimeout_RenewsTheCookieSoTheSessionSlides()
+    public async Task Get_WithinAMinuteOfTheLastRenewal_LeavesTheCookieAsItIs()
     {
         using var session = new Session();
         using var signIn = await session.SignInAsync();
 
-        session.Clock.Advance(IdleTimeout / 2 + TimeSpan.FromMinutes(1));
+        session.Clock.Advance(TimeSpan.FromSeconds(59));
+        using var response = await session.GetAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Null(SessionCookieOf(response));
+    }
+
+    [Fact]
+    public async Task Get_MoreThanAMinuteAfterTheLastRenewal_RenewsTheCookie()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+
+        session.Clock.Advance(TimeSpan.FromSeconds(61));
+        using var response = await session.GetAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(SessionCookieOf(response));
+    }
+
+    [Fact]
+    public async Task Get_FourteenMinutesAfterSignInAndSeventeenMinutesLater_IsStillSignedIn()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+
+        session.Clock.Advance(TimeSpan.FromMinutes(14));
         using var renewed = await session.GetAsync();
-        session.Clock.Advance(IdleTimeout / 2 + TimeSpan.FromMinutes(1));
+        session.Clock.Advance(TimeSpan.FromMinutes(17));
         using var stillSignedIn = await session.GetAsync();
 
         Assert.Equal(HttpStatusCode.OK, renewed.StatusCode);
@@ -60,13 +90,29 @@ public sealed class SessionCookieTests
         Assert.Equal(HttpStatusCode.OK, stillSignedIn.StatusCode);
     }
 
-    [Fact]
-    public async Task Get_OnceTheIdleTimeoutHasPassed_AnswersUnauthenticated()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("00:10:00")]
+    public async Task Get_ASecondBeforeTheIdleTimeout_IsStillSignedIn(string? idleTimeout)
     {
-        using var session = new Session();
+        using var session = new Session(idleTimeout: idleTimeout);
         using var signIn = await session.SignInAsync();
 
-        session.Clock.Advance(IdleTimeout + TimeSpan.FromSeconds(1));
+        session.Clock.Advance(IdleTimeoutOf(idleTimeout) - TimeSpan.FromSeconds(1));
+        using var response = await session.GetAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("00:10:00")]
+    public async Task Get_ASecondAfterTheIdleTimeout_AnswersUnauthenticated(string? idleTimeout)
+    {
+        using var session = new Session(idleTimeout: idleTimeout);
+        using var signIn = await session.SignInAsync();
+
+        session.Clock.Advance(IdleTimeoutOf(idleTimeout) + TimeSpan.FromSeconds(1));
         using var response = await session.GetAsync();
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -75,7 +121,7 @@ public sealed class SessionCookieTests
     [Fact]
     public async Task Get_OnceTheSessionLifetimeHasPassedWhileActive_AnswersUnauthenticatedAndClearsTheCookie()
     {
-        using var session = new Session(lifetime: TimeSpan.FromHours(1));
+        using var session = new Session(lifetime: "01:00:00");
         using var signIn = await session.SignInAsync();
         for (var minutes = 20; minutes < 60; minutes += 20)
         {
@@ -88,7 +134,7 @@ public sealed class SessionCookieTests
         using var response = await session.GetAsync();
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Contains("expires=Thu, 01 Jan 1970", SessionCookieOf(response), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(ClearedCookie, SessionCookieOf(response), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -96,21 +142,59 @@ public sealed class SessionCookieTests
     {
         using var session = new Session();
         using var signIn = await session.SignInAsync();
-        var value = SessionCookieOf(signIn)!.Split(';')[0][(SessionCookie.Length + 1)..];
+        var value = CookieValueOf(signIn);
         var tampered = (value[^5] == 'A' ? 'B' : 'A') + value[^4..];
-        using var client = TestSignIn.CreateClient(session.Factory);
-        using var request = new HttpRequestMessage(HttpMethod.Get, ObjectIdPath);
-        request.Headers.Add("Cookie", $"{SessionCookie}={value[..^5]}{tampered}");
 
-        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        using var response = await session.GetWithCookieAsync($"{value[..^5]}{tampered}");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Get_WithACopyOfTheCookieOnceThePersonHasSignedOut_AnswersUnauthenticatedAndClearsTheCookie()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+        var copy = CookieValueOf(signIn);
+        using (var beforeSignOut = await session.GetWithCookieAsync(copy))
+        {
+            Assert.Equal(HttpStatusCode.OK, beforeSignOut.StatusCode);
+        }
+
+        using var signOut = await session.SignOutAsync();
+        using var response = await session.GetWithCookieAsync(copy);
+
+        Assert.Equal(HttpStatusCode.Found, signOut.StatusCode);
+        Assert.False(await TestSignIn.IsAccountCachedAsync(session.Factory.Services, TestUsers.Accountant));
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains(ClearedCookie, SessionCookieOf(response), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Get_WhenTheTokenCacheHoldsNoAccountForTheSession_AnswersUnauthenticatedAndClearsTheCookie()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+        await TestSignIn.ForgetAccountAsync(session.Factory.Services, TestUsers.Accountant);
+
+        using var response = await session.GetAsync();
+        using var afterwards = await session.GetAsync();
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains(ClearedCookie, SessionCookieOf(response), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(HttpStatusCode.Unauthorized, afterwards.StatusCode);
+    }
+
+    private static TimeSpan IdleTimeoutOf(string? idleTimeout) =>
+        idleTimeout is null ? DefaultIdleTimeout : TimeSpan.Parse(idleTimeout, CultureInfo.InvariantCulture);
 
     private static string? SessionCookieOf(HttpResponseMessage response) =>
         response.Headers.TryGetValues("Set-Cookie", out var cookies)
             ? cookies.SingleOrDefault(cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal))
             : null;
+
+    private static string CookieValueOf(HttpResponseMessage response) =>
+        SessionCookieOf(response)!.Split(';')[0][(SessionCookie.Length + 1)..];
 
     private sealed class Session : IDisposable
     {
@@ -118,16 +202,21 @@ public sealed class SessionCookieTests
 
         private readonly HttpClient _client;
 
-        public Session(TimeSpan? lifetime = null)
+        public Session(string? idleTimeout = null, string? lifetime = null)
         {
             _root = new ErpApiFactory().WithTestEndpoints(routes =>
             {
                 TestSignIn.Map(routes);
                 routes.MapGet(ObjectIdPath, (HttpContext context) => context.User.FindFirst(TestUser.ObjectIdClaim)?.Value);
             });
-            if (lifetime is { } sessionLifetime)
+            if (idleTimeout is not null)
             {
-                _root.WithConfiguration(ErpApiFactory.IdentitySessionLifetimeKey, sessionLifetime.ToString("c"));
+                _root.WithConfiguration(ErpApiFactory.IdentitySessionIdleTimeoutKey, idleTimeout);
+            }
+
+            if (lifetime is not null)
+            {
+                _root.WithConfiguration(ErpApiFactory.IdentitySessionLifetimeKey, lifetime);
             }
 
             Factory = _root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddSingleton<TimeProvider>(Clock)));
@@ -140,7 +229,18 @@ public sealed class SessionCookieTests
 
         public Task<HttpResponseMessage> SignInAsync() => TestSignIn.SignInAsync(_client, TestUsers.Accountant);
 
+        public Task<HttpResponseMessage> SignOutAsync() => _client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+
         public Task<HttpResponseMessage> GetAsync() => _client.GetAsync(new Uri(ObjectIdPath, UriKind.Relative), TestContext.Current.CancellationToken);
+
+        public async Task<HttpResponseMessage> GetWithCookieAsync(string cookieValue)
+        {
+            using var client = TestSignIn.CreateClient(Factory);
+            using var request = new HttpRequestMessage(HttpMethod.Get, ObjectIdPath);
+            request.Headers.Add("Cookie", $"{SessionCookie}={cookieValue}");
+
+            return await client.SendAsync(request, TestContext.Current.CancellationToken);
+        }
 
         public void Dispose()
         {

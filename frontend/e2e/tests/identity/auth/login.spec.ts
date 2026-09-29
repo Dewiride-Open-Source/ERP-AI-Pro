@@ -1,9 +1,9 @@
-import { startServers } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { LoginPage } from "../../../pages/identity/auth/login.page";
 
 const apiContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
 const failureMessage = "We could not sign you in. Try again, or ask your administrator for access.";
+const storeLabelSuffix = " (local-dev)";
 
 test.describe("login page", () => {
   forEachTheme("renders the sign-in card with every control", async ({ page, capture, theme }) => {
@@ -64,9 +64,13 @@ test.describe("login page", () => {
       baseURL,
       request,
     }) => {
+      const systemInfo = await request.get("/api/platform/system-info");
+      expect(systemInfo.status()).toBe(200);
+      const { applicationName } = (await systemInfo.json()) as { applicationName?: unknown };
+      expect(typeof applicationName).toBe("string");
       test.skip(
-        !startServers,
-        "E2E_BASE_URL is set: an API started outside Playwright runs without the App Configuration store and signs in with placeholder ids that Microsoft sign-in does not know",
+        !(applicationName as string).endsWith(storeLabelSuffix),
+        "the API behind the web origin does not report the local-dev label of the App Configuration store, so it runs without the store and signs in with throwaway ids that Microsoft sign-in does not know",
       );
 
       const response = await request.get("/api/auth/login?returnUrl=%2F", { maxRedirects: 0 });
