@@ -132,14 +132,11 @@ test.describe("form kit", () => {
   });
 
   test.describe("before the page is interactive", () => {
-    test.use({ expectedConsoleError: /Failed to load resource: net::ERR_FAILED$/ });
+    test.use({ javaScriptEnabled: false });
 
-    // Aborting the app's script files leaves the page as the server sent it: React's inline scripts still stream the page
-    // in, but nothing hydrates, which is what a person sees while the scripts are still on their way.
     test("keeps Save disabled so the form cannot be sent", async ({ page }) => {
       const formKit = new FormKitPage(page);
       const saves = watch(page, isSaveRequest);
-      await page.route("**/_next/static/chunks/**", (route) => route.abort());
       await page.goto(formKitPath);
 
       await expect(formKit.heading).toBeVisible();

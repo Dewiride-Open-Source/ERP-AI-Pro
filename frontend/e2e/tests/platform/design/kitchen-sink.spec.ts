@@ -506,9 +506,8 @@ test.describe("design system kitchen sink", () => {
         value,
       );
     }
-    await expect(feedback.getByRole("status", { name: "Loading client details" })).toHaveAttribute(
-      "aria-busy",
-      "true",
+    await expect(feedback.getByRole("status", { name: "Loading client details" })).toHaveText(
+      "Loading client details",
     );
 
     const navigation = kitchenSink.section("navigation");

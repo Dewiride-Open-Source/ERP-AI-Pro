@@ -114,10 +114,12 @@ export async function tabOntoLink(page: Page, link: Locator): Promise<void> {
 }
 
 // Colour contrast is measured on what is painted, so an element still fading or sliding in would be judged at a colour it only
-// passes through; animations that repeat for ever never settle and are left running.
+// passes through; animations that repeat for ever never settle and are left running. An AnimatedList item changes its height
+// from JavaScript, outside document.getAnimations(), and marks itself data-animating meanwhile.
 async function settleAnimations(page: Page): Promise<void> {
   await page.waitForFunction(
     () =>
+      document.querySelector("[data-animating]") === null &&
       document
         .getAnimations()
         .every(
@@ -130,8 +132,7 @@ async function settleAnimations(page: Page): Promise<void> {
   );
 }
 
-// Every captured screen is a key screen, so each one is scanned, within the captured element when there is one, in the theme
-// it is captured in; a moderate or minor finding is left to review, and a serious or critical one fails the test.
+// Every captured screen is a key screen, so each one is scanned, in the theme it is captured in.
 async function expectNoSeriousAccessibilityViolations(
   page: Page,
   name: string,

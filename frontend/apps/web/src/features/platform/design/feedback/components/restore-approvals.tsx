@@ -3,8 +3,12 @@
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { Spinner } from "@dewiride/erp-ui/components/ui/spinner";
 import { RotateCcwIcon } from "lucide-react";
+import { unstable_isUnrecognizedActionError, unstable_rethrow } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
+
+import { showFailureToast } from "@/shared/feedback/failure-toast";
+import { rejectedActionState } from "@/shared/forms/client/rejected-action";
 
 import { restoreApprovals } from "../server/actions";
 
@@ -14,8 +18,14 @@ export function RestoreApprovals() {
   const restore = () => {
     if (restoring) return;
     startRestore(async () => {
-      await restoreApprovals();
-      toast.success("Restored every request.");
+      try {
+        await restoreApprovals();
+        toast.success("Restored every request.");
+      } catch (error) {
+        unstable_rethrow(error);
+        const failed = rejectedActionState(error, unstable_isUnrecognizedActionError);
+        showFailureToast("The requests were not restored.", failed.message, failed.reference);
+      }
     });
   };
 

@@ -1,4 +1,10 @@
-export function SkipLink({ targetId, label = "Skip to main content" }: { targetId: string; label?: string }) {
+export function SkipLink({
+  targetId,
+  label = "Skip to main content",
+}: {
+  targetId: string;
+  label?: string | undefined;
+}) {
   return (
     <a
       href={`#${targetId}`}

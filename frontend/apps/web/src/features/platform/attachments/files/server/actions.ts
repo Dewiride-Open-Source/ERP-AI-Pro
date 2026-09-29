@@ -9,6 +9,8 @@ import type { RowRemovalOutcome } from "@/shared/lists/optimistic-rows";
 
 const attachmentId = z.uuid();
 
+const attachmentNotFound = "attachment.not-found";
+
 export type DownloadLinkResult = { readonly url: string } | { readonly error: string };
 
 export async function createDownloadLink(id: string): Promise<DownloadLinkResult> {
@@ -34,7 +36,10 @@ export async function deleteAttachment(id: string): Promise<RowRemovalOutcome> {
     await sendApi((client) => client.api.platform.attachments.byId(parsed.data).delete());
     outcome = { removed: true };
   } catch (error) {
-    outcome = { removed: false, message: describe(error) };
+    outcome =
+      error instanceof ApiError && error.problem.code === attachmentNotFound
+        ? { removed: true, message: "It had already been deleted." }
+        : { removed: false, message: describe(error) };
   }
   refresh();
   return outcome;

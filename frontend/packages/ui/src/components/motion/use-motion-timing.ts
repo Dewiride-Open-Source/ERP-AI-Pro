@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useSyncExternalStore } from "react";
 
 import { motionTiming, type MotionTiming } from "./motion-tokens";

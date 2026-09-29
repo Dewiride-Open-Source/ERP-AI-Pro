@@ -6,6 +6,7 @@ import { DownloadIcon, Trash2Icon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { showFailureToast } from "@/shared/feedback/failure-toast";
 import { useRemoveRow } from "@/shared/lists/list-row-removal";
 
 import { createDownloadLink, deleteAttachment } from "../server/actions";
@@ -33,15 +34,12 @@ export function AttachmentActions({
 
   const remove = () => {
     void removeRow(id, () => deleteAttachment(id)).then((outcome) => {
-      if (outcome.removed) {
-        toast.success(`Deleted ${fileName}.`);
+      if (!outcome.removed) {
+        showFailureToast(`${fileName} was not deleted.`, outcome.message, outcome.reference);
         return;
       }
-      toast.error(`${fileName} was not deleted.`, {
-        description: outcome.reference
-          ? `${outcome.message} Reference: ${outcome.reference}`
-          : outcome.message,
-      });
+      if (outcome.message === undefined) toast.success(`Deleted ${fileName}.`);
+      else toast.info(`${fileName} is no longer stored.`, { description: outcome.message });
     });
   };
 

@@ -69,6 +69,15 @@ async function deleteAttachments(request: APIRequestContext, ids: readonly strin
   }
 }
 
+// A test that deletes some of its files itself cleans up whatever is left, so a failure midway reports its own cause rather
+// than a cleanup that found a file already gone.
+async function deleteLeftoverAttachments(request: APIRequestContext, ids: readonly string[]): Promise<void> {
+  for (const id of ids) {
+    const response = await request.delete(`${attachmentsApi}/${id}`);
+    expect([204, 404]).toContain(response.status());
+  }
+}
+
 test.describe("attachments page", () => {
   forEachTheme("uploads, lists, downloads and deletes a file", async ({ page, capture }) => {
     const attachments = new AttachmentsPage(page);
@@ -177,7 +186,7 @@ test.describe("attachments page", () => {
     await expect(new AppShell(page).toast(`Deleted ${file.name}.`)).toBeVisible();
   });
 
-  test("takes a deleted file off the list at once and reports one deleted elsewhere", async ({
+  test("takes a deleted file off the list at once and treats one deleted elsewhere as gone", async ({
     page,
     request,
   }) => {
@@ -196,6 +205,7 @@ test.describe("attachments page", () => {
 
     try {
       await attachments.goto(`?name=${prefix}`);
+      await attachments.list.waitUntilInteractive();
       await expect(attachments.list.status).toContainText("Showing all 2 files.");
 
       const release = await holdServerFunctionCalls(page, attachmentsPath);
@@ -206,18 +216,18 @@ test.describe("attachments page", () => {
       release();
       await expect(shell.toast(`Deleted ${kept.name}.`)).toBeVisible();
       await expect(attachments.row(kept.name)).toHaveCount(0);
-      ids.delete(kept.name);
 
       const deletedElsewhere = await request.delete(`${attachmentsApi}/${ids.get(gone.name) ?? ""}`);
       expect(deletedElsewhere.status()).toBe(204);
-      ids.delete(gone.name);
       await attachments.row(gone.name).getByTestId("attachment-delete").click();
       await attachments.confirmDelete.click();
-      await expect(shell.toast(`${gone.name} was not deleted.`)).toBeVisible();
+      const alreadyGone = shell.toast(`${gone.name} is no longer stored.`);
+      await expect(alreadyGone).toBeVisible();
+      await expect(alreadyGone).toContainText("It had already been deleted.");
       await expect(attachments.row(gone.name)).toHaveCount(0);
       await expect(attachments.list.noMatches).toBeVisible();
     } finally {
-      await deleteAttachments(request, [...ids.values()]);
+      await deleteLeftoverAttachments(request, [...ids.values()]);
     }
   });
 

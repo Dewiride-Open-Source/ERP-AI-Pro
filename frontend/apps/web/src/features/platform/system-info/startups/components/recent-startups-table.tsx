@@ -24,6 +24,8 @@ import { getRecentStartups } from "../server/queries";
 
 const missing = "—";
 
+const titleId = "recent-startups-title";
+
 export async function RecentStartupsTable() {
   let startups: StartupResponse[] | undefined;
   let failure: string | undefined;
@@ -37,7 +39,7 @@ export async function RecentStartupsTable() {
   return (
     <Card data-testid="recent-startups-card">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle id={titleId} className="flex items-center gap-2">
           <HistoryIcon className="size-4 text-muted-foreground" aria-hidden />
           Recent starts
         </CardTitle>
@@ -54,7 +56,7 @@ function StartupsTable({ startups }: { startups: StartupResponse[] }) {
   if (startups.length === 0) return <Empty />;
 
   return (
-    <Table data-testid="recent-startups-table">
+    <Table aria-labelledby={titleId} data-testid="recent-startups-table">
       <TableHeader>
         <TableRow>
           <TableHead>Started</TableHead>

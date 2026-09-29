@@ -33,3 +33,7 @@ export async function dismissApproval(id: string): Promise<RowRemovalOutcome> {
 export async function restoreApprovals(): Promise<void> {
   await writeDismissed(new Set());
 }
+
+export async function reconnectBankFeed(): Promise<{ readonly connected: true }> {
+  return { connected: true };
+}

@@ -25,10 +25,19 @@ test("withoutRow_ShownRow_LeavesTheOthersAndCountsOneFewer", () => {
 });
 
 test("withoutRow_LastRowOfTheLastPage_DropsThatPage", () => {
-  const result = withoutRow(shown(["e"], 5, 2, 3), "e", idOf);
+  const result = withoutRow(shown(["c", "d"], 4, 2, 2), "d", idOf);
 
-  assert.deepEqual(result.rows, []);
-  assert.deepEqual(result.page, { page: 3, pageSize: 2, totalCount: 4, pageCount: 2 });
+  assert.deepEqual(
+    result.rows.map((row) => row.id),
+    ["c"],
+  );
+  assert.deepEqual(result.page, { page: 2, pageSize: 2, totalCount: 3, pageCount: 2 });
+});
+
+test("withoutRow_OnlyRowOfALaterPage_StaysUntilTheServerAnswers", () => {
+  const before = shown(["e"], 5, 2, 3);
+
+  assert.equal(withoutRow(before, "e", idOf), before);
 });
 
 test("withoutRow_OnlyRow_LeavesAnEmptyList", () => {

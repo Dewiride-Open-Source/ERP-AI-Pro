@@ -9,6 +9,7 @@ export function SystemInfoOverviewSkeleton() {
   return (
     <LoadingStatus
       label="Loading system information"
+      pageTitle="System information"
       className="grid gap-section"
       data-testid="system-info-loading"
     >

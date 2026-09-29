@@ -19,8 +19,8 @@ const ageingBuckets = [
   { label: "More than 90 days overdue", amount: 41_750 },
 ] as const;
 
-// The report stands in for one whose data takes a while to gather, so the app shell's loading status is what a person sees
-// while it is prepared.
+// The report stands in for one whose data takes a while to gather, so the skeleton of its own loading.tsx is what a person
+// sees while it is prepared.
 export async function SlowReport() {
   await new Promise((resolve) => setTimeout(resolve, preparationMilliseconds));
 

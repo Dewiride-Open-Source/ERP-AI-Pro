@@ -33,8 +33,9 @@ export function RemindersDemo({ labelledBy }: { labelledBy: string }) {
       input.current?.focus();
       return;
     }
-    setReminders((current) => [...current, { id: `reminder-${nextId.current}`, text }]);
+    const id = `reminder-${nextId.current}`;
     nextId.current += 1;
+    setReminders((current) => [...current, { id, text }]);
     setDraft("");
     setError(undefined);
   };

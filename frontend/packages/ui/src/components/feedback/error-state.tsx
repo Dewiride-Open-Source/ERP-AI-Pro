@@ -11,7 +11,7 @@ export type ErrorStateProps = {
   title: string;
   description: ReactNode;
   reference?: string | undefined;
-  onRetry?: (() => void) | undefined;
+  onRetry?: (() => void | Promise<void>) | undefined;
   retryLabel?: string | undefined;
   headingLevel?: 1 | 2 | undefined;
   focusOnMount?: boolean | undefined;

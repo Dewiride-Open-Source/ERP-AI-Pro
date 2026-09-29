@@ -2,7 +2,13 @@
 
 import { ErrorState } from "@dewiride/erp-ui/components/feedback/error-state";
 import { CircleCheckIcon } from "lucide-react";
+import { unstable_isUnrecognizedActionError, unstable_rethrow } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
+import { showFailureToast } from "@/shared/feedback/failure-toast";
+import { rejectedActionState } from "@/shared/forms/client/rejected-action";
+
+import { reconnectBankFeed } from "../server/actions";
 
 export function RetryDemo() {
   const [connected, setConnected] = useState(false);
@@ -11,6 +17,17 @@ export function RetryDemo() {
   useEffect(() => {
     if (connected) message.current?.focus();
   }, [connected]);
+
+  const retry = async () => {
+    try {
+      const answer = await reconnectBankFeed();
+      setConnected(answer.connected);
+    } catch (error) {
+      unstable_rethrow(error);
+      const failed = rejectedActionState(error, unstable_isUnrecognizedActionError);
+      showFailureToast("The bank feed is still not connected.", failed.message, failed.reference);
+    }
+  };
 
   if (connected) {
     return (
@@ -31,7 +48,7 @@ export function RetryDemo() {
       title="The bank feed did not load"
       description="The bank did not answer in time. Nothing was changed."
       reference="BANK-FEED-TIMEOUT"
-      onRetry={() => setConnected(true)}
+      onRetry={retry}
       className="rounded-lg border"
     />
   );

@@ -1,3 +1,4 @@
+import { LoadingStatus } from "@dewiride/erp-ui/components/feedback/loading-status";
 import { Alert, AlertDescription, AlertTitle } from "@dewiride/erp-ui/components/ui/alert";
 import { Badge } from "@dewiride/erp-ui/components/ui/badge";
 import { Button } from "@dewiride/erp-ui/components/ui/button";
@@ -73,18 +74,13 @@ export function FeedbackShowcase() {
       </Specimen>
 
       <Specimen title="Skeleton and spinner" description="Placeholders while content loads.">
-        <div
-          role="status"
-          aria-label="Loading client details"
-          aria-busy="true"
-          className="flex items-center gap-3"
-        >
+        <LoadingStatus label="Loading client details" className="flex items-center gap-3">
           <Skeleton className="size-10 rounded-full" />
           <div className="grid flex-1 gap-2">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
           </div>
-        </div>
+        </LoadingStatus>
         <SpecimenRow>
           <Spinner className="size-3" />
           <Spinner />

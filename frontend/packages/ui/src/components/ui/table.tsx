@@ -23,6 +23,9 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
       ref={container}
       data-slot="table-container"
       tabIndex={scrollable ? 0 : undefined}
+      role={scrollable ? "region" : undefined}
+      aria-label={scrollable ? props["aria-label"] : undefined}
+      aria-labelledby={scrollable ? props["aria-labelledby"] : undefined}
       className="relative w-full overflow-x-auto rounded-sm focus-ring"
     >
       <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />

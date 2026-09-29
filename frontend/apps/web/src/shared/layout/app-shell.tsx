@@ -7,9 +7,8 @@ import { Wordmark } from "@/shared/brand/wordmark";
 import { isFeatureEnabled } from "@/shared/feature-flags/feature-flags";
 import { getFeatureFlags } from "@/shared/feature-flags/queries";
 
+import { mainContentId } from "./main-content";
 import type { NavigationEntry } from "./navigation-entry";
-
-const mainContentId = "main-content";
 
 export async function AppShell({
   navigation,

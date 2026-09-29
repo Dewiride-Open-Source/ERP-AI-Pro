@@ -5,7 +5,12 @@ import { Skeleton } from "@dewiride/erp-ui/components/ui/skeleton";
 
 export function AttachmentsOverviewSkeleton() {
   return (
-    <LoadingStatus label="Loading attachments" className="grid gap-section" data-testid="attachments-loading">
+    <LoadingStatus
+      label="Loading attachments"
+      pageTitle="Attachments"
+      className="grid gap-section"
+      data-testid="attachments-loading"
+    >
       <header className="grid gap-2">
         <Skeleton className="h-3 w-20" />
         <Skeleton className="h-9 w-48" />

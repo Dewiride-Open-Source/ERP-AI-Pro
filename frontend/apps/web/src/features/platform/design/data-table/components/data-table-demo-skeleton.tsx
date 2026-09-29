@@ -7,6 +7,7 @@ export function DataTableDemoSkeleton() {
   return (
     <LoadingStatus
       label="Loading purchase bills"
+      pageTitle="Data table"
       className="grid gap-section"
       data-testid="data-table-demo-loading"
     >

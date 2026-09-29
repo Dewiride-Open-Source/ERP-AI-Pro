@@ -2,7 +2,7 @@ import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { SystemInfoPage } from "../../../pages/platform/system-info/info.page";
 
 test.describe("system information page", () => {
-  forEachTheme("shows the API identity and refreshes it", async ({ page, capture }) => {
+  forEachTheme("shows the API identity and refreshes it", async ({ page, capture }, isMobile) => {
     const systemInfo = new SystemInfoPage(page);
     await systemInfo.goto();
 
@@ -57,6 +57,14 @@ test.describe("system information page", () => {
             - cell /\\w+/
             - cell /\\d{4}/
     `);
+    const scroller = page.locator("[data-slot='table-container']").filter({ has: systemInfo.startupsTable });
+    if (isMobile) {
+      await expect(scroller).toHaveAttribute("tabindex", "0");
+      await expect(page.getByRole("region", { name: "Recent starts" })).toBeVisible();
+    } else {
+      await expect(scroller).not.toHaveAttribute("tabindex");
+      await expect(scroller).not.toHaveAttribute("role");
+    }
 
     const refreshed = page.waitForResponse(
       (response) =>

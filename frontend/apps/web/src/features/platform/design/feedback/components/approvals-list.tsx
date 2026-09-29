@@ -6,9 +6,10 @@ import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@dewiride/erp-ui/components/ui/empty";
 import { formatDisplayDate } from "@dewiride/erp-ui/lib/calendar-date";
 import { CheckIcon, LockIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, type MouseEvent } from "react";
 import { toast } from "sonner";
 
+import { showFailureToast } from "@/shared/feedback/failure-toast";
 import type { ListQuery } from "@/shared/lists/list-query";
 import { useRemoveRow } from "@/shared/lists/list-row-removal";
 import { ListTable } from "@/shared/lists/list-table";
@@ -22,14 +23,13 @@ const basePath = "/design/feedback";
 function DismissApproval({ approval, focusAfterId }: { approval: ApprovalRequest; focusAfterId: string }) {
   const removeRow = useRemoveRow();
 
-  const dismiss = () => {
+  // The row leaves on the first click, so the second click of a double click would land on the next row's Dismiss.
+  const dismiss = (event: MouseEvent<HTMLButtonElement>) => {
+    if (event.detail > 1) return;
     document.getElementById(focusAfterId)?.focus();
     void removeRow(approval.id, () => dismissApproval(approval.id)).then((outcome) => {
-      if (outcome.removed) {
-        toast.success(`Dismissed “${approval.request}”.`);
-        return;
-      }
-      toast.error(`“${approval.request}” was not dismissed.`, { description: outcome.message });
+      if (outcome.removed) toast.success(`Dismissed “${approval.request}”.`);
+      else showFailureToast(`“${approval.request}” was not dismissed.`, outcome.message, outcome.reference);
     });
   };
 
@@ -113,6 +113,7 @@ export function ApprovalsList({
       columns={columns}
       rows={approvals}
       getRowId={(approval) => approval.id}
+      selection={{ rowLabel: (approval) => approval.request }}
       noMatches="No requests match."
       empty={
         <Empty className="border" data-testid="approvals-empty">

@@ -10,7 +10,6 @@ export class AppShell {
   readonly main: Locator;
   readonly notifications: Locator;
   readonly pageTransition: Locator;
-  readonly pageLoading: Locator;
 
   constructor(private readonly page: Page) {
     this.banner = page.getByRole("banner");
@@ -20,7 +19,6 @@ export class AppShell {
     this.main = page.getByRole("main");
     this.notifications = page.getByRole("region", { name: /^Notifications/ });
     this.pageTransition = page.locator("[data-slot='page-transition']");
-    this.pageLoading = page.getByRole("status", { name: "Loading the page" });
   }
 
   get wordmarkLink(): Locator {

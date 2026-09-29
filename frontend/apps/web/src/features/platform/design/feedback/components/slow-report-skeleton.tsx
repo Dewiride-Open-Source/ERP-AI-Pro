@@ -6,7 +6,12 @@ const bucketRows = ["not-due", "thirty", "sixty", "ninety", "older"];
 
 export function SlowReportSkeleton() {
   return (
-    <LoadingStatus label="Loading the report" className="grid gap-section" data-testid="slow-report-loading">
+    <LoadingStatus
+      label="Loading the report"
+      pageTitle="Receivables ageing (example)"
+      className="grid gap-section"
+      data-testid="slow-report-loading"
+    >
       <header className="grid gap-2">
         <Skeleton className="h-3 w-20" />
         <Skeleton className="h-9 w-80 max-w-full" />

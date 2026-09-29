@@ -65,4 +65,26 @@ export class FeedbackPage {
   dismissButton(request: string): Locator {
     return this.approvalsCard.getByRole("button", { name: `Dismiss ${request}` });
   }
+
+  selectCheckbox(request: string): Locator {
+    return this.approvalsCard.getByRole("checkbox", { name: `Select ${request}` });
+  }
+
+  designPageLink(title: string): Locator {
+    return this.navigationCard.getByRole("link", { name: title });
+  }
+}
+
+export const slowReportPath = `${feedbackPath}/report`;
+
+export class SlowReportPage {
+  readonly heading: Locator;
+  readonly loading: Locator;
+  readonly backToFeedback: Locator;
+
+  constructor(page: Page) {
+    this.heading = page.getByRole("heading", { name: "Receivables ageing (example)", level: 1 });
+    this.loading = page.getByRole("status", { name: "Loading the report" });
+    this.backToFeedback = page.getByRole("link", { name: "Back to feedback" });
+  }
 }

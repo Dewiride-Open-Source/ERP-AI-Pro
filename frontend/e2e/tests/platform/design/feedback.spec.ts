@@ -1,18 +1,59 @@
-import type { Page } from "@playwright/test";
+import type { Page, Request } from "@playwright/test";
 
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
-import { FeedbackPage, feedbackPath } from "../../../pages/platform/design/feedback.page";
-import { AppShell } from "../../../pages/shared/layout/app-shell.page";
+import {
+  FeedbackPage,
+  feedbackPath,
+  SlowReportPage,
+  slowReportPath,
+} from "../../../pages/platform/design/feedback.page";
 
 declare global {
   interface Window {
     reminderHeights?: string[];
+    returnedRows?: string[];
   }
 }
 
-function reportHeading(page: Page) {
-  return page.getByRole("heading", { name: "Receivables ageing (example)", level: 1 });
+const travel = "Travel advance for the Pune client visit";
+const vendor = "Onboarding of Konark Electricals as a vendor";
+const purchase = "Purchase order PO-2026-0412 for laptops";
+const budget = "Budget revision for the festive campaign";
+const renewal = "Renewal of the design software subscription";
+
+function isServerFunctionCall(request: Request): boolean {
+  return (
+    request.method() === "POST" &&
+    new URL(request.url()).pathname === feedbackPath &&
+    request.headers()["next-action"] !== undefined
+  );
+}
+
+function countServerFunctionCalls(page: Page): { count: () => number } {
+  let calls = 0;
+  page.on("request", (request) => {
+    if (isServerFunctionCall(request)) calls += 1;
+  });
+  return { count: () => calls };
+}
+
+// Records every element added to the approvals card whose text names the request, so a row that came back for a moment
+// between the optimistic removal and the Server Function's answer is caught even though it is gone again afterwards.
+async function watchForReturningRow(page: Page, request: string): Promise<void> {
+  await page.evaluate((text) => {
+    const returned: string[] = [];
+    window.returnedRows = returned;
+    const card = document.querySelector("[data-testid='feedback-approvals']");
+    if (card === null) throw new Error("The approvals card is missing.");
+    new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (node.textContent?.includes(text)) returned.push(node.textContent);
+        }
+      }
+    }).observe(card, { childList: true, subtree: true });
+  }, request);
 }
 
 async function watchReminderHeights(page: Page): Promise<void> {
@@ -32,11 +73,17 @@ async function watchReminderHeights(page: Page): Promise<void> {
 }
 
 async function heightsBetweenClosedAndOpen(page: Page, openHeight: number): Promise<string[]> {
-  const heights = await page.evaluate(() => window.reminderHeights ?? []);
+  const heights = await page.evaluate(() => window.reminderHeights?.splice(0) ?? []);
   return heights.filter((height) => {
     const pixels = /^(\d+(?:\.\d+)?)px$/.exec(height)?.[1];
     return pixels !== undefined && Number(pixels) > 0 && Number(pixels) < openHeight;
   });
+}
+
+function seconds(duration: string): number {
+  const match = /^(\d*\.?\d+(?:e-?\d+)?)(ms|s)$/.exec(duration.trim());
+  if (match?.[1] === undefined) throw new Error(`Not a duration: ${duration}`);
+  return Number(match[1]) / (match[2] === "ms" ? 1000 : 1);
 }
 
 test.describe("feedback", () => {
@@ -90,18 +137,23 @@ test.describe("feedback", () => {
       await expect(approvals.status).toContainText("Showing all 5 requests.");
       await expect(feedback.restoreApprovals).toHaveCount(0);
 
-      const travel = "Travel advance for the Pune client visit";
+      await feedback.selectCheckbox(travel).check();
+      await feedback.selectCheckbox(budget).check();
+      await expect(approvals.selection).toContainText("2 requests selected");
+
       const releaseDismissal = await holdServerFunctionCalls(page, feedbackPath);
       await feedback.dismissButton(travel).click();
       await expect(await approvals.row(travel)).toHaveCount(0);
       await expect(approvals.status).toContainText("Showing all 4 requests.");
       await expect(feedback.approvalsHeading).toBeFocused();
+      await watchForReturningRow(page, travel);
       releaseDismissal();
       await expect(feedback.shell.toast(`Dismissed “${travel}”.`)).toBeVisible();
       await expect(await approvals.row(travel)).toHaveCount(0);
+      expect(await page.evaluate(() => window.returnedRows ?? []), "rows that came back").toEqual([]);
+      await expect(approvals.selection).toContainText("1 request selected");
       await expect(feedback.restoreApprovals).toBeVisible();
 
-      const vendor = "Onboarding of Konark Electricals as a vendor";
       const releaseRefusal = await holdServerFunctionCalls(page, feedbackPath);
       await feedback.dismissButton(vendor).click();
       await expect(await approvals.row(vendor)).toHaveCount(0);
@@ -113,6 +165,8 @@ test.describe("feedback", () => {
       await expect(await approvals.row(vendor)).toHaveCount(1);
       await expect(approvals.status).toContainText("Showing all 4 requests.");
       await capture("approvals-after-a-refusal", feedback.approvalsCard);
+      await refusal.getByRole("button", { name: "Close toast" }).click();
+      await expect(refusal).toHaveCount(0);
 
       await feedback.goto();
       await expect(approvals.status).toContainText("Showing all 4 requests.");
@@ -123,47 +177,107 @@ test.describe("feedback", () => {
     },
   );
 
-  forEachTheme("adds a reminder, refuses an empty one and removes one", async ({ page, capture }) => {
+  test("dismisses one request for a double click, although the next row moves under the pointer", async ({
+    page,
+  }) => {
     const feedback = new FeedbackPage(page);
+    const { approvals } = feedback;
+    const calls = countServerFunctionCalls(page);
     await feedback.goto();
-    await expect(feedback.reminderItems).toHaveCount(3);
 
-    await feedback.addReminder.click();
-    await expect(feedback.reminderInput).toBeFocused();
-    await expect(feedback.reminderInput).toHaveAttribute("aria-invalid", "true");
-    await expect(feedback.remindersCard).toContainText("Enter a reminder.");
-    await capture("reminders-refused", feedback.remindersCard);
+    await feedback.dismissButton(purchase).dblclick();
+    await expect(feedback.shell.toast(`Dismissed “${purchase}”.`)).toBeVisible();
+    await expect(approvals.status).toContainText("Showing all 4 requests.");
+    await expect(await approvals.row(travel)).toHaveCount(1);
+    expect(calls.count(), "Server Function calls").toBe(1);
+  });
 
-    await feedback.reminderInput.fill("File the quarterly TDS return");
-    await page.keyboard.press("Enter");
-    await expect(feedback.reminderItems).toHaveCount(4);
-    await expect(feedback.reminderItems.last()).toContainText("File the quarterly TDS return");
-    await expect(feedback.reminderInput).toHaveValue("");
-    await expect(feedback.reminderInput).not.toHaveAttribute("aria-invalid");
+  test.describe("when the Server Function call itself fails", () => {
+    // Chromium logs the provoked reset; WebKit and Firefox log nothing for it.
+    test.use({ expectedConsoleError: /^Failed to load resource: net::ERR_CONNECTION_RESET$/ });
 
-    await feedback.removeReminderButton("Reconcile the bank statement").click();
-    await expect(feedback.reminderItems).toHaveCount(3);
-    await expect(feedback.shell.toast("Removed “Reconcile the bank statement”.")).toBeVisible();
-    await expect(feedback.reminderInput).toBeFocused();
-    await expect(feedback.reminders).toMatchAriaSnapshot(`
-      - list "Reminders (example)":
-        - listitem:
-          - text: Send the September payslips
-          - button "Remove Send the September payslips"
-        - listitem:
-          - text: Renew the office lease
-          - button "Remove Renew the office lease"
-        - listitem:
-          - text: File the quarterly TDS return
-          - button "Remove File the quarterly TDS return"
-    `);
-    await capture("reminders", feedback.remindersCard);
+    forEachTheme(
+      "brings the request back and says the service did not respond",
+      async ({ page, capture }) => {
+        const feedback = new FeedbackPage(page);
+        const { approvals } = feedback;
+        await feedback.goto();
+        await page.route(
+          (url) => url.pathname === feedbackPath,
+          (route) =>
+            isServerFunctionCall(route.request()) ? route.abort("connectionreset") : route.fallback(),
+        );
+
+        await feedback.dismissButton(renewal).click();
+        const failure = feedback.shell.toast(`“${renewal}” was not dismissed.`);
+        await expect(failure).toBeVisible();
+        await expect(failure).toContainText("The ERP service did not respond. Try again.");
+        await expect(await approvals.row(renewal)).toHaveCount(1);
+        await expect(approvals.status).toContainText("Showing all 5 requests.");
+        await capture("approvals-unreachable", failure);
+      },
+    );
   });
 
   forEachTheme(
-    "offers to load the bank feed again and says when it is connected",
+    "adds a reminder, refuses an empty one and removes every reminder",
     async ({ page, capture }) => {
       const feedback = new FeedbackPage(page);
+      await feedback.goto();
+      await expect(feedback.reminderItems).toHaveCount(3);
+
+      await feedback.addReminder.click();
+      await expect(feedback.reminderInput).toBeFocused();
+      await expect(feedback.reminderInput).toHaveAttribute("aria-invalid", "true");
+      await expect(feedback.remindersCard).toContainText("Enter a reminder.");
+      await capture("reminders-refused", feedback.remindersCard);
+
+      await feedback.reminderInput.fill("File the quarterly TDS return");
+      await page.keyboard.press("Enter");
+      const added = feedback.reminderItems.last();
+      await expect(feedback.reminderItems).toHaveCount(4);
+      await expect(added).toContainText("File the quarterly TDS return");
+      await expect(added).not.toHaveAttribute("data-animating");
+      await expect(added).toHaveCSS("overflow", "visible");
+      await expect(feedback.reminderInput).toHaveValue("");
+      await expect(feedback.reminderInput).not.toHaveAttribute("aria-invalid");
+
+      await feedback.removeReminderButton("Reconcile the bank statement").click();
+      await expect(feedback.reminderItems).toHaveCount(3);
+      await expect(feedback.shell.toast("Removed “Reconcile the bank statement”.")).toBeVisible();
+      await expect(feedback.reminderInput).toBeFocused();
+      await expect(feedback.reminders).toMatchAriaSnapshot(`
+        - list "Reminders (example)":
+          - listitem:
+            - text: Send the September payslips
+            - button "Remove Send the September payslips"
+          - listitem:
+            - text: Renew the office lease
+            - button "Remove Renew the office lease"
+          - listitem:
+            - text: File the quarterly TDS return
+            - button "Remove File the quarterly TDS return"
+      `);
+      await capture("reminders", feedback.remindersCard);
+
+      for (const reminder of [
+        "Send the September payslips",
+        "Renew the office lease",
+        "File the quarterly TDS return",
+      ]) {
+        await feedback.removeReminderButton(reminder).click();
+      }
+      await expect(feedback.reminderItems).toHaveCount(0);
+      await expect(feedback.remindersCard.getByTestId("reminders-empty")).toHaveText("No reminders left.");
+      await capture("reminders-empty", feedback.remindersCard);
+    },
+  );
+
+  forEachTheme(
+    "offers to load the bank feed again, stays busy until the answer and says when it is connected",
+    async ({ page, capture }) => {
+      const feedback = new FeedbackPage(page);
+      const calls = countServerFunctionCalls(page);
       await feedback.goto();
       const tryAgain = feedback.retryCard.getByRole("button", { name: "Try again" });
 
@@ -172,12 +286,20 @@ test.describe("feedback", () => {
       ).toBeVisible();
       await expect(feedback.retryCard).toContainText("Reference: BANK-FEED-TIMEOUT");
       await capture("retry-state", feedback.retryCard);
+
+      const release = await holdServerFunctionCalls(page, feedbackPath);
       await tryAgain.focus();
       await page.keyboard.press("Enter");
+      await expect(tryAgain).toHaveAttribute("aria-busy", "true");
+      await expect(tryAgain).toHaveAttribute("aria-disabled", "true");
+      await expect(tryAgain).toBeFocused();
+      await page.keyboard.press("Enter");
+      release();
       await expect(feedback.bankFeedConnected).toBeFocused();
       await expect(feedback.bankFeedConnected).toHaveText(
         "The bank feed is connected and today's transactions are in.",
       );
+      expect(calls.count(), "Server Function calls").toBe(1);
     },
   );
 
@@ -204,44 +326,48 @@ test.describe("feedback", () => {
       await page.keyboard.press("Enter");
       await expect(feedback.heading).toBeVisible();
       await expect(failure).toHaveCount(0);
+      await expect(feedback.shell.main).toBeFocused();
     });
   });
 
-  // The server sends the shell's loading status ahead of a page that has no loading file of its own, and React's inline
-  // script swaps the page in once it arrives; with scripts turned off the swap never runs, so the status stays to be checked.
-  test.describe("with scripts turned off", () => {
-    test.use({ javaScriptEnabled: false });
+  forEachTheme(
+    "shows the report's own loading status while it is prepared, then fades it in",
+    async ({ page, capture }) => {
+      const feedback = new FeedbackPage(page);
+      const report = new SlowReportPage(page);
+      await feedback.goto();
 
-    forEachTheme(
-      "sends the shell's loading status ahead of a page without its own loading file",
-      async ({ page }) => {
-        const shell = new AppShell(page);
-        await page.goto("/design/form-kit");
+      await feedback.designPageLink("Receivables ageing (takes three seconds)").click();
+      await expect(report.loading).toBeVisible();
+      await expect(report.loading.getByRole("heading", { level: 1 })).toHaveText(
+        "Receivables ageing (example)",
+      );
+      await capture("report-loading", report.loading);
+      await expect(report.heading).toBeVisible({ timeout: 15_000 });
+      await expect(report.loading).toHaveCount(0);
+      await expect(page).toHaveURL((url) => url.pathname === slowReportPath);
+      await expect(feedback.shell.pageTransition).toHaveCSS("animation-name", "page-enter");
+      await capture("report");
 
-        await expect(shell.pageLoading).toBeVisible();
-        await expect(shell.pageLoading).toHaveText("Loading the page");
-        await expect(page.getByRole("heading", { name: "Form kit", level: 1 })).toBeHidden();
-      },
-    );
-  });
+      await report.backToFeedback.click();
+      await expect(feedback.heading).toBeVisible();
+    },
+  );
 
-  test("shows the report's own loading status when it is opened from this page", async ({
-    page,
-    capture,
-  }) => {
+  test("follows each link to another design page and back", async ({ page }) => {
     const feedback = new FeedbackPage(page);
-    const reportLoading = page.getByRole("status", { name: "Loading the report" });
     await feedback.goto();
 
-    await feedback.navigationCard
-      .getByRole("link", { name: "Receivables ageing (takes three seconds)" })
-      .click();
-    await expect(reportLoading).toBeVisible();
-    await capture("report-loading");
-    await expect(reportHeading(page)).toBeVisible({ timeout: 15_000 });
-    await expect(reportLoading).toHaveCount(0);
-    await page.getByRole("link", { name: "Back to feedback" }).click();
-    await expect(feedback.heading).toBeVisible();
+    for (const [title, heading] of [
+      ["Form kit", "Form kit"],
+      ["Data table", "Data table"],
+      ["Kitchen sink", "Design system"],
+    ] as const) {
+      await feedback.designPageLink(title).click();
+      await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();
+      await page.goBack();
+      await expect(feedback.heading).toBeVisible();
+    }
   });
 
   for (const reducedMotion of ["no-preference", "reduce"] as const) {
@@ -252,7 +378,13 @@ test.describe("feedback", () => {
       const moves = reducedMotion === "no-preference";
 
       await expect(feedback.shell.pageTransition).toHaveCSS("animation-name", "page-enter");
-      await expect(feedback.shell.pageTransition).toHaveCSS("animation-duration", moves ? "0.2s" : "1e-05s");
+      const entrance = seconds(
+        await feedback.shell.pageTransition.evaluate(
+          (element) => getComputedStyle(element).animationDuration,
+        ),
+      );
+      if (moves) expect(entrance).toBeCloseTo(0.2, 5);
+      else expect(entrance).toBeLessThanOrEqual(0.00001);
 
       const openHeight = (await feedback.reminderItems.last().boundingBox())?.height ?? 0;
       expect(openHeight).toBeGreaterThan(0);
@@ -261,15 +393,17 @@ test.describe("feedback", () => {
       await feedback.addReminder.click();
       const added = feedback.reminderItems.last();
       await expect(added).toContainText("Book the auditor's visit");
-      await expect(added).toHaveCSS("opacity", "1");
+      await expect(added).not.toHaveAttribute("data-animating");
       await expect.poll(async () => (await added.boundingBox())?.height).toBe(openHeight);
-
-      const between = await heightsBetweenClosedAndOpen(page, openHeight);
-      if (moves) expect(between.length, "heights the added item passed through").toBeGreaterThan(0);
-      else expect(between, "heights the added item passed through").toEqual([]);
+      const entering = await heightsBetweenClosedAndOpen(page, openHeight);
+      if (moves) expect(entering.length, "heights the added item passed through").toBeGreaterThan(0);
+      else expect(entering, "heights the added item passed through").toEqual([]);
 
       await feedback.removeReminderButton("Book the auditor's visit").click();
       await expect(feedback.reminderItems).toHaveCount(3);
+      const leaving = await heightsBetweenClosedAndOpen(page, openHeight);
+      if (moves) expect(leaving.length, "heights the removed item passed through").toBeGreaterThan(0);
+      else expect(leaving, "heights the removed item passed through").toEqual([]);
     });
   }
 });
