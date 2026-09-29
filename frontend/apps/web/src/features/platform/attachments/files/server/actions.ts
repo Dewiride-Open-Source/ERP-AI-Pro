@@ -1,15 +1,17 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { callApi, sendApi } from "@/shared/api/client";
 import { ApiError } from "@/shared/api/problem-details";
+import type { RowRemovalOutcome } from "@/shared/lists/optimistic-rows";
 
 const attachmentId = z.uuid();
 
-export type DownloadLinkResult = { readonly url: string } | { readonly error: string };
+const attachmentNotFound = "attachment.not-found";
 
-export type DeleteResult = { readonly error?: string };
+export type DownloadLinkResult = { readonly url: string } | { readonly error: string };
 
 export async function createDownloadLink(id: string): Promise<DownloadLinkResult> {
   const parsed = attachmentId.safeParse(id);
@@ -25,16 +27,22 @@ export async function createDownloadLink(id: string): Promise<DownloadLinkResult
   }
 }
 
-export async function deleteAttachment(id: string): Promise<DeleteResult> {
+export async function deleteAttachment(id: string): Promise<RowRemovalOutcome> {
   const parsed = attachmentId.safeParse(id);
-  if (!parsed.success) return { error: "That attachment does not exist." };
+  if (!parsed.success) return { removed: false, message: "That attachment does not exist." };
 
+  let outcome: RowRemovalOutcome;
   try {
     await sendApi((client) => client.api.platform.attachments.byId(parsed.data).delete());
-    return {};
+    outcome = { removed: true };
   } catch (error) {
-    return { error: describe(error) };
+    outcome =
+      error instanceof ApiError && error.problem.code === attachmentNotFound
+        ? { removed: true, message: "It had already been deleted." }
+        : { removed: false, message: describe(error) };
   }
+  refresh();
+  return outcome;
 }
 
 function describe(error: unknown): string {

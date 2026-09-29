@@ -17,11 +17,12 @@ import {
 } from "@dewiride/erp-ui/components/ui/empty";
 import type { Route } from "next";
 import { useSearchParams } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useOptimistic, useState, useTransition, type ReactNode } from "react";
 
 import { listParameters, type ListDefinition } from "./list-definition.ts";
 import { ListFilterForm } from "./list-filter-form.tsx";
 import { ListLink, ListNavigationProvider, useListNavigation } from "./list-navigation.tsx";
+import { RowRemovalContext, settleRemoval, type RemoveRow } from "./list-row-removal.tsx";
 import {
   filterSignature,
   listLink,
@@ -33,6 +34,7 @@ import {
   withSort,
   type ListQuery,
 } from "./list-query.ts";
+import { withoutRow, type ShownRows } from "./optimistic-rows.ts";
 
 export interface ListTableSelection<TRow> {
   readonly rowLabel: (row: TRow) => string;
@@ -118,85 +120,106 @@ function ListTableContent<TRow extends DataTableRow>({
     });
   }
 
+  const [shown, hideRow] = useOptimistic<ShownRows<TRow>, string>({ page, rows }, (current, id) =>
+    withoutRow(current, id, getRowId),
+  );
+  const [, startRemoval] = useTransition();
+  const removeRow: RemoveRow = (id, remove) =>
+    new Promise((resolve) => {
+      startRemoval(async () => {
+        hideRow(id);
+        const outcome = await settleRemoval(remove);
+        if (outcome.removed) {
+          setSelected((current) => ({
+            ...current,
+            ids: current.ids.filter((selectedId) => selectedId !== id),
+          }));
+        }
+        resolve(outcome);
+      });
+    });
+
   const filtered = Object.keys(query.filters).length > 0;
   const link = (next: ListQuery) => listLink(basePath, next, definition);
   const clear = () => setForm((state) => ({ ...state, clearing: true }));
 
   return (
-    <DataTable
-      label={label}
-      labelledBy={labelledBy}
-      noun={noun}
-      columns={columns}
-      rows={rows}
-      getRowId={getRowId}
-      pending={pending}
-      paging={{
-        page,
-        pageSizes: definition.pageSizes,
-        pageHref: (target) => link(withPage(current, target)),
-        onPageSizeChange: (pageSize) => navigate(link(withPageSize(current, pageSize))),
-        linkComponent: ListLink,
-      }}
-      sorting={{
-        sort: { columnId: query.sort.field, direction: query.sort.direction },
-        onSortChange: (sort) =>
-          navigate(link(withSort(current, { field: sort.columnId, direction: sort.direction }))),
-      }}
-      columnVisibility={{
-        hiddenColumnIds: hiddenColumns,
-        onHiddenColumnIdsChange: (hidden) =>
-          window.history.replaceState(null, "", link(withHiddenColumns(current, hidden))),
-      }}
-      selection={
-        selection === undefined
-          ? undefined
-          : {
-              selectedIds,
-              onSelectedIdsChange: (ids) => setSelected({ signature, ids }),
-              rowLabel: selection.rowLabel,
-            }
-      }
-      filters={
-        filters === undefined ? undefined : (
-          <ListFilterForm
-            key={form.key}
-            basePath={basePath}
-            definition={definition}
-            query={current}
-            label={`Filter ${label.toLowerCase()}`}
-            focusFirstField={form.focusFirstField}
-            onApply={(applied) => setForm((state) => ({ ...state, applied }))}
-            onClear={clear}
-          >
-            {filters}
-          </ListFilterForm>
-        )
-      }
-      empty={
-        filtered ? (
-          <Empty className="border" data-testid="list-no-matches">
-            <EmptyHeader>
-              <EmptyTitle>{noMatches}</EmptyTitle>
-              <EmptyDescription>Change or clear the filters to see more.</EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <ListLink
-                href={link(withFilters(current, {}))}
-                disabled={false}
-                aria-label="Clear filters"
-                className={buttonVariants({ variant: "outline" })}
-                onFollow={clear}
-              >
-                Clear filters
-              </ListLink>
-            </EmptyContent>
-          </Empty>
-        ) : (
-          empty
-        )
-      }
-    />
+    <RowRemovalContext value={removeRow}>
+      <DataTable
+        label={label}
+        labelledBy={labelledBy}
+        noun={noun}
+        columns={columns}
+        rows={shown.rows}
+        getRowId={getRowId}
+        pending={pending}
+        paging={{
+          page: shown.page,
+          pageSizes: definition.pageSizes,
+          pageHref: (target) => link(withPage(current, target)),
+          onPageSizeChange: (pageSize) => navigate(link(withPageSize(current, pageSize))),
+          linkComponent: ListLink,
+        }}
+        sorting={{
+          sort: { columnId: query.sort.field, direction: query.sort.direction },
+          onSortChange: (sort) =>
+            navigate(link(withSort(current, { field: sort.columnId, direction: sort.direction }))),
+        }}
+        columnVisibility={{
+          hiddenColumnIds: hiddenColumns,
+          onHiddenColumnIdsChange: (hidden) =>
+            window.history.replaceState(null, "", link(withHiddenColumns(current, hidden))),
+        }}
+        selection={
+          selection === undefined
+            ? undefined
+            : {
+                selectedIds,
+                onSelectedIdsChange: (ids) => setSelected({ signature, ids }),
+                rowLabel: selection.rowLabel,
+              }
+        }
+        filters={
+          filters === undefined ? undefined : (
+            <ListFilterForm
+              key={form.key}
+              basePath={basePath}
+              definition={definition}
+              query={current}
+              label={`Filter ${label.toLowerCase()}`}
+              focusFirstField={form.focusFirstField}
+              onApply={(applied) => setForm((state) => ({ ...state, applied }))}
+              onClear={clear}
+            >
+              {filters}
+            </ListFilterForm>
+          )
+        }
+        empty={
+          filtered ? (
+            <Empty className="border" data-testid="list-no-matches">
+              <EmptyHeader>
+                <EmptyTitle>{noMatches}</EmptyTitle>
+                <EmptyDescription>Change or clear the filters to see more.</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <ListLink
+                  href={link(withFilters(current, {}))}
+                  disabled={false}
+                  aria-label="Clear filters"
+                  className={buttonVariants({ variant: "outline" })}
+                  onFollow={clear}
+                >
+                  Clear filters
+                </ListLink>
+              </EmptyContent>
+            </Empty>
+          ) : (
+            empty
+          )
+        }
+      />
+    </RowRemovalContext>
   );
 }
 

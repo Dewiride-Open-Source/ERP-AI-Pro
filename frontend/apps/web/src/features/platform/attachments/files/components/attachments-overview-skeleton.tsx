@@ -1,13 +1,14 @@
+import { LoadingStatus } from "@dewiride/erp-ui/components/feedback/loading-status";
 import { DataTableSkeleton } from "@dewiride/erp-ui/components/data-table/data-table-skeleton";
 import { Card, CardContent, CardHeader } from "@dewiride/erp-ui/components/ui/card";
 import { Skeleton } from "@dewiride/erp-ui/components/ui/skeleton";
 
 export function AttachmentsOverviewSkeleton() {
   return (
-    <div
+    <LoadingStatus
+      label="Loading attachments"
+      pageTitle="Attachments"
       className="grid gap-section"
-      role="status"
-      aria-label="Loading attachments"
       data-testid="attachments-loading"
     >
       <header className="grid gap-2">
@@ -34,6 +35,6 @@ export function AttachmentsOverviewSkeleton() {
           <DataTableSkeleton columns={5} />
         </CardContent>
       </Card>
-    </div>
+    </LoadingStatus>
   );
 }

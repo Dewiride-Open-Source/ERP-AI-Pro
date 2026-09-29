@@ -22,6 +22,7 @@
   --ease-enter: var(--motion-ease-enter);
   --animate-fade-up: fade-up var(--motion-duration-slow) var(--motion-ease-enter) both;
   --animate-glow: glow var(--motion-duration-ambient) ease-in-out infinite;
+  --animate-page-enter: page-enter var(--motion-duration-normal) var(--motion-ease-enter) backwards;
 
   @keyframes fade-up {
     from {
@@ -31,6 +32,13 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
     }
   }
 

@@ -311,8 +311,8 @@ export const motionDurations = [
   {
     token: "--motion-duration-normal",
     value: "200ms",
-    utility: "duration-(--motion-duration-normal)",
-    use: "Toggles and short movements",
+    utility: "duration-(--motion-duration-normal), animate-page-enter",
+    use: "Toggles and short movements; animate-page-enter fades each page in the app shell up 4px as it arrives, and AnimatedList items grow in and shrink out",
   },
   {
     token: "--motion-duration-slow",

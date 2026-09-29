@@ -1,10 +1,22 @@
-export function ApplicationFailure({ onReload }: { onReload: () => void }) {
+import { ErrorState } from "@dewiride/erp-ui/components/feedback/error-state";
+
+export function ApplicationFailure({
+  reference,
+  onRetry,
+}: {
+  reference: string | undefined;
+  onRetry: () => void;
+}) {
   return (
-    <>
-      <h1 className="text-2xl font-semibold">The application failed to load</h1>
-      <button type="button" onClick={onReload} className="rounded-md border px-4 py-2 text-sm">
-        Reload
-      </button>
-    </>
+    <main className="flex min-h-dvh items-center justify-center">
+      <ErrorState
+        headingLevel={1}
+        focusOnMount
+        title="The application failed to load"
+        description="Something stopped the ERP from starting. Try again, and if it keeps happening, share the reference with support."
+        reference={reference}
+        onRetry={onRetry}
+      />
+    </main>
   );
 }

@@ -28,7 +28,7 @@ export function DataTableDemo({ searchParameters }: { searchParameters: SearchPa
   }
 
   return (
-    <div className="grid min-w-0 animate-fade-up grid-cols-1 gap-section">
+    <div className="grid min-w-0 grid-cols-1 gap-section">
       <header className="grid gap-2">
         <p className="text-eyebrow text-primary uppercase">Platform</p>
         <h1 className="text-title">Data table</h1>

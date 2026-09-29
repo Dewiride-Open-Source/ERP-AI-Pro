@@ -169,23 +169,25 @@ async function openNavigationMenuItem(trigger: Locator, isMobile: boolean): Prom
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
 }
 
-// Playwright's WebKit ends a tap that no touch handler cancels with a mouse move, press and release at the tapped point, so
-// about 100 ms after a tapped link has scrolled the page WebKit reports that mouse leaving the still-closing menu, and Radix
-// starts its 150 ms close timer; a menu the next tap opens before the timer fires closes again. So on a touch device the
-// tap that opens the menu and the tap on its link are retried together, and the trigger is tapped only while it is closed,
-// because a tap on an open trigger closes it.
-async function followNavigationMenuItem(trigger: Locator, link: Locator, isMobile: boolean): Promise<void> {
-  if (!isMobile) {
-    await openNavigationMenuItem(trigger, isMobile);
-    await link.click();
-    return;
-  }
+// A link that scrolls the page moves it under the pointer, and about 100 ms later WebKit reports the pointer leaving the
+// still-closing menu, so Radix starts its 150 ms close timer; a menu the next hover or tap opens before the timer fires
+// closes again, sometimes as its link is pressed. So opening the menu and following its link are retried together until the
+// page has arrived, and the trigger is hovered or tapped only while it is closed, because a tap on an open trigger closes it.
+async function followNavigationMenuItem(
+  trigger: Locator,
+  link: Locator,
+  isMobile: boolean,
+  arrived: () => Promise<void>,
+): Promise<void> {
   await expect(async () => {
     if ((await trigger.getAttribute("aria-expanded", { timeout: 1_000 })) !== "true") {
-      await trigger.tap({ timeout: 1_000 });
+      if (isMobile) await trigger.tap({ timeout: 1_000 });
+      else await trigger.hover({ timeout: 1_000 });
     }
     await expect(trigger).toHaveAttribute("aria-expanded", "true", { timeout: 1_000 });
-    await link.tap({ timeout: 1_000 });
+    if (isMobile) await link.tap({ timeout: 1_000 });
+    else await link.click({ timeout: 1_000 });
+    await arrived();
   }).toPass();
 }
 
@@ -305,15 +307,15 @@ async function clickEveryEnabledButton(container: Locator): Promise<void> {
 }
 
 test.describe("design system kitchen sink", () => {
-  test.beforeEach(({ browserName }) => {
+  test.beforeEach(() => {
     test.slow(
-      browserName === "webkit",
-      "WebKit takes about twice as long per action, and each test here drives a whole section of controls",
+      true,
+      "Each test here drives, captures and scans a whole section of controls, which a CI runner, WebKit and Firefox's axe scans take well over 30 seconds to do",
     );
   });
 
-  test("triples the timeout on WebKit only", ({ browserName }) => {
-    expect(test.info().timeout).toBe(test.info().project.timeout * (browserName === "webkit" ? 3 : 1));
+  test("triples the timeout on every project", () => {
+    expect(test.info().timeout).toBe(test.info().project.timeout * 3);
   });
 
   forEachTheme("renders every token group", async ({ page, capture, theme }) => {
@@ -506,9 +508,8 @@ test.describe("design system kitchen sink", () => {
         value,
       );
     }
-    await expect(feedback.getByRole("status", { name: "Loading client details" })).toHaveAttribute(
-      "aria-busy",
-      "true",
+    await expect(feedback.getByRole("status", { name: "Loading client details" })).toHaveText(
+      "Loading client details",
     );
 
     const navigation = kitchenSink.section("navigation");
@@ -684,7 +685,7 @@ test.describe("design system kitchen sink", () => {
             - slider "Minimum"
             - slider "Maximum"
           - paragraph: From ₹20,000 to ₹80,000.
-        - group:
+        - group [disabled]:
           - group "Credit limit (₹ lakh)":
             - slider "Minimum" [disabled]
             - slider "Maximum" [disabled]
@@ -1465,8 +1466,8 @@ test.describe("design system kitchen sink", () => {
           trigger,
           navigationMenu.getByRole("link", { name: new RegExp(`^${link}`) }),
           isMobile,
+          () => expect(page).toHaveURL(new RegExp(`#${section}$`), { timeout: 1_000 }),
         );
-        await expect(page).toHaveURL(new RegExp(`#${section}$`));
         await expect(trigger).toHaveAttribute("aria-expanded", "false");
       }
       const excludedLink = navigationMenu.getByRole("link", { name: "Excluded" });
