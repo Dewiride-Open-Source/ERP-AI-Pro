@@ -1099,7 +1099,7 @@ test.describe("design system kitchen sink", () => {
   });
 
   test.describe("opens every overlay", () => {
-    forEachTheme("dialogs, confirmations and sheets", async ({ page, capture }) => {
+    forEachTheme("dialogs and confirmations", async ({ page, capture }) => {
       const kitchenSink = new KitchenSinkPage(page);
       await kitchenSink.goto();
       const overlays = kitchenSink.section("overlays");
@@ -1163,6 +1163,12 @@ test.describe("design system kitchen sink", () => {
       await alertDialog.getByRole("button", { name: "Delete", exact: true }).click();
       await expect(alertDialog).toBeHidden();
       await expect(kitchenSink.toast("Draft deleted")).toBeVisible();
+    });
+
+    forEachTheme("sheets", async ({ page, capture }) => {
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+      const overlays = kitchenSink.section("overlays");
 
       const filtersTrigger = overlays.getByRole("button", { name: "Open filters" });
       const filters = page.getByRole("dialog", { name: "Filters" });

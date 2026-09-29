@@ -60,16 +60,23 @@ export const test = base.extend<Fixtures>({
 
   capture: async ({ page, theme }, use, testInfo) => {
     await use(async (name: string, target?: Locator) => {
-      await expectNoSeriousAccessibilityViolations(page, name, target);
       await waitForRest(page, name);
       const file = screenshotPath(testInfo, name, theme);
-      mkdirSync(dirname(file), { recursive: true });
-      if (target === undefined) {
-        const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
-        await expectOneCapture(page, pageHeight, name);
-        await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
-      } else {
-        await captureElement(target, file, name);
+      const heldMotion = await page.addStyleTag({ content: heldMotionStyle });
+      try {
+        await expectNoSeriousAccessibilityViolations(page, name, target);
+        mkdirSync(dirname(file), { recursive: true });
+        if (target === undefined) {
+          const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+          await expectOneCapture(page, pageHeight, name);
+          await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
+        } else {
+          await captureElement(target, file, name);
+        }
+      } finally {
+        await heldMotion.evaluate((style) => {
+          if (style instanceof Element) style.remove();
+        });
       }
       await testInfo.attach(`${name}--${theme}`, { path: file, contentType: "image/png" });
     });
@@ -188,9 +195,9 @@ async function waitForRest(page: Page, name: string): Promise<void> {
   expect(unsettled, `${name} came to rest before its capture`).toBeUndefined();
 }
 
-// Colour contrast is measured on what is painted, so while the scan runs every CSS animation and transition is held at its end
-// state: a change that starts during the scan, such as a toast leaving, is measured at rest rather than at a colour it only
-// passes through, and an animation that repeats for ever shows its base style.
+// Colour contrast is measured on what is painted, so while the scan and the screenshot run every CSS animation and transition
+// is held at its end state: a change that starts meanwhile, such as a toast leaving, is scanned and shown at rest rather than at
+// a colour it only passes through, and an animation that repeats for ever shows its base style.
 const heldMotionStyle = `*, *::before, *::after {
   animation-delay: 0s !important;
   animation-duration: 0s !important;
@@ -204,21 +211,16 @@ async function expectNoSeriousAccessibilityViolations(
   name: string,
   target?: Locator,
 ): Promise<void> {
-  await waitForRest(page, name);
   const scan = new AxeBuilder({ page }).withTags(accessibilityTags);
   for (const selector of excludedFromScans) scan.exclude(selector);
   if (target !== undefined) {
     await target.evaluate((element, attribute) => element.setAttribute(attribute, ""), scanTargetAttribute);
     scan.include(`[${scanTargetAttribute}]`);
   }
-  const heldMotion = await page.addStyleTag({ content: heldMotionStyle });
   let violations: Awaited<ReturnType<AxeBuilder["analyze"]>>["violations"];
   try {
     ({ violations } = await scan.analyze());
   } finally {
-    await heldMotion.evaluate((style) => {
-      if (style instanceof Element) style.remove();
-    });
     if (target !== undefined) {
       await target.evaluate((element, attribute) => element.removeAttribute(attribute), scanTargetAttribute);
     }
