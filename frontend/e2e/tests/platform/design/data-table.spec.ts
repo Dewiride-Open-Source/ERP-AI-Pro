@@ -246,7 +246,9 @@ test.describe("data table", () => {
       for (const key of ["ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowRight", "ArrowRight"]) {
         await page.keyboard.press(key);
       }
-      await expect(calendar.getByRole("button", { name: /\b31 August 2026/ })).toBeFocused();
+      await expect(
+        calendar.getByRole("grid", { name: /^August/ }).getByRole("button", { name: /\b31 August 2026/ }),
+      ).toBeFocused();
       await page.keyboard.press("Enter");
       await expect(calendar).toBeHidden();
       await expect(bills.rangeEnd("Due between")).toHaveValue("31-08-2026");
@@ -284,6 +286,9 @@ test.describe("data table", () => {
 
     await from.fill("10-08-2026");
     await to.fill("01-08-2026");
+    await to.blur();
+    await expect(to).not.toHaveAttribute("aria-invalid");
+    await expect(bills.filters).not.toContainText("The end date is before the start date.");
     await bills.applyFilters.click();
     await expect(to).toBeFocused();
     await expect(to).toHaveAttribute("aria-invalid", "true");

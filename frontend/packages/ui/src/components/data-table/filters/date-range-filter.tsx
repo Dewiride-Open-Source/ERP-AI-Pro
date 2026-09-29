@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FocusEvent } from "react";
+import { useState } from "react";
 
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { DateRangeInput } from "@dewiride/erp-ui/components/pickers/date-range-input";
@@ -60,9 +60,6 @@ export function DataTableDateRangeFilter({
             toRef={validityRef(problems.to, reveal("to"))}
             value={value}
             onValueChange={setValue}
-            onBlur={(event: FocusEvent<HTMLInputElement>) =>
-              reveal(event.currentTarget.id === control.id ? "from" : "to")()
-            }
             disabled={!interactive}
             ends={{
               from: {
