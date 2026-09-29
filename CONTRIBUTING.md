@@ -52,7 +52,9 @@ write. You sign by adding one file in your first pull request, as `docs/cla/sign
 - Dewiride Technologies Private Limited may also license your contribution under other terms, including in the
   Enterprise edition, but always also under `LGPL-3.0-only`.
 - The `Contributor licence agreement` check runs on every pull request and fails until every commit author and
-  every `Co-authored-by` email is exempt (`docs/cla/exempt.json`) or covered by a signature.
+  every `Co-authored-by` email is exempt (`docs/cla/exempt.json`) or covered by a signature, and until a
+  signature names the account that opened the pull request. An exempt email counts as a co-author in any pull
+  request, so accepting a maintainer's review suggestion needs no signature from the maintainer.
 
 ## Editions
 

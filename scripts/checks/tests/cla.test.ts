@@ -12,6 +12,7 @@ import {
   parseCommitLog,
   parseNameStatus,
   parseSignature,
+  pullRequestAuthorProblem,
   readExemptions,
   readSignatures,
   type Signature,
@@ -83,6 +84,11 @@ const signatureOf = (path: string, text: string): Signature => {
 const commit = (sha: string, author: string, ...coAuthors: string[]): Commit => ({ sha, author, coAuthors });
 
 const janeSignature = (): Signature => signatureOf("docs/cla/individual/janedoe.md", individual());
+
+const ashaLine = "Asha Rao asha.rao@example.com https://github.com/asharao";
+const raviLine = "Ravi Kumar ravi.kumar@example.com https://github.com/ravikumar";
+const malloryLine = "Mallory Moe mallory@example.com https://github.com/mallory";
+const unsignedAuthor = (login: string): string => `${login} opened this pull request but has not signed the contributor licence agreement`;
 
 test("a well-formed individual signature yields its emails and login", () => {
   const text = individual({
@@ -200,7 +206,8 @@ test("a corporate signature lists every contributor and needs at least one", () 
     path,
     kind: "corporate",
     emails: ["ravi.kumar@example.com", "777+ravikumar@users.noreply.github.com"],
-    logins: ["asharao", "ravikumar"],
+    logins: ["ravikumar"],
+    signatory: { email: "asha.rao@example.com", login: "asharao" },
   });
   assert.deepEqual(signatureOf(path, corporate(signatory, [...signatory, ...contributors])).emails, [
     "asha.rao@example.com",
@@ -226,6 +233,40 @@ test("a corporate signature lists every contributor and needs at least one", () 
   assert.match(
     problemsOf(path, corporate(signatory, [contributors[0] ?? "", contributors[0] ?? ""])).join("\n"),
     /ravi\.kumar@example\.com is listed twice/,
+  );
+});
+
+test("a GitHub no-reply address names the login on its line", () => {
+  const path = "docs/cla/individual/janedoe.md";
+  assert.deepEqual(
+    problemsOf(
+      path,
+      individual({
+        people: [
+          "Jane Doe 12345+JaneDoe@users.noreply.github.com https://github.com/janedoe",
+          "Jane Doe janedoe@users.noreply.github.com https://github.com/janedoe",
+        ],
+      }),
+    ),
+    [],
+  );
+  assert.deepEqual(
+    problemsOf(path, individual({ people: ["Jane Doe 67890+johnroe@users.noreply.github.com https://github.com/janedoe"] })),
+    [`${path}:9: 67890+johnroe@users.noreply.github.com is the no-reply address of johnroe`],
+  );
+  const corporatePath = "docs/cla/corporate/example.md";
+  assert.deepEqual(
+    problemsOf(
+      corporatePath,
+      corporate(
+        ["Asha Rao 1+RaviKumar@users.noreply.github.com https://github.com/asharao"],
+        ["Ravi Kumar johnroe@users.noreply.github.com https://github.com/ravikumar"],
+      ),
+    ),
+    [
+      `${corporatePath}:9: 1+RaviKumar@users.noreply.github.com is the no-reply address of ravikumar`,
+      `${corporatePath}:13: johnroe@users.noreply.github.com is the no-reply address of johnroe`,
+    ],
   );
 });
 
@@ -284,6 +325,33 @@ test("a file outside the naming rule and an email signed twice are refused", () 
   assert.deepEqual(readSignatures([{ path: "docs/cla/individual/janedoe.md", text: individual() }], today, noExemptions).problems, []);
 });
 
+test("a corporate signatory's email is never exempt and never signed in another file", () => {
+  const path = "docs/cla/corporate/example.md";
+  const exempt = readSignatures(
+    [{ path, text: corporate([`Jagdish Kumawat ${ownerEmail} https://github.com/${owner}`], [raviLine]) }],
+    today,
+    exemptions,
+  );
+  assert.deepEqual(exempt.problems, [`${path}: ${ownerEmail} belongs to the exempt account ${owner}, and an exempt email is never signed`]);
+  const twice = readSignatures(
+    [
+      { path, text: corporate(["Jane Doe jane@example.com https://github.com/janedoe"], [raviLine]) },
+      { path: "docs/cla/individual/janedoe.md", text: individual() },
+    ],
+    today,
+    exemptions,
+  );
+  assert.deepEqual(twice.problems, ["docs/cla/individual/janedoe.md: jane@example.com is already signed in docs/cla/corporate/example.md"]);
+  const listed = readSignatures([{ path, text: corporate([ashaLine], [ashaLine, raviLine]) }], today, exemptions);
+  assert.deepEqual(listed.problems, []);
+  assert.deepEqual(listed.signatures[0]?.emails, ["asha.rao@example.com", "ravi.kumar@example.com"]);
+  const unlisted = readSignatures([{ path, text: corporate([ashaLine], [raviLine]) }], today, exemptions);
+  assert.deepEqual(unlisted.signatures[0]?.emails, ["ravi.kumar@example.com"]);
+  assert.deepEqual(uncoveredCommits([commit("s1", "asha.rao@example.com")], unlisted.signatures, exemptions, "ravikumar"), [
+    { sha: "s1", email: "asha.rao@example.com", role: "author" },
+  ]);
+});
+
 test("a malformed exemption document is refused", () => {
   const entry = { reason: "the copyright holder", emails: [ownerEmail] };
   const document = (value: unknown): string => JSON.stringify(value);
@@ -329,19 +397,20 @@ test("every exempt email is covered in a pull request opened by an exempt login"
   ]);
 });
 
-test("an exempt email in a pull request opened by anyone else is not covered", () => {
+test("an exempt email authors a commit only in a pull request opened by an exempt login", () => {
   const signatures = [janeSignature()];
-  assert.deepEqual(
-    uncoveredCommits([commit("c1", "jane@example.com", ownerEmail), commit("c2", ownerNoReply)], signatures, exemptions, "janedoe"),
-    [
-      { sha: "c1", email: ownerEmail, role: "co-author" },
-      { sha: "c2", email: ownerNoReply, role: "author" },
-    ],
-  );
+  assert.deepEqual(uncoveredCommits([commit("c1", "jane@example.com", ownerEmail)], signatures, exemptions, "janedoe"), []);
+  assert.equal(pullRequestAuthorProblem("janedoe", signatures, exemptions), undefined);
+  assert.deepEqual(uncoveredCommits([commit("c2", ownerNoReply, "jane@example.com")], signatures, exemptions, "janedoe"), [
+    { sha: "c2", email: ownerNoReply, role: "author" },
+  ]);
   assert.deepEqual(uncoveredCommits([commit("c3", dependabotEmail, ownerEmail)], [], exemptions, "Dependabot"), [
     { sha: "c3", email: dependabotEmail, role: "author" },
-    { sha: "c3", email: ownerEmail, role: "co-author" },
   ]);
+  assert.deepEqual(uncoveredCommits([commit("c5", "jane@example.com", ownerNoReply)], [], exemptions, "janedoe"), [
+    { sha: "c5", email: "jane@example.com", role: "author" },
+  ]);
+  assert.equal(pullRequestAuthorProblem("janedoe", [], exemptions), unsignedAuthor("janedoe"));
   const borrowed: Signature = {
     path: "docs/cla/individual/janedoe.md",
     kind: "individual",
@@ -379,6 +448,18 @@ test("a corporate contributor is covered", () => {
   ]);
 });
 
+test("a pull request author who is not exempt is named by a signature", () => {
+  const jane = janeSignature();
+  const company = signatureOf("docs/cla/corporate/example.md", corporate([ashaLine], [raviLine]));
+  assert.deepEqual(uncoveredCommits([commit("h1", "jane@example.com")], [jane], exemptions, "johnroe"), []);
+  assert.equal(pullRequestAuthorProblem("johnroe", [jane, company], exemptions), unsignedAuthor("johnroe"));
+  assert.equal(pullRequestAuthorProblem("JaneDoe", [jane, company], exemptions), undefined);
+  assert.equal(pullRequestAuthorProblem("Jagdish-Kumawat", [], exemptions), undefined);
+  assert.equal(pullRequestAuthorProblem(dependabot, [], exemptions), undefined);
+  assert.equal(pullRequestAuthorProblem("RaviKumar", [jane, company], exemptions), undefined);
+  assert.equal(pullRequestAuthorProblem("asharao", [jane, company], exemptions), unsignedAuthor("asharao"));
+});
+
 test("an unsigned co-author is not covered", () => {
   const signatures = [janeSignature()];
   assert.deepEqual(
@@ -395,6 +476,58 @@ test("an unsigned co-author is not covered", () => {
   ]);
   assert.deepEqual(uncoveredCommits([commit("f4", "ravi@example.com", "jane@example.com")], signatures, exemptions, "janedoe"), [
     { sha: "f4", email: "ravi@example.com", role: "author" },
+  ]);
+});
+
+test("a co-author trailer is unfolded and holds exactly one address, or it is reported whole", () => {
+  const signatures = [
+    janeSignature(),
+    signatureOf("docs/cla/individual/ravikumar.md", individual({ people: ["Ravi Kumar ravi@example.com https://github.com/ravikumar"] })),
+  ];
+  const log = parseCommitLog(
+    [
+      "g1\x1fjane@example.com\x1fRavi Kumar\n <ravi@example.com>\x1eRavi Kumar\r\n\t<Ravi@Example.com> \x1d",
+      "g2\x1fjane@example.com\x1fJane Doe <jane@example.com> Ravi Kumar <ravi@example.com>\x1d",
+      "g3\x1fjane@example.com\x1fJane Doe <jane@example.com>\n Ravi Kumar <ravi@example.com>\x1d",
+      "g4\x1fjane@example.com\x1fRavi Kumar <ravi @example.com>\x1d",
+    ].join("\n"),
+  );
+  assert.deepEqual(log, [
+    commit("g1", "jane@example.com", "ravi@example.com", "Ravi@Example.com"),
+    commit("g2", "jane@example.com", "Jane Doe <jane@example.com> Ravi Kumar <ravi@example.com>"),
+    commit("g3", "jane@example.com", "Jane Doe <jane@example.com> Ravi Kumar <ravi@example.com>"),
+    commit("g4", "jane@example.com", "Ravi Kumar <ravi @example.com>"),
+  ]);
+  assert.deepEqual(uncoveredCommits(log, signatures, exemptions, "janedoe"), [
+    { sha: "g2", email: "Jane Doe <jane@example.com> Ravi Kumar <ravi@example.com>", role: "co-author" },
+    { sha: "g3", email: "Jane Doe <jane@example.com> Ravi Kumar <ravi@example.com>", role: "co-author" },
+    { sha: "g4", email: "Ravi Kumar <ravi @example.com>", role: "co-author" },
+  ]);
+});
+
+test("a corporate signature is added only by its signatory and edited only by the signatory the base branch names", () => {
+  const path = "docs/cla/corporate/example.md";
+  const base = [{ path, text: corporate([ashaLine], [ashaLine]) }];
+  const edited = [{ path, text: corporate([ashaLine], [ashaLine, raviLine]) }];
+  const swapped = [{ path, text: corporate([malloryLine], [ashaLine, malloryLine]) }];
+  const added = parseNameStatus(`A\0${path}\0`);
+  const modified = parseNameStatus(`M\0${path}\0`);
+  const addedOnly = (login: string): string =>
+    `${path}: this pull request is by ${login}, and a corporate signature is added only by the signatory it names`;
+  const editedOnly = (login: string): string =>
+    `${path}: this pull request is by ${login}, and a corporate signature is edited only by the signatory the base branch names`;
+
+  assert.deepEqual(signatureChangeProblems(added, "AshaRao", exemptions, { base: [], head: base }), []);
+  assert.deepEqual(signatureChangeProblems(added, "ravikumar", exemptions, { base: [], head: base }), [addedOnly("ravikumar")]);
+  assert.deepEqual(signatureChangeProblems(added, "mallory", exemptions, { base: [], head: [] }), [addedOnly("mallory")]);
+  assert.deepEqual(signatureChangeProblems(modified, "asharao", exemptions, { base, head: edited }), []);
+  assert.deepEqual(signatureChangeProblems(modified, "ravikumar", exemptions, { base, head: edited }), [editedOnly("ravikumar")]);
+  assert.deepEqual(signatureChangeProblems(modified, "mallory", exemptions, { base, head: swapped }), [editedOnly("mallory")]);
+  assert.deepEqual(signatureChangeProblems(added, "mallory", exemptions, { base, head: swapped }), [editedOnly("mallory")]);
+  assert.deepEqual(signatureChangeProblems(modified, "asharao", exemptions, { base: [], head: edited }), [editedOnly("asharao")]);
+  assert.deepEqual(signatureChangeProblems(modified, owner, exemptions, { base, head: swapped }), []);
+  assert.deepEqual(signatureChangeProblems(parseNameStatus(`D\0${path}\0`), "asharao", exemptions, { base, head: [] }), [
+    `${path}: a signature is never deleted or renamed`,
   ]);
 });
 
@@ -415,15 +548,18 @@ test("a contributor cannot sign for another login or delete a signature", () => 
     ].join("\0"),
   );
   assert.equal(changes.length, 5);
-  assert.deepEqual(signatureChangeProblems(changes, "JaneDoe", exemptions), [
+  const versions = { base: [], head: [{ path: "docs/cla/corporate/example.md", text: corporate([ashaLine], [ashaLine]) }] };
+  assert.deepEqual(signatureChangeProblems(changes, "JaneDoe", exemptions, versions), [
     "docs/cla/individual/johnroe.md: this pull request is by JaneDoe, who adds or edits only docs/cla/individual/janedoe.md",
+    "docs/cla/corporate/example.md: this pull request is by JaneDoe, and a corporate signature is added only by the signatory it names",
     "docs/cla/individual/ravikumar.md: a signature is never deleted or renamed",
   ]);
-  assert.deepEqual(signatureChangeProblems(changes, owner, exemptions), [
+  assert.deepEqual(signatureChangeProblems(changes, owner, exemptions, versions), [
     "docs/cla/individual/ravikumar.md: a signature is never deleted or renamed",
   ]);
-  assert.deepEqual(signatureChangeProblems(parseNameStatus("A\0docs/cla/individual/janedoe.md\0"), "janedoe", exemptions), []);
-  assert.deepEqual(signatureChangeProblems(parseNameStatus("T\0docs/cla/individual/janedoe.md\0"), "janedoe", exemptions), [
+  const none = { base: [], head: [] };
+  assert.deepEqual(signatureChangeProblems(parseNameStatus("A\0docs/cla/individual/janedoe.md\0"), "janedoe", exemptions, none), []);
+  assert.deepEqual(signatureChangeProblems(parseNameStatus("T\0docs/cla/individual/janedoe.md\0"), "janedoe", exemptions, none), [
     "docs/cla/individual/janedoe.md: a signature is only added or edited (git status T)",
   ]);
   assert.deepEqual(parseNameStatus(""), []);
@@ -473,6 +609,7 @@ test("the command line fails on an unsigned author and passes once the signature
   const failing = repository.run("--base", repository.base, "--head", unsigned, "--pull-request-author", "janedoe");
   assert.equal(failing.status, 1, failing.stdout);
   const short = unsigned.slice(0, 7);
+  assert.match(failing.stderr, /janedoe opened this pull request but has not signed the contributor licence agreement\./);
   assert.match(failing.stderr, new RegExp(`  ${short} jane@example\\.com \\(author\\)`));
   assert.match(failing.stderr, new RegExp(`  ${short} 12345\\+janedoe@users\\.noreply\\.github\\.com \\(co-author\\)`));
   assert.match(failing.stderr, /docs\/cla\/sign-cla\.md/);
@@ -486,18 +623,64 @@ test("the command line fails on an unsigned author and passes once the signature
       ],
     }),
   );
-  const signed = repository.commitAs("jane@example.com", "Sign the contributor licence agreement");
+  const signed = repository.commitAs(
+    "jane@example.com",
+    `Sign the contributor licence agreement\n\nCo-authored-by: Jagdish Kumawat <${ownerEmail}>`,
+  );
   const passing = repository.run("--base", repository.base, "--head", signed, "--pull-request-author", "janedoe");
   assert.equal(passing.status, 0, passing.stderr);
-  assert.match(passing.stdout, /cla ok: every author and co-author of 2 commits is exempt or signed/);
+  assert.match(passing.stdout, /cla ok: janedoe and every author and co-author of 2 commits are exempt or signed/);
 
   const otherAuthor = repository.run("--base", repository.base, "--head", signed, "--pull-request-author", "johnroe");
   assert.equal(otherAuthor.status, 1);
   assert.match(otherAuthor.stderr, /docs\/cla\/individual\/janedoe\.md: this pull request is by johnroe/);
+  assert.match(otherAuthor.stderr, /johnroe opened this pull request but has not signed the contributor licence agreement\./);
+
+  repository.write("feature.txt", "feature, with a signed author\n");
+  const borrowed = repository.commitAs("jane@example.com", "Commit with a signed address");
+  const borrowedByOther = repository.run("--base", signed, "--head", borrowed, "--pull-request-author", "johnroe");
+  assert.equal(borrowedByOther.status, 1);
+  assert.match(borrowedByOther.stderr, /johnroe opened this pull request but has not signed the contributor licence agreement\./);
+  assert.doesNotMatch(borrowedByOther.stderr, /\((?:author|co-author)\)/);
+
+  repository.write("feature.txt", "feature, with a folded trailer\n");
+  const folded = repository.commitAs(
+    "jane@example.com",
+    "Credit two people in one trailer\n\nCo-authored-by: Jane Doe <jane@example.com>\n Ravi Kumar <ravi@example.com>",
+  );
+  const foldedRun = repository.run("--base", signed, "--head", folded, "--pull-request-author", "janedoe");
+  assert.equal(foldedRun.status, 1);
+  assert.match(
+    foldedRun.stderr,
+    new RegExp(`  ${folded.slice(0, 7)} Jane Doe <jane@example\\.com> Ravi Kumar <ravi@example\\.com> \\(co-author\\)`),
+  );
 
   const partial = repository.run("--base", repository.base);
   assert.equal(partial.status, 1);
   assert.match(partial.stderr, /--base, --head and --pull-request-author are given together/);
+});
+
+test("the command line lets only the base branch's signatory edit a corporate signature", (t) => {
+  const repository = temporaryRepository(t);
+  const path = "docs/cla/corporate/example-private-limited.md";
+  repository.write(path, corporate([ashaLine], [ashaLine]));
+  const signed = repository.commitAs(ownerEmail, "Example Private Limited signs");
+
+  repository.write(path, corporate([ashaLine], [ashaLine, raviLine]));
+  const edited = repository.commitAs("asha.rao@example.com", "Add Ravi Kumar");
+  const bySignatory = repository.run("--base", signed, "--head", edited, "--pull-request-author", "asharao");
+  assert.equal(bySignatory.status, 0, bySignatory.stderr);
+
+  repository.git("checkout", "-q", "--detach", signed);
+  repository.write(path, corporate([malloryLine], [ashaLine, malloryLine]));
+  const swapped = repository.commitAs("mallory@example.com", "Replace the signatory");
+  const byOther = repository.run("--base", signed, "--head", swapped, "--pull-request-author", "mallory");
+  assert.equal(byOther.status, 1);
+  assert.match(
+    byOther.stderr,
+    /example-private-limited\.md: this pull request is by mallory, and a corporate signature is edited only by the signatory the base branch names/,
+  );
+  assert.doesNotMatch(byOther.stderr, /opened this pull request|\((?:author|co-author)\)/);
 });
 
 test("the command line without a range validates only the signature files", (t) => {

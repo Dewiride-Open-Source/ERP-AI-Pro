@@ -33,6 +33,8 @@ Every mutation stamps today's date unless --date YYYY-MM-DD is given.
 Every sub-phase is Community or Enterprise. A phase given to edition applies to all its sub-phases.
 Without --confirm the edition is a recommendation and any confirmation is cleared; --confirm records
 the owner's confirmation, and start and done need a confirmed edition.
+next offers a planned sub-phase once everything it and its phase depend on is done; a phase counts as
+done for Community work once its Community sub-phases are, and for Enterprise work once all of them are.
 `;
 
 const { values, positionals } = parseArgs({

@@ -1,4 +1,4 @@
-import { DATE_PATTERN, EDITIONS, ID_PATTERN, STATUSES, isDone, isEdition, isEnterpriseOnly, phaseStatus, type Roadmap, type SubPhase } from './model.ts';
+import { DATE_PATTERN, EDITIONS, ID_PATTERN, STATUSES, isDoneFor, isEdition, isEnterpriseOnly, locate, phaseStatus, subPhasesAwaitedBy, type Edition, type Roadmap, type SubPhase } from './model.ts';
 
 export type Issue = { level: 'error' | 'warning'; message: string };
 
@@ -67,8 +67,9 @@ export function validate(roadmap: Roadmap, options: ValidateOptions = {}): Issue
 
   for (const phase of roadmap.phases) {
     if (phaseStatus(phase) !== 'done') continue;
+    const editions = new Set(phase.subPhases.filter((s) => s.status === 'done').map((s) => s.edition));
     for (const dep of phase.dependsOn) {
-      if (!isDone(roadmap, dep)) error(`phase "${phase.id}" is done but depends on "${dep}" which is not done`);
+      if ([...editions].some((edition) => !isDoneFor(roadmap, dep, edition))) error(`phase "${phase.id}" is done but depends on "${dep}" which is not done`);
     }
   }
 
@@ -149,33 +150,59 @@ function rejectCommunityOnEnterprise(roadmap: Roadmap, error: (message: string) 
   }
 }
 
-function findCycle(roadmap: Roadmap): string[] | undefined {
-  const edges = new Map<string, string[]>();
+type GraphNode = { id: string; edges: string[] };
+
+function dependencyGraph(roadmap: Roadmap): Map<string, GraphNode> {
+  const graph = new Map<string, GraphNode>();
+  const doneNodes = (deps: string[], edition: Edition): string[] =>
+    deps.flatMap((dep) => {
+      const found = locate(roadmap, dep);
+      if (!found) return [];
+      return [found.subPhase === undefined ? `done:${dep}:${edition}` : dep];
+    });
   for (const phase of roadmap.phases) {
-    edges.set(phase.id, [...phase.dependsOn]);
-    for (const sub of phase.subPhases) edges.set(sub.id, [...sub.dependsOn, phase.id]);
+    for (const sub of phase.subPhases) graph.set(sub.id, { id: sub.id, edges: [...doneNodes(sub.dependsOn, sub.edition), `start:${phase.id}:${sub.edition}`] });
   }
+  for (const phase of roadmap.phases) {
+    for (const edition of EDITIONS) {
+      const start = `start:${phase.id}:${edition}`;
+      const awaited = subPhasesAwaitedBy(phase, edition).filter((s) => s.status !== 'deferred').map((s) => s.id);
+      graph.set(start, { id: phase.id, edges: doneNodes(phase.dependsOn, edition) });
+      graph.set(`done:${phase.id}:${edition}`, { id: phase.id, edges: awaited.length > 0 ? awaited : [start] });
+    }
+  }
+  return graph;
+}
+
+function findCycle(roadmap: Roadmap): string[] | undefined {
+  const graph = dependencyGraph(roadmap);
   const state = new Map<string, 'visiting' | 'done'>();
   const stack: string[] = [];
-  const visit = (id: string): string[] | undefined => {
-    const current = state.get(id);
+  const visit = (node: string): string[] | undefined => {
+    const current = state.get(node);
     if (current === 'done') return undefined;
-    if (current === 'visiting') return [...stack.slice(stack.indexOf(id)), id];
-    state.set(id, 'visiting');
-    stack.push(id);
-    for (const dep of edges.get(id) ?? []) {
-      const found = visit(dep);
+    if (current === 'visiting') return [...stack.slice(stack.indexOf(node)), node];
+    state.set(node, 'visiting');
+    stack.push(node);
+    for (const next of graph.get(node)?.edges ?? []) {
+      const found = visit(next);
       if (found) return found;
     }
     stack.pop();
-    state.set(id, 'done');
+    state.set(node, 'done');
     return undefined;
   };
-  for (const id of edges.keys()) {
-    const found = visit(id);
-    if (found) return found;
+  for (const node of graph.keys()) {
+    const found = visit(node);
+    if (found) return plainCycle(found.map((n) => graph.get(n)!.id));
   }
   return undefined;
+}
+
+function plainCycle(ids: string[]): string[] {
+  const path = ids.slice(0, -1).filter((id, index, all) => index === 0 || id !== all[index - 1]);
+  if (path.length > 1 && path.at(-1) === path[0]) path.pop();
+  return [...path, path[0]!];
 }
 
 export function formatIssues(issues: Issue[]): string {

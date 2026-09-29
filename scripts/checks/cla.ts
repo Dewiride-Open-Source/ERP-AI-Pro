@@ -12,6 +12,7 @@ import {
   latestCalendarDate,
   parseCommitLog,
   parseNameStatus,
+  pullRequestAuthorProblem,
   readExemptions,
   readSignatures,
   type Signature,
@@ -27,6 +28,13 @@ const signingGuide = "docs/cla/sign-cla.md (https://github.com/Dewiride-Open-Sou
 const commitReference = /^[A-Za-z0-9][A-Za-z0-9._/~^-]*$/;
 const pullRequestAuthor = /^[A-Za-z0-9][A-Za-z0-9-]*(?:\[bot\])?$/;
 const regularFileModes = ["100644", "100755"];
+
+interface TreeEntry {
+  readonly mode: string;
+  readonly type: string;
+  readonly object: string;
+  readonly path: string;
+}
 
 const { values } = parseArgs({
   options: {
@@ -102,41 +110,59 @@ function checkWorkingTree(): void {
   console.log(`cla ok: ${count(signatures, "individual")} individual and ${count(signatures, "corporate")} corporate signatures`);
 }
 
+function signatureTree(commit: string): TreeEntry[] {
+  return git("ls-tree", "-r", "-z", commit, "--", ...signatureFolders)
+    .split("\0")
+    .filter((entry) => entry !== "")
+    .map((entry) => {
+      const tab = entry.indexOf("\t");
+      const [mode = "", type = "", object = ""] = entry.slice(0, tab).split(" ");
+      return { mode, type, object, path: entry.slice(tab + 1) };
+    });
+}
+
+function isRegularFile(entry: TreeEntry): boolean {
+  return entry.type === "blob" && regularFileModes.includes(entry.mode);
+}
+
+function readBlob(entry: TreeEntry): SignatureFile {
+  return { path: entry.path, text: git("cat-file", "blob", entry.object) };
+}
+
 function checkPullRequest(baseReference: string, headReference: string, prAuthor: string): void {
   if (!pullRequestAuthor.test(prAuthor)) fail("Usage error:", [`${prAuthor} is not a GitHub login`]);
   const baseCommit = resolveCommit(baseReference);
   const headCommit = resolveCommit(headReference);
 
   const problems: string[] = [];
-  const files: SignatureFile[] = [];
-  const entries = git("ls-tree", "-r", "-z", headCommit, "--", ...signatureFolders)
-    .split("\0")
-    .filter((entry) => entry !== "");
-  for (const entry of entries) {
-    const tab = entry.indexOf("\t");
-    const [mode = "", type = "", object = ""] = entry.slice(0, tab).split(" ");
-    const path = entry.slice(tab + 1);
-    if (type !== "blob" || !regularFileModes.includes(mode)) {
-      problems.push(`${path}: a signature is a regular file`);
-      continue;
-    }
-    files.push({ path, text: git("cat-file", "blob", object) });
+  const headTree = signatureTree(headCommit);
+  for (const entry of headTree) {
+    if (!isRegularFile(entry)) problems.push(`${entry.path}: a signature is a regular file`);
   }
+  const files = headTree.filter(isRegularFile).map(readBlob);
   const { signatures, problems: signatureProblems } = readSignatures(files, today, exemptions);
   problems.push(...signatureProblems);
 
-  const changes = parseNameStatus(git("diff", "--name-status", "--no-renames", "-z", `${baseCommit}...${headCommit}`, "--", claFolder));
-  problems.push(...signatureChangeProblems(changes, prAuthor, exemptions));
+  const changes = parseNameStatus(
+    git("diff", "--name-status", "--no-renames", "--no-textconv", "--no-ext-diff", "-z", `${baseCommit}...${headCommit}`, "--", claFolder),
+  );
+  const changed = new Set(changes.map((change) => change.path));
+  const baseFiles = signatureTree(baseCommit)
+    .filter((entry) => changed.has(entry.path) && isRegularFile(entry))
+    .map(readBlob);
+  problems.push(...signatureChangeProblems(changes, prAuthor, exemptions, { base: baseFiles, head: files }));
 
   const commits = parseCommitLog(
     git("-c", "log.showSignature=false", "log", `--format=${commitLogFormat}`, `${baseCommit}..${headCommit}`),
   );
   const uncovered = uncoveredCommits(commits, signatures, exemptions, prAuthor);
+  const authorProblem = pullRequestAuthorProblem(prAuthor, signatures, exemptions);
 
-  if (problems.length === 0 && uncovered.length === 0) {
-    console.log(`cla ok: every author and co-author of ${commits.length} commits is exempt or signed`);
+  if (problems.length === 0 && uncovered.length === 0 && authorProblem === undefined) {
+    console.log(`cla ok: ${prAuthor} and every author and co-author of ${commits.length} commits are exempt or signed`);
     return;
   }
+  if (authorProblem !== undefined) console.error(`${authorProblem}.`);
   if (problems.length > 0) {
     console.error("Contributor licence agreement signatures that cannot be accepted:");
     for (const problem of problems) console.error(`  ${problem}`);

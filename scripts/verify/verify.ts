@@ -41,6 +41,7 @@ if (!values["skip-backend"]) {
 
   rmSync(join(backend, "artifacts", "TestResults"), { recursive: true, force: true });
   steps.push(
+    { name: "backend tools restore", cwd: backend, command: "dotnet", args: ["tool", "restore"] },
     { name: "backend restore (locked)", cwd: backend, command: "dotnet", args: ["restore", "--locked-mode"] },
     { name: "nuget licences", cwd: repoRoot, command: "node", args: ["scripts/checks/licences.ts", "nuget"] },
     { name: "backend build", cwd: backend, command: "dotnet", args: ["build", "--no-restore", "-warnaserror"] },

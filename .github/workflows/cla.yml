@@ -1,7 +1,9 @@
 name: cla
 
 on:
-  pull_request:
+  # The workflow comes from the default branch and the checker and exemptions from the base commit, never from the pull request.
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
 
 permissions:
   contents: read

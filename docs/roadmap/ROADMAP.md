@@ -147,7 +147,7 @@ Id `foundation` · Milestone: M0 Repository ready · Edition: Community · Statu
   - Note: Reviewed by an 85-agent multi-lens workflow (106 raw findings, 40 verified, 35 confirmed): all confirmed items fixed, the four contested items addressed (forwarded-header stripping, BuildingBlocks unit tests, offline web instance for API-unavailable states, web-origin security spec); verify.ts --e2e --docker green, 59 Playwright tests across five projects, 50 .NET tests, compose smoke green.
 - [x] **P01.11** Editions, LGPL licensing and the contributor licence agreement (`foundation-editions-and-licensing`) — done 2026-09-29 <a id="foundation-editions-and-licensing"></a>
   Relicense this repository as the ERP-AI-Pro Community edition under LGPL-3.0-only (COPYING and COPYING.LESSER replace LICENSE; README notice, MSBuild and npm metadata and the OpenAPI licence object with its SPDX identifier), give every roadmap sub-phase a Community or Enterprise edition that the owner confirms before work starts (the edition and depends-on commands and a rule that Community work never depends on Enterprise-only work), accept outside contributions only under a Harmony-based individual or corporate contributor licence agreement signed by a file under docs/cla and checked by the cla workflow, gate dependency licences with an allow list in dependency review and scripts/checks/licences.ts, record the decisions in ADR-0030, and create the private Enterprise repository with its proprietary licence.
-  - GitHub reports the repository licence as LGPL-3.0 from COPYING and COPYING.LESSER, and the README notice, Directory.Build.props, every package.json and the OpenAPI document name LGPL-3.0-only and Dewiride Technologies Private Limited
+  - GitHub reports the repository licence as LGPL-3.0 from COPYING and COPYING.LESSER; the README notice and Directory.Build.props name LGPL-3.0-only and Dewiride Technologies Private Limited, every package.json declares the licence LGPL-3.0-only, and the OpenAPI licence object carries the SPDX identifier LGPL-3.0-only
   - Every sub-phase carries an edition; start and done refuse one whose edition the owner has not confirmed, validation refuses Community work that depends on Enterprise-only work, and ROADMAP.md shows the edition of every phase and sub-phase
   - The cla workflow, running the checker from the base branch, fails a pull request containing a commit whose author or co-author is neither exempt nor covered by a well-formed signature under docs/cla, and passes once that contributor adds a signature file
   - Dependency review allows only the licences of scripts/checks/lib/licence-policy.ts, and scripts/checks/licences.ts fails CI on any installed npm or restored NuGet package outside it
@@ -494,6 +494,7 @@ Id `business-building-blocks` · Milestone: M4 Master data live · Edition: Mixe
 - [ ] **P08.3** Module and feature scaffolders (`business-building-blocks-module-and-feature-scaffolders`) <a id="business-building-blocks-module-and-feature-scaffolders"></a>
   Create a `dotnet new erp-module` template package (templates/erp-module) generating Domain/Application/Infrastructure/Endpoints/Ai folders, DbContext with schema and migrations factory, IModule registration and matching test projects under backend/Modules/<Domain>/<Feature>/, and a `pnpm scaffold:feature` script generating frontend/apps/web/src/features/<domain>/<feature>/ with route, list/detail pages and an e2e spec, both derived from the `user-management` reference module and verified by architecture tests on generated output.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the Community templates generate no Ai or web ai folder; the template for an Enterprise companion module (<Domain>/<Module>Ai) belongs to the private repository.
 - [ ] **P08.4** Reference data module (`business-building-blocks-reference-data-module`) <a id="business-building-blocks-reference-data-module"></a>
   Create backend/Modules/ReferenceData with countries, Indian States and UTs with GST State codes, currencies, a dated exchange-rate table with manual entry and file import, fiscal-year and period services (April to March), seed migrations, cached read endpoints and reusable UI pickers, with tests.
   - Edition: Community (recommended)
@@ -695,6 +696,7 @@ Id `finance-sales` · Milestone: M6 Finance live · Edition: Mixed · Status: pl
 - [ ] **P13.6** Receivables, dunning and TDS receivable (`finance-sales-receivables-dunning-and-tds-receivable`) <a id="finance-sales-receivables-dunning-and-tds-receivable"></a>
   Provide receivables ageing, 9-month export realisation ageing, a dunning ladder with reminder jobs sending through `business-building-blocks-minimal-transactional-email-sender`, and a TDS-receivable ledger reconciled against 26AS/AIS CSV imports, with tests.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the TDS-receivable ledger and its reconciliation against 26AS and AIS imports are Community; the Enterprise `compliance-income-tax-filing-packs-tds` consumes them through a Community contract instead of repeating them.
 - [ ] **P13.7** GSTR-1 extracts (`finance-sales-gstr-1-extracts`) <a id="finance-sales-gstr-1-extracts"></a>
   Generate GSTR-1 tables (B2B 4A, B2CL/B2CS, EXP 6A, CDNR 9B, HSN 12, document summary 13) for monthly or quarterly periods as JSON/Excel matching the GST offline tool, with fixture-based tests.
   - Edition: Community (recommended)
@@ -742,12 +744,14 @@ Id `finance-expenses` · Milestone: M6 Finance live · Edition: Mixed · Status:
 - [ ] **P14.7** Recurring expenses and subscriptions feed (`finance-expenses-recurring-expenses-and-subscriptions-feed`) <a id="finance-expenses-recurring-expenses-and-subscriptions-feed"></a>
   Support recurring bill templates (SaaS, rent, utilities) including foreign SaaS as import of services under IGST RCM, cost allocation to cost centres/projects and a renewal calendar feeding `procurement-assets-subscriptions-and-licences`.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): recurring bill templates and cost allocation stay Community; the renewal calendar publishes a Community contract or integration event that the Enterprise `procurement-assets-subscriptions-and-licences` consumes.
 - [ ] **P14.8** Web: bill entry and list (`finance-expenses-web-bill-entry-and-list`) <a id="finance-expenses-web-bill-entry-and-list"></a>
   Build bill entry with vendor defaults, attachment zone and live TDS/RCM/ITC preview, and the bills list with facets and approval actions, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
 - [ ] **P14.9** Web: TDS, ITC and MSME workbenches (`finance-expenses-web-tds-itc-and-msme-workbenches`) <a id="finance-expenses-web-tds-itc-and-msme-workbenches"></a>
   Build the TDS dashboard and challan batch UI, the GSTR-2B reconciliation workbench and the MSME ageing view, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the TDS dashboard, challan batches and MSME ageing are built here; the GSTR-2B reconciliation workbench is built with the Enterprise `finance-expenses-itc-and-gstr-2b-ims-reconciliation`.
 - [ ] **P14.10** AI: bill intelligence (`finance-expenses-ai-bill-intelligence`) <a id="finance-expenses-ai-bill-intelligence"></a>
   Add Finance/Expenses/Ai for bill OCR to Rule 46 fields with per-field confidence and review, expense categorisation and ledger-account suggestion, duplicate-bill detection and TDS/RCM applicability explanations.
   - Edition: Enterprise (recommended)
@@ -783,6 +787,7 @@ Id `finance-banking` · Milestone: M6 Finance live · Edition: Mixed · Status: 
 - [ ] **P15.8** Web: reconciliation and remittances (`finance-banking-web-reconciliation-and-remittances`) <a id="finance-banking-web-reconciliation-and-remittances"></a>
   Build the keyboard-driven reconciliation workbench, statement import wizard, remittance capture and cash-flow dashboard, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the reconciliation workbench, statement import wizard and remittance capture are built here; the cash-flow dashboard is built with the Enterprise `finance-banking-cash-flow-forecasting`.
 - [ ] **P15.9** AI: banking assistant (`finance-banking-ai-banking-assistant`) <a id="finance-banking-ai-banking-assistant"></a>
   Add Finance/Banking/Ai for statement-line categorisation and counterparty matching suggestions with explanations and a cash-flow risk narrative.
   - Edition: Enterprise (recommended)
@@ -803,9 +808,11 @@ Id `finance-reimbursements` · Milestone: M6 Finance live · Edition: Mixed · S
 - [ ] **P16.3** Approval routing (`finance-reimbursements-approval-routing`) <a id="finance-reimbursements-approval-routing"></a>
   Route claims through manager approval and finance verification with delegation and SLA reminders via `business-building-blocks-shared-minimal-approvals-building-block` and `business-building-blocks-background-jobs-and-scheduling`, with integration tests (tag bridge, retired by `approvals-workflow-consumer-migration`).
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here.
 - [ ] **P16.4** Settlement and posting (`finance-reimbursements-settlement-and-posting`) <a id="finance-reimbursements-settlement-and-posting"></a>
   Settle approved claims through `finance-banking-payout-batches` payout batches or as a payroll add-on, post journals to the ledger and push GSTIN-bearing receipts into the `finance-expenses-itc-and-gstr-2b-ims-reconciliation` purchase register, with tests.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): settlement through payout batches and ledger posting stay Community, and GSTIN-bearing receipts are recorded on the Community bill and expense records of `finance-expenses-bill-and-expense-aggregate`, which the Enterprise `finance-expenses-itc-and-gstr-2b-ims-reconciliation` reads; settling a claim as a payroll add-on is done by the Enterprise payroll items consuming a Community reimbursement contract.
 - [ ] **P16.5** Web: my expenses and approver inbox (`finance-reimbursements-web-my-expenses-and-approver-inbox`) <a id="finance-reimbursements-web-my-expenses-and-approver-inbox"></a>
   Build the mobile-first 'my expenses' flow with camera upload and the approver inbox, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
@@ -889,6 +896,7 @@ Id `compliance` · Milestone: M7 Payroll and compliance live · Edition: Mixed �
 - [ ] **P18.9** Web: compliance calendar, filings and corporate records (`compliance-web-compliance-calendar-filings-and-corporate`) <a id="compliance-web-compliance-calendar-filings-and-corporate"></a>
   Build the compliance calendar (month and list views, overdue heat-map), filing-pack and workspace pages with export buttons, and corporate-record pages, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the compliance calendar and the corporate-record pages are built here; the filing-pack and workspace pages are built with the Enterprise `compliance-gst-filing-packs`, `compliance-filing-workspaces`, `compliance-income-tax-filing-packs-tds` and `compliance-income-tax-filing-packs-company-return`.
 - [ ] **P18.10** AI: compliance assistant (`compliance-ai-compliance-assistant`) <a id="compliance-ai-compliance-assistant"></a>
   Add Compliance/Ai for deadline-risk scoring, a 'what changed' digest generated from statutory parameter-set diffs and draft board-resolution text from templates.
   - Edition: Enterprise (recommended)
@@ -909,6 +917,7 @@ Id `timesheets` · Milestone: M8 Delivery tracking · Edition: Mixed · Status: 
 - [ ] **P19.3** Approvals and reminders (`timesheets-approvals-and-reminders`) <a id="timesheets-approvals-and-reminders"></a>
   Implement manager/engagement-lead approval with rejection reasons, delegate approvers and missing-timesheet reminders through `business-building-blocks-shared-minimal-approvals-building-block` and `business-building-blocks-background-jobs-and-scheduling` (tag bridge, retired by `approvals-workflow-consumer-migration`).
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here.
 - [ ] **P19.4** Billing feed (`timesheets-billing-feed`) <a id="timesheets-billing-feed"></a>
   Convert approved billable hours into invoice draft lines through the `finance-sales-recurring-and-retainer-billing` contract using rate cards, accrue contractor bills from approved contractor time into `finance-expenses`, support fixed-price milestone mapping and track write-downs/write-offs, with integration tests.
   - Edition: Community (recommended)
@@ -998,6 +1007,7 @@ Id `documents` · Milestone: M9 Operations backbone · Edition: Mixed · Status:
 - [ ] **P22.2** Generated documents service (`documents-generated-documents-service`) <a id="documents-generated-documents-service"></a>
   Consolidate PDF generation (invoices, credit notes, payslips, Form 16, purchase orders, letters) on a shared template engine with branding, QR codes, watermarks and a digital-signature (DSC) integration point, with snapshot tests and migration of `finance-sales-invoice-pdf-rendering` and `finance-payroll-statutory-outputs-salary-tds-and-registers` renderers.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): this item offers the template engine and migrates `finance-sales-invoice-pdf-rendering` onto it; the payslip and Form 16 renderers belong to the Enterprise payroll items, which adopt the engine in the private repository.
 - [ ] **P22.3** Search and OCR (`documents-search-and-ocr`) <a id="documents-search-and-ocr"></a>
   Index metadata and extracted text with SQL Server full-text search, run OCR through `ai-platform-document-intelligence-pipeline` for scanned uploads and support saved searches, with tests.
   - Edition: Enterprise (recommended)
@@ -1028,12 +1038,15 @@ Id `hr-core` · Milestone: M10 People operations · Edition: Mixed · Status: pl
 - [ ] **P23.2** Onboarding and offboarding (`hr-core-onboarding-and-offboarding`) <a id="hr-core-onboarding-and-offboarding"></a>
   Implement cross-team checklists (IT, Finance, HR), offer-to-joining flow with KYC document collection, asset issue hooks to `procurement-assets`, and an exit process covering notice, clearance, F&F trigger to `finance-payroll-full-and-final-and-benefits` and access revocation to `user-management-user-lifecycle`, with tests.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the exit process publishes an exit integration event that the Enterprise `finance-payroll-full-and-final-and-benefits` consumes; Community code never names payroll.
 - [ ] **P23.3** Leave management (`hr-core-leave-management`) <a id="hr-core-leave-management"></a>
   Create Hr/Leave with leave types and policies (earned, casual, sick, comp-off, accrual, carry-forward, encashment per Labour Codes), State holiday calendars, requests through `approvals-workflow`, balances, the LOP feed into `finance-payroll-payroll-run-pipeline` and the `timesheets-timesheet-rules` timesheet hook, with tests.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): requests go through `business-building-blocks-shared-minimal-approvals-building-block`, and loss-of-pay days are published as a Community contract or integration event that the Enterprise `finance-payroll-payroll-run-pipeline` consumes; Community code never names payroll.
 - [ ] **P23.4** Attendance (`hr-core-attendance`) <a id="hr-core-attendance"></a>
   Create Hr/Attendance with web/mobile check-in, timesheet-derived presence option, regularisation requests, shift and WFH policies, overtime capture at the statutory rate and monthly lock feeding `finance-payroll-payroll-run-pipeline`, with tests.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the monthly lock publishes attendance and overtime as a Community contract or integration event that the Enterprise payroll run consumes; Community code never names payroll.
 - [ ] **P23.5** Web: employee self-service portal (`hr-core-web-employee-self-service-portal`) <a id="hr-core-web-employee-self-service-portal"></a>
   Build mobile-first pages for my profile, documents and payslips, leave, attendance, tax declarations and team calendar, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
@@ -1057,6 +1070,7 @@ Id `hr-talent` · Milestone: M10 People operations · Edition: Mixed · Status: 
 - [ ] **P24.1** Recruitment (`hr-talent-recruitment`) <a id="hr-talent-recruitment"></a>
   Create Hr/Recruitment with job requisitions approved via `approvals-workflow`, candidate pipeline stages, interview scheduling through Graph calendar, scorecards, offer generation via templates and a careers JSON feed, with tests.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): requisitions are approved through `business-building-blocks-shared-minimal-approvals-building-block`; whether interview scheduling through the Graph calendar stays Community or belongs to the Enterprise `integrations-microsoft-365-connectors` is decided with the owner when this is planned.
 - [ ] **P24.2** Performance management (`hr-talent-performance-management`) <a id="hr-talent-performance-management"></a>
   Create Hr/Performance with goal setting, review cycles collecting self/manager/peer input, calibration, rating scales and history, with tests.
   - Edition: Enterprise (recommended)
@@ -1122,6 +1136,7 @@ Id `procurement-assets` · Milestone: M11 Spend and assets under control · Edit
 - [ ] **P26.1** Requisitions (`procurement-assets-requisitions`) <a id="procurement-assets-requisitions"></a>
   Create backend/Modules/Procurement/Requisitions in schema `procurement` with purchase requests, budget checks, categories, justification, `approvals-workflow` approvals and conversion to purchase orders, with tests.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): approvals go through `business-building-blocks-shared-minimal-approvals-building-block`, never the Enterprise workflow engine.
 - [ ] **P26.2** Purchase orders (`procurement-assets-purchase-orders`) <a id="procurement-assets-purchase-orders"></a>
   Create Procurement/Orders issuing POs with GST-treatment preview from `finance-core-gst-tax-engine`, amendments, PDF/email delivery, acknowledgement tracking and closure, with tests.
   - Edition: Community (recommended)
@@ -1149,9 +1164,11 @@ Id `procurement-assets` · Milestone: M11 Spend and assets under control · Edit
 - [ ] **P26.10** Web: requisitions, orders, receipts and sourcing (`procurement-assets-web-requisitions-orders-receipts-and-sourcing`) <a id="procurement-assets-web-requisitions-orders-receipts-and-sourcing"></a>
   Build screens for requisitions, purchase orders, receipts/three-way match and sourcing, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the requisition, purchase order and receipt screens are built here; the sourcing screens are built with the Enterprise `procurement-assets-sourcing`.
 - [ ] **P26.11** Web: subscriptions and assets (`procurement-assets-web-subscriptions-and-assets`) <a id="procurement-assets-web-subscriptions-and-assets"></a>
   Build the subscription inventory, asset register, asset 360, QR label printing and a mobile physical-verification mode with camera scanning, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
+  - Note: Edition split (ADR-0030): the asset register, asset 360, QR labels and physical verification are built here; the subscription inventory screens are built with the Enterprise `procurement-assets-subscriptions-and-licences`.
 - [ ] **P26.12** AI: procurement and asset assistant (`procurement-assets-ai-procurement-and-asset-assistant`) <a id="procurement-assets-ai-procurement-and-asset-assistant"></a>
   Add Procurement/Ai and Assets/Ai for requisition classification, overlap detection with existing subscriptions, quote comparison summaries, renewal negotiation briefs, asset classification and useful-life suggestion from bill descriptions.
   - Edition: Enterprise (recommended)

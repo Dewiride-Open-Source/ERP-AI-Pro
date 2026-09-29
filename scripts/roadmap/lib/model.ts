@@ -173,10 +173,15 @@ export function resolveId(roadmap: Roadmap, idOrLabel: string): string | undefin
   return phase.subPhases[Number(match[2]) - 1]?.id;
 }
 
-export function isDone(roadmap: Roadmap, id: string): boolean {
+export function subPhasesAwaitedBy(phase: Phase, edition: Edition): SubPhase[] {
+  return edition === 'community' ? phase.subPhases.filter((s) => s.edition === 'community') : phase.subPhases;
+}
+
+export function isDoneFor(roadmap: Roadmap, id: string, edition: Edition): boolean {
   const found = locate(roadmap, id);
   if (!found) return false;
-  return found.subPhase === undefined ? phaseStatus(found.phase) === 'done' : found.subPhase.status === 'done';
+  if (found.subPhase !== undefined) return found.subPhase.status === 'done';
+  return phaseStatus({ ...found.phase, subPhases: subPhasesAwaitedBy(found.phase, edition) }) === 'done';
 }
 
 export function isEnterpriseOnly(roadmap: Roadmap, id: string): boolean {

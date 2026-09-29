@@ -1,4 +1,4 @@
-import { isDone, phaseEdition, phaseLabel, phaseStatus, subPhaseLabel, type Phase, type PhaseEdition, type Roadmap, type SubPhase } from './model.ts';
+import { isDoneFor, phaseEdition, phaseLabel, phaseStatus, subPhaseLabel, type Phase, type PhaseEdition, type Roadmap, type SubPhase } from './model.ts';
 
 const BAR_WIDTH = 24;
 
@@ -167,10 +167,9 @@ export function nextCandidates(roadmap: Roadmap, limit: number): Candidate[] {
   const result: Candidate[] = [];
   for (const [phaseIndex, phase] of roadmap.phases.entries()) {
     if (phase.deferred) continue;
-    if (!phase.dependsOn.every((d) => isDone(roadmap, d))) continue;
     for (const [subIndex, sub] of phase.subPhases.entries()) {
       if (sub.status !== 'planned') continue;
-      if (!sub.dependsOn.every((d) => isDone(roadmap, d))) continue;
+      if (![...phase.dependsOn, ...sub.dependsOn].every((d) => isDoneFor(roadmap, d, sub.edition))) continue;
       result.push({ label: subPhaseLabel(phaseIndex, subIndex), subPhase: sub, phase });
       if (result.length >= limit) return result;
     }

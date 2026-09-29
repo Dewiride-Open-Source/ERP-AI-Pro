@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { locate, serialize, type Roadmap } from '../lib/model.ts';
+import { locate, phaseStatus, serialize, type Roadmap } from '../lib/model.ts';
 import { RoadmapError, addPhase, addSubPhase, block, defer, done, move, note, resume, setAcceptance, setDependsOn, setEdition, start } from '../lib/mutate.ts';
 import { nextCandidates, render } from '../lib/render.ts';
 import { validate } from '../lib/validate.ts';
@@ -99,6 +99,39 @@ test('next candidates respect order and dependencies', () => {
     nextCandidates(roadmap, 5).map((c) => c.subPhase.id),
     ['authentication-ai-helper'],
   );
+});
+
+test('community work waits only for the community sub-phases of a mixed prerequisite and enterprise work waits for all of them', () => {
+  const roadmap = sampleRoadmap();
+  setEdition(roadmap, 'enterprise', ['authentication-ai-helper'], true, DATE);
+  addPhase(roadmap, { id: 'clients', title: 'Clients', goal: 'Client master', milestone: 'm1-live', dependsOn: ['authentication'] }, DATE);
+  addSubPhase(roadmap, { phase: 'clients', id: 'clients-master', title: 'Client master', scope: 'Clients', edition: 'community', confirm: true }, DATE);
+  addPhase(roadmap, { id: 'insights', title: 'Insights', goal: 'Client insights', milestone: 'm1-live', dependsOn: ['authentication'] }, DATE);
+  addSubPhase(roadmap, { phase: 'insights', id: 'insights-dashboard', title: 'Dashboard', scope: 'Charts', edition: 'enterprise', confirm: true }, DATE);
+  const next = () => nextCandidates(roadmap, 10).map((c) => c.subPhase.id);
+  const errors = () => validate(roadmap, { today: DATE }).filter((i) => i.level === 'error').map((i) => i.message);
+
+  done(roadmap, 'foundation-tooling', DATE);
+  assert.deepEqual(next(), ['authentication-oidc']);
+  done(roadmap, 'authentication-oidc', DATE);
+  assert.deepEqual(next(), ['authentication-ai-helper', 'clients-master']);
+
+  done(roadmap, 'clients-master', DATE);
+  assert.equal(phaseStatus(roadmap.phases[2]!), 'done');
+  assert.equal(phaseStatus(roadmap.phases[1]!), 'in-progress');
+  assert.deepEqual(errors(), []);
+  assert.deepEqual(next(), ['authentication-ai-helper']);
+
+  done(roadmap, 'authentication-ai-helper', DATE);
+  assert.deepEqual(next(), ['insights-dashboard']);
+
+  setDependsOn(roadmap, ['clients-master'], ['insights-dashboard'], DATE);
+  setDependsOn(roadmap, ['clients'], ['insights'], DATE);
+  assert.deepEqual(errors(), [
+    'phase "clients" holds Community sub-phases but depends on "insights", which is Enterprise work only',
+    'sub-phase "clients-master" is Community work but depends on "insights-dashboard", which is Enterprise work only',
+    'phase "clients" is done but depends on "insights" which is not done',
+  ]);
 });
 
 test('render produces task lists, anchors and markers', () => {
@@ -274,6 +307,26 @@ test('the CLI writes canonical json, regenerates markdown and detects staleness'
   run('build', '--date', DATE);
   assert.match(run('next'), /P02\.1|foundation-tooling/);
   assert.match(run('show', 'P01.2'), /"status": "in-progress"/);
+});
+
+test('the CLI refuses a dependency that makes a phase wait for its own sub-phases and writes nothing', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'roadmap-'));
+  const jsonFile = join(dir, 'roadmap.json');
+  const markdownFile = join(dir, 'ROADMAP.md');
+  writeFileSync(jsonFile, serialize(sampleRoadmap()));
+  const cli = resolve(fileURLToPath(import.meta.url), '..', '..', 'roadmap.ts');
+  const run = (...args: string[]) => execFileSync(process.execPath, [cli, ...args, '--file', jsonFile], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  run('build', '--date', DATE);
+  const json = readFileSync(jsonFile, 'utf8');
+  const markdown = readFileSync(markdownFile, 'utf8');
+
+  assert.throws(
+    () => run('depends-on', 'P01.2', '--on', 'P02', '--date', DATE),
+    /dependency cycle: foundation-tooling -> authentication -> authentication-oidc -> authentication -> foundation -> foundation-tooling/,
+  );
+  assert.equal(readFileSync(jsonFile, 'utf8'), json);
+  assert.equal(readFileSync(markdownFile, 'utf8'), markdown);
+  assert.match(run('check', '--date', DATE), /fresh/);
 });
 
 test('the CLI records editions, refuses an unconfirmed start and fills a roadmap without editions in one call', () => {

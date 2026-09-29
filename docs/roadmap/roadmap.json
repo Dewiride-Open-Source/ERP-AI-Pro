@@ -265,7 +265,7 @@
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
           "acceptance": [
-            "GitHub reports the repository licence as LGPL-3.0 from COPYING and COPYING.LESSER, and the README notice, Directory.Build.props, every package.json and the OpenAPI document name LGPL-3.0-only and Dewiride Technologies Private Limited",
+            "GitHub reports the repository licence as LGPL-3.0 from COPYING and COPYING.LESSER; the README notice and Directory.Build.props name LGPL-3.0-only and Dewiride Technologies Private Limited, every package.json declares the licence LGPL-3.0-only, and the OpenAPI licence object carries the SPDX identifier LGPL-3.0-only",
             "Every sub-phase carries an edition; start and done refuse one whose edition the owner has not confirmed, validation refuses Community work that depends on Enterprise-only work, and ROADMAP.md shows the edition of every phase and sub-phase",
             "The cla workflow, running the checker from the base branch, fails a pull request containing a commit whose author or co-author is neither exempt nor covered by a well-formed signature under docs/cla, and passes once that contributor adds a signature file",
             "Dependency review allows only the licences of scripts/checks/lib/licence-policy.ts, and scripts/checks/licences.ts fails CI on any installed npm or restored NuGet package outside it",
@@ -1101,7 +1101,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the Community templates generate no Ai or web ai folder; the template for an Enterprise companion module (<Domain>/<Module>Ai) belongs to the private repository."
         },
         {
           "id": "business-building-blocks-reference-data-module",
@@ -1693,7 +1694,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the TDS-receivable ledger and its reconciliation against 26AS and AIS imports are Community; the Enterprise `compliance-income-tax-filing-packs-tds` consumes them through a Community contract instead of repeating them."
         },
         {
           "id": "finance-sales-gstr-1-extracts",
@@ -1836,7 +1838,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): recurring bill templates and cost allocation stay Community; the renewal calendar publishes a Community contract or integration event that the Enterprise `procurement-assets-subscriptions-and-licences` consumes."
         },
         {
           "id": "finance-expenses-web-bill-entry-and-list",
@@ -1856,7 +1859,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the TDS dashboard, challan batches and MSME ageing are built here; the GSTR-2B reconciliation workbench is built with the Enterprise `finance-expenses-itc-and-gstr-2b-ims-reconciliation`."
         },
         {
           "id": "finance-expenses-ai-bill-intelligence",
@@ -1960,7 +1964,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the reconciliation workbench, statement import wizard and remittance capture are built here; the cash-flow dashboard is built with the Enterprise `finance-banking-cash-flow-forecasting`."
         },
         {
           "id": "finance-banking-ai-banking-assistant",
@@ -2013,7 +2018,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here."
         },
         {
           "id": "finance-reimbursements-settlement-and-posting",
@@ -2023,7 +2029,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): settlement through payout batches and ledger posting stay Community, and GSTIN-bearing receipts are recorded on the Community bill and expense records of `finance-expenses-bill-and-expense-aggregate`, which the Enterprise `finance-expenses-itc-and-gstr-2b-ims-reconciliation` reads; settling a claim as a payroll add-on is done by the Enterprise payroll items consuming a Community reimbursement contract."
         },
         {
           "id": "finance-reimbursements-web-my-expenses-and-approver-inbox",
@@ -2272,7 +2279,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the compliance calendar and the corporate-record pages are built here; the filing-pack and workspace pages are built with the Enterprise `compliance-gst-filing-packs`, `compliance-filing-workspaces`, `compliance-income-tax-filing-packs-tds` and `compliance-income-tax-filing-packs-company-return`."
         },
         {
           "id": "compliance-ai-compliance-assistant",
@@ -2325,7 +2333,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here."
         },
         {
           "id": "timesheets-billing-feed",
@@ -2570,7 +2579,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): this item offers the template engine and migrates `finance-sales-invoice-pdf-rendering` onto it; the payslip and Form 16 renderers belong to the Enterprise payroll items, which adopt the engine in the private repository."
         },
         {
           "id": "documents-search-and-ocr",
@@ -2652,7 +2662,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the exit process publishes an exit integration event that the Enterprise `finance-payroll-full-and-final-and-benefits` consumes; Community code never names payroll."
         },
         {
           "id": "hr-core-leave-management",
@@ -2662,7 +2673,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): requests go through `business-building-blocks-shared-minimal-approvals-building-block`, and loss-of-pay days are published as a Community contract or integration event that the Enterprise `finance-payroll-payroll-run-pipeline` consumes; Community code never names payroll."
         },
         {
           "id": "hr-core-attendance",
@@ -2672,7 +2684,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the monthly lock publishes attendance and overtime as a Community contract or integration event that the Enterprise payroll run consumes; Community code never names payroll."
         },
         {
           "id": "hr-core-web-employee-self-service-portal",
@@ -2735,7 +2748,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): requisitions are approved through `business-building-blocks-shared-minimal-approvals-building-block`; whether interview scheduling through the Graph calendar stays Community or belongs to the Enterprise `integrations-microsoft-365-connectors` is decided with the owner when this is planned."
         },
         {
           "id": "hr-talent-performance-management",
@@ -2922,7 +2936,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): approvals go through `business-building-blocks-shared-minimal-approvals-building-block`, never the Enterprise workflow engine."
         },
         {
           "id": "procurement-assets-purchase-orders",
@@ -3012,7 +3027,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the requisition, purchase order and receipt screens are built here; the sourcing screens are built with the Enterprise `procurement-assets-sourcing`."
         },
         {
           "id": "procurement-assets-web-subscriptions-and-assets",
@@ -3022,7 +3038,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the asset register, asset 360, QR labels and physical verification are built here; the subscription inventory screens are built with the Enterprise `procurement-assets-subscriptions-and-licences`."
         },
         {
           "id": "procurement-assets-ai-procurement-and-asset-assistant",

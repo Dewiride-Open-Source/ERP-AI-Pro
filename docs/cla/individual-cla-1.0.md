@@ -58,7 +58,7 @@ You confirm that:
 
 (b) You own the Copyright and patent claims covering the Contribution which are required to grant the rights under Section 2.
 
-(c) The grant of rights under Section 2 does not violate any grant of rights which You have made to third parties, including Your employer. If You are an employee, You have had Your employer approve this Agreement or sign the ERP-AI-Pro Corporate Contributor Licence Agreement v1.0 (https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/cla/corporate-cla-1.0.md). If You are less than eighteen years old, please have Your parents or guardian sign the Agreement.
+(c) The grant of rights under Section 2 does not violate any grant of rights which You have made to third parties, including Your employer. If You are an employee, You have had Your employer approve this Agreement or sign the ERP-AI-Pro Corporate Contributor Licence Agreement v1.0 (https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/cla/corporate-cla-1.0.md). You are at least eighteen years old.
 
 (d) You have followed the instructions in the section "Work you do not own" of https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/cla/sign-cla.md, if You do not own the Copyright in the entire work of authorship Submitted.
 

@@ -2,7 +2,7 @@
 
 ERP-AI-Pro is a modular monolith: one ASP.NET Core process hosts independent business modules behind one Next.js web application, deployed with Docker Compose on an on-premises Ubuntu server.
 
-This repository is the Community edition, licensed LGPL-3.0-only. The Enterprise edition composes additional proprietary modules, kept in the private repository `Dewiride-Enterprise/ERP-AI-Pro-Enterprise`, into the same hosts; Enterprise depends on Community, never the reverse ([ADR-0030](../adr/0030-community-and-enterprise-editions.md), [dependency rules](dependency-rules.md#editions)).
+This repository is the Community edition, licensed LGPL-3.0-only. The Enterprise edition has its own hosts in the private repository `Dewiride-Enterprise/ERP-AI-Pro-Enterprise`, which compose the Community modules and additional proprietary modules through the Community host entry points; Enterprise depends on Community, never the reverse ([ADR-0030](../adr/0030-community-and-enterprise-editions.md), [dependency rules](dependency-rules.md#editions)).
 
 ```
 ┌──────────────┐   https    ┌─────────────┐   /api/*   ┌──────────────────────────────────┐

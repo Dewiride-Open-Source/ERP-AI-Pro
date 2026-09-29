@@ -5,12 +5,27 @@ export interface SignatureFile {
   readonly text: string;
 }
 
-export interface Signature {
+export interface Signatory {
+  readonly email: string;
+  readonly login: string;
+}
+
+interface SignatureCoverage {
   readonly path: string;
-  readonly kind: SignatureKind;
   readonly emails: readonly string[];
   readonly logins: readonly string[];
 }
+
+export interface IndividualSignature extends SignatureCoverage {
+  readonly kind: "individual";
+}
+
+export interface CorporateSignature extends SignatureCoverage {
+  readonly kind: "corporate";
+  readonly signatory: Signatory;
+}
+
+export type Signature = IndividualSignature | CorporateSignature;
 
 export type ParsedSignature = { readonly signature: Signature } | { readonly problems: readonly string[] };
 
@@ -30,6 +45,11 @@ export type Exemptions = ReadonlyMap<string, Exemption>;
 export interface Change {
   readonly status: string;
   readonly path: string;
+}
+
+export interface SignatureVersions {
+  readonly base: readonly SignatureFile[];
+  readonly head: readonly SignatureFile[];
 }
 
 export interface Commit {
@@ -76,6 +96,8 @@ const personPattern = /^(?<name>\S(?:.*\S)?)\s+(?<email>\S+)\s+https:\/\/github\
 const emailPattern =
   /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
 const exemptEmailPattern = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
+const noReplyEmailPattern = /^(?:\d+\+)?([^@]+)@users\.noreply\.github\.com$/i;
+const trailerIdentityPattern = /^[^<>]*<([^<>\s]+)>\s*$/;
 const furthestAheadUtcOffsetMilliseconds = 14 * 60 * 60 * 1000;
 
 interface Line {
@@ -148,8 +170,12 @@ function readPerson(line: Line, report: Report): Person | undefined {
     report(line, `${login} is not a GitHub login`);
     valid = false;
   }
+  const noReplyLogin = noReplyEmailPattern.exec(email)?.[1]?.toLowerCase();
   if (!emailPattern.test(email)) {
     report(line, `${email} is not an email address`);
+    valid = false;
+  } else if (noReplyLogin !== undefined && noReplyLogin !== login.toLowerCase()) {
+    report(line, `${email} is the no-reply address of ${noReplyLogin}`);
     valid = false;
   }
   return valid ? { line, email: email.toLowerCase(), login: login.toLowerCase() } : undefined;
@@ -234,8 +260,24 @@ export function parseSignature(path: string, text: string, today: string): Parse
   }
   const contributors = readPeople(lines.slice(6), listHeading, report);
   if (problems.length > 0 || signatory === undefined) return { problems };
-  const logins = [...new Set([signatory.login, ...contributors.map((person) => person.login)])];
-  return { signature: { path, kind: "corporate", emails: contributors.map((person) => person.email), logins } };
+  return {
+    signature: {
+      path,
+      kind: "corporate",
+      emails: contributors.map((person) => person.email),
+      logins: [...new Set(contributors.map((person) => person.login))],
+      signatory: { email: signatory.email, login: signatory.login },
+    },
+  };
+}
+
+function signatoryLogin(text: string): string | undefined {
+  const line = meaningfulLines(text)[4];
+  return line === undefined ? undefined : personPattern.exec(line.text)?.groups?.login?.toLowerCase();
+}
+
+function namedEmails(signature: Signature): readonly string[] {
+  return signature.kind === "corporate" ? [...new Set([signature.signatory.email, ...signature.emails])] : signature.emails;
 }
 
 function exemptEmailOwners(exemptions: Exemptions): Map<string, string> {
@@ -259,7 +301,7 @@ export function readSignatures(files: readonly SignatureFile[], today: string, e
       continue;
     }
     signatures.push(parsed.signature);
-    for (const email of parsed.signature.emails) {
+    for (const email of namedEmails(parsed.signature)) {
       const owner = exemptOwners.get(email);
       if (owner !== undefined)
         problems.push(`${file.path}: ${email} belongs to the exempt account ${owner}, and an exempt email is never signed`);
@@ -327,32 +369,54 @@ export function parseNameStatus(output: string): Change[] {
   return changes;
 }
 
-export function signatureChangeProblems(changes: readonly Change[], prAuthor: string, exemptions: Exemptions): string[] {
+function versionOf(path: string, files: readonly SignatureFile[]): string | undefined {
+  return files.find((file) => file.path === path)?.text;
+}
+
+function changeProblem(change: Change, prAuthor: string, exempt: boolean, versions: SignatureVersions): string | undefined {
+  const kind = change.status.charAt(0);
+  if (kind === "D") return `${change.path}: a signature is never deleted or renamed`;
+  if (kind !== "A" && kind !== "M") return `${change.path}: a signature is only added or edited (git status ${change.status})`;
+  if (exempt) return undefined;
   const author = prAuthor.toLowerCase();
-  const exempt = exemptions.has(author);
-  const problems: string[] = [];
-  for (const change of changes) {
-    if (!isSignaturePath(change.path)) continue;
-    const kind = change.status.charAt(0);
-    if (kind === "D") {
-      problems.push(`${change.path}: a signature is never deleted or renamed`);
-      continue;
-    }
-    if (kind !== "A" && kind !== "M") {
-      problems.push(`${change.path}: a signature is only added or edited (git status ${change.status})`);
-      continue;
-    }
-    const location = signatureLocation(change.path);
-    if (location?.kind === "individual" && location.slug !== author && !exempt) {
-      problems.push(`${change.path}: this pull request is by ${prAuthor}, who adds or edits only docs/cla/individual/${author}.md`);
-    }
+  const location = signatureLocation(change.path);
+  if (location?.kind === "individual") {
+    if (location.slug === author) return undefined;
+    return `${change.path}: this pull request is by ${prAuthor}, who adds or edits only docs/cla/individual/${author}.md`;
   }
-  return problems;
+  if (location?.kind !== "corporate") return undefined;
+  const base = versionOf(change.path, versions.base);
+  if (base === undefined && kind === "A") {
+    const head = versionOf(change.path, versions.head);
+    if (head !== undefined && signatoryLogin(head) === author) return undefined;
+    return `${change.path}: this pull request is by ${prAuthor}, and a corporate signature is added only by the signatory it names`;
+  }
+  if (base !== undefined && signatoryLogin(base) === author) return undefined;
+  return `${change.path}: this pull request is by ${prAuthor}, and a corporate signature is edited only by the signatory the base branch names`;
+}
+
+export function signatureChangeProblems(
+  changes: readonly Change[],
+  prAuthor: string,
+  exemptions: Exemptions,
+  versions: SignatureVersions,
+): string[] {
+  const exempt = exemptions.has(prAuthor.toLowerCase());
+  return changes.flatMap((change) => {
+    const problem = isSignaturePath(change.path) ? changeProblem(change, prAuthor, exempt, versions) : undefined;
+    return problem === undefined ? [] : [problem];
+  });
+}
+
+export function pullRequestAuthorProblem(prAuthor: string, signatures: readonly Signature[], exemptions: Exemptions): string | undefined {
+  const author = prAuthor.toLowerCase();
+  if (exemptions.has(author) || signatures.some((signature) => signature.logins.includes(author))) return undefined;
+  return `${prAuthor} opened this pull request but has not signed the contributor licence agreement`;
 }
 
 function trailerEmail(value: string): string {
-  const match = /<([^<>]*)>\s*$/.exec(value);
-  return (match?.[1] ?? value).trim();
+  const unfolded = value.replace(/\r?\n[ \t]+/g, " ").trim();
+  return trailerIdentityPattern.exec(unfolded)?.[1] ?? unfolded;
 }
 
 export function parseCommitLog(output: string): Commit[] {
@@ -382,13 +446,13 @@ export function uncoveredCommits(
   const authorIsExempt = exemptions.has(prAuthor.toLowerCase());
   const exemptEmails = new Set([...exemptions.values()].flatMap((exemption) => exemption.emails));
   const signed = new Set(signatures.flatMap((signature) => signature.emails));
-  const isCovered = (email: string): boolean => {
+  const isCovered = (email: string, role: CommitRole): boolean => {
     const normalised = email.toLowerCase();
-    return exemptEmails.has(normalised) ? authorIsExempt : signed.has(normalised);
+    return exemptEmails.has(normalised) ? role === "co-author" || authorIsExempt : signed.has(normalised);
   };
   const uncovered = new Map<string, UncoveredEmail>();
   const check = (sha: string, email: string, role: CommitRole): void => {
-    if (!isCovered(email)) uncovered.set(`${sha}\n${email.toLowerCase()}\n${role}`, { sha, email, role });
+    if (!isCovered(email, role)) uncovered.set(`${sha}\n${email.toLowerCase()}\n${role}`, { sha, email, role });
   };
   for (const commit of commits) {
     check(commit.sha, commit.author, "author");
