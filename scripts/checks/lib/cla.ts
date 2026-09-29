@@ -69,7 +69,7 @@ export interface UncoveredEmail {
 export const claFolder = "docs/cla";
 export const exemptionsPath = "docs/cla/exempt.json";
 export const signatureFolders = ["docs/cla/individual", "docs/cla/corporate"] as const;
-export const commitLogFormat = "%H%x1f%ae%x1f%(trailers:key=Co-authored-by,valueonly,separator=%x1e)%x1d";
+export const coAuthorTrailerFormat = "%(trailers:key=Co-authored-by,valueonly,separator=%x00)";
 
 export const individualStatement = "I hereby agree to the terms of the ERP-AI-Pro Individual Contributor Licence Agreement v1.0.";
 export const individualDeclaration = "I declare that I am authorised and able to make this agreement and sign this declaration.";
@@ -419,22 +419,15 @@ function trailerEmail(value: string): string {
   return trailerIdentityPattern.exec(unfolded)?.[1] ?? unfolded;
 }
 
-export function parseCommitLog(output: string): Commit[] {
-  return output
-    .split("\x1d")
-    .map((record) => record.replace(/^\s+/, ""))
-    .filter((record) => record !== "")
-    .map((record) => {
-      const [sha = "", author = "", trailers = ""] = record.split("\x1f");
-      return {
-        sha,
-        author: author.trim(),
-        coAuthors: trailers
-          .split("\x1e")
-          .map(trailerEmail)
-          .filter((email) => email !== ""),
-      };
-    });
+export function commitIdentity(sha: string, author: string, coAuthorTrailers: string): Commit {
+  return {
+    sha,
+    author: author.trim(),
+    coAuthors: coAuthorTrailers
+      .split("\0")
+      .map(trailerEmail)
+      .filter((email) => email !== ""),
+  };
 }
 
 export function uncoveredCommits(

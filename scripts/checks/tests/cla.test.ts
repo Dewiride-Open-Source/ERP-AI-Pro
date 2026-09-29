@@ -6,10 +6,10 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 
 import {
+  commitIdentity,
   type Commit,
   type Exemptions,
   isSignaturePath,
-  parseCommitLog,
   parseNameStatus,
   parseSignature,
   pullRequestAuthorProblem,
@@ -466,9 +466,10 @@ test("an unsigned co-author is not covered", () => {
     uncoveredCommits([commit("f1", "jane@example.com", "ravi@example.com", "ravi@example.com")], signatures, exemptions, "janedoe"),
     [{ sha: "f1", email: "ravi@example.com", role: "co-author" }],
   );
-  const log = parseCommitLog(
-    ["f2\x1fjane@example.com\x1fRavi Kumar <Ravi@Example.com>\x1eJane Doe\x1d", "f3\x1fjane@example.com\x1f\x1d", ""].join("\n"),
-  );
+  const log = [
+    commitIdentity("f2", "jane@example.com\n", "Ravi Kumar <Ravi@Example.com>\0Jane Doe\n"),
+    commitIdentity("f3", "jane@example.com\n", "\n"),
+  ];
   assert.deepEqual(log, [commit("f2", "jane@example.com", "Ravi@Example.com", "Jane Doe"), commit("f3", "jane@example.com")]);
   assert.deepEqual(uncoveredCommits(log, signatures, exemptions, "janedoe"), [
     { sha: "f2", email: "Ravi@Example.com", role: "co-author" },
@@ -484,14 +485,12 @@ test("a co-author trailer is unfolded and holds exactly one address, or it is re
     janeSignature(),
     signatureOf("docs/cla/individual/ravikumar.md", individual({ people: ["Ravi Kumar ravi@example.com https://github.com/ravikumar"] })),
   ];
-  const log = parseCommitLog(
-    [
-      "g1\x1fjane@example.com\x1fRavi Kumar\n <ravi@example.com>\x1eRavi Kumar\r\n\t<Ravi@Example.com> \x1d",
-      "g2\x1fjane@example.com\x1fJane Doe <jane@example.com> Ravi Kumar <ravi@example.com>\x1d",
-      "g3\x1fjane@example.com\x1fJane Doe <jane@example.com>\n Ravi Kumar <ravi@example.com>\x1d",
-      "g4\x1fjane@example.com\x1fRavi Kumar <ravi @example.com>\x1d",
-    ].join("\n"),
-  );
+  const log = [
+    commitIdentity("g1", "jane@example.com", "Ravi Kumar\n <ravi@example.com>\0Ravi Kumar\r\n\t<Ravi@Example.com> "),
+    commitIdentity("g2", "jane@example.com", "Jane Doe <jane@example.com> Ravi Kumar <ravi@example.com>"),
+    commitIdentity("g3", "jane@example.com", "Jane Doe <jane@example.com>\n Ravi Kumar <ravi@example.com>"),
+    commitIdentity("g4", "jane@example.com", "Ravi Kumar <ravi @example.com>"),
+  ];
   assert.deepEqual(log, [
     commit("g1", "jane@example.com", "ravi@example.com", "Ravi@Example.com"),
     commit("g2", "jane@example.com", "Jane Doe <jane@example.com> Ravi Kumar <ravi@example.com>"),
@@ -681,6 +680,49 @@ test("the command line lets only the base branch's signatory edit a corporate si
     /example-private-limited\.md: this pull request is by mallory, and a corporate signature is edited only by the signatory the base branch names/,
   );
   assert.doesNotMatch(byOther.stderr, /opened this pull request|\((?:author|co-author)\)/);
+});
+
+test("the command line reads each commit on its own, so separator bytes in a message hide no co-author", (t) => {
+  const repository = temporaryRepository(t);
+  repository.write("docs/cla/individual/janedoe.md", individual({ people: ["Jane Doe jane@example.com https://github.com/janedoe"] }));
+  const signed = repository.commitAs(ownerEmail, "Jane Doe signs");
+  repository.write("feature.txt", "feature\n");
+  const forged = `Co-authored-by: Jane Doe <jane@example.com>\x1d${"a".repeat(40)}\x1fjane@example.com\x1f\x1fx`;
+  const smuggled = repository.commitAs(
+    "jane@example.com",
+    `Add a feature\n\n${forged}\nCo-authored-by: Unsigned Person <unsigned@example.com>`,
+  );
+  const run = repository.run("--base", signed, "--head", smuggled, "--pull-request-author", "janedoe");
+  assert.equal(run.status, 1, run.stdout);
+  assert.match(run.stderr, new RegExp(`  ${smuggled.slice(0, 7)} unsigned@example\\.com \\(co-author\\)`));
+});
+
+test("the command line judges signatures as the base branch holds them, with the pull request's own changes on top", (t) => {
+  const repository = temporaryRepository(t);
+  const path = "docs/cla/corporate/example-private-limited.md";
+  repository.write(path, corporate([ashaLine], [ashaLine, malloryLine]));
+  const listed = repository.commitAs(ownerEmail, "Example Private Limited signs");
+
+  repository.write("feature.txt", "feature\n");
+  const staleBranch = repository.commitAs("mallory@example.com", "Add a feature");
+  repository.git("checkout", "-q", "--detach", listed);
+  repository.write(path, corporate([ashaLine], [ashaLine]));
+  const removed = repository.commitAs("asha.rao@example.com", "Remove Mallory Moe");
+  const stale = repository.run("--base", removed, "--head", staleBranch, "--pull-request-author", "mallory");
+  assert.equal(stale.status, 1, stale.stdout);
+  assert.match(stale.stderr, /mallory opened this pull request but has not signed the contributor licence agreement\./);
+  assert.match(stale.stderr, new RegExp(`  ${staleBranch.slice(0, 7)} mallory@example\\.com \\(author\\)`));
+
+  repository.git("checkout", "-q", "--detach", removed);
+  repository.write("other.txt", "other\n");
+  const earlyBranch = repository.commitAs("ravi.kumar@example.com", "Add another feature");
+  const beforeSigning = repository.run("--base", removed, "--head", earlyBranch, "--pull-request-author", "ravikumar");
+  assert.equal(beforeSigning.status, 1, beforeSigning.stdout);
+  repository.git("checkout", "-q", "--detach", removed);
+  repository.write(path, corporate([ashaLine], [ashaLine, raviLine]));
+  const added = repository.commitAs("asha.rao@example.com", "Add Ravi Kumar");
+  const afterSigning = repository.run("--base", added, "--head", earlyBranch, "--pull-request-author", "ravikumar");
+  assert.equal(afterSigning.status, 0, afterSigning.stderr);
 });
 
 test("the command line without a range validates only the signature files", (t) => {

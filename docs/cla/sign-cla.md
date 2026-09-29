@@ -89,7 +89,7 @@ The agreements refer to this section for work whose copyright you, or the compan
 
 The workflow `cla` (job "Contributor licence agreement") runs on every pull request through the `pull_request_target` event, so nothing a pull request changes can alter the check that judges it: the workflow file comes from the default branch, and `scripts/checks/cla.ts` and `exempt.json` come from the pull request's base commit. The pull request's commits and signature files are only read, never checked out or run. For the same reason the workflow does not run on the pull request that introduces it, and a pull request that changes it is checked by the version already on the default branch; a new version runs from the default branch once its pull request has merged.
 
-The commits checked are the ones on the pull request's head that are not on the base branch as it is when the check runs. The check fails when:
+The commits checked are the ones on the pull request's head that are not on the base branch as it is when the check runs, each read on its own. The signatures that cover them are the ones on the base branch as it is when the check runs, with the signature files the pull request itself adds or edits on top: a signature merged after you opened your pull request covers it at the next run without your branch being updated, and a line a company's signatory has since removed no longer covers a branch that still carries it. The check fails when:
 
 - a commit's author email is not covered: an exempt email is covered as an author only in a pull request opened by an exempt login, and any other email only when a well-formed signature lists it;
 - a `Co-authored-by:` email is not covered: an exempt email is covered as a co-author in every pull request, and any other email only when a well-formed signature lists it; a trailer that, with its continuation lines joined, does not hold exactly one `<name> <email>` is reported whole as uncovered;
@@ -101,7 +101,7 @@ The commits checked are the ones on the pull request's head that are not on the 
 
 A pull request opened by an exempt login may add or edit any signature, but never delete or rename one.
 
-A failure lists each uncovered commit as `<short sha> <email> (author|co-author)`. Add or correct your signature in the same pull request and push again.
+A failure lists each uncovered commit as `<short sha> <email> (author|co-author)`. Add or correct your signature in the same pull request and push again; when your company's signatory adds you in a pull request of their own, re-run the check on yours once that pull request has merged.
 
 Run the same checks before you push, against this repository's `main` branch rather than your fork's:
 

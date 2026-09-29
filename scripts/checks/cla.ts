@@ -5,12 +5,12 @@ import { parseArgs } from "node:util";
 
 import {
   claFolder,
-  commitLogFormat,
+  coAuthorTrailerFormat,
+  commitIdentity,
   type Exemptions,
   exemptionsPath,
   isSignaturePath,
   latestCalendarDate,
-  parseCommitLog,
   parseNameStatus,
   pullRequestAuthorProblem,
   readExemptions,
@@ -135,26 +135,33 @@ function checkPullRequest(baseReference: string, headReference: string, prAuthor
   const headCommit = resolveCommit(headReference);
 
   const problems: string[] = [];
-  const headTree = signatureTree(headCommit);
-  for (const entry of headTree) {
-    if (!isRegularFile(entry)) problems.push(`${entry.path}: a signature is a regular file`);
-  }
-  const files = headTree.filter(isRegularFile).map(readBlob);
-  const { signatures, problems: signatureProblems } = readSignatures(files, today, exemptions);
-  problems.push(...signatureProblems);
-
   const changes = parseNameStatus(
     git("diff", "--name-status", "--no-renames", "--no-textconv", "--no-ext-diff", "-z", `${baseCommit}...${headCommit}`, "--", claFolder),
   );
   const changed = new Set(changes.map((change) => change.path));
-  const baseFiles = signatureTree(baseCommit)
-    .filter((entry) => changed.has(entry.path) && isRegularFile(entry))
-    .map(readBlob);
-  problems.push(...signatureChangeProblems(changes, prAuthor, exemptions, { base: baseFiles, head: files }));
+  const changedInHead = signatureTree(headCommit).filter((entry) => changed.has(entry.path));
+  for (const entry of changedInHead) {
+    if (!isRegularFile(entry)) problems.push(`${entry.path}: a signature is a regular file`);
+  }
+  const baseTree = signatureTree(baseCommit).filter(isRegularFile);
+  const baseFiles = baseTree.filter((entry) => changed.has(entry.path)).map(readBlob);
+  const files = [
+    ...baseTree.filter((entry) => !changed.has(entry.path)).map(readBlob),
+    ...changedInHead.filter(isRegularFile).map(readBlob),
+  ];
+  const { signatures, problems: signatureProblems } = readSignatures(files, today, exemptions);
+  problems.push(...signatureProblems, ...signatureChangeProblems(changes, prAuthor, exemptions, { base: baseFiles, head: files }));
 
-  const commits = parseCommitLog(
-    git("-c", "log.showSignature=false", "log", `--format=${commitLogFormat}`, `${baseCommit}..${headCommit}`),
-  );
+  const commits = git("rev-list", `${baseCommit}..${headCommit}`)
+    .split("\n")
+    .filter((sha) => sha !== "")
+    .map((sha) =>
+      commitIdentity(
+        sha,
+        git("-c", "log.showSignature=false", "log", "-1", "--format=%ae", sha),
+        git("-c", "log.showSignature=false", "log", "-1", `--format=${coAuthorTrailerFormat}`, sha),
+      ),
+    );
   const uncovered = uncoveredCommits(commits, signatures, exemptions, prAuthor);
   const authorProblem = pullRequestAuthorProblem(prAuthor, signatures, exemptions);
 
