@@ -307,15 +307,15 @@ async function clickEveryEnabledButton(container: Locator): Promise<void> {
 }
 
 test.describe("design system kitchen sink", () => {
-  test.beforeEach(({ browserName }) => {
+  test.beforeEach(() => {
     test.slow(
-      browserName !== "chromium",
-      "WebKit takes about twice as long per action and Firefox runs the axe scan of each capture about twice as slowly, and each test here drives and captures a whole section of controls",
+      true,
+      "Each test here drives, captures and scans a whole section of controls, which a CI runner, WebKit and Firefox's axe scans take well over 30 seconds to do",
     );
   });
 
-  test("triples the timeout outside Chromium", ({ browserName }) => {
-    expect(test.info().timeout).toBe(test.info().project.timeout * (browserName === "chromium" ? 1 : 3));
+  test("triples the timeout on every project", () => {
+    expect(test.info().timeout).toBe(test.info().project.timeout * 3);
   });
 
   forEachTheme("renders every token group", async ({ page, capture, theme }) => {
