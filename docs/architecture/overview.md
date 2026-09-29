@@ -2,6 +2,8 @@
 
 ERP-AI-Pro is a modular monolith: one ASP.NET Core process hosts independent business modules behind one Next.js web application, deployed with Docker Compose on an on-premises Ubuntu server.
 
+This repository is the Community edition, licensed LGPL-3.0-only. The Enterprise edition composes additional proprietary modules, kept in the private repository `Dewiride-Enterprise/ERP-AI-Pro-Enterprise`, into the same hosts; Enterprise depends on Community, never the reverse ([ADR-0030](../adr/0030-community-and-enterprise-editions.md), [dependency rules](dependency-rules.md#editions)).
+
 ```
 ┌──────────────┐   https    ┌─────────────┐   /api/*   ┌──────────────────────────────────┐
 │   Browser    │ ─────────▶ │ Edge proxy  │ ─────────▶ │ Dewiride.Erp.Host.Api             │
@@ -29,7 +31,7 @@ ERP-AI-Pro is a modular monolith: one ASP.NET Core process hosts independent bus
 | Configuration | Azure App Configuration + Key Vault | one store, environment labels, secrets as Key Vault references |
 | Identity | Microsoft Entra ID | BFF cookie session issued by the API; permissions stored by the identity module |
 | Observability | OpenTelemetry | OTLP exporter when configured; Aspire dashboard locally |
-| AI | Microsoft.Extensions.AI | one `IChatClient` pipeline; per-module `Ai/` folders; every capability behind a feature flag |
+| AI | Microsoft.Extensions.AI | the Community AI foundation: one `IChatClient` pipeline, the prompt library and tool registry, evaluation and safety; AI features are Enterprise modules, every capability behind a feature flag ([AI capabilities](ai-capabilities.md)) |
 
 ## Request flow
 

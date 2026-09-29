@@ -2,6 +2,7 @@
   "name": "@dewiride/erp-config",
   "version": "0.1.0",
   "private": true,
+  "license": "LGPL-3.0-only",
   "type": "module",
   "bin": {
     "erp-unit-tests": "./cli/run-unit-tests.mjs"

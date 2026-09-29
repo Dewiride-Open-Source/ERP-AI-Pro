@@ -10,6 +10,7 @@ These settings live outside the repository and must be applied by the owner in *
 ## Code security
 
 - [ ] **Dependency graph** and **Dependabot alerts**: enabled (automatic for public repositories).
+  - Dependency review (the dependency-review workflow) reads `.github/dependency-review-config.yml`: it fails a pull request on a high-severity vulnerability or on a dependency whose licence is outside the allow list of `scripts/checks/lib/licence-policy.ts`, which `scripts/checks/tests/licences.test.ts` keeps equal to the configuration ([ADR-0030](../adr/0030-community-and-enterprise-editions.md)). The dependency graph does not see this workspace's transitive npm packages (it lists npm packages only as `pkg:npm/<name>@catalog:`, without licences), so `scripts/checks/licences.ts` is the gate for them: `node scripts/checks/licences.ts npm` checks every installed npm package (ci-frontend) and `node scripts/checks/licences.ts nuget` every package in the hosts' lock files (ci-backend).
 - [ ] **Dependabot security updates**: enabled. Version updates come from `.github/dependabot.yml`.
 - [ ] **Code scanning**: do **not** enable *Default setup*. The repository ships the advanced-setup workflow `.github/workflows/codeql.yml` (C#, JavaScript/TypeScript, Actions); enabling default setup would reject its uploads.
 - [ ] **Secret scanning** and **Push protection**: enabled.
@@ -28,6 +29,7 @@ These settings live outside the repository and must be applied by the owner in *
   - `Build images and smoke test the compose stack` (docker-build)
   - `Review dependency changes` (dependency-review)
   - `Validate roadmap and rendered Markdown` (roadmap)
+  - `Contributor licence agreement` (cla; added once the workflow is on `main`: it runs the checker from the pull request's base commit, so it fails on the pull request that introduces it, [ADR-0030](../adr/0030-community-and-enterprise-editions.md))
   - `Analyze (csharp)`, `Analyze (javascript-typescript)`, `Analyze (actions)` (CodeQL)
 - [ ] Block force pushes.
 - [ ] Require signed commits once SSH commit signing is configured on the owner's machine (see `docs/guides/local-development.md`).

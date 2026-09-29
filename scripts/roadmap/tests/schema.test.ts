@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { DATE_PATTERN, ID_PATTERN, paths, today } from '../lib/model.ts';
+import { DATE_PATTERN, EDITIONS, ID_PATTERN, paths, serialize, today } from '../lib/model.ts';
+import { sampleRoadmap } from './fixture.ts';
 
-type Schema = { $defs: Record<string, { pattern?: string; enum?: string[] }> };
+type Schema = { $defs: Record<string, { pattern?: string; enum?: string[]; required?: string[]; properties?: Record<string, unknown> }> };
 
 test('roadmap.schema.json parses and its patterns agree with the model', () => {
   const schema = JSON.parse(readFileSync(paths.schemaJson, 'utf8')) as Schema;
@@ -17,6 +18,19 @@ test('roadmap.schema.json parses and its patterns agree with the model', () => {
   assert.ok(slug.test('finance-sales'));
   assert.ok(!slug.test('Finance_Sales'));
   assert.deepEqual(schema.$defs.status?.enum, ['planned', 'in-progress', 'blocked', 'deferred', 'done']);
+});
+
+test('roadmap.schema.json declares the editions and every sub-phase key serialize writes', () => {
+  const schema = JSON.parse(readFileSync(paths.schemaJson, 'utf8')) as Schema;
+  assert.deepEqual(schema.$defs.edition?.enum, [...EDITIONS]);
+
+  const roadmap = sampleRoadmap();
+  Object.assign(roadmap.phases[0]!.subPhases[0]!, { blockedReason: 'waiting', notes: 'shipped' });
+  const written = (JSON.parse(serialize(roadmap)) as ReturnType<typeof sampleRoadmap>).phases[0]!.subPhases[0]!;
+  const subPhase = schema.$defs.subPhase;
+  assert.deepEqual(Object.keys(subPhase?.properties ?? {}), Object.keys(written));
+  assert.ok(subPhase?.required?.includes('edition'));
+  assert.ok(!subPhase?.required?.includes('editionConfirmedOn'));
 });
 
 test('today() is the local calendar date', () => {

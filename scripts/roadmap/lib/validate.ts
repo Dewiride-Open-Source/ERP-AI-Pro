@@ -1,4 +1,4 @@
-import { DATE_PATTERN, ID_PATTERN, STATUSES, isDone, phaseStatus, type Roadmap, type SubPhase } from './model.ts';
+import { DATE_PATTERN, EDITIONS, ID_PATTERN, STATUSES, isDone, isEdition, isEnterpriseOnly, phaseStatus, type Roadmap, type SubPhase } from './model.ts';
 
 export type Issue = { level: 'error' | 'warning'; message: string };
 
@@ -63,6 +63,7 @@ export function validate(roadmap: Roadmap, options: ValidateOptions = {}): Issue
 
   const cycle = findCycle(roadmap);
   if (cycle) error(`dependency cycle: ${cycle.join(' -> ')}`);
+  rejectCommunityOnEnterprise(roadmap, error);
 
   for (const phase of roadmap.phases) {
     if (phaseStatus(phase) !== 'done') continue;
@@ -95,6 +96,7 @@ function validateSubPhase(sub: SubPhase, where: string, ctx: SubPhaseContext): v
   if (!sub.scope?.trim()) error(`${where}: missing scope`);
   rejectBareLabels(where, { title: sub.title, scope: sub.scope, notes: sub.notes, blockedReason: sub.blockedReason, ...Object.fromEntries((sub.acceptance ?? []).map((a, i) => [`acceptance[${i}]`, a])) }, error);
   if (!STATUSES.includes(sub.status)) error(`${where}: invalid status "${String(sub.status)}"`);
+  if (!isEdition(sub.edition)) error(`${where}: edition must be ${EDITIONS.join(' or ')}, got "${String(sub.edition)}"`);
   if (!Array.isArray(sub.acceptance)) error(`${where}: acceptance must be an array`);
   if (!Array.isArray(sub.tags)) error(`${where}: tags must be an array`);
   if (!Array.isArray(sub.dependsOn)) error(`${where}: dependsOn must be an array`);
@@ -102,7 +104,7 @@ function validateSubPhase(sub: SubPhase, where: string, ctx: SubPhaseContext): v
     if (!allIds.has(dep)) error(`${where}: dependsOn references unknown id "${dep}"`);
     if (dep === sub.id || dep === phaseId) error(`${where}: depends on itself or its own phase`);
   }
-  for (const key of ['startedOn', 'completedOn'] as const) {
+  for (const key of ['startedOn', 'completedOn', 'editionConfirmedOn'] as const) {
     const value = sub[key];
     if (value === undefined) continue;
     if (!DATE_PATTERN.test(value)) error(`${where}: ${key} must be an ISO date`);
@@ -110,6 +112,9 @@ function validateSubPhase(sub: SubPhase, where: string, ctx: SubPhaseContext): v
   }
   if (sub.status === 'done' && !sub.completedOn) error(`${where}: done without completedOn`);
   if (sub.status === 'in-progress' && !sub.startedOn) error(`${where}: in-progress without startedOn`);
+  if ((sub.status === 'in-progress' || sub.status === 'done') && !sub.editionConfirmedOn) {
+    error(`${where}: ${sub.status} without editionConfirmedOn; the owner confirms the edition before work starts`);
+  }
   if (sub.status === 'blocked' && !sub.blockedReason) error(`${where}: blocked without blockedReason`);
   if (sub.status !== 'blocked' && sub.blockedReason) warning(`${where}: blockedReason set but status is ${sub.status}`);
   if (sub.status !== 'done' && sub.completedOn) warning(`${where}: completedOn set but status is ${sub.status}`);
@@ -125,6 +130,22 @@ function rejectBareLabels(where: string, fields: Record<string, string | undefin
   for (const [field, text] of Object.entries(fields)) {
     const match = text === undefined ? null : BARE_LABEL.exec(text);
     if (match) error(`${where}: ${field} references "${match[0]}" by positional label; use the stable slug (labels change when phases move)`);
+  }
+}
+
+function rejectCommunityOnEnterprise(roadmap: Roadmap, error: (message: string) => void): void {
+  for (const phase of roadmap.phases) {
+    const community = phase.subPhases.filter((s) => s.edition === 'community');
+    if (community.length > 0) {
+      for (const dep of phase.dependsOn.filter((d) => isEnterpriseOnly(roadmap, d))) {
+        error(`phase "${phase.id}" holds Community sub-phases but depends on "${dep}", which is Enterprise work only`);
+      }
+    }
+    for (const sub of community) {
+      for (const dep of sub.dependsOn.filter((d) => isEnterpriseOnly(roadmap, d))) {
+        error(`sub-phase "${sub.id}" is Community work but depends on "${dep}", which is Enterprise work only`);
+      }
+    }
   }
 }
 

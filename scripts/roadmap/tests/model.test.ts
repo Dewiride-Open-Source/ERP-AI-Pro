@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isDone, labelOf, locate, phaseLabel, phaseStatus, resolveId, serialize, subPhaseLabel } from '../lib/model.ts';
+import { isDone, isEdition, isEnterpriseOnly, labelOf, locate, phaseEdition, phaseLabel, phaseStatus, resolveId, serialize, subPhaseLabel } from '../lib/model.ts';
 import { sampleRoadmap } from './fixture.ts';
 
 test('labels are derived from position', () => {
@@ -45,6 +45,38 @@ test('phase status is derived from sub-phases', () => {
   assert.equal(phaseStatus(roadmap.phases[1]!), 'deferred');
   roadmap.phases[1]!.deferred = true;
   assert.equal(phaseStatus(roadmap.phases[1]!), 'deferred');
+});
+
+test('phase edition is derived from its sub-phases', () => {
+  const roadmap = sampleRoadmap();
+  assert.equal(phaseEdition(roadmap.phases[0]!), 'community');
+  assert.equal(phaseEdition(roadmap.phases[1]!), 'mixed');
+  assert.equal(isEnterpriseOnly(roadmap, 'authentication'), false);
+  assert.equal(isEnterpriseOnly(roadmap, 'authentication-ai-helper'), true);
+  assert.equal(isEnterpriseOnly(roadmap, 'authentication-oidc'), false);
+  assert.equal(isEnterpriseOnly(roadmap, 'missing'), false);
+  roadmap.phases[1]!.subPhases[0]!.edition = 'enterprise';
+  assert.equal(phaseEdition(roadmap.phases[1]!), 'enterprise');
+  assert.equal(isEnterpriseOnly(roadmap, 'authentication'), true);
+  roadmap.phases[1]!.subPhases = [];
+  assert.equal(phaseEdition(roadmap.phases[1]!), undefined);
+  assert.equal(isEnterpriseOnly(roadmap, 'authentication'), false);
+  assert.equal(isEdition('community'), true);
+  assert.equal(isEdition('enterprise'), true);
+  assert.equal(isEdition('Community'), false);
+  assert.equal(isEdition(undefined), false);
+});
+
+test('serialize writes the edition after the status and omits a missing confirmation', () => {
+  const parsed = JSON.parse(serialize(sampleRoadmap())) as ReturnType<typeof sampleRoadmap>;
+  assert.deepEqual(
+    Object.keys(parsed.phases[0]!.subPhases[0]!),
+    ['id', 'title', 'scope', 'status', 'edition', 'editionConfirmedOn', 'acceptance', 'tags', 'dependsOn', 'startedOn', 'completedOn'],
+  );
+  assert.deepEqual(
+    Object.keys(parsed.phases[1]!.subPhases[1]!),
+    ['id', 'title', 'scope', 'status', 'edition', 'acceptance', 'tags', 'dependsOn'],
+  );
 });
 
 test('serialize is canonical and stable', () => {

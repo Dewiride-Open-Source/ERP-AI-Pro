@@ -52,6 +52,70 @@ test('status and dates are consistent', () => {
   assert.ok(errors(roadmap).some((m) => m.includes('in-progress without startedOn')));
 });
 
+test('every sub-phase names a known edition', () => {
+  const roadmap = sampleRoadmap();
+  roadmap.phases[0]!.subPhases[1]!.edition = 'premium' as never;
+  assert.ok(errors(roadmap).some((m) => m.includes('(foundation-tooling): edition must be community or enterprise, got "premium"')));
+  const missing = sampleRoadmap();
+  delete (missing.phases[1]!.subPhases[1] as { edition?: string }).edition;
+  assert.ok(errors(missing).some((m) => m.includes('(authentication-ai-helper): edition must be community or enterprise')));
+});
+
+test('work cannot start or finish before the owner confirms the edition', () => {
+  const roadmap = sampleRoadmap();
+  const sub = roadmap.phases[1]!.subPhases[1]!;
+  sub.status = 'in-progress';
+  sub.startedOn = '2026-09-19';
+  assert.ok(errors(roadmap).some((m) => m.includes('in-progress without editionConfirmedOn; the owner confirms the edition before work starts')));
+  sub.status = 'done';
+  sub.completedOn = '2026-09-19';
+  assert.ok(errors(roadmap).some((m) => m.includes('done without editionConfirmedOn')));
+  sub.status = 'blocked';
+  sub.blockedReason = 'waiting for the owner';
+  delete sub.completedOn;
+  assert.deepEqual(errors(roadmap), []);
+  sub.status = 'done';
+  sub.completedOn = '2026-09-19';
+  delete sub.blockedReason;
+  sub.editionConfirmedOn = '2026-09-19';
+  assert.deepEqual(errors(roadmap), []);
+});
+
+test('editionConfirmedOn must be an ISO date that is not in the future', () => {
+  const roadmap = sampleRoadmap();
+  const sub = roadmap.phases[1]!.subPhases[1]!;
+  sub.editionConfirmedOn = 'soon';
+  assert.ok(errors(roadmap).some((m) => m.includes('editionConfirmedOn must be an ISO date')));
+  sub.editionConfirmedOn = '2027-01-01';
+  assert.ok(errors(roadmap).some((m) => m.includes('editionConfirmedOn 2027-01-01 is in the future')));
+  sub.editionConfirmedOn = '2026-09-20';
+  assert.deepEqual(errors(roadmap), []);
+  assert.ok(errors(roadmap, { today: '2026-09-18' }).some((m) => m.includes('editionConfirmedOn 2026-09-20 is in the future')));
+});
+
+test('community work cannot depend on enterprise-only work', () => {
+  const subEdge = sampleRoadmap();
+  subEdge.phases[0]!.subPhases[1]!.dependsOn = ['authentication-ai-helper'];
+  assert.deepEqual(errors(subEdge), ['sub-phase "foundation-tooling" is Community work but depends on "authentication-ai-helper", which is Enterprise work only']);
+
+  const phaseEdge = sampleRoadmap();
+  for (const sub of phaseEdge.phases[0]!.subPhases) sub.edition = 'enterprise';
+  assert.deepEqual(errors(phaseEdge), ['phase "authentication" holds Community sub-phases but depends on "foundation", which is Enterprise work only']);
+  phaseEdge.phases[1]!.subPhases[0]!.edition = 'enterprise';
+  assert.deepEqual(errors(phaseEdge), []);
+});
+
+test('community work may depend on a mixed phase and enterprise work may depend on community work', () => {
+  const mixed = sampleRoadmap();
+  mixed.phases[0]!.subPhases[1]!.dependsOn = ['authentication'];
+  assert.deepEqual(errors(mixed), []);
+
+  const enterprise = sampleRoadmap();
+  enterprise.phases[1]!.subPhases[0]!.edition = 'enterprise';
+  enterprise.phases[1]!.subPhases[1]!.dependsOn = ['foundation-tooling'];
+  assert.deepEqual(errors(enterprise), []);
+});
+
 test('a done phase cannot depend on an unfinished phase', () => {
   const roadmap = sampleRoadmap();
   roadmap.phases[0]!.subPhases[1]!.status = 'done';

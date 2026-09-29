@@ -1,0 +1,12 @@
+{
+  "exemptPullRequestAuthors": {
+    "jagdish-kumawat": {
+      "reason": "Dewiride Technologies Private Limited, the copyright holder",
+      "emails": ["109734266+jagdish-kumawat@users.noreply.github.com", "jagdish.kumawat@dewiride.com"]
+    },
+    "dependabot[bot]": {
+      "reason": "Dependabot version and security updates",
+      "emails": ["49699333+dependabot[bot]@users.noreply.github.com"]
+    }
+  }
+}

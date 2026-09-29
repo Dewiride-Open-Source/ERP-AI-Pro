@@ -34,7 +34,10 @@ public sealed class OpenApiDocumentTests : IClassFixture<ErpApiFactory>
         var info = document.RootElement.GetProperty("info");
         Assert.Equal(ErpOpenApiOptions.Title, info.GetProperty("title").GetString());
         Assert.Equal(ErpOpenApiOptions.Version, info.GetProperty("version").GetString());
-        Assert.Equal("MIT", info.GetProperty("license").GetProperty("name").GetString());
+        var license = info.GetProperty("license");
+        Assert.Equal("GNU Lesser General Public License v3.0 only", license.GetProperty("name").GetString());
+        Assert.Equal("LGPL-3.0-only", license.GetProperty("identifier").GetString());
+        Assert.False(license.TryGetProperty("url", out _));
         Assert.False(document.RootElement.TryGetProperty("servers", out _));
     }
 

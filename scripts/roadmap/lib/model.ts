@@ -5,11 +5,21 @@ import { fileURLToPath } from 'node:url';
 export const STATUSES = ['planned', 'in-progress', 'blocked', 'deferred', 'done'] as const;
 export type Status = (typeof STATUSES)[number];
 
+export const EDITIONS = ['community', 'enterprise'] as const;
+export type Edition = (typeof EDITIONS)[number];
+export type PhaseEdition = Edition | 'mixed';
+
+export function isEdition(value: unknown): value is Edition {
+  return typeof value === 'string' && (EDITIONS as readonly string[]).includes(value);
+}
+
 export type SubPhase = {
   id: string;
   title: string;
   scope: string;
   status: Status;
+  edition: Edition;
+  editionConfirmedOn?: string;
   acceptance: string[];
   tags: string[];
   dependsOn: string[];
@@ -92,6 +102,8 @@ function canonicalSubPhase(sub: SubPhase) {
     title: sub.title,
     scope: sub.scope,
     status: sub.status,
+    edition: sub.edition,
+    ...(sub.editionConfirmedOn ? { editionConfirmedOn: sub.editionConfirmedOn } : {}),
     acceptance: sub.acceptance,
     tags: sub.tags,
     dependsOn: sub.dependsOn,
@@ -120,6 +132,12 @@ export function phaseStatus(phase: Phase): Status {
   if (statuses.some((s) => s === 'in-progress' || s === 'done')) return 'in-progress';
   if (statuses.some((s) => s === 'blocked')) return 'blocked';
   return 'planned';
+}
+
+export function phaseEdition(phase: Phase): PhaseEdition | undefined {
+  const editions = new Set(phase.subPhases.map((s) => s.edition));
+  if (editions.size === 0) return undefined;
+  return editions.size === 1 ? [...editions][0] : 'mixed';
 }
 
 export type Located = {
@@ -159,6 +177,12 @@ export function isDone(roadmap: Roadmap, id: string): boolean {
   const found = locate(roadmap, id);
   if (!found) return false;
   return found.subPhase === undefined ? phaseStatus(found.phase) === 'done' : found.subPhase.status === 'done';
+}
+
+export function isEnterpriseOnly(roadmap: Roadmap, id: string): boolean {
+  const found = locate(roadmap, id);
+  if (!found) return false;
+  return found.subPhase === undefined ? phaseEdition(found.phase) === 'enterprise' : found.subPhase.edition === 'enterprise';
 }
 
 export function today(): string {

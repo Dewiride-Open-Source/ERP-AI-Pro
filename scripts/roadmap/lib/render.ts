@@ -1,4 +1,4 @@
-import { isDone, phaseLabel, phaseStatus, subPhaseLabel, type Phase, type Roadmap, type SubPhase } from './model.ts';
+import { isDone, phaseEdition, phaseLabel, phaseStatus, subPhaseLabel, type Phase, type PhaseEdition, type Roadmap, type SubPhase } from './model.ts';
 
 const BAR_WIDTH = 24;
 
@@ -6,6 +6,9 @@ export function render(roadmap: Roadmap): string {
   const allSubPhases = roadmap.phases.flatMap((p) => p.subPhases);
   const doneCount = allSubPhases.filter((s) => s.status === 'done').length;
   const phasesDone = roadmap.phases.filter((p) => phaseStatus(p) === 'done').length;
+  const community = allSubPhases.filter((s) => s.edition === 'community').length;
+  const enterprise = allSubPhases.filter((s) => s.edition === 'enterprise').length;
+  const unconfirmed = allSubPhases.filter((s) => !s.editionConfirmedOn).length;
   const lines: string[] = [];
 
   lines.push('# ERP-AI-Pro Roadmap');
@@ -16,9 +19,13 @@ export function render(roadmap: Roadmap): string {
     `Updated ${roadmap.updatedOn} · Sub-phases done: ${doneCount}/${allSubPhases.length} · Phases done: ${phasesDone}/${roadmap.phases.length}`,
   );
   lines.push('');
+  lines.push(`Editions: ${community} Community · ${enterprise} Enterprise · ${unconfirmed} awaiting the owner's confirmation`);
+  lines.push('');
   lines.push(`\`${progressBar(doneCount, allSubPhases.length)}\``);
   lines.push('');
   lines.push('Legend: `[x]` done · `[ ]` planned · `⏳` in progress · `⛔` blocked · `⏸` deferred');
+  lines.push('');
+  lines.push('Edition: Community (this repository, LGPL-3.0-only) · Enterprise (built in the private Enterprise repository) · "recommended" until the owner confirms');
   lines.push('');
 
   lines.push('## Milestones');
@@ -38,13 +45,13 @@ export function render(roadmap: Roadmap): string {
 
   lines.push('## Phases');
   lines.push('');
-  lines.push('| Label | Phase | Milestone | Status | Done |');
-  lines.push('|---|---|---|---|---|');
+  lines.push('| Label | Phase | Milestone | Edition | Status | Done |');
+  lines.push('|---|---|---|---|---|---|');
   for (const [index, phase] of roadmap.phases.entries()) {
     const done = phase.subPhases.filter((s) => s.status === 'done').length;
     const milestone = roadmap.milestones.find((m) => m.id === phase.milestone)?.title ?? phase.milestone;
     lines.push(
-      `| ${phaseLabel(index)} | [${phase.title}](#phase-${phase.id}) | ${milestone} | ${statusText(phaseStatus(phase))} | ${done}/${phase.subPhases.length} |`,
+      `| ${phaseLabel(index)} | [${phase.title}](#phase-${phase.id}) | ${milestone} | ${editionText(phaseEdition(phase))} | ${statusText(phaseStatus(phase))} | ${done}/${phase.subPhases.length} |`,
     );
   }
   lines.push('');
@@ -54,13 +61,13 @@ export function render(roadmap: Roadmap): string {
   for (const [phaseIndex, phase] of roadmap.phases.entries()) {
     for (const [subIndex, sub] of phase.subPhases.entries()) {
       if (sub.status !== 'in-progress') continue;
-      lines.push(`- ⏳ **${subPhaseLabel(phaseIndex, subIndex)}** ${sub.title} (\`${sub.id}\`) — in progress since ${sub.startedOn}`);
+      lines.push(`- ⏳ **${subPhaseLabel(phaseIndex, subIndex)}** ${sub.title} (\`${sub.id}\`) · ${subPhaseEditionText(sub)} — in progress since ${sub.startedOn}`);
     }
   }
   const upcoming = nextCandidates(roadmap, 5);
   if (upcoming.length === 0) lines.push('Nothing else is eligible: every remaining item is blocked, deferred or waiting on a dependency.');
   for (const item of upcoming) {
-    lines.push(`- **${item.label}** ${item.subPhase.title} (\`${item.subPhase.id}\`) — ${item.subPhase.scope}`);
+    lines.push(`- **${item.label}** ${item.subPhase.title} (\`${item.subPhase.id}\`) · ${subPhaseEditionText(item.subPhase)} — ${item.subPhase.scope}`);
   }
   lines.push('');
 
@@ -79,7 +86,7 @@ function renderPhase(roadmap: Roadmap, phase: Phase, index: number): string[] {
   lines.push(phase.goal);
   lines.push('');
   const deps = phase.dependsOn.length > 0 ? phase.dependsOn.map((d) => `\`${d}\``).join(', ') : 'none';
-  lines.push(`Id \`${phase.id}\` · Milestone: ${milestone} · Status: ${statusText(phaseStatus(phase))} · Depends on: ${deps}`);
+  lines.push(`Id \`${phase.id}\` · Milestone: ${milestone} · Edition: ${editionText(phaseEdition(phase))} · Status: ${statusText(phaseStatus(phase))} · Depends on: ${deps}`);
   lines.push('');
   for (const [subIndex, sub] of phase.subPhases.entries()) {
     lines.push(...renderSubPhase(sub, subPhaseLabel(index, subIndex)));
@@ -94,6 +101,7 @@ function renderSubPhase(sub: SubPhase, label: string): string[] {
   const lines = [`- ${box} **${label}** ${sub.title} (\`${sub.id}\`)${marker} <a id="${sub.id}"></a>`];
   lines.push(`  ${sub.scope}`);
   for (const criterion of sub.acceptance) lines.push(`  - ${criterion}`);
+  lines.push(`  - Edition: ${subPhaseEditionText(sub)}`);
   if (sub.dependsOn.length > 0) lines.push(`  - Depends on: ${sub.dependsOn.map((d) => `\`${d}\``).join(', ')}`);
   if (sub.tags.length > 0) lines.push(`  - Tags: ${sub.tags.join(', ')}`);
   if (sub.notes) lines.push(`  - Note: ${sub.notes}`);
@@ -128,6 +136,23 @@ function statusText(status: SubPhase['status']): string {
     default:
       return 'planned';
   }
+}
+
+function editionText(edition: PhaseEdition | undefined): string {
+  switch (edition) {
+    case 'community':
+      return 'Community';
+    case 'enterprise':
+      return 'Enterprise';
+    case 'mixed':
+      return 'Mixed';
+    default:
+      return '—';
+  }
+}
+
+function subPhaseEditionText(sub: SubPhase): string {
+  return `${editionText(sub.edition)} (${sub.editionConfirmedOn ? `confirmed ${sub.editionConfirmedOn}` : 'recommended'})`;
 }
 
 function progressBar(done: number, total: number): string {

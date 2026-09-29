@@ -1,8 +1,8 @@
 # ERP-AI-Pro
 
-Open-source ERP for a small Indian private-limited software company, built by [Dewiride](https://github.com/Dewiride-Open-Source). A modular monolith on .NET 10 with a Next.js 16 web application, signed in through Microsoft Entra ID, configured from Azure App Configuration and Key Vault, keeping attachments encrypted in Azure Blob Storage, and deployed with Docker Compose on the company's own server.
+The open-source Community edition of ERP-AI-Pro, the ERP of a small Indian private-limited software company, built by [Dewiride Technologies Private Limited](https://github.com/Dewiride-Open-Source) and licensed under the GNU Lesser General Public License version 3 only (LGPL-3.0-only). A modular monolith on .NET 10 with a Next.js 16 web application, signed in through Microsoft Entra ID, configured from Azure App Configuration and Key Vault, keeping attachments encrypted in Azure Blob Storage, and deployed with Docker Compose on the company's own server.
 
-The roadmap runs from user management through clients, vendors, GST-compliant finance, Indian statutory payroll, timesheets, HR and integrations, with AI capabilities woven into every module. See [docs/roadmap/ROADMAP.md](docs/roadmap/ROADMAP.md) for what is done, in progress and planned.
+The roadmap runs from user management through clients, vendors, GST-compliant finance, Indian statutory payroll, timesheets, HR and integrations. The Community edition carries the AI foundation (the connection to the AI service, the prompt library and tool registry, evaluation and safety); the AI features themselves are Enterprise modules. See [docs/roadmap/ROADMAP.md](docs/roadmap/ROADMAP.md) for what is done, in progress and planned.
 
 ## Stack
 
@@ -25,7 +25,7 @@ backend/     .NET solution — BuildingBlocks/, Hosts/{Api,Composition,HealthPro
 frontend/    pnpm workspace — apps/web (Next.js), packages/{api-client,config,ui}, e2e (Playwright)
 infra/       Dockerfiles and Compose files
 scripts/     roadmap CLI, verification runner, repository checks, API client generation (Node 24, zero dependencies)
-docs/        roadmap, architecture, guides, operations, ADRs, configuration and routing registers, the OpenAPI document
+docs/        roadmap, architecture, guides, operations, ADRs, contributor licence agreements (cla/), configuration and routing registers, the OpenAPI document
 .github/     workflows, composite actions, Dependabot, CodeQL configuration, templates
 ```
 
@@ -57,6 +57,19 @@ cd frontend && pnpm install --frozen-lockfile && pnpm dev
 
 Start at [docs/README.md](docs/README.md): architecture overview, module anatomy, dependency rules, naming, guides and the architecture decision records. Contributions follow [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md); security reports follow [SECURITY.md](SECURITY.md).
 
+## Editions
+
+| Edition | What it is |
+|---|---|
+| Community | This repository, licensed LGPL-3.0-only. |
+| Enterprise | The Community edition plus proprietary modules that Dewiride Technologies Private Limited develops in a private repository, every AI feature among them. |
+
+Every roadmap item in [docs/roadmap/ROADMAP.md](docs/roadmap/ROADMAP.md) names its edition. [ADR-0030](docs/adr/0030-community-and-enterprise-editions.md) records the decision.
+
 ## Licence
 
-[MIT](LICENSE) © 2026 Dewiride
+Copyright (c) 2026 Dewiride Technologies Private Limited.
+
+ERP-AI-Pro Community is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License version 3 as published by the Free Software Foundation (SPDX `LGPL-3.0-only`). It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [COPYING.LESSER](COPYING.LESSER) and [COPYING](COPYING) for the licence texts.
+
+Contributions are accepted under the contributor licence agreement described in [docs/cla/sign-cla.md](docs/cla/sign-cla.md).
