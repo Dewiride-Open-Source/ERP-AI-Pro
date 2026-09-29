@@ -141,6 +141,7 @@ test.describe("form kit", () => {
 
       await expect(formKit.heading).toBeVisible();
       await expect(formKit.save).toBeDisabled();
+      await expect(formKit.save).toHaveAttribute("data-hydrating", "");
       await formKit.legalName.fill(validSupplier.legalName);
       await formKit.legalName.press("Enter");
       await expect(formKit.legalName).toHaveValue(validSupplier.legalName);

@@ -4,6 +4,7 @@ import type { ComponentProps, MouseEvent } from "react";
 
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { Spinner } from "@dewiride/erp-ui/components/ui/spinner";
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { cn } from "@dewiride/erp-ui/lib/utils";
 
 export type SubmitButtonProps = Omit<ComponentProps<typeof Button>, "type" | "asChild"> & {
@@ -20,6 +21,7 @@ export function SubmitButton({
   children,
   ...buttonProps
 }: SubmitButtonProps) {
+  const hydrated = useHydrated();
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (pending) {
       event.preventDefault();
@@ -36,6 +38,7 @@ export function SubmitButton({
       aria-disabled={pending || undefined}
       aria-busy={pending || undefined}
       data-pending={pending || undefined}
+      data-hydrating={hydrated ? undefined : ""}
       className={cn("aria-disabled:opacity-50", className)}
       onClick={handleClick}
     >

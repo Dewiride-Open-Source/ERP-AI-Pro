@@ -4,9 +4,8 @@ import { useState } from "react";
 
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { DateRangeInput } from "@dewiride/erp-ui/components/pickers/date-range-input";
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { cn } from "@dewiride/erp-ui/lib/utils";
-
-import { useHydrated } from "../use-hydrated";
 
 import {
   dateRangeProblems,

@@ -14,9 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@dewiride/erp-ui/components/ui/dropdown-menu";
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { cn } from "@dewiride/erp-ui/lib/utils";
-
-import { useHydrated } from "../use-hydrated";
 
 import { optionsSummary, toggleOption, type DataTableFilterOption } from "./filter-values";
 

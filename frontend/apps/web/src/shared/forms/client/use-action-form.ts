@@ -1,5 +1,6 @@
 "use client";
 
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { unstable_isUnrecognizedActionError, unstable_rethrow } from "next/navigation";
 import {
   startTransition,
@@ -10,7 +11,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type RefObject,
   type SubmitEvent,
 } from "react";
@@ -76,10 +76,6 @@ const noAnswer: Answer = { state: idleFormState, controlIds: new Set() };
 
 const serverErrorName = "root.server";
 
-const subscribeToNothing = () => () => {};
-const hydrated = () => true;
-const notHydrated = () => false;
-
 export function useActionForm<TSchema extends z.ZodType<unknown, FieldValues>>({
   schema,
   action,
@@ -107,7 +103,7 @@ export function useActionForm<TSchema extends z.ZodType<unknown, FieldValues>>({
   );
   const [answer, dispatch, pending] = useActionState(settle, noAnswer);
   const { state } = answer;
-  const ready = useSyncExternalStore(subscribeToNothing, hydrated, notHydrated);
+  const ready = useHydrated();
   const formId = useId();
   const alertRef = useRef<HTMLDivElement>(null);
   const lastSentKey = useRef<SentIdempotencyKey | undefined>(undefined);

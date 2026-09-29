@@ -40,6 +40,7 @@ test.describe("data table", () => {
       const { bills } = demo;
       await demo.goto();
 
+      await expect(bills.root).not.toHaveAttribute("data-hydrating");
       await expect(page).toHaveTitle(/Data table · ERP-AI-Pro/);
       await expect(bills.status).toHaveText("Showing 1–10 of 64 bills. Sorted by Due date, earliest first.");
       await expect(bills.pageLabel).toHaveText("Page 1 of 7");
@@ -408,6 +409,19 @@ test.describe("data table", () => {
     await expectAddress(page, "");
     await expect(bills.status).toContainText("Showing 1–10 of 64 bills.");
     await expect(bills.selection).toHaveText("");
+  });
+
+  test.describe("before the page is interactive", () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("marks the list as still loading and keeps its controls disabled", async ({ page }) => {
+      const demo = new DataTableDemoPage(page);
+      await page.goto(dataTablePath);
+
+      await expect(demo.heading).toBeVisible();
+      await expect(demo.bills.root).toHaveAttribute("data-hydrating", "");
+      await expect(demo.bills.columnsButton).toBeDisabled();
+    });
   });
 
   test.describe("from an address typed by hand", () => {

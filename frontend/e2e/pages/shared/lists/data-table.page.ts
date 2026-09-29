@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 export class DataTableRegion {
+  readonly root: Locator;
   readonly table: Locator;
   readonly tableRows: Locator;
   readonly cardList: Locator;
@@ -24,6 +25,7 @@ export class DataTableRegion {
     private readonly page: Page,
     readonly container: Locator,
   ) {
+    this.root = container.locator("[data-slot='data-table']");
     this.table = container.getByTestId("data-table");
     this.tableRows = this.table.getByTestId("data-table-row");
     this.cardList = container.getByTestId("data-table-cards");

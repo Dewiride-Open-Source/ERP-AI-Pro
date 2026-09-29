@@ -43,7 +43,10 @@ export function MotionDemo() {
   const [moved, setMoved] = useState(false);
 
   return (
-    <div className="grid min-w-0 gap-4 rounded-xl border bg-card p-4">
+    <div
+      data-hydrating={reducedMotion === undefined ? "" : undefined}
+      className="grid min-w-0 gap-4 rounded-xl border bg-card p-4"
+    >
       <div className="grid gap-1">
         <h3 className="text-body font-medium">Live demo</h3>
         <p

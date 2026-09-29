@@ -1073,19 +1073,29 @@ test.describe("design system kitchen sink", () => {
       await capture("button-hover", buttons);
     }
 
-    for (const { id } of primitiveSections) {
-      if (!capturedBySpecimen.has(id)) {
-        await capture(`section-${id}`, kitchenSink.section(id));
-        continue;
-      }
-      for (const title of await kitchenSink
-        .section(id)
-        .getByRole("heading", { level: 3 })
-        .allTextContents()) {
-        await capture(`section-${id}-${title}`, kitchenSink.specimen(title));
-      }
-    }
     expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
+  });
+
+  // Each capture is scanned first, and WebKit on a CI runner takes several seconds per scan and capture, so every primitive
+  // section is captured by a test of its own rather than all of them inside one test's time.
+  test.describe("captures every primitive section", () => {
+    for (const { id, title } of primitiveSections) {
+      forEachTheme(title, async ({ page, capture }) => {
+        const kitchenSink = new KitchenSinkPage(page);
+        await kitchenSink.goto();
+        const section = kitchenSink.section(id);
+
+        if (!capturedBySpecimen.has(id)) {
+          await capture(`section-${id}`, section);
+          return;
+        }
+        const specimens = await section.getByRole("heading", { level: 3 }).allTextContents();
+        expect(specimens.length, `specimens in ${title}`).toBeGreaterThan(0);
+        for (const specimen of specimens) {
+          await capture(`section-${id}-${specimen}`, kitchenSink.specimen(specimen));
+        }
+      });
+    }
   });
 
   test.describe("opens every overlay", () => {
