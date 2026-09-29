@@ -1,8 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { labelOf, loadRoadmap, locate, paths, resolveId, saveRoadmap, serialize, subPhaseLabel, today, type Roadmap } from './lib/model.ts';
-import { RoadmapError, addPhase, addSubPhase, block, defer, done, move, note, resume, setAcceptance, start } from './lib/mutate.ts';
+import { labelOf, loadRoadmap, locate, paths, resolveId, saveRoadmap, serialize, subPhaseLabel, today, type Roadmap, type SubPhase } from './lib/model.ts';
+import { RoadmapError, addPhase, addSubPhase, block, defer, done, move, note, resume, setAcceptance, setDependsOn, setEdition, start } from './lib/mutate.ts';
 import { nextCandidates, render } from './lib/render.ts';
 import { formatIssues, validate } from './lib/validate.ts';
 
@@ -22,13 +21,20 @@ Mutations (rewrite roadmap.json canonically, regenerate ROADMAP.md, then run che
   resume <id|label>               (sub-phase or whole phase)
   note <id|label> "<text>"        (empty text clears the note)
   acceptance <id|label> "<criterion>" ["<criterion>" ...]
+  edition <community|enterprise> <id|label> [<id|label> ...] [--confirm]
+  depends-on <id|label> [<id|label> ...] --on a,b   (replaces the list; --on "" clears it)
   add-phase --id <slug> --title "<t>" --goal "<g>" --milestone <slug> [--after <phase>] [--depends-on a,b]
-  add-sub-phase --phase <id> --id <slug> --title "<t>" --scope "<s>" [--after <sub-phase>] [--tags a,b] [--depends-on a,b]
+  add-sub-phase --phase <id> --id <slug> --title "<t>" --scope "<s>" --edition <community|enterprise> [--confirm] [--after <sub-phase>] [--tags a,b] [--depends-on a,b]
   move <sub-phase> --to <phase> [--at N]
 
 Ids are stable slugs; labels such as P07 or P07.3 are accepted anywhere an id is.
 Every mutation stamps today's date unless --date YYYY-MM-DD is given.
 --file <path> operates on another roadmap.json; its ROADMAP.md is written beside it.
+Every sub-phase is Community or Enterprise. A phase given to edition applies to all its sub-phases.
+Without --confirm the edition is a recommendation and any confirmation is cleared; --confirm records
+the owner's confirmation, and start and done need a confirmed edition.
+next offers a planned sub-phase once everything it and its phase depend on is done; a phase counts as
+done for Community work once its Community sub-phases are, and for Enterprise work once all of them are.
 `;
 
 const { values, positionals } = parseArgs({
@@ -49,6 +55,9 @@ const { values, positionals } = parseArgs({
     at: { type: 'string' },
     tags: { type: 'string' },
     'depends-on': { type: 'string' },
+    edition: { type: 'string' },
+    confirm: { type: 'boolean', default: false },
+    on: { type: 'string' },
     file: { type: 'string' },
     help: { type: 'boolean', default: false },
   },
@@ -117,6 +126,11 @@ function describe(roadmap: Roadmap, id: string): string {
   return `${labelOf(roadmap, id)} (${id})`;
 }
 
+function editionState(sub: SubPhase): string {
+  if (sub.editionConfirmedOn) return `[${sub.edition}, confirmed ${sub.editionConfirmedOn}]`;
+  return `[${sub.edition}, recommended: ask the owner, then edition ${sub.edition} ${sub.id} --confirm]`;
+}
+
 if (values.help || !command) {
   console.log(USAGE);
   process.exit(command ? 0 : 1);
@@ -140,7 +154,7 @@ try {
       }
       const candidates = nextCandidates(roadmap, count);
       if (candidates.length === 0) console.log('nothing else is eligible');
-      for (const c of candidates) console.log(`${c.label}  ${c.subPhase.id}\n  ${c.subPhase.title}\n  ${c.subPhase.scope}`);
+      for (const c of candidates) console.log(`${c.label}  ${c.subPhase.id}  ${editionState(c.subPhase)}\n  ${c.subPhase.title}\n  ${c.subPhase.scope}`);
       break;
     }
     case 'show': {
@@ -186,6 +200,18 @@ try {
       commit(roadmap, `acceptance updated for ${describe(roadmap, sub.id)}`);
       break;
     }
+    case 'edition': {
+      const [edition, ...ids] = args;
+      const subs = setEdition(roadmap, edition ?? fail(USAGE), ids, values.confirm, date);
+      commit(roadmap, `${values.confirm ? 'confirmed' : 'recommended'} the ${edition} edition for ${subs.length} sub-phase(s)`);
+      break;
+    }
+    case 'depends-on': {
+      if (values.on === undefined) fail(`--on is required\n\n${USAGE}`);
+      const items = setDependsOn(roadmap, args, list(values.on), date);
+      commit(roadmap, `dependencies set for ${items.map((item) => describe(roadmap, item.id)).join(', ')}`);
+      break;
+    }
     case 'add-phase': {
       const phase = addPhase(
         roadmap,
@@ -198,7 +224,17 @@ try {
     case 'add-sub-phase': {
       const sub = addSubPhase(
         roadmap,
-        { phase: required('phase'), id: required('id'), title: required('title'), scope: required('scope'), tags: list(values.tags), dependsOn: list(values['depends-on']), after: values.after },
+        {
+          phase: required('phase'),
+          id: required('id'),
+          title: required('title'),
+          scope: required('scope'),
+          edition: required('edition'),
+          confirm: values.confirm,
+          tags: list(values.tags),
+          dependsOn: list(values['depends-on']),
+          after: values.after,
+        },
         date,
       );
       commit(roadmap, `added sub-phase ${describe(roadmap, sub.id)}`);

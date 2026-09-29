@@ -31,6 +31,12 @@ test('dependencies must exist and form a DAG', () => {
   const self = sampleRoadmap();
   self.phases[0]!.dependsOn = ['foundation-tooling'];
   assert.ok(errors(self).some((m) => m.startsWith('dependency cycle')));
+  const empty = sampleRoadmap();
+  empty.phases.push(
+    { id: 'clients', title: 'Clients', goal: 'Client master', milestone: 'm1-live', dependsOn: ['vendors'], subPhases: [] },
+    { id: 'vendors', title: 'Vendors', goal: 'Vendor master', milestone: 'm1-live', dependsOn: ['clients'], subPhases: [] },
+  );
+  assert.deepEqual(errors(empty), ['dependency cycle: clients -> vendors -> clients']);
 });
 
 test('status and dates are consistent', () => {
@@ -50,6 +56,114 @@ test('status and dates are consistent', () => {
   assert.ok(errors(roadmap).some((m) => m.includes('blocked without blockedReason')));
   sub.status = 'in-progress';
   assert.ok(errors(roadmap).some((m) => m.includes('in-progress without startedOn')));
+});
+
+test('every sub-phase names a known edition', () => {
+  const roadmap = sampleRoadmap();
+  roadmap.phases[0]!.subPhases[1]!.edition = 'premium' as never;
+  assert.ok(errors(roadmap).some((m) => m.includes('(foundation-tooling): edition must be community or enterprise, got "premium"')));
+  const missing = sampleRoadmap();
+  delete (missing.phases[1]!.subPhases[1] as { edition?: string }).edition;
+  assert.ok(errors(missing).some((m) => m.includes('(authentication-ai-helper): edition must be community or enterprise')));
+});
+
+test('work cannot start or finish before the owner confirms the edition', () => {
+  const roadmap = sampleRoadmap();
+  const sub = roadmap.phases[1]!.subPhases[1]!;
+  sub.status = 'in-progress';
+  sub.startedOn = '2026-09-19';
+  assert.ok(errors(roadmap).some((m) => m.includes('in-progress without editionConfirmedOn; the owner confirms the edition before work starts')));
+  sub.status = 'done';
+  sub.completedOn = '2026-09-19';
+  assert.ok(errors(roadmap).some((m) => m.includes('done without editionConfirmedOn')));
+  sub.status = 'blocked';
+  sub.blockedReason = 'waiting for the owner';
+  delete sub.completedOn;
+  assert.deepEqual(errors(roadmap), []);
+  sub.status = 'done';
+  sub.completedOn = '2026-09-19';
+  delete sub.blockedReason;
+  sub.editionConfirmedOn = '2026-09-19';
+  assert.deepEqual(errors(roadmap), []);
+});
+
+test('editionConfirmedOn must be an ISO date that is not in the future', () => {
+  const roadmap = sampleRoadmap();
+  const sub = roadmap.phases[1]!.subPhases[1]!;
+  sub.editionConfirmedOn = 'soon';
+  assert.ok(errors(roadmap).some((m) => m.includes('editionConfirmedOn must be an ISO date')));
+  sub.editionConfirmedOn = '2027-01-01';
+  assert.ok(errors(roadmap).some((m) => m.includes('editionConfirmedOn 2027-01-01 is in the future')));
+  sub.editionConfirmedOn = '2026-09-20';
+  assert.deepEqual(errors(roadmap), []);
+  assert.ok(errors(roadmap, { today: '2026-09-18' }).some((m) => m.includes('editionConfirmedOn 2026-09-20 is in the future')));
+});
+
+test('community work cannot depend on enterprise-only work', () => {
+  const subEdge = sampleRoadmap();
+  subEdge.phases[1]!.dependsOn = [];
+  subEdge.phases[0]!.subPhases[1]!.dependsOn = ['authentication-ai-helper'];
+  assert.deepEqual(errors(subEdge), ['sub-phase "foundation-tooling" is Community work but depends on "authentication-ai-helper", which is Enterprise work only']);
+
+  const phaseEdge = sampleRoadmap();
+  for (const sub of phaseEdge.phases[0]!.subPhases) sub.edition = 'enterprise';
+  assert.deepEqual(errors(phaseEdge), ['phase "authentication" holds Community sub-phases but depends on "foundation", which is Enterprise work only']);
+  phaseEdge.phases[1]!.subPhases[0]!.edition = 'enterprise';
+  assert.deepEqual(errors(phaseEdge), []);
+});
+
+test('a done phase needs each prerequisite done for every edition among its sub-phases', () => {
+  const roadmap = sampleRoadmap();
+  const finished = { status: 'done' as const, editionConfirmedOn: '2026-09-19', startedOn: '2026-09-19', completedOn: '2026-09-19' };
+  Object.assign(roadmap.phases[0]!.subPhases[1]!, finished);
+  Object.assign(roadmap.phases[1]!.subPhases[0]!, finished);
+  roadmap.phases.push({
+    id: 'clients',
+    title: 'Clients',
+    goal: 'Client master',
+    milestone: 'm1-live',
+    dependsOn: ['authentication'],
+    subPhases: [{ id: 'clients-master', title: 'Client master', scope: 'Clients', edition: 'community', acceptance: [], tags: [], dependsOn: [], ...finished }],
+  });
+  assert.deepEqual(errors(roadmap), []);
+
+  roadmap.phases[2]!.subPhases.push({ id: 'clients-ai-insights', title: 'AI: insights', scope: 'Insights', edition: 'enterprise', acceptance: [], tags: ['ai'], dependsOn: [], ...finished });
+  assert.deepEqual(errors(roadmap), ['phase "clients" is done but depends on "authentication" which is not done']);
+  Object.assign(roadmap.phases[1]!.subPhases[1]!, finished);
+  assert.deepEqual(errors(roadmap), []);
+});
+
+test('a sub-phase that depends on a phase which depends on its own phase is a dependency cycle', () => {
+  const roadmap = sampleRoadmap();
+  roadmap.phases[0]!.subPhases[1]!.dependsOn = ['authentication'];
+  assert.deepEqual(errors(roadmap), ['dependency cycle: foundation-tooling -> authentication -> authentication-oidc -> authentication -> foundation -> foundation-tooling']);
+});
+
+test('the cycle check follows what each edition waits for', () => {
+  const roadmap = sampleRoadmap();
+  roadmap.phases.push({
+    id: 'clients',
+    title: 'Clients',
+    goal: 'Client master',
+    milestone: 'm1-live',
+    dependsOn: ['authentication'],
+    subPhases: [{ id: 'clients-master', title: 'Client master', scope: 'Clients', status: 'planned', edition: 'community', acceptance: [], tags: [], dependsOn: [] }],
+  });
+  roadmap.phases[1]!.subPhases[1]!.dependsOn = ['authentication-oidc', 'clients'];
+  assert.deepEqual(errors(roadmap), []);
+  roadmap.phases[2]!.subPhases[0]!.edition = 'enterprise';
+  assert.deepEqual(errors(roadmap), ['dependency cycle: authentication-ai-helper -> clients -> clients-master -> clients -> authentication -> authentication-ai-helper']);
+
+  const deferred = sampleRoadmap();
+  deferred.phases[0]!.subPhases.push({ id: 'foundation-audit', title: 'Audit', scope: 'Audit trail', status: 'planned', edition: 'enterprise', acceptance: [], tags: [], dependsOn: ['authentication'] });
+  assert.ok(errors(deferred).some((m) => m.startsWith('dependency cycle')));
+  deferred.phases[1]!.subPhases[1]!.status = 'deferred';
+  assert.deepEqual(errors(deferred), []);
+
+  const enterprise = sampleRoadmap();
+  enterprise.phases[1]!.subPhases[0]!.edition = 'enterprise';
+  enterprise.phases[1]!.subPhases[1]!.dependsOn = ['foundation-tooling'];
+  assert.deepEqual(errors(enterprise), []);
 });
 
 test('a done phase cannot depend on an unfinished phase', () => {

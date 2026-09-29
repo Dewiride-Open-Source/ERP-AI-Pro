@@ -1,11 +1,16 @@
-import { ID_PATTERN, locate, resolveId, type Phase, type Roadmap, type SubPhase } from './model.ts';
+import { EDITIONS, ID_PATTERN, isEdition, locate, resolveId, type Edition, type Located, type Phase, type Roadmap, type SubPhase } from './model.ts';
 
 export class RoadmapError extends Error {}
 
-function requireSubPhase(roadmap: Roadmap, idOrLabel: string): SubPhase {
+function requireItem(roadmap: Roadmap, idOrLabel: string): Located {
   const id = resolveId(roadmap, idOrLabel);
   const found = id === undefined ? undefined : locate(roadmap, id);
   if (!found) throw new RoadmapError(`unknown id or label "${idOrLabel}"`);
+  return found;
+}
+
+function requireSubPhase(roadmap: Roadmap, idOrLabel: string): SubPhase {
+  const found = requireItem(roadmap, idOrLabel);
   if (!found.subPhase) throw new RoadmapError(`"${idOrLabel}" is a phase; status changes apply to sub-phases`);
   return found.subPhase;
 }
@@ -22,9 +27,22 @@ function requireNewId(roadmap: Roadmap, id: string): void {
   if (locate(roadmap, id)) throw new RoadmapError(`id "${id}" already exists`);
 }
 
+function requireEdition(value: string): Edition {
+  if (!isEdition(value)) throw new RoadmapError(`unknown edition "${value}"; use ${EDITIONS.join(' or ')}`);
+  return value;
+}
+
+function requireConfirmedEdition(sub: SubPhase): void {
+  if (sub.editionConfirmedOn) return;
+  const recorded = isEdition(sub.edition) ? `has the ${sub.edition} edition recommended but not confirmed` : 'has no edition';
+  const edition = isEdition(sub.edition) ? sub.edition : EDITIONS.join('|');
+  throw new RoadmapError(`"${sub.id}" ${recorded}; ask the owner, then run: edition ${edition} ${sub.id} --confirm`);
+}
+
 export function start(roadmap: Roadmap, idOrLabel: string, date: string, allowMultipleWip = false): SubPhase {
   const sub = requireSubPhase(roadmap, idOrLabel);
   if (sub.status === 'done') throw new RoadmapError(`"${sub.id}" is already done`);
+  requireConfirmedEdition(sub);
   const wip = roadmap.phases.flatMap((p) => p.subPhases).filter((s) => s.status === 'in-progress' && s.id !== sub.id);
   if (wip.length > 0 && !allowMultipleWip) throw new RoadmapError(`"${wip[0]!.id}" is already in progress; finish or block it first`);
   sub.status = 'in-progress';
@@ -36,6 +54,7 @@ export function start(roadmap: Roadmap, idOrLabel: string, date: string, allowMu
 
 export function done(roadmap: Roadmap, idOrLabel: string, date: string): SubPhase {
   const sub = requireSubPhase(roadmap, idOrLabel);
+  requireConfirmedEdition(sub);
   sub.status = 'done';
   sub.startedOn ??= date;
   sub.completedOn = date;
@@ -55,9 +74,7 @@ export function block(roadmap: Roadmap, idOrLabel: string, reason: string, date:
 }
 
 export function defer(roadmap: Roadmap, idOrLabel: string, date: string): SubPhase | Phase {
-  const id = resolveId(roadmap, idOrLabel);
-  const found = id === undefined ? undefined : locate(roadmap, id);
-  if (!found) throw new RoadmapError(`unknown id or label "${idOrLabel}"`);
+  const found = requireItem(roadmap, idOrLabel);
   roadmap.updatedOn = date;
   if (!found.subPhase) {
     found.phase.deferred = true;
@@ -70,9 +87,7 @@ export function defer(roadmap: Roadmap, idOrLabel: string, date: string): SubPha
 }
 
 export function resume(roadmap: Roadmap, idOrLabel: string, date: string): SubPhase | Phase {
-  const id = resolveId(roadmap, idOrLabel);
-  const found = id === undefined ? undefined : locate(roadmap, id);
-  if (!found) throw new RoadmapError(`unknown id or label "${idOrLabel}"`);
+  const found = requireItem(roadmap, idOrLabel);
   roadmap.updatedOn = date;
   if (!found.subPhase) {
     delete found.phase.deferred;
@@ -104,7 +119,7 @@ export function addPhase(roadmap: Roadmap, input: NewPhase, date: string): Phase
   return phase;
 }
 
-export type NewSubPhase = { phase: string; id: string; title: string; scope: string; acceptance?: string[]; tags?: string[]; dependsOn?: string[]; after?: string };
+export type NewSubPhase = { phase: string; id: string; title: string; scope: string; edition: string; confirm?: boolean; acceptance?: string[]; tags?: string[]; dependsOn?: string[]; after?: string };
 
 export function addSubPhase(roadmap: Roadmap, input: NewSubPhase, date: string): SubPhase {
   requireNewId(roadmap, input.id);
@@ -114,6 +129,8 @@ export function addSubPhase(roadmap: Roadmap, input: NewSubPhase, date: string):
     title: input.title,
     scope: input.scope,
     status: 'planned',
+    edition: requireEdition(input.edition),
+    ...(input.confirm ? { editionConfirmedOn: date } : {}),
     acceptance: input.acceptance ?? [],
     tags: input.tags ?? [],
     dependsOn: input.dependsOn ?? [],
@@ -146,4 +163,40 @@ export function setAcceptance(roadmap: Roadmap, idOrLabel: string, acceptance: s
   sub.acceptance = acceptance.map((a) => a.trim()).filter(Boolean);
   roadmap.updatedOn = date;
   return sub;
+}
+
+export function setEdition(roadmap: Roadmap, edition: string, idsOrLabels: string[], confirm: boolean, date: string): SubPhase[] {
+  const value = requireEdition(edition);
+  if (idsOrLabels.length === 0) throw new RoadmapError('name at least one phase or sub-phase');
+  const targets = new Set<SubPhase>();
+  for (const idOrLabel of idsOrLabels) {
+    const found = requireItem(roadmap, idOrLabel);
+    if (found.subPhase) targets.add(found.subPhase);
+    else if (found.phase.subPhases.length === 0) throw new RoadmapError(`phase "${found.phase.id}" has no sub-phases to take an edition`);
+    else found.phase.subPhases.forEach((s) => targets.add(s));
+  }
+  for (const sub of targets) {
+    sub.edition = value;
+    if (confirm) sub.editionConfirmedOn = date;
+    else delete sub.editionConfirmedOn;
+  }
+  roadmap.updatedOn = date;
+  return [...targets];
+}
+
+export function setDependsOn(roadmap: Roadmap, idsOrLabels: string[], deps: string[], date: string): (Phase | SubPhase)[] {
+  if (idsOrLabels.length === 0) throw new RoadmapError('name at least one phase or sub-phase');
+  const items = idsOrLabels.map((idOrLabel) => {
+    const found = requireItem(roadmap, idOrLabel);
+    return found.subPhase ?? found.phase;
+  });
+  const resolved = new Set<string>();
+  for (const dep of deps) {
+    const id = resolveId(roadmap, dep);
+    if (id === undefined) throw new RoadmapError(`unknown dependency "${dep}"`);
+    resolved.add(id);
+  }
+  for (const item of items) item.dependsOn = [...resolved];
+  roadmap.updatedOn = date;
+  return items;
 }

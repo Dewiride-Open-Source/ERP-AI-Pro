@@ -1,4 +1,4 @@
-import { DATE_PATTERN, ID_PATTERN, STATUSES, isDone, phaseStatus, type Roadmap, type SubPhase } from './model.ts';
+import { DATE_PATTERN, EDITIONS, ID_PATTERN, STATUSES, isDoneFor, isEdition, isEnterpriseOnly, locate, phaseStatus, subPhasesAwaitedBy, type Edition, type Roadmap, type SubPhase } from './model.ts';
 
 export type Issue = { level: 'error' | 'warning'; message: string };
 
@@ -63,11 +63,13 @@ export function validate(roadmap: Roadmap, options: ValidateOptions = {}): Issue
 
   const cycle = findCycle(roadmap);
   if (cycle) error(`dependency cycle: ${cycle.join(' -> ')}`);
+  rejectCommunityOnEnterprise(roadmap, error);
 
   for (const phase of roadmap.phases) {
     if (phaseStatus(phase) !== 'done') continue;
+    const editions = new Set(phase.subPhases.filter((s) => s.status === 'done').map((s) => s.edition));
     for (const dep of phase.dependsOn) {
-      if (!isDone(roadmap, dep)) error(`phase "${phase.id}" is done but depends on "${dep}" which is not done`);
+      if ([...editions].some((edition) => !isDoneFor(roadmap, dep, edition))) error(`phase "${phase.id}" is done but depends on "${dep}" which is not done`);
     }
   }
 
@@ -95,6 +97,7 @@ function validateSubPhase(sub: SubPhase, where: string, ctx: SubPhaseContext): v
   if (!sub.scope?.trim()) error(`${where}: missing scope`);
   rejectBareLabels(where, { title: sub.title, scope: sub.scope, notes: sub.notes, blockedReason: sub.blockedReason, ...Object.fromEntries((sub.acceptance ?? []).map((a, i) => [`acceptance[${i}]`, a])) }, error);
   if (!STATUSES.includes(sub.status)) error(`${where}: invalid status "${String(sub.status)}"`);
+  if (!isEdition(sub.edition)) error(`${where}: edition must be ${EDITIONS.join(' or ')}, got "${String(sub.edition)}"`);
   if (!Array.isArray(sub.acceptance)) error(`${where}: acceptance must be an array`);
   if (!Array.isArray(sub.tags)) error(`${where}: tags must be an array`);
   if (!Array.isArray(sub.dependsOn)) error(`${where}: dependsOn must be an array`);
@@ -102,7 +105,7 @@ function validateSubPhase(sub: SubPhase, where: string, ctx: SubPhaseContext): v
     if (!allIds.has(dep)) error(`${where}: dependsOn references unknown id "${dep}"`);
     if (dep === sub.id || dep === phaseId) error(`${where}: depends on itself or its own phase`);
   }
-  for (const key of ['startedOn', 'completedOn'] as const) {
+  for (const key of ['startedOn', 'completedOn', 'editionConfirmedOn'] as const) {
     const value = sub[key];
     if (value === undefined) continue;
     if (!DATE_PATTERN.test(value)) error(`${where}: ${key} must be an ISO date`);
@@ -110,6 +113,9 @@ function validateSubPhase(sub: SubPhase, where: string, ctx: SubPhaseContext): v
   }
   if (sub.status === 'done' && !sub.completedOn) error(`${where}: done without completedOn`);
   if (sub.status === 'in-progress' && !sub.startedOn) error(`${where}: in-progress without startedOn`);
+  if ((sub.status === 'in-progress' || sub.status === 'done') && !sub.editionConfirmedOn) {
+    error(`${where}: ${sub.status} without editionConfirmedOn; the owner confirms the edition before work starts`);
+  }
   if (sub.status === 'blocked' && !sub.blockedReason) error(`${where}: blocked without blockedReason`);
   if (sub.status !== 'blocked' && sub.blockedReason) warning(`${where}: blockedReason set but status is ${sub.status}`);
   if (sub.status !== 'done' && sub.completedOn) warning(`${where}: completedOn set but status is ${sub.status}`);
@@ -128,33 +134,75 @@ function rejectBareLabels(where: string, fields: Record<string, string | undefin
   }
 }
 
-function findCycle(roadmap: Roadmap): string[] | undefined {
-  const edges = new Map<string, string[]>();
+function rejectCommunityOnEnterprise(roadmap: Roadmap, error: (message: string) => void): void {
   for (const phase of roadmap.phases) {
-    edges.set(phase.id, [...phase.dependsOn]);
-    for (const sub of phase.subPhases) edges.set(sub.id, [...sub.dependsOn, phase.id]);
+    const community = phase.subPhases.filter((s) => s.edition === 'community');
+    if (community.length > 0) {
+      for (const dep of phase.dependsOn.filter((d) => isEnterpriseOnly(roadmap, d))) {
+        error(`phase "${phase.id}" holds Community sub-phases but depends on "${dep}", which is Enterprise work only`);
+      }
+    }
+    for (const sub of community) {
+      for (const dep of sub.dependsOn.filter((d) => isEnterpriseOnly(roadmap, d))) {
+        error(`sub-phase "${sub.id}" is Community work but depends on "${dep}", which is Enterprise work only`);
+      }
+    }
   }
+}
+
+type GraphNode = { id: string; edges: string[] };
+
+function dependencyGraph(roadmap: Roadmap): Map<string, GraphNode> {
+  const graph = new Map<string, GraphNode>();
+  const doneNodes = (deps: string[], edition: Edition): string[] =>
+    deps.flatMap((dep) => {
+      const found = locate(roadmap, dep);
+      if (!found) return [];
+      return [found.subPhase === undefined ? `done:${dep}:${edition}` : dep];
+    });
+  for (const phase of roadmap.phases) {
+    for (const sub of phase.subPhases) graph.set(sub.id, { id: sub.id, edges: [...doneNodes(sub.dependsOn, sub.edition), `start:${phase.id}:${sub.edition}`] });
+  }
+  for (const phase of roadmap.phases) {
+    for (const edition of EDITIONS) {
+      const start = `start:${phase.id}:${edition}`;
+      const awaited = subPhasesAwaitedBy(phase, edition).filter((s) => s.status !== 'deferred').map((s) => s.id);
+      graph.set(start, { id: phase.id, edges: doneNodes(phase.dependsOn, edition) });
+      graph.set(`done:${phase.id}:${edition}`, { id: phase.id, edges: awaited.length > 0 ? awaited : [start] });
+    }
+  }
+  return graph;
+}
+
+function findCycle(roadmap: Roadmap): string[] | undefined {
+  const graph = dependencyGraph(roadmap);
   const state = new Map<string, 'visiting' | 'done'>();
   const stack: string[] = [];
-  const visit = (id: string): string[] | undefined => {
-    const current = state.get(id);
+  const visit = (node: string): string[] | undefined => {
+    const current = state.get(node);
     if (current === 'done') return undefined;
-    if (current === 'visiting') return [...stack.slice(stack.indexOf(id)), id];
-    state.set(id, 'visiting');
-    stack.push(id);
-    for (const dep of edges.get(id) ?? []) {
-      const found = visit(dep);
+    if (current === 'visiting') return [...stack.slice(stack.indexOf(node)), node];
+    state.set(node, 'visiting');
+    stack.push(node);
+    for (const next of graph.get(node)?.edges ?? []) {
+      const found = visit(next);
       if (found) return found;
     }
     stack.pop();
-    state.set(id, 'done');
+    state.set(node, 'done');
     return undefined;
   };
-  for (const id of edges.keys()) {
-    const found = visit(id);
-    if (found) return found;
+  for (const node of graph.keys()) {
+    const found = visit(node);
+    if (found) return plainCycle(found.map((n) => graph.get(n)!.id));
   }
   return undefined;
+}
+
+function plainCycle(ids: string[]): string[] {
+  const path = ids.slice(0, -1).filter((id, index, all) => index === 0 || id !== all[index - 1]);
+  if (path.length > 1 && path.at(-1) === path[0]) path.pop();
+  return [...path, path[0]!];
 }
 
 export function formatIssues(issues: Issue[]): string {

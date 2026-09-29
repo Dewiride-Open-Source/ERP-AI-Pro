@@ -20,11 +20,11 @@
     <NuGetAuditLevel>low</NuGetAuditLevel>
     <RootNamespace>$(MSBuildProjectName)</RootNamespace>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
-    <Authors>Dewiride</Authors>
-    <Company>Dewiride</Company>
+    <Authors>Dewiride Technologies Private Limited</Authors>
+    <Company>Dewiride Technologies Private Limited</Company>
     <Product>ERP-AI-Pro</Product>
-    <Copyright>Copyright (c) 2026 Dewiride</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>Copyright (c) 2026 Dewiride Technologies Private Limited</Copyright>
+    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!-- CS1591: the documentation file feeds OpenAPI descriptions; XML comments are never mandatory (comment policy). -->

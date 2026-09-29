@@ -87,6 +87,8 @@
           "title": "Repository governance and root configuration",
           "scope": "LICENSE (MIT), README, SECURITY.md with private vulnerability reporting, CONTRIBUTING, CODE_OF_CONDUCT, CODEOWNERS, pull-request and issue templates, .editorconfig with the .NET code-style severities, .gitattributes, .gitignore, .dockerignore and VS Code workspace settings.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Every root governance file exists and is referenced from README",
             "CODEOWNERS covers workflows, build props, infra, scripts, roadmap and security files",
@@ -95,13 +97,16 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-09-19",
-          "completedOn": "2026-09-19"
+          "completedOn": "2026-09-19",
+          "notes": "From `foundation-editions-and-licensing` (ADR-0030): the licence is LGPL-3.0-only, stated in COPYING and COPYING.LESSER, which replace the LICENSE file this item created."
         },
         {
           "id": "foundation-roadmap-tooling",
           "title": "Roadmap tooling",
           "scope": "docs/roadmap/roadmap.schema.json, roadmap.json holding every phase and sub-phase, and the zero-dependency scripts/roadmap/roadmap.ts CLI (build, check, next, show, start, done, block, defer, resume, note, acceptance, add-phase, add-sub-phase, move) with node:test coverage and the generated ROADMAP.md.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "`node scripts/roadmap/roadmap.ts check` passes and detects a stale ROADMAP.md",
             "Mutations rewrite roadmap.json canonically and stamp dates",
@@ -118,6 +123,8 @@
           "title": "Engineering docs, ADRs and planner tooling",
           "scope": "ADRs 0000-0009, the architecture, guide and operations documents, the configuration and routing registers, and the owner-local Claude Code operating manuals and skills (planner mode, verification, research) that are kept out of the repository.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "docs/architecture and docs/guides state the module anatomy, dependency rules, naming, testing and the comment policy",
             "The owner-local roadmap skill describes planner mode end to end",
@@ -133,6 +140,8 @@
           "title": ".NET solution skeleton",
           "scope": "backend/Dewiride.Erp.slnx with global.json, Directory.Build.props/targets, Central Package Management, nuget.config, build/ conventions, six BuildingBlocks projects, Host.Api (health, ProblemDetails, security headers, OpenAPI + Scalar in Development, explicit module list), Host.HealthProbe and the Platform/SystemInfo reference module.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "`dotnet build` succeeds with zero warnings and warnings treated as errors",
             "`dotnet run` serves /healthz/live, /healthz/ready, /api/platform/system-info and /openapi/erp.json",
@@ -149,6 +158,8 @@
           "title": ".NET test harness",
           "scope": "Microsoft.Testing.Platform configuration, xUnit v3 test projects for the shared testing library, architecture rules (ArchUnitNET), host integration tests (WebApplicationFactory) and the SystemInfo module unit and integration tests, producing TRX and Cobertura output.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "`dotnet test --solution` runs unit, integration and architecture tests green under MTP",
             "Architecture tests fail on a cross-module reference, a namespace mismatch or a module missing from Modules.cs",
@@ -164,6 +175,8 @@
           "title": "Web workspace skeleton",
           "scope": "frontend/ pnpm 12 workspace with packages/config, packages/ui (Tailwind 4 tokens, shadcn on Radix, theme provider and toggle) and apps/web on Next.js 16 App Router: root redirect to /login, branded login card, platform/system-info page calling the API, nonce CSP in proxy.ts, OpenTelemetry instrumentation, standalone output.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "`pnpm lint`, `pnpm typecheck`, `pnpm format:check` and `pnpm build` pass",
             "/ redirects to /login; /platform/system-info renders data from the API",
@@ -179,6 +192,8 @@
           "title": "Playwright end-to-end skeleton",
           "scope": "frontend/e2e workspace package with desktop (Chromium, Firefox, WebKit) and mobile (newest Pixel and iPhone descriptors) projects, a light/dark fixture that names screenshots per theme, page objects and specs for the login page, the system-info page, the theme toggle and an API health smoke.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Every project passes locally against the built web app and the running API",
             "Screenshots exist for every page in both themes on desktop and mobile",
@@ -194,6 +209,8 @@
           "title": "CI workflows, Dependabot and security automation",
           "scope": "GitHub Actions composite setup actions and SHA-pinned, least-privilege workflows for backend, frontend, e2e, Docker builds, CodeQL (advanced setup), dependency review and the roadmap check; Dependabot for nuget, npm, github-actions, docker, docker-compose and dotnet-sdk; the repository-settings checklist for the owner.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "All workflows are green on the first push to main",
             "Every action is pinned to a full commit SHA with a version comment",
@@ -210,6 +227,8 @@
           "title": "Docker skeleton",
           "scope": "infra/docker/api.Dockerfile (SDK build with locked restore to the chiseled runtime, non-root, health probe) and web.Dockerfile (Node 24 slim, pnpm frozen install, standalone output), infra/compose/compose.yaml with api and web, compose.override.yaml for local ports and the Aspire dashboard profile, compose.production.yaml with hardening, and .env.example. No SQL Server container.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Both images build locally",
             "`docker compose config` validates for the base, override and production combinations",
@@ -225,6 +244,8 @@
           "title": "Verification and first push",
           "scope": "scripts/verify/verify.ts runs the full local verification; the multi-agent verification review runs because more than 20 files changed and its findings are fixed; `foundation` sub-phases are marked done through the CLI; the initial Conventional Commits are pushed to main and CI is confirmed green.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "`node scripts/verify/verify.ts` passes end to end",
             "Review findings are resolved or recorded as roadmap notes",
@@ -235,6 +256,26 @@
           "startedOn": "2026-09-19",
           "completedOn": "2026-09-20",
           "notes": "Reviewed by an 85-agent multi-lens workflow (106 raw findings, 40 verified, 35 confirmed): all confirmed items fixed, the four contested items addressed (forwarded-header stripping, BuildingBlocks unit tests, offline web instance for API-unavailable states, web-origin security spec); verify.ts --e2e --docker green, 59 Playwright tests across five projects, 50 .NET tests, compose smoke green."
+        },
+        {
+          "id": "foundation-editions-and-licensing",
+          "title": "Editions, LGPL licensing and the contributor licence agreement",
+          "scope": "Relicense this repository as the ERP-AI-Pro Community edition under LGPL-3.0-only (COPYING and COPYING.LESSER replace LICENSE; README notice, MSBuild and npm metadata and the OpenAPI licence object with its SPDX identifier), give every roadmap sub-phase a Community or Enterprise edition that the owner confirms before work starts (the edition and depends-on commands and a rule that Community work never depends on Enterprise-only work), accept outside contributions only under a Harmony-based individual or corporate contributor licence agreement signed by a file under docs/cla and checked by the cla workflow, gate dependency licences with an allow list in dependency review and scripts/checks/licences.ts, record the decisions in ADR-0030, and create the private Enterprise repository with its proprietary licence.",
+          "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
+          "acceptance": [
+            "GitHub reports the repository licence as LGPL-3.0 from COPYING and COPYING.LESSER; the README notice and Directory.Build.props name LGPL-3.0-only and Dewiride Technologies Private Limited, every package.json declares the licence LGPL-3.0-only, and the OpenAPI licence object carries the SPDX identifier LGPL-3.0-only",
+            "Every sub-phase carries an edition; start and done refuse one whose edition the owner has not confirmed, validation refuses Community work that depends on Enterprise-only work, and ROADMAP.md shows the edition of every phase and sub-phase",
+            "The cla workflow, running the checker from the base branch, fails a pull request containing a commit whose author or co-author is neither exempt nor covered by a well-formed signature under docs/cla, and passes once that contributor adds a signature file",
+            "Dependency review allows only the licences of scripts/checks/lib/licence-policy.ts, and scripts/checks/licences.ts fails CI on any installed npm or restored NuGet package outside it",
+            "The private repository Dewiride-Enterprise/ERP-AI-Pro-Enterprise exists with its Enterprise licence, README, CODEOWNERS, security policy and the settings ADR-0030 lists"
+          ],
+          "tags": [],
+          "dependsOn": [],
+          "startedOn": "2026-09-29",
+          "completedOn": "2026-09-29",
+          "notes": "COPYING and COPYING.LESSER (LGPL-3.0-only) with the licence in README, Directory.Build.props, every package.json and the OpenAPI document; roadmap editions with owner confirmation before start, the edition and depends-on commands and the cross-edition rule; Harmony-based agreements under docs/cla checked by the cla workflow; the dependency licence allow list and scripts/checks/licences.ts; ADR-0030; the private repository Dewiride-Enterprise/ERP-AI-Pro-Enterprise."
         }
       ]
     },
@@ -252,6 +293,8 @@
           "title": "Idempotent Azure provisioning scripts",
           "scope": "Add infra/azure scripts (bash plus PowerShell, az CLI) that create the resource group, one App Configuration store with a sentinel key and labels local-dev/production, Key Vaults for local-dev and production with RBAC authorization and purge protection, and role assignments (App Configuration Data Reader, Key Vault Secrets User, Key Vault Crypto User) for developers and the production service principal, re-runnable with a dry-run flag, a parameter file, printed endpoints and docs/azure/bootstrap.md.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "bash scripts/azure/provision.sh --dry-run exits 0 without creating or changing any Azure resource: it prints the az deployment group what-if result and every data-plane command it would run.",
             "Running bash scripts/azure/provision.sh twice with the same parameter file leaves the second what-if with no Create or Delete entries and no Modify beyond the server-filled properties listed as what-if noise in docs/operations/azure-bootstrap.md, keeps the sentinel values, key versions and rotation policies unchanged, and both runs exit 0 with the store endpoint and vault URIs printed (verified by the owner-consented run recorded in the pull request).",
@@ -270,6 +313,8 @@
           "title": "Entra app registration scripts",
           "scope": "Add scripts that create or update per-environment single-tenant app registrations (web redirect URIs signin-oidc/signout-callback-oidc, implicit flow off, app roles from app-roles.json with baseline Erp.User plus Erp.Admin, Graph openid/profile/User.Read consent, api.requestedAccessTokenVersion=2 via az rest), create the service principal with assignment required, create the production automation service principal with a certificate credential (secret fallback) stored in the matching Key Vault, write resulting ids to App Configuration, and verify the registration by reading it back and asserting expected settings.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "bash scripts/azure/entra.sh creates or updates the registrations named in params.env for local-dev, production and the runtime service principal; running it a second time performs no Microsoft Graph or Key Vault write and exits 0 (verified by the owner-consented runs recorded in the pull request).",
             "bash scripts/azure/verify.sh --entra passes by reading back: single-tenant audience, the documented redirect URIs per environment, implicit grant off, access token version 2, app roles Erp.User and Erp.Admin with their fixed ids, Graph openid/profile/User.Read granted, service principals with assignment required, a key credential matching the Key Vault certificate, and App Configuration keys Erp:Platform:Identity:TenantId and ClientId per label.",
@@ -287,6 +332,8 @@
           "title": "API configuration bootstrap",
           "scope": "Implement backend/BuildingBlocks/Configuration: AddAzureAppConfiguration selecting all keys with the null label then the APPCONFIG_LABEL label, sentinel-key refreshAll with the refresh middleware, Key Vault references with secret refresh interval, an App Configuration health check, a credential factory (DefaultAzureCredential with AZURE_TOKEN_CREDENTIALS=dev locally, EnvironmentCredential with certificate in production), strongly-typed options with ValidateOnStart, and a local-only fallback to appsettings plus dotnet user-secrets when APPCONFIG_ENDPOINT is unset, covered by unit tests.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "AddErpConfiguration selects AppConfiguration, InMemory or LocalDevelopment from APPCONFIG_ENDPOINT, the test-only bootstrap value ERP_CONFIGURATION_SOURCE and ASPNETCORE_ENVIRONMENT; a Production host without APPCONFIG_ENDPOINT fails at startup with a message naming the variable; every ErpApiFactory (Development and Production) resolves InMemory without setting APPCONFIG_ENDPOINT; unit and integration tests cover every branch.",
             "Unit tests prove the App Configuration chain builds with the labelled Erp:Sentinel registration and the validated intervals, the in-repo refresh middleware throttles to one refresh per second and always calls the next middleware, the App Configuration health check and refresher provider are registered only for the AppConfiguration source, and UseErpConfigurationRefresh runs between forwarded headers and host filtering.",
@@ -305,6 +352,8 @@
           "title": "Configuration conventions and seed data",
           "scope": "Define key naming (`Erp:<Module>:<Setting>`, Key Vault references named `Erp--<Module>--<Secret>`), add config/appconfig.local-dev.json and config/appconfig.production.json with a script that imports them into their labels and creates Key Vault secret placeholders, add an in-memory configuration source for integration tests and CI so the suite needs no Azure access, document how to add a setting, and add tests proving a local-dev label value overrides the unlabelled default.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "infra/appconfig/defaults.json, local-dev.json, production.json, feature-flags.json and key-vault-references.json contain only keys of the form Erp:<Domain>:<Module>:<Setting>, flags of the form Erp.Modules.<Domain>.<Module>[.<Capability>] and secrets of the form Erp--<Domain>--<Module>--<Name>, carry no vault, store or tenant identifiers, and a node test run by scripts/verify/verify.ts and CI enforces that.",
             "bash scripts/azure/seed.sh imports the unlabelled defaults and each label file, sets the labelled feature flags, writes Key Vault references composed from params.env only after confirming the secret exists, bumps the labelled Erp:Sentinel, prints a read-back, is re-runnable and supports --dry-run (verified by the owner-consented run recorded in the pull request).",
@@ -323,6 +372,8 @@
           "title": "Web app runtime configuration",
           "scope": "Define the Next.js environment contract (server-only vs NEXT_PUBLIC_ variables) validated with Zod at startup in instrumentation.ts, configure the same-origin API base path used by Server Actions and the fetch wrapper, add .env.example, and add a unit test that fails when a required variable is missing.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "readServerEnv in frontend/apps/web/src/shared/config/env.schema.ts validates API_INTERNAL_URL, OTEL_EXPORTER_OTLP_ENDPOINT and OTEL_SERVICE_NAME with Zod, and pnpm test:unit (node --test) proves that a missing or blank API_INTERNAL_URL fails when NODE_ENV=production, defaults to http://localhost:5080 in development, has trailing slashes stripped, accepts http://api:8080 and rejects non-http(s) or malformed values.",
             "instrumentation.ts runs the validation on the Node.js runtime so next start and the standalone server exit with a message naming the offending variable, pnpm build still succeeds without API_INTERNAL_URL, and proxy.ts and shared/api/http.ts obtain the API base URL only through the schema (no other process.env.API_INTERNAL_URL read exists).",
@@ -341,6 +392,8 @@
           "title": "Feature management",
           "scope": "Integrate Microsoft.FeatureManagement with a typed feature catalogue (`Erp.Modules.<Name>` toggles plus named capability flags) read from App Configuration under the environment label, a RequireFeature endpoint filter returning 404 when a module is disabled, a GET /api/features endpoint for UI gating, and unit and integration tests using in-memory flags.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "FeatureCatalogue derives one flag per module and one per declared ModuleCapability, and the custom IFeatureDefinitionProvider returns configured definitions first and catalogue defaults otherwise, so an undefined module flag evaluates enabled while a definition from a later configuration provider overrides an earlier one by id; unit tests cover each path.",
             "Every module route group is feature-gated: with Erp.Modules.Platform.SystemInfo disabled through configuration, GET /api/platform/system-info returns 404 application/problem+json with code feature.disabled, and GET /api/platform/features returns { features: [{ name, enabled }] } for the whole catalogue and is whitelisted as anonymous in the architecture test.",
@@ -359,6 +412,8 @@
           "title": "Secrets hygiene and rotation runbook",
           "scope": "Write docs/runbooks/secrets.md (naming, rotation steps, refresh intervals, emergency revocation), confirm secret scanning and push protection are enabled, and add a CI grep plus unit test that rejects any committed value resembling a client secret, connection-string password or private key.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "node scripts/checks/secret-patterns.ts passes on the repository and exits 1 with <path>:<line>: <reason> for a file containing a private key header, an Entra client-secret shape, a connection-string password, an App Configuration access key or a bearer token; it runs in node scripts/verify/verify.ts and in the ci-backend workflow.",
             "node --test scripts/checks/tests/*.test.ts proves that role definition GUIDs, <placeholder> values, CHANGE_ME, ${VAR} interpolations, TrustServerCertificate=True and lockfile hashes are not reported and that git-ignored files are never scanned.",
@@ -387,6 +442,8 @@
           "title": "Module contract and registration",
           "scope": "Define IModule (RegisterServices, MapEndpoints(RouteGroupBuilder), migrations assembly, feature-flag key, permission declarations) in backend/BuildingBlocks/Modules with a static module catalogue in the host (no runtime assembly scanning), per-module feature flags from `azure-configuration-feature-management`, and architecture tests enforcing namespace equals folder path, one public entry type per module, and no cross-module references except <Domain>.Contracts projects.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "ModuleCatalog rejects a duplicate module id, route prefix, schema or feature flag and a permission that does not start with <domain>.<module>., each with a message naming the module, proven by unit tests.",
             "Architecture tests fail on a .cs file whose namespace does not equal its folder path, on a module folder missing one of the four projects or its README.md, and on a folder holding more than 12 source files.",
@@ -404,6 +461,8 @@
           "title": "Persistence conventions: contexts, schemas and ids",
           "scope": "Implement a ModuleDbContext base with HasDefaultSchema(<module>) and MigrationsHistoryTable per schema, provider selection (UseSqlServer with compatibility level 170 and EnableRetryOnFailure locally, UseAzureSql in production), strongly-typed ids with EF value converters, complex-type value objects, and a sample module proving migrations run against the owner's SQL Server instance in local integration tests and against the SQL Server 2025 service container in CI.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "AddModuleDbContext<TContext> configures HasDefaultSchema, the __EFMigrationsHistory table inside the module schema, compatibility level 170 with EnableRetryOnFailure on UseSqlServer, and UseAzureSql when Erp:Platform:Database:Provider is AzureSql, proven by unit tests over the options and an integration test that reads sys.schemas and INFORMATION_SCHEMA.TABLES.",
             "A strongly-typed id and a complex-type value object (a readonly record struct mapped through ComplexProperty) round-trip through SQL Server with the expected column names and types, DateTimeOffset values are stored in UTC, and HasPendingModelChanges() is false for every registered context under both provider options.",
@@ -422,6 +481,8 @@
           "title": "Persistence conventions: auditing, soft delete and domain primitives",
           "scope": "Add backend/BuildingBlocks/Domain with Entity and AggregateRoot bases, IAuditable with a CreatedBy/At and ModifiedBy/At interceptor, ISoftDeletable with a named query filter, RowVersion concurrency, UTC DateTimeOffset storage with IST helpers, Money (currency plus minor units with paise rounding), Percentage and Indian financial-year helpers, covered by unit tests.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Saving an IAuditable entity stamps CreatedAt/CreatedBy and ModifiedAt/ModifiedBy from IActorContext and TimeProvider, an update stamps ModifiedAt/ModifiedBy only, deleting an ISoftDeletable entity sets IsDeleted, DeletedAt and DeletedBy instead of removing the row, and the named SoftDelete query filter hides it unless a query ignores that filter — proven against SQL Server on the sample aggregate.",
             "An IVersioned entity maps to a rowversion column and a stale update surfaces as DbUpdateConcurrencyException, proven against SQL Server.",
@@ -440,6 +501,8 @@
           "title": "Application-layer primitives",
           "scope": "Add hand-written ICommand/IQuery handler abstractions with convention-based DI registration and pipeline steps (validation, unit of work, logging, transaction), a Result<T> type with typed error kinds mapped to RFC 9457 ProblemDetails, pagination/sorting/safe-filter request contracts, in-process domain events, and an idempotency-key endpoint filter for POST, with unit tests.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "A command handler resolved from the container runs the logging, validation and unit-of-work steps in that order regardless of registration order; a validation failure answers 400 application/problem+json with an errors member per field without touching the database; a successful command commits the handler's writes and its domain-event handlers' writes in one transaction; a failed result or an exception leaves no rows.",
             "Paging, sorting and filtering request contracts cap the page size at 200 and reject a field or operator outside the handler's allow-list with 400 ProblemDetails codes query.invalid-field and query.invalid-operator, and the parsing of the wire grammar is covered by unit tests including separators inside values.",
@@ -457,6 +520,8 @@
           "title": "HTTP and OpenAPI conventions",
           "scope": "Standardise endpoints on TypedResults, per-module validation registration (built-in DataAnnotations validation with the per-assembly source generator), AddProblemDetails plus a global IExceptionHandler, correlation-id middleware, route prefix /api/<domain>/<feature>, an OpenAPI 3.1 document with build-time openapi.json and Scalar UI in Development only, and a generated TypeScript client in frontend/packages/api-client (generator chosen by ADR) with a CI drift check.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Every API response carries an X-Correlation-ID header (the caller's value when it is well formed, otherwise the W3C trace id of the request), the same value appears as traceId in every ProblemDetails body and in the log scope of the request, and integration tests prove all three.",
             "A request record that fails DataAnnotations or IValidatableObject answers 400 application/problem+json with an errors member per field, every non-2xx response carries type = /problems/<code> and the code extension, and the OpenAPI operation documents the validation problem shape.",
@@ -475,6 +540,8 @@
           "title": "Transport security middleware",
           "scope": "Configure forwarded headers with KnownIPNetworks from configuration and ForwardLimit 1, HostFiltering with AllowedHosts, HSTS with configurable ramp and HTTPS redirection, security-headers middleware (CSP with nonces, X-Content-Type-Options, Referrer-Policy, frame-ancestors, Permissions-Policy), Kestrel AddServerHeader=false and request size limits in the documented middleware order, with integration tests for each header and proxy scenario.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Integration tests against a real Kestrel listener prove that API responses carry X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy, the default-src 'none' Content-Security-Policy, Cross-Origin-Resource-Policy and Cross-Origin-Opener-Policy, and never Strict-Transport-Security or an HTTPS redirect, in both Development and Production hosts; the proxy owns TLS and HSTS.",
             "X-Forwarded-For and X-Forwarded-Proto are applied only when the direct peer is inside Erp:Platform:Host:KnownNetworks, with ForwardLimit 1; an invalid network entry fails startup with a message naming it; a Host header outside Erp:Platform:Host:AllowedHosts answers 400.",
@@ -492,6 +559,8 @@
           "title": "Rate limiting, output caching and health checks",
           "scope": "Add a global per-IP limiter chained to a per-user sliding-window policy bound from configuration returning 429 with Retry-After, output caching restricted to explicitly tagged reference-data endpoints, and /healthz/live plus /healthz/ready (SQL, App Configuration) with integration tests for each limiter and probe.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Anonymous requests are limited per client address with a fixed window and signed-in requests per actor with a sliding window, both bound from Erp:Platform:RateLimiting; a request over its limit answers 429 application/problem+json with code rate-limit.exceeded and a Retry-After header; clients forwarded by a trusted proxy get separate partitions, IPv6 clients are grouped by their /64 prefix, and Enabled=false applies no limit; proven by unit tests over the limiter and integration tests over the real pipeline.",
             "The health endpoints are exempt from rate limiting and from HTTP request metrics; /healthz/live answers 200 without touching any dependency; /healthz/ready runs every readiness check under a 2-second timeout and answers 503 service.unavailable, naming no check, within that bound when SQL Server is unreachable; an App Configuration store that cannot be reached after startup degrades readiness instead of failing it.",
@@ -509,6 +578,8 @@
           "title": "Observability baseline",
           "scope": "Add backend/BuildingBlocks/Observability with OpenTelemetry traces/metrics/logs exported over OTLP only when OTEL_EXPORTER_OTLP_ENDPOINT is set, source-generated LoggerMessage conventions enforced by analyzers, ASP.NET Core/Kestrel/HttpClient/EF Core meters, Microsoft.Extensions.Http.Resilience standard handler for outbound HTTP, and the local aspire-dashboard compose profile receiving telemetry.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "The API exports traces, metrics and logs over OTLP only when OTEL_EXPORTER_OTLP_ENDPOINT is set; metrics come from an explicit meter list (ASP.NET Core hosting, Kestrel, memory pool, routing, diagnostics, rate limiting, authentication, authorization, System.Net.Http, name resolution, System.Runtime, Microsoft.EntityFrameworkCore, SQL client operations and Dewiride.Erp.*), and the resource carries the service name, the host's version, an instance id and the deployment environment; proven by unit tests with the in-memory exporter.",
             "Every SQL command issued through SqlClient produces a client span and a db.client.operation.duration measurement whose query text carries no parameter values and whose error status carries no value the server quoted, proven against SQL Server.",
@@ -526,6 +597,8 @@
           "title": "Migration tooling and seeding",
           "scope": "Provide per-context `dotnet ef` wrapper scripts (scripts/ef.ps1 and ef.sh), a CI step running `migrations has-pending-model-changes` for every context, self-contained migration bundle builds per context in CI, the one-shot migrator compose service pattern, and an idempotent ordered seeder framework verified by a test that runs seeding twice.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "node scripts/ef/ef.ts list, add, update, pending and script run dotnet ef for any discovered module or building-block DbContext from the repository root on Windows and Linux, discovering contexts from the source tree so a new context needs no script change, and node --test covers discovery and argument composition.",
             "ci-backend.yml fails when any discovered context has pending model changes, through a single ef.ts pending --all step.",
@@ -544,6 +617,8 @@
           "title": "Attachments building block",
           "scope": "Add backend/BuildingBlocks/Attachments with an IDocumentStore abstraction backed by an encrypted, content-addressed Docker volume, metadata in a `files` schema, size and content-type allow-list, virus-scan hook interface, authorised time-limited download endpoint, upload endpoint and a frontend/packages/ui upload component, so every business module stores real files from day one and `documents` extends rather than replaces it.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "POST /api/platform/attachments streams one multipart file into the Azure Blob Storage container named by Erp:Platform:Attachments (the Entra-only development account for local runs, Azurite in tests and CI) as an AES-256-GCM envelope under a per-file data key wrapped by the Key Vault encryption key, records it in the files schema, stores identical content once, and answers 413 over MaxSizeBytes, 415 for a content type outside the allow-list or whose leading bytes do not match it and 400 for an empty file, as ProblemDetails, without leaving a committed blob behind",
             "A download link from POST /api/platform/attachments/{id}/download-links streams the original bytes with the original file name and content type until DownloadLinkLifetime passes and records each download; a tampered, expired, other-actor or deleted-attachment link answers 404, and a stored file whose envelope fails authentication answers 404 before any byte is sent",
@@ -573,6 +648,8 @@
           "title": "Design tokens and theme package",
           "scope": "Build frontend/packages/ui with OKLch light/dark colour, typography, spacing, radius and motion tokens, shadcn init (Base UI primitives, cssVariables, tw-animate-css, lucide) wired to next-themes class strategy, an @import-able theme CSS shared across the workspace, and a /design/kitchen-sink route rendering every primitive in both themes that Playwright screenshots at desktop and mobile widths.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "@dewiride/erp-ui exports theme.css, holding the colour, typography, spacing, radius, elevation, layer, focus and motion tokens without importing Tailwind, and globals.css, which imports Tailwind once and then the theme, so the web build carries a single preflight; a unit test proves every declared foreground/background pair and status colour on its tint meets 4.5:1 and input borders and the focus ring meet 3:1 in light and dark",
             "Motion durations and easings are tokens that collapse to 0.01 ms under prefers-reduced-motion in one place backed by one global safety net; a Playwright test with reduced motion emulated measures the demo animation, a token-driven transition and a generated primitive's literal duration at 0.01 ms or less, and without the preference measures the token durations",
@@ -590,6 +667,8 @@
           "title": "Feature folder conventions and routing",
           "scope": "Establish frontend/apps/web/src/features/<domain>/<module>/<feature>/{components,server,forms,ai} with app/ kept routing-only under (auth) and (app) route groups, typedRoutes, a proxy.ts scaffold, a fetch wrapper skeleton over frontend/packages/api-client with ProblemDetails mapping, and an ESLint boundary rule that fails on cross-feature deep imports.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "node scripts/checks/feature-boundaries.ts fails, naming the file and the rule, on a non-special file or a private folder under apps/web/src/app, a page or layout outside the (auth) and (app) groups other than the root layout and the root redirect, a module-root file other than index.ts and nav.ts, a feature subfolder outside components, server, forms, hooks and ai, a server/actions.ts without a leading use server or a server/queries.ts without server-only, a module index.ts exporting from its server or forms folders, and any static, re-export, side-effect or dynamic import that breaks the import matrix (another module's internals, a domain _shared from another domain, app/ importing anything but a module index, the registry or shared, shared importing features, anything importing app/); node --test proves each case and the check passes on the tree",
             "pnpm lint fails on a deep alias import into another module, a relative import that leaves its module other than into its domain _shared, an app/ import outside its allow-list, an HTML element rendered by an app/ file other than html and body in the root layout and global error, a value import from the API client or a fetch or XMLHttpRequest reference outside src/shared/api, an object href, and a packages/ui import of apps/web; unit tests in @dewiride/erp-config prove each case through the full preset",
@@ -608,6 +687,8 @@
           "title": "Forms and validation kit",
           "scope": "Create form primitives (field, select/combobox, date and date-range pickers with dd-MM-yyyy, INR currency input with lakh/crore grouping, GSTIN/PAN/IFSC masked inputs, file drop zone using `backend-platform-attachments-building-block`) driven by Zod schemas shared between Server Actions and client, the useActionState submission pattern, and ProblemDetails-to-field-error mapping, each covered by component tests.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "packages/ui ships the form primitives, each shown in every state on /design/kitchen-sink in light and dark and driven by keyboard in Playwright on all projects with ARIA snapshots: a labelled field frame with description and errors, an error summary, a submit button with pending and not-yet-ready states, an in-house search-as-you-type combobox following the WAI-ARIA combobox pattern on Radix Popover, dd-MM-yyyy date and date-range inputs with a react-day-picker calendar whose values are yyyy-MM-dd, an INR amount input with lakh and crore grouping whose value is a decimal string, and upper-casing GSTIN, PAN and IFSC inputs",
             "The pure logic runs under node --test with tables: dd-MM-yyyy parsing and formatting including impossible dates and range order, INR parsing and grouping including negatives, paise and values of a crore and more, GSTIN, PAN and IFSC normalisation and shape (GSTIN shape only, no check character), the in-house Zod resolver that maps issues to react-hook-form paths, the submission envelope parser, and the ProblemDetails-to-form-state mapping for 400 field errors, 400 without fields, 403, 404, 409, 422, 429, 5xx, idempotency answers and an unreachable API",
@@ -626,6 +707,8 @@
           "title": "Data table kit (core)",
           "scope": "Build a server-driven table (TanStack Table + TanStack Query over the generated API client, licences verified) with sorting, filtering, pagination, column visibility, row selection and a mobile card layout backed by the `backend-platform-application-layer-primitives` paginated-query contract; saved views, bulk actions, CSV export and virtualisation follow in `business-building-blocks-web-shared-kit-extensions`.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "`@dewiride/erp-ui` exposes a `DataTable` built on TanStack Table 9 whose sortable headers carry `aria-sort` and sort on the server, with a column-visibility menu, page-scoped row selection with a select-all checkbox, a pagination bar whose page controls are links, loading, pending and empty states, and a card list of the same rows below its container breakpoint; Playwright component tests on `/design/data-table` prove the keyboard path, ARIA snapshots and every control on all five projects in light and dark.",
             "A list's page, page size, sort, filters and hidden columns live in URL search parameters that `apps/web/src/shared/lists` parses against a per-list definition and maps onto the API's `page`, `pageSize`, `sort` and `filter` grammar (values percent-encoded, date ranges on IST day boundaries); a malformed or non-canonical address redirects to its canonical form, and `node --test` covers parsing, serialisation, canonical addresses and the encoding.",
@@ -643,6 +726,8 @@
           "title": "Feedback, motion and accessibility baseline",
           "scope": "Add Sonner toasts, confirm dialogs, empty/error states with retry, skeleton loading states, optimistic-update helpers, page transition and list animation patterns honouring prefers-reduced-motion, and an accessibility baseline (keyboard navigation, focus rings, ARIA labels) enforced by an axe scan step in Playwright that fails on serious violations.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "The design system gains ConfirmDialog, ErrorState, LoadingStatus, SkipLink, PageTransition and AnimatedList, each shown on /design/feedback or its report page, where Playwright drives every control by keyboard or pointer in light and dark on all five projects.",
             "Dismissing a request on /design/feedback or deleting a stored file on /platform/attachments takes its row off the list and lowers the count at once and reports the outcome in a toast; a request the server refuses, or a call that fails, comes back with an error toast that stays until closed, and a file already deleted elsewhere stays gone, proven by Playwright, the attachments case against the API.",
@@ -661,6 +746,8 @@
           "title": "E2E harness matrix",
           "scope": "Extend Playwright with per-viewport projects crossed with light/dark, a screenshot naming convention, a nav-crawl helper that visits every registered navigation entry and asserts zero console errors, blob reporter with sharding and merge in CI, and HTML report artifacts; the authentication fixture slot is filled by `authentication-test-authentication-infrastructure`.",
           "status": "done",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Playwright runs a desktop, a tablet and a phone viewport: desktop Chromium, Firefox and WebKit, the owner-approved iPad (gen 11) as tablet-ios, and the newest Pixel and iPhone, with every visual test in light and dark through forEachTheme and every capture named <spec>/<name>--<project>--<theme>.png; the whole suite passes on all six projects.",
             "A navigation crawl reads every entry the shell's primary navigation renders from the module registry, visits each in light and dark on every project, and fails on a console error, a missing page heading or a serious accessibility violation, naming the page.",
@@ -690,6 +777,8 @@
           "title": "OIDC BFF in the API",
           "scope": "Configure Microsoft.Identity.Web AddMicrosoftIdentityWebApp from the AzureAd section (auth code + PKCE, single tenant, explicit default and challenge schemes), /api/auth/login with validated relative-only returnUrl, /api/auth/logout and callback paths, hardened cookie options (HttpOnly, Secure, SameSite=Lax, sliding expiry), a fallback RequireAuthenticatedUser policy with an explicit AllowAnonymous allow-list, 401 ProblemDetails instead of redirects for XHR requests, and integration tests using a TestAuthHandler scheme.",
           "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -700,6 +789,8 @@
           "title": "Token cache and Data Protection key ring",
           "scope": "Add AddDistributedTokenCaches backed by the SQL Server IDistributedCache (in-memory in Development), persist Data Protection keys to a named Docker volume with ProtectKeysWithAzureKeyVault using a versionless key identifier and SetApplicationName, fail fast when the vault key is unreachable in production, and add a test proving cookies survive an app restart.",
           "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -709,6 +800,8 @@
           "title": "Antiforgery for JSON endpoints",
           "scope": "Add AddAntiforgery with header X-XSRF-TOKEN, a GET /api/auth/antiforgery endpoint setting a non-HttpOnly XSRF-TOKEN cookie, an endpoint filter validating POST/PUT/PATCH/DELETE on every cookie-authenticated group, the web fetch wrapper attaching the header, and integration tests for missing and invalid tokens.",
           "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -719,6 +812,8 @@
           "title": "Session endpoints, OpenAPI security and bearer scheme",
           "scope": "Implement GET /api/auth/me (id, name, email, Entra roles, permissions placeholder) and a session-ping endpoint, describe cookie and XSRF security schemes in the OpenAPI document, and register AddMicrosoftIdentityWebApi as a JWT bearer scheme behind a feature flag with per-group scheme selection, scope and app-role checks and integration tests with a test token issuer for later integrations and mobile.",
           "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -728,6 +823,8 @@
           "title": "Test authentication infrastructure",
           "scope": "Expose the TestAuthHandler scheme and an E2E-only login endpoint issuing the real auth cookie for seeded users solely when ASPNETCORE_ENVIRONMENT=Testing (never in production images), add Playwright fixtures using it into the `web-foundation-e2e-harness-matrix` slot, and document a manual smoke run with a real Entra test user.",
           "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -737,6 +834,8 @@
           "title": "Web login page and session integration",
           "scope": "Build the animated branded /login page (root redirects here when unauthenticated) with a Microsoft sign-in button starting the API challenge, complete proxy.ts with the optimistic session-cookie check and relative-only returnUrl validation, hydrate user context from /api/auth/me, implement sign-out with Entra front-channel logout and session-expired handling that returns the user to their page after re-login, with e2e on desktop and mobile in light and dark with screenshots.",
           "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -747,6 +846,8 @@
           "title": "Authenticated application shell",
           "scope": "Implement the (app) layout with a collapsible sidebar generated from a typed, permission-gated module/feature navigation registry, top bar with command palette (Ctrl+K), breadcrumbs, user menu and theme toggle, responsive drawer navigation on phones, and React ViewTransition route transitions, covered by the nav-crawl e2e on desktop and mobile in light and dark with screenshots.",
           "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -757,6 +858,8 @@
           "title": "Login hardening",
           "scope": "Apply strict rate limiting to auth endpoints, record sign-in/sign-out/failure events in an audit table, verify security headers and cookie flags with a Playwright test, and write docs/security/auth-threat-model.md covering CSRF, session fixation, open redirects and token leakage.",
           "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-09-29",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -777,6 +880,7 @@
           "title": "Users module and just-in-time provisioning",
           "scope": "Create backend/Modules/Identity/Users with a User aggregate linked to the Entra object id (employee code, display name, work email, phone, designation, date of joining, status) in schema `identity`, create or update the user from Entra claims on first sign-in, deny sign-in for deactivated users, bootstrap the first administrator from configuration, and add admin CRUD endpoints with validation plus unit and integration tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -786,6 +890,7 @@
           "title": "Directory invitation via Microsoft Graph",
           "scope": "Add an invitation flow that searches directory users through Microsoft Graph, pre-registers invitees with an intended role, matches them by object id or email on first login, and covers the flow with integration tests using a fake Graph client.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -795,6 +900,7 @@
           "title": "Roles and permissions",
           "scope": "Add a permission catalogue generated from module declarations (e.g. finance.sales.invoices.approve), Role and RolePermission entities with seeded system roles (Owner, Admin, Finance, HR, Manager, Employee) mapped from Entra app roles, a permission authorisation handler and RequirePermission endpoint extension with permission claims returned by /api/auth/me, and an architecture test that every non-anonymous endpoint declares a permission.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -804,6 +910,7 @@
           "title": "Departments, designations and reporting lines",
           "scope": "Model a department tree, designations, manager assignment with effective dates, position history and an org-chart query exposed through admin endpoints under /api/identity/organisation, consumed by approvals and timesheets later and extended (not replaced) by `hr-core`.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -813,6 +920,7 @@
           "title": "Audit trail building block",
           "scope": "Add backend/BuildingBlocks/Auditing with an EF Core SaveChanges interceptor recording append-only entries (actor, timestamp, before/after JSON diff, IP, correlation id) into an `audit` schema for user, role and department changes, a filterable exportable audit endpoint, an audit timeline component, and an architecture test requiring aggregates to implement IAuditable.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -822,6 +930,7 @@
           "title": "Web: users, roles and permissions",
           "scope": "Build the users list (data table with search, sort, filter, pagination, mobile cards), user detail and create/edit forms, role assignment dialog and a roles/permissions matrix page, with Playwright clicking every control on desktop and mobile in light and dark with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -831,6 +940,7 @@
           "title": "Web: invitations, organisation and my profile",
           "scope": "Build the invite dialog with directory search, department and designation admin pages with an org-tree preview, and my-profile with Graph photo and theme preference, with e2e on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -840,6 +950,7 @@
           "title": "User lifecycle",
           "scope": "Implement deactivate/reactivate with immediate session invalidation via a server-side security stamp validated on each request, an offboarding checklist hook for `hr-core`, and the contract for the nightly Entra directory sync job that `business-building-blocks-background-jobs-and-scheduling` schedules to flag disabled or deleted accounts.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -860,6 +971,7 @@
           "title": "Production compose stack",
           "scope": "Complete infra/compose/compose.yaml and compose.production.yaml with proxy, api, web and one-shot migrator services, named volumes (data-protection keys, attachments, proxy certificates), hardened settings (read_only with tmpfs, cap_drop ALL, no-new-privileges, resource limits, log rotation, restart unless-stopped, healthcheck on every service, depends_on service_healthy), file-backed secrets for the service-principal certificate, profiles so SQL Server never starts in production, and `docker compose config` validation in CI.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -870,6 +982,7 @@
           "title": "Production database provisioning",
           "scope": "Provision Azure SQL (serverless free offer or small provisioned tier, recorded as an ADR) with an Entra admin, contained users for the app (data role) and migrator (schema role), service-principal connection strings stored in Key Vault, firewall rules for the home server, the free-amount-remaining alert, and a documented fallback to a SQL Server Express container.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -880,6 +993,7 @@
           "title": "Production attachments storage",
           "scope": "Provision the production storage account for attachments with the existing storage-account Bicep module (Entra only, private attachments container, blob and container soft delete, CanNotDelete lock) after asking the owner for its redundancy (locally redundant, zone-redundant across three Central India zones, or geo-redundant) and its soft-delete retention; grant Storage Blob Data Contributor on the container to the runtime service principal only; create Erp--Platform--Attachments--EncryptionKey in kv-erp-ai-pro-prod with its own value; write Erp:Platform:Attachments:BlobServiceUri and the EncryptionKey reference under the production label; optionally restrict the account to the server's fixed address; extend verify.sh to production; and prove a production upload and download round trip.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -889,6 +1003,7 @@
           "title": "Host bootstrap runbook and scripts",
           "scope": "Write docs/runbooks/host-setup.md and infra/compose/host scripts for Ubuntu hardening (unattended upgrades, ufw, fail2ban, SSH keys only), Docker Engine install, non-root deploy user, mounted service-principal certificate, .env for non-secret values, DNS and router port-forwarding, and a systemd unit running `docker compose up -d --wait`.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -898,6 +1013,7 @@
           "title": "Reverse proxy and TLS",
           "scope": "Configure the edge proxy (Caddy with automatic TLS as default, nginx+certbot as alternative, recorded as an ADR) routing /api/* to api:8080 and everything else to web:3000, TLS 1.2+, HSTS ramp-up, forwarded headers with KnownIPNetworks equal to the compose subnet, security headers, request size limits, streaming buffering off and no host-published ports other than 80/443, verified by a local end-to-end run through the proxy including the Entra redirect flow.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -908,16 +1024,18 @@
           "title": "Release and deploy pipeline",
           "scope": "Add a release workflow on v* tags building and pushing images with SBOM, provenance, attestations and the CVE gate, and host-side deploy.sh and rollback.sh that pull by digest, run `gh attestation verify`, execute the migrator, roll api/web with health-gated cutover, prune, and roll back to the previous digest on failure, with a shellcheck CI job.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): the migrator ships inside the api image at /app/migrator as the compose migrator service (pull_policy never, restart no). docker compose up recreates a changed api container before it evaluates the api depends_on condition service_completed_successfully, so deploy.sh must pull api and web, run docker compose run --rm migrator on its own, stop and keep the running api when it exits non-zero, and only then run up -d --remove-orphans --wait. Migrator exit codes: 0 succeeded, 1 failed or cancelled, 2 configuration could not be loaded or is invalid, 3 migrations pending (status), 64 usage. docs/operations/runbooks/migrations.md is the manual form of this sequence."
+          "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): the migrator ships inside the api image at /app/migrator as the compose migrator service (pull_policy never, restart no). docker compose up recreates a changed api container before it evaluates the api depends_on condition service_completed_successfully, so deploy.sh must pull api and web, run docker compose run --rm migrator on its own, stop and keep the running api when it exits non-zero, and only then run up -d --remove-orphans --wait. Migrator exit codes: 0 succeeded, 1 failed or cancelled, 2 configuration could not be loaded or is invalid, 3 migrations pending (status), 64 usage. docs/operations/runbooks/migrations.md is the manual form of this sequence. From `foundation-editions-and-licensing` (ADR-0030): publishing the Community images conveys LGPL-3.0-only object code, so both images carry COPYING, COPYING.LESSER and a third-party notices file (including the LGPL-3.0-or-later libvips binaries that sharp brings into the web image, with where their source is), the OCI labels org.opencontainers.image.licenses=LGPL-3.0-only, org.opencontainers.image.source, org.opencontainers.image.revision and org.opencontainers.image.vendor=Dewiride Technologies Private Limited, and each release names its tagged commit as the corresponding source. No published image may contain Microsoft.Identity.Client.NativeInterop (libmsalruntime.so, brought in by Microsoft.Data.SqlClient.Extensions.Azure through Microsoft.Identity.Client.Broker), because section 3(e) of its Microsoft Software License Terms forbids distributing it: exclude its native runtime from the published hosts, or the dependency that brings it, and prove the image holds no such file. The private Enterprise images get their own labels and notices in `business-building-blocks-enterprise-edition-composition`."
         },
         {
           "id": "first-deployment-health-probes-and-uptime-monitoring",
           "title": "Health probes and uptime monitoring",
           "scope": "Provide a shell-less health probe for the chiseled API image (tiny .NET probe entrypoint or proxy-side active checks), a /api/health route in the web app, compose healthcheck definitions and an external uptime monitor hitting /healthz/live through the proxy with alerting to the owner.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -927,6 +1045,7 @@
           "title": "Backups and restore drill",
           "scope": "Verify Azure SQL automated backups and PITR retention, back up the data-protection key volume, attachments volume and compose configuration nightly to an encrypted off-host location, and rehearse a full restore documented in docs/runbooks/restore.md with measured RTO/RPO.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -937,6 +1056,7 @@
           "title": "Go-live checklist and production smoke",
           "scope": "Run a production Playwright smoke project (real Entra test user via stored auth state, users list renders, sign-out) against the live URL, confirm traces and logs arrive, complete docs/runbooks/go-live-checklist.md, record ADR deployment topology, and mark milestone M3 done in the roadmap.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -958,6 +1078,7 @@
           "title": "Background jobs and scheduling",
           "scope": "Implement backend/BuildingBlocks/Jobs with a persistent job table with idempotency keys, retry with exponential backoff, dead-letter state, cron-style recurring schedules in IST, a hosted runner with graceful shutdown, admin endpoints to list/re-run/cancel jobs, an in-process fake for tests, and the nightly Entra directory sync from `user-management-user-lifecycle` as the first recurring job.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -967,6 +1088,7 @@
           "title": "Transactional outbox and integration events",
           "scope": "Add a per-module outbox table written in the same transaction as domain changes, a dispatcher running on the `business-building-blocks-background-jobs-and-scheduling` runner publishing integration events in-process to <Domain>.Contracts subscribers with at-least-once delivery and idempotent handlers, covered by integration tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -976,15 +1098,18 @@
           "title": "Module and feature scaffolders",
           "scope": "Create a `dotnet new erp-module` template package (templates/erp-module) generating Domain/Application/Infrastructure/Endpoints/Ai folders, DbContext with schema and migrations factory, IModule registration and matching test projects under backend/Modules/<Domain>/<Feature>/, and a `pnpm scaffold:feature` script generating frontend/apps/web/src/features/<domain>/<feature>/ with route, list/detail pages and an e2e spec, both derived from the `user-management` reference module and verified by architecture tests on generated output.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the Community templates generate no Ai or web ai folder; the template for an Enterprise companion module (<Domain>/<Module>Ai) belongs to the private repository."
         },
         {
           "id": "business-building-blocks-reference-data-module",
           "title": "Reference data module",
           "scope": "Create backend/Modules/ReferenceData with countries, Indian States and UTs with GST State codes, currencies, a dated exchange-rate table with manual entry and file import, fiscal-year and period services (April to March), seed migrations, cached read endpoints and reusable UI pickers, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -995,6 +1120,7 @@
           "title": "Statutory parameter store and GST datasets",
           "scope": "Create backend/Modules/Compliance/StatutoryParameters with effective-dated, versioned parameter sets seeded from statutory/*.json, an `IStatutoryParameters.GetAsOf(date)` service, list/read endpoints, an admin viewer page with version diff, and the first datasets (GST rate schedule with history, SAC/HSN master seeded with 9983xx and 997331, State codes, GST due-date rules) pinned by golden-value tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1004,6 +1130,7 @@
           "title": "Statutory datasets: direct tax and labour",
           "scope": "Seed and golden-test TDS sections with the ITA-1961 to ITA-2025 crosswalk, rates, per-FY thresholds, no/inoperative-PAN and 206AB non-filer rates, company income-tax rates and surcharge, advance-tax schedule, professional-tax State slabs, PF/ESI ceilings and rates (including the pending PF ceiling revision), LWF, gratuity and bonus parameters, and Companies Act Schedule II useful lives with income-tax block rates.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1013,6 +1140,7 @@
           "title": "Document numbering series",
           "scope": "Provide configurable number series per document type and financial year (max 16 characters, unique per FY, prefix and reset rules) with gap-free concurrent allocation proven by a parallel integration test.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1022,15 +1150,18 @@
           "title": "Shared minimal approvals building block",
           "scope": "Add backend/BuildingBlocks/Approvals with an ApprovalRequest entity bound to any aggregate by generic reference, a state machine (submitted, approved, rejected, returned, withdrawn), approver resolution by manager or role, SLA reminder jobs, endpoints and an approvals inbox page, used by vendors, bills, payouts, reimbursements and timesheets until `approvals-workflow-consumer-migration` migrates them (tag bridge).",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): this building block is the permanent Community approval mechanism; Community modules call it and never the Enterprise workflow engine, which takes over routing in the Enterprise edition through the approval-routing contract of `business-building-blocks-edition-extension-points`."
         },
         {
           "id": "business-building-blocks-minimal-transactional-email-sender",
           "title": "Minimal transactional email sender",
           "scope": "Add backend/BuildingBlocks/Email with Microsoft Graph sendMail from a shared mailbox, a dark-mode-safe HTML template base, attachment support, a delivery log, a local dev mail-sink compose profile and SPF/DKIM/DMARC documentation, used for invoice delivery, approval requests and reminders until `notifications` generalises it (tag bridge).",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1040,6 +1171,7 @@
           "title": "Web shared kit extensions",
           "scope": "Extend frontend/packages/ui with advanced table features (saved views, bulk actions, CSV export, virtualised rows), list/detail/wizard page templates, entity activity timeline and document tab components, and demonstrate them on a hidden /kit route covered by e2e screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1050,9 +1182,34 @@
           "title": "Developer experience",
           "scope": "Add a dev container, a one-command local stack (`pnpm dev:all` starting SQL Server, aspire-dashboard, API and web), a seed-data generator for realistic demo data, and a module documentation index with module SDK docs.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
+        },
+        {
+          "id": "business-building-blocks-edition-extension-points",
+          "title": "Composition open to modules from another repository",
+          "scope": "Let the Community hosts and web app compose a module set assembled outside this repository while Community code names no other edition: AddErpPlatform and every host take their module list as an argument (Modules.All stays the Community list), the API host pipeline and OpenAPI registration become entry points another host project calls, the web app navigation registry, gated route segments and shell slots accept feature folders supplied at build time, the architecture tests and scripts/checks/feature-boundaries.ts run over a given module set, root namespace and source root, and the minimal approvals building block routes decisions through a replaceable approval-routing contract; each extension point is exercised by a test module inside this repository.",
+          "status": "planned",
+          "edition": "community",
+          "acceptance": [],
+          "tags": [],
+          "dependsOn": [
+            "business-building-blocks-shared-minimal-approvals-building-block"
+          ]
+        },
+        {
+          "id": "business-building-blocks-enterprise-edition-composition",
+          "title": "Enterprise edition composition",
+          "scope": "In the private repository Dewiride-Enterprise/ERP-AI-Pro-Enterprise: pin this repository as a git submodule; add the Enterprise solution, pnpm workspace and hosts that compose the Community and Enterprise module sets through the extension points of `business-building-blocks-edition-extension-points`; run the architecture tests and the frontend structure and import checks over both trees and prove that schemas, route groups, feature flags and permissions are unique across both editions; commit the Enterprise OpenAPI snapshot and generated client; build and publish private api and web images with their licence labels and notices; and switch the production deployment to the Enterprise images.",
+          "status": "planned",
+          "edition": "enterprise",
+          "acceptance": [],
+          "tags": [],
+          "dependsOn": [
+            "business-building-blocks-edition-extension-points"
+          ]
         }
       ]
     },
@@ -1070,6 +1227,7 @@
           "title": "Client aggregate",
           "scope": "Create backend/Modules/Clients/Core with legal/trade name, client type (domestic B2B, domestic B2C, export, SEZ, deemed export), GSTIN with checksum and State-code validation, PAN with GSTIN consistency, TAN, CIN, MSME flag, billing/shipping addresses with PIN and State, country and currency, default payment terms, status lifecycle, tags and duplicate detection, plus CRUD endpoints in schema `clients` and tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1079,6 +1237,7 @@
           "title": "Contacts",
           "scope": "Add multiple contacts per client with roles (billing, technical, signatory), preferred channel, portal-access flag, and de-duplication rules on email/phone with merge support.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1088,6 +1247,7 @@
           "title": "Engagements and rate cards",
           "scope": "Model MSA/SOW engagements with effective dates, billing model (time-and-materials, fixed, retainer, milestone), rate cards per role and currency, client PO numbers, SOW documents via `backend-platform-attachments-building-block` and renewal reminders through `business-building-blocks-background-jobs-and-scheduling` jobs.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1097,6 +1257,7 @@
           "title": "Client tax profile",
           "scope": "Implement a tax-profile service returning the GST treatment for a client (intra-State CGST+SGST, inter-State IGST, export/SEZ zero-rated with LUT), expected client-side TDS section/rate and foreign-exchange settings from the statutory store, with a golden-value test table covering every client type.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1106,6 +1267,7 @@
           "title": "Web: client list, wizard and import",
           "scope": "Build the client list with facets, a create/edit wizard with GSTIN formatting and CSV import with dry-run preview, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1115,6 +1277,7 @@
           "title": "Web: client 360",
           "scope": "Build the client 360 page (overview, contacts, engagements, tax, documents, activity and audit tabs) with inline editing, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1124,6 +1287,7 @@
           "title": "Activity feed and health widgets",
           "scope": "Aggregate integration events from other modules (invoices, receipts, projects) via `business-building-blocks-transactional-outbox-and-integration-events` into a per-client activity timeline and define the receivables/health widget contract consumed by dashboards.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1133,6 +1297,7 @@
           "title": "Leads and opportunities",
           "scope": "Add Clients/Pipeline with lead and opportunity records (source, stage, value, probability, owner, next step), a stage board UI, conversion to client plus engagement, and pipeline reports, with e2e.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1153,6 +1318,7 @@
           "title": "Vendor aggregate",
           "scope": "Create backend/Modules/Vendors/Core with legal name, vendor type (company, individual/contractor, foreign), PAN with entity-type character parsing, GST status (registered, unregistered, composition, overseas), Udyam number and MSE classification, residency/country, TRC and Form 10F on file, bank details with IFSC validation and UPI id, default expense category, status lifecycle and duplicate detection, plus CRUD endpoints in schema `vendors` and tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1162,6 +1328,7 @@
           "title": "Vendor tax profile",
           "scope": "Add Vendors/Tax with default TDS section mapping (ITA-1961 code and ITA-2025 table item), lower/nil deduction certificates with validity and cap, 206AB non-filer and inoperative-PAN flags, RCM applicability flags (advocate, GTA, non-employee director, foreign supplier, unregistered commercial rent), MSME due-date rule (45 days, 15 without agreement), and a service returning TDS/RCM treatment for a payment date covered by golden-value tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1171,6 +1338,7 @@
           "title": "Contractor agreements",
           "scope": "Model contractor contracts (rate, currency, period, SOW, deliverables, notice, reporting manager, linked client engagement for pass-through billing) with expiry reminders via jobs and SOW documents via `backend-platform-attachments-building-block`.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1180,6 +1348,7 @@
           "title": "Onboarding and KYC",
           "scope": "Implement an onboarding checklist (PAN, GST certificate, cancelled cheque, MSME certificate) with uploaded evidence, verification status, an adapter interface for bank-account penny-drop verification, and approval through the `business-building-blocks-shared-minimal-approvals-building-block` block.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1189,6 +1358,7 @@
           "title": "Web: vendor list, wizard and import",
           "scope": "Build the vendor list with facets, an onboarding wizard and CSV import with dry-run, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1198,6 +1368,7 @@
           "title": "Web: vendor 360 and KYC",
           "scope": "Build the vendor 360 (overview, tax, bank, contracts, documents, audit tabs), the contractor view and the KYC checklist UI, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1207,6 +1378,7 @@
           "title": "Vendor activity and MSME exposure",
           "scope": "Aggregate bills, payments and on-time metrics from integration events into vendor activity and define the MSME 45-day exposure widget contract used by `finance-expenses` and `compliance`.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1227,6 +1399,7 @@
           "title": "Core AI infrastructure",
           "scope": "Create backend/BuildingBlocks/Ai with a Microsoft.Extensions.AI IChatClient pipeline (Azure OpenAI in an Indian region, function invocation, OpenTelemetry, redacting logging, distributed cache, retry and backoff), IEmbeddingGenerator, provider settings in App Configuration with credentials from Key Vault, per-feature model routing with fallback, a fake chat client for tests, an architecture test forbidding provider SDK usage outside backend/BuildingBlocks/Ai, and a health check.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1236,6 +1409,7 @@
           "title": "Prompt and tool registry",
           "scope": "Add versioned prompt templates in-repo with snapshot tests, an AIFunction tool catalogue exposing permission-checked ERP queries and actions with tool-call auditing, structured-output schema helpers, a suggestion-versus-commit review contract, a PII redaction filter, and per-user/per-feature token and cost accounting with budgets and alerts.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1245,6 +1419,7 @@
           "title": "Document intelligence pipeline",
           "scope": "Build upload-to-structured-JSON extraction for PDFs and images (text and vision) over `backend-platform-attachments-building-block`, confidence scoring and a human-review queue UI used by bills, receipts, vendor KYC and client enrichment, with evaluation fixtures.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1254,6 +1429,7 @@
           "title": "Retrieval, grounded Q&A and semantic search",
           "scope": "Store embeddings for policies, SOPs, statutory notes, module docs and entity summaries (clients, vendors, invoices) in SQL Server 2025 vector columns, implement permission-aware retrieval, a grounded assistant with citations and a global semantic search endpoint wired to the `authentication-authenticated-application-shell` command palette, with evaluation tests on a fixed corpus.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1263,6 +1439,7 @@
           "title": "Assistant UX",
           "scope": "Build frontend/apps/web/src/features/ai with a global assistant panel streaming via Server-Sent Events, page-context suggestions, action confirmation cards, feedback capture and per-user conversation history, covered by Playwright on desktop and mobile.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1273,6 +1450,7 @@
           "title": "Evaluation and safety",
           "scope": "Add an offline evaluation suite (golden prompts and expected outputs) run on a sample in CI, red-team and prompt-injection tests for document-derived text, an audit log of AI-initiated actions, per-capability feature flags and an AI usage policy page.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1282,6 +1460,7 @@
           "title": "Agent runtime",
           "scope": "Adopt Microsoft Agent Framework (once its provider packages are stable, recorded as an ADR) over the IChatClient pipeline and tool registry with human-in-the-loop checkpoints through `approvals-workflow-workflow-runtime` approvals, sandboxed execution and auditing, with tests (dependsOn `approvals-workflow-workflow-runtime`).",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1291,6 +1470,7 @@
           "title": "Agent scenarios",
           "scope": "Implement a month-end close assistant, a collections agent and an onboarding agent with evaluation suites and feature flags.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1300,6 +1480,7 @@
           "title": "Agent console",
           "scope": "Build a console for agent runs, pending approvals and traces, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1309,6 +1490,7 @@
           "title": "AI: user administration assistant",
           "scope": "Add Identity/Users/Ai with natural-language user search and role suggestion from designation using IChatClient structured output behind a feature flag with mandatory human confirmation.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1320,6 +1502,7 @@
           "title": "AI: client enrichment",
           "scope": "Add Clients/Ai to enrich a client from a website or email signature into structured fields, detect duplicate clients with explanations and draft engagement summaries via structured output.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1331,6 +1514,7 @@
           "title": "AI: vendor data extraction",
           "scope": "Add Vendors/Ai to extract vendor master data from GST certificate, PAN card or invoice images into a review form with per-field confidence, suggest TDS section from vendor type and service description, and flag KYC anomalies.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1354,6 +1538,7 @@
           "title": "Chart of accounts and cost centres",
           "scope": "Create backend/Modules/Finance/Core/Ledger in schema `finance` with an account tree grouped for Schedule III seeded from an Indian small-company template, cost centres, and account CRUD endpoints with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1363,6 +1548,7 @@
           "title": "Journals and posting",
           "scope": "Implement double-entry journal entries with balanced-posting validation, posting-period locks, immutable posted journals with reversal entries, the Companies (Accounts) Rules audit-trail/edit-log requirement and 8-year books retention, and trial-balance/GL queries covered by tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1372,6 +1558,7 @@
           "title": "Fiscal calendar and year-end close",
           "scope": "Model the April-March financial year with periods, opening balances, role-based period locking, a year-end close checklist and tax-year alignment with the Income-tax Act 2025.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1381,6 +1568,7 @@
           "title": "Currency and FX",
           "scope": "Add INR as reporting currency over the `business-building-blocks-reference-data-module` rate table, realised and unrealised gain-loss journal generation, period-end revaluation, and GST-compliant rounding rules with unit tests on paise handling.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1390,6 +1578,7 @@
           "title": "GST tax engine",
           "scope": "Implement Finance/Core/Tax determining place of supply (Section 12 intra/inter-State, Section 13 export and SEZ zero-rated with LUT), splitting CGST/SGST/IGST with rounding, applying RCM and exemption flags, resolving rates by date from the statutory store and computing tax on advances, with fixture-driven golden tests reused by sales, expenses and procurement.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1399,6 +1588,7 @@
           "title": "Company profile",
           "scope": "Model the legal entity (legal name, CIN, PAN, TAN, GSTINs per State, LUT number per FY, IEC, Udyam, PF/ESI/PT registrations, registered address, signatory, logo, bank-account references) with multi-GSTIN readiness, identifier format validation and admin API.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1408,6 +1598,7 @@
           "title": "Financial reports",
           "scope": "Deliver trial balance, P&L, balance sheet (Schedule III layout) and GL detail reports with period filters and Excel/CSV export, with fixture-based tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1417,6 +1608,7 @@
           "title": "Web: finance admin",
           "scope": "Build screens for accounts, journals and posting, periods and close checklist, statutory parameter sets, company profile and the four reports, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1426,6 +1618,7 @@
           "title": "AI: ledger assistant",
           "scope": "Add Finance/Core/Ai translating natural-language questions into safe parameterised report definitions with a preview step and flagging unusual journal entries with explanations.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1448,6 +1641,7 @@
           "title": "Invoice aggregate and lifecycle",
           "scope": "Create backend/Modules/Finance/Sales/Invoicing in schema `sales` with the Rule 46 field set, client snapshot, line items (SAC, quantity, unit, taxable value, discount), tax computed by `finance-core-gst-tax-engine`, RCM flag, export endorsement text and LUT reference, foreign currency with INR conversion, a draft/issued/paid/cancelled state machine, numbering via `business-building-blocks-document-numbering-series` and the Rule 47 30-day issuance warning, all covered by golden tax-computation tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1457,6 +1651,7 @@
           "title": "Invoice PDF rendering",
           "scope": "Render invoices as PDF in the Rule 46 layout with branding, export endorsement and a QR placeholder through a Finance/Sales/Documents service, with snapshot tests of rendered output (consolidated by `documents-generated-documents-service` later).",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1466,6 +1661,7 @@
           "title": "Credit and debit notes",
           "scope": "Implement notes linked to one or more original invoices with reason codes, partial amounts, tax recomputation, a separate numbering series and 30-November cut-off warnings for the previous financial year, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1475,6 +1671,7 @@
           "title": "Advances and receipt vouchers",
           "scope": "Record advances received against engagements with GST receipt vouchers and tax on advance where applicable, refund vouchers, and automatic adjustment of the advance and its tax on the subsequent invoice, with golden tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1484,6 +1681,7 @@
           "title": "Receipts and allocation",
           "scope": "Record receipts (bank, UPI, cheque, foreign remittance with FIRC reference and realisation date), allocate them to invoices, handle client-deducted TDS and short-payment write-offs, and post FX gain/loss journals, with API and tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1493,15 +1691,18 @@
           "title": "Receivables, dunning and TDS receivable",
           "scope": "Provide receivables ageing, 9-month export realisation ageing, a dunning ladder with reminder jobs sending through `business-building-blocks-minimal-transactional-email-sender`, and a TDS-receivable ledger reconciled against 26AS/AIS CSV imports, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the TDS-receivable ledger and its reconciliation against 26AS and AIS imports are Community; the Enterprise `compliance-income-tax-filing-packs-tds` consumes them through a Community contract instead of repeating them."
         },
         {
           "id": "finance-sales-gstr-1-extracts",
           "title": "GSTR-1 extracts",
           "scope": "Generate GSTR-1 tables (B2B 4A, B2CL/B2CS, EXP 6A, CDNR 9B, HSN 12, document summary 13) for monthly or quarterly periods as JSON/Excel matching the GST offline tool, with fixture-based tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1511,6 +1712,7 @@
           "title": "E-invoicing adapter",
           "scope": "Model the IRP e-invoice schema payload, IRN and signed QR storage and printing, and a sandbox client abstraction behind an AATO-driven feature flag, with contract tests that need no live credentials.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1520,6 +1722,7 @@
           "title": "Recurring and retainer billing",
           "scope": "Add billing schedules per engagement, proforma invoices, auto-drafted invoices from approved timesheets or milestones through a contract consumed by `timesheets` and `projects`, and a monthly billing-run job with a review queue.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1529,6 +1732,7 @@
           "title": "Web: invoice builder and notes",
           "scope": "Build the invoice builder with live tax preview, invoice list with status facets, credit/debit note and advance flows, and PDF preview/download with email delivery through `business-building-blocks-minimal-transactional-email-sender` and a delivery log, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1538,6 +1742,7 @@
           "title": "Web: receipts and receivables",
           "scope": "Build the receipt allocation UI, receivables dashboard with ageing and dunning status, TDS-receivable reconciliation and GSTR-1 export page, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1547,6 +1752,7 @@
           "title": "AI: invoicing assistant",
           "scope": "Add Finance/Sales/Ai to draft invoice lines from a description or SOW, suggest SAC codes, flag rate and place-of-supply anomalies before issue, score collection risk per client and draft payment-reminder text.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1569,6 +1775,7 @@
           "title": "Bill and expense aggregate",
           "scope": "Create backend/Modules/Finance/Expenses/Bills in schema `expenses` with vendor bills and lines, vendor snapshot, expense categories mapped to ledger accounts, GST treatment (eligible, ineligible, blocked under 17(5)), currency and FX, attachments via `backend-platform-attachments-building-block`, approval through `business-building-blocks-shared-minimal-approvals-building-block` and journal posting, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1578,6 +1785,7 @@
           "title": "Reverse charge documents",
           "scope": "Detect RCM (notified categories and import of services including foreign SaaS), generate self-invoices within 30 days and payment vouchers, and post the RCM liability and eligible credit, with golden tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1587,6 +1795,7 @@
           "title": "TDS computation engine",
           "scope": "Implement Finance/Expenses/Tds computing deductions per vendor and section selected by credit/payment date with per-FY single and aggregate thresholds, lower-deduction certificates, 20% no/inoperative-PAN and 206AB rules, and Section 195/DTAA handling, pinned by golden tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1596,6 +1805,7 @@
           "title": "TDS ledger, challans and statements",
           "scope": "Maintain a TDS ledger, monthly challan batches due by the 7th, quarterly TDS statement extracts (form numbering verified against current ITA-2025 rules at implementation time) and Form 16A tracking, with fixture tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1605,6 +1815,7 @@
           "title": "ITC and GSTR-2B/IMS reconciliation",
           "scope": "Maintain a purchase register, import GSTR-2B JSON, match invoices with mismatch reasons, record accept/reject/pending per inward invoice, raise 180-day non-payment reversal alerts and output GSTR-3B Table 3.1(d) and 4 figures, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1614,6 +1825,7 @@
           "title": "MSME 45-day compliance",
           "scope": "Compute due dates from acceptance/invoice date and agreed terms, calculate interest at three times the RBI bank rate compounded monthly, and generate the half-yearly MSME-1 extract and a Section 43B(h) year-end disallowance report, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1623,15 +1835,18 @@
           "title": "Recurring expenses and subscriptions feed",
           "scope": "Support recurring bill templates (SaaS, rent, utilities) including foreign SaaS as import of services under IGST RCM, cost allocation to cost centres/projects and a renewal calendar feeding `procurement-assets-subscriptions-and-licences`.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): recurring bill templates and cost allocation stay Community; the renewal calendar publishes a Community contract or integration event that the Enterprise `procurement-assets-subscriptions-and-licences` consumes."
         },
         {
           "id": "finance-expenses-web-bill-entry-and-list",
           "title": "Web: bill entry and list",
           "scope": "Build bill entry with vendor defaults, attachment zone and live TDS/RCM/ITC preview, and the bills list with facets and approval actions, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1641,15 +1856,18 @@
           "title": "Web: TDS, ITC and MSME workbenches",
           "scope": "Build the TDS dashboard and challan batch UI, the GSTR-2B reconciliation workbench and the MSME ageing view, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the TDS dashboard, challan batches and MSME ageing are built here; the GSTR-2B reconciliation workbench is built with the Enterprise `finance-expenses-itc-and-gstr-2b-ims-reconciliation`."
         },
         {
           "id": "finance-expenses-ai-bill-intelligence",
           "title": "AI: bill intelligence",
           "scope": "Add Finance/Expenses/Ai for bill OCR to Rule 46 fields with per-field confidence and review, expense categorisation and ledger-account suggestion, duplicate-bill detection and TDS/RCM applicability explanations.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1673,6 +1891,7 @@
           "title": "Bank accounts and cash book",
           "scope": "Create backend/Modules/Finance/Banking/Accounts in schema `banking` with account types (current, overdraft, EEFC), opening balances, cash and petty-cash books, UPI ids and signatories, posting to the ledger, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1682,6 +1901,7 @@
           "title": "Payout batches",
           "scope": "Build Finance/Banking/Payouts creating batches from due bills, reimbursements, payroll and tax challans with rail selection enforcing limits (RTGS, NEFT, IMPS, UPI), pluggable bulk-file exporters (generic CSV plus one major bank template), maker-checker approval via `business-building-blocks-shared-minimal-approvals-building-block`, status tracking and UTR capture, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1691,6 +1911,7 @@
           "title": "Statement import",
           "scope": "Implement CSV/XLSX/MT940 importers with saved bank-format mapping profiles, de-duplication and categorisation rules, with sample-file tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1700,6 +1921,7 @@
           "title": "Reconciliation",
           "scope": "Auto-match transactions to receipts, bills, claims, payroll and challans on amount/date/reference/UTR with tolerance rules, suggested matches, manual match and split, unreconciled-item ageing and a bank reconciliation statement report, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1709,6 +1931,7 @@
           "title": "Inward remittances and export documentation",
           "scope": "Capture foreign inward remittances with purpose code, bank charges, FX rate and FIRC/e-FIRA reference, link them to export invoices, and track e-BRC status and SOFTEX/EDPMS filing status for software exports, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1718,6 +1941,7 @@
           "title": "Cash-flow forecasting",
           "scope": "Produce a 13-week cash-flow projection from receivables, payables, payroll and the compliance calendar with scenario adjustments, exposed as a dashboard widget.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1727,6 +1951,7 @@
           "title": "Web: accounts and payouts",
           "scope": "Build bank account pages, the payout batch wizard and export download, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1736,15 +1961,18 @@
           "title": "Web: reconciliation and remittances",
           "scope": "Build the keyboard-driven reconciliation workbench, statement import wizard, remittance capture and cash-flow dashboard, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the reconciliation workbench, statement import wizard and remittance capture are built here; the cash-flow dashboard is built with the Enterprise `finance-banking-cash-flow-forecasting`."
         },
         {
           "id": "finance-banking-ai-banking-assistant",
           "title": "AI: banking assistant",
           "scope": "Add Finance/Banking/Ai for statement-line categorisation and counterparty matching suggestions with explanations and a cash-flow risk narrative.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1767,6 +1995,7 @@
           "title": "Claims aggregate",
           "scope": "Create backend/Modules/Finance/Reimbursements/Claims in schema `reimbursements` with claim lines (category, date, amount, GST details when ITC-eligible, receipt attachment), advances and settlement, and a draft/submitted/approved/rejected/paid state machine, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1776,6 +2005,7 @@
           "title": "Policy engine",
           "scope": "Implement per-category and per-grade caps, receipt-required thresholds, per-diem and mileage rules, duplicate-receipt detection, corporate-card versus personal-paid distinction and tax-treatment mapping of claim heads (exempt or taxable) that feeds payroll, with unit tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1785,24 +2015,29 @@
           "title": "Approval routing",
           "scope": "Route claims through manager approval and finance verification with delegation and SLA reminders via `business-building-blocks-shared-minimal-approvals-building-block` and `business-building-blocks-background-jobs-and-scheduling`, with integration tests (tag bridge, retired by `approvals-workflow-consumer-migration`).",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here."
         },
         {
           "id": "finance-reimbursements-settlement-and-posting",
           "title": "Settlement and posting",
           "scope": "Settle approved claims through `finance-banking-payout-batches` payout batches or as a payroll add-on, post journals to the ledger and push GSTIN-bearing receipts into the `finance-expenses-itc-and-gstr-2b-ims-reconciliation` purchase register, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): settlement through payout batches and ledger posting stay Community, and GSTIN-bearing receipts are recorded on the Community bill and expense records of `finance-expenses-bill-and-expense-aggregate`, which the Enterprise `finance-expenses-itc-and-gstr-2b-ims-reconciliation` reads; settling a claim as a payroll add-on is done by the Enterprise payroll items consuming a Community reimbursement contract."
         },
         {
           "id": "finance-reimbursements-web-my-expenses-and-approver-inbox",
           "title": "Web: my expenses and approver inbox",
           "scope": "Build the mobile-first 'my expenses' flow with camera upload and the approver inbox, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1812,6 +2047,7 @@
           "title": "Web: finance queue and policy configuration",
           "scope": "Build the finance settlement queue and policy configuration pages, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1821,6 +2057,7 @@
           "title": "AI: receipt intelligence",
           "scope": "Add Finance/Reimbursements/Ai for receipt OCR into claim lines, policy-violation explanations, category suggestions and monthly spend summaries.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1844,6 +2081,7 @@
           "title": "Salary structures and payroll profiles",
           "scope": "Create backend/Modules/Finance/Payroll/Structures in schema `payroll` with a component library (basic, HRA, special, LTA, allowances, employer PF/NPS, perquisites), CTC templates validated against the Code on Wages 50% rule, effective-dated revisions, grades and employee payroll profiles (PAN, UAN, ESIC IP number, bank account, PF/ESI applicability, regime election), with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1853,6 +2091,7 @@
           "title": "PF, ESI, PT and LWF engines",
           "scope": "Implement Finance/Payroll/Statutory computing PF (employee 12%, EPS on ceiling, EPF, EDLI, admin charges, excluded employees, VPF), ESI (employee and employer rates, wage ceiling, daily-wage exemption, half-yearly period lock), professional tax by State slab and LWF from `business-building-blocks-statutory-datasets-direct-tax-and-labour` parameter sets, verified by golden-value tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1862,6 +2101,7 @@
           "title": "Income tax on salary",
           "scope": "Implement Finance/Payroll/IncomeTax with per-employee per-tax-year regime election (default new), slabs, Section 87A rebate with marginal relief, standard deduction, 80CCD(2), old-regime declarations (Form 12BB, HRA/LTA/80C/80D), previous-employer income, perquisites (12BA), monthly projection with true-up and ITA-2025 section mapping, pinned by test cases per regime.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1871,6 +2111,7 @@
           "title": "Payroll run pipeline",
           "scope": "Build Finance/Payroll/Runs with manual LOP/arrears input (tag bridge, automated by `hr-core-leave-management`/`hr-core-attendance`), reimbursement and loan inputs, preview with variance versus previous month, approval, journal posting, `finance-banking-payout-batches` payout batch creation, lock and controlled rerun, and payslip PDFs meeting Code on Wages wage-slip requirements.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1880,6 +2121,7 @@
           "title": "Statutory outputs: PF, ESI and PT",
           "scope": "Generate the PF ECR file, ESI contribution file and State PT return data with reconciliation reports validated against sample files.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1889,6 +2131,7 @@
           "title": "Statutory outputs: salary TDS and registers",
           "scope": "Generate the salary TDS challan batch and quarterly statement extract (form numbering verified against ITA-2025 rules), Form 16 Part B, and statutory registers (wages, bonus, gratuity nominations) with fixture tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1898,6 +2141,7 @@
           "title": "Full-and-final and benefits",
           "scope": "Compute F&F within the two-working-day timeline including notice pay, leave encashment with the statutory exemption, gratuity (15/26 formula, five-year and fixed-term rules, cap), statutory bonus (8.33-20%) and loan/advance recovery from `business-building-blocks-statutory-datasets-direct-tax-and-labour` parameters, with a settlement statement PDF and unit tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1907,6 +2151,7 @@
           "title": "Web: structure designer and run wizard",
           "scope": "Build the salary structure designer, employee payroll profile and the run wizard with variance highlights and statutory report downloads, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1916,6 +2161,7 @@
           "title": "Web: employee payslip portal and declarations",
           "scope": "Build the employee payslip portal and tax-declaration submission with proof upload, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1925,6 +2171,7 @@
           "title": "AI: payroll assistant",
           "scope": "Add Finance/Payroll/Ai with a regime-recommendation simulator per employee, payroll variance explanations and guarded natural-language payroll queries.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -1940,8 +2187,7 @@
       "milestone": "m7-payroll-and-compliance-live",
       "dependsOn": [
         "finance-sales",
-        "finance-expenses",
-        "finance-payroll"
+        "finance-expenses"
       ],
       "subPhases": [
         {
@@ -1949,6 +2195,7 @@
           "title": "Compliance calendar engine",
           "scope": "Create backend/Modules/Compliance/Calendar in schema `compliance` with rule-driven obligations keyed to the financial year (monthly, quarterly, half-yearly, annual, State-specific), owner assignment, reminders and escalation via `business-building-blocks-background-jobs-and-scheduling` and `business-building-blocks-minimal-transactional-email-sender`, evidence attachments (challan/ARN/SRN), completion audit and weekend/holiday adjustment, seeded from a tested JSON rule set.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1958,6 +2205,7 @@
           "title": "GST filing packs",
           "scope": "Produce GSTR-1/IFF and GSTR-3B computations (outward, RCM 3.1(d), ITC 4, set-off order) for monthly and QRMP modes, GSTR-9/9C threshold checks, LUT renewal reminders, amendment cut-off tracking and an RFD-01 export refund data pack, exported as offline-tool JSON and reconciled against filed figures.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1967,6 +2215,7 @@
           "title": "Filing workspaces",
           "scope": "Add period-close checklists for GSTR-1/3B, quarterly TDS statements and monthly PF/ESI that pull extracts from `finance-sales`, `finance-expenses` and `finance-payroll` with reconciliation summaries, evidence capture and sign-off, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1976,6 +2225,7 @@
           "title": "Income-tax filing packs: TDS and disallowances",
           "scope": "Provide the advance-tax instalment calculator (15/45/75/100), FVU-ready TDS statement CSV extracts, 26AS/AIS reconciliation and the Section 40(a)(ia) and 43B(h) disallowance reports, with unit tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1985,6 +2235,7 @@
           "title": "Income-tax filing packs: company return",
           "scope": "Provide a Form 15CA/15CB-equivalent register for foreign remittances (numbering verified against ITA-2025 rules), a 44AB tax-audit threshold monitor, the company income-tax computation from `business-building-blocks-statutory-datasets-direct-tax-and-labour` parameters and an ITR-6 data pack, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1994,6 +2245,7 @@
           "title": "Company secretarial records",
           "scope": "Create Compliance/Corporate with entity profile, directors and KMP with DIN and DIR-3 KYC dates, share capital and cap table with allotments, and statutory registers, with endpoints and tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2003,6 +2255,7 @@
           "title": "Meetings and ROC filings",
           "scope": "Add a board/AGM meeting log with gap rules, resolution templates and minutes, and a ROC filing tracker (AOC-4, MGT-7A, ADT-1, DPT-3, MSME-1, INC-20A, PAS-3, SH-7) linked to the calendar, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2012,24 +2265,29 @@
           "title": "Labour-law and POSH registers",
           "scope": "Maintain registers required under the Labour Codes (wages, overtime, leave, bonus, gratuity nominations), PF/ESI registration data, shop-and-establishment records and POSH internal-committee constitution and annual return tracking, with export to prescribed layouts.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): payroll is Enterprise, so the wages, bonus and gratuity registers belong to `finance-payroll-statutory-outputs-salary-tds-and-registers`; this item keeps the registers that Community data fills (leave, overtime from attendance, PF and ESI registration, shop and establishment, POSH)."
         },
         {
           "id": "compliance-web-compliance-calendar-filings-and-corporate",
           "title": "Web: compliance calendar, filings and corporate records",
           "scope": "Build the compliance calendar (month and list views, overdue heat-map), filing-pack and workspace pages with export buttons, and corporate-record pages, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the compliance calendar and the corporate-record pages are built here; the filing-pack and workspace pages are built with the Enterprise `compliance-gst-filing-packs`, `compliance-filing-workspaces`, `compliance-income-tax-filing-packs-tds` and `compliance-income-tax-filing-packs-company-return`."
         },
         {
           "id": "compliance-ai-compliance-assistant",
           "title": "AI: compliance assistant",
           "scope": "Add Compliance/Ai for deadline-risk scoring, a 'what changed' digest generated from statutory parameter-set diffs and draft board-resolution text from templates.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2052,6 +2310,7 @@
           "title": "Timesheet aggregate",
           "scope": "Create backend/Modules/Timesheets/Core in schema `timesheets` with weekly/daily entries against client engagements (`clients-engagements-and-rate-cards`) or internal activity codes with optional task text (tag bridge, upgraded to project/task references by `projects-project-aggregate-and-timesheet-migration`), hours, billable flag, notes, submission periods, lock rules and contractor timesheets tied to vendor contracts, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2061,6 +2320,7 @@
           "title": "Timesheet rules",
           "scope": "Implement overlap and daily/weekly cap validation, national plus company holiday calendars, a leave integration hook (tag bridge, wired by `hr-core-leave-management`) and billable-rate resolution from engagement rate cards, with unit tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2070,24 +2330,29 @@
           "title": "Approvals and reminders",
           "scope": "Implement manager/engagement-lead approval with rejection reasons, delegate approvers and missing-timesheet reminders through `business-building-blocks-shared-minimal-approvals-building-block` and `business-building-blocks-background-jobs-and-scheduling` (tag bridge, retired by `approvals-workflow-consumer-migration`).",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here."
         },
         {
           "id": "timesheets-billing-feed",
           "title": "Billing feed",
           "scope": "Convert approved billable hours into invoice draft lines through the `finance-sales-recurring-and-retainer-billing` contract using rate cards, accrue contractor bills from approved contractor time into `finance-expenses`, support fixed-price milestone mapping and track write-downs/write-offs, with integration tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): Community code cannot use the Enterprise `finance-sales-recurring-and-retainer-billing`; when this is planned the owner decides between drafting invoice lines through a Community finance-sales contract that recurring billing also consumes, and making recurring and retainer billing Community."
         },
         {
           "id": "timesheets-utilisation-analytics",
           "title": "Utilisation analytics",
           "scope": "Compute billable utilisation per person, team and client, capacity views, overtime flags and exports, exposed as dashboard widgets.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2097,6 +2362,7 @@
           "title": "Web: weekly grid and mobile entry",
           "scope": "Build a keyboard-driven weekly grid, mobile daily entry with timer and calendar view, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2106,6 +2372,7 @@
           "title": "Web: approvals and utilisation",
           "scope": "Build the approver inbox and utilisation dashboard, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2115,6 +2382,7 @@
           "title": "AI: timesheet drafting",
           "scope": "Add Timesheets/Ai to draft entries from pasted calendar/commit summaries (connectors via `operations-hardening` later), parse natural-language entries such as '3h Acme API review', and detect duplicate or over-capacity entries.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2137,6 +2405,7 @@
           "title": "Workflow definitions",
           "scope": "Create backend/BuildingBlocks/Workflow with declarative versioned definitions (steps, approver resolution by manager chain, role, user or amount band, sequential/parallel, conditions), validation and seeded defaults per document type, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2146,6 +2415,7 @@
           "title": "Workflow runtime",
           "scope": "Implement instances bound to any aggregate through a generic reference, a task inbox model, actions (approve, reject, return, delegate, escalate), SLA timers and reminders via jobs, an audit trail and idempotent transitions proven by concurrency tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2155,15 +2425,18 @@
           "title": "Consumer migration",
           "scope": "Move vendors KYC, bills, payout batches, reimbursements, timesheets and invoices from `business-building-blocks-shared-minimal-approvals-building-block` onto the engine behind feature flags with regression tests proving identical outcomes, then retire `business-building-blocks-shared-minimal-approvals-building-block`.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): Community consumers keep calling `business-building-blocks-shared-minimal-approvals-building-block`; this item plugs the engine in behind its approval-routing contract for the Enterprise edition, proves identical outcomes and retires nothing in the Community edition."
         },
         {
           "id": "approvals-workflow-web-inbox-and-designer",
           "title": "Web: inbox and designer",
           "scope": "Build a unified approvals inbox with keyboard actions, a form-based workflow designer, instance timeline and mobile-first approve/reject, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2173,6 +2446,7 @@
           "title": "Policies and controls",
           "scope": "Enforce segregation of duties (maker not equal to checker), amount thresholds, out-of-office delegation, mandatory rejection comments and a pending-approvals-by-age report.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2182,6 +2456,7 @@
           "title": "AI: approval assistant",
           "scope": "Add Workflow/Ai summarising what is being approved with risk highlights, suggesting approvers when resolution fails and drafting rejection reasons.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2204,6 +2479,7 @@
           "title": "Notification core",
           "scope": "Create backend/BuildingBlocks/Notifications with a notification aggregate (type, recipient, payload, channels, read state), subscriptions to `business-building-blocks-transactional-outbox-and-integration-events` integration events, digest batching, per-type/channel user preferences and an in-app bell updated over Server-Sent Events, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2213,6 +2489,7 @@
           "title": "Email channel",
           "scope": "Promote `business-building-blocks-minimal-transactional-email-sender` into a provider abstraction with Microsoft Graph sendMail and SMTP fallback implementations, a queued background sender with retries, bounce handling and delivery-status tracking, keeping the dev mail sink, with fake-transport tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2222,6 +2499,7 @@
           "title": "Transactional templates",
           "scope": "Ship templates for invoice/credit-note delivery, payment receipt, dunning ladder, approval requests, payslip release, compliance reminders and invitations, each with preview, test send and snapshot tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2231,6 +2509,7 @@
           "title": "Web: notification centre and templates",
           "scope": "Build the notification centre, preferences page, template management with preview and delivery logs, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2240,6 +2519,7 @@
           "title": "Scheduled reminders and digests",
           "scope": "Send compliance deadline, invoice due and pending-approval reminders and daily digests from the `business-building-blocks-background-jobs-and-scheduling` scheduler with per-user preferences, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2249,15 +2529,18 @@
           "title": "Additional channels",
           "scope": "Add Microsoft Teams adaptive-card webhooks, an SMS/WhatsApp provider adapter interface with a fake implementation, and web push hooks consumed by `mobile-pwa`.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): web push serves the Community `mobile-pwa-push-notifications`; when either is planned the owner decides whether the web push channel moves there, leaving Teams, SMS and WhatsApp here."
         },
         {
           "id": "notifications-ai-communication-assistant",
           "title": "AI: communication assistant",
           "scope": "Add Notifications/Ai for tone-adjusted reminder drafting, daily digest summaries and notification prioritisation.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2280,9 +2563,12 @@
           "title": "Document model and permissions",
           "scope": "Extend `backend-platform-attachments-building-block` into backend/BuildingBlocks/Documents with collections per module entity, versions, tags, ownership, permission inheritance from the linked entity, access audit, legal hold and retention policies enforced by a job, migrating existing attachment metadata in place, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": [],
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ],
           "notes": "From backend-platform-attachments-building-block (ADR-0022): build on BuildingBlocks.Attachments and IAttachmentService. Deleting an attachment only soft-deletes its row and keeps its content, and identical uploads share one StoredContent, so the retention job must purge a blob and its StoredContents row only when no attachment row references it any more, must honour DPDP erasure requests, and must re-wrap envelopes before a retired encryption key is removed (files.StoredContents.KeyId lists the content each key still protects); files.DownloadRedemptions is the read record until the audit-trail building block exists."
         },
         {
@@ -2290,47 +2576,61 @@
           "title": "Generated documents service",
           "scope": "Consolidate PDF generation (invoices, credit notes, payslips, Form 16, purchase orders, letters) on a shared template engine with branding, QR codes, watermarks and a digital-signature (DSC) integration point, with snapshot tests and migration of `finance-sales-invoice-pdf-rendering` and `finance-payroll-statutory-outputs-salary-tds-and-registers` renderers.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): this item offers the template engine and migrates `finance-sales-invoice-pdf-rendering` onto it; the payslip and Form 16 renderers belong to the Enterprise payroll items, which adopt the engine in the private repository."
         },
         {
           "id": "documents-search-and-ocr",
           "title": "Search and OCR",
           "scope": "Index metadata and extracted text with SQL Server full-text search, run OCR through `ai-platform-document-intelligence-pipeline` for scanned uploads and support saved searches, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         },
         {
           "id": "documents-web-document-explorer",
           "title": "Web: document explorer",
           "scope": "Build a document explorer, entity document tabs across modules, drag-and-drop upload with progress, PDF/image previewer and version history, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         },
         {
           "id": "documents-templates-and-e-signature",
           "title": "Templates and e-signature",
           "scope": "Add a template library (NDA, offer letter, contractor agreement) with merge fields and an e-signature request adapter interface storing signed documents.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         },
         {
           "id": "documents-ai-document-intelligence",
           "title": "AI: document intelligence",
           "scope": "Add Documents/Ai for auto-tagging and classification, contract clause and renewal-date extraction and semantic search.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
           ],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         }
       ]
     },
@@ -2340,7 +2640,8 @@
       "goal": "Manage the employee journey from onboarding to exit, leave and attendance feeding payroll, HR policies and letters, and the employee self-service portal.",
       "milestone": "m10-people-operations",
       "dependsOn": [
-        "finance-payroll"
+        "finance-core",
+        "user-management"
       ],
       "subPhases": [
         {
@@ -2348,6 +2649,7 @@
           "title": "Employee master extension",
           "scope": "Create backend/Modules/Hr/Employees in schema `hr` extending users with personal details, masked statutory ids (PAN, Aadhaar last digits, UAN, ESIC), bank, emergency contacts, documents, employment history, probation/confirmation and effective-dated changes with field-level privacy controls, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2357,33 +2659,40 @@
           "title": "Onboarding and offboarding",
           "scope": "Implement cross-team checklists (IT, Finance, HR), offer-to-joining flow with KYC document collection, asset issue hooks to `procurement-assets`, and an exit process covering notice, clearance, F&F trigger to `finance-payroll-full-and-final-and-benefits` and access revocation to `user-management-user-lifecycle`, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the exit process publishes an exit integration event that the Enterprise `finance-payroll-full-and-final-and-benefits` consumes; Community code never names payroll."
         },
         {
           "id": "hr-core-leave-management",
           "title": "Leave management",
           "scope": "Create Hr/Leave with leave types and policies (earned, casual, sick, comp-off, accrual, carry-forward, encashment per Labour Codes), State holiday calendars, requests through `approvals-workflow`, balances, the LOP feed into `finance-payroll-payroll-run-pipeline` and the `timesheets-timesheet-rules` timesheet hook, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): requests go through `business-building-blocks-shared-minimal-approvals-building-block`, and loss-of-pay days are published as a Community contract or integration event that the Enterprise `finance-payroll-payroll-run-pipeline` consumes; Community code never names payroll."
         },
         {
           "id": "hr-core-attendance",
           "title": "Attendance",
           "scope": "Create Hr/Attendance with web/mobile check-in, timesheet-derived presence option, regularisation requests, shift and WFH policies, overtime capture at the statutory rate and monthly lock feeding `finance-payroll-payroll-run-pipeline`, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the monthly lock publishes attendance and overtime as a Community contract or integration event that the Enterprise payroll run consumes; Community code never names payroll."
         },
         {
           "id": "hr-core-web-employee-self-service-portal",
           "title": "Web: employee self-service portal",
           "scope": "Build mobile-first pages for my profile, documents and payslips, leave, attendance, tax declarations and team calendar, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2393,6 +2702,7 @@
           "title": "Web: HR admin and manager pages",
           "scope": "Build HR admin and manager pages for onboarding/offboarding checklists, leave and attendance administration and policies, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2402,6 +2712,7 @@
           "title": "HR policies and letters",
           "scope": "Provide a policy library with acknowledgement tracking and letter generation (offer, appointment, increment, experience) through `documents` templates.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2411,6 +2722,7 @@
           "title": "AI: HR assistant",
           "scope": "Add Hr/Ai with a policy Q&A assistant grounded on policy documents, leave-request drafting with conflict detection and onboarding checklist suggestions.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2433,15 +2745,18 @@
           "title": "Recruitment",
           "scope": "Create Hr/Recruitment with job requisitions approved via `approvals-workflow`, candidate pipeline stages, interview scheduling through Graph calendar, scorecards, offer generation via templates and a careers JSON feed, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): requisitions are approved through `business-building-blocks-shared-minimal-approvals-building-block`; whether interview scheduling through the Graph calendar stays Community or belongs to the Enterprise `integrations-microsoft-365-connectors` is decided with the owner when this is planned."
         },
         {
           "id": "hr-talent-performance-management",
           "title": "Performance management",
           "scope": "Create Hr/Performance with goal setting, review cycles collecting self/manager/peer input, calibration, rating scales and history, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2451,6 +2766,7 @@
           "title": "Compensation cycles",
           "scope": "Create Hr/Compensation with increment cycles, band structures, budget versus actual and revision letters that update `finance-payroll-salary-structures-and-payroll-profiles` salary structures, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2460,6 +2776,7 @@
           "title": "Skills and learning",
           "scope": "Create Hr/Learning with a skills matrix, certifications with expiry reminders, training records and budgets and learning requests, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2469,6 +2786,7 @@
           "title": "Engagement surveys",
           "scope": "Add pulse surveys and eNPS with anonymous responses aggregated only above a minimum respondent threshold, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2478,15 +2796,18 @@
           "title": "Web: recruitment and performance",
           "scope": "Build recruitment pipeline board, interview and offer screens and performance cycle pages, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): this item builds the Community recruitment screens; the performance cycle pages belong to the Enterprise `hr-talent-performance-management` and are built with it in the private repository."
         },
         {
           "id": "hr-talent-web-compensation-learning-and-surveys",
           "title": "Web: compensation, learning and surveys",
           "scope": "Build compensation cycle, skills/learning and survey screens, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2496,6 +2817,7 @@
           "title": "AI: talent assistant",
           "scope": "Add Hr/Talent/Ai for resume parsing into candidate profiles, interview question suggestions, review-summary drafting with bias checks and skills-gap analysis.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2518,6 +2840,7 @@
           "title": "Project aggregate and timesheet migration",
           "scope": "Create backend/Modules/Projects/Core in schema `projects` with project types, phases, milestones linked to billing, team assignments with roles and rates, hour/amount budgets, status and health, templates, and migrate timesheets to project/task references (retires the `timesheets-timesheet-aggregate` bridge), with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2527,6 +2850,7 @@
           "title": "Tasks and boards",
           "scope": "Add tasks with estimates, assignees, dependencies, sprints, comments and attachments with kanban and list views, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2536,6 +2860,7 @@
           "title": "Profitability and budgets",
           "scope": "Compute cost (payroll-rate loaded) versus revenue (invoiced and accrued) per project, WIP and unbilled revenue, burn charts and variance alerts, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2545,6 +2870,7 @@
           "title": "Client status reporting and change requests",
           "scope": "Generate shareable milestone/status reports (PDF/email) and record change requests that amend the SOW and budgets, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2554,6 +2880,7 @@
           "title": "Resource planning",
           "scope": "Provide an allocation calendar, capacity versus demand, bench report and conflict detection with leave from `hr-core-leave-management`, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2563,6 +2890,7 @@
           "title": "Web: portfolio, project 360 and boards",
           "scope": "Build the portfolio dashboard, project 360 and task boards, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2572,6 +2900,7 @@
           "title": "Web: timeline and resource planner",
           "scope": "Build the timeline view, resource planner and profitability views, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2581,6 +2910,7 @@
           "title": "AI: delivery assistant",
           "scope": "Add Projects/Ai for status-report drafting from tasks and timesheets, schedule/budget risk detection and effort-estimation suggestions from history.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2603,15 +2933,18 @@
           "title": "Requisitions",
           "scope": "Create backend/Modules/Procurement/Requisitions in schema `procurement` with purchase requests, budget checks, categories, justification, `approvals-workflow` approvals and conversion to purchase orders, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): approvals go through `business-building-blocks-shared-minimal-approvals-building-block`, never the Enterprise workflow engine."
         },
         {
           "id": "procurement-assets-purchase-orders",
           "title": "Purchase orders",
           "scope": "Create Procurement/Orders issuing POs with GST-treatment preview from `finance-core-gst-tax-engine`, amendments, PDF/email delivery, acknowledgement tracking and closure, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2621,6 +2954,7 @@
           "title": "Receipts and three-way match",
           "scope": "Record goods/service receipt notes and match PO, receipt and `finance-expenses` bill within tolerances with a discrepancy workflow, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2630,6 +2964,7 @@
           "title": "Subscriptions and licences",
           "scope": "Create Procurement/Subscriptions as a SaaS/licence inventory with seats, owners, renewal dates, costs, auto-renew flags, cancellation reminders and spend analytics fed by `finance-expenses-recurring-expenses-and-subscriptions-feed` recurring bills, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2639,6 +2974,7 @@
           "title": "Sourcing",
           "scope": "Support RFQs, quote comparison, preferred-vendor rules and contract linkage to `vendors-contractor-agreements`, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2648,6 +2984,7 @@
           "title": "Asset register",
           "scope": "Create backend/Modules/Assets/Register in schema `assets` with asset classes, capitalisation from `finance-expenses` bills, tags/serials, location, custodian, warranty, insurance and documents, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2657,6 +2994,7 @@
           "title": "Depreciation",
           "scope": "Create Assets/Depreciation with Companies Act Schedule II useful lives (SLM/WDV) and income-tax block rates from `business-building-blocks-statutory-datasets-direct-tax-and-labour`, a monthly depreciation run posting `finance-core` journals and a fixed-asset register report verified by golden tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2666,6 +3004,7 @@
           "title": "Asset assignment and lifecycle",
           "scope": "Handle issue/return to employees with `hr-core-onboarding-and-offboarding` onboarding/offboarding hooks, transfers, maintenance records and disposal/sale with gain-loss journals, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2675,6 +3014,7 @@
           "title": "IT and software inventory",
           "scope": "Track devices with OS/patch and security attestation fields (disk encryption, MDM) and link software licences to `procurement-assets-subscriptions-and-licences` subscriptions, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2684,24 +3024,29 @@
           "title": "Web: requisitions, orders, receipts and sourcing",
           "scope": "Build screens for requisitions, purchase orders, receipts/three-way match and sourcing, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the requisition, purchase order and receipt screens are built here; the sourcing screens are built with the Enterprise `procurement-assets-sourcing`."
         },
         {
           "id": "procurement-assets-web-subscriptions-and-assets",
           "title": "Web: subscriptions and assets",
           "scope": "Build the subscription inventory, asset register, asset 360, QR label printing and a mobile physical-verification mode with camera scanning, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): the asset register, asset 360, QR labels and physical verification are built here; the subscription inventory screens are built with the Enterprise `procurement-assets-subscriptions-and-licences`."
         },
         {
           "id": "procurement-assets-ai-procurement-and-asset-assistant",
           "title": "AI: procurement and asset assistant",
           "scope": "Add Procurement/Ai and Assets/Ai for requisition classification, overlap detection with existing subscriptions, quote comparison summaries, renewal negotiation briefs, asset classification and useful-life suggestion from bill descriptions.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2724,6 +3069,7 @@
           "title": "Reporting infrastructure",
           "scope": "Create backend/BuildingBlocks/Reporting with read models refreshed from `business-building-blocks-transactional-outbox-and-integration-events` events, a report-definition abstraction (parameters, dataset, layout), Excel/CSV/PDF export and scheduled delivery through `notifications`, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2733,6 +3079,7 @@
           "title": "Role dashboards",
           "scope": "Build owner (cash, receivables, payables, runway, compliance status), finance, HR and delivery/utilisation dashboards with drill-down and date ranges over a module widget registry; the owner dashboard may be pulled forward by order override after M5.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2742,6 +3089,7 @@
           "title": "Financial statements and MIS",
           "scope": "Deliver Schedule III P&L and balance sheet, cash-flow statement, budget versus actual, cost-centre and project profitability and GST/TDS liability summaries, with fixture tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2751,6 +3099,7 @@
           "title": "People and operations reports",
           "scope": "Implement headcount, payroll cost, utilisation, timesheet compliance and leave reports, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2760,6 +3109,7 @@
           "title": "Self-service report builder",
           "scope": "Provide a field picker over curated datasets with filters, grouping, charts and saved/shared reports with permissions, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2769,6 +3119,7 @@
           "title": "Data export and warehouse hooks",
           "scope": "Add nightly Parquet/CSV exports to a volume, Power BI/Excel connection guidance and a data dictionary with privacy classifications.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2778,6 +3129,7 @@
           "title": "Web: dashboards and reports",
           "scope": "Build dashboards and reports with accessible light/dark charts, covered by Playwright on desktop and mobile with screenshot baselines.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -2788,6 +3140,7 @@
           "title": "AI: analytics assistant",
           "scope": "Add Reporting/Ai for natural-language-to-report definitions with preview, narrative insights on dashboards and anomaly alerts.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
@@ -2810,6 +3163,7 @@
           "title": "Integration framework",
           "scope": "Create backend/BuildingBlocks/Integrations with a connector abstraction (auth, sync jobs, mapping, error handling, replay), per-connection secrets in Key Vault, connection health, rate-limit awareness and idempotency, with a fake connector under test.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2819,6 +3173,7 @@
           "title": "Public API and webhooks",
           "scope": "Expose a versioned public API secured by `authentication-session-endpoints-openapi-security-and-bearer` bearer tokens or API keys with scopes, hashing and rotation, outbound webhook subscriptions with HMAC signatures and retries, per-client rate limits and a developer documentation page, with integration tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2828,51 +3183,67 @@
           "title": "Microsoft 365 connectors",
           "scope": "Integrate Graph calendar (interviews, leave), SharePoint/OneDrive document sync and Teams notifications with contract tests against recorded responses.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         },
         {
           "id": "integrations-engineering-tool-connectors",
           "title": "Engineering tool connectors",
           "scope": "Integrate GitHub, Azure DevOps and Jira for timesheet hints and project task sync, with contract tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         },
         {
           "id": "integrations-gst-and-identity-connectors",
           "title": "GST and identity connectors",
           "scope": "Implement adapter interfaces and sandbox tests for GST/GSP APIs (GSTR-2B download, live e-invoice IRP over `finance-sales-e-invoicing-adapter`) and PAN/GSTIN verification, each behind feature flags.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         },
         {
           "id": "integrations-direct-tax-and-labour-connectors",
           "title": "Direct-tax and labour connectors",
           "scope": "Implement TRACES/26AS ingestion, EPFO ECR and ESIC file validators and exchange-rate feeds, each behind feature flags with contract tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         },
         {
           "id": "integrations-banking-and-payment-connectors",
           "title": "Banking and payment connectors",
           "scope": "Add bank statement API/host-to-host adapters where available and a payment-gateway adapter interface for client receipts with webhook reconciliation into `finance-banking`, with tests.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         },
         {
           "id": "integrations-import-export-centre",
           "title": "Import/export centre",
           "scope": "Provide a generic CSV/Excel import framework with mapping templates, dry-run and error reports, bulk export, and migration importers for Tally/Zoho/QuickBooks formats, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2882,6 +3253,7 @@
           "title": "Web: integrations admin",
           "scope": "Build admin pages for API keys, webhooks, connectors, import jobs and delivery logs, covered by Playwright on desktop and mobile with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2891,11 +3263,14 @@
           "title": "AI: integration assistant",
           "scope": "Add Integrations/Ai for import-mapping suggestions and error-triage explanations for failed syncs.",
           "status": "planned",
+          "edition": "enterprise",
           "acceptance": [],
           "tags": [
             "ai"
           ],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-enterprise-edition-composition"
+          ]
         }
       ]
     },
@@ -2913,6 +3288,7 @@
           "title": "Production telemetry backend",
           "scope": "Decide by ADR with owner approval between a self-hosted OTLP stack compose profile on the server and Azure Monitor, deploy it, build golden-signal dashboards and alert routing to email/Teams, and set log retention.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2922,6 +3298,7 @@
           "title": "Disaster recovery",
           "scope": "Configure Azure SQL long-term retention and geo-restore, encrypted off-site backups of documents and key volumes, quarterly restore drills with recorded RTO/RPO and a server-loss DR runbook rebuilding from images and backups.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2931,6 +3308,7 @@
           "title": "Security posture: gates and checklist",
           "scope": "Run CodeQL security-extended, image scans and dependency audits as merge gates, add e2e verification of security headers and CSRF protections, and track an OWASP ASVS checklist in the repo with findings fixed.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2940,6 +3318,7 @@
           "title": "Security posture: rotation and access review",
           "scope": "Automate secret and certificate rotation, add periodic access-review screens, and document Entra Conditional Access recommendations.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2949,6 +3328,7 @@
           "title": "Performance and capacity",
           "scope": "Add load tests for key endpoints, a Query Store based slow-query report, an index review job, a caching review and a capacity dashboard with thresholds and a CI performance smoke check.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2958,6 +3338,7 @@
           "title": "Admin console",
           "scope": "Build an admin console for feature flags, jobs, outbox, cache purge and maintenance mode, an audit-log explorer and an approved, audited data-fix script framework, covered by Playwright.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2967,6 +3348,7 @@
           "title": "Runbooks and incident process",
           "scope": "Write incident and postmortem templates, an on-call checklist, upgrade runbooks (.NET, Next.js, SQL, base images) and a dependency-upgrade cadence policy.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2976,6 +3358,7 @@
           "title": "Data privacy compliance (DPDP)",
           "scope": "Implement DPDP Act obligations (notice/consent records, data-principal requests, breach notification workflow), data classification, retention/purge jobs and employee data export, with tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -2996,6 +3379,7 @@
           "title": "PWA foundation",
           "scope": "Add a web manifest, icons, a service worker that never caches authenticated API data by default, install prompts and update notifications.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -3005,6 +3389,7 @@
           "title": "Offline capture",
           "scope": "Queue expense receipts, timesheet entries and attendance check-ins offline and sync them through idempotent endpoints with conflict handling tests.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -3014,15 +3399,18 @@
           "title": "Push notifications",
           "scope": "Manage web push subscriptions wired to `notifications-additional-channels` channels with permission UX and per-type preferences.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Edition split (ADR-0030): `notifications-additional-channels` is Enterprise, so the web push channel this item needs is built as Community code, decided with the owner when it is planned."
         },
         {
           "id": "mobile-pwa-mobile-ux-pass",
           "title": "Mobile UX pass",
           "scope": "Audit every screen at phone widths for touch targets, bottom navigation, camera/scan integration and passkey (WebAuthn) step-up re-authentication.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -3032,6 +3420,7 @@
           "title": "Native wrapper decision",
           "scope": "Evaluate a store wrapper (.NET MAUI or Capacitor) only if store presence is required and record the decision as an ADR, staying web-first.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -3041,6 +3430,7 @@
           "title": "Mobile E2E",
           "scope": "Extend Playwright mobile projects to cover offline/online transitions, install flow and push subscription with screenshots.",
           "status": "planned",
+          "edition": "community",
           "acceptance": [],
           "tags": [],
           "dependsOn": []

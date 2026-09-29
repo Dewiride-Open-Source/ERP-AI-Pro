@@ -4,8 +4,8 @@
     "title": "ERP-AI-Pro API",
     "description": "Modular ERP for Dewiride. Routes are grouped as /api/<domain>/<module>/<resource>, every response carries an X-Correlation-ID header and every error is an RFC 9457 problem document.",
     "license": {
-      "name": "MIT",
-      "url": "https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/LICENSE"
+      "name": "GNU Lesser General Public License v3.0 only",
+      "identifier": "LGPL-3.0-only"
     },
     "version": "1.0"
   },

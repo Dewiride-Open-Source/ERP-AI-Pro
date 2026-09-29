@@ -41,7 +41,9 @@ if (!values["skip-backend"]) {
 
   rmSync(join(backend, "artifacts", "TestResults"), { recursive: true, force: true });
   steps.push(
+    { name: "backend tools restore", cwd: backend, command: "dotnet", args: ["tool", "restore"] },
     { name: "backend restore (locked)", cwd: backend, command: "dotnet", args: ["restore", "--locked-mode"] },
+    { name: "nuget licences", cwd: repoRoot, command: "node", args: ["scripts/checks/licences.ts", "nuget"] },
     { name: "backend build", cwd: backend, command: "dotnet", args: ["build", "--no-restore", "-warnaserror"] },
     { name: "backend format", cwd: backend, command: "dotnet", args: ["format", "--verify-no-changes", "--no-restore"] },
     { name: "pending model changes", cwd: repoRoot, command: "node", args: ["scripts/ef/ef.ts", "pending", "--all", "--no-build"] },
@@ -59,6 +61,7 @@ steps.push(
   { name: "folder cap", cwd: repoRoot, command: "node", args: ["scripts/checks/folder-size.ts"] },
   { name: "comment policy", cwd: repoRoot, command: "node", args: ["scripts/checks/comment-policy.ts"] },
   { name: "secret patterns", cwd: repoRoot, command: "node", args: ["scripts/checks/secret-patterns.ts"] },
+  { name: "cla signatures", cwd: repoRoot, command: "node", args: ["scripts/checks/cla.ts"] },
   { name: "azure scripts check", cwd: repoRoot, command: bash, args: ["scripts/azure/check.sh"], shell: false },
   { name: "roadmap tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/roadmap/tests/*.test.ts"] },
   { name: "check tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/checks/tests/*.test.ts"] },
@@ -70,6 +73,7 @@ steps.push(
 if (!values["skip-frontend"]) {
   steps.push(
     { name: "frontend install (frozen)", cwd: frontend, command: "pnpm", args: ["install", "--frozen-lockfile"] },
+    { name: "npm licences", cwd: repoRoot, command: "node", args: ["scripts/checks/licences.ts", "npm"] },
     { name: "api client drift", cwd: repoRoot, command: "node", args: ["scripts/api-client/drift.ts"] },
     { name: "frontend lint", cwd: frontend, command: "pnpm", args: ["lint"] },
     { name: "frontend typecheck", cwd: frontend, command: "pnpm", args: ["typecheck"] },

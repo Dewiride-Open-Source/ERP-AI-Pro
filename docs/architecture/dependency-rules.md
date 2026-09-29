@@ -26,7 +26,7 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 | `<Feature>.Endpoints` | Application, `BuildingBlocks.Endpoints` | EF Core, another feature's Application |
 | `<Feature>.Persistence` | Domain, EF Core | ASP.NET Core |
 | `<Feature>.Hosting` | Application, Domain, `BuildingBlocks.*`, `Microsoft.Extensions.*` (hosting, DI, logging, feature management) | ASP.NET Core, EF Core, Endpoints |
-| `<Feature>.Ai` | own Application/Domain, `BuildingBlocks.Ai` | provider SDKs |
+| `<Feature>.Ai` (Enterprise modules) | own Application/Domain, `BuildingBlocks.Ai` | provider SDKs |
 | `Integration` | own Application, other modules' `Contracts` events | other modules' implementations |
 
 ## Layer rules (`LayerTests`)
@@ -64,6 +64,17 @@ The object providers for framework namespaces (`Microsoft.AspNetCore`, `Microsof
 - Every catalogue context maps only entity types from its own assembly.
 - A module context's schema equals its descriptor's `Schema`. Schemas owned by building blocks (`platform_idempotency`, `files`) are named by concern and sit outside the `<domain>_<module>` descriptor rule; the module that exposes a building block's routes declares `Schema: null` (`Platform/Attachments`).
 - Every strongly-typed id property in every catalogue model uses `StronglyTypedIdConverter`.
+
+## Editions
+
+Decided in [ADR-0030](../adr/0030-community-and-enterprise-editions.md). This repository is the Community edition; the Enterprise edition adds proprietary modules from the private repository `Dewiride-Enterprise/ERP-AI-Pro-Enterprise`. Enterprise depends on Community, never the reverse.
+
+| From | May reference | Never references |
+|---|---|---|
+| a Community assembly or web feature | Community assemblies and features only, by the rules of this document | anything of the Enterprise edition: nothing names, imports, stubs, feature-flags, hides or reserves room for Enterprise work, and an extension point exists only for a Community reason, with a Community implementation and test |
+| an Enterprise module `Dewiride.Erp.Enterprise.Modules.<Domain>.<Module>` | Community `*.Contracts`, `BuildingBlocks.*`, Enterprise `*.Contracts` | a Community module's implementation, DbContext, tables or schema; another Enterprise module's implementation |
+
+The direction is structural here: Enterprise code exists only in the private repository, so no Community build can reach it. Architecture tests over both trees arrive with the roadmap item `business-building-blocks-enterprise-edition-composition`. The roadmap validator (`scripts/roadmap/lib/validate.ts`, run by `node scripts/roadmap/roadmap.ts check` in the roadmap workflow and by every roadmap command that changes the file) refuses Community work that depends on Enterprise-only work.
 
 ## Frontend
 

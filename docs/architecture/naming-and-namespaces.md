@@ -8,6 +8,8 @@
 | Host assembly | `Dewiride.Erp.Host.<Name>` | `Dewiride.Erp.Host.Api` |
 | Module assembly | `Dewiride.Erp.Modules.<Domain>.<Module>` | `Dewiride.Erp.Modules.Finance.Sales` |
 | Contracts assembly | `Dewiride.Erp.Modules.<Domain>.<Module>.Contracts` | `Dewiride.Erp.Modules.Finance.Sales.Contracts` |
+| Enterprise module assembly | `Dewiride.Erp.Enterprise.Modules.<Domain>.<Module>`, with `.Contracts`, `.UnitTests` and `.IntegrationTests` beside it ([ADR-0030](../adr/0030-community-and-enterprise-editions.md)) | `Dewiride.Erp.Enterprise.Modules.Finance.Payroll` |
+| AI companion module | `<Module>Ai` in the same domain, an Enterprise module | `Finance/SalesAi` |
 | Test assemblies | `<assembly>.UnitTests`, `<assembly>.IntegrationTests` | `Dewiride.Erp.Modules.Finance.Sales.UnitTests` |
 | Namespace | assembly name + folder path | `Dewiride.Erp.Modules.Finance.Sales.Invoices.Domain` |
 | Module class | `<Module>Module` | `SalesModule` |
@@ -54,7 +56,7 @@ Route exemptions: `/api/auth/*` (authentication endpoints owned by the host) and
 | Query file | `server/queries.ts` | `getInvoice`, `listInvoices` |
 | Schema file | `forms/<name>.schema.ts` | `invoice-form.schema.ts` |
 | Hook | `hooks/use-<name>.ts` or `.tsx` | `use-invoice-draft.ts` |
-| AI capability folder | `<feature>/ai/<capability>/` kebab-case | `invoices/ai/invoice-extraction/` |
+| AI capability folder (Enterprise features) | `<feature>/ai/<capability>/` kebab-case | `invoices/ai/invoice-extraction/` |
 | Playwright spec | `e2e/tests/<domain>/<module>/<feature>.spec.ts` | `e2e/tests/finance/sales/invoices.spec.ts` |
 | Page object | `e2e/pages/<domain>/<module>/<feature>.page.ts` | `e2e/pages/finance/sales/invoices.page.ts` |
 

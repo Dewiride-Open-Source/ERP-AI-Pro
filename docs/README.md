@@ -6,6 +6,7 @@
 | [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [persistence](architecture/persistence.md), [application pipeline](architecture/application-pipeline.md), [HTTP conventions](architecture/http-conventions.md), [request pipeline](architecture/request-pipeline.md), [attachments](architecture/attachments.md), [design system](architecture/design-system.md), [AI capabilities](architecture/ai-capabilities.md) |
 | [Guides](guides/local-development.md) | [local development](guides/local-development.md), [testing](guides/testing.md), [adding a setting, flag or secret](guides/adding-a-setting.md), [comment policy](guides/comment-policy.md), [observability](guides/observability.md), [migrations and seeding](guides/migrations.md) |
 | [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md), [Azure bootstrap](operations/azure-bootstrap.md), [secrets runbook](operations/runbooks/secrets.md), [migrations runbook](operations/runbooks/migrations.md); the other deployment runbooks arrive with the first-deployment phase |
+| [Contributor licence agreements](cla/sign-cla.md) | how outside contributors sign, and the [individual](cla/individual-cla-1.0.md) and [corporate](cla/corporate-cla-1.0.md) agreements |
 | [Configuration register](configuration.md) | every configuration key, feature flag and secret name |
 | [Routing register](routing.md) | every API route group and web route |
 | [OpenAPI document](openapi/erp.json) | the committed contract of the API, refreshed by `OpenApiSnapshotTests` and the source of the generated web client |
@@ -43,5 +44,6 @@
 | [0027](adr/0027-feedback-motion-and-the-accessibility-baseline.md) | Feedback, motion and the accessibility baseline |
 | [0028](adr/0028-playwright-matrix-navigation-crawl-and-sharded-reports.md) | Playwright matrix, navigation crawl and sharded reports |
 | [0029](adr/0029-captures-of-a-page-at-rest-and-the-hydration-marker.md) | Captures of a page at rest and the hydration marker |
+| [0030](adr/0030-community-and-enterprise-editions.md) | Community and Enterprise editions, the LGPL-3.0-only licence and the contributor licence agreement |
 
 New decisions use [0000-template.md](adr/0000-template.md).
