@@ -1,6 +1,7 @@
 import { expect, type JSHandle, type Locator, type Page } from "@playwright/test";
 
 import type { FileUpload } from "../../../fixtures/files";
+import { DataTableRegion } from "../../shared/lists/data-table.page";
 
 export const attachmentsPath = "/platform/attachments";
 
@@ -16,14 +17,9 @@ export class AttachmentsPage {
   readonly uploadAnnouncement: Locator;
   readonly uploadError: Locator;
   readonly uploadProgress: Locator;
-  readonly table: Locator;
-  readonly rows: Locator;
+  readonly list: DataTableRegion;
   readonly empty: Locator;
   readonly unavailable: Locator;
-  readonly pagination: Locator;
-  readonly currentPage: Locator;
-  readonly previousPage: Locator;
-  readonly nextPage: Locator;
   readonly deleteDialog: Locator;
   readonly confirmDelete: Locator;
   readonly cancelDelete: Locator;
@@ -40,14 +36,9 @@ export class AttachmentsPage {
     this.uploadAnnouncement = this.uploadStatus.locator("[aria-live=polite]");
     this.uploadError = page.getByTestId("upload-error");
     this.uploadProgress = page.getByTestId("upload-progress");
-    this.table = page.getByTestId("attachments-table");
-    this.rows = page.getByTestId("attachments-row");
+    this.list = new DataTableRegion(page, this.listCard);
     this.empty = page.getByTestId("attachments-empty");
     this.unavailable = page.getByTestId("attachments-unavailable");
-    this.pagination = page.getByTestId("attachments-pagination");
-    this.currentPage = page.getByTestId("attachments-page");
-    this.previousPage = page.getByTestId("attachments-previous");
-    this.nextPage = page.getByTestId("attachments-next");
     this.deleteDialog = page.getByTestId("attachment-delete-dialog");
     this.confirmDelete = page.getByTestId("attachment-delete-confirm");
     this.cancelDelete = page.getByTestId("attachment-delete-cancel");
@@ -58,10 +49,12 @@ export class AttachmentsPage {
     await expect(this.heading).toBeVisible();
   }
 
+  // The list renders its rows twice, as a table and as cards, and shows one of them by the width of its card.
   row(fileName: string): Locator {
-    return this.rows.filter({
-      has: this.page.getByTestId("attachments-file-name").getByText(fileName, { exact: true }),
-    });
+    return this.list.tableRows
+      .or(this.list.cards)
+      .filter({ visible: true })
+      .filter({ has: this.page.getByTestId("attachments-file-name").getByText(fileName, { exact: true }) });
   }
 
   async upload(file: FileUpload): Promise<void> {

@@ -21,7 +21,8 @@ test.describe("attachments page without the API", () => {
       await expect(attachments.unavailable.first()).toHaveRole("status");
       await expect(attachments.unavailable.first()).toContainText("Attachments are not available.");
       await expect(attachments.dropZone).toHaveCount(0);
-      await expect(attachments.table).toHaveCount(0);
+      await expect(attachments.list.table).toHaveCount(0);
+      await expect(attachments.list.cardList).toHaveCount(0);
 
       await capture("attachments-unavailable");
     },

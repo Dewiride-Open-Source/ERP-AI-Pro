@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-28",
+  "updatedOn": "2026-09-29",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -625,7 +625,7 @@
           "id": "web-foundation-data-table-kit-core",
           "title": "Data table kit (core)",
           "scope": "Build a server-driven table (TanStack Table + TanStack Query over the generated API client, licences verified) with sorting, filtering, pagination, column visibility, row selection and a mobile card layout backed by the `backend-platform-application-layer-primitives` paginated-query contract; saved views, bulk actions, CSV export and virtualisation follow in `business-building-blocks-web-shared-kit-extensions`.",
-          "status": "in-progress",
+          "status": "done",
           "acceptance": [
             "`@dewiride/erp-ui` exposes a `DataTable` built on TanStack Table 9 whose sortable headers carry `aria-sort` and sort on the server, with a column-visibility menu, page-scoped row selection with a select-all checkbox, a pagination bar whose page controls are links, loading, pending and empty states, and a card list of the same rows below its container breakpoint; Playwright component tests on `/design/data-table` prove the keyboard path, ARIA snapshots and every control on all five projects in light and dark.",
             "A list's page, page size, sort, filters and hidden columns live in URL search parameters that `apps/web/src/shared/lists` parses against a per-list definition and maps onto the API's `page`, `pageSize`, `sort` and `filter` grammar (values percent-encoded, date ranges on IST day boundaries); a malformed or non-canonical address redirects to its canonical form, and `node --test` covers parsing, serialisation, canonical addresses and the encoding.",
@@ -634,7 +634,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-09-28"
+          "startedOn": "2026-09-28",
+          "completedOn": "2026-09-29",
+          "notes": "DataTable on TanStack Table 9.2.4 (packages/ui components/data-table: sortable headers with aria-sort, Columns menu, page-scoped selection, page links, live status, pending and empty states, cards below @2xl, React-only controls disabled until hydration) and filters; shared/lists (defineList, readListQuery with canonical addresses, listApiParameters with IST day bounds, ListTable, ListLink, ListFilterForm); lists/ feature folder (S4, S5, I7); /design/data-table harness; attachments list migrated. Owner decision 2026-09-28 (ADR-0026): lists read on the server with the view in the address, no TanStack Query. Locally the owner's SQL Server stalled attachments queries for about 30 s under default Playwright parallelism (THREADPOOL and LCK_M_SCH_M waits; also seen once in the forms kit), so local runs used two workers; CI unaffected."
         },
         {
           "id": "web-foundation-feedback-motion-and-accessibility-baseline",
@@ -1024,7 +1026,8 @@
           "status": "planned",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Builds on ADR-0026: a saved view can store a list address (shared/lists listSearch), bulk actions receive the selected row ids ListTable keeps (cleared when filters change), CSV export can send listApiParameters; virtualised rows need a client-driven variant and its own ADR, because lists read one server page at a time."
         },
         {
           "id": "business-building-blocks-developer-experience",

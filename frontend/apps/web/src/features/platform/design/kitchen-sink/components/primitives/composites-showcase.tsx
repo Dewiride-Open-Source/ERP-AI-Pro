@@ -6,6 +6,8 @@ import { toast } from "sonner";
 
 import { Specimen, SpecimenGrid } from "../specimen";
 
+import { DataTableSpecimens } from "./data-table-specimen";
+
 const accept = ["image/png"] as const;
 const maxSizeBytes = 1024 * 1024;
 
@@ -41,6 +43,7 @@ export function CompositesShowcase() {
           }
         />
       </Specimen>
+      <DataTableSpecimens />
     </SpecimenGrid>
   );
 }

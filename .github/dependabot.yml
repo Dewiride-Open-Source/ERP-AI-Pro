@@ -81,6 +81,7 @@ updates:
           - postcss
           - geist
           - react-day-picker
+          - "@tanstack/*"
       playwright:
         patterns: ["@playwright/*"]
       opentelemetry:

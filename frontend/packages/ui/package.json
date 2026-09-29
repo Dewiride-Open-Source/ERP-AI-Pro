@@ -17,6 +17,7 @@
     "shadcn": "shadcn"
   },
   "dependencies": {
+    "@tanstack/react-table": "catalog:",
     "class-variance-authority": "catalog:",
     "cn": "catalog:",
     "lucide-react": "catalog:",

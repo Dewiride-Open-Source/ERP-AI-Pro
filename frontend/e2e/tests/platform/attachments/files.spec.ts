@@ -106,21 +106,48 @@ test.describe("attachments page", () => {
     await expect(row).toBeVisible();
     await expect(row).toContainText("PNG image");
     await expect(row).toContainText("256 bytes");
-    await expect(attachments.table).toMatchAriaSnapshot(`
-      - table:
-        - rowgroup:
-          - row:
-            - columnheader "File"
-            - columnheader "Size"
-            - columnheader "Actions"
-        - rowgroup:
-          - row /e2e-[0-9a-f]{12}\\.png/:
-            - cell /e2e-[0-9a-f]{12}\\.png PNG image/
-            - cell /^[\\d,.]+ (bytes?|KB|MB|GB)$/
-            - cell:
-              - button /^Download e2e-[0-9a-f]{12}\\.png$/
-              - button /^Delete e2e-[0-9a-f]{12}\\.png$/
-    `);
+    if (await attachments.list.showsCards()) {
+      await expect(row).toMatchAriaSnapshot(`
+        - listitem:
+          - text: /^e2e-[0-9a-f]{12}\\.png$/
+          - term: Type
+          - definition: PNG image
+          - term: Size
+          - definition: 256 bytes
+          - term: Uploaded
+          - definition: /\\d{4}/
+          - term: Virus scan
+          - definition: Not scanned
+          - button /^Download e2e-[0-9a-f]{12}\\.png$/
+          - button /^Delete e2e-[0-9a-f]{12}\\.png$/
+      `);
+    } else {
+      await expect(attachments.list.table.getByRole("row").first()).toMatchAriaSnapshot(`
+        - row:
+          - columnheader "File":
+            - button "File"
+          - columnheader "Type":
+            - button "Type"
+          - columnheader "Size":
+            - button "Size"
+          - columnheader "Uploaded":
+            - button "Uploaded"
+          - columnheader "Virus scan"
+          - columnheader "Actions"
+      `);
+      await expect(attachments.list.columnHeader("Uploaded")).toHaveAttribute("aria-sort", "descending");
+      await expect(row).toMatchAriaSnapshot(`
+        - row:
+          - rowheader /^e2e-[0-9a-f]{12}\\.png$/
+          - cell "PNG image"
+          - cell "256 bytes"
+          - cell /\\d{4}/
+          - cell "Not scanned"
+          - cell:
+            - button /^Download e2e-[0-9a-f]{12}\\.png$/
+            - button /^Delete e2e-[0-9a-f]{12}\\.png$/
+      `);
+    }
     await capture("attachments-uploaded");
 
     const downloadStarted = page.waitForEvent("download");
@@ -271,20 +298,21 @@ test.describe("attachments page", () => {
       try {
         await seedAttachments(request, listPageSize + 1, seeded);
         await attachments.goto();
-        await expect(attachments.pagination).toBeVisible();
-        await expect(attachments.currentPage).toHaveText(/^Page 1 of \d+$/);
-        await expect(attachments.pagination.getByRole("button", { name: "Previous" })).toBeDisabled();
-        await expect(attachments.rows).toHaveCount(listPageSize);
+        const { list } = attachments;
+        await list.waitUntilInteractive();
+        await expect(list.pageLabel).toHaveText(/^Page 1 of \d+$/);
+        await expect(list.previousPage).toHaveAttribute("aria-disabled", "true");
+        await expect(await list.rows()).toHaveCount(listPageSize);
 
-        await attachments.nextPage.click();
+        await list.nextPage.click();
         await expect(page).toHaveURL((url) => url.searchParams.get("page") === "2");
-        await expect(attachments.currentPage).toHaveText(/^Page 2 of \d+$/);
-        await expect(attachments.rows.first()).toBeVisible();
+        await expect(list.pageLabel).toHaveText(/^Page 2 of \d+$/);
+        await expect((await list.rows()).first()).toBeVisible();
 
-        await attachments.previousPage.click();
-        await expect(page).toHaveURL((url) => url.searchParams.get("page") === "1");
-        await expect(attachments.currentPage).toHaveText(/^Page 1 of \d+$/);
-        await expect(attachments.rows.first()).toBeVisible();
+        await list.previousPage.click();
+        await expect(page).toHaveURL((url) => url.pathname === attachmentsPath && url.search === "");
+        await expect(list.pageLabel).toHaveText(/^Page 1 of \d+$/);
+        await expect((await list.rows()).first()).toBeVisible();
 
         await page.goto(`${attachmentsPath}?page=100000`);
         await expect(page).toHaveURL((url) => {
@@ -292,17 +320,95 @@ test.describe("attachments page", () => {
           return url.pathname === attachmentsPath && landed >= 2 && landed < 100_000;
         });
         const landed = new URL(page.url()).searchParams.get("page") ?? "";
-        await expect(attachments.currentPage).toHaveText(new RegExp(`^Page ${landed} of \\d+$`));
-        await expect(attachments.rows.first()).toBeVisible();
+        await expect(list.pageLabel).toHaveText(new RegExp(`^Page ${landed} of \\d+$`));
+        await expect((await list.rows()).first()).toBeVisible();
 
         for (const malformed of ["abc", "0", "-2", "1.5", "999999999999"]) {
           await page.goto(`${attachmentsPath}?page=${malformed}`);
           await expect(page).toHaveURL((url) => url.pathname === attachmentsPath && url.search === "");
-          await expect(attachments.currentPage).toHaveText(/^Page 1 of \d+$/);
+          await expect(list.pageLabel).toHaveText(/^Page 1 of \d+$/);
         }
       } finally {
         await deleteAttachments(request, seeded);
       }
     });
   });
+
+  test("sorts, filters and hides a column of the stored files through the API", async ({ page, request }) => {
+    const attachments = new AttachmentsPage(page);
+    const { list } = attachments;
+    const token = `e2e-${randomUUID().slice(-8)}`;
+    const small = png({ size: 256, name: `${token}-small.png` });
+    const large = png({ size: 512, name: `${token}-large.png` });
+    const seeded: string[] = [];
+
+    try {
+      for (const file of [small, large]) {
+        seeded.push(await createdAttachmentId(await request.post(attachmentsApi, { multipart: { file } })));
+      }
+      await attachments.goto();
+      await list.waitUntilInteractive();
+
+      const name = list.textFilter("File name");
+      await name.fill(token);
+      await name.press("Enter");
+      await expect(page).toHaveURL((url) => url.searchParams.get("name") === token);
+      await expect(list.status).toContainText("Showing all 2 files.");
+      await expect(name).toBeFocused();
+
+      await list.sortBy("Size", "Size, highest first");
+      await expect(page).toHaveURL((url) => url.searchParams.get("sort") === "sizeBytes:desc");
+      await expect.poll(() => list.titles()).toEqual([large.name, small.name]);
+      await list.sortBy("Size", "Size, lowest first");
+      await expect(page).toHaveURL((url) => url.searchParams.get("sort") === "sizeBytes:asc");
+      await expect.poll(() => list.titles()).toEqual([small.name, large.name]);
+
+      await list.rangeStart("Uploaded between").fill(indiaDate(-1));
+      await list.rangeEnd("Uploaded between").fill(indiaDate(0));
+      await list.applyFilters.click();
+      await expect(page).toHaveURL(
+        (url) => url.searchParams.has("uploadedFrom") && url.searchParams.has("uploadedTo"),
+      );
+      await expect(list.status).toContainText("Showing all 2 files.");
+
+      await list.chooseOptions("Type", ["JPEG image"]);
+      await list.applyFilters.click();
+      await expect(page).toHaveURL((url) => url.searchParams.get("type") === "image/jpeg");
+      await expect(list.noMatches).toContainText("No files match these filters.");
+
+      await list.optionsFilter("Type").click();
+      await page.getByRole("menuitemcheckbox", { name: "JPEG image", exact: true }).click();
+      await page.getByRole("menuitemcheckbox", { name: "PNG image", exact: true }).click();
+      await page.keyboard.press("Escape");
+      await list.applyFilters.click();
+      await expect(page).toHaveURL((url) => url.searchParams.get("type") === "image/png");
+      await expect(list.status).toContainText("Showing all 2 files.");
+
+      await list.setColumnVisible("Type", false);
+      await expect(page).toHaveURL((url) => url.searchParams.get("hide") === "contentType");
+      if (await list.showsCards()) {
+        await expect(attachments.row(small.name).getByRole("term")).toHaveText([
+          "Size",
+          "Uploaded",
+          "Virus scan",
+        ]);
+      } else {
+        await expect(list.columnHeader("Type")).toHaveCount(0);
+      }
+    } finally {
+      await deleteAttachments(request, seeded);
+    }
+  });
 });
+
+function indiaDate(daysFromToday: number): string {
+  const day = new Date(Date.now() + daysFromToday * 86_400_000);
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
+    .format(day)
+    .replaceAll("/", "-");
+}

@@ -161,6 +161,12 @@ const cases: readonly Case[] = [
     expected: ["I7"],
   },
   {
+    condition: "IndexReExportingItsOwnListDefinition",
+    source: "features/platform/attachments/index.ts",
+    content: 'export { attachmentsList } from "./files/lists/attachments.list";\n',
+    expected: ["I7"],
+  },
+  {
     condition: "ComponentImportingItsOwnModulesQueries",
     source: attachmentsComponent,
     content: 'import { listAttachments } from "../server/queries";\n',

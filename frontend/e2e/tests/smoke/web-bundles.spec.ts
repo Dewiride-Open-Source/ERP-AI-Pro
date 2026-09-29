@@ -13,12 +13,28 @@ const routes = [
       "overlay-hover-card",
       "upload-progress",
       "system-info-refresh",
+      "No bills match these filters.",
+    ],
+  },
+  {
+    path: "/design/data-table",
+    ownMarkers: ["No bills match these filters."],
+    foreignMarkers: [
+      "supplier-example-form",
+      "motion-demo-preference",
+      "upload-progress",
+      "system-info-refresh",
     ],
   },
   {
     path: "/design/kitchen-sink",
     ownMarkers: ["motion-demo-preference"],
-    foreignMarkers: ["supplier-example-form", "upload-progress", "system-info-refresh"],
+    foreignMarkers: [
+      "supplier-example-form",
+      "upload-progress",
+      "system-info-refresh",
+      "No bills match these filters.",
+    ],
   },
   {
     path: "/platform/system-info",
@@ -27,8 +43,13 @@ const routes = [
   },
   {
     path: "/platform/attachments",
-    ownMarkers: ["upload-progress"],
-    foreignMarkers: ["system-info-refresh", "supplier-example-form", "motion-demo-preference"],
+    ownMarkers: ["upload-progress", "No files match these filters."],
+    foreignMarkers: [
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
+      "No bills match these filters.",
+    ],
   },
 ] as const;
 

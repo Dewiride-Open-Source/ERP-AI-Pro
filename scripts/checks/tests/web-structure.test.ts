@@ -151,6 +151,7 @@ const cases: readonly Case[] = [
     files: [
       file(`${featureRoot}/components/table/attachments-table.tsx`),
       file(`${featureRoot}/forms/upload.schema.ts`),
+      file(`${featureRoot}/lists/attachments.list.ts`),
       file(`${featureRoot}/hooks/use-upload.ts`),
       file(`${featureRoot}/ai/tagging/tag-suggestions.tsx`),
       file("features/platform/_shared/status-badge.tsx"),
@@ -206,10 +207,12 @@ const cases: readonly Case[] = [
     expected: [],
   },
   {
-    condition: "FormsHooksAndAiFilesWithTheirTests",
+    condition: "FormsListsHooksAndAiFilesWithTheirTests",
     files: [
       file(`${featureRoot}/forms/upload.schema.ts`),
       file(`${featureRoot}/forms/upload.schema.test.ts`),
+      file(`${featureRoot}/lists/attachments.list.ts`),
+      file(`${featureRoot}/lists/attachments.list.test.ts`),
       file(`${featureRoot}/hooks/use-upload-progress.tsx`),
       file(`${featureRoot}/hooks/use-upload-progress.test.ts`),
       file(`${featureRoot}/ai/tagging/prompts/tag-suggestions.prompt.md`),
@@ -265,6 +268,16 @@ const cases: readonly Case[] = [
     condition: "SchemaTestWithoutItsSchema",
     files: [file(`${featureRoot}/forms/upload.schema.test.ts`)],
     expected: [`S5 ${featureRoot}/forms/upload.schema.test.ts`],
+  },
+  {
+    condition: "ListsFileThatIsNotAListDefinition",
+    files: [file(`${featureRoot}/lists/attachments-columns.ts`)],
+    expected: [`S5 ${featureRoot}/lists/attachments-columns.ts`],
+  },
+  {
+    condition: "ListTestWithoutItsListDefinition",
+    files: [file(`${featureRoot}/lists/attachments.list.test.ts`)],
+    expected: [`S5 ${featureRoot}/lists/attachments.list.test.ts`],
   },
   {
     condition: "HookWithoutTheUsePrefix",

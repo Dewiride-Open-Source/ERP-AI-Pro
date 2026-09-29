@@ -1,7 +1,6 @@
+import { DataTableSkeleton } from "@dewiride/erp-ui/components/data-table/data-table-skeleton";
 import { Card, CardContent, CardHeader } from "@dewiride/erp-ui/components/ui/card";
 import { Skeleton } from "@dewiride/erp-ui/components/ui/skeleton";
-
-const rows = ["first", "second", "third", "fourth", "fifth"];
 
 export function AttachmentsOverviewSkeleton() {
   return (
@@ -31,10 +30,8 @@ export function AttachmentsOverviewSkeleton() {
           <Skeleton className="h-5 w-28" />
           <Skeleton className="h-4 w-80 max-w-full" />
         </CardHeader>
-        <CardContent className="grid gap-3">
-          {rows.map((row) => (
-            <Skeleton key={row} className="h-10 w-full" />
-          ))}
+        <CardContent>
+          <DataTableSkeleton columns={5} />
         </CardContent>
       </Card>
     </div>
