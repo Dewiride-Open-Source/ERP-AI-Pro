@@ -158,6 +158,7 @@ test.describe("form kit", () => {
       const saves = watch(page, isSaveRequest);
       await formKit.goto();
 
+      await expect(formKit.save).not.toHaveAttribute("data-hydrating");
       await expect(page).toHaveTitle("Form kit · ERP-AI-Pro");
       await expect(formKit.form).toMatchAriaSnapshot(`
       - form "Register a supplier (example)":
