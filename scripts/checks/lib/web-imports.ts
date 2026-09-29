@@ -22,7 +22,7 @@ type ModulePlace = Extract<Place, { readonly kind: "module" }>;
 
 type Problem = { readonly rule: WebRule; readonly message: string };
 
-const serverOrFormsFolder = new Set(["server", "forms"]);
+const unexportedFolders = new Set(["server", "forms", "lists"]);
 
 const staticImport = /(?:^|[\n;])\s*(?:import|export)\b[^;]*?\bfrom\s*(["'])([^"'\r\n]+)\1/g;
 const sideEffectImport = /(?:^|[\n;])\s*import\s*(["'])([^"'\r\n]+)\1/g;
@@ -120,8 +120,8 @@ function moduleInternalsProblem(from: Place, to: ModulePlace): Problem | undefin
       message: `reaches into features/${to.domain}/${to.module} internals; import its public surface @/features/${to.domain}/${to.module}`,
     };
   }
-  if (from.publicSurface && serverOrFormsFolder.has(to.subfolder ?? "")) {
-    return { rule: "I7", message: "a module's index.ts exposes no Server Function, query or schema: nothing from server/ or forms/" };
+  if (from.publicSurface && unexportedFolders.has(to.subfolder ?? "")) {
+    return { rule: "I7", message: "a module's index.ts exposes no Server Function, query, schema or list definition: nothing from server/, forms/ or lists/" };
   }
   return undefined;
 }

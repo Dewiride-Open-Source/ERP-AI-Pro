@@ -29,8 +29,9 @@ const kebabName = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/;
 const kebabFileName = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*(?:\.[a-z0-9]+)+$/;
 const camelCaseName = /^[a-z][A-Za-z0-9]*$/;
 
-const featureSubfolders = new Set(["components", "server", "forms", "hooks", "ai"]);
+const featureSubfolders = new Set(["components", "server", "forms", "lists", "hooks", "ai"]);
 const schemaFile = /^([a-z][a-z0-9]*(?:-[a-z0-9]+)*)\.schema(\.test)?\.ts$/;
+const listFile = /^([a-z][a-z0-9]*(?:-[a-z0-9]+)*)\.list(\.test)?\.ts$/;
 const hookFile = /^(use-[a-z0-9]+(?:-[a-z0-9]+)*)(?:\.tsx?|(\.test)\.ts)$/;
 const useServerDirective = /^(["'])use server\1[ \t]*(?:;|\r?\n|$)/;
 const serverOnlyImport = /^[ \t]*import[ \t]+(["'])server-only\1[ \t]*;?[ \t]*\r?$/m;
@@ -140,18 +141,19 @@ function checkFeatures(file: WebSourceFile, segments: readonly string[], paths: 
     return;
   }
   if (segments.length === 5) {
-    report(path, "S4", "a feature folder holds only components/, server/, forms/, hooks/ and ai/");
+    report(path, "S4", "a feature folder holds only components/, server/, forms/, lists/, hooks/ and ai/");
     return;
   }
 
   const subfolder = segments[4] ?? "";
   if (!featureSubfolders.has(subfolder)) {
-    report(folder(segments, 5), "S4", `${subfolder}/ is not a feature subfolder; use components/, server/, forms/, hooks/ or ai/`);
+    report(folder(segments, 5), "S4", `${subfolder}/ is not a feature subfolder; use components/, server/, forms/, lists/, hooks/ or ai/`);
     return;
   }
   const inside = segments.slice(5);
   if (subfolder === "server") checkServerFile(file, inside, report);
   else if (subfolder === "forms") checkFormsFile(path, inside, paths, report);
+  else if (subfolder === "lists") checkListsFile(path, inside, paths, report);
   else if (subfolder === "hooks") checkHooksFile(path, inside, paths, report);
   else if (subfolder === "ai" && inside.length === 1) {
     report(path, "S5", "ai/ holds only <capability>/ folders");
@@ -190,6 +192,15 @@ function checkFormsFile(path: string, inside: readonly string[], paths: Readonly
     report(path, "S5", "forms/ holds only <name>.schema.ts files and their <name>.schema.test.ts tests");
   } else if (match[2] && !paths.has(path.replace(/\.test\.ts$/, ".ts"))) {
     report(path, "S5", `${match[1]}.schema.test.ts has no ${match[1]}.schema.ts beside it`);
+  }
+}
+
+function checkListsFile(path: string, inside: readonly string[], paths: ReadonlySet<string>, report: Report): void {
+  const match = inside.length === 1 ? listFile.exec(inside[0] ?? "") : null;
+  if (!match) {
+    report(path, "S5", "lists/ holds only <name>.list.ts files and their <name>.list.test.ts tests");
+  } else if (match[2] && !paths.has(path.replace(/\.test\.ts$/, ".ts"))) {
+    report(path, "S5", `${match[1]}.list.test.ts has no ${match[1]}.list.ts beside it`);
   }
 }
 

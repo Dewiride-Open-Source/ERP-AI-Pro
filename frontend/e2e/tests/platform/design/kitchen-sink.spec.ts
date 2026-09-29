@@ -9,6 +9,7 @@ import {
   type KitchenSinkSectionId,
 } from "../../../pages/platform/design/kitchen-sink.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
+import { DataTableRegion } from "../../../pages/shared/lists/data-table.page";
 
 const tokenSections = kitchenSinkSections.filter((section) => section.group === "tokens");
 
@@ -16,7 +17,7 @@ const primitiveSections = kitchenSinkSections.filter((section) => section.group 
 
 // On a phone with a device pixel ratio of 3 these sections are taller than the 16,384 device pixels one capture holds, so
 // each of their specimens is captured on its own.
-const capturedBySpecimen: ReadonlySet<KitchenSinkSectionId> = new Set(["forms"]);
+const capturedBySpecimen: ReadonlySet<KitchenSinkSectionId> = new Set(["composites", "forms"]);
 
 const reducedMotionSeconds = 0.01 / 1000;
 
@@ -1827,6 +1828,47 @@ test.describe("design system kitchen sink", () => {
 
       expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
     });
+
+    forEachTheme(
+      "the data table with its sorting, pages, selection and columns",
+      async ({ page, capture }) => {
+        const kitchenSink = new KitchenSinkPage(page);
+        await kitchenSink.goto();
+        const vendors = new DataTableRegion(page, kitchenSink.specimen("Data table"));
+        await vendors.waitUntilInteractive();
+
+        await expect(vendors.status).toHaveText("Showing 1–3 of 5 vendors. Sorted by Vendor, A to Z.");
+        expect(await vendors.titles()).toEqual(["Deccan Logistics", "Kaveri Traders", "Konark Electricals"]);
+        await vendors.sortBy("Outstanding", "Outstanding, highest first");
+        await expect(vendors.status).toContainText("Sorted by Outstanding, highest first.");
+        expect(await vendors.titles()).toEqual(["Deccan Logistics", "Nilgiri Print House", "Kaveri Traders"]);
+
+        await vendors.nextPage.click();
+        await expect(vendors.pageLabel).toHaveText("Page 2 of 2");
+        await expect(vendors.status).toContainText("Showing 4–5 of 5 vendors.");
+        expect(await vendors.titles()).toEqual(["Konark Electricals", "Thar Solar Systems"]);
+        await expect(vendors.nextPage).toHaveAttribute("aria-disabled", "true");
+
+        await vendors.container
+          .getByRole("checkbox", { name: "Select Thar Solar Systems" })
+          .filter({ visible: true })
+          .click();
+        await expect(vendors.selection).toHaveText("1 vendor selected");
+        await vendors.setColumnVisible("City", false);
+        if (await vendors.showsCards())
+          await expect(vendors.cards.first().getByRole("term")).toHaveText(["Outstanding"]);
+        else await expect(vendors.columnHeader("City")).toHaveCount(0);
+        await capture("composites-data-table-operated", kitchenSink.specimen("Data table"));
+
+        const withoutRows = new DataTableRegion(page, kitchenSink.specimen("Data table without rows"));
+        await expect(withoutRows.container).toContainText("No vendors owe anything.");
+        await expect(withoutRows.status).toHaveText("No vendors to show.");
+        await expect(
+          kitchenSink.specimen("Data table while loading").getByTestId("data-table-skeleton"),
+        ).toBeVisible();
+        expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
+      },
+    );
 
     forEachTheme(
       "the field frame, error summary and submit button with the keyboard",

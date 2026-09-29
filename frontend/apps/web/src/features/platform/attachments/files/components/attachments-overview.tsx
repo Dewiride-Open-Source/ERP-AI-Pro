@@ -8,30 +8,33 @@ import {
 import { FilesIcon, UploadIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
-import { readPageParameter } from "@/shared/api/paging";
 import { ApiError } from "@/shared/api/problem-details";
+import { listApiParameters } from "@/shared/lists/list-api";
+import { listHref, readListQuery, withPage, type SearchParameters } from "@/shared/lists/list-query";
 
 import { attachmentsNavigation } from "../../nav";
-import { attachmentsPageSize, getAttachments, getUploadPolicy } from "../server/queries";
+import { attachmentsList } from "../lists/attachments.list";
+import { getAttachments, getUploadPolicy } from "../server/queries";
 
-import { AttachmentsPagination } from "./attachments-pagination";
-import { AttachmentsTable } from "./attachments-table";
+import { AttachmentsList } from "./attachments-list";
 import { UploadPanel } from "./upload-panel";
 
 const listHeadingId = "attachments-list-heading";
 
-export async function AttachmentsOverview({
-  pageParameter,
-}: {
-  pageParameter: string | readonly string[] | undefined;
-}) {
-  const page = readPageParameter(pageParameter, attachmentsPageSize);
-  if (page === undefined) redirect(listPage(1));
+export async function AttachmentsOverview({ searchParameters }: { searchParameters: SearchParameters }) {
+  const { basePath } = attachmentsNavigation;
+  const { query, canonical } = readListQuery(searchParameters, attachmentsList);
+  if (!canonical) redirect(listHref(basePath, query, attachmentsList));
 
-  const [policy, attachments] = await Promise.allSettled([getUploadPolicy(), getAttachments(page)]);
+  const [policy, attachments] = await Promise.allSettled([
+    getUploadPolicy(),
+    getAttachments(listApiParameters(query, attachmentsList)),
+  ]);
   if (attachments.status === "fulfilled") {
     const totalPages = attachments.value.totalPages ?? 0;
-    if (page > 1 && page > totalPages) redirect(listPage(totalPages));
+    if (query.page > 1 && query.page > totalPages) {
+      redirect(listHref(basePath, withPage(query, Math.max(1, totalPages)), attachmentsList));
+    }
   }
 
   return (
@@ -71,20 +74,24 @@ export async function AttachmentsOverview({
               Stored files
             </h2>
           </CardTitle>
-          <CardDescription>Newest first. Downloads use a link that works for a few minutes.</CardDescription>
+          <CardDescription>Downloads use a link that works for a few minutes.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4">
+        <CardContent>
           {attachments.status === "fulfilled" ? (
-            <>
-              <AttachmentsTable
-                attachments={attachments.value.items ?? []}
-                focusAfterDeleteId={listHeadingId}
-              />
-              <AttachmentsPagination
-                page={attachments.value.page ?? page}
-                totalPages={attachments.value.totalPages ?? 1}
-              />
-            </>
+            <AttachmentsList
+              query={query}
+              page={{
+                page: attachments.value.page ?? query.page,
+                pageSize: attachments.value.pageSize ?? query.pageSize,
+                totalCount: attachments.value.totalCount ?? 0,
+                pageCount: attachments.value.totalPages ?? 0,
+              }}
+              attachments={attachments.value.items ?? []}
+              allowedContentTypes={
+                policy.status === "fulfilled" ? (policy.value.allowedContentTypes ?? []) : []
+              }
+              labelledBy={listHeadingId}
+            />
           ) : (
             <Unavailable reason={describeFailure(attachments.reason)} />
           )}
@@ -92,11 +99,6 @@ export async function AttachmentsOverview({
       </Card>
     </div>
   );
-}
-
-function listPage(page: number) {
-  const { basePath } = attachmentsNavigation;
-  return page > 1 ? (`${basePath}?page=${page}` as const) : basePath;
 }
 
 function describeFailure(reason: unknown): string {

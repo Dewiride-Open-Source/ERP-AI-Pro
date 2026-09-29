@@ -111,7 +111,7 @@ export const kitchenSinkSections = [
     group: "primitives",
     title: "Composites",
     description:
-      "Components the design system builds from primitives: the theme switch and the file drop zone.",
+      "Components the design system builds from primitives: the theme switch, the file drop zone and the data table.",
   },
   {
     id: "forms",
