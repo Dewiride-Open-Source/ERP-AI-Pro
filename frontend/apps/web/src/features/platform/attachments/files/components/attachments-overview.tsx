@@ -38,7 +38,7 @@ export async function AttachmentsOverview({ searchParameters }: { searchParamete
   }
 
   return (
-    <div className="grid animate-fade-up gap-section">
+    <div className="grid gap-section">
       <header>
         <p className="text-eyebrow text-primary uppercase">Platform</p>
         <h1 className="text-title">Attachments</h1>

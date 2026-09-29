@@ -31,7 +31,7 @@ export async function SystemInfoCard() {
   }
 
   return (
-    <section className="grid animate-fade-up gap-section">
+    <section className="grid gap-section">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-eyebrow text-primary uppercase">Platform</p>

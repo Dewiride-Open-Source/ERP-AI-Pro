@@ -1,3 +1,4 @@
+import { LoadingStatus } from "@dewiride/erp-ui/components/feedback/loading-status";
 import { Card, CardContent, CardHeader } from "@dewiride/erp-ui/components/ui/card";
 import { Skeleton } from "@dewiride/erp-ui/components/ui/skeleton";
 
@@ -6,10 +7,9 @@ const startupRows = ["first", "second", "third", "fourth", "fifth"];
 
 export function SystemInfoOverviewSkeleton() {
   return (
-    <div
+    <LoadingStatus
+      label="Loading system information"
       className="grid gap-section"
-      role="status"
-      aria-label="Loading system information"
       data-testid="system-info-loading"
     >
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -48,6 +48,6 @@ export function SystemInfoOverviewSkeleton() {
           ))}
         </CardContent>
       </Card>
-    </div>
+    </LoadingStatus>
   );
 }

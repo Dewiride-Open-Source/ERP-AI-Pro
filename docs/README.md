@@ -40,5 +40,6 @@
 | [0024](adr/0024-frontend-structure-and-import-boundaries.md) | Frontend structure and import boundaries |
 | [0025](adr/0025-forms-typed-submissions-and-form-composites.md) | Forms: typed submissions, one schema, field-error mapping and the form composites |
 | [0026](adr/0026-server-driven-lists-and-the-data-table.md) | Server-driven lists: the view in the address and the data table |
+| [0027](adr/0027-feedback-motion-and-the-accessibility-baseline.md) | Feedback, motion and the accessibility baseline |
 
 New decisions use [0000-template.md](adr/0000-template.md).

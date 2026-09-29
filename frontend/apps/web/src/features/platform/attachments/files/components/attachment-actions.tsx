@@ -1,20 +1,12 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@dewiride/erp-ui/components/ui/alert-dialog";
+import { ConfirmDialog } from "@dewiride/erp-ui/components/feedback/confirm-dialog";
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { DownloadIcon, Trash2Icon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+
+import { useRemoveRow } from "@/shared/lists/list-row-removal";
 
 import { createDownloadLink, deleteAttachment } from "../server/actions";
 
@@ -27,13 +19,12 @@ export function AttachmentActions({
   fileName: string;
   focusAfterDeleteId: string;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const removeRow = useRemoveRow();
+  const [downloading, startDownload] = useTransition();
   const [error, setError] = useState<string>();
-  const deleteConfirmed = useRef(false);
 
   const download = () =>
-    startTransition(async () => {
+    startDownload(async () => {
       setError(undefined);
       const result = await createDownloadLink(id);
       if ("url" in result) downloadWithoutLeavingPage(result.url, fileName);
@@ -41,20 +32,17 @@ export function AttachmentActions({
     });
 
   const remove = () => {
-    deleteConfirmed.current = true;
-    startTransition(async () => {
-      setError(undefined);
-      const result = await deleteAttachment(id);
-      if (result.error) setError(result.error);
-      else router.refresh();
+    void removeRow(id, () => deleteAttachment(id)).then((outcome) => {
+      if (outcome.removed) {
+        toast.success(`Deleted ${fileName}.`);
+        return;
+      }
+      toast.error(`${fileName} was not deleted.`, {
+        description: outcome.reference
+          ? `${outcome.message} Reference: ${outcome.reference}`
+          : outcome.message,
+      });
     });
-  };
-
-  const moveFocusAfterDelete = (event: Event) => {
-    if (!deleteConfirmed.current) return;
-    deleteConfirmed.current = false;
-    event.preventDefault();
-    document.getElementById(focusAfterDeleteId)?.focus();
   };
 
   return (
@@ -64,46 +52,39 @@ export function AttachmentActions({
           variant="ghost"
           size="sm"
           onClick={download}
-          disabled={pending}
+          disabled={downloading}
           aria-label={`Download ${fileName}`}
           data-testid="attachment-download"
         >
           <DownloadIcon aria-hidden />
           <span className="max-sm:sr-only">Download</span>
         </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
+        <ConfirmDialog
+          trigger={
             <Button
               variant="ghost"
               size="sm"
-              disabled={pending}
+              disabled={downloading}
               aria-label={`Delete ${fileName}`}
               data-testid="attachment-delete"
             >
               <Trash2Icon aria-hidden />
               <span className="max-sm:sr-only">Delete</span>
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent onCloseAutoFocus={moveFocusAfterDelete} data-testid="attachment-delete-dialog">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete this attachment?</AlertDialogTitle>
-              <AlertDialogDescription>
-                <span className="font-medium text-foreground">{fileName}</span> is removed from the list and
-                its download links stop working.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel data-testid="attachment-delete-cancel">Keep it</AlertDialogCancel>
-              <AlertDialogAction
-                variant="destructive"
-                onClick={remove}
-                data-testid="attachment-delete-confirm"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          }
+          title="Delete this attachment?"
+          description={
+            <>
+              <span className="font-medium text-foreground">{fileName}</span> is removed from the list and its
+              download links stop working.
+            </>
+          }
+          cancelLabel="Keep it"
+          confirmLabel="Delete"
+          tone="destructive"
+          onConfirm={remove}
+          focusAfterConfirm={() => document.getElementById(focusAfterDeleteId)}
+        />
       </div>
       {error ? (
         <p role="alert" className="text-xs text-destructive" data-testid="attachment-action-error">

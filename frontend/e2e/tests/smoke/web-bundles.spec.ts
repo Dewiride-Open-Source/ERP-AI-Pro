@@ -14,6 +14,7 @@ const routes = [
       "upload-progress",
       "system-info-refresh",
       "No bills match these filters.",
+      "animated-list-item",
     ],
   },
   {
@@ -24,6 +25,18 @@ const routes = [
       "motion-demo-preference",
       "upload-progress",
       "system-info-refresh",
+      "animated-list-item",
+    ],
+  },
+  {
+    path: "/design/feedback",
+    ownMarkers: ["animated-list-item", "Enter a reminder.", "Restore the requests"],
+    foreignMarkers: [
+      "supplier-example-form",
+      "motion-demo-preference",
+      "upload-progress",
+      "system-info-refresh",
+      "No bills match these filters.",
     ],
   },
   {
@@ -34,12 +47,18 @@ const routes = [
       "upload-progress",
       "system-info-refresh",
       "No bills match these filters.",
+      "animated-list-item",
     ],
   },
   {
     path: "/platform/system-info",
     ownMarkers: ["system-info-refresh"],
-    foreignMarkers: ["upload-progress", "attachment-delete-dialog", "supplier-example-form"],
+    foreignMarkers: [
+      "upload-progress",
+      "Delete this attachment?",
+      "supplier-example-form",
+      "animated-list-item",
+    ],
   },
   {
     path: "/platform/attachments",
@@ -49,6 +68,7 @@ const routes = [
       "supplier-example-form",
       "motion-demo-preference",
       "No bills match these filters.",
+      "animated-list-item",
     ],
   },
 ] as const;

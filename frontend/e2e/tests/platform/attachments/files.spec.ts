@@ -4,8 +4,10 @@ import { readFile } from "node:fs/promises";
 import type { APIRequestContext, Page, Request, Response } from "@playwright/test";
 
 import { png, type FileUpload } from "../../../fixtures/files";
+import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
+import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 const attachmentsApi = "/api/platform/attachments";
 
@@ -172,6 +174,51 @@ test.describe("attachments page", () => {
     await attachments.confirmDelete.click();
     await expect(attachments.listHeading).toBeFocused();
     await expect(row).toHaveCount(0);
+    await expect(new AppShell(page).toast(`Deleted ${file.name}.`)).toBeVisible();
+  });
+
+  test("takes a deleted file off the list at once and reports one deleted elsewhere", async ({
+    page,
+    request,
+  }) => {
+    const attachments = new AttachmentsPage(page);
+    const shell = new AppShell(page);
+    const prefix = `e2e-delete-${randomUUID().slice(-12)}`;
+    const kept = png({ name: `${prefix}-first.png` });
+    const gone = png({ name: `${prefix}-second.png` });
+    const ids = new Map<string, string>();
+    for (const file of [kept, gone]) {
+      ids.set(
+        file.name,
+        await createdAttachmentId(await request.post(attachmentsApi, { multipart: { file } })),
+      );
+    }
+
+    try {
+      await attachments.goto(`?name=${prefix}`);
+      await expect(attachments.list.status).toContainText("Showing all 2 files.");
+
+      const release = await holdServerFunctionCalls(page, attachmentsPath);
+      await attachments.row(kept.name).getByTestId("attachment-delete").click();
+      await attachments.confirmDelete.click();
+      await expect(attachments.row(kept.name)).toHaveCount(0);
+      await expect(attachments.list.status).toContainText("Showing 1 file.");
+      release();
+      await expect(shell.toast(`Deleted ${kept.name}.`)).toBeVisible();
+      await expect(attachments.row(kept.name)).toHaveCount(0);
+      ids.delete(kept.name);
+
+      const deletedElsewhere = await request.delete(`${attachmentsApi}/${ids.get(gone.name) ?? ""}`);
+      expect(deletedElsewhere.status()).toBe(204);
+      ids.delete(gone.name);
+      await attachments.row(gone.name).getByTestId("attachment-delete").click();
+      await attachments.confirmDelete.click();
+      await expect(shell.toast(`${gone.name} was not deleted.`)).toBeVisible();
+      await expect(attachments.row(gone.name)).toHaveCount(0);
+      await expect(attachments.list.noMatches).toBeVisible();
+    } finally {
+      await deleteAttachments(request, [...ids.values()]);
+    }
   });
 
   forEachTheme("uploads a file dropped on the drop zone", async ({ page, capture }) => {

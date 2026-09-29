@@ -684,7 +684,7 @@ test.describe("design system kitchen sink", () => {
             - slider "Minimum"
             - slider "Maximum"
           - paragraph: From ₹20,000 to ₹80,000.
-        - group:
+        - group [disabled]:
           - group "Credit limit (₹ lakh)":
             - slider "Minimum" [disabled]
             - slider "Maximum" [disabled]

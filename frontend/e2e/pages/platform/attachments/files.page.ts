@@ -39,9 +39,9 @@ export class AttachmentsPage {
     this.list = new DataTableRegion(page, this.listCard);
     this.empty = page.getByTestId("attachments-empty");
     this.unavailable = page.getByTestId("attachments-unavailable");
-    this.deleteDialog = page.getByTestId("attachment-delete-dialog");
-    this.confirmDelete = page.getByTestId("attachment-delete-confirm");
-    this.cancelDelete = page.getByTestId("attachment-delete-cancel");
+    this.deleteDialog = page.getByRole("alertdialog", { name: "Delete this attachment?" });
+    this.confirmDelete = this.deleteDialog.getByRole("button", { name: "Delete", exact: true });
+    this.cancelDelete = this.deleteDialog.getByRole("button", { name: "Keep it" });
   }
 
   async goto(query = ""): Promise<void> {

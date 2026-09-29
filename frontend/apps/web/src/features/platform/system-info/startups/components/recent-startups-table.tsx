@@ -35,7 +35,7 @@ export async function RecentStartupsTable() {
   }
 
   return (
-    <Card className="animate-fade-up" data-testid="recent-startups-card">
+    <Card data-testid="recent-startups-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <HistoryIcon className="size-4 text-muted-foreground" aria-hidden />

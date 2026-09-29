@@ -4,8 +4,27 @@ import * as React from "react";
 import { cn } from "cn";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
+  const container = React.useRef<HTMLDivElement>(null);
+  const [scrollable, setScrollable] = React.useState(false);
+
+  React.useEffect(() => {
+    const element = container.current;
+    if (element === null) return undefined;
+    const measure = () => setScrollable(element.scrollWidth > element.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    if (element.firstElementChild !== null) observer.observe(element.firstElementChild);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
+    <div
+      ref={container}
+      data-slot="table-container"
+      tabIndex={scrollable ? 0 : undefined}
+      className="relative w-full overflow-x-auto rounded-sm focus-ring"
+    >
       <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   );

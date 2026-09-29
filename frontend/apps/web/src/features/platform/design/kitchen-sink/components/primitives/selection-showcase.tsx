@@ -141,7 +141,7 @@ export function SelectionShowcase() {
         description="A range with a thumb for each end; arrow keys move the focused thumb."
       >
         <AmountRangeSlider />
-        <Field data-disabled="true">
+        <Field data-disabled="true" aria-disabled="true">
           <FieldTitle id="ks-slider-disabled-label">Credit limit (₹ lakh)</FieldTitle>
           <div role="group" aria-labelledby="ks-slider-disabled-label">
             <Slider defaultValue={[10, 40]} max={50} disabled />
