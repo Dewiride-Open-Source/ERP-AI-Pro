@@ -24,7 +24,7 @@ These settings live outside the repository and must be applied by the owner in *
 - [ ] Require status checks to pass. GitHub lists checks by **job name**, and every workflow runs on each pull request (no path filters), so all of these always report:
   - `Build, analyse and test` (ci-backend)
   - `Lint, typecheck and build` (ci-frontend)
-  - `Playwright (chromium)` and `Playwright (mobile-android)` (e2e; the other three projects run on `main` only)
+  - `Playwright` (e2e: the job that merges the shards' blob reports into one HTML report and fails unless every shard passed; a pull request shards chromium and mobile-android, `main` all six projects, [ADR-0028](../adr/0028-playwright-matrix-navigation-crawl-and-sharded-reports.md))
   - `Build images and smoke test the compose stack` (docker-build)
   - `Review dependency changes` (dependency-review)
   - `Validate roadmap and rendered Markdown` (roadmap)

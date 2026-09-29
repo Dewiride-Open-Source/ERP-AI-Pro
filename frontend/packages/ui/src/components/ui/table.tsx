@@ -5,7 +5,7 @@ import { cn } from "cn";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   const container = React.useRef<HTMLDivElement>(null);
-  const [scrollable, setScrollable] = React.useState(false);
+  const [scrollable, setScrollable] = React.useState(true);
 
   React.useEffect(() => {
     const element = container.current;

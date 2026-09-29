@@ -21,6 +21,7 @@ frontend/packages/api-client/dist/
 playwright-report/
 test-results/
 blob-report/
+all-blob-reports/
 frontend/e2e/screenshots/
 
 # Environment and secrets

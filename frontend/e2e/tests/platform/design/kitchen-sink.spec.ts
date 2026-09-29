@@ -2423,7 +2423,9 @@ test.describe("design system kitchen sink", () => {
       ]) {
         await page.keyboard.press(key);
         await expect(accounts.getByRole("option", { name: option })).toHaveAttribute("aria-selected", "true");
-        await expect(accounts.getByRole("option", { name: option })).toBeInViewport({ ratio: 1 });
+        // On the iPad's two device pixels per CSS pixel the scrolled list leaves a hundredth of a pixel of the option
+        // outside its edge, so the option counts as in view from 99 % visible.
+        await expect(accounts.getByRole("option", { name: option })).toBeInViewport({ ratio: 0.99 });
       }
       await expect(popup).toBeInViewport({ ratio: 1 });
       expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
