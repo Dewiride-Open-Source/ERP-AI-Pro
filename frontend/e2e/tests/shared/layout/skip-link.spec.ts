@@ -1,4 +1,4 @@
-import { expect, forEachTheme, tabOntoLink, test } from "../../../fixtures/test";
+import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { FeedbackPage } from "../../../pages/platform/design/feedback.page";
 
 test.describe("skip link", () => {
@@ -8,7 +8,12 @@ test.describe("skip link", () => {
     await feedback.goto();
 
     expect((await skipLink.boundingBox())?.width).toBeLessThanOrEqual(1);
-    await tabOntoLink(page, skipLink);
+    // The skip link is the page's first focusable element, so the first Tab reaches it. WebKit leaves links out of the Tab
+    // order unless Safari's "Press Tab to highlight each item" is on, so there it is focused from script right after the key
+    // press, which :focus-visible treats as keyboard focus.
+    await page.keyboard.press("Tab");
+    if (page.context().browser()?.browserType().name() === "webkit") await skipLink.focus();
+    await expect(skipLink).toBeFocused();
     await expect(skipLink).toBeInViewport();
     expect((await skipLink.boundingBox())?.width).toBeGreaterThan(1);
     await capture("skip-link", skipLink);

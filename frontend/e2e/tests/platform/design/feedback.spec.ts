@@ -304,7 +304,8 @@ test.describe("feedback", () => {
   );
 
   test.describe("when the page itself fails", () => {
-    test.use({ expectedConsoleError: /The feedback page failed on purpose\./ });
+    // React logs the caught error object; Firefox reports an Error object logged to the console as the bare text "Error".
+    test.use({ expectedConsoleError: /The feedback page failed on purpose\.|^Error$/ });
 
     forEachTheme("shows the shell's error state and recovers with Try again", async ({ page, capture }) => {
       const feedback = new FeedbackPage(page);
@@ -330,29 +331,39 @@ test.describe("feedback", () => {
     });
   });
 
+  // The page streams its skeleton ahead of the report on a visit in every engine. On a client navigation WebKit shows the new
+  // page only once the whole answer has arrived, so the link is followed in the next test without asserting the skeleton.
+  // A capture of the skeleton would outlast its three seconds in Firefox and WebKit; the kitchen sink's skeleton specimen, a
+  // LoadingStatus too, is the one captured and scanned.
   forEachTheme(
     "shows the report's own loading status while it is prepared, then fades it in",
     async ({ page, capture }) => {
       const feedback = new FeedbackPage(page);
       const report = new SlowReportPage(page);
-      await feedback.goto();
+      await page.goto(slowReportPath, { waitUntil: "commit" });
 
-      await feedback.designPageLink("Receivables ageing (takes three seconds)").click();
       await expect(report.loading).toBeVisible();
       await expect(report.loading.getByRole("heading", { level: 1 })).toHaveText(
         "Receivables ageing (example)",
       );
-      await capture("report-loading", report.loading);
       await expect(report.heading).toBeVisible({ timeout: 15_000 });
       await expect(report.loading).toHaveCount(0);
-      await expect(page).toHaveURL((url) => url.pathname === slowReportPath);
       await expect(feedback.shell.pageTransition).toHaveCSS("animation-name", "page-enter");
       await capture("report");
-
-      await report.backToFeedback.click();
-      await expect(feedback.heading).toBeVisible();
     },
   );
+
+  test("opens the report from this page and comes back", async ({ page }) => {
+    const feedback = new FeedbackPage(page);
+    const report = new SlowReportPage(page);
+    await feedback.goto();
+
+    await feedback.designPageLink("Receivables ageing (takes three seconds)").click();
+    await expect(report.heading).toBeVisible({ timeout: 15_000 });
+    await expect(page).toHaveURL((url) => url.pathname === slowReportPath);
+    await report.backToFeedback.click();
+    await expect(feedback.heading).toBeVisible();
+  });
 
   test("follows each link to another design page and back", async ({ page }) => {
     const feedback = new FeedbackPage(page);
