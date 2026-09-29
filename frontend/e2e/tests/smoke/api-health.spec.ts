@@ -40,8 +40,9 @@ test.describe("api smoke", () => {
       startups: [expect.objectContaining({ id: expect.any(String) })],
     });
 
-    const missing = await request.get("/api/platform/does-not-exist");
-    expect(missing.status()).toBe(404);
-    expect(missing.headers()["content-type"]).toContain("application/problem+json");
+    const unknown = await request.get("/api/platform/does-not-exist", { maxRedirects: 0 });
+    expect(unknown.status()).toBe(401);
+    expect(unknown.headers()["content-type"]).toContain("application/problem+json");
+    expect(await unknown.json()).toMatchObject({ code: "request.unauthenticated" });
   });
 });

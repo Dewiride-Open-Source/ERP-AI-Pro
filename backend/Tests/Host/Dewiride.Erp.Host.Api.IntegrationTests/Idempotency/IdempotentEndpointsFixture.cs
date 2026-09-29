@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Idempotency;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Idempotency;
 
@@ -53,6 +54,8 @@ public sealed class IdempotentEndpointsFixture : IAsyncDisposable
     public SemaphoreSlim Entered { get; } = new(0);
 
     public SemaphoreSlim Gate { get; } = new(0);
+
+    public HttpClient CreateClient() => Factory.CreateClient().AsUser(TestUsers.Accountant);
 
     public async ValueTask DisposeAsync()
     {

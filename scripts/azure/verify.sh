@@ -364,7 +364,7 @@ verify_app_roles() {
 verify_required_resource_access() {
   local registration_json="$1" display_name="$2"
   local requested_ids index scope scope_id
-  local -a scope_ids=("$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_USER_READ")
+  local -a scope_ids=("$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ")
   requested_ids="$(json_eval "$registration_json" '(value.requiredResourceAccess || []).filter((r) => String(r.resourceAppId).toLowerCase() === args[0].toLowerCase()).flatMap((r) => r.resourceAccess || []).filter((a) => a.type === "Scope").map((a) => String(a.id).toLowerCase())' "$GRAPH_APP_ID")"
   for index in "${!GRAPH_SCOPE_VALUES[@]}"; do
     scope="${GRAPH_SCOPE_VALUES[$index]}"
@@ -506,6 +506,13 @@ verify_signin_registration() {
 
   assert_appconfig_value "$IDENTITY_TENANT_ID_KEY [$label] is the tenant id" "$IDENTITY_TENANT_ID_KEY" "$label" "$ERP_AZURE_TENANT_ID"
   assert_appconfig_value "$IDENTITY_CLIENT_ID_KEY [$label] is the application id of '$display_name'" "$IDENTITY_CLIENT_ID_KEY" "$label" "$app_id"
+  local web_origin
+  web_origin="$(signin_web_origin "$label")"
+  if [[ -n "$web_origin" ]]; then
+    assert_appconfig_value "$IDENTITY_WEB_ORIGIN_KEY [$label] is the web origin $web_origin" "$IDENTITY_WEB_ORIGIN_KEY" "$label" "$web_origin"
+  else
+    skip "$IDENTITY_WEB_ORIGIN_KEY [$label]: skipped: ERP_AZURE_PRODUCTION_WEB_ORIGIN is not set"
+  fi
 }
 
 assert_runtime_role() {

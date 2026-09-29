@@ -4,6 +4,7 @@ using Azure.Core;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Observability.Health;
 using Dewiride.Erp.Testing;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -141,12 +142,13 @@ public sealed class HealthEndpointsTests : IClassFixture<ErpApiFactory>
     [Theory]
     [InlineData("/healthz/live")]
     [InlineData("/healthz/ready")]
-    public void HealthEndpoint_Metadata_ExemptsItFromRateLimitingAndRequestMetrics(string path)
+    public void HealthEndpoint_Metadata_ExemptsItFromSignInRateLimitingAndRequestMetrics(string path)
     {
         var endpoint = _factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
             .OfType<RouteEndpoint>()
             .Single(candidate => candidate.RoutePattern.RawText == path);
 
+        Assert.NotNull(endpoint.Metadata.GetMetadata<IAllowAnonymous>());
         Assert.NotNull(endpoint.Metadata.GetMetadata<DisableRateLimitingAttribute>());
         Assert.NotNull(endpoint.Metadata.GetMetadata<IDisableHttpMetricsMetadata>());
     }

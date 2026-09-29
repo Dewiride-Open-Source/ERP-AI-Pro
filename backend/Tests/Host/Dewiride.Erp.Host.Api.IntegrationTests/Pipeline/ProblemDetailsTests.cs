@@ -8,6 +8,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -49,7 +50,7 @@ public sealed class ProblemDetailsTests : IClassFixture<ProblemDetailsTests.Fixt
 
     public ProblemDetailsTests(Fixture fixture)
     {
-        _client = fixture.Factory.CreateClient();
+        _client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Fact]

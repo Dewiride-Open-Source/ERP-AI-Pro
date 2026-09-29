@@ -6,7 +6,7 @@ import { repoRoot } from "./lib/walk.ts";
 
 const composeDirectory = join(repoRoot, "infra", "compose");
 const composeFiles = ["-f", "compose.yaml", "-f", "compose.override.yaml"];
-const secretFiles = ["Erp__Platform__Database__ConnectionString", "Erp__Platform__Database__MigratorConnectionString", "Erp__Platform__Attachments__EncryptionKey"];
+const secretFiles = ["Erp__Platform__Database__ConnectionString", "Erp__Platform__Database__MigratorConnectionString", "Erp__Platform__Attachments__EncryptionKey", "Erp__Platform__Identity__ClientCertificate"];
 const projectName = "erp-ai-pro-smoke";
 const apiBaseUrl = "http://127.0.0.1:5080";
 const webBaseUrl = "http://127.0.0.1:3000";
@@ -25,6 +25,8 @@ const checks: Check[] = [
   { name: "feature flags through the web origin", url: `${webBaseUrl}/api/platform/features`, status: 200, header: ["content-type", "application/json"], body: "Erp.Modules.Platform.SystemInfo" },
   { name: "api startups", url: `${apiBaseUrl}/api/platform/system-info/startups`, status: 200, header: ["content-type", "application/json"], body: '"startups"' },
   { name: "startups through the web origin", url: `${webBaseUrl}/api/platform/system-info/startups`, status: 200, header: ["content-type", "application/json"], body: '"startups"' },
+  { name: "anonymous unknown api route", url: `${apiBaseUrl}/api/platform/does-not-exist`, status: 401, header: ["content-type", "application/problem+json"], body: '"request.unauthenticated"' },
+  { name: "sign-in refuses a return address on another site through the web origin", url: `${webBaseUrl}/api/auth/login?returnUrl=https%3A%2F%2Fexample.com`, status: 400, header: ["content-type", "application/problem+json"], body: '"request.invalid"' },
 ];
 
 function compose(...args: string[]): void {

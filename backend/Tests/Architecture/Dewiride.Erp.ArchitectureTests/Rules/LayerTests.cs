@@ -8,6 +8,12 @@ public sealed class LayerTests
 {
     private const string AzureStorageNamespace = @"^Azure\.Storage(\..*)?$";
 
+    private const string AuthenticationAssembly = "Dewiride.Erp.BuildingBlocks.Authentication";
+
+    private const string IdentityWebAssemblyPrefix = "Microsoft.Identity.Web";
+
+    private const string TestingAssemblyPrefix = "Dewiride.Erp.Testing";
+
     private static readonly Architecture Architecture = ErpAssemblies.Architecture;
 
     private static readonly IObjectProvider<IType> DomainTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Domain(\..*)?$").As("domain types");
@@ -79,6 +85,29 @@ public sealed class LayerTests
     {
         Assert.NotEmpty(Types(true).That().ResideInNamespaceMatching(AzureStorageNamespace).GetObjects(Architecture));
         AssertRule(Types().That().AreNot(BlobStorageTypes).Should().NotDependOnAny(AzureStorageTypes));
+    }
+
+    [Fact]
+    public void MicrosoftIdentityWeb_IsReferencedOnlyByTheAuthenticationBuildingBlock()
+    {
+        var referencing = ErpAssemblies.All
+            .Where(assembly => assembly.GetReferencedAssemblies().Any(reference => reference.Name!.StartsWith(IdentityWebAssemblyPrefix, StringComparison.Ordinal)))
+            .Select(assembly => assembly.GetName().Name)
+            .ToList();
+
+        Assert.Equal([AuthenticationAssembly], referencing);
+    }
+
+    [Fact]
+    public void ProductAssemblies_NeverReferenceTheTestingLibrary()
+    {
+        var violations = ErpAssemblies.All
+            .SelectMany(assembly => assembly.GetReferencedAssemblies().Select(reference => (Assembly: assembly.GetName().Name, Referenced: reference.Name!)))
+            .Where(pair => pair.Referenced.StartsWith(TestingAssemblyPrefix, StringComparison.Ordinal))
+            .Select(pair => $"{pair.Assembly} -> {pair.Referenced}")
+            .ToList();
+
+        Assert.Empty(violations);
     }
 
     [Fact]

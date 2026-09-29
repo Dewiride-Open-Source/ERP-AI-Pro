@@ -1,16 +1,26 @@
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.Testing;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.Extensions.Options;
 using HostModules = Dewiride.Erp.Host.Composition.Modules;
 
 namespace Dewiride.Erp.ArchitectureTests.Rules;
 
 public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
 {
-    private static readonly string[] AnonymousRouteWhitelist =
+    private static readonly string[] PermanentAnonymousRoutes =
     [
         "/healthz/live",
         "/healthz/ready",
+        "/api/auth/login",
+        "/openapi/{documentName}.json",
+    ];
+
+    private static readonly string[] DevelopmentOnlyRoutePrefixes = ["/scalar"];
+
+    private static readonly string[] TransitionalAnonymousRoutes =
+    [
         "/api/platform/system-info",
         "/api/platform/system-info/startups",
         "/api/platform/attachments",
@@ -19,10 +29,7 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         "/api/platform/attachments/{id:guid}/download-links",
         "/api/platform/attachments/{id:guid}/content",
         "/api/platform/features",
-        "/openapi/{documentName}.json",
     ];
-
-    private static readonly string[] DevelopmentOnlyRoutePrefixes = ["/scalar"];
 
     private static readonly string[] GeneratedBaseTypes = ["Microsoft.EntityFrameworkCore.Migrations.Migration", "Microsoft.EntityFrameworkCore.Infrastructure.ModelSnapshot"];
 
@@ -110,19 +117,43 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
     private static string Snake(string pascal) => System.Text.RegularExpressions.Regex.Replace(pascal, "(?<=[a-z0-9])(?=[A-Z])", "_").ToLowerInvariant();
 
     [Fact]
-    public void AnonymousEndpoints_AreOnTheWhitelist()
+    public void FallbackPolicy_Always_RequiresAnAuthenticatedUserOfAnyScheme()
     {
-        using var scope = _factory.Services.CreateScope();
-        var endpoints = scope.ServiceProvider.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>();
+        var fallback = _factory.Services.GetRequiredService<IOptions<AuthorizationOptions>>().Value.FallbackPolicy;
 
-        var offenders = endpoints
-            .Where(e => e.Metadata.GetMetadata<IAllowAnonymous>() is not null || e.Metadata.GetMetadata<IAuthorizeData>() is null)
-            .Select(e => e.RoutePattern.RawText!.Length > 1 ? e.RoutePattern.RawText!.TrimEnd('/') : e.RoutePattern.RawText!)
-            .Where(route => !AnonymousRouteWhitelist.Contains(route, StringComparer.Ordinal))
+        Assert.NotNull(fallback);
+        Assert.IsType<DenyAnonymousAuthorizationRequirement>(Assert.Single(fallback.Requirements));
+        Assert.Empty(fallback.AuthenticationSchemes);
+    }
+
+    [Fact]
+    public void AnonymousEndpoints_AreOnThePermanentOrTheTransitionalList()
+    {
+        var offenders = AnonymousRoutes()
+            .Where(route => !PermanentAnonymousRoutes.Contains(route, StringComparer.Ordinal) && !TransitionalAnonymousRoutes.Contains(route, StringComparer.Ordinal))
             .Where(route => !DevelopmentOnlyRoutePrefixes.Any(prefix => route.StartsWith(prefix, StringComparison.Ordinal)))
-            .Distinct()
             .ToList();
 
         Assert.Empty(offenders);
     }
+
+    [Fact]
+    public void AnonymousRouteLists_NameOnlyRoutesThatAreMappedAndAnonymous()
+    {
+        var anonymous = AnonymousRoutes();
+
+        var stale = PermanentAnonymousRoutes.Concat(TransitionalAnonymousRoutes)
+            .Where(route => !anonymous.Contains(route, StringComparer.Ordinal))
+            .Concat(DevelopmentOnlyRoutePrefixes.Where(prefix => !anonymous.Any(route => route.StartsWith(prefix, StringComparison.Ordinal))))
+            .ToList();
+
+        Assert.Empty(stale);
+    }
+
+    private List<string> AnonymousRoutes() =>
+        _factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
+            .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null)
+            .Select(endpoint => endpoint.RoutePattern.RawText!.Length > 1 ? endpoint.RoutePattern.RawText!.TrimEnd('/') : endpoint.RoutePattern.RawText!)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
 }

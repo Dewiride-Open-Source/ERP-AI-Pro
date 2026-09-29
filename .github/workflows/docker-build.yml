@@ -37,6 +37,13 @@ jobs:
           material="$(openssl rand -base64 32)"
           echo "::add-mask::$material"
           printf 'ci:%s' "$material" > infra/compose/secrets/Erp__Platform__Attachments__EncryptionKey
+          signin="$(mktemp -d "$RUNNER_TEMP/signin.XXXXXX")"
+          openssl req -x509 -newkey rsa:2048 -noenc -days 2 -subj "/CN=erp-compose-smoke" -keyout "$signin/key.pem" -out "$signin/certificate.pem"
+          openssl pkcs12 -export -inkey "$signin/key.pem" -in "$signin/certificate.pem" -passout pass: -out "$signin/certificate.pfx"
+          certificate="$(base64 -w 0 "$signin/certificate.pfx")"
+          rm -rf -- "$signin"
+          echo "::add-mask::$certificate"
+          printf '%s' "$certificate" > infra/compose/secrets/Erp__Platform__Identity__ClientCertificate
       - name: Set up Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Build API image

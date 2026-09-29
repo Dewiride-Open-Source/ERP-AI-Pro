@@ -1,5 +1,9 @@
+import { startServers } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { LoginPage } from "../../../pages/identity/auth/login.page";
+
+const apiContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
+const failureMessage = "We could not sign you in. Try again, or ask your administrator for access.";
 
 test.describe("login page", () => {
   forEachTheme("renders the sign-in card with every control", async ({ page, capture, theme }) => {
@@ -11,6 +15,7 @@ test.describe("login page", () => {
     await expect(login.signInButton).toBeVisible();
     await expect(login.signInButton).toHaveAttribute("href", "/api/auth/login?returnUrl=%2F");
     await expect(page.getByText("Single sign-on through Microsoft Entra ID")).toBeVisible();
+    await expect(login.failure).toHaveCount(0);
     if (theme === "dark") {
       await expect(page.locator("html")).toHaveClass(/dark/);
     } else {
@@ -26,30 +31,89 @@ test.describe("login page", () => {
     await capture("login");
   });
 
+  forEachTheme("explains a failed sign-in above the sign-in link", async ({ page, capture }) => {
+    const login = new LoginPage(page);
+    await login.goto("?error=sign-in-failed");
+
+    await expect(login.failure).toHaveText(failureMessage);
+    await expect(login.signInButton).toHaveAttribute("href", "/api/auth/login?returnUrl=%2F");
+    await expect(page.getByRole("main")).toMatchAriaSnapshot(`
+      - heading "Sign in to your workspace" [level=1]
+      - alert: ${failureMessage}
+      - link "Continue with Microsoft"
+    `);
+
+    await capture("login-sign-in-failed");
+  });
+
+  test("shows no failure for any other error value and never repeats it", async ({ page }) => {
+    const login = new LoginPage(page);
+    await login.goto(`?error=${encodeURIComponent("Your account is locked")}`);
+
+    await expect(login.failure).toHaveCount(0);
+    await expect(page.getByRole("main")).not.toContainText("Your account is locked");
+  });
+
   test("root redirects to the login page", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test.describe("sign-in link", () => {
-    test.use({
-      expectedConsoleError: /the server responded with a status of 404|Refused to apply a stylesheet/,
+  test.describe("sign-in endpoints through the web origin", () => {
+    test("send a local return address to Microsoft sign-in without following it", async ({
+      baseURL,
+      request,
+    }) => {
+      test.skip(
+        !startServers,
+        "E2E_BASE_URL is set: an API started outside Playwright runs without the App Configuration store and signs in with placeholder ids that Microsoft sign-in does not know",
+      );
+
+      const response = await request.get("/api/auth/login?returnUrl=%2F", { maxRedirects: 0 });
+
+      expect(response.status()).toBe(302);
+      const location = response.headers()["location"];
+      expect(location).toMatch(/^https:\/\/login\.microsoftonline\.com\//);
+      const authorize = new URL(location ?? "");
+      expect(authorize.searchParams.get("redirect_uri")).toBe(`${baseURL}/api/auth/signin-oidc`);
+      expect(authorize.searchParams.get("response_type")).toBe("code");
+      expect(authorize.searchParams.get("code_challenge_method")).toBe("S256");
     });
 
-    test("reaches the API session endpoint through the web origin", async ({ page }) => {
-      const login = new LoginPage(page);
-      await login.goto();
-
-      const [response] = await Promise.all([
-        page.waitForResponse((candidate) => candidate.url().includes("/api/auth/login")),
-        login.signInButton.click(),
-      ]);
-
-      expect(response.status()).toBe(404);
-      expect(response.headers()["content-type"]).toContain("application/problem+json");
-      expect(response.headers()["content-security-policy"]).toBe(
-        "default-src 'none'; frame-ancestors 'none'",
+    test("refuse a return address on another site with the API's own problem", async ({ request }) => {
+      const response = await request.get(
+        `/api/auth/login?returnUrl=${encodeURIComponent("https://example.com")}`,
+        { maxRedirects: 0 },
       );
+
+      expect(response.status()).toBe(400);
+      expect(response.headers()["location"]).toBeUndefined();
+      expect(response.headers()["content-type"]).toContain("application/problem+json");
+      expect(response.headers()["content-security-policy"]).toBe(apiContentSecurityPolicy);
+      expect(await response.json()).toMatchObject({
+        type: "/problems/request.invalid",
+        code: "request.invalid",
+        status: 400,
+        instance: "/api/auth/login",
+        errors: { returnUrl: [expect.any(String)] },
+      });
+    });
+
+    test("answer an anonymous sign-out with an unauthenticated problem instead of a redirect", async ({
+      request,
+    }) => {
+      const response = await request.post("/api/auth/logout", { maxRedirects: 0 });
+
+      expect(response.status()).toBe(401);
+      expect(response.headers()["location"]).toBeUndefined();
+      expect(response.headers()["content-type"]).toContain("application/problem+json");
+      expect(response.headers()["content-security-policy"]).toBe(apiContentSecurityPolicy);
+      expect(await response.json()).toMatchObject({
+        type: "/problems/request.unauthenticated",
+        code: "request.unauthenticated",
+        status: 401,
+        instance: "/api/auth/logout",
+      });
     });
   });
 });

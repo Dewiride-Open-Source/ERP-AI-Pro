@@ -34,17 +34,20 @@ test.describe("api problem details", () => {
     });
   });
 
-  test("an unknown route answers a not-found problem whose trace id is the correlation header", async ({
+  test("an anonymous request to an unknown route answers an unauthenticated problem whose trace id is the correlation header", async ({
     request,
   }) => {
-    const response = await request.get("/api/platform/does-not-exist");
+    const response = await request.get("/api/platform/does-not-exist", { maxRedirects: 0 });
 
-    expect(response.status()).toBe(404);
+    expect(response.status()).toBe(401);
+    expect(response.headers()["location"]).toBeUndefined();
+    expect(response.headers()["content-type"]).toContain("application/problem+json");
     const correlationId = response.headers()[correlationHeader];
     expect(correlationId).toMatch(/^[0-9a-f]{32}$/);
     expect(await response.json()).toMatchObject({
-      type: "/problems/resource.not-found",
-      code: "resource.not-found",
+      type: "/problems/request.unauthenticated",
+      code: "request.unauthenticated",
+      status: 401,
       instance: "/api/platform/does-not-exist",
       traceId: correlationId,
     });

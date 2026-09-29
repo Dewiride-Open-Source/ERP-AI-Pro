@@ -1,6 +1,7 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 
@@ -28,7 +29,7 @@ public sealed class ConfigurationRefreshTests
     {
         var refresher = new CountingRefresher();
         using var factory = CreateFactory(refresher);
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(new Uri(ErpApiFactory.ThrowingPath, UriKind.Relative), TestContext.Current.CancellationToken);
 

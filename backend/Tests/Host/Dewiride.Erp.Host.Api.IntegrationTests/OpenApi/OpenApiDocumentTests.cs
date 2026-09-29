@@ -24,6 +24,8 @@ public sealed class OpenApiDocumentTests : IClassFixture<ErpApiFactory>
         Assert.True(paths.TryGetProperty("/api/platform/system-info", out _));
         Assert.True(paths.TryGetProperty("/api/platform/system-info/startups", out _));
         Assert.True(paths.TryGetProperty("/api/platform/features", out _));
+        Assert.True(paths.TryGetProperty("/api/auth/login", out _));
+        Assert.True(paths.TryGetProperty("/api/auth/logout", out _));
     }
 
     [Fact]

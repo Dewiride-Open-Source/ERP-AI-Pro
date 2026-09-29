@@ -3,6 +3,7 @@ using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
 using Dewiride.Erp.BuildingBlocks.Modules.Features;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Features;
 
@@ -16,7 +17,7 @@ public sealed class FeatureGateOrderTests : IClassFixture<FeatureGateOrderTests.
 
     public FeatureGateOrderTests(Fixture fixture)
     {
-        _client = fixture.Factory.CreateClient();
+        _client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Fact]

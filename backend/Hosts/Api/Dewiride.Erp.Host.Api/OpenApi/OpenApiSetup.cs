@@ -27,11 +27,12 @@ internal static class OpenApiSetup
             return app;
         }
 
-        app.MapOpenApi(RoutePattern);
+        app.MapOpenApi(RoutePattern).AllowAnonymous();
         app.MapScalarApiReference(options => options
             .WithTitle(ErpOpenApiOptions.Title)
             .WithOpenApiRoutePattern(RoutePattern)
-            .AddDocument(ErpOpenApiOptions.DocumentName));
+            .AddDocument(ErpOpenApiOptions.DocumentName))
+            .AllowAnonymous();
 
         return app;
     }

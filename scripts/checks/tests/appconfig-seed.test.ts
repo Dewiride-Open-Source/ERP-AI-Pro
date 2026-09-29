@@ -168,10 +168,11 @@ test('bootstrap-only, host-local and entra.sh-owned keys are never seeded', () =
   data.defaults.set('Erp:Platform:Identity:TenantId', 'tenant');
   data.labelled.production.set('Erp:Platform:Identity:ClientId', 'client');
   data.references.push({ key: 'Erp:Platform:Identity:ClientId', secret: 'Erp--Platform--Identity--ClientId' });
+  data.labelled['local-dev'].set('Erp:Platform:Identity:WebOrigin', 'http://localhost:3000');
   const problems = validateSeedData(data);
   assert.ok(problems.some((p) => p.includes('bootstrap-only')));
   assert.ok(problems.some((p) => p.includes('host-local')));
-  assert.equal(problems.filter((p) => p.includes('written by scripts/azure/entra.sh')).length, 3);
+  assert.equal(problems.filter((p) => p.includes('written by scripts/azure/entra.sh')).length, 4);
 });
 
 test('an empty value and a value with a control character are reported', () => {

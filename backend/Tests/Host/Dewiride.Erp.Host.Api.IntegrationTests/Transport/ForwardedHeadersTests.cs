@@ -73,7 +73,7 @@ public sealed class ForwardedHeadersTests
 
         factory
             .WithTestEndpoints(routes => routes.MapGet(ClientPath, (HttpContext context) =>
-                new ObservedClient(context.Connection.RemoteIpAddress?.ToString(), context.Request.Scheme, context.Request.Host.Value)))
+                new ObservedClient(context.Connection.RemoteIpAddress?.ToString(), context.Request.Scheme, context.Request.Host.Value)).AllowAnonymous())
             .WithKestrel();
         using var client = factory.CreateClient();
         using var request = new HttpRequestMessage(HttpMethod.Get, ClientPath);

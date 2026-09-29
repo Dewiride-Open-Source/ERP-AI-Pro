@@ -45,5 +45,6 @@
 | [0028](adr/0028-playwright-matrix-navigation-crawl-and-sharded-reports.md) | Playwright matrix, navigation crawl and sharded reports |
 | [0029](adr/0029-captures-of-a-page-at-rest-and-the-hydration-marker.md) | Captures of a page at rest and the hydration marker |
 | [0030](adr/0030-community-and-enterprise-editions.md) | Community and Enterprise editions, the LGPL-3.0-only licence and the contributor licence agreement |
+| [0031](adr/0031-sign-in-through-entra-in-the-api.md) | Sign-in through Microsoft Entra ID in the API |
 
 New decisions use [0000-template.md](adr/0000-template.md).

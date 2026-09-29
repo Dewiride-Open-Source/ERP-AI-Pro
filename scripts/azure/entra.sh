@@ -9,7 +9,7 @@ Creates or converges the three single-tenant app registrations (sign-in for
 local-dev, sign-in for production, runtime for the server), their service
 principals, app roles, Microsoft Graph consent, Key Vault certificates, key
 credentials, the Erp.Admin assignment of the operator and the App Configuration
-identity ids. Safe to run repeatedly; never deletes a registration.
+identity ids and web origins. Safe to run repeatedly; never deletes a registration.
 
 Options:
   --dry-run                              Print every write that would run; write nothing.
@@ -27,7 +27,6 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/appconfig.sh"
 # shellcheck source=lib/graph.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
 
-readonly SENTINEL_KEY='Erp:Sentinel'
 readonly RUNTIME_TARGET='runtime'
 
 MODE=converge
@@ -112,12 +111,6 @@ require_existing_app() {
   printf '%s' "$found"
 }
 
-sentinel_bump_command() {
-  local label="$1"
-  printf 'az appconfig kv set --name %s --auth-mode login --key %s --label %s --value "$(date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ)" --yes' \
-    "$ERP_AZURE_APPCONFIG_NAME" "$SENTINEL_KEY" "$label"
-}
-
 converge_signin_app() {
   local label="$1" operator_id="$2" admin_role_id="$3" app_id_variable="$4"
   local display_name vault common_name
@@ -135,7 +128,7 @@ converge_signin_app() {
 
   log_step "Sign-in registration '$display_name' ($label)"
   if [[ "$label" == production ]] && (( ${#redirect_uris[@]} == 0 )); then
-    log_warn "ERP_AZURE_PRODUCTION_WEB_ORIGIN is empty: no redirect URI is requested for production, so its sign-in stays impossible until the parameter is set and entra.sh re-run"
+    log_warn "ERP_AZURE_PRODUCTION_WEB_ORIGIN is empty: no redirect URI is requested for production and $IDENTITY_WEB_ORIGIN_KEY [production] is not written, so its sign-in stays impossible until the parameter is set and entra.sh re-run"
   fi
   local ids object_id app_id
   ids="$(ensure_app "$display_name" web "${redirect_uris[@]}")"
@@ -152,6 +145,11 @@ converge_signin_app() {
   ensure_app_role_assignment "$sp_id" "$operator_id" "$admin_role_id"
   ensure_kv "$IDENTITY_TENANT_ID_KEY" "$label" "$ERP_AZURE_TENANT_ID"
   ensure_kv "$IDENTITY_CLIENT_ID_KEY" "$label" "$app_id"
+  local web_origin
+  web_origin="$(signin_web_origin "$label")" || die "cannot compute the web origin of the $label registration"
+  if [[ -n "$web_origin" ]]; then
+    ensure_kv "$IDENTITY_WEB_ORIGIN_KEY" "$label" "$web_origin"
+  fi
   printf -v "$app_id_variable" '%s' "$app_id"
 }
 
@@ -231,8 +229,13 @@ run_rotate_signin() {
     log_info "dry run: nothing was created or changed"
   fi
   log_info "next steps:"
-  log_info "  1. bump the $label sentinel so the API reloads the certificate reference:"
-  log_info "     $(sentinel_bump_command "$label")"
+  if [[ "$label" == production ]]; then
+    log_info "  1. restart the api so it loads the new certificate (it reads the certificate only when it starts), on the server:"
+    log_info "     docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api"
+  else
+    log_info "  1. restart every API started with dotnet run so it loads the new certificate from the store (it reads the certificate only when it"
+    log_info "     starts); the local containers and the store-less APIs of the browser tests use throwaway certificates and need nothing"
+  fi
   log_info "  2. sign in through the $label web app and confirm it works"
   log_info "  3. bash scripts/azure/entra.sh --prune-old-credentials $label"
 }

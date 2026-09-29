@@ -4,6 +4,7 @@ using Dewiride.Erp.Modules.Platform.SystemInfo.Persistence;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Domain;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Hosting;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
@@ -43,9 +44,10 @@ public sealed class StartupRecorderTests
     [Fact]
     public async Task ExecuteAsync_ClockBeforeTheProcessStart_ReportsTheAggregateRuleAndKeepsTheHostRunning()
     {
-        using var root = new ErpApiFactory();
+        var clock = new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        using var root = new ErpApiFactory().WithConfiguration(ErpApiFactory.IdentityClientCertificateKey, TestSignInCertificate.Create(clock.AddDays(-1), clock.AddYears(1)));
         using var factory = root.WithWebHostBuilder(builder =>
-            builder.ConfigureServices(services => services.AddSingleton<TimeProvider>(new FakeTimeProvider(new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero)))));
+            builder.ConfigureServices(services => services.AddSingleton<TimeProvider>(new FakeTimeProvider(clock))));
 
         var recorded = await factory.Services.GetRequiredService<StartupRecorder>().Recorded.WaitAsync(TestContext.Current.CancellationToken);
 

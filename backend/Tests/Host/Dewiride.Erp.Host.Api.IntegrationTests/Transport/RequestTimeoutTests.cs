@@ -3,6 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +25,7 @@ public sealed class RequestTimeoutTests : IClassFixture<RequestTimeoutTests.Fixt
 
     public RequestTimeoutTests(Fixture fixture)
     {
-        _client = fixture.Factory.CreateClient();
+        _client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Theory]
