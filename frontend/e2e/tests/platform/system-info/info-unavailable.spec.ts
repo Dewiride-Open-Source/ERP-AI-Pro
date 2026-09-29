@@ -29,7 +29,12 @@ test.describe("system information page without the API", () => {
       await expect(systemInfo.startupsTable).toHaveCount(0);
       await expect(systemInfo.startupsRows).toHaveCount(0);
 
+      const refreshed = page.waitForResponse(
+        (response) =>
+          response.url().includes("/platform/system-info") && response.request().headers()["rsc"] === "1",
+      );
       await systemInfo.refresh.click();
+      expect((await refreshed).ok()).toBe(true);
       await expect(systemInfo.refresh).toBeEnabled();
       await expect(systemInfo.unavailable).toBeVisible();
       await expect(systemInfo.startupsUnavailable).toBeVisible();

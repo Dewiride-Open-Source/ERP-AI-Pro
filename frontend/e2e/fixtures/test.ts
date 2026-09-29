@@ -60,15 +60,23 @@ export const test = base.extend<Fixtures>({
 
   capture: async ({ page, theme }, use, testInfo) => {
     await use(async (name: string, target?: Locator) => {
-      await expectNoSeriousAccessibilityViolations(page, name, target);
+      await waitForRest(page, name);
       const file = screenshotPath(testInfo, name, theme);
-      mkdirSync(dirname(file), { recursive: true });
-      if (target === undefined) {
-        const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
-        await expectOneCapture(page, pageHeight, name);
-        await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
-      } else {
-        await captureElement(target, file, name);
+      const heldMotion = await page.addStyleTag({ content: heldMotionStyle });
+      try {
+        await expectNoSeriousAccessibilityViolations(page, name, target);
+        mkdirSync(dirname(file), { recursive: true });
+        if (target === undefined) {
+          const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+          await expectOneCapture(page, pageHeight, name);
+          await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
+        } else {
+          await captureElement(target, file, name);
+        }
+      } finally {
+        await heldMotion.evaluate((style) => {
+          if (style instanceof Element) style.remove();
+        });
       }
       await testInfo.attach(`${name}--${theme}`, { path: file, contentType: "image/png" });
     });
@@ -118,24 +126,84 @@ export async function tabOntoLink(page: Page, link: Locator): Promise<void> {
   await expect(link).toBeFocused();
 }
 
-// Colour contrast is measured on what is painted, so an element still fading or sliding in would be judged at a colour it only
-// passes through; animations that repeat for ever never settle and are left running. An AnimatedList item changes its height
-// from JavaScript, outside document.getAnimations(), and marks itself data-animating meanwhile.
-async function settleAnimations(page: Page): Promise<void> {
-  await page.waitForFunction(
-    () =>
-      document.querySelector("[data-animating]") === null &&
-      document
-        .getAnimations()
-        .every(
-          (animation) =>
-            animation.playState !== "running" ||
-            animation.effect?.getComputedTiming().iterations === Infinity,
-        ),
-    undefined,
-    { timeout: 10_000 },
+// A capture shows the page as a person meets it once it works, so it waits until no component still shows its server-rendered
+// state (data-hydrating), no AnimatedList item is changing its height from JavaScript (data-animating), no finite CSS animation
+// or transition runs, and the document has then stayed unchanged for a few frames. On a loaded runner a component hydrates
+// seconds after the load event and a popover starts its entrance only once it has been positioned, so none of these alone is
+// enough. Animations that repeat for ever never settle and are left running.
+const restFrames = 3;
+
+const restTimeout = 10_000;
+
+async function waitForRest(page: Page, name: string): Promise<void> {
+  const unsettled = await page.evaluate(
+    ({ frames, timeout }) =>
+      new Promise<string | undefined>((resolve) => {
+        let quietFrames = 0;
+        let checkedFrames = 0;
+        let lastChange = "";
+        const observer = new MutationObserver((records) => {
+          quietFrames = 0;
+          const record = records.at(-1);
+          const target = record?.target;
+          lastChange =
+            target instanceof Element
+              ? `${record?.type ?? ""} ${record?.attributeName ?? ""} on ${target.outerHTML.slice(0, 120)}`
+              : `${record?.type ?? ""} on ${target?.nodeName ?? "a node"}`;
+        });
+        observer.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+        const animationName = (animation: Animation): string => {
+          if (animation instanceof CSSAnimation) return animation.animationName;
+          if (animation instanceof CSSTransition) return animation.transitionProperty;
+          return "a script animation";
+        };
+        const busy = (): string | undefined => {
+          const hydrating = document.querySelectorAll("[data-hydrating]").length;
+          if (hydrating > 0) return `${hydrating} element(s) still render their server state`;
+          const animating = document.querySelectorAll("[data-animating]").length;
+          if (animating > 0) return `${animating} list item(s) still change their height`;
+          const running = document
+            .getAnimations()
+            .filter(
+              (animation) =>
+                animation.playState === "running" &&
+                animation.effect?.getComputedTiming().iterations !== Infinity,
+            )
+            .map(animationName);
+          return running.length > 0 ? `still running: ${running.join(", ")}` : undefined;
+        };
+        const deadline = performance.now() + timeout;
+        const check = () => {
+          const reason = busy();
+          checkedFrames += 1;
+          quietFrames = reason === undefined ? quietFrames + 1 : 0;
+          if (quietFrames < frames && performance.now() < deadline) {
+            requestAnimationFrame(check);
+            return;
+          }
+          observer.disconnect();
+          resolve(
+            quietFrames >= frames
+              ? undefined
+              : `${reason ?? `the document kept changing, last by ${lastChange}`} (${checkedFrames} frames in ${timeout} ms)`,
+          );
+        };
+        requestAnimationFrame(check);
+      }),
+    { frames: restFrames, timeout: restTimeout },
   );
+  expect(unsettled, `${name} came to rest before its capture`).toBeUndefined();
 }
+
+// Colour contrast is measured on what is painted, so while the scan and the screenshot run every CSS animation and transition
+// is held at its end state: a change that starts meanwhile, such as a toast leaving, is scanned and shown at rest rather than at
+// a colour it only passes through, and an animation that repeats for ever shows its base style.
+const heldMotionStyle = `*, *::before, *::after {
+  animation-delay: 0s !important;
+  animation-duration: 0s !important;
+  transition-delay: 0s !important;
+  transition-duration: 0s !important;
+}`;
 
 // Every captured screen is a key screen, so each one is scanned, in the theme it is captured in.
 async function expectNoSeriousAccessibilityViolations(
@@ -143,7 +211,6 @@ async function expectNoSeriousAccessibilityViolations(
   name: string,
   target?: Locator,
 ): Promise<void> {
-  await settleAnimations(page);
   const scan = new AxeBuilder({ page }).withTags(accessibilityTags);
   for (const selector of excludedFromScans) scan.exclude(selector);
   if (target !== undefined) {
@@ -163,7 +230,7 @@ async function expectNoSeriousAccessibilityViolations(
     .map(
       (violation) =>
         `${violation.id} (${violation.impact ?? "unknown"}): ${violation.help}; ${violation.nodes
-          .map((node) => node.target.join(" "))
+          .map((node) => `${node.target.join(" ")} (${node.failureSummary ?? "no summary"})`)
           .join(", ")}`,
     );
   expect(blocking, `serious or critical accessibility violations on ${name}`).toEqual([]);

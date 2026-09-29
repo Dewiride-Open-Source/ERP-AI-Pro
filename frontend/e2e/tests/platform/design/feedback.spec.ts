@@ -9,9 +9,11 @@ import {
   slowReportPath,
 } from "../../../pages/platform/design/feedback.page";
 
+type ReminderEvent = { readonly kind: "click" | "height"; readonly height: string; readonly at: number };
+
 declare global {
   interface Window {
-    reminderHeights?: string[];
+    reminderEvents?: ReminderEvent[];
     returnedRows?: string[];
   }
 }
@@ -56,28 +58,47 @@ async function watchForReturningRow(page: Page, request: string): Promise<void> 
   }, request);
 }
 
-async function watchReminderHeights(page: Page): Promise<void> {
+async function watchReminders(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const heights: string[] = [];
-    window.reminderHeights = heights;
+    const events: ReminderEvent[] = [];
+    window.reminderEvents = events;
     const list = document.querySelector("[data-testid='reminders']");
     if (list === null) throw new Error("The reminders list is missing.");
+    document.addEventListener(
+      "click",
+      () => events.push({ kind: "click", height: "", at: performance.now() }),
+      {
+        capture: true,
+      },
+    );
     new MutationObserver((records) => {
       for (const record of records) {
         if (record.target instanceof HTMLElement && record.target.dataset.slot === "animated-list-item") {
-          heights.push(record.target.style.height);
+          events.push({ kind: "height", height: record.target.style.height, at: performance.now() });
         }
       }
     }).observe(list, { attributes: true, attributeFilter: ["style"], subtree: true });
   });
 }
 
-async function heightsBetweenClosedAndOpen(page: Page, openHeight: number): Promise<string[]> {
-  const heights = await page.evaluate(() => window.reminderHeights?.splice(0) ?? []);
-  return heights.filter((height) => {
-    const pixels = /^(\d+(?:\.\d+)?)px$/.exec(height)?.[1];
-    return pixels !== undefined && Number(pixels) > 0 && Number(pixels) < openHeight;
-  });
+// A loaded runner can draw fewer frames than an animation lasts, so an item that moves may skip every height between closed
+// and open; an animation only ends once its duration has passed since it started, so the time from the click to the item's
+// last height is at least that duration however few frames the runner draws.
+async function reminderMotion(
+  page: Page,
+  openHeight: number,
+): Promise<{ between: string[]; milliseconds: number }> {
+  const events = await page.evaluate(() => window.reminderEvents?.splice(0) ?? []);
+  const heights = events.filter(({ kind }) => kind === "height");
+  const between = heights
+    .map(({ height }) => height)
+    .filter((height) => {
+      const pixels = /^(\d+(?:\.\d+)?)px$/.exec(height)?.[1];
+      return pixels !== undefined && Number(pixels) > 0 && Number(pixels) < openHeight;
+    });
+  const clicked = events.find(({ kind }) => kind === "click")?.at;
+  const settled = heights.at(-1)?.at;
+  return { between, milliseconds: clicked === undefined || settled === undefined ? 0 : settled - clicked };
 }
 
 function seconds(duration: string): number {
@@ -397,24 +418,32 @@ test.describe("feedback", () => {
       if (moves) expect(entrance).toBeCloseTo(0.2, 5);
       else expect(entrance).toBeLessThanOrEqual(0.00001);
 
+      // An AnimatedList item moves over the same normal duration as the page, and clock readings in the page are coarsened.
+      const shortestMove = entrance * 1000 * 0.9;
       const openHeight = (await feedback.reminderItems.last().boundingBox())?.height ?? 0;
       expect(openHeight).toBeGreaterThan(0);
-      await watchReminderHeights(page);
+      await watchReminders(page);
       await feedback.reminderInput.fill("Book the auditor's visit");
       await feedback.addReminder.click();
       const added = feedback.reminderItems.last();
       await expect(added).toContainText("Book the auditor's visit");
       await expect(added).not.toHaveAttribute("data-animating");
       await expect.poll(async () => (await added.boundingBox())?.height).toBe(openHeight);
-      const entering = await heightsBetweenClosedAndOpen(page, openHeight);
-      if (moves) expect(entering.length, "heights the added item passed through").toBeGreaterThan(0);
-      else expect(entering, "heights the added item passed through").toEqual([]);
+      const entering = await reminderMotion(page, openHeight);
+      if (moves) {
+        expect(entering.milliseconds, "milliseconds the added item took to open").toBeGreaterThanOrEqual(
+          shortestMove,
+        );
+      } else expect(entering.between, "heights the added item passed through").toEqual([]);
 
       await feedback.removeReminderButton("Book the auditor's visit").click();
       await expect(feedback.reminderItems).toHaveCount(3);
-      const leaving = await heightsBetweenClosedAndOpen(page, openHeight);
-      if (moves) expect(leaving.length, "heights the removed item passed through").toBeGreaterThan(0);
-      else expect(leaving, "heights the removed item passed through").toEqual([]);
+      const leaving = await reminderMotion(page, openHeight);
+      if (moves) {
+        expect(leaving.milliseconds, "milliseconds the removed item took to close").toBeGreaterThanOrEqual(
+          shortestMove,
+        );
+      } else expect(leaving.between, "heights the removed item passed through").toEqual([]);
     });
   }
 });

@@ -3,6 +3,7 @@
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { Label } from "@dewiride/erp-ui/components/ui/label";
 import { Switch } from "@dewiride/erp-ui/components/ui/switch";
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { RotateCcwIcon } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 
@@ -38,12 +39,16 @@ function useMotionDuration(name: MotionDurationName) {
 }
 
 export function MotionDemo() {
+  const hydrated = useHydrated();
   const reducedMotion = useReducedMotion();
   const [replays, setReplays] = useState(0);
   const [moved, setMoved] = useState(false);
 
   return (
-    <div className="grid min-w-0 gap-4 rounded-xl border bg-card p-4">
+    <div
+      data-hydrating={hydrated ? undefined : ""}
+      className="grid min-w-0 gap-4 rounded-xl border bg-card p-4"
+    >
       <div className="grid gap-1">
         <h3 className="text-body font-medium">Live demo</h3>
         <p

@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@dewiride/erp-ui/components/ui/table";
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { cn } from "@dewiride/erp-ui/lib/utils";
 
 import { DataTableCards, type DataTableCard } from "./data-table-cards";
@@ -46,7 +47,6 @@ import {
 import { DataTablePagination, type DataTableLinkComponent } from "./data-table-pagination";
 import { DataTableSelectCheckbox, DataTableSelectionSummary } from "./data-table-selection";
 import { DataTableSortSelect, type DataTableSortChoice } from "./data-table-sort-select";
-import { useHydrated } from "./use-hydrated";
 
 export type {
   DataTableColumn,
@@ -287,7 +287,11 @@ export function DataTable<TRow extends RowData>({
   );
 
   return (
-    <div data-slot="data-table" className="@container/data-table grid min-w-0 gap-4">
+    <div
+      data-slot="data-table"
+      data-hydrating={interactive ? undefined : ""}
+      className="@container/data-table grid min-w-0 gap-4"
+    >
       {filters !== undefined || sortChoices.length > 0 || columnChoices.length > 0 ? (
         <div className="flex flex-wrap items-end gap-3">
           {filters !== undefined ? (

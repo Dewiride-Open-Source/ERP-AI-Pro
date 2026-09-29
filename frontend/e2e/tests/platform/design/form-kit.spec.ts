@@ -141,6 +141,7 @@ test.describe("form kit", () => {
 
       await expect(formKit.heading).toBeVisible();
       await expect(formKit.save).toBeDisabled();
+      await expect(formKit.save).toHaveAttribute("data-hydrating", "");
       await formKit.legalName.fill(validSupplier.legalName);
       await formKit.legalName.press("Enter");
       await expect(formKit.legalName).toHaveValue(validSupplier.legalName);
@@ -157,6 +158,7 @@ test.describe("form kit", () => {
       const saves = watch(page, isSaveRequest);
       await formKit.goto();
 
+      await expect(formKit.save).not.toHaveAttribute("data-hydrating");
       await expect(page).toHaveTitle("Form kit · ERP-AI-Pro");
       await expect(formKit.form).toMatchAriaSnapshot(`
       - form "Register a supplier (example)":

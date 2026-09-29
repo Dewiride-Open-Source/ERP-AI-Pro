@@ -3,8 +3,8 @@
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { RadioGroup } from "radix-ui";
-import { useSyncExternalStore } from "react";
 
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { cn } from "@dewiride/erp-ui/lib/utils";
 
 const options = [
@@ -13,22 +13,17 @@ const options = [
   { value: "system", label: "System", Icon: MonitorIcon },
 ] as const;
 
-const subscribeToNothing = () => () => {};
-
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
-  const mounted = useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false,
-  );
+  const hydrated = useHydrated();
 
   return (
     <RadioGroup.Root
-      value={mounted ? (theme ?? "") : ""}
+      value={hydrated ? (theme ?? "") : ""}
       onValueChange={setTheme}
       aria-label="Colour theme"
       data-testid="theme-toggle"
+      data-hydrating={hydrated ? undefined : ""}
       className={cn(
         "inline-flex items-center gap-0.5 rounded-full border bg-muted/60 p-0.5 backdrop-blur",
         className,
