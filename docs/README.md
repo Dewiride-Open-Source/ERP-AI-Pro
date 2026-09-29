@@ -41,5 +41,6 @@
 | [0025](adr/0025-forms-typed-submissions-and-form-composites.md) | Forms: typed submissions, one schema, field-error mapping and the form composites |
 | [0026](adr/0026-server-driven-lists-and-the-data-table.md) | Server-driven lists: the view in the address and the data table |
 | [0027](adr/0027-feedback-motion-and-the-accessibility-baseline.md) | Feedback, motion and the accessibility baseline |
+| [0028](adr/0028-playwright-matrix-navigation-crawl-and-sharded-reports.md) | Playwright matrix, navigation crawl and sharded reports |
 
 New decisions use [0000-template.md](adr/0000-template.md).

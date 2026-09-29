@@ -75,7 +75,12 @@ export const test = base.extend<Fixtures>({
   },
 });
 
-export type ThemedFixtures = { page: Page; capture: Fixtures["capture"]; theme: Theme };
+export type ThemedFixtures = {
+  page: Page;
+  capture: Fixtures["capture"];
+  theme: Theme;
+  consoleErrors: Fixtures["consoleErrors"];
+};
 
 export function forEachTheme(
   title: string,
@@ -84,8 +89,8 @@ export function forEachTheme(
   for (const theme of themes) {
     test.describe(theme, () => {
       test.use({ theme });
-      test(title, async ({ page, capture, isMobile }) => {
-        await body({ page, capture, theme }, isMobile);
+      test(title, async ({ page, capture, consoleErrors, isMobile }) => {
+        await body({ page, capture, theme, consoleErrors }, isMobile);
       });
     });
   }

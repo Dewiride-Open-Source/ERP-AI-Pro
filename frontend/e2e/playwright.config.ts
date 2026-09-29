@@ -21,9 +21,7 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
   ...(isCI && { workers: 2 }),
-  reporter: isCI
-    ? [["list"], ["html", { open: "never" }], ["github"]]
-    : [["list"], ["html", { open: "never" }]],
+  reporter: isCI ? [["list"], ["blob"], ["github"]] : [["list"], ["html", { open: "never" }]],
   timeout: 30_000,
   expect: { timeout: 10_000 },
   use: {
@@ -40,6 +38,7 @@ export default defineConfig({
     { name: "webkit", use: { ...devices["Desktop Safari"] }, ...browserOnly },
     { name: "mobile-android", use: { ...devices["Pixel 10"] }, ...browserOnly },
     { name: "mobile-ios", use: { ...devices["iPhone 17"] }, ...browserOnly },
+    { name: "tablet-ios", use: { ...devices["iPad (gen 11)"] }, ...browserOnly },
   ],
   ...(startServers && {
     webServer: [
