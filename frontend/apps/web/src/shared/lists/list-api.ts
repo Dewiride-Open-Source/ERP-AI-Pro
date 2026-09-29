@@ -11,6 +11,8 @@ export interface ListApiParameters {
 // India observes no daylight saving, so a fixed UTC+05:30 offset gives every India Standard Time midnight.
 const indiaStandardTimeOffset = "+05:30";
 
+const firstCalendarDate = "0001-01-01";
+
 const lastCalendarDate = "9999-12-31";
 
 function encodeValue(value: string): string {
@@ -30,7 +32,9 @@ function nextIsoDate(isoDate: string): string {
 function dateRangeTerms(filter: DateRangeFilterDefinition, range: DateRangeValue): string[] {
   const terms: string[] = [];
   if (filter.instant) {
-    if (range.from !== "") terms.push(`${filter.field}:gte:${encodeValue(istMidnight(range.from))}`);
+    if (range.from !== "" && range.from !== firstCalendarDate) {
+      terms.push(`${filter.field}:gte:${encodeValue(istMidnight(range.from))}`);
+    }
     if (range.to !== "" && range.to !== lastCalendarDate) {
       terms.push(`${filter.field}:lt:${encodeValue(istMidnight(nextIsoDate(range.to)))}`);
     }

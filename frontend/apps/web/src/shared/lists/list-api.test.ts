@@ -67,6 +67,14 @@ test("listApiParameters_InstantRangeEndingOnTheLastCalendarDay_HasNoUpperBound",
   assert.equal(filter, undefined);
 });
 
+test("listApiParameters_InstantRangeStartingOnTheFirstCalendarDay_HasNoLowerBound", () => {
+  const { filter } = listApiParameters(
+    { ...firstPage, filters: { uploaded: { from: "0001-01-01", to: "" } } },
+    files,
+  );
+  assert.equal(filter, undefined);
+});
+
 test("listApiParameters_InstantRangeAcrossAMonthEnd_EndsAtTheNextMidnight", () => {
   const { filter } = listApiParameters(
     { ...firstPage, filters: { uploaded: { from: "", to: "2028-02-29" } } },

@@ -104,16 +104,17 @@ export function AttachmentsList({
   labelledBy: string;
 }) {
   const columns = useMemo(() => attachmentColumns(labelledBy), [labelledBy]);
+  const type = query.filters.type;
+  const chosenTypes = Array.isArray(type) ? type : noValues;
   const typeOptions = useMemo(
     () =>
-      allowedContentTypes.map((contentType) => ({
+      [...new Set([...allowedContentTypes, ...chosenTypes])].map((contentType) => ({
         value: contentType,
         label: contentTypeLabel(contentType),
       })),
-    [allowedContentTypes],
+    [allowedContentTypes, chosenTypes],
   );
   const name = query.filters.name;
-  const type = query.filters.type;
   const uploaded = query.filters.uploaded;
 
   return (
@@ -151,7 +152,7 @@ export function AttachmentsList({
               name="type"
               label="Type"
               options={typeOptions}
-              defaultValues={Array.isArray(type) ? type : noValues}
+              defaultValues={chosenTypes}
             />
           ) : null}
           <DataTableDateRangeFilter

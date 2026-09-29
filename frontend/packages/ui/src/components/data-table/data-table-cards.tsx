@@ -43,6 +43,7 @@ export function DataTableCards({
   return (
     <ul
       ref={listRef}
+      role="list"
       tabIndex={-1}
       aria-label={labelledBy === undefined ? label : undefined}
       aria-labelledby={labelledBy}

@@ -59,6 +59,7 @@ export function DataTableOptionsFilter({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
+              aria-labelledby={formFieldLabelId(control.id)}
               className="w-56 max-w-(--radix-dropdown-menu-content-available-width)"
             >
               <DropdownMenuGroup>

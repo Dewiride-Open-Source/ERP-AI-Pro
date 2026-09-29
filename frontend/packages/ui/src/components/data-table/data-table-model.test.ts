@@ -11,7 +11,6 @@ import {
   resultsStatus,
   selectionState,
   sortDirectionLabel,
-  sortFromSorting,
   sortingState,
   sortStatus,
   visibilityState,
@@ -30,7 +29,7 @@ const columns: readonly DataTableColumn<Bill>[] = [
 
 const bills: DataTableNoun = { one: "bill", other: "bills" };
 
-test("firstSortDirection_TextAscendsNumbersAndDatesDescend", () => {
+test("firstSortDirection_EachKind_TextAscendsAndNumbersAndDatesDescend", () => {
   assert.equal(firstSortDirection("text"), "asc");
   assert.equal(firstSortDirection("number"), "desc");
   assert.equal(firstSortDirection("date"), "desc");
@@ -84,17 +83,15 @@ test("resultsStatus_EachCount_SaysWhatIsShownWithIndianGrouping", () => {
   );
 });
 
-test("sortingState_RoundTripsThroughTheTableState", () => {
+test("sortingState_SortOrNone_IsOneTableTermOrNone", () => {
   assert.deepEqual(sortingState({ columnId: "amount", direction: "desc" }), [{ id: "amount", desc: true }]);
+  assert.deepEqual(sortingState({ columnId: "supplier", direction: "asc" }), [
+    { id: "supplier", desc: false },
+  ]);
   assert.deepEqual(sortingState(undefined), []);
-  assert.deepEqual(sortFromSorting([{ id: "supplier", desc: false }]), {
-    columnId: "supplier",
-    direction: "asc",
-  });
-  assert.equal(sortFromSorting([]), undefined);
 });
 
-test("visibilityState_RoundTripsInColumnOrder", () => {
+test("visibilityState_HiddenIds_RoundTripInColumnOrder", () => {
   const visibility = visibilityState(["amount", "supplier"]);
   assert.deepEqual(visibility, { amount: false, supplier: false });
   assert.deepEqual(hiddenFromVisibility({ ...visibility, number: true }, ["number", "supplier", "amount"]), [
@@ -103,7 +100,7 @@ test("visibilityState_RoundTripsInColumnOrder", () => {
   ]);
 });
 
-test("selectionState_KeepsOnlySelectedIds", () => {
+test("selectionState_SelectedIds_KeepsOnlyThoseIds", () => {
   assert.deepEqual(selectionState(["b-1", "b-9"]), { "b-1": true, "b-9": true });
   assert.deepEqual(idsFromSelection({ "b-1": true, "b-9": true }), ["b-1", "b-9"]);
 });

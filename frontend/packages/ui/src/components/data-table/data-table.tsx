@@ -119,6 +119,8 @@ type Features = typeof features;
 
 const noHiddenColumns: readonly string[] = [];
 
+const noSelectedIds: readonly string[] = [];
+
 function columnDefinitions<TRow extends RowData>(
   columns: readonly DataTableColumn<TRow>[],
 ): ColumnDef<Features, TRow>[] {
@@ -179,7 +181,7 @@ export function DataTable<TRow extends RowData>({
     () => ({
       sorting: sortingState(sort),
       columnVisibility: visibilityState(hiddenColumnIds),
-      rowSelection: selectionState(selectedIds ?? noHiddenColumns),
+      rowSelection: selectionState(selectedIds ?? noSelectedIds),
     }),
     [sort, hiddenColumnIds, selectedIds],
   );
@@ -220,10 +222,13 @@ export function DataTable<TRow extends RowData>({
       ? sortStatus(sortColumn.header, sortColumn.sort, sort.direction)
       : undefined;
 
-  const sortChoices: DataTableSortChoice[] = visibleColumns.flatMap((column) => {
-    const meta = column.columnDef.meta;
-    return meta?.sort === undefined ? [] : [{ columnId: column.id, header: meta.header, kind: meta.sort }];
-  });
+  const sortChoices: DataTableSortChoice[] = columns.flatMap((column) =>
+    column.sort !== undefined &&
+    (column.id === sort?.columnId || visibleColumns.some((visible) => visible.id === column.id))
+      ? [{ columnId: column.id, header: column.header, kind: column.sort }]
+      : [],
+  );
+  const sortsSeveralRows = paging.page.totalCount > 1;
 
   const columnChoices: DataTableColumnChoice[] = columns.filter(isDataColumn).flatMap((column) =>
     column.hideable === false
@@ -240,6 +245,11 @@ export function DataTable<TRow extends RowData>({
 
   const allSelected = table.getIsAllPageRowsSelected();
   const someSelected = table.getIsSomePageRowsSelected();
+  const pageSelection: boolean | "indeterminate" = allSelected
+    ? true
+    : someSelected
+      ? "indeterminate"
+      : false;
 
   const cards: DataTableCard[] = rowModel.map((row) => {
     const cells = row.getVisibleCells();
@@ -270,9 +280,7 @@ export function DataTable<TRow extends RowData>({
       ) : (
         <>
           {resultsStatus(paging.page, noun)}
-          {sortText !== undefined && rowModel.length > 1 ? (
-            <span className="sr-only"> {sortText}</span>
-          ) : null}
+          {sortText !== undefined && sortsSeveralRows ? <span className="sr-only"> {sortText}</span> : null}
         </>
       )}
     </p>
@@ -286,7 +294,7 @@ export function DataTable<TRow extends RowData>({
             <div className="min-w-0 basis-full @4xl/data-table:grow @4xl/data-table:basis-0">{filters}</div>
           ) : null}
           <div className="ms-auto flex flex-wrap items-center gap-2">
-            {sorting !== undefined && sortChoices.length > 0 && rowModel.length > 1 ? (
+            {sorting !== undefined && sortChoices.length > 0 && sortsSeveralRows ? (
               <DataTableSortSelect
                 choices={sortChoices}
                 sort={sorting.sort}
@@ -307,11 +315,24 @@ export function DataTable<TRow extends RowData>({
       ) : null}
 
       {selection !== undefined ? (
-        <DataTableSelectionSummary
-          count={selection.selectedIds.length}
-          noun={noun}
-          onClear={clearSelection}
-        />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {rowModel.length > 0 ? (
+            <label className="flex items-center gap-2 text-sm @2xl/data-table:hidden">
+              <DataTableSelectCheckbox
+                checked={pageSelection}
+                label="Select all rows on this page"
+                disabled={!interactive}
+                onCheckedChange={(checked) => table.toggleAllPageRowsSelected(checked)}
+              />
+              Select all rows on this page
+            </label>
+          ) : null}
+          <DataTableSelectionSummary
+            count={selection.selectedIds.length}
+            noun={noun}
+            onClear={clearSelection}
+          />
+        </div>
       ) : null}
 
       {rowModel.length === 0 ? (
@@ -336,7 +357,7 @@ export function DataTable<TRow extends RowData>({
                   {selection !== undefined ? (
                     <TableHead className="w-8">
                       <DataTableSelectCheckbox
-                        checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                        checked={pageSelection}
                         label="Select all rows on this page"
                         disabled={!interactive}
                         onCheckedChange={(checked) => table.toggleAllPageRowsSelected(checked)}

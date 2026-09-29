@@ -95,6 +95,7 @@ function ListTableContent<TRow extends DataTableRow>({
   const current = withHiddenColumns(query, hiddenColumns);
   const signature = filterSignature(query.filters, definition);
   const [selected, setSelected] = useState<Selection>({ signature, ids: noIds });
+  if (selected.signature !== signature) setSelected({ signature, ids: noIds });
   const selectedIds = selected.signature === signature ? selected.ids : noIds;
   const [form, setForm] = useState<FilterFormState>({
     signature,

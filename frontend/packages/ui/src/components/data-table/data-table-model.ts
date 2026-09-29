@@ -88,11 +88,6 @@ export function sortingState(sort: DataTableSort | undefined): SortingState {
   return sort === undefined ? [] : [{ id: sort.columnId, desc: sort.direction === "desc" }];
 }
 
-export function sortFromSorting(sorting: SortingState): DataTableSort | undefined {
-  const [first] = sorting;
-  return first === undefined ? undefined : { columnId: first.id, direction: first.desc ? "desc" : "asc" };
-}
-
 export function visibilityState(hiddenColumnIds: readonly string[]): ColumnVisibilityState {
   return Object.fromEntries(hiddenColumnIds.map((id) => [id, false]));
 }

@@ -14,6 +14,7 @@ export class DataTableRegion {
   readonly filters: Locator;
   readonly applyFilters: Locator;
   readonly noMatches: Locator;
+  readonly rangeTrigger: Locator;
   readonly firstPage: Locator;
   readonly previousPage: Locator;
   readonly nextPage: Locator;
@@ -36,6 +37,7 @@ export class DataTableRegion {
     this.filters = container.getByRole("search");
     this.applyFilters = this.filters.getByRole("button", { name: "Apply filters" });
     this.noMatches = container.getByTestId("list-no-matches");
+    this.rangeTrigger = this.filters.locator("button[aria-label='Choose dates']");
     this.firstPage = container.getByRole("link", { name: "First page" });
     this.previousPage = container.getByRole("link", { name: "Previous page" });
     this.nextPage = container.getByRole("link", { name: "Next page" });

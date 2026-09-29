@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FocusEvent } from "react";
 
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { DateRangeInput } from "@dewiride/erp-ui/components/pickers/date-range-input";
 import { cn } from "@dewiride/erp-ui/lib/utils";
 
-import { dateRangeProblems, submittedDate, type DateRangeFilterValue } from "./filter-values";
+import { useHydrated } from "../use-hydrated";
+
+import {
+  dateRangeProblems,
+  submittedDate,
+  type DateRangeFilterValue,
+  type DateRangeProblems,
+} from "./filter-values";
 
 export type { DateRangeFilterValue } from "./filter-values";
+
+type RangeEnd = keyof DateRangeProblems;
 
 function validityRef(message: string | undefined, onInvalid: () => void) {
   return (input: HTMLInputElement | null) => {
@@ -30,11 +39,15 @@ export function DataTableDateRangeFilter({
   defaultValue: DateRangeFilterValue;
   className?: string | undefined;
 }) {
+  const interactive = useHydrated();
   const [value, setValue] = useState<DateRangeFilterValue>(defaultValue);
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState<Readonly<Record<RangeEnd, boolean>>>({ from: false, to: false });
   const problems = dateRangeProblems(value);
-  const reveal = () => setRevealed(true);
-  const shown = revealed ? problems : { from: undefined, to: undefined };
+  const reveal = (end: RangeEnd) => () => setRevealed((current) => ({ ...current, [end]: true }));
+  const shown: DateRangeProblems = {
+    from: revealed.from ? problems.from : undefined,
+    to: revealed.to ? problems.to : undefined,
+  };
   const errors = [shown.from, shown.to].filter((message) => message !== undefined);
 
   return (
@@ -43,11 +56,14 @@ export function DataTableDateRangeFilter({
         <>
           <DateRangeInput
             {...control}
-            ref={validityRef(problems.from, reveal)}
-            toRef={validityRef(problems.to, reveal)}
+            ref={validityRef(problems.from, reveal("from"))}
+            toRef={validityRef(problems.to, reveal("to"))}
             value={value}
             onValueChange={setValue}
-            onBlur={reveal}
+            onBlur={(event: FocusEvent<HTMLInputElement>) =>
+              reveal(event.currentTarget.id === control.id ? "from" : "to")()
+            }
+            disabled={!interactive}
             ends={{
               from: {
                 invalid: shown.from !== undefined,

@@ -31,7 +31,7 @@ const camelCaseName = /^[a-z][A-Za-z0-9]*$/;
 
 const featureSubfolders = new Set(["components", "server", "forms", "lists", "hooks", "ai"]);
 const schemaFile = /^([a-z][a-z0-9]*(?:-[a-z0-9]+)*)\.schema(\.test)?\.ts$/;
-const listFile = /^([a-z][a-z0-9]*(?:-[a-z0-9]+)*).list(.test)?.ts$/;
+const listFile = /^([a-z][a-z0-9]*(?:-[a-z0-9]+)*)\.list(\.test)?\.ts$/;
 const hookFile = /^(use-[a-z0-9]+(?:-[a-z0-9]+)*)(?:\.tsx?|(\.test)\.ts)$/;
 const useServerDirective = /^(["'])use server\1[ \t]*(?:;|\r?\n|$)/;
 const serverOnlyImport = /^[ \t]*import[ \t]+(["'])server-only\1[ \t]*;?[ \t]*\r?$/m;
@@ -199,7 +199,7 @@ function checkListsFile(path: string, inside: readonly string[], paths: Readonly
   const match = inside.length === 1 ? listFile.exec(inside[0] ?? "") : null;
   if (!match) {
     report(path, "S5", "lists/ holds only <name>.list.ts files and their <name>.list.test.ts tests");
-  } else if (match[2] && !paths.has(path.replace(/.test.ts$/, ".ts"))) {
+  } else if (match[2] && !paths.has(path.replace(/\.test\.ts$/, ".ts"))) {
     report(path, "S5", `${match[1]}.list.test.ts has no ${match[1]}.list.ts beside it`);
   }
 }

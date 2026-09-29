@@ -180,12 +180,32 @@ test.describe("data table", () => {
     await expect(bills.lastPage).toBeFocused();
     await expect(bills.lastPage).toHaveAttribute("aria-disabled", "true");
     await expect(bills.nextPage).toHaveAttribute("aria-disabled", "true");
+    const listRequests: URL[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (request.headers()["rsc"] === "1" && url.pathname === dataTablePath) listRequests.push(url);
+    });
     await page.keyboard.press("Enter");
-    await expect(bills.pageLabel).toHaveText("Page 7 of 7");
-    await expectAddress(page, "?page=7");
+    await expect(bills.lastPage).toBeFocused();
 
+    await tabOntoLink(page, bills.firstPage);
+    await page.keyboard.press("Enter");
+    await expectAddress(page, "");
+    await expect(bills.pageLabel).toHaveText("Page 1 of 7");
+    await expect(bills.firstPage).toBeFocused();
+    await expect(bills.firstPage).toHaveAttribute("aria-disabled", "true");
+    await expect(bills.previousPage).toHaveAttribute("aria-disabled", "true");
+    expect(
+      listRequests.filter((url) => url.searchParams.get("page") === "7"),
+      "requests sent by the unavailable last-page link",
+    ).toEqual([]);
+
+    await bills.nextPage.click();
+    await expectAddress(page, "?page=2");
     await bills.previousPage.click();
-    await expectAddress(page, "?page=6");
+    await expectAddress(page, "");
+    await bills.nextPage.click();
+    await expectAddress(page, "?page=2");
     await bills.choosePageSize(20);
     await expectAddress(page, "?size=20");
     await expect(bills.status).toContainText("Showing 1–20 of 64 bills.");
@@ -218,7 +238,18 @@ test.describe("data table", () => {
 
       await supplier.fill("");
       await bills.rangeStart("Due between").fill("01-08-2026");
-      await bills.rangeEnd("Due between").fill("31-08-2026");
+      await bills.rangeTrigger.focus();
+      await page.keyboard.press("Enter");
+      const calendar = page.getByRole("dialog", { name: "Choose dates", exact: true });
+      await expect(calendar).toBeVisible();
+      await expect(calendar.getByRole("button", { name: /\b1 August 2026/ })).toBeFocused();
+      for (const key of ["ArrowDown", "ArrowDown", "ArrowDown", "ArrowDown", "ArrowRight", "ArrowRight"]) {
+        await page.keyboard.press(key);
+      }
+      await expect(calendar.getByRole("button", { name: /\b31 August 2026/ })).toBeFocused();
+      await page.keyboard.press("Enter");
+      await expect(calendar).toBeHidden();
+      await expect(bills.rangeEnd("Due between")).toHaveValue("31-08-2026");
       await bills.applyFilters.click();
       await expectAddress(page, "?status=paid&dueFrom=2026-08-01&dueTo=2026-08-31");
       await bills.optionsFilter("Status").click();
@@ -239,7 +270,7 @@ test.describe("data table", () => {
   test("refuses a due date range it cannot use without leaving the page", async ({ page, capture }) => {
     const demo = new DataTableDemoPage(page);
     const { bills } = demo;
-    await demo.goto();
+    await demo.goto("?supplier=kaveri");
     const from = bills.rangeStart("Due between");
     const to = bills.rangeEnd("Due between");
 
@@ -247,8 +278,9 @@ test.describe("data table", () => {
     await from.press("Enter");
     await expect(from).toBeFocused();
     await expect(from).toHaveAttribute("aria-invalid", "true");
+    await expect(to).not.toHaveAttribute("aria-invalid");
     await expect(bills.filters).toContainText("Enter a real date as day-month-year, for example 31-03-2026.");
-    await expectAddress(page, "");
+    await expectAddress(page, "?supplier=kaveri");
 
     await from.fill("10-08-2026");
     await to.fill("01-08-2026");
@@ -256,7 +288,7 @@ test.describe("data table", () => {
     await expect(to).toBeFocused();
     await expect(to).toHaveAttribute("aria-invalid", "true");
     await expect(bills.filters).toContainText("The end date is before the start date.");
-    await expectAddress(page, "");
+    await expectAddress(page, "?supplier=kaveri");
     await capture("data-table-refused-range", bills.filters);
   });
 
@@ -324,36 +356,38 @@ test.describe("data table", () => {
     await bills.setColumnVisible("State", true);
     await bills.setColumnVisible("Bill date", true);
     await expectAddress(page, "?page=3");
+
+    await bills.setColumnVisible("Due date", false);
+    await expectAddress(page, "?page=3&hide=dueDate");
+    await expect(bills.status).toContainText("Sorted by Due date, earliest first.");
+    if (cards) await expect(bills.sortSelect).toHaveText("Due date, earliest first");
+    await bills.setColumnVisible("Due date", true);
+    await expectAddress(page, "?page=3");
   });
 
   test("selects rows on a page and across pages, and clears the selection", async ({ page }) => {
     const demo = new DataTableDemoPage(page);
     const { bills } = demo;
     await demo.goto();
-    const cards = await bills.showsCards();
-    const region = cards ? bills.cardList : bills.table;
+    const region = (await bills.showsCards()) ? bills.cardList : bills.table;
+    const all = bills.container.getByRole("checkbox", { name: "Select all rows on this page" });
 
     await region.getByRole("checkbox", { name: "Select PB/2026-27/0001" }).click();
     await expect(bills.selection).toHaveText("1 bill selected");
-    if (!cards) {
-      const all = bills.table.getByRole("checkbox", { name: "Select all rows on this page" });
-      await expect(all).toHaveAttribute("aria-checked", "mixed");
-      await all.click();
-      await expect(bills.selection).toHaveText("10 bills selected");
-      await expect(all).toHaveAttribute("aria-checked", "true");
-      await expect(bills.tableRows.first()).toHaveAttribute("data-state", "selected");
-    } else {
-      await region.getByRole("checkbox", { name: "Select PB/2026-27/0004" }).click();
-      await expect(bills.selection).toHaveText("2 bills selected");
-    }
-    const selectedOnFirstPage = cards ? 2 : 10;
+    await expect(all).toHaveAttribute("aria-checked", "mixed");
+    await all.click();
+    await expect(bills.selection).toHaveText("10 bills selected");
+    await expect(all).toHaveAttribute("aria-checked", "true");
+    await expect((await bills.rows()).first()).toHaveAttribute("data-state", "selected");
 
     await bills.nextPage.click();
     await expectAddress(page, "?page=2");
     await expect(bills.pageLabel).toHaveText("Page 2 of 7");
+    await expect(all).toHaveAttribute("aria-checked", "false");
     const [secondPageFirst = ""] = await bills.titles();
     await region.getByRole("checkbox", { name: `Select ${secondPageFirst}` }).click();
-    await expect(bills.selection).toHaveText(`${selectedOnFirstPage + 1} bills selected`);
+    await expect(bills.selection).toHaveText("11 bills selected");
+    await expect(all).toHaveAttribute("aria-checked", "mixed");
 
     await bills.container.getByRole("button", { name: "Clear selection" }).click();
     await expect(bills.selection).toHaveText("");
@@ -364,6 +398,10 @@ test.describe("data table", () => {
     await bills.textFilter("Supplier").fill("a");
     await bills.textFilter("Supplier").press("Enter");
     await expectAddress(page, "?supplier=a");
+    await expect(bills.selection).toHaveText("");
+    await bills.filters.getByRole("link", { name: "Clear filters" }).click();
+    await expectAddress(page, "");
+    await expect(bills.status).toContainText("Showing 1–10 of 64 bills.");
     await expect(bills.selection).toHaveText("");
   });
 

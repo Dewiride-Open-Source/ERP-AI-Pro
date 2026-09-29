@@ -275,6 +275,11 @@ const cases: readonly Case[] = [
     expected: [`S5 ${featureRoot}/lists/attachments-columns.ts`],
   },
   {
+    condition: "ListsFileWithAnotherCharacterForADot",
+    files: [file(`${featureRoot}/lists/attachments-list.ts`), file(`${featureRoot}/lists/attachments.listxtest.ts`)],
+    expected: [`S5 ${featureRoot}/lists/attachments-list.ts`, `S5 ${featureRoot}/lists/attachments.listxtest.ts`],
+  },
+  {
     condition: "ListTestWithoutItsListDefinition",
     files: [file(`${featureRoot}/lists/attachments.list.test.ts`)],
     expected: [`S5 ${featureRoot}/lists/attachments.list.test.ts`],

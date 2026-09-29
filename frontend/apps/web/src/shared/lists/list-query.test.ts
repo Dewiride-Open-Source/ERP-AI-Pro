@@ -96,6 +96,8 @@ const notCanonical: readonly (readonly [string, SearchParameters, Partial<ListQu
   ["PageBeyondTheApiLimit", { page: "999999999999" }, {}],
   ["UnknownHiddenColumn", { hide: "notes,amount" }, { hiddenColumns: ["amount"] }],
   ["HiddenColumnsOutOfOrder", { hide: "amount,supplier" }, { hiddenColumns: ["supplier", "amount"] }],
+  ["MoreOptionsThanTheApiAccepts", { state: Array.from({ length: 101 }, (_, index) => `S${index}`) }, {}],
+  ["OptionLongerThanTheLimit", { state: ["x".repeat(201), "KA"] }, { filters: { state: ["KA"] } }],
   [
     "FixedColumnAmongTheHidden",
     { hide: "number,supplier,amount,dueDate" },
@@ -110,6 +112,13 @@ for (const [condition, parameters, expected] of notCanonical) {
     assert.deepEqual(result.query, { ...firstPage, ...expected });
   });
 }
+
+test("readListQuery_AsManyOptionsAsTheApiAccepts_AreKept", () => {
+  const states = Array.from({ length: 100 }, (_, index) => `S${String(index).padStart(3, "0")}`);
+  const result = read({ state: states });
+  assert.deepEqual(result.query.filters, { state: states });
+  assert.equal(result.canonical, true);
+});
 
 test("readListQuery_OptionsInAnyOrder_AreTheSameCanonicalView", () => {
   const result = read({ status: ["paid", "draft"], state: ["MH", "KA"] });
@@ -152,7 +161,7 @@ test("listSearch_FirstPage_IsEmpty", () => {
   assert.equal(listSearch(firstPage, bills), "");
 });
 
-test("withChanges_SortSizeAndFilters_ReturnToTheFirstPage", () => {
+test("withSortSizeAndFilters_OnALaterPage_ReturnToTheFirstPage", () => {
   const onPageFour = withPage(firstPage, 4);
   assert.equal(onPageFour.page, 4);
   assert.equal(withSort(onPageFour, { field: "amount", direction: "desc" }).page, 1);
@@ -176,7 +185,7 @@ test("filtersFromForm_SubmittedFields_AreReadLikeTheAddress", () => {
   });
 });
 
-test("filterSignature_IgnoresPagingSortingAndHiddenColumns", () => {
+test("filterSignature_PagingSortingAndHiddenColumns_AreIgnored", () => {
   const filters = { supplier: "Kaveri" };
   assert.equal(filterSignature(filters, bills), "?supplier=Kaveri");
   assert.equal(filterSignature({}, bills), "");
