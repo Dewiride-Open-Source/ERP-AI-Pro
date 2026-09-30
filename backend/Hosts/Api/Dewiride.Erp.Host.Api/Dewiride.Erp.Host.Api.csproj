@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Authentication/Dewiride.Erp.BuildingBlocks.Authentication/Dewiride.Erp.BuildingBlocks.Authentication.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Observability/Dewiride.Erp.BuildingBlocks.Observability/Dewiride.Erp.BuildingBlocks.Observability.csproj" />
     <ProjectReference Include="../../Composition/Dewiride.Erp.Host.Composition/Dewiride.Erp.Host.Composition.csproj" />

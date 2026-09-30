@@ -50,10 +50,12 @@ public static class HealthEndpoints
 
         endpoints.MapHealthChecks("/healthz/live", new HealthCheckOptions { Predicate = _ => false, ResponseWriter = WriteAsync })
             .DisableRateLimiting()
-            .DisableHttpMetrics();
+            .DisableHttpMetrics()
+            .AllowAnonymous();
         endpoints.MapHealthChecks("/healthz/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains(ReadyTag), ResponseWriter = WriteAsync })
             .DisableRateLimiting()
-            .DisableHttpMetrics();
+            .DisableHttpMetrics()
+            .AllowAnonymous();
 
         return endpoints;
     }

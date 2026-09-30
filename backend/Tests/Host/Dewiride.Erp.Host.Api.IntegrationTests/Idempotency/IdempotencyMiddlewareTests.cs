@@ -55,7 +55,7 @@ public sealed class IdempotencyMiddlewareTests(IdempotentEndpointsFixture fixtur
     [Fact]
     public async Task Post_WithoutAKey_Answers400KeyMissing()
     {
-        var response = await fixture.Factory.CreateClient().PostAsJsonAsync(OrdersPath, new OrderRequest("pen"), TestContext.Current.CancellationToken);
+        var response = await fixture.CreateClient().PostAsJsonAsync(OrdersPath, new OrderRequest("pen"), TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, IdempotencyProblems.KeyMissing);
     }
@@ -144,7 +144,7 @@ public sealed class IdempotencyMiddlewareTests(IdempotentEndpointsFixture fixtur
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/platform/features");
         request.Headers.TryAddWithoutValidation(IdempotencyKeyHeader.Name, "not-a-uuid");
 
-        var response = await fixture.Factory.CreateClient().SendAsync(request, TestContext.Current.CancellationToken);
+        var response = await fixture.CreateClient().SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -160,7 +160,7 @@ public sealed class IdempotencyMiddlewareTests(IdempotentEndpointsFixture fixtur
             request.Headers.TryAddWithoutValidation(CorrelationId.HeaderName, correlationId);
         }
 
-        return await fixture.Factory.CreateClient().SendAsync(request, TestContext.Current.CancellationToken);
+        return await fixture.CreateClient().SendAsync(request, TestContext.Current.CancellationToken);
     }
 
     private static async Task<string?> TraceIdAsync(HttpResponseMessage response)

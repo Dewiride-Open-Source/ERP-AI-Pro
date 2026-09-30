@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Responses;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints;
@@ -223,6 +224,40 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"wrong shape {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "shape.txt");
 
         using var response = await client.GetAsync(ContentPath(attachment.Id, token), TestContext.Current.CancellationToken);
+
+        await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.NotFound, AttachmentErrors.NotFound.Code);
+    }
+
+    [Fact]
+    public async Task Get_ContentWithTheLinkOfTheSignedInPersonWhoCreatedIt_StreamsTheFile()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        var text = SampleFiles.Text($"own link {AttachmentsApi.UniqueToken()}");
+        var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "own.txt");
+        var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
+
+        using var response = await client.GetAsync(new Uri(link.Url, UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(text, await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Get_ContentWithTheLinkOfAnotherSignedInPerson_AnswersNotFound(bool redeemerSignedIn)
+    {
+        using var creator = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var redeemer = factory.CreateClient();
+        if (redeemerSignedIn)
+        {
+            redeemer.AsUser(TestUsers.Administrator);
+        }
+
+        var attachment = await AttachmentsApi.UploadAsync(creator, SampleFiles.Text($"someone else {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "private.txt");
+        var link = await AttachmentsApi.CreateDownloadLinkAsync(creator, attachment.Id);
+
+        using var response = await redeemer.GetAsync(new Uri(link.Url, UriKind.Relative), TestContext.Current.CancellationToken);
 
         await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.NotFound, AttachmentErrors.NotFound.Code);
     }

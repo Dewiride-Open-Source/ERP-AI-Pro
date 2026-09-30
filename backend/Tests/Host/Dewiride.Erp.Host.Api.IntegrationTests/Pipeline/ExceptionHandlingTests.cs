@@ -1,5 +1,6 @@
 using System.Net;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Pipeline;
@@ -10,7 +11,7 @@ public sealed class ExceptionHandlingTests : IClassFixture<ErpApiFactory>
 
     public ExceptionHandlingTests(ErpApiFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Testing;
 
@@ -68,7 +69,7 @@ public sealed class CorrelationIdTests : IClassFixture<ErpApiFactory>
     [Fact]
     public async Task Get_UnknownRoute_ReportsTheCorrelationIdAsTheTraceIdOfTheProblem()
     {
-        using var request = Request("/api/platform/does-not-exist", correlationId: "order-4711");
+        using var request = Request("/api/platform/does-not-exist", correlationId: "order-4711").AsUser(TestUsers.Accountant);
 
         using var response = await _client.SendAsync(request, TestContext.Current.CancellationToken);
 
@@ -84,7 +85,7 @@ public sealed class CorrelationIdTests : IClassFixture<ErpApiFactory>
         using var factory = new ErpApiFactory();
         using var scoped = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddFakeLogging()));
         using var client = scoped.CreateClient();
-        using var request = Request(ErpApiFactory.ThrowingPath, correlationId: "order-4711");
+        using var request = Request(ErpApiFactory.ThrowingPath, correlationId: "order-4711").AsUser(TestUsers.Accountant);
 
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 

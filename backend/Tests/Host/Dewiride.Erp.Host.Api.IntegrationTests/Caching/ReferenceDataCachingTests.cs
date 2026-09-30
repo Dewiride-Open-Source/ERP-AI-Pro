@@ -1,6 +1,7 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Caching;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Caching;
 
@@ -16,7 +17,7 @@ public sealed class ReferenceDataCachingTests : IClassFixture<ReferenceDataCachi
 
     public ReferenceDataCachingTests(Fixture fixture)
     {
-        _client = fixture.Factory.CreateClient();
+        _client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Fact]

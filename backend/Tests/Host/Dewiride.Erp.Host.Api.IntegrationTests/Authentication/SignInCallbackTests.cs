@@ -1,0 +1,289 @@
+using System.Buffers.Text;
+using System.Net;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
+using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Logging.Testing;
+using Microsoft.Extensions.Primitives;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
+
+namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
+
+public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixture>
+{
+    private const string SessionCookie = "__Host-erp-session";
+
+    private const string Description = "AADSTS65004: User declined to consent to access the app.";
+
+    private const string RefusedCode = "code-that-entra-refuses";
+
+    private const string ReturnPath = "/platform/attachments";
+
+    private const string AccountPath = "/__test/account";
+
+    private const string ClearedCookie = "expires=Thu, 01 Jan 1970";
+
+    private readonly Fixture _fixture;
+
+    public SignInCallbackTests(Fixture fixture)
+    {
+        _fixture = fixture;
+        _fixture.Logs.Clear();
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_IssuesASessionTheAccountCheckAccepts()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Accountant)));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(ReturnPath, response.Headers.Location?.OriginalString);
+        using var browser = TestSignIn.CreateClient(_fixture.Factory);
+        using var signedIn = await GetAccountWithOnlyTheSessionCookieAsync(browser, SessionCookieValueOf(response));
+        Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        Assert.Equal(TestUsers.Accountant.AccountId, await signedIn.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.DoesNotContain(_fixture.Logs.GetSnapshot(), record => record.Category == typeof(SignInEvents).FullName);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithoutClientInfo_IssuesASessionTheNextRequestRefusesAndClears()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(ReturnPath, response.Headers.Location?.OriginalString);
+        Assert.True(await TestSignIn.IsAccountCachedAsync(_fixture.Factory.Services, TestUsers.Accountant));
+        using var browser = TestSignIn.CreateClient(_fixture.Factory);
+        using var refused = await GetAccountWithOnlyTheSessionCookieAsync(browser, SessionCookieValueOf(response));
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+        var cleared = Assert.Single(refused.Headers.GetValues("Set-Cookie"), cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
+        Assert.Contains(ClearedCookie, cleared, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithoutState_LandsOnTheSignInFailedPageWithoutASession()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+
+        using var response = await PostCallbackAsync(client, ("code", "stolen-code"));
+
+        AssertSignInFailed(response);
+        AssertLogged(_fixture.Logs.GetSnapshot(), SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithAForgedState_LandsOnTheSignInFailedPageWithoutASession()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+
+        using var response = await PostCallbackAsync(client, ("state", "forged-state"), ("code", "stolen-code"));
+
+        AssertSignInFailed(response);
+        AssertLogged(_fixture.Logs.GetSnapshot(), SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithAValidStateButNoCorrelationCookie_LandsOnTheSignInFailedPage()
+    {
+        using var challenger = TestSignIn.CreateClient(_fixture.Factory);
+        var authorize = await ChallengeAsync(challenger);
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+
+        using var response = await PostCallbackAsync(client, ("state", Single(authorize, "state")), ("code", "stolen-code"));
+
+        AssertSignInFailed(response);
+        AssertLogged(_fixture.Logs.GetSnapshot(), SignInEvents.CallbackFailure, SignInEvents.NoOAuthError);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWhereThePersonDeclined_LandsOnTheSignInFailedPageAndLogsOnlyTheErrorCode()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(client, ("state", state), ("error", "access_denied"), ("error_description", Description));
+
+        AssertSignInFailed(response);
+        var records = _fixture.Logs.GetSnapshot();
+        var record = AssertLogged(records, SignInEvents.IdentityProviderFailure, "access_denied");
+        Assert.DoesNotContain("AADSTS65004", record.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(state, record.Message, StringComparison.Ordinal);
+        AssertNoRecordContains(records, Description);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithAnErrorOutsideTheOAuthGrammar_LogsItAsUnrecognised()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(client, ("state", state), ("error", "<script>alert(1)</script>"));
+
+        AssertSignInFailed(response);
+        AssertLogged(_fixture.Logs.GetSnapshot(), SignInEvents.IdentityProviderFailure, SignInEvents.UnrecognisedOAuthError);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithACodeEntraRefuses_RedeemsItWithTheCertificateAndPkceAndLandsOnTheSignInFailedPage()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var authorize = await ChallengeAsync(client);
+
+        using var response = await PostCallbackAsync(client, ("state", Single(authorize, "state")), ("code", RefusedCode));
+
+        AssertSignInFailed(response);
+        var redemption = Assert.Single(_fixture.TokenEndpoint.Requests, request => request.Form.GetValueOrDefault("code") == RefusedCode);
+        Assert.Equal(TestIdentityProvider.TokenEndpoint.AbsoluteUri, redemption.Address.GetLeftPart(UriPartial.Path));
+        Assert.Equal("authorization_code", redemption.Form["grant_type"]);
+        Assert.Equal(TestIdentityProvider.ClientId, redemption.Form["client_id"]);
+        Assert.Equal($"{TestIdentityProvider.WebOrigin}{AuthPaths.SignInCallback}", redemption.Form["redirect_uri"]);
+        Assert.Equal(Single(authorize, "code_challenge"), Base64Url.EncodeToString(SHA256.HashData(Encoding.ASCII.GetBytes(redemption.Form["code_verifier"]))));
+        Assert.Equal("urn:ietf:params:oauth:client-assertion-type:jwt-bearer", redemption.Form["client_assertion_type"]);
+        Assert.DoesNotContain("client_secret", redemption.Form.Keys);
+        await AssertSignedWithTheSignInCertificateAsync(redemption.Form["client_assertion"]);
+        var records = _fixture.Logs.GetSnapshot();
+        AssertLogged(records, SignInEvents.CodeRedemptionFailure, TestTokenEndpoint.RefusedCodeError);
+        AssertNoRecordContains(records, TestTokenEndpoint.RefusedCodeDescription);
+    }
+
+    [Fact]
+    public async Task Post_FailedCallbacks_WriteNoErrorDescriptionEvenWhenConfigurationLogsEveryLevelOfTheIdentityLibraries()
+    {
+        await using var root = new ErpApiFactory()
+            .WithConfiguration("Logging:LogLevel:Microsoft.Identity.Web", "Trace")
+            .WithConfiguration("Logging:LogLevel:Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectHandler", "Trace");
+        await using var factory = root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddFakeLogging()));
+        using var client = TestSignIn.CreateClient(factory);
+
+        using var declined = await PostCallbackAsync(client, ("state", Single(await ChallengeAsync(client), "state")), ("error", "access_denied"), ("error_description", Description));
+        using var refused = await PostCallbackAsync(client, ("state", Single(await ChallengeAsync(client), "state")), ("code", RefusedCode));
+
+        AssertSignInFailed(declined);
+        AssertSignInFailed(refused);
+        var records = factory.Services.GetRequiredService<FakeLogCollector>().GetSnapshot();
+        Assert.Contains(records, record => record.Category == typeof(SignInEvents).FullName);
+        AssertNoRecordContains(records, Description);
+        AssertNoRecordContains(records, TestTokenEndpoint.RefusedCodeDescription);
+    }
+
+    private static async Task<Dictionary<string, StringValues>> ChallengeAsync(HttpClient client)
+    {
+        using var response = await client.GetAsync(new Uri($"{AuthPaths.Login}?returnUrl={Uri.EscapeDataString(ReturnPath)}", UriKind.Relative), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+
+        return QueryHelpers.ParseQuery(response.Headers.Location!.Query);
+    }
+
+    private static string SessionCookieValueOf(HttpResponseMessage response)
+    {
+        var cookies = response.Headers.TryGetValues("Set-Cookie", out var values) ? values : [];
+        var cookie = Assert.Single(cookies, value => value.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
+
+        return cookie.Split(';')[0][(SessionCookie.Length + 1)..];
+    }
+
+    private static async Task<HttpResponseMessage> GetAccountWithOnlyTheSessionCookieAsync(HttpClient client, string sessionCookie)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, AccountPath);
+        request.Headers.Add("Cookie", $"{SessionCookie}={sessionCookie}");
+
+        return await client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    private static string Single(Dictionary<string, StringValues> query, string name) => Assert.Single(query[name])!;
+
+    private static async Task<HttpResponseMessage> PostCallbackAsync(HttpClient client, params (string Name, string Value)[] fields)
+    {
+        using var form = new FormUrlEncodedContent(fields.Select(field => KeyValuePair.Create(field.Name, field.Value)));
+
+        return await client.PostAsync(new Uri(AuthPaths.SignInCallback, UriKind.Relative), form, TestContext.Current.CancellationToken);
+    }
+
+    private static void AssertSignInFailed(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(AuthPaths.SignInFailedPage, response.Headers.Location?.OriginalString);
+        var cookies = response.Headers.TryGetValues("Set-Cookie", out var values) ? values : [];
+        Assert.DoesNotContain(cookies, cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
+    }
+
+    private static FakeLogRecord AssertLogged(IReadOnlyList<FakeLogRecord> records, string failure, string oAuthError)
+    {
+        var record = Assert.Single(records, entry => entry.Category == typeof(SignInEvents).FullName);
+        Assert.Equal(LogLevel.Warning, record.Level);
+        Assert.Equal(failure, record.GetStructuredStateValue("Failure"));
+        Assert.Equal(oAuthError, record.GetStructuredStateValue("OAuthError"));
+
+        return record;
+    }
+
+    private static void AssertNoRecordContains(IReadOnlyList<FakeLogRecord> records, string text)
+    {
+        var leaks = records
+            .Where(record => record.Message.Contains(text, StringComparison.Ordinal)
+                || (record.Exception?.ToString().Contains(text, StringComparison.Ordinal) ?? false)
+                || (record.StructuredState?.Any(pair => pair.Value?.Contains(text, StringComparison.Ordinal) ?? false) ?? false))
+            .Select(record => $"{record.Category} ({record.Level})")
+            .ToList();
+
+        Assert.Empty(leaks);
+    }
+
+    private static async Task AssertSignedWithTheSignInCertificateAsync(string assertion)
+    {
+        using var certificate = X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(TestSignInCertificate.Base64), password: null);
+
+        var result = await new JsonWebTokenHandler().ValidateTokenAsync(assertion, new TokenValidationParameters
+        {
+            IssuerSigningKey = new X509SecurityKey(certificate),
+            ValidIssuer = TestIdentityProvider.ClientId,
+            ValidAudience = TestIdentityProvider.TokenEndpoint.AbsoluteUri,
+            ValidateIssuerSigningKey = true,
+        });
+
+        Assert.True(result.IsValid, result.Exception?.Message);
+        Assert.Equal(TestIdentityProvider.ClientId, result.Claims["sub"]);
+    }
+
+    public sealed class Fixture : IDisposable
+    {
+        private readonly ErpApiFactory _root = new ErpApiFactory().WithTestEndpoints(routes =>
+            routes.MapGet(AccountPath, (HttpContext context) => $"{context.User.FindFirst(TestUser.HomeObjectIdClaim)?.Value}.{context.User.FindFirst(TestUser.HomeTenantIdClaim)?.Value}"));
+
+        public Fixture()
+        {
+            Factory = _root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddFakeLogging()));
+            Logs = Factory.Services.GetRequiredService<FakeLogCollector>();
+            TokenEndpoint = Factory.Services.GetRequiredService<TestTokenEndpoint>();
+        }
+
+        public WebApplicationFactory<Program> Factory { get; }
+
+        public FakeLogCollector Logs { get; }
+
+        public TestTokenEndpoint TokenEndpoint { get; }
+
+        public void Dispose()
+        {
+            Factory.Dispose();
+            _root.Dispose();
+        }
+    }
+}

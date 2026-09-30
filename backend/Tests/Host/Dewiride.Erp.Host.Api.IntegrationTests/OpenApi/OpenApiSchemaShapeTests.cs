@@ -48,7 +48,7 @@ public sealed partial class OpenApiSchemaShapeTests(ErpApiFactory factory) : ICl
         {
             foreach (var operation in path.Value.EnumerateObject())
             {
-                foreach (var response in operation.Value.GetProperty("responses").EnumerateObject().Where(r => !r.Name.StartsWith('2')))
+                foreach (var response in operation.Value.GetProperty("responses").EnumerateObject().Where(r => r.Name[0] is '4' or '5'))
                 {
                     if (!response.Value.TryGetProperty("content", out var content) || !content.TryGetProperty("application/problem+json", out _))
                     {

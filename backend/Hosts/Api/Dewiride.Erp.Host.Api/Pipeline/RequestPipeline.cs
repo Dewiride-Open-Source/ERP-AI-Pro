@@ -54,7 +54,12 @@ internal static class RequestPipeline
         app.UseForwardedHeaders();
         app.UseErpConfigurationRefresh();
         app.UseErpEndpointPipeline();
+
+        // Called explicitly: with an explicit UseRouting, .NET 10 would otherwise insert both ahead of routing. Authentication
+        // precedes the rate limiter so a signed-in person is limited as that person rather than by address.
+        app.UseAuthentication();
         app.UseErpRateLimiting();
+        app.UseAuthorization();
         app.UseFeatureGate();
         app.UseErpIdempotency();
 

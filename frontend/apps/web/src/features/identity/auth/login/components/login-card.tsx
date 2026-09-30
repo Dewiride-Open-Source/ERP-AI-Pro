@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "@dewiride/erp-ui/components/ui/alert";
 import {
   Card,
   CardContent,
@@ -6,13 +7,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@dewiride/erp-ui/components/ui/card";
-import { ShieldCheckIcon } from "lucide-react";
+import { CircleAlertIcon, ShieldCheckIcon } from "lucide-react";
 
 import { Wordmark } from "@/shared/brand/wordmark";
+import type { SearchParameters } from "@/shared/lists/list-query";
 
 import { SignInButton } from "./sign-in-button";
 
-export function LoginCard() {
+const signInFailedError = "sign-in-failed";
+
+export function LoginCard({ searchParameters }: { searchParameters: SearchParameters }) {
   return (
     <Card className="w-full max-w-md animate-fade-up border-border/60 bg-card/90 shadow-xl backdrop-blur">
       <CardHeader className="gap-3">
@@ -25,6 +29,14 @@ export function LoginCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
+        {searchParameters.error === signInFailedError ? (
+          <Alert variant="destructive">
+            <CircleAlertIcon aria-hidden />
+            <AlertDescription>
+              We could not sign you in. Try again, or ask your administrator for access.
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <SignInButton />
         <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
           <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />

@@ -5,6 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Transport;
@@ -21,7 +22,7 @@ public sealed class RequestLimitsTests : IClassFixture<RequestLimitsTests.Fixtur
 
     public RequestLimitsTests(Fixture fixture)
     {
-        _client = fixture.Factory.CreateClient();
+        _client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Theory]

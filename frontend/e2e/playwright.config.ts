@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { throwawaySignInCertificate } from "./fixtures/sign-in-certificate";
 import {
   apiBaseURL,
   baseURL,
@@ -13,6 +14,7 @@ import {
 
 const isCI = Boolean(process.env.CI);
 const browserOnly = { testIgnore: "**/tests/smoke/**" };
+const runnerStartsServers = startServers && process.env.TEST_WORKER_INDEX === undefined;
 
 export default defineConfig({
   testDir: "./tests",
@@ -40,7 +42,7 @@ export default defineConfig({
     { name: "mobile-ios", use: { ...devices["iPhone 17"] }, ...browserOnly },
     { name: "tablet-ios", use: { ...devices["iPad (gen 11)"] }, ...browserOnly },
   ],
-  ...(startServers && {
+  ...(runnerStartsServers && {
     webServer: [
       {
         command: "dotnet run --project ../../backend/Hosts/Api/Dewiride.Erp.Host.Api --no-build",
@@ -73,6 +75,10 @@ export default defineConfig({
           ASPNETCORE_URLS: gatedApiBaseURL,
           APPCONFIG_ENDPOINT: "",
           AZURE_TOKEN_CREDENTIALS: "AzureCliCredential",
+          Erp__Platform__Identity__TenantId: "11111111-1111-1111-1111-111111111111",
+          Erp__Platform__Identity__ClientId: "22222222-2222-2222-2222-222222222222",
+          Erp__Platform__Identity__WebOrigin: "http://localhost:3002",
+          Erp__Platform__Identity__ClientCertificate: throwawaySignInCertificate(),
           ...Object.fromEntries(
             gatedFeatureFlags.flatMap((flag, index) => [
               [`feature_management__feature_flags__${index}__id`, flag],

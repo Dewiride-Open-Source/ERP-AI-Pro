@@ -15,7 +15,10 @@ export const secretPattern = /^Erp--[A-Z][A-Za-z0-9]*--[A-Z][A-Za-z0-9]*--[A-Z][
 const bootstrapOnlyPrefix = "Erp:Platform:Configuration:";
 const hostLocalKeys = new Set(["Erp:Platform:Host:KnownNetworks", "Erp:Platform:Attachments:EmulatorHost"]);
 const scriptOwnedKeys: { script: string; keys: ReadonlySet<string> }[] = [
-  { script: "scripts/azure/entra.sh", keys: new Set(["Erp:Platform:Identity:TenantId", "Erp:Platform:Identity:ClientId"]) },
+  {
+    script: "scripts/azure/entra.sh",
+    keys: new Set(["Erp:Platform:Identity:TenantId", "Erp:Platform:Identity:ClientId", "Erp:Platform:Identity:WebOrigin"]),
+  },
   { script: "scripts/azure/provision.sh", keys: new Set(["Erp:Platform:Attachments:BlobServiceUri"]) },
 ];
 const secretLikeSettingPattern = /(Secret|Password|Pwd|Token|ConnectionString|ApiKey|AccessKey|PrivateKey|Certificate|EncryptionKeys?)$/i;

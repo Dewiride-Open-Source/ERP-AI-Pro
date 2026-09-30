@@ -1,6 +1,7 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Transport;
 
@@ -9,18 +10,28 @@ public sealed class TransportSecurityTests
     private const string SchemePath = "/__test/scheme";
 
     [Theory]
-    [InlineData("Development", "/api/platform/system-info", HttpStatusCode.OK)]
-    [InlineData("Production", "/api/platform/system-info", HttpStatusCode.OK)]
-    [InlineData("Development", "/api/platform/does-not-exist", HttpStatusCode.NotFound)]
-    [InlineData("Production", "/api/platform/does-not-exist", HttpStatusCode.NotFound)]
-    public async Task Get_OverARealListener_CarriesTheApiHeaders(string environment, string path, HttpStatusCode status)
+    [InlineData("Development", "/api/platform/system-info", false, HttpStatusCode.OK)]
+    [InlineData("Production", "/api/platform/system-info", false, HttpStatusCode.OK)]
+    [InlineData("Development", "/api/platform/does-not-exist", true, HttpStatusCode.NotFound)]
+    [InlineData("Production", "/api/platform/does-not-exist", true, HttpStatusCode.NotFound)]
+    [InlineData("Development", "/api/platform/does-not-exist", false, HttpStatusCode.Unauthorized)]
+    [InlineData("Production", "/api/platform/does-not-exist", false, HttpStatusCode.Unauthorized)]
+    [InlineData("Production", ErpApiFactory.ThrowingPath, true, HttpStatusCode.InternalServerError)]
+    [InlineData("Production", ErpApiFactory.ThrowingPath, false, HttpStatusCode.Unauthorized)]
+    public async Task Get_OverARealListener_CarriesTheApiHeaders(string environment, string path, bool signedIn, HttpStatusCode status)
     {
         await using var factory = ErpApiFactory.ForEnvironment(environment).WithKestrel();
         using var client = factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        if (signedIn)
+        {
+            request.AsUser(TestUsers.Accountant);
+        }
 
-        using var response = await client.GetAsync(new Uri(path, UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(status, response.StatusCode);
+        Assert.Null(response.Headers.Location);
         Assert.Equal("nosniff", Single(response, "X-Content-Type-Options"));
         Assert.Equal("strict-origin-when-cross-origin", Single(response, "Referrer-Policy"));
         Assert.Contains("camera=()", Single(response, "Permissions-Policy"), StringComparison.Ordinal);
@@ -57,7 +68,7 @@ public sealed class TransportSecurityTests
             .WithTestEndpoints(routes => routes.MapGet(SchemePath, (HttpContext context) => context.Request.IsHttps))
             .WithKestrel();
         using var client = factory.CreateClient();
-        using var request = new HttpRequestMessage(HttpMethod.Get, SchemePath);
+        using var request = new HttpRequestMessage(HttpMethod.Get, SchemePath).AsUser(TestUsers.Accountant);
         request.Headers.Host = "erp.example.com";
         request.Headers.TryAddWithoutValidation("X-Forwarded-For", "203.0.113.7");
         request.Headers.TryAddWithoutValidation("X-Forwarded-Proto", "https");

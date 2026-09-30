@@ -1,21 +1,29 @@
 using System.Net;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.OpenApi;
 
 public sealed class ProductionExposureTests
 {
     [Theory]
-    [InlineData("/openapi/erp.json")]
-    [InlineData("/scalar")]
-    public async Task Get_DevelopmentOnlyRoute_IsNotFoundInProduction(string path)
+    [InlineData("/openapi/erp.json", true, HttpStatusCode.NotFound)]
+    [InlineData("/scalar", true, HttpStatusCode.NotFound)]
+    [InlineData("/openapi/erp.json", false, HttpStatusCode.Unauthorized)]
+    [InlineData("/scalar", false, HttpStatusCode.Unauthorized)]
+    public async Task Get_DevelopmentOnlyRoute_IsNotServedInProduction(string path, bool signedIn, HttpStatusCode status)
     {
         using var factory = ErpApiFactory.ForEnvironment(Environments.Production);
         using var client = factory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        if (signedIn)
+        {
+            request.AsUser(TestUsers.Accountant);
+        }
 
-        using var response = await client.GetAsync(new Uri(path, UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(status, response.StatusCode);
     }
 
     [Fact]

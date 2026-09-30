@@ -5,6 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.RateLimiting;
@@ -14,6 +15,8 @@ public sealed class RateLimitingTests
     private const string SystemInfoFlag = "Erp.Modules.Platform.SystemInfo";
 
     private const string LimitKey = $"{RateLimitingOptions.SectionName}:AnonymousPermitLimit";
+
+    private const string ActorLimitKey = $"{RateLimitingOptions.SectionName}:ActorPermitLimit";
 
     private static readonly Uri SystemInfoPath = new("/api/platform/system-info", UriKind.Relative);
 
@@ -72,6 +75,22 @@ public sealed class RateLimitingTests
         Assert.Equal(HttpStatusCode.OK, await StatusForAsync(client, "203.0.113.7"));
         Assert.Equal(HttpStatusCode.TooManyRequests, await StatusForAsync(client, "203.0.113.7"));
         Assert.Equal(HttpStatusCode.OK, await StatusForAsync(client, "203.0.113.8"));
+    }
+
+    [Fact]
+    public async Task Get_SignedInPeopleBehindOneAddress_EachHaveTheirOwnAllowanceApartFromAnonymousCallers()
+    {
+        await using var factory = new ErpApiFactory().WithConfiguration(ActorLimitKey, "2").WithConfiguration(LimitKey, "2");
+        using var accountant = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var administrator = factory.CreateClient().AsUser(TestUsers.Administrator);
+        using var anonymous = factory.CreateClient();
+        await AssertServedAsync(accountant, SystemInfoPath, times: 2);
+
+        using var overTheLimit = await accountant.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, overTheLimit.StatusCode);
+        await AssertServedAsync(administrator, SystemInfoPath, times: 2);
+        await AssertServedAsync(anonymous, SystemInfoPath, times: 2);
     }
 
     [Fact]

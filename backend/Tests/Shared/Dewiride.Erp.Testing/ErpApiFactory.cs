@@ -1,14 +1,19 @@
 using System.Security.Cryptography;
 using Dewiride.Erp.BuildingBlocks.Attachments;
+using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
+using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Blob;
 using Dewiride.Erp.Testing.Sql;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Identity.Client;
 
 namespace Dewiride.Erp.Testing;
 
@@ -29,6 +34,18 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
     public const string AttachmentsContainerNameKey = $"{AttachmentsOptions.SectionName}:ContainerName";
 
     public const string AttachmentsEncryptionKeyKey = $"{AttachmentsOptions.SectionName}:EncryptionKey";
+
+    public const string IdentityTenantIdKey = $"{EntraSignInOptions.SectionName}:TenantId";
+
+    public const string IdentityClientIdKey = $"{EntraSignInOptions.SectionName}:ClientId";
+
+    public const string IdentityWebOriginKey = $"{EntraSignInOptions.SectionName}:WebOrigin";
+
+    public const string IdentityClientCertificateKey = $"{EntraSignInOptions.SectionName}:ClientCertificate";
+
+    public const string IdentitySessionIdleTimeoutKey = $"{EntraSignInOptions.SectionName}:SessionIdleTimeout";
+
+    public const string IdentitySessionLifetimeKey = $"{EntraSignInOptions.SectionName}:SessionLifetime";
 
     private const string FeatureFlagsSection = "feature_management:feature_flags:";
 
@@ -143,14 +160,32 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
             builder.UseSetting(AttachmentsEncryptionKeyKey, TestEncryptionKey);
         }
 
+        UseSettingUnlessSupplied(builder, IdentityTenantIdKey, TestIdentityProvider.TenantId);
+        UseSettingUnlessSupplied(builder, IdentityClientIdKey, TestIdentityProvider.ClientId);
+        UseSettingUnlessSupplied(builder, IdentityWebOriginKey, TestIdentityProvider.WebOrigin);
+        UseSettingUnlessSupplied(builder, IdentityClientCertificateKey, TestSignInCertificate.Base64);
+
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);
         builder.UseSetting("APPCONFIG_ENDPOINT", string.Empty);
         builder.UseSetting(ConfigurationSourceSetting, InMemorySource);
         builder.ConfigureServices(services =>
         {
+            services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, null);
+            services.PostConfigure<AuthenticationOptions>(options => options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName);
+            services.PostConfigure<OpenIdConnectOptions>(OpenIdConnectDefaults.AuthenticationScheme, TestIdentityProvider.Configure);
+            services.AddSingleton<TestTokenEndpoint>();
+            services.AddSingleton<IMsalHttpClientFactory>(provider => provider.GetRequiredService<TestTokenEndpoint>());
             services.AddTransient<IStartupFilter, ThrowingRouteStartupFilter>();
             services.AddTransient<IStartupFilter>(_ => new TestEndpointsStartupFilter(_testEndpoints));
         });
+    }
+
+    private void UseSettingUnlessSupplied(IWebHostBuilder builder, string key, string value)
+    {
+        if (!_configuration.ContainsKey(key))
+        {
+            builder.UseSetting(key, value);
+        }
     }
 
     private sealed class TestEndpointsStartupFilter(IReadOnlyList<Action<IEndpointRouteBuilder>> maps) : IStartupFilter

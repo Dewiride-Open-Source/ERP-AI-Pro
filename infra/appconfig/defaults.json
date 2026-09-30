@@ -20,7 +20,9 @@
         "MaximumPayloadBytes": "1048576"
       },
       "Identity": {
-        "Instance": "https://login.microsoftonline.com/"
+        "Instance": "https://login.microsoftonline.com/",
+        "SessionIdleTimeout": "00:30:00",
+        "SessionLifetime": "12:00:00"
       },
       "Database": {
         "Provider": "SqlServer",

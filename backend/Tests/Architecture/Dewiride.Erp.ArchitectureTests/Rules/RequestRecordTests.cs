@@ -12,11 +12,18 @@ public sealed class RequestRecordTests(ErpApiFactory factory) : IClassFixture<Er
 {
     private const string RequestsNamespaceSuffix = ".Endpoints.Requests";
 
-    private static readonly Type[] RequestRecords = ErpAssemblies.ModuleImplementations
+    private static readonly Type[] RequestRecords = ErpAssemblies.ModuleImplementations.Concat(ErpAssemblies.BuildingBlocks)
         .SelectMany(assembly => assembly.GetTypes())
         .Where(type => type.Namespace is { } ns && ns.EndsWith(RequestsNamespaceSuffix, StringComparison.Ordinal))
         .Where(type => !type.IsDefined(typeof(CompilerGeneratedAttribute), inherit: false))
         .ToArray();
+
+    [Fact]
+    public void RequestRecords_OfModulesAndBuildingBlocks_AreFound()
+    {
+        Assert.Contains(RequestRecords, type => type.Assembly.GetName().Name!.StartsWith(ErpAssemblies.ModulesPrefix, StringComparison.Ordinal));
+        Assert.Contains(RequestRecords, type => type.Assembly.GetName().Name!.StartsWith(ErpAssemblies.BuildingBlocksPrefix, StringComparison.Ordinal));
+    }
 
     [Fact]
     public void RequestRecords_Always_ArePublicSealedRecords()
