@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-29",
+  "updatedOn": "2026-09-30",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -776,7 +776,7 @@
           "id": "authentication-oidc-bff-in-the-api",
           "title": "OIDC BFF in the API",
           "scope": "Configure Microsoft.Identity.Web AddMicrosoftIdentityWebApp from the AzureAd section (auth code + PKCE, single tenant, explicit default and challenge schemes), /api/auth/login with validated relative-only returnUrl, /api/auth/logout and callback paths, hardened cookie options (HttpOnly, Secure, SameSite=Lax, sliding expiry), a fallback RequireAuthenticatedUser policy with an explicit AllowAnonymous allow-list, 401 ProblemDetails instead of redirects for XHR requests, and integration tests using a TestAuthHandler scheme.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
           "acceptance": [
@@ -789,7 +789,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-09-29",
-          "notes": "From backend-platform-rate-limiting-output-caching-and-health (ADR-0019): call UseAuthentication() explicitly between UseErpEndpointPipeline() and UseErpRateLimiting(), and UseAuthorization() and UseAntiforgery() after it, so a signed-in caller is rate-limited per actor instead of per address; no named rate-limit policy exists yet, so decide there whether the sign-in endpoints need a stricter one. From backend-platform-attachments-building-block (ADR-0022): remove AllowAnonymous from the seven /api/platform/attachments routes (and their entries in ModuleCatalogTests.AnonymousRouteWhitelist and docs/routing.md) and require platform.attachments.files.upload, .read and .delete; download links are bound to the IActorContext actor that created them, so once sign-in exists a link works only for the signed-in person who asked for it; the web Server Functions createDownloadLink and deleteAttachment must re-check the session before calling the API."
+          "completedOn": "2026-09-30",
+          "notes": "BuildingBlocks.Authentication (ADR-0031): Microsoft.Identity.Web sign-in with the Key Vault certificate redeeming the code, GET /api/auth/login (local returnUrl, top-level navigations only) and POST /api/auth/logout, the __Host-erp-session cookie (30 minutes idle, 12 hours absolute, accepted only while the account is in the token cache, so signing out ends every session of the person), 401 and 403 ProblemDetails without redirects, the fallback policy with the permanent and transitional anonymous lists, settings Erp:Platform:Identity:* in App Configuration only (WebOrigin per label, the two session lifetimes seeded), throwaway sign-in values for tests, CI, the compose stack and the gated Playwright API, and the owner verified a real sign-in against local-dev on 2026-09-29 and 2026-09-30."
         },
         {
           "id": "authentication-token-cache-and-data-protection-key",

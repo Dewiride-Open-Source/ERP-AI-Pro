@@ -24,12 +24,57 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
 
     private const string RefusedCode = "code-that-entra-refuses";
 
+    private const string ReturnPath = "/platform/attachments";
+
+    private const string AccountPath = "/__test/account";
+
+    private const string ClearedCookie = "expires=Thu, 01 Jan 1970";
+
     private readonly Fixture _fixture;
 
     public SignInCallbackTests(Fixture fixture)
     {
         _fixture = fixture;
         _fixture.Logs.Clear();
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_IssuesASessionTheAccountCheckAccepts()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Accountant)));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(ReturnPath, response.Headers.Location?.OriginalString);
+        using var browser = TestSignIn.CreateClient(_fixture.Factory);
+        using var signedIn = await GetAccountWithOnlyTheSessionCookieAsync(browser, SessionCookieValueOf(response));
+        Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        Assert.Equal(TestUsers.Accountant.AccountId, await signedIn.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.DoesNotContain(_fixture.Logs.GetSnapshot(), record => record.Category == typeof(SignInEvents).FullName);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithoutClientInfo_IssuesASessionTheNextRequestRefusesAndClears()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(ReturnPath, response.Headers.Location?.OriginalString);
+        Assert.True(await TestSignIn.IsAccountCachedAsync(_fixture.Factory.Services, TestUsers.Accountant));
+        using var browser = TestSignIn.CreateClient(_fixture.Factory);
+        using var refused = await GetAccountWithOnlyTheSessionCookieAsync(browser, SessionCookieValueOf(response));
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+        var cleared = Assert.Single(refused.Headers.GetValues("Set-Cookie"), cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
+        Assert.Contains(ClearedCookie, cleared, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -140,10 +185,26 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
 
     private static async Task<Dictionary<string, StringValues>> ChallengeAsync(HttpClient client)
     {
-        using var response = await client.GetAsync(new Uri($"{AuthPaths.Login}?returnUrl=%2F", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(new Uri($"{AuthPaths.Login}?returnUrl={Uri.EscapeDataString(ReturnPath)}", UriKind.Relative), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
 
         return QueryHelpers.ParseQuery(response.Headers.Location!.Query);
+    }
+
+    private static string SessionCookieValueOf(HttpResponseMessage response)
+    {
+        var cookies = response.Headers.TryGetValues("Set-Cookie", out var values) ? values : [];
+        var cookie = Assert.Single(cookies, value => value.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
+
+        return cookie.Split(';')[0][(SessionCookie.Length + 1)..];
+    }
+
+    private static async Task<HttpResponseMessage> GetAccountWithOnlyTheSessionCookieAsync(HttpClient client, string sessionCookie)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, AccountPath);
+        request.Headers.Add("Cookie", $"{SessionCookie}={sessionCookie}");
+
+        return await client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
     private static string Single(Dictionary<string, StringValues> query, string name) => Assert.Single(query[name])!;
@@ -203,7 +264,8 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
 
     public sealed class Fixture : IDisposable
     {
-        private readonly ErpApiFactory _root = new();
+        private readonly ErpApiFactory _root = new ErpApiFactory().WithTestEndpoints(routes =>
+            routes.MapGet(AccountPath, (HttpContext context) => $"{context.User.FindFirst(TestUser.HomeObjectIdClaim)?.Value}.{context.User.FindFirst(TestUser.HomeTenantIdClaim)?.Value}"));
 
         public Fixture()
         {

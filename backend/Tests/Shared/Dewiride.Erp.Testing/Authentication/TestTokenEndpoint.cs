@@ -11,7 +11,8 @@ namespace Dewiride.Erp.Testing.Authentication;
 // MSAL sends every request of a test host through this client instead of one that reaches Entra. The token endpoint
 // redeems a code from CodeFor as Entra redeems the code of a person who signed in, with the tokens and client info that
 // put the person's account in the token cache, and refuses every other code as Entra refuses an expired one; instance
-// discovery answers with the aliases of the public cloud. Anything else fails the request that sent it.
+// discovery answers with the aliases of the public cloud. Anything else fails the request that sent it. ClientInfoFor is
+// the client info Entra also posts to the callback with the code, from which Microsoft.Identity.Web adds uid and utid.
 public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 {
     public const string RefusedCodeError = "invalid_grant";
@@ -38,6 +39,17 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         ArgumentNullException.ThrowIfNull(user);
 
         return CodePrefix + user.ObjectId.ToString("D");
+    }
+
+    public static string ClientInfoFor(TestUser user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        return Encode(new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["uid"] = user.ObjectId.ToString("D"),
+            ["utid"] = TestIdentityProvider.TenantId,
+        });
     }
 
     public HttpClient GetHttpClient() => _client;
@@ -104,11 +116,6 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             ["preferred_username"] = user.UserName,
             ["ver"] = "2.0",
         };
-        var clientInfo = new Dictionary<string, object>(StringComparer.Ordinal)
-        {
-            ["uid"] = user.ObjectId.ToString("D"),
-            ["utid"] = TestIdentityProvider.TenantId,
-        };
 
         return new Dictionary<string, object>(StringComparer.Ordinal)
         {
@@ -119,7 +126,7 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             ["access_token"] = $"test-access-token.{user.ObjectId:N}",
             ["refresh_token"] = $"test-refresh-token.{user.ObjectId:N}",
             ["id_token"] = $"{Encode(new Dictionary<string, object>(StringComparer.Ordinal) { ["alg"] = "none", ["typ"] = "JWT" })}.{Encode(idToken)}.",
-            ["client_info"] = Encode(clientInfo),
+            ["client_info"] = ClientInfoFor(user),
         };
     }
 

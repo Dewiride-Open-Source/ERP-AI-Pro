@@ -18,9 +18,11 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 // form, so a refused request answers a problem without a Location header. Sliding renewal re-issues the cookie with the
 // same properties, so the sign-in time stamped here bounds the whole session however often it slides. The handler alone
 // renews only after half the idle timeout, so a person idle for just over half of it could be signed out; renewing on the
-// first request after a minute keeps every session alive for the idle timeout less at most a minute. Signing out removes
-// the person's account from the token cache, and a restart of the API empties the in-memory cache, so a session whose
-// account is missing from the cache is refused and cleared: every copy of a signed-out cookie stops working at once.
+// first request more than a minute, or half the idle timeout when that is shorter, after the cookie was issued keeps every
+// session alive for the idle timeout less at most that interval, and lets a session of the shortest idle timeout slide.
+// The token cache holds one entry per person, the account that signing out removes, and a restart of the API empties the
+// in-memory cache, so a session whose account is missing from the cache is refused and cleared: signing out ends every
+// session of that person, on every device and browser, at once.
 internal sealed class SessionCookieEvents(
     TimeProvider timeProvider,
     IOptions<EntraSignInOptions> signIn,
@@ -33,7 +35,7 @@ internal sealed class SessionCookieEvents(
 
     public const string ForbiddenTitle = "The signed-in person may not do this.";
 
-    private static readonly TimeSpan RenewalInterval = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan MaxRenewalInterval = TimeSpan.FromMinutes(1);
 
     public override Task RedirectToLogin(RedirectContext<CookieAuthenticationOptions> context)
     {
@@ -76,7 +78,8 @@ internal sealed class SessionCookieEvents(
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        context.ShouldRenew = context.ElapsedTime > RenewalInterval;
+        var halfIdleTimeout = signIn.Value.SessionIdleTimeout / 2;
+        context.ShouldRenew = context.ElapsedTime > (halfIdleTimeout < MaxRenewalInterval ? halfIdleTimeout : MaxRenewalInterval);
 
         return Task.CompletedTask;
     }

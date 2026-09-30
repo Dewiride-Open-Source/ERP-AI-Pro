@@ -16,6 +16,8 @@ public sealed class SessionCookieTests
 
     private const string ClearedCookie = "expires=Thu, 01 Jan 1970";
 
+    private const string MinimumIdleTimeout = "00:01:00";
+
     private static readonly TimeSpan DefaultIdleTimeout = TimeSpan.FromMinutes(30);
 
     [Fact]
@@ -90,9 +92,26 @@ public sealed class SessionCookieTests
         Assert.Equal(HttpStatusCode.OK, stillSignedIn.StatusCode);
     }
 
+    [Fact]
+    public async Task Get_EveryFortySecondsAtTheMinimumIdleTimeout_RenewsTheCookieAndStaysSignedInPastTheFirstMinute()
+    {
+        using var session = new Session(idleTimeout: MinimumIdleTimeout);
+        using var signIn = await session.SignInAsync();
+
+        for (var request = 1; request <= 4; request++)
+        {
+            session.Clock.Advance(TimeSpan.FromSeconds(40));
+            using var response = await session.GetAsync();
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.NotNull(SessionCookieOf(response));
+        }
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("00:10:00")]
+    [InlineData(MinimumIdleTimeout)]
     public async Task Get_ASecondBeforeTheIdleTimeout_IsStillSignedIn(string? idleTimeout)
     {
         using var session = new Session(idleTimeout: idleTimeout);
@@ -107,6 +126,7 @@ public sealed class SessionCookieTests
     [Theory]
     [InlineData(null)]
     [InlineData("00:10:00")]
+    [InlineData(MinimumIdleTimeout)]
     public async Task Get_ASecondAfterTheIdleTimeout_AnswersUnauthenticated(string? idleTimeout)
     {
         using var session = new Session(idleTimeout: idleTimeout);
@@ -171,6 +191,27 @@ public sealed class SessionCookieTests
     }
 
     [Fact]
+    public async Task Get_WithAnotherSessionOfThePersonOnceTheySignedOutElsewhere_AnswersUnauthenticatedAndClearsTheCookie()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+        using var otherDevice = TestSignIn.CreateClient(session.Factory);
+        using var otherSignIn = await TestSignIn.SignInAsync(otherDevice, TestUsers.Accountant);
+        Assert.NotEqual(CookieValueOf(signIn), CookieValueOf(otherSignIn));
+        using (var beforeSignOut = await GetObjectIdAsync(otherDevice))
+        {
+            Assert.Equal(HttpStatusCode.OK, beforeSignOut.StatusCode);
+        }
+
+        using var signOut = await session.SignOutAsync();
+        using var response = await GetObjectIdAsync(otherDevice);
+
+        Assert.Equal(HttpStatusCode.Found, signOut.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains(ClearedCookie, SessionCookieOf(response), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task Get_WhenTheTokenCacheHoldsNoAccountForTheSession_AnswersUnauthenticatedAndClearsTheCookie()
     {
         using var session = new Session();
@@ -195,6 +236,9 @@ public sealed class SessionCookieTests
 
     private static string CookieValueOf(HttpResponseMessage response) =>
         SessionCookieOf(response)!.Split(';')[0][(SessionCookie.Length + 1)..];
+
+    private static Task<HttpResponseMessage> GetObjectIdAsync(HttpClient client) =>
+        client.GetAsync(new Uri(ObjectIdPath, UriKind.Relative), TestContext.Current.CancellationToken);
 
     private sealed class Session : IDisposable
     {
@@ -231,7 +275,7 @@ public sealed class SessionCookieTests
 
         public Task<HttpResponseMessage> SignOutAsync() => _client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
 
-        public Task<HttpResponseMessage> GetAsync() => _client.GetAsync(new Uri(ObjectIdPath, UriKind.Relative), TestContext.Current.CancellationToken);
+        public Task<HttpResponseMessage> GetAsync() => GetObjectIdAsync(_client);
 
         public async Task<HttpResponseMessage> GetWithCookieAsync(string cookieValue)
         {
