@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
-import type { APIRequestContext, APIResponse, Page, Request, Response } from "@playwright/test";
+import type { APIRequestContext, Page, Request, Response } from "@playwright/test";
 
 import { png, type FileUpload } from "../../../fixtures/files";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
@@ -311,28 +311,45 @@ test.describe("attachments page", () => {
   test.describe("when the API refuses the upload's antiforgery token", () => {
     test.use({ expectedConsoleError: /the server responded with a status of 400/ });
 
-    test("renews the token once and sends the upload once more", async ({ page }) => {
+    test("renews the token once and sends the upload once more with the renewed token", async ({
+      page,
+      baseURL,
+    }) => {
       const attachments = new AttachmentsPage(page);
       const file = png();
-      const stored: APIResponse[] = [];
-      let uploads = 0;
+      // WebKit keeps a Secure cookie over http://localhost but neither sends it back nor shows it to scripts (ADR-0033), and it
+      // sometimes forwards an intercepted multipart request with an empty file part, so there the page holds no token and
+      // the upload sent once more is answered with the API's answer to the same file sent by the test.
+      const keepsSecureCookies = page.context().browser()?.browserType().name() !== "webkit";
+      const requestToken = (value: string) => ({
+        name: "__Host-erp-xsrf",
+        value,
+        domain: new URL(baseURL!).hostname,
+        path: "/",
+        secure: true,
+        sameSite: "Lax" as const,
+      });
+      const sentTokens: (string | undefined)[] = [];
+      const stored: Response[] = [];
       let renewals = 0;
+      page.on("response", (response) => {
+        if (isUpload(response) && response.status() === 201) stored.push(response);
+      });
       await attachments.goto();
+      if (keepsSecureCookies) await page.context().addCookies([requestToken("first-token")]);
 
       await page.route(`**${antiforgeryRenewalApi}`, async (route) => {
         renewals += 1;
+        if (keepsSecureCookies) await page.context().addCookies([requestToken("renewed-token")]);
         await route.fulfill({ status: 204 });
       });
-      // WebKit intercepts every request while a route is registered and sometimes forwards an intercepted multipart request
-      // with an empty file part, so the upload sent once more is answered with the API's answer to the same file sent by the
-      // test, never forwarded.
       await page.route(`**${attachmentsApi}`, async (route) => {
         if (!isUploadRequest(route.request())) {
           await route.fallback();
           return;
         }
-        uploads += 1;
-        if (uploads === 1) {
+        sentTokens.push(route.request().headers()["x-xsrf-token"]);
+        if (sentTokens.length === 1) {
           await route.fulfill({
             status: 400,
             contentType: "application/problem+json",
@@ -345,9 +362,11 @@ test.describe("attachments page", () => {
           });
           return;
         }
-        const response = await page.request.post(attachmentsApi, { multipart: { file } });
-        stored.push(response);
-        await route.fulfill({ response });
+        if (keepsSecureCookies) {
+          await route.continue();
+          return;
+        }
+        await route.fulfill({ response: await page.request.post(attachmentsApi, { multipart: { file } }) });
       });
 
       try {
@@ -357,10 +376,11 @@ test.describe("attachments page", () => {
         await expect(attachments.uploadStatus).toHaveAttribute("data-state", "uploaded");
         await expect(attachments.row(file.name)).toBeVisible();
         expect(renewals).toBe(1);
-        expect(uploads).toBe(2);
+        expect(sentTokens).toEqual(
+          keepsSecureCookies ? ["first-token", "renewed-token"] : [undefined, undefined],
+        );
       } finally {
-        const created = stored.filter((response) => response.status() === 201);
-        await deleteAttachments(page.request, await Promise.all(created.map(createdAttachmentId)));
+        await deleteAttachments(page.request, await Promise.all(stored.map(createdAttachmentId)));
       }
     });
   });

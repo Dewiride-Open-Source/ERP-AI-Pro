@@ -36,6 +36,15 @@ export type AntiforgeryExchange<TAnswer> = {
   readonly renew: (() => Promise<AntiforgeryRenewal<TAnswer>>) | undefined;
 };
 
+export type ApiFetch = (url: string, init: RequestInit) => Promise<Response>;
+
+export type AntiforgeryFetchOptions = {
+  readonly fetch: ApiFetch;
+  readonly renewalUrl: string;
+  readonly renewalHeaders: () => Promise<Readonly<Record<string, string>>>;
+  readonly relay: (renewed: readonly SetCookie[]) => Promise<void>;
+};
+
 type CookiePair = { readonly name: string; readonly value: string; readonly text: string };
 
 const unsafeMethods: ReadonlySet<string> = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -158,6 +167,62 @@ export async function sendWithAntiforgery<TAnswer>({
     case "failed":
       return answer;
   }
+}
+
+// The fetch of the web server's API client: the request token comes from the cookie header it forwards, and a renewed pair
+// is relayed to the browser as well as merged into the request sent once more.
+export function antiforgeryFetch({
+  fetch,
+  renewalUrl,
+  renewalHeaders,
+  relay,
+}: AntiforgeryFetchOptions): ApiFetch {
+  const renew = async (cookieHeader: string): Promise<AntiforgeryRenewal<Response>> => {
+    const response = await fetch(renewalUrl, {
+      headers: { ...(await renewalHeaders()), accept: "application/json" },
+    }).catch(() => undefined);
+    if (response?.status === 204) {
+      const renewed = response.headers.getSetCookie().flatMap((header) => parseSetCookie(header) ?? []);
+      await relay(renewed);
+      return { outcome: "renewed", cookies: mergeCookies(cookieHeader, renewed) };
+    }
+    if (response?.status === 401) return { outcome: "unauthenticated", answer: response };
+    await response?.body?.cancel();
+    return { outcome: "failed" };
+  };
+
+  return (url, init) => {
+    const requestHeaders = new Headers(init.headers);
+    const cookieHeader = requestHeaders.get("cookie") ?? "";
+    return sendWithAntiforgery({
+      method: init.method,
+      cookies: cookieHeader,
+      send: (attempt) => fetch(url, { ...init, headers: attemptHeaders(requestHeaders, attempt) }),
+      isRefusal: isAntiforgeryRefusalResponse,
+      // A streamed body is read by the first send, so that request cannot be sent again.
+      renew: init.body instanceof ReadableStream ? undefined : () => renew(cookieHeader),
+    });
+  };
+}
+
+function attemptHeaders(
+  requestHeaders: Headers,
+  { cookies: cookieHeader, token }: AntiforgeryAttempt,
+): Headers {
+  const attempt = new Headers(requestHeaders);
+  if (cookieHeader === "") attempt.delete("cookie");
+  else attempt.set("cookie", cookieHeader);
+  if (token !== undefined) attempt.set(antiforgeryHeaderName, token);
+  return attempt;
+}
+
+async function isAntiforgeryRefusalResponse(response: Response): Promise<boolean> {
+  if (response.status !== 400) return false;
+  const body: unknown = await response
+    .clone()
+    .json()
+    .catch(() => undefined);
+  return isAntiforgeryRefusal(response.status, body);
 }
 
 function cookiePairs(cookies: string | null | undefined): readonly CookiePair[] {

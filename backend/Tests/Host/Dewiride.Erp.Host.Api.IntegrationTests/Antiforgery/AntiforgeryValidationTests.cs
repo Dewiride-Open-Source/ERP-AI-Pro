@@ -20,7 +20,7 @@ public sealed class AntiforgeryValidationTests(AntiforgeryValidationTests.Fixtur
 
     public static TheoryData<string> DataChangingMethods => ["POST", "PUT", "PATCH", "DELETE"];
 
-    public static TheoryData<string> SafeMethods => ["GET", "HEAD"];
+    public static TheoryData<string> SafeMethods => ["GET", "HEAD", "OPTIONS", "TRACE"];
 
     [Theory]
     [MemberData(nameof(DataChangingMethods))]
@@ -66,7 +66,44 @@ public sealed class AntiforgeryValidationTests(AntiforgeryValidationTests.Fixtur
 
         using var response = await SendAsync(client, HttpMethod.Post, TokenCookies.ChangesPath, requestToken: "not-a-token-the-api-issued");
 
-        await AssertRefusedAsync(response, AntiforgeryProblems.TokenInvalid);
+        await AssertRefusedAsync(response, "antiforgery.token-invalid");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Post_TokenOnlyInAFormFieldOfAnEndpointThatReadsNoForm_AnswersTokenMissing(bool multipart)
+    {
+        using var client = TestSignIn.CreateClientWithoutRequestToken(fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+        var token = TokenCookies.RequestTokenOf(signIn);
+        using HttpContent form = multipart
+            ? new MultipartFormDataContent { { new StringContent(token), AntiforgeryTokens.FormFieldName } }
+            : new FormUrlEncodedContent([KeyValuePair.Create(AntiforgeryTokens.FormFieldName, token)]);
+
+        using var response = await client.PostAsync(new Uri(TokenCookies.ChangesPath, UriKind.Relative), form, TestContext.Current.CancellationToken);
+
+        await AssertRefusedAsync(response, AntiforgeryProblems.TokenMissing);
+    }
+
+    [Fact]
+    public async Task Post_UploadWithTheTokenOnlyInAFormPart_IsRefusedAndStoresNothing()
+    {
+        using var client = TestSignIn.CreateClientWithoutRequestToken(fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+        var fileName = $"forged-form-token-{Guid.CreateVersion7():N}.txt";
+        using var file = new ByteArrayContent("an agreement the person signed"u8.ToArray());
+        file.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+        using var form = new MultipartFormDataContent
+        {
+            { new StringContent(TokenCookies.RequestTokenOf(signIn)), AntiforgeryTokens.FormFieldName },
+            { file, "file", fileName },
+        };
+
+        using var response = await client.PostAsync(new Uri(AttachmentsPath, UriKind.Relative), form, TestContext.Current.CancellationToken);
+
+        await AssertRefusedAsync(response, AntiforgeryProblems.TokenMissing);
+        Assert.Equal(0, await CountStoredAsync(client, fileName));
     }
 
     [Fact]
@@ -210,7 +247,8 @@ public sealed class AntiforgeryValidationTests(AntiforgeryValidationTests.Fixtur
         using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         var root = problem.RootElement;
         Assert.Equal(400, root.GetProperty("status").GetInt32());
-        Assert.Equal(ProblemTypes.ToTypeUri(AntiforgeryProblems.TokenMissing), root.GetProperty("type").GetString());
+        Assert.Equal("/problems/antiforgery.token-missing", root.GetProperty("type").GetString());
+        Assert.Equal("antiforgery.token-missing", root.GetProperty("code").GetString());
         Assert.Equal(AntiforgeryProblems.Title, root.GetProperty("title").GetString());
         Assert.Equal(AntiforgeryProblems.TokenMissingDetail, root.GetProperty("detail").GetString());
         Assert.Equal(TokenCookies.ChangesPath, root.GetProperty("instance").GetString());
@@ -225,6 +263,7 @@ public sealed class AntiforgeryValidationTests(AntiforgeryValidationTests.Fixtur
         using var client = TestSignIn.CreateClientWithoutRequestToken(factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
         var issued = TokenCookies.RequestTokenOf(signIn);
+        string[] carried = [issued, TokenCookies.ValueOf(signIn, AntiforgeryTokens.CookieName), TokenCookies.ValueOf(signIn, TokenCookies.SessionCookieName)];
         var logs = factory.Services.GetRequiredService<FakeLogCollector>();
         logs.Clear();
 
@@ -236,10 +275,7 @@ public sealed class AntiforgeryValidationTests(AntiforgeryValidationTests.Fixtur
         Assert.Equal(AntiforgeryProblems.TokenInvalid, record.GetStructuredStateValue("Code"));
         Assert.Equal("POST", record.GetStructuredStateValue("Method"));
         Assert.Equal(TokenCookies.ChangesPath, record.GetStructuredStateValue("Path"));
-        Assert.DoesNotContain(logs.GetSnapshot(), entry =>
-            entry.Message.Contains(issued, StringComparison.Ordinal)
-            || (entry.Exception?.ToString().Contains(issued, StringComparison.Ordinal) ?? false)
-            || (entry.StructuredState?.Any(pair => pair.Value?.Contains(issued, StringComparison.Ordinal) ?? false) ?? false));
+        Assert.DoesNotContain(logs.GetSnapshot(), entry => carried.Any(value => Carries(entry, value)));
     }
 
     private static async Task<HttpResponseMessage> SendAsync(HttpClient client, HttpMethod method, string path, string? requestToken = null, string? idempotencyKey = null)
@@ -275,6 +311,11 @@ public sealed class AntiforgeryValidationTests(AntiforgeryValidationTests.Fixtur
 
         return page.RootElement.GetProperty("totalCount").GetInt32();
     }
+
+    private static bool Carries(FakeLogRecord record, string value) =>
+        record.Message.Contains(value, StringComparison.Ordinal)
+        || (record.Exception?.ToString().Contains(value, StringComparison.Ordinal) ?? false)
+        || (record.StructuredState?.Any(pair => pair.Value?.Contains(value, StringComparison.Ordinal) ?? false) ?? false);
 
     private static async Task AssertRefusedAsync(HttpResponseMessage response, string code)
     {

@@ -13,6 +13,7 @@ export interface AntiforgeryRequestBuilder extends BaseRequestBuilder<Antiforger
     /**
      * Issues the signed-in person's antiforgery tokens again: the request token in the readable cookie __Host-erp-xsrf, sent back in the X-XSRF-TOKEN header of every POST, PUT, PATCH and DELETE.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
+     * @throws {ProblemDetails} error when the service returns a 400 status code
      * @throws {ProblemDetails} error when the service returns a 401 status code
      * @throws {ProblemDetails} error when the service returns a 429 status code
      * @throws {ProblemDetails} error when the service returns a 500 status code
@@ -38,6 +39,7 @@ export const AntiforgeryRequestBuilderRequestsMetadata: RequestsMetadata = {
         uriTemplate: AntiforgeryRequestBuilderUriTemplate,
         responseBodyContentType: "application/problem+json",
         errorMappings: {
+            400: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             401: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             429: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             500: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,

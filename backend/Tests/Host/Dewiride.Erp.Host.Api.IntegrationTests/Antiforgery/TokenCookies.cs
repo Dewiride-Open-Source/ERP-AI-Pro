@@ -17,7 +17,7 @@ internal static class TokenCookies
     public static void MapSignInAndChanges(IEndpointRouteBuilder routes)
     {
         TestSignIn.Map(routes);
-        routes.MapMethods(ChangesPath, ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"], () => Results.NoContent()).AllowAnonymous();
+        routes.MapMethods(ChangesPath, ["GET", "HEAD", "OPTIONS", "TRACE", "POST", "PUT", "PATCH", "DELETE"], () => Results.NoContent()).AllowAnonymous();
         routes.MapPost(ProtectedChangesPath, () => Results.NoContent());
     }
 

@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
+  antiforgeryFetch,
+  antiforgeryHeaderName,
   antiforgeryRenewalPath,
   isAntiforgeryRefusal,
   isUnsafeMethod,
@@ -499,4 +501,192 @@ test("sendWithAntiforgery_SendThatRejects_RejectsWithoutRenewing", async () => {
     (thrown) => thrown === failure,
   );
   assert.equal(renewals, 0);
+});
+
+test("antiforgeryNames_SharedWithTheApi_AreTheNamesTheApiReads", () => {
+  assert.equal(antiforgeryHeaderName, "X-XSRF-TOKEN");
+  assert.equal(requestTokenCookieName, "__Host-erp-xsrf");
+});
+
+type Fetched = { readonly url: string; readonly init: RequestInit };
+
+const apiUrl = "http://api.internal/api/platform/attachments/0199a4c2-7d1e-7c3a-9f1b-2b6d4e8a1c00";
+
+const renewalUrl = "http://api.internal/api/auth/antiforgery";
+
+const forwardedCookie = `__Host-erp-session=session; ${requestTokenCookieName}=first-token; ${antiforgeryCookieName}=first-cookie-token`;
+
+function problemResponse(status: number, code: string): Response {
+  return new Response(JSON.stringify({ status, type: `/problems/${code}`, code }), {
+    status,
+    headers: { "content-type": "application/problem+json" },
+  });
+}
+
+function renewedPair(): Response {
+  return new Response(null, {
+    status: 204,
+    headers: [
+      ["set-cookie", `${requestTokenCookieName}=renewed-token; path=/; secure; samesite=lax`],
+      [
+        "set-cookie",
+        `${antiforgeryCookieName}=renewed-cookie-token; path=/; secure; samesite=strict; httponly`,
+      ],
+    ],
+  });
+}
+
+function apiFetch(answers: readonly (Response | Error)[]) {
+  const fetched: Fetched[] = [];
+  const relayed: SetCookie[][] = [];
+  const pending = [...answers];
+  const send = antiforgeryFetch({
+    fetch: (url, init) => {
+      fetched.push({ url, init });
+      const answer = pending.shift();
+      if (answer === undefined) return Promise.reject(new Error("fetched more often than expected"));
+      return answer instanceof Error ? Promise.reject(answer) : Promise.resolve(answer);
+    },
+    renewalUrl,
+    renewalHeaders: () => Promise.resolve({ cookie: forwardedCookie, traceparent: "00-renewal" }),
+    relay: (renewed) => {
+      relayed.push([...renewed]);
+      return Promise.resolve();
+    },
+  });
+  return { send, fetched, relayed };
+}
+
+function headerOf({ init }: Fetched, name: string): string | null {
+  return new Headers(init.headers).get(name);
+}
+
+test("antiforgeryFetch_CallThatChangesData_SendsTheRequestTokenOfTheForwardedCookie", async () => {
+  for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
+    const { send, fetched } = apiFetch([new Response(null, { status: 204 })]);
+
+    const response = await send(apiUrl, {
+      method,
+      headers: { cookie: forwardedCookie, traceparent: "00-call" },
+      body: "{}",
+    });
+
+    assert.equal(response.status, 204, method);
+    assert.equal(fetched.length, 1, method);
+    assert.equal(fetched[0]?.url, apiUrl, method);
+    assert.equal(headerOf(fetched[0]!, "x-xsrf-token"), "first-token", method);
+    assert.equal(headerOf(fetched[0]!, "cookie"), forwardedCookie, method);
+    assert.equal(headerOf(fetched[0]!, "traceparent"), "00-call", method);
+    assert.equal(fetched[0]?.init.body, "{}", method);
+  }
+});
+
+test("antiforgeryFetch_SafeCall_SendsNoRequestToken", async () => {
+  for (const method of ["GET", "HEAD", undefined]) {
+    const { send, fetched } = apiFetch([new Response("[]", { status: 200 })]);
+
+    const headers = { cookie: forwardedCookie };
+    await send(apiUrl, method === undefined ? { headers } : { method, headers });
+
+    assert.equal(headerOf(fetched[0]!, "x-xsrf-token"), null, String(method));
+  }
+});
+
+test("antiforgeryFetch_CallWithoutTheRequestTokenCookie_SendsNoToken", async () => {
+  const { send, fetched } = apiFetch([new Response(null, { status: 204 })]);
+
+  await send(apiUrl, { method: "DELETE", headers: { cookie: "__Host-erp-session=session" } });
+
+  assert.equal(headerOf(fetched[0]!, "x-xsrf-token"), null);
+});
+
+test("antiforgeryFetch_AntiforgeryRefusal_RenewsOnceRelaysThePairAndSendsOnceMoreWithIt", async () => {
+  const { send, fetched, relayed } = apiFetch([
+    problemResponse(400, "antiforgery.token-invalid"),
+    renewedPair(),
+    new Response(null, { status: 204 }),
+  ]);
+
+  const response = await send(apiUrl, { method: "DELETE", headers: { cookie: forwardedCookie } });
+
+  assert.equal(response.status, 204);
+  assert.equal(fetched.length, 3);
+  assert.equal(fetched[1]?.url, renewalUrl);
+  assert.equal(fetched[1]?.init.method, undefined);
+  assert.equal(headerOf(fetched[1]!, "cookie"), forwardedCookie);
+  assert.equal(headerOf(fetched[1]!, "traceparent"), "00-renewal");
+  assert.equal(headerOf(fetched[1]!, "accept"), "application/json");
+  assert.deepEqual(relayed, [
+    [
+      setCookie(requestTokenCookieName, "renewed-token", { secure: true, sameSite: "lax", path: "/" }),
+      setCookie(antiforgeryCookieName, "renewed-cookie-token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        path: "/",
+      }),
+    ],
+  ]);
+  assert.equal(fetched[2]?.url, apiUrl);
+  assert.equal(fetched[2]?.init.method, "DELETE");
+  assert.equal(headerOf(fetched[2]!, "x-xsrf-token"), "renewed-token");
+  assert.equal(
+    headerOf(fetched[2]!, "cookie"),
+    `__Host-erp-session=session; ${requestTokenCookieName}=renewed-token; ${antiforgeryCookieName}=renewed-cookie-token`,
+  );
+});
+
+test("antiforgeryFetch_RefusalWhoseRenewalAnswersUnauthenticated_ReturnsThatAnswerWithoutRelaying", async () => {
+  const { send, fetched, relayed } = apiFetch([
+    problemResponse(400, "antiforgery.token-missing"),
+    problemResponse(401, "request.unauthenticated"),
+  ]);
+
+  const response = await send(apiUrl, { method: "POST", headers: { cookie: forwardedCookie }, body: "{}" });
+
+  assert.equal(response.status, 401);
+  assert.equal(fetched.length, 2);
+  assert.deepEqual(relayed, []);
+});
+
+test("antiforgeryFetch_RefusalWhoseRenewalFails_ReturnsTheRefusalWithItsBodyStillReadable", async () => {
+  for (const renewal of [new Response("unavailable", { status: 503 }), new Error("connect ECONNREFUSED")]) {
+    const { send, fetched, relayed } = apiFetch([problemResponse(400, "antiforgery.token-missing"), renewal]);
+
+    const response = await send(apiUrl, { method: "POST", headers: { cookie: forwardedCookie }, body: "{}" });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), {
+      status: 400,
+      type: "/problems/antiforgery.token-missing",
+      code: "antiforgery.token-missing",
+    });
+    assert.equal(fetched.length, 2);
+    assert.deepEqual(relayed, []);
+  }
+});
+
+test("antiforgeryFetch_OtherBadRequest_IsReturnedWithoutRenewing", async () => {
+  const { send, fetched } = apiFetch([problemResponse(400, "request.invalid")]);
+
+  const response = await send(apiUrl, { method: "POST", headers: { cookie: forwardedCookie }, body: "{}" });
+
+  assert.equal(response.status, 400);
+  assert.equal(((await response.json()) as { code: string }).code, "request.invalid");
+  assert.equal(fetched.length, 1);
+});
+
+test("antiforgeryFetch_RefusalOfAStreamedBody_IsReturnedWithoutRenewing", async () => {
+  const { send, fetched } = apiFetch([problemResponse(400, "antiforgery.token-missing")]);
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode("{}"));
+      controller.close();
+    },
+  });
+
+  const response = await send(apiUrl, { method: "POST", headers: { cookie: forwardedCookie }, body });
+
+  assert.equal(response.status, 400);
+  assert.equal(fetched.length, 1);
 });

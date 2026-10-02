@@ -81,7 +81,7 @@ internal sealed class SessionCookieEvents(
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        AntiforgeryCookies.Clear(context.Response);
+        AntiforgeryCookies.Clear(context.HttpContext);
 
         return Task.CompletedTask;
     }

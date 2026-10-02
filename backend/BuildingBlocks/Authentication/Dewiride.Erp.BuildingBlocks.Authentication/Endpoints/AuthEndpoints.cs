@@ -32,7 +32,11 @@ internal static class AuthEndpoints
 
     public const string FetchDestinationHeader = "Sec-Fetch-Dest";
 
+    public const string FetchSiteHeader = "Sec-Fetch-Site";
+
     public const string NotAPageMessage = "The sign-in starts only from a page the browser opens itself, never from an image, a frame or a script.";
+
+    public const string NotThisSiteMessage = "The antiforgery tokens are issued again only to a script of this site, never to a page, an image or a frame another site opens.";
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
@@ -63,6 +67,7 @@ internal static class AuthEndpoints
             .WithName(AntiforgeryRouteName)
             .WithSummary("Issues the signed-in person's antiforgery tokens again: the request token in the readable cookie __Host-erp-xsrf, sent back in the X-XSRF-TOKEN header of every POST, PUT, PATCH and DELETE.")
             .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
     }
 
@@ -97,8 +102,15 @@ internal static class AuthEndpoints
             [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
     }
 
-    private static NoContent IssueAntiforgeryTokens(HttpContext httpContext, AntiforgeryCookies cookies)
+    // A page, image or frame of another site that sends the browser here would replace the person's tokens and break a token a
+    // page of this site already holds; the web app's own calls are same-origin, and its server sends no Sec-Fetch-Site.
+    private static Results<NoContent, ProblemHttpResult> IssueAntiforgeryTokens(HttpContext httpContext, AntiforgeryCookies cookies)
     {
+        if (!IsAbsentOrExactly(httpContext.Request.Headers[FetchSiteHeader], "same-origin"))
+        {
+            return Error.Validation(ProblemTypes.RequestInvalid, NotThisSiteMessage).ToProblem();
+        }
+
         cookies.Issue(httpContext, httpContext.User);
 
         return TypedResults.NoContent();
