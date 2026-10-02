@@ -7,39 +7,37 @@ import { createProblemDetailsFromDiscriminatorValue, type ProblemDetails } from 
 import { type BaseRequestBuilder, type Parsable, type ParsableFactory, type RequestConfiguration, type RequestInformation, type RequestsMetadata } from '@microsoft/kiota-abstractions';
 
 /**
- * Builds and executes requests for operations under /api/auth/logout
+ * Builds and executes requests for operations under /api/auth/antiforgery
  */
-export interface LogoutRequestBuilder extends BaseRequestBuilder<LogoutRequestBuilder> {
+export interface AntiforgeryRequestBuilder extends BaseRequestBuilder<AntiforgeryRequestBuilder> {
     /**
-     * Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.
+     * Issues the signed-in person's antiforgery tokens again: the request token in the readable cookie __Host-erp-xsrf, sent back in the X-XSRF-TOKEN header of every POST, PUT, PATCH and DELETE.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
-     * @throws {ProblemDetails} error when the service returns a 400 status code
      * @throws {ProblemDetails} error when the service returns a 401 status code
      * @throws {ProblemDetails} error when the service returns a 429 status code
      * @throws {ProblemDetails} error when the service returns a 500 status code
      * @throws {ProblemDetails} error when the service returns a 504 status code
      */
-     post(requestConfiguration?: RequestConfiguration<object> | undefined) : Promise<void>;
+     get(requestConfiguration?: RequestConfiguration<object> | undefined) : Promise<void>;
     /**
-     * Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.
+     * Issues the signed-in person's antiforgery tokens again: the request token in the readable cookie __Host-erp-xsrf, sent back in the X-XSRF-TOKEN header of every POST, PUT, PATCH and DELETE.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {RequestInformation}
      */
-     toPostRequestInformation(requestConfiguration?: RequestConfiguration<object> | undefined) : RequestInformation;
+     toGetRequestInformation(requestConfiguration?: RequestConfiguration<object> | undefined) : RequestInformation;
 }
 /**
  * Uri template for the request builder.
  */
-export const LogoutRequestBuilderUriTemplate = "{+baseurl}/api/auth/logout";
+export const AntiforgeryRequestBuilderUriTemplate = "{+baseurl}/api/auth/antiforgery";
 /**
  * Metadata for all the requests in the request builder.
  */
-export const LogoutRequestBuilderRequestsMetadata: RequestsMetadata = {
-    post: {
-        uriTemplate: LogoutRequestBuilderUriTemplate,
+export const AntiforgeryRequestBuilderRequestsMetadata: RequestsMetadata = {
+    get: {
+        uriTemplate: AntiforgeryRequestBuilderUriTemplate,
         responseBodyContentType: "application/problem+json",
         errorMappings: {
-            400: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             401: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             429: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             500: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,

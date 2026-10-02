@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
@@ -27,6 +28,8 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     private const string ReturnPath = "/platform/attachments";
 
     private const string AccountPath = "/__test/account";
+
+    private const string ChangesPath = "/__test/changes";
 
     private const string ClearedCookie = "expires=Thu, 01 Jan 1970";
 
@@ -57,6 +60,26 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
         Assert.Equal(TestUsers.Accountant.AccountId, await signedIn.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.DoesNotContain(_fixture.Logs.GetSnapshot(), record => record.Category == typeof(SignInEvents).FullName);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_IssuesAntiforgeryTokensThatCarryThePersonsChanges()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var callback = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Accountant)));
+        using var change = await client.PostAsync(new Uri(ChangesPath, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Found, callback.StatusCode);
+        var cookies = callback.Headers.GetValues("Set-Cookie").ToList();
+        Assert.Contains(cookies, cookie => cookie.StartsWith($"{AntiforgeryTokens.CookieName}=", StringComparison.Ordinal));
+        Assert.Contains(cookies, cookie => cookie.StartsWith($"{AntiforgeryTokens.RequestTokenCookieName}=", StringComparison.Ordinal));
+        Assert.Equal(HttpStatusCode.NoContent, change.StatusCode);
     }
 
     [Fact]
@@ -265,7 +288,10 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     public sealed class Fixture : IDisposable
     {
         private readonly ErpApiFactory _root = new ErpApiFactory().WithTestEndpoints(routes =>
-            routes.MapGet(AccountPath, (HttpContext context) => $"{context.User.FindFirst(TestUser.HomeObjectIdClaim)?.Value}.{context.User.FindFirst(TestUser.HomeTenantIdClaim)?.Value}"));
+        {
+            routes.MapGet(AccountPath, (HttpContext context) => $"{context.User.FindFirst(TestUser.HomeObjectIdClaim)?.Value}.{context.User.FindFirst(TestUser.HomeTenantIdClaim)?.Value}");
+            routes.MapPost(ChangesPath, () => Results.NoContent());
+        });
 
         public Fixture()
         {

@@ -1,4 +1,5 @@
 using System.Globalization;
+using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
@@ -25,13 +26,15 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 // signing out ends every session of that person, on every device and browser and on every instance of the API, at once, and
 // a copy of one of those cookies stays refused after the person signs in again, while a restart of the API ends none. A
 // token cache or sign-out record that cannot be read fails the request instead, and leaves the cookie as it is, so a passing
-// database failure signs nobody out.
+// database failure signs nobody out. Every sign-in issues the person's antiforgery tokens, and every sign-out, a refused
+// cookie's included, clears them, so a browser holds tokens only for the person signed in on it.
 internal sealed class SessionCookieEvents(
     TimeProvider timeProvider,
     IOptions<EntraSignInOptions> signIn,
     IProblemDetailsService problemDetails,
     IConfidentialClientApplicationProvider applications,
-    SessionRevocations revocations) : CookieAuthenticationEvents
+    SessionRevocations revocations,
+    AntiforgeryCookies antiforgeryCookies) : CookieAuthenticationEvents
 {
     public const string SignedInAtItem = "erp.signed-in-at";
 
@@ -61,6 +64,24 @@ internal sealed class SessionCookieEvents(
 
         context.Properties.IsPersistent = false;
         context.Properties.Items[SignedInAtItem] = timeProvider.GetUtcNow().ToString("O", CultureInfo.InvariantCulture);
+
+        return Task.CompletedTask;
+    }
+
+    public override Task SignedIn(CookieSignedInContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        antiforgeryCookies.Issue(context.HttpContext, context.Principal!);
+
+        return Task.CompletedTask;
+    }
+
+    public override Task SigningOut(CookieSigningOutContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        AntiforgeryCookies.Clear(context.Response);
 
         return Task.CompletedTask;
     }

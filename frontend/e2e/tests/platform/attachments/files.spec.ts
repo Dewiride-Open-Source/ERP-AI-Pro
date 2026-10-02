@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 
-import type { APIRequestContext, Page, Request, Response } from "@playwright/test";
+import type { APIRequestContext, APIResponse, Page, Request, Response } from "@playwright/test";
 
 import { png, type FileUpload } from "../../../fixtures/files";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
@@ -10,6 +10,8 @@ import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attach
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 const attachmentsApi = "/api/platform/attachments";
+
+const antiforgeryRenewalApi = "/api/auth/antiforgery";
 
 const listPageSize = 20;
 
@@ -303,6 +305,63 @@ test.describe("attachments page", () => {
       await expect(attachments.chooseFile).toBeEnabled();
       await expect(attachments.row(file.name)).toHaveCount(0);
       await capture("attachments-refused-by-api");
+    });
+  });
+
+  test.describe("when the API refuses the upload's antiforgery token", () => {
+    test.use({ expectedConsoleError: /the server responded with a status of 400/ });
+
+    test("renews the token once and sends the upload once more", async ({ page }) => {
+      const attachments = new AttachmentsPage(page);
+      const file = png();
+      const stored: APIResponse[] = [];
+      let uploads = 0;
+      let renewals = 0;
+      await attachments.goto();
+
+      await page.route(`**${antiforgeryRenewalApi}`, async (route) => {
+        renewals += 1;
+        await route.fulfill({ status: 204 });
+      });
+      // WebKit intercepts every request while a route is registered and sometimes forwards an intercepted multipart request
+      // with an empty file part, so the upload sent once more is answered with the API's answer to the same file sent by the
+      // test, never forwarded.
+      await page.route(`**${attachmentsApi}`, async (route) => {
+        if (!isUploadRequest(route.request())) {
+          await route.fallback();
+          return;
+        }
+        uploads += 1;
+        if (uploads === 1) {
+          await route.fulfill({
+            status: 400,
+            contentType: "application/problem+json",
+            json: {
+              type: "/problems/antiforgery.token-missing",
+              title: "The request could not be confirmed as coming from this site.",
+              status: 400,
+              code: "antiforgery.token-missing",
+            },
+          });
+          return;
+        }
+        const response = await page.request.post(attachmentsApi, { multipart: { file } });
+        stored.push(response);
+        await route.fulfill({ response });
+      });
+
+      try {
+        await attachments.chooseAndUpload(file);
+
+        await expect(attachments.uploadAnnouncement).toHaveText(`${file.name} was uploaded.`);
+        await expect(attachments.uploadStatus).toHaveAttribute("data-state", "uploaded");
+        await expect(attachments.row(file.name)).toBeVisible();
+        expect(renewals).toBe(1);
+        expect(uploads).toBe(2);
+      } finally {
+        const created = stored.filter((response) => response.status() === 201);
+        await deleteAttachments(page.request, await Promise.all(created.map(createdAttachmentId)));
+      }
     });
   });
 

@@ -1,5 +1,7 @@
 import type { HttpValidationProblemDetails, ProblemDetails } from "@dewiride/erp-api-client";
 
+import { antiforgeryRefusalMessage, isAntiforgeryRefusal } from "./antiforgery.ts";
+
 type ProblemMember = "type" | "title" | "detail" | "instance" | "code" | "traceId";
 
 export type Problem = { readonly [K in ProblemMember]?: NonNullable<ProblemDetails[K]> } & {
@@ -17,6 +19,13 @@ export class ApiError extends Error {
     this.status = problem.status;
     this.problem = problem;
   }
+}
+
+// The detail of an antiforgery refusal names cookies and headers for developers, so a person reads a plain sentence instead.
+export function apiErrorMessage(error: ApiError): string {
+  return isAntiforgeryRefusal(error.status, error.problem)
+    ? antiforgeryRefusalMessage
+    : (error.problem.detail ?? error.message);
 }
 
 type HttpFailure = { readonly responseStatusCode: number; readonly message?: unknown };

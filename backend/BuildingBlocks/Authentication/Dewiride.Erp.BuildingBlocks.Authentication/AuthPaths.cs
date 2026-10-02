@@ -10,6 +10,8 @@ public static class AuthPaths
 
     public const string Logout = Prefix + "/logout";
 
+    public const string Antiforgery = Prefix + "/antiforgery";
+
     public const string SignInCallback = Prefix + "/signin-oidc";
 
     public const string SignedOutCallback = Prefix + "/signout-callback-oidc";

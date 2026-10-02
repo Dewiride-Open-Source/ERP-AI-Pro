@@ -7,6 +7,8 @@ export const problemCodes = {
   idempotencyInProgress: "idempotency.in-progress",
   idempotencyKeyReused: "idempotency.key-reused",
   idempotencyReplayUnavailable: "idempotency.replay-unavailable",
+  antiforgeryTokenMissing: "antiforgery.token-missing",
+  antiforgeryTokenInvalid: "antiforgery.token-invalid",
 } as const;
 
 export const queryCodePrefix = "query.";
