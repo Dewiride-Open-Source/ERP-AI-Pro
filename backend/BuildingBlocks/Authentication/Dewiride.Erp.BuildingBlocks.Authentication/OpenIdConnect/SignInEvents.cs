@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,8 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
     public const string TokenValidationFailure = "token-validation";
 
     public const string CodeRedemptionFailure = "code-redemption";
+
+    public const string TokenCacheFailure = "token-cache";
 
     public const string UnexpectedFailure = "unexpected";
 
@@ -72,6 +75,7 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
             AuthenticationFailureException => (CallbackFailure, NoOAuthError),
             SecurityTokenException => (TokenValidationFailure, NoOAuthError),
             MsalException msal => (CodeRedemptionFailure, OAuthErrorCode(msal.ErrorCode)),
+            TokenCacheUnavailableException => (TokenCacheFailure, NoOAuthError),
             _ => (UnexpectedFailure, NoOAuthError),
         };
 

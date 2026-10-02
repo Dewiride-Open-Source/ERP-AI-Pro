@@ -5,8 +5,11 @@ USAGE='Usage: bash scripts/azure/provision.sh [--dry-run] [--params <file>]
 Creates or converges the ERP-AI-Pro resource group, the App Configuration store,
 both Key Vaults with their data-protection keys, the development storage account
 with its attachments container and delete lock, the role assignments, the
-labelled Erp:Sentinel keys and Erp:Platform:Attachments:BlobServiceUri under the
-local-dev label (bumping the local-dev sentinel only when that endpoint changed).
+labelled Erp:Sentinel keys, Erp:Platform:Attachments:BlobServiceUri under the
+local-dev label (bumping the local-dev sentinel only when that endpoint changed)
+and Erp:Platform:DataProtection:KeyIdentifier under the local-dev and production
+labels (the versionless identifier of the data-protection key in the matching
+vault; no sentinel bump, because the API reads it only when it starts).
 Safe to run repeatedly; never deletes or purges.
 
 Options:
@@ -24,6 +27,8 @@ readonly LABELS=(local-dev production)
 readonly TEMPLATE_FILE='scripts/azure/bicep/main.bicep'
 readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
 readonly BLOB_SERVICE_URI_LABEL='local-dev'
+readonly DATA_PROTECTION_KEY_NAME='Erp--Platform--DataProtection--Key'
+readonly DATA_PROTECTION_KEY_IDENTIFIER_KEY='Erp:Platform:DataProtection:KeyIdentifier'
 
 deployment_output() {
   local outputs_json="$1" name="$2"
@@ -31,6 +36,24 @@ deployment_output() {
   value="$(json_field "$outputs_json" "$name.value")"
   [[ -n "$value" ]] || die "deployment output '$name' missing"
   printf '%s' "$value"
+}
+
+deployment_output_uri() {
+  local outputs_json="$1" name="$2"
+  local value uri
+  value="$(deployment_output "$outputs_json" "$name")"
+  uri="$(canonical_uri "$value")" || die "deployment output '$name' is not an absolute URI ('$value')"
+  printf '%s' "$uri"
+}
+
+ensure_data_protection_key_identifier() {
+  local label="$1" key_uri="$2"
+  local previous
+  previous="$(retry -- appconfig_kv_get "$DATA_PROTECTION_KEY_IDENTIFIER_KEY" "$label")"
+  ensure_kv "$DATA_PROTECTION_KEY_IDENTIFIER_KEY" "$label" "$key_uri"
+  if [[ "$previous" != "$key_uri" ]]; then
+    log_info "$DATA_PROTECTION_KEY_IDENTIFIER_KEY [$label] was written; the API reads it only when it starts, so restart any API running against $label"
+  fi
 }
 
 ensure_sentinel() {
@@ -137,6 +160,8 @@ main() {
   local development_vault_uri="https://$ERP_AZURE_KEYVAULT_DEV_NAME.vault.azure.net/"
   local production_vault_uri="https://$ERP_AZURE_KEYVAULT_PROD_NAME.vault.azure.net/"
   local attachments_blob_endpoint="https://$ERP_AZURE_STORAGE_DEV_NAME.blob.core.windows.net/"
+  local development_data_protection_key_uri="${development_vault_uri}keys/$DATA_PROTECTION_KEY_NAME"
+  local production_data_protection_key_uri="${production_vault_uri}keys/$DATA_PROTECTION_KEY_NAME"
 
   log_step "Deployment $deployment_name"
   if (( DRY_RUN )); then
@@ -146,12 +171,17 @@ main() {
     log_step "Data plane"
     run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$BLOB_SERVICE_URI_KEY" \
       --label "$BLOB_SERVICE_URI_LABEL" --value "$attachments_blob_endpoint" --yes --output none --only-show-errors
+    run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$DATA_PROTECTION_KEY_IDENTIFIER_KEY" \
+      --label local-dev --value "$development_data_protection_key_uri" --yes --output none --only-show-errors
+    run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$DATA_PROTECTION_KEY_IDENTIFIER_KEY" \
+      --label production --value "$production_data_protection_key_uri" --yes --output none --only-show-errors
     local label
     for label in "${LABELS[@]}"; do
       run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$SENTINEL_KEY" --label "$label" \
         --value "$(utc_timestamp)" --yes --output none --only-show-errors
     done
     log_info "$BLOB_SERVICE_URI_KEY is written only when it differs from the deployment output"
+    log_info "$DATA_PROTECTION_KEY_IDENTIFIER_KEY is written under each label only when it differs from the deployment output, without a sentinel bump: the API reads it only when it starts"
     log_info "each sentinel is written when absent; the $BLOB_SERVICE_URI_LABEL sentinel is also bumped when $BLOB_SERVICE_URI_KEY changed"
   else
     local outputs_json
@@ -162,12 +192,16 @@ main() {
     development_vault_uri="$(deployment_output "$outputs_json" developmentKeyVaultUri)"
     production_vault_uri="$(deployment_output "$outputs_json" productionKeyVaultUri)"
     attachments_blob_endpoint="$(deployment_output "$outputs_json" developmentAttachmentsBlobEndpoint)"
+    development_data_protection_key_uri="$(deployment_output_uri "$outputs_json" developmentDataProtectionKeyUri)"
+    production_data_protection_key_uri="$(deployment_output_uri "$outputs_json" productionDataProtectionKeyUri)"
     log_info "deployed"
 
     log_step "Data plane"
     local previous_blob_service_uri
     previous_blob_service_uri="$(retry -- appconfig_kv_get "$BLOB_SERVICE_URI_KEY" "$BLOB_SERVICE_URI_LABEL")"
     ensure_kv "$BLOB_SERVICE_URI_KEY" "$BLOB_SERVICE_URI_LABEL" "$attachments_blob_endpoint"
+    ensure_data_protection_key_identifier local-dev "$development_data_protection_key_uri"
+    ensure_data_protection_key_identifier production "$production_data_protection_key_uri"
     local label
     for label in "${LABELS[@]}"; do
       if [[ "$label" == "$BLOB_SERVICE_URI_LABEL" && "$previous_blob_service_uri" != "$attachments_blob_endpoint" ]]; then
@@ -183,6 +217,8 @@ main() {
   printf 'APPCONFIG_ENDPOINT=%s\n' "$store_endpoint"
   printf 'KEYVAULT_DEV_URI=%s\n' "$development_vault_uri"
   printf 'KEYVAULT_PROD_URI=%s\n' "$production_vault_uri"
+  printf 'DATA_PROTECTION_KEY_URI_DEV=%s\n' "$development_data_protection_key_uri"
+  printf 'DATA_PROTECTION_KEY_URI_PROD=%s\n' "$production_data_protection_key_uri"
   printf 'ATTACHMENTS_BLOB_ENDPOINT_DEV=%s\n' "$attachments_blob_endpoint"
   if (( DRY_RUN )); then
     log_info "dry run: nothing was created or changed"

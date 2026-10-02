@@ -2,6 +2,12 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Dewiride.Erp.BuildingBlocks.UnitTests" />
+    <InternalsVisibleTo Include="Dewiride.Erp.BuildingBlocks.IntegrationTests" />
+    <InternalsVisibleTo Include="Dewiride.Erp.Host.Api.IntegrationTests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -10,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Caching.Hybrid" />
+    <PackageReference Include="Microsoft.Extensions.Caching.SqlServer" />
   </ItemGroup>
 
 </Project>

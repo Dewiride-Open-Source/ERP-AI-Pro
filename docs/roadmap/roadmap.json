@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-30",
+  "updatedOn": "2026-10-02",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -759,6 +759,21 @@
           "startedOn": "2026-09-29",
           "completedOn": "2026-09-29",
           "notes": "Six Playwright projects on three viewports (desktop chromium, firefox, webkit; the owner-approved iPad (gen 11) as tablet-ios; Pixel 10 and iPhone 17), visual tests in light and dark through forEachTheme, captures named <spec>/<name>--<project>--<theme>.png; a navigation crawl over every entry of the primary navigation (fixtures/navigation.ts) in both themes on every project; e2e.yml shards each project in two with blob reports that the required Playwright job merges into the playwright-report HTML artifact. The signed-in session stays with authentication-test-authentication-infrastructure. ADR-0028. The first full runs on main then failed in the three WebKit projects (a scan that overlapped hydration, a kitchen sink test too long for a runner, a motion check that needed frames); ADR-0029 makes every capture wait for a page at rest, marks server-rendered states with data-hydrating, splits the kitchen sink captures per section and times the motion check from the click."
+        },
+        {
+          "id": "web-foundation-webkit-data-table-column-test-stability",
+          "title": "Reliable data table column test on WebKit",
+          "scope": "Make the data table test that hides and shows columns and keeps them in the address (frontend/e2e/tests/platform/design/data-table.spec.ts) pass reliably on the WebKit projects on Windows, where it fails about three runs in five on tablet-ios while every CI run passes: find the cause from Playwright traces of failing runs, fix it in the spec, its page object or the data table component without sleeps, fixed timeouts, retries or skips, and prove it with repeated runs on tablet-ios and webkit.",
+          "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-10-02",
+          "acceptance": [
+            "On the owner's Windows machine the data table test that hides and shows columns passes 20 of 20 runs with --repeat-each=20 on the tablet-ios project and 20 of 20 on the webkit project",
+            "The pull request names the cause, shown by a Playwright trace of a failing run, and the fix adds no sleep, fixed timeout, retry, skip or WebKit-only branch",
+            "The full Playwright matrix dispatched on the branch passes, and the run on main after the merge passes"
+          ],
+          "tags": [],
+          "dependsOn": []
         }
       ]
     },
@@ -796,13 +811,21 @@
           "id": "authentication-token-cache-and-data-protection-key",
           "title": "Token cache and Data Protection key ring",
           "scope": "Add AddDistributedTokenCaches backed by the SQL Server IDistributedCache (in-memory in Development), persist Data Protection keys to a named Docker volume with ProtectKeysWithAzureKeyVault using a versionless key identifier and SetApplicationName, fail fast when the vault key is unreachable in production, and add a test proving cookies survive an app restart.",
-          "status": "planned",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
-          "acceptance": [],
+          "acceptance": [
+            "A session survives a restart of the API and a replacement of its container: the API keeps its Data Protection key ring as files in <LocalApplicationData>/ERP-AI-Pro/DataProtection-Keys (in the production stack the external named volume erp-ai-pro-data-protection-keys mounted at /home/app/.local/share/ERP-AI-Pro/DataProtection-Keys) under the fixed application name Dewiride.Erp, and the token cache in the SQL Server table platform_caching.DistributedCacheEntries that the migrator creates; a host test signs a person in on one API host, stops it, and the next host on the same key ring and database accepts the same cookie without a new sign-in",
+            "Every Data Protection key at rest is wrapped by the Key Vault key that Erp:Platform:DataProtection:KeyIdentifier names (a versionless key identifier that scripts/azure/provision.sh writes under local-dev and production); the API refuses to start, naming the cause, when that setting is missing while the API reads App Configuration or runs in Production, when the key folder is not writable, when the Key Vault key cannot wrap and unwrap, or when a key that may still protect a live session cannot be decrypted; a run without the store keeps its key ring in memory and writes no key to disk",
+            "Each person's token cache entry is stored encrypted with Data Protection, so no token is readable in the table, expires SessionIdleTimeout after the last request and at most SessionLifetime after it was written (each plus five minutes), and is read from SQL Server on every session check, so signing out on one API instance refuses that person's cookies on every instance at once; a database failure during a session check, a sign-in or a sign-out fails that request instead of signing anyone out or leaving a session silently alive, and an entry that cannot be decrypted counts as signed out",
+            "No token, account id or key material reaches a log; the key files on disk hold no unwrapped key; the runtime service principal holds Key Vault Crypto Service Encryption User, not Crypto User, on the production vault",
+            "The owner signs in through dotnet run and pnpm dev against local-dev, restarts the API, and is still signed in without a new sign-in, recorded in the pull request"
+          ],
           "tags": [],
           "dependsOn": [],
-          "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031): replace AddInMemoryTokenCaches, bounded by MsalMemoryTokenCacheOptions to the session lifetimes, with AddDistributedTokenCaches on SQL Server with MsalDistributedTokenCacheAdapterOptions.Encrypt; the session cookie and the OIDC state, nonce and correlation cookies are Data Protection payloads, so the key ring must survive a restart for sessions to survive one."
+          "startedOn": "2026-10-02",
+          "completedOn": "2026-10-02",
+          "notes": "BuildingBlocks.Caching and BuildingBlocks.Authentication (ADR-0032): the MSAL token cache in platform_caching.DistributedCacheEntries through the keyed SqlServerCache behind RetryingSqlServerCache, every entry protected by Data Protection and read on every session check, so a store failure fails the request instead of signing anyone out; each sign-out recorded per person, so a later sign-in revives no older cookie; the Data Protection key ring under the fixed application name Dewiride.Erp, persisted in <LocalApplicationData>/ERP-AI-Pro/DataProtection-Keys (the external volume erp-ai-pro-data-protection-keys in production) and wrapped by the Key Vault key that Erp:Platform:DataProtection:KeyIdentifier names (written under both labels), with KeyRingStartupCheck refusing an unwritable folder, an unusable key or an undecryptable live key; the runtime service principal narrowed to Key Vault Crypto Service Encryption User; and the owner verified on 2026-10-02 that a session survives a restart of dotnet run against local-dev (signed in, API process stopped and started, still signed in without a new sign-in)."
         },
         {
           "id": "authentication-antiforgery-for-json-endpoints",
@@ -814,7 +837,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "The web API client forwards only cookie, traceparent, tracestate and x-correlation-id (frontend/apps/web/src/shared/api/forwarded-headers.ts, used by shared/api/client.ts). When antiforgery lands, add the X-XSRF-TOKEN header read from the antiforgery cookie there for unsafe methods, with a web unit test and a Playwright proof, and document it in docs/architecture/http-conventions.md; ADR-0017 defers it to this sub-phase. From backend-platform-attachments-building-block: the browser uploads files itself through frontend/apps/web/src/shared/api/upload.ts (XMLHttpRequest multipart POST to /api/platform/attachments), so that request must carry X-XSRF-TOKEN as well; the upload endpoint binds no form, so the header check is the only antiforgery check it gets. From `authentication-oidc-bff-in-the-api` (ADR-0031): GET /api/auth/antiforgery must be anonymous while the transitional platform routes are; POST /api/auth/logout is a top-level form navigation that ends in the Entra end-session redirect, so decide whether its check reads the token from the form."
+          "notes": "The web API client forwards only cookie, traceparent, tracestate and x-correlation-id (frontend/apps/web/src/shared/api/forwarded-headers.ts, used by shared/api/client.ts). When antiforgery lands, add the X-XSRF-TOKEN header read from the antiforgery cookie there for unsafe methods, with a web unit test and a Playwright proof, and document it in docs/architecture/http-conventions.md; ADR-0017 defers it to this sub-phase. From backend-platform-attachments-building-block: the browser uploads files itself through frontend/apps/web/src/shared/api/upload.ts (XMLHttpRequest multipart POST to /api/platform/attachments), so that request must carry X-XSRF-TOKEN as well; the upload endpoint binds no form, so the header check is the only antiforgery check it gets. From `authentication-oidc-bff-in-the-api` (ADR-0031): GET /api/auth/antiforgery must be anonymous while the transitional platform routes are; POST /api/auth/logout is a top-level form navigation that ends in the Entra end-session redirect, so decide whether its check reads the token from the form. From `authentication-token-cache-and-data-protection-key` (ADR-0032): antiforgery tokens are Data Protection payloads, so they share the persisted key ring and the fixed application name Dewiride.Erp and survive restarts; AddAntiforgery calls AddDataProtection, which AddErpDataProtection has already configured, so it needs no key ring setup of its own."
         },
         {
           "id": "authentication-session-endpoints-openapi-security-and-bearer",
@@ -838,7 +861,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031): the e2e APIs run with placeholder identity settings and a generated certificate, so no spec performs a real Entra round trip; move the anonymous unknown-route smoke check and the sign-in redirect checks onto the signed-in fixture; verify that WebKit keeps a Secure __Host- cookie over http://localhost, and otherwise serve the e2e web origin over https rather than relaxing the cookie."
+          "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031): the e2e APIs run with placeholder identity settings and a generated certificate, so no spec performs a real Entra round trip; move the anonymous unknown-route smoke check and the sign-in redirect checks onto the signed-in fixture; verify that WebKit keeps a Secure __Host- cookie over http://localhost, and otherwise serve the e2e web origin over https rather than relaxing the cookie. From `authentication-token-cache-and-data-protection-key` (ADR-0032): the e2e API hosts read no store, so their Data Protection key ring lives in memory and a cookie a fixture mints lives only as long as that API process; host tests share one key ring and token cache between hosts through TestDeployment."
         },
         {
           "id": "authentication-web-login-page-and-session-integration",
@@ -988,7 +1011,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-transport-security-middleware: the API is called under three host names in production - the public host name (the edge proxy routes /api/* straight to api:8080 and passes the browser's Host through), api (the web container's server-side calls to http://api:8080) and 127.0.0.1 (the container health probe) - so the production value of Erp:Platform:Host:AllowedHosts is <public host name>;api;127.0.0.1, and Erp:Platform:Host:KnownNetworks must list the compose network so forwarded client addresses are trusted; an empty list trusts no proxy. Never set ASPNETCORE_FORWARDEDHEADERS_ENABLED. From backend-platform-attachments-building-block (ADR-0022): attachments live in Azure Blob Storage, so the stack needs no attachments volume; the production api reads Erp:Platform:Attachments:BlobServiceUri and the EncryptionKey reference from the production label that first-deployment-production-attachments-storage creates, and the edge proxy must pass /api/platform/attachments uploads of up to MaxSizeBytes plus 64 KiB and allow transfers of up to Erp:Platform:Attachments:TransferTimeout."
+          "notes": "From backend-platform-transport-security-middleware: the API is called under three host names in production - the public host name (the edge proxy routes /api/* straight to api:8080 and passes the browser's Host through), api (the web container's server-side calls to http://api:8080) and 127.0.0.1 (the container health probe) - so the production value of Erp:Platform:Host:AllowedHosts is <public host name>;api;127.0.0.1, and Erp:Platform:Host:KnownNetworks must list the compose network so forwarded client addresses are trusted; an empty list trusts no proxy. Never set ASPNETCORE_FORWARDEDHEADERS_ENABLED. From backend-platform-attachments-building-block (ADR-0022): attachments live in Azure Blob Storage, so the stack needs no attachments volume; the production api reads Erp:Platform:Attachments:BlobServiceUri and the EncryptionKey reference from the production label that first-deployment-production-attachments-storage creates, and the edge proxy must pass /api/platform/attachments uploads of up to MaxSizeBytes plus 64 KiB and allow transfers of up to Erp:Platform:Attachments:TransferTimeout. From `authentication-token-cache-and-data-protection-key` (ADR-0032): compose.production.yaml mounts the external volume erp-ai-pro-data-protection-keys on the api at /home/app/.local/share/ERP-AI-Pro/DataProtection-Keys, so the deploy script creates it once with docker volume create erp-ai-pro-data-protection-keys before the first up and never removes it (an external volume survives docker compose down -v); the api keeps its tmpfs /tmp under read_only, because every new Data Protection key is staged there; the production label must hold Erp:Platform:DataProtection:KeyIdentifier (provision.sh writes it) and the runtime service principal must hold Key Vault Crypto Service Encryption User on the production vault, or the api refuses to start."
         },
         {
           "id": "first-deployment-production-database-provisioning",
@@ -1062,7 +1085,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From backend-platform-attachments-building-block (ADR-0022): attachments live in Azure Blob Storage, not on a volume, so their backup is the account's redundancy plus blob and container soft delete (versioning or point-in-time restore only if the owner chooses the extra cost), and the drill restores a deleted blob and a deleted container; the attachments encryption key in Key Vault (soft delete and purge protection) is as critical as the data, because losing it makes every attachment it wrapped unreadable."
+          "notes": "From backend-platform-attachments-building-block (ADR-0022): attachments live in Azure Blob Storage, not on a volume, so their backup is the account's redundancy plus blob and container soft delete (versioning or point-in-time restore only if the owner chooses the extra cost), and the drill restores a deleted blob and a deleted container; the attachments encryption key in Key Vault (soft delete and purge protection) is as critical as the data, because losing it makes every attachment it wrapped unreadable. From `authentication-token-cache-and-data-protection-key` (ADR-0032): the volume erp-ai-pro-data-protection-keys holds the Data Protection key ring, key-<guid>.xml files wrapped by the production vault key Erp--Platform--DataProtection--Key; back it up with a separate digest-pinned helper container that has tar (the chiseled api image has no shell), restore it with the stack stopped and before the api starts, keep every Key Vault key version that wrapped a backed-up key enabled, and rehearse the loss case too: losing the volume signs everyone out and loses nothing else, and the token cache table platform_caching.DistributedCacheEntries needs no restore of its own."
         },
         {
           "id": "first-deployment-go-live-checklist-and-production-smoke",

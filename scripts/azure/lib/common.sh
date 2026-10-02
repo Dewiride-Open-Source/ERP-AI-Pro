@@ -277,3 +277,7 @@ json_field() {
   local json="$1" path="$2"
   node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { let value = JSON.parse(raw); for (const segment of process.argv[1].split(".")) { value = value == null ? undefined : value[segment]; } process.stdout.write(value == null ? "" : String(value)); });' "$path" <<< "$json"
 }
+
+canonical_uri() {
+  node -e 'process.stdout.write(new URL(process.argv[1]).href);' "$1" 2> /dev/null
+}

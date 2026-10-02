@@ -1,9 +1,11 @@
 using System.Security.Cryptography;
 using Dewiride.Erp.BuildingBlocks.Attachments;
+using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Blob;
+using Dewiride.Erp.Testing.Deployment;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -47,6 +49,8 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
     public const string IdentitySessionLifetimeKey = $"{EntraSignInOptions.SectionName}:SessionLifetime";
 
+    public const string DataProtectionKeyIdentifierKey = KeyRingOptions.KeyIdentifierKey;
+
     private const string FeatureFlagsSection = "feature_management:feature_flags:";
 
     // One key per test process: every factory shares the process's test database and blob container, so content one host
@@ -56,6 +60,10 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
     private readonly Dictionary<string, string> _configuration = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly List<Action<IEndpointRouteBuilder>> _testEndpoints = [];
+
+    private TestDeployment? _deployment;
+
+    private bool _ownsDeployment;
 
     private bool _hostCreated;
 
@@ -70,6 +78,24 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
     }
 
     public string Environment { get; }
+
+    // Every factory is a deployment of its own unless a test gives it one to share. Production refuses a key ring kept in
+    // memory, so a Production factory gets a persisted one.
+    public TestDeployment Deployment
+    {
+        get
+        {
+            if (_deployment is null)
+            {
+                _deployment = string.Equals(Environment, Environments.Production, StringComparison.OrdinalIgnoreCase)
+                    ? TestDeployment.WithPersistedKeyRing()
+                    : TestDeployment.WithInMemoryKeyRing();
+                _ownsDeployment = true;
+            }
+
+            return _deployment;
+        }
+    }
 
     public static ErpApiFactory ForEnvironment(string environment) => new(environment);
 
@@ -123,6 +149,35 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         return this;
     }
 
+    // The test owns the deployment, so two factories can be one deployment: the hosts of a restart, or two instances side by side.
+    public ErpApiFactory WithDeployment(TestDeployment deployment)
+    {
+        ArgumentNullException.ThrowIfNull(deployment);
+        if (_hostCreated)
+        {
+            throw new InvalidOperationException("WithDeployment must be called before the first client or service is requested from the factory.");
+        }
+
+        if (_ownsDeployment)
+        {
+            _deployment?.Dispose();
+        }
+
+        _deployment = deployment;
+        _ownsDeployment = false;
+
+        return this;
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        if (_ownsDeployment)
+        {
+            _deployment?.Dispose();
+        }
+    }
+
     protected override IHost CreateHost(IHostBuilder builder)
     {
         _hostCreated = true;
@@ -165,6 +220,12 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         UseSettingUnlessSupplied(builder, IdentityWebOriginKey, TestIdentityProvider.WebOrigin);
         UseSettingUnlessSupplied(builder, IdentityClientCertificateKey, TestSignInCertificate.Base64);
 
+        var deployment = Deployment;
+        if (deployment.KeyIdentifier is { } keyIdentifier)
+        {
+            UseSettingUnlessSupplied(builder, DataProtectionKeyIdentifierKey, keyIdentifier.AbsoluteUri);
+        }
+
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);
         builder.UseSetting("APPCONFIG_ENDPOINT", string.Empty);
         builder.UseSetting(ConfigurationSourceSetting, InMemorySource);
@@ -177,6 +238,7 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
             services.AddSingleton<IMsalHttpClientFactory>(provider => provider.GetRequiredService<TestTokenEndpoint>());
             services.AddTransient<IStartupFilter, ThrowingRouteStartupFilter>();
             services.AddTransient<IStartupFilter>(_ => new TestEndpointsStartupFilter(_testEndpoints));
+            deployment.Register(services);
         });
     }
 

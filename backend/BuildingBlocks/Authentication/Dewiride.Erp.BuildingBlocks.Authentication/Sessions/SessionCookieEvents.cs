@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Claims;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
@@ -20,14 +19,19 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 // renews only after half the idle timeout, so a person idle for just over half of it could be signed out; renewing on the
 // first request more than a minute, or half the idle timeout when that is shorter, after the cookie was issued keeps every
 // session alive for the idle timeout less at most that interval, and lets a session of the shortest idle timeout slide.
-// The token cache holds one entry per person, the account that signing out removes, and a restart of the API empties the
-// in-memory cache, so a session whose account is missing from the cache is refused and cleared: signing out ends every
-// session of that person, on every device and browser, at once.
+// A session is accepted only when it was issued after the person last signed out, which SessionRevocations records, and while
+// the person's account is in the token cache, the one entry per person in SQL Server that signing out removes; the record is
+// read first, so a refused copy of a cookie costs one read and never slides the person's token cache entry:
+// signing out ends every session of that person, on every device and browser and on every instance of the API, at once, and
+// a copy of one of those cookies stays refused after the person signs in again, while a restart of the API ends none. A
+// token cache or sign-out record that cannot be read fails the request instead, and leaves the cookie as it is, so a passing
+// database failure signs nobody out.
 internal sealed class SessionCookieEvents(
     TimeProvider timeProvider,
     IOptions<EntraSignInOptions> signIn,
     IProblemDetailsService problemDetails,
-    IConfidentialClientApplicationProvider applications) : CookieAuthenticationEvents
+    IConfidentialClientApplicationProvider applications,
+    SessionRevocations revocations) : CookieAuthenticationEvents
 {
     public const string SignedInAtItem = "erp.signed-in-at";
 
@@ -65,7 +69,11 @@ internal sealed class SessionCookieEvents(
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        if (IsWithinLifetime(context.Properties) && await IsAccountCachedAsync(context.Principal).ConfigureAwait(false))
+        if (SignedInAt(context.Properties) is { } signedInAt
+            && timeProvider.GetUtcNow() - signedInAt < signIn.Value.SessionLifetime
+            && context.Principal?.GetMsalAccountId() is { } accountId
+            && !await revocations.IsRevokedAsync(accountId, signedInAt, context.HttpContext.RequestAborted).ConfigureAwait(false)
+            && await IsAccountCachedAsync(accountId).ConfigureAwait(false))
         {
             return;
         }
@@ -84,18 +92,14 @@ internal sealed class SessionCookieEvents(
         return Task.CompletedTask;
     }
 
-    private bool IsWithinLifetime(AuthenticationProperties properties) =>
+    private static DateTimeOffset? SignedInAt(AuthenticationProperties properties) =>
         properties.Items.TryGetValue(SignedInAtItem, out var stamp)
         && DateTimeOffset.TryParseExact(stamp, "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out var signedInAt)
-        && timeProvider.GetUtcNow() - signedInAt < signIn.Value.SessionLifetime;
+            ? signedInAt
+            : null;
 
-    private async Task<bool> IsAccountCachedAsync(ClaimsPrincipal? principal)
+    private async Task<bool> IsAccountCachedAsync(string accountId)
     {
-        if (principal?.GetMsalAccountId() is not { } accountId)
-        {
-            return false;
-        }
-
         var application = await applications.GetConfidentialClientApplicationAsync(OpenIdConnectDefaults.AuthenticationScheme).ConfigureAwait(false);
 
         return await application.GetAccountAsync(accountId).ConfigureAwait(false) is not null;

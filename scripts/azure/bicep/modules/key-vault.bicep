@@ -65,3 +65,4 @@ resource vaultRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-0
 
 output uri string = vault.properties.vaultUri
 output id string = vault.id
+output dataProtectionKeyUri string = vault::dataProtectionKey.properties.keyUri

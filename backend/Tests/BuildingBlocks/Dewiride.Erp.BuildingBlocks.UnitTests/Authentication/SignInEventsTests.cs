@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
+using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -22,6 +23,7 @@ public sealed class SignInEventsTests
     [InlineData("code redemption needing interaction", SignInEvents.CodeRedemptionFailure, "invalid_grant")]
     [InlineData("code redemption error of 65 characters", SignInEvents.CodeRedemptionFailure, SignInEvents.UnrecognisedOAuthError)]
     [InlineData("code redemption error outside ASCII", SignInEvents.CodeRedemptionFailure, SignInEvents.UnrecognisedOAuthError)]
+    [InlineData("token cache unavailable", SignInEvents.TokenCacheFailure, SignInEvents.NoOAuthError)]
     [InlineData("unexpected exception", SignInEvents.UnexpectedFailure, SignInEvents.NoOAuthError)]
     [InlineData("no exception", SignInEvents.UnexpectedFailure, SignInEvents.NoOAuthError)]
     public void Describe_Failure_NamesItsCategoryAndOnlyAnErrorCodeOfTheOAuthGrammar(string failure, string category, string oAuthError)
@@ -55,6 +57,7 @@ public sealed class SignInEventsTests
             "code redemption needing interaction" => new MsalUiRequiredException("invalid_grant", Description),
             "code redemption error of 65 characters" => new MsalServiceException(new string('b', 65), Description),
             "code redemption error outside ASCII" => new MsalServiceException("ungültig", Description),
+            "token cache unavailable" => new TokenCacheUnavailableException(new TimeoutException(Description)),
             "unexpected exception" => new InvalidOperationException(Description),
             "no exception" => null,
             _ => throw new ArgumentOutOfRangeException(nameof(failure), failure, "No failure of that name."),

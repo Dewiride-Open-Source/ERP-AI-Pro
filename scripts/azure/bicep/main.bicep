@@ -49,7 +49,7 @@ var roleDefinitionIds = {
   appConfigurationDataOwner: '5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b'
   keyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
   keyVaultSecretsOfficer: 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
-  keyVaultCryptoUser: '12338af0-0e69-4776-bea7-57ae8d297424'
+  keyVaultCryptoServiceEncryptionUser: 'e147488a-f6f5-4113-8e2d-b22465e65bf6'
   keyVaultCryptoOfficer: '14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
   keyVaultCertificatesOfficer: 'a4417e6f-fecd-4de8-b567-7b0420556985'
   storageBlobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
@@ -116,7 +116,7 @@ var developmentKeyVaultRoleAssignments RoleAssignment[] = concat(
         {
           principalId: developersGroupPrincipalId
           principalType: 'Group'
-          roleDefinitionId: roleDefinitionIds.keyVaultCryptoUser
+          roleDefinitionId: roleDefinitionIds.keyVaultCryptoServiceEncryptionUser
         }
       ]
 )
@@ -134,7 +134,7 @@ var productionKeyVaultRoleAssignments RoleAssignment[] = concat(
         {
           principalId: runtimePrincipalId
           principalType: 'ServicePrincipal'
-          roleDefinitionId: roleDefinitionIds.keyVaultCryptoUser
+          roleDefinitionId: roleDefinitionIds.keyVaultCryptoServiceEncryptionUser
         }
       ]
 )
@@ -206,6 +206,8 @@ output configurationStoreEndpoint string = configurationStore.outputs.endpoint
 output configurationStoreId string = configurationStore.outputs.id
 output developmentKeyVaultUri string = developmentKeyVault.outputs.uri
 output productionKeyVaultUri string = productionKeyVault.outputs.uri
+output developmentDataProtectionKeyUri string = developmentKeyVault.outputs.dataProtectionKeyUri
+output productionDataProtectionKeyUri string = productionKeyVault.outputs.dataProtectionKeyUri
 output developmentAttachmentsBlobEndpoint string = developmentStorageAccount.outputs.blobEndpoint
 output developmentStorageAccountId string = developmentStorageAccount.outputs.id
 output developmentAttachmentsContainerId string = developmentStorageAccount.outputs.containerId
