@@ -796,7 +796,7 @@
           "id": "authentication-token-cache-and-data-protection-key",
           "title": "Token cache and Data Protection key ring",
           "scope": "Add AddDistributedTokenCaches backed by the SQL Server IDistributedCache (in-memory in Development), persist Data Protection keys to a named Docker volume with ProtectKeysWithAzureKeyVault using a versionless key identifier and SetApplicationName, fail fast when the vault key is unreachable in production, and add a test proving cookies survive an app restart.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
           "acceptance": [
@@ -809,7 +809,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-10-02",
-          "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031): replace AddInMemoryTokenCaches, bounded by MsalMemoryTokenCacheOptions to the session lifetimes, with AddDistributedTokenCaches on SQL Server with MsalDistributedTokenCacheAdapterOptions.Encrypt; the session cookie and the OIDC state, nonce and correlation cookies are Data Protection payloads, so the key ring must survive a restart for sessions to survive one."
+          "completedOn": "2026-10-02",
+          "notes": "BuildingBlocks.Caching and BuildingBlocks.Authentication (ADR-0032): the MSAL token cache in platform_caching.DistributedCacheEntries through the keyed SqlServerCache behind RetryingSqlServerCache, every entry protected by Data Protection and read on every session check, so a store failure fails the request instead of signing anyone out; each sign-out recorded per person, so a later sign-in revives no older cookie; the Data Protection key ring under the fixed application name Dewiride.Erp, persisted in <LocalApplicationData>/ERP-AI-Pro/DataProtection-Keys (the external volume erp-ai-pro-data-protection-keys in production) and wrapped by the Key Vault key that Erp:Platform:DataProtection:KeyIdentifier names (written under both labels), with KeyRingStartupCheck refusing an unwritable folder, an unusable key or an undecryptable live key; the runtime service principal narrowed to Key Vault Crypto Service Encryption User; and the owner verified on 2026-10-02 that a session survives a restart of dotnet run against local-dev (signed in, API process stopped and started, still signed in without a new sign-in)."
         },
         {
           "id": "authentication-antiforgery-for-json-endpoints",
