@@ -11,14 +11,14 @@ namespace Dewiride.Erp.Host.Api.IntegrationTests.Antiforgery;
 public sealed class AntiforgeryCookieTests(AntiforgeryCookieTests.Fixture fixture) : IClassFixture<AntiforgeryCookieTests.Fixture>
 {
     [Fact]
-    public async Task Post_SignIn_IssuesAnHttpOnlyStrictCookieTokenAndAReadableLaxRequestToken()
+    public async Task Post_SignIn_IssuesAnHttpOnlyCookieTokenAndAReadableRequestTokenBothStrict()
     {
         using var client = TestSignIn.CreateClient(fixture.Factory);
 
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
 
         Assert.Equal(["httponly", "path=/", "samesite=strict", "secure"], AttributesOf(signIn, "__Host-erp-antiforgery"));
-        Assert.Equal(["path=/", "samesite=lax", "secure"], AttributesOf(signIn, "__Host-erp-xsrf"));
+        Assert.Equal(["path=/", "samesite=strict", "secure"], AttributesOf(signIn, "__Host-erp-xsrf"));
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public sealed class AntiforgeryCookieTests(AntiforgeryCookieTests.Fixture fixtur
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
         Assert.Null(TokenCookies.SetCookieOf(response, AntiforgeryTokens.CookieName));
-        Assert.Equal(["path=/", "samesite=lax", "secure"], AttributesOf(response, AntiforgeryTokens.RequestTokenCookieName));
+        Assert.Equal(["path=/", "samesite=strict", "secure"], AttributesOf(response, AntiforgeryTokens.RequestTokenCookieName));
         Assert.Equal(HttpStatusCode.NoContent, change.StatusCode);
     }
 

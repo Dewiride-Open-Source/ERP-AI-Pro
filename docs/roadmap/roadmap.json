@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-10-02",
+  "updatedOn": "2026-10-03",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -773,7 +773,8 @@
             "The full Playwright matrix dispatched on the branch passes, and the run on main after the merge passes"
           ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From `authentication-antiforgery-for-json-endpoints`: the full local Playwright run of 2026-10-03 on the owner Windows machine timed out once on tablet-ios in another test of the same spec, \"selects rows on a page and across pages, and clears the selection\" (data-table.spec.ts line 374, 30 s test timeout, a page at rest in the failure snapshot), which then passed 10 of 10 runs with --repeat-each=10 on its own; it passes on chromium, firefox and webkit in the same run, so look for one cause shared by both data table tests under the load of the full suite on Windows WebKit."
         }
       ]
     },
@@ -836,7 +837,7 @@
           "editionConfirmedOn": "2026-09-29",
           "acceptance": [
             "Every POST, PUT, PATCH and DELETE request that the session cookie authenticates is refused, before the feature gate, idempotency and the endpoint run, with 400 antiforgery.token-missing when it carries no token and 400 antiforgery.token-invalid when its token does not belong to the cookie token and the person: the token travels in the X-XSRF-TOKEN header, and only an endpoint that reads a form also takes it from the form field __RequestVerificationToken; GET, HEAD, OPTIONS and TRACE requests, anonymous requests and requests authenticated without the session cookie are never checked; host tests prove every case, and an architecture test fails on any product endpoint that disables the check",
-            "Signing in sets the cookie token __Host-erp-antiforgery (HttpOnly, Secure, SameSite=Strict, Path=/, no Expires) and the readable request token __Host-erp-xsrf (Secure, SameSite=Lax, Path=/, no Expires) for that person; GET /api/auth/antiforgery issues the pair again for the signed-in person (204, and 401 without a session); signing out and a refused session cookie clear both; a token issued before an API restart on the same key ring is accepted after it",
+            "Signing in sets the cookie token __Host-erp-antiforgery (HttpOnly, Secure, SameSite=Strict, Path=/, no Expires) and the readable request token __Host-erp-xsrf (Secure, SameSite=Strict, Path=/, no Expires) for that person; GET /api/auth/antiforgery issues the pair again for the signed-in person (204, and 401 without a session); signing out and a refused session cookie clear both; a token issued before an API restart on the same key ring is accepted after it",
             "POST /api/auth/logout takes the token from X-XSRF-TOKEN or from the form field __RequestVerificationToken, so a sign-out form the page posts works; without a token it answers 400 antiforgery.token-missing and the person stays signed in",
             "The web app sends X-XSRF-TOKEN with the value of __Host-erp-xsrf on every unsafe call, from Server Functions through frontend/apps/web/src/shared/api/client.ts and from the browser upload through frontend/apps/web/src/shared/api/upload.ts, and after a refusal with an antiforgery code each fetches a new pair from GET /api/auth/antiforgery and sends the request once more; web unit tests prove both, a Playwright spec proves the retried upload on every browser project, and every existing spec still passes",
             "The owner signs in through dotnet run and pnpm dev against local-dev, then uploads, downloads and deletes an attachment, recorded in the pull request"

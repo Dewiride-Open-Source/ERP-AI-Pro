@@ -169,8 +169,8 @@ export async function sendWithAntiforgery<TAnswer>({
   }
 }
 
-// The fetch of the web server's API client: the request token comes from the cookie header it forwards, and a renewed pair
-// is relayed to the browser as well as merged into the request sent once more.
+// A renewed pair reaches the browser only with the answer of the Server Function that is still running, so the request sent
+// once more carries it in its own cookie header as well.
 export function antiforgeryFetch({
   fetch,
   renewalUrl,

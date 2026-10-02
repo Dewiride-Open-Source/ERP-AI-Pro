@@ -102,8 +102,9 @@ internal static class AuthEndpoints
             [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
     }
 
-    // A page, image or frame of another site that sends the browser here would replace the person's tokens and break a token a
-    // page of this site already holds; the web app's own calls are same-origin, and its server sends no Sec-Fetch-Site.
+    // A navigation another site starts carries the SameSite=Lax session cookie but not the SameSite=Strict cookie token, so
+    // issuing the pair for it would write a new cookie token and refuse every request token a page of this site holds. The
+    // web app's scripts send same-origin and its server sends no Sec-Fetch-Site, so every other value is refused.
     private static Results<NoContent, ProblemHttpResult> IssueAntiforgeryTokens(HttpContext httpContext, AntiforgeryCookies cookies)
     {
         if (!IsAbsentOrExactly(httpContext.Request.Headers[FetchSiteHeader], "same-origin"))

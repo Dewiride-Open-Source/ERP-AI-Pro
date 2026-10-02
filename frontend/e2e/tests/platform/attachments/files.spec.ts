@@ -327,7 +327,7 @@ test.describe("attachments page", () => {
         domain: new URL(baseURL!).hostname,
         path: "/",
         secure: true,
-        sameSite: "Lax" as const,
+        sameSite: "Strict" as const,
       });
       const sentTokens: (string | undefined)[] = [];
       const stored: Response[] = [];

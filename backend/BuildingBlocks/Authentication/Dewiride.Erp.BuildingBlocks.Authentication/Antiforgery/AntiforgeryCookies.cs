@@ -5,13 +5,13 @@ using Microsoft.AspNetCore.Http;
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 
 // Both cookies are always Secure under the __Host- prefix, so no sibling host can set or shadow them, and carry no Expires,
-// so they end with the browser session like the session cookie. The cookie token stays HttpOnly and SameSite=Strict; the
-// request token is readable by the page's scripts and SameSite=Lax.
+// so they end with the browser session like the session cookie. Both are SameSite=Strict: only a request a page of this
+// site sends needs them, and every such request is same-site.
 internal sealed class AntiforgeryCookies(IAntiforgery antiforgery)
 {
     private static readonly CookieOptions CookieTokenOptions = Options(httpOnly: true, SameSiteMode.Strict);
 
-    private static readonly CookieOptions RequestTokenOptions = Options(httpOnly: false, SameSiteMode.Lax);
+    private static readonly CookieOptions RequestTokenOptions = Options(httpOnly: false, SameSiteMode.Strict);
 
     private static readonly object ClearedItem = new();
 

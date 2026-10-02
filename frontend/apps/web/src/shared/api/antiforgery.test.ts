@@ -198,8 +198,8 @@ test("isAntiforgeryRefusal_AntiforgeryCodeWithAnotherStatus_IsNotARefusal", () =
 
 test("parseSetCookie_RequestTokenWrittenByAspNetCore_ReadsItsAttributes", () => {
   assert.deepEqual(
-    parseSetCookie(`${requestTokenCookieName}=CfDJ8request; path=/; secure; samesite=lax`),
-    setCookie(requestTokenCookieName, "CfDJ8request", { secure: true, sameSite: "lax", path: "/" }),
+    parseSetCookie(`${requestTokenCookieName}=CfDJ8request; path=/; secure; samesite=strict`),
+    setCookie(requestTokenCookieName, "CfDJ8request", { secure: true, sameSite: "strict", path: "/" }),
   );
 });
 
@@ -233,9 +233,14 @@ test("parseSetCookie_MaxAgeAndExpires_AreRead", () => {
 test("parseSetCookie_CookieDeletedByAspNetCore_HasAnEmptyValueAndAPastExpiry", () => {
   assert.deepEqual(
     parseSetCookie(
-      `${requestTokenCookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; secure; samesite=lax`,
+      `${requestTokenCookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; secure; samesite=strict`,
     ),
-    setCookie(requestTokenCookieName, "", { secure: true, sameSite: "lax", path: "/", expires: new Date(0) }),
+    setCookie(requestTokenCookieName, "", {
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+      expires: new Date(0),
+    }),
   );
 });
 
@@ -527,7 +532,7 @@ function renewedPair(): Response {
   return new Response(null, {
     status: 204,
     headers: [
-      ["set-cookie", `${requestTokenCookieName}=renewed-token; path=/; secure; samesite=lax`],
+      ["set-cookie", `${requestTokenCookieName}=renewed-token; path=/; secure; samesite=strict`],
       [
         "set-cookie",
         `${antiforgeryCookieName}=renewed-cookie-token; path=/; secure; samesite=strict; httponly`,
@@ -618,7 +623,7 @@ test("antiforgeryFetch_AntiforgeryRefusal_RenewsOnceRelaysThePairAndSendsOnceMor
   assert.equal(headerOf(fetched[1]!, "accept"), "application/json");
   assert.deepEqual(relayed, [
     [
-      setCookie(requestTokenCookieName, "renewed-token", { secure: true, sameSite: "lax", path: "/" }),
+      setCookie(requestTokenCookieName, "renewed-token", { secure: true, sameSite: "strict", path: "/" }),
       setCookie(antiforgeryCookieName, "renewed-cookie-token", {
         httpOnly: true,
         secure: true,
