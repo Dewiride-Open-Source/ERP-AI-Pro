@@ -759,6 +759,21 @@
           "startedOn": "2026-09-29",
           "completedOn": "2026-09-29",
           "notes": "Six Playwright projects on three viewports (desktop chromium, firefox, webkit; the owner-approved iPad (gen 11) as tablet-ios; Pixel 10 and iPhone 17), visual tests in light and dark through forEachTheme, captures named <spec>/<name>--<project>--<theme>.png; a navigation crawl over every entry of the primary navigation (fixtures/navigation.ts) in both themes on every project; e2e.yml shards each project in two with blob reports that the required Playwright job merges into the playwright-report HTML artifact. The signed-in session stays with authentication-test-authentication-infrastructure. ADR-0028. The first full runs on main then failed in the three WebKit projects (a scan that overlapped hydration, a kitchen sink test too long for a runner, a motion check that needed frames); ADR-0029 makes every capture wait for a page at rest, marks server-rendered states with data-hydrating, splits the kitchen sink captures per section and times the motion check from the click."
+        },
+        {
+          "id": "web-foundation-webkit-data-table-column-test-stability",
+          "title": "Reliable data table column test on WebKit",
+          "scope": "Make the data table test that hides and shows columns and keeps them in the address (frontend/e2e/tests/platform/design/data-table.spec.ts) pass reliably on the WebKit projects on Windows, where it fails about three runs in five on tablet-ios while every CI run passes: find the cause from Playwright traces of failing runs, fix it in the spec, its page object or the data table component without sleeps, fixed timeouts, retries or skips, and prove it with repeated runs on tablet-ios and webkit.",
+          "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-10-02",
+          "acceptance": [
+            "On the owner's Windows machine the data table test that hides and shows columns passes 20 of 20 runs with --repeat-each=20 on the tablet-ios project and 20 of 20 on the webkit project",
+            "The pull request names the cause, shown by a Playwright trace of a failing run, and the fix adds no sleep, fixed timeout, retry, skip or WebKit-only branch",
+            "The full Playwright matrix dispatched on the branch passes, and the run on main after the merge passes"
+          ],
+          "tags": [],
+          "dependsOn": []
         }
       ]
     },
