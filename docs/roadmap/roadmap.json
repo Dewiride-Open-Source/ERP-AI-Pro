@@ -831,12 +831,19 @@
           "id": "authentication-antiforgery-for-json-endpoints",
           "title": "Antiforgery for JSON endpoints",
           "scope": "Add AddAntiforgery with header X-XSRF-TOKEN, a GET /api/auth/antiforgery endpoint setting a non-HttpOnly XSRF-TOKEN cookie, an endpoint filter validating POST/PUT/PATCH/DELETE on every cookie-authenticated group, the web fetch wrapper attaching the header, and integration tests for missing and invalid tokens.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
-          "acceptance": [],
+          "acceptance": [
+            "Every POST, PUT, PATCH and DELETE request that the session cookie authenticates is refused, before the feature gate, idempotency and the endpoint run, with 400 antiforgery.token-missing when it carries no token and 400 antiforgery.token-invalid when its token does not belong to the cookie token and the person: the token travels in the X-XSRF-TOKEN header, and only an endpoint that reads a form also takes it from the form field __RequestVerificationToken; GET, HEAD, OPTIONS and TRACE requests, anonymous requests and requests authenticated without the session cookie are never checked; host tests prove every case, and an architecture test fails on any product endpoint that disables the check",
+            "Signing in sets the cookie token __Host-erp-antiforgery (HttpOnly, Secure, SameSite=Strict, Path=/, no Expires) and the readable request token __Host-erp-xsrf (Secure, SameSite=Lax, Path=/, no Expires) for that person; GET /api/auth/antiforgery issues the pair again for the signed-in person (204, and 401 without a session); signing out and a refused session cookie clear both; a token issued before an API restart on the same key ring is accepted after it",
+            "POST /api/auth/logout takes the token from X-XSRF-TOKEN or from the form field __RequestVerificationToken, so a sign-out form the page posts works; without a token it answers 400 antiforgery.token-missing and the person stays signed in",
+            "The web app sends X-XSRF-TOKEN with the value of __Host-erp-xsrf on every unsafe call, from Server Functions through frontend/apps/web/src/shared/api/client.ts and from the browser upload through frontend/apps/web/src/shared/api/upload.ts, and after a refusal with an antiforgery code each fetches a new pair from GET /api/auth/antiforgery and sends the request once more; web unit tests prove both, a Playwright spec proves the retried upload on every browser project, and every existing spec still passes",
+            "The owner signs in through dotnet run and pnpm dev against local-dev, then uploads, downloads and deletes an attachment, recorded in the pull request"
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-02",
           "notes": "The web API client forwards only cookie, traceparent, tracestate and x-correlation-id (frontend/apps/web/src/shared/api/forwarded-headers.ts, used by shared/api/client.ts). When antiforgery lands, add the X-XSRF-TOKEN header read from the antiforgery cookie there for unsafe methods, with a web unit test and a Playwright proof, and document it in docs/architecture/http-conventions.md; ADR-0017 defers it to this sub-phase. From backend-platform-attachments-building-block: the browser uploads files itself through frontend/apps/web/src/shared/api/upload.ts (XMLHttpRequest multipart POST to /api/platform/attachments), so that request must carry X-XSRF-TOKEN as well; the upload endpoint binds no form, so the header check is the only antiforgery check it gets. From `authentication-oidc-bff-in-the-api` (ADR-0031): GET /api/auth/antiforgery must be anonymous while the transitional platform routes are; POST /api/auth/logout is a top-level form navigation that ends in the Entra end-session redirect, so decide whether its check reads the token from the form. From `authentication-token-cache-and-data-protection-key` (ADR-0032): antiforgery tokens are Data Protection payloads, so they share the persisted key ring and the fixed application name Dewiride.Erp and survive restarts; AddAntiforgery calls AddDataProtection, which AddErpDataProtection has already configured, so it needs no key ring setup of its own."
         },
         {
