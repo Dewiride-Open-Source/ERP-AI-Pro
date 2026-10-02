@@ -832,7 +832,7 @@
           "id": "authentication-antiforgery-for-json-endpoints",
           "title": "Antiforgery for JSON endpoints",
           "scope": "Add AddAntiforgery with header X-XSRF-TOKEN, a GET /api/auth/antiforgery endpoint setting a non-HttpOnly XSRF-TOKEN cookie, an endpoint filter validating POST/PUT/PATCH/DELETE on every cookie-authenticated group, the web fetch wrapper attaching the header, and integration tests for missing and invalid tokens.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
           "acceptance": [
@@ -845,7 +845,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-10-02",
-          "notes": "The web API client forwards only cookie, traceparent, tracestate and x-correlation-id (frontend/apps/web/src/shared/api/forwarded-headers.ts, used by shared/api/client.ts). When antiforgery lands, add the X-XSRF-TOKEN header read from the antiforgery cookie there for unsafe methods, with a web unit test and a Playwright proof, and document it in docs/architecture/http-conventions.md; ADR-0017 defers it to this sub-phase. From backend-platform-attachments-building-block: the browser uploads files itself through frontend/apps/web/src/shared/api/upload.ts (XMLHttpRequest multipart POST to /api/platform/attachments), so that request must carry X-XSRF-TOKEN as well; the upload endpoint binds no form, so the header check is the only antiforgery check it gets. From `authentication-oidc-bff-in-the-api` (ADR-0031): GET /api/auth/antiforgery must be anonymous while the transitional platform routes are; POST /api/auth/logout is a top-level form navigation that ends in the Entra end-session redirect, so decide whether its check reads the token from the form. From `authentication-token-cache-and-data-protection-key` (ADR-0032): antiforgery tokens are Data Protection payloads, so they share the persisted key ring and the fixed application name Dewiride.Erp and survive restarts; AddAntiforgery calls AddDataProtection, which AddErpDataProtection has already configured, so it needs no key ring setup of its own."
+          "completedOn": "2026-10-03",
+          "notes": "BuildingBlocks.Authentication/Antiforgery (ADR-0033): AntiforgeryValidationMiddleware refuses every POST, PUT, PATCH and DELETE the session cookie signs in without a valid antiforgery token (400 antiforgery.token-missing or antiforgery.token-invalid), after authorization and before the feature gate and idempotency, reading the token from X-XSRF-TOKEN and, only on POST /api/auth/logout, from the form field __RequestVerificationToken; anonymous requests and other schemes pass unchecked; AntiforgeryCookies writes __Host-erp-antiforgery (HttpOnly) and the readable __Host-erp-xsrf, both Secure and SameSite=Strict session cookies, at every sign-in and clears them at sign-out; GET /api/auth/antiforgery issues the pair again for a same-origin script or the web server only; the web app sends the header from Server Functions (antiforgeryFetch in shared/api/client.ts) and the browser upload, renewing once and resending once after a refusal; and the owner verified on 2026-10-03, signed in through dotnet run and pnpm dev against local-dev, that an upload, two download links and a delete all went through without a refusal."
         },
         {
           "id": "authentication-session-endpoints-openapi-security-and-bearer",
