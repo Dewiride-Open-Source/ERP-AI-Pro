@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-09-30",
+  "updatedOn": "2026-10-02",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -796,12 +796,19 @@
           "id": "authentication-token-cache-and-data-protection-key",
           "title": "Token cache and Data Protection key ring",
           "scope": "Add AddDistributedTokenCaches backed by the SQL Server IDistributedCache (in-memory in Development), persist Data Protection keys to a named Docker volume with ProtectKeysWithAzureKeyVault using a versionless key identifier and SetApplicationName, fail fast when the vault key is unreachable in production, and add a test proving cookies survive an app restart.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
-          "acceptance": [],
+          "acceptance": [
+            "A session survives a restart of the API and a replacement of its container: the API keeps its Data Protection key ring as files in <LocalApplicationData>/ERP-AI-Pro/DataProtection-Keys (in the production stack the external named volume erp-ai-pro-data-protection-keys mounted at /home/app/.local/share/ERP-AI-Pro/DataProtection-Keys) under the fixed application name Dewiride.Erp, and the token cache in the SQL Server table platform_caching.DistributedCache that the migrator creates; a host test signs a person in on one API host, stops it, and the next host on the same key ring and database accepts the same cookie without a new sign-in",
+            "Every Data Protection key at rest is wrapped by the Key Vault key that Erp:Platform:DataProtection:KeyIdentifier names (a versionless key identifier that scripts/azure/provision.sh writes under local-dev and production); the API refuses to start, naming the cause, when that setting is missing while the API reads App Configuration or runs in Production, when the key folder is not writable, when the Key Vault key cannot wrap and unwrap, or when a key that may still protect a live session cannot be decrypted; a run without the store keeps its key ring in memory and writes no key to disk",
+            "Each person's token cache entry is stored encrypted with Data Protection, so no token is readable in the table, expires SessionIdleTimeout after the last request and at most SessionLifetime after it was written (each plus five minutes), and is read from SQL Server on every session check, so signing out on one API instance refuses that person's cookies on every instance at once; a database failure during a session check, a sign-in or a sign-out fails that request instead of signing anyone out or leaving a session silently alive, and an entry that cannot be decrypted counts as signed out",
+            "No token, account id or key material reaches a log; the key files on disk hold no unwrapped key; the runtime service principal holds Key Vault Crypto Service Encryption User, not Crypto User, on the production vault",
+            "The owner signs in through dotnet run and pnpm dev against local-dev, restarts the API, and is still signed in without a new sign-in, recorded in the pull request"
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-02",
           "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031): replace AddInMemoryTokenCaches, bounded by MsalMemoryTokenCacheOptions to the session lifetimes, with AddDistributedTokenCaches on SQL Server with MsalDistributedTokenCacheAdapterOptions.Encrypt; the session cookie and the OIDC state, nonce and correlation cookies are Data Protection payloads, so the key ring must survive a restart for sessions to survive one."
         },
         {
