@@ -6,7 +6,9 @@ Reads the provisioned Azure resources back and asserts the documented state:
 the App Configuration store, both Key Vaults, the data-protection keys, the
 development storage account (properties, blob service, private attachments
 container, delete lock and a read-only blob listing signed in with Entra ID),
-every row of the role matrix and the labelled Erp:Sentinel keys. Never writes.
+every row of the role matrix, the absence of Key Vault Crypto User for the
+developers group and the runtime service principal, and the labelled
+Erp:Sentinel keys. Never writes.
 
 Options:
   --entra           Check the Entra app registrations, service principals,
@@ -16,9 +18,11 @@ Options:
                     references written by seed.sh: every value of
                     infra/appconfig is read back (a reference only under the
                     labels it lists), the local-dev label is proven to
-                    override the unlabelled default, and the blob endpoint
+                    override the unlabelled default, the blob endpoint
                     provision.sh writes under local-dev is compared with the
-                    storage account.
+                    storage account, and the data-protection key identifier
+                    it writes under local-dev and production is compared with
+                    the key in the matching vault.
   --params <file>   Parameter file (default: scripts/azure/params.env).
   --help            Show this help.'
 
@@ -40,6 +44,7 @@ readonly ROLE_APP_CONFIGURATION_DATA_OWNER='5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b
 readonly ROLE_KEY_VAULT_SECRETS_USER='4633458b-17de-408a-b874-0445c86b69e6'
 readonly ROLE_KEY_VAULT_SECRETS_OFFICER='b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
 readonly ROLE_KEY_VAULT_CRYPTO_USER='12338af0-0e69-4776-bea7-57ae8d297424'
+readonly ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER='e147488a-f6f5-4113-8e2d-b22465e65bf6'
 readonly ROLE_KEY_VAULT_CRYPTO_OFFICER='14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
 readonly ROLE_KEY_VAULT_CERTIFICATES_OFFICER='a4417e6f-fecd-4de8-b567-7b0420556985'
 readonly ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR='ba92f5b4-2d11-453d-a403-e96b0029c9fe'
@@ -50,6 +55,7 @@ readonly STORAGE_DELETE_RETENTION_DAYS='7'
 readonly STORAGE_LOCK_NAME='do-not-delete'
 readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
 readonly BLOB_SERVICE_URI_LABEL='local-dev'
+readonly DATA_PROTECTION_KEY_IDENTIFIER_KEY='Erp:Platform:DataProtection:KeyIdentifier'
 
 readonly ENTRA_HINT='run: bash scripts/azure/entra.sh'
 readonly PROVISION_HINT='run: bash scripts/azure/provision.sh'
@@ -111,6 +117,19 @@ assert_role() {
   local description="$1" scope="$2" principal_id="$3" role_id="$4"
   assert_query "$description" '1' role assignment list --scope "$scope" --assignee-object-id "$principal_id" --role "$role_id" \
     --fill-principal-name false --query 'length(@)'
+}
+
+assert_no_role() {
+  local description="$1" scope="$2" principal_id="$3" role_id="$4"
+  local output
+  if ! output="$(az_read role assignment list --scope "$scope" --assignee-object-id "$principal_id" --role "$role_id" \
+    --fill-principal-name false --query 'length(@)' --output tsv 2>&1)"; then
+    fail "$description (query failed: $(query_error_summary "$output"))"
+  elif [[ "$output" == '0' ]]; then
+    pass "$description"
+  else
+    fail "$description ($output assignment(s) remain); remove with: az role assignment delete --assignee-object-id $principal_id --role $role_id --scope $scope"
+  fi
 }
 
 json_eval() {
@@ -241,7 +260,8 @@ verify_roles() {
   if [[ -n "$developers_group_id" ]]; then
     assert_role "developers group is App Configuration Data Reader on the store" "$store_id" "$developers_group_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
     assert_role "developers group is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_DEV_NAME" "$development_vault_id" "$developers_group_id" "$ROLE_KEY_VAULT_SECRETS_USER"
-    assert_role "developers group is Key Vault Crypto User on $ERP_AZURE_KEYVAULT_DEV_NAME" "$development_vault_id" "$developers_group_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
+    assert_role "developers group is Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_DEV_NAME" "$development_vault_id" "$developers_group_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
+    assert_no_role "developers group is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_DEV_NAME" "$development_vault_id" "$developers_group_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
     assert_role "developers group is Storage Blob Data Contributor on container $attachments_container" "$attachments_container_id" "$developers_group_id" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
   else
     skip "developers group roles: skipped: not configured"
@@ -251,7 +271,8 @@ verify_roles() {
   if [[ -n "$runtime_id" ]]; then
     assert_role "runtime service principal is App Configuration Data Reader on the store" "$store_id" "$runtime_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
     assert_role "runtime service principal is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$runtime_id" "$ROLE_KEY_VAULT_SECRETS_USER"
-    assert_role "runtime service principal is Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$runtime_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
+    assert_role "runtime service principal is Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$runtime_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
+    assert_no_role "runtime service principal is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$runtime_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
   else
     skip "runtime service principal roles: skipped: not configured"
   fi
@@ -549,7 +570,8 @@ verify_runtime_registration() {
   production_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_PROD_NAME")"
   assert_runtime_role "runtime service principal is App Configuration Data Reader on the store" "$store_id" "$principal_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
   assert_runtime_role "runtime service principal is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_SECRETS_USER"
-  assert_runtime_role "runtime service principal is Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
+  assert_runtime_role "runtime service principal is Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
+  assert_no_role "runtime service principal is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
 }
 
 verify_entra() {
@@ -675,7 +697,6 @@ verify_label_precedence() {
 }
 
 verify_blob_service_uri() {
-  log_step "Provisioned endpoints"
   local description="$BLOB_SERVICE_URI_KEY [$BLOB_SERVICE_URI_LABEL] is the blob endpoint of $ERP_AZURE_STORAGE_DEV_NAME"
   local endpoint value
   if ! endpoint="$(az_read storage account show --name "$ERP_AZURE_STORAGE_DEV_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
@@ -690,6 +711,34 @@ verify_blob_service_uri() {
   else
     assert_equals_exact "$description" "$endpoint" "$value"
   fi
+}
+
+verify_data_protection_key_identifier() {
+  local label="$1" vault_name="$2"
+  local description="$DATA_PROTECTION_KEY_IDENTIFIER_KEY [$label] is the versionless identifier of $DATA_PROTECTION_KEY_NAME in $vault_name"
+  local key_id expected value
+  if ! key_id="$(az_read keyvault key show --vault-name "$vault_name" --name "$DATA_PROTECTION_KEY_NAME" --query key.kid --output tsv 2>&1)"; then
+    fail "$description (query failed: $(query_error_summary "$key_id")); $PROVISION_HINT"
+    return 0
+  fi
+  if ! expected="$(canonical_uri "${key_id%/*}")"; then
+    fail "$description (the key id '$key_id' is not a URI)"
+    return 0
+  fi
+  if ! value="$(appconfig_kv_get "$DATA_PROTECTION_KEY_IDENTIFIER_KEY" "$label" 2>&1)"; then
+    fail "$description (query failed: $(query_error_summary "$value"))"
+  elif [[ -z "$value" ]]; then
+    fail "$description (key absent from the store); $PROVISION_HINT"
+  else
+    assert_equals "$description" "$expected" "$value"
+  fi
+}
+
+verify_provisioned_endpoints() {
+  log_step "Provisioned endpoints"
+  verify_blob_service_uri
+  verify_data_protection_key_identifier local-dev "$ERP_AZURE_KEYVAULT_DEV_NAME"
+  verify_data_protection_key_identifier production "$ERP_AZURE_KEYVAULT_PROD_NAME"
 }
 
 verify_labels() {
@@ -715,7 +764,7 @@ verify_labels() {
   done
 
   verify_label_precedence
-  verify_blob_service_uri
+  verify_provisioned_endpoints
   verify_sentinels
 }
 

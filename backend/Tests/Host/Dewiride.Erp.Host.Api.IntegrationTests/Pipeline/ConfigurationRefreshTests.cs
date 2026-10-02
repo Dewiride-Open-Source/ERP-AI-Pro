@@ -2,6 +2,7 @@ using System.Net;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Deployment;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 
@@ -13,7 +14,9 @@ public sealed class ConfigurationRefreshTests
     public async Task Get_AppConfigurationSource_TriggersOneRefreshPerRequestBurst()
     {
         var refresher = new CountingRefresher();
-        using var factory = CreateFactory(refresher);
+        using var deployment = TestDeployment.WithPersistedKeyRing();
+        await using var root = new ErpApiFactory().WithDeployment(deployment);
+        using var factory = ReadingTheStore(root, refresher);
         using var client = factory.CreateClient();
 
         using var first = await client.GetAsync(new Uri("/api/platform/system-info", UriKind.Relative), TestContext.Current.CancellationToken);
@@ -28,7 +31,9 @@ public sealed class ConfigurationRefreshTests
     public async Task Get_RequestFailingLaterInThePipeline_HasAlreadyTriggeredTheRefresh()
     {
         var refresher = new CountingRefresher();
-        using var factory = CreateFactory(refresher);
+        using var deployment = TestDeployment.WithPersistedKeyRing();
+        await using var root = new ErpApiFactory().WithDeployment(deployment);
+        using var factory = ReadingTheStore(root, refresher);
         using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(new Uri(ErpApiFactory.ThrowingPath, UriKind.Relative), TestContext.Current.CancellationToken);
@@ -51,8 +56,9 @@ public sealed class ConfigurationRefreshTests
         Assert.Equal(0, refresher.Calls);
     }
 
-    private static WebApplicationFactory<Program> CreateFactory(CountingRefresher refresher) =>
-        new ErpApiFactory().WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+    // A host that reads the store protects its key ring with Key Vault, so these hosts are deployments with a persisted ring.
+    private static WebApplicationFactory<Program> ReadingTheStore(ErpApiFactory root, CountingRefresher refresher) =>
+        root.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
         {
             services.AddSingleton(new ErpConfigurationInfo(ErpConfigurationSource.AppConfiguration, ErpEnvironmentNames.LocalDev, refresher.AppConfigurationEndpoint));
             services.AddSingleton<IConfigurationRefresherProvider>(new CountingRefresherProvider(refresher));

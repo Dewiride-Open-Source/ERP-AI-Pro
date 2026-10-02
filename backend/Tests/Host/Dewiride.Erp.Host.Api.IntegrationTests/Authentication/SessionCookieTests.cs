@@ -191,6 +191,28 @@ public sealed class SessionCookieTests
     }
 
     [Fact]
+    public async Task Get_WithACopyOfTheCookieOnceThePersonSignedOutAndSignedInAgain_AnswersUnauthenticatedWhileTheNewSessionWorks()
+    {
+        using var session = new Session();
+        using var firstSignIn = await session.SignInAsync();
+        var copy = CookieValueOf(firstSignIn);
+        session.Clock.Advance(TimeSpan.FromSeconds(1));
+        using var signOut = await session.SignOutAsync();
+        session.Clock.Advance(TimeSpan.FromSeconds(1));
+        using var secondSignIn = await session.SignInAsync();
+
+        using var refused = await session.GetWithCookieAsync(copy);
+        using var signedIn = await session.GetAsync();
+
+        Assert.Equal(HttpStatusCode.Found, signOut.StatusCode);
+        Assert.True(await TestSignIn.IsAccountCachedAsync(session.Factory.Services, TestUsers.Accountant));
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+        Assert.Contains(ClearedCookie, SessionCookieOf(refused), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        Assert.Equal(TestUsers.Accountant.ObjectId.ToString("D"), await signedIn.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task Get_WithAnotherSessionOfThePersonOnceTheySignedOutElsewhere_AnswersUnauthenticatedAndClearsTheCookie()
     {
         using var session = new Session();

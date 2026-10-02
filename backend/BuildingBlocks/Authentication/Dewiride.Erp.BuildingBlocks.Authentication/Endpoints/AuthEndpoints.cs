@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Requests;
+using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Primitives;
+using Microsoft.Identity.Web;
 
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
 
@@ -43,7 +46,7 @@ internal static class AuthEndpoints
             .AllowAnonymous();
 
         // A cross-site form post carries no SameSite=Lax session cookie, so the fallback policy refuses it before anything is signed out.
-        group.MapPost("/logout", Logout)
+        group.MapPost("/logout", LogoutAsync)
             .WithName(LogoutRouteName)
             .WithSummary("Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.")
             .Produces(StatusCodes.Status302Found)
@@ -65,10 +68,21 @@ internal static class AuthEndpoints
             : TypedResults.Challenge(new AuthenticationProperties { RedirectUri = login.LocalReturnUrl }, [OpenIdConnectDefaults.AuthenticationScheme]);
     }
 
-    private static SignOutHttpResult Logout() =>
-        TypedResults.SignOut(
+    private static async Task<SignOutHttpResult> LogoutAsync(ClaimsPrincipal user, SessionRevocations revocations)
+    {
+        // The sign-out is recorded before anything is signed out: a record that cannot be written fails the request and leaves
+        // the person signed in, and a written one refuses every older session of the person even if removing their account fails.
+        // It is written whatever happens to the request meanwhile, so a sign-out the browser abandons still takes effect; the
+        // retry limits and the command timeout bound it.
+        if (user.GetMsalAccountId() is { } accountId)
+        {
+            await revocations.RevokeAsync(accountId, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        return TypedResults.SignOut(
             new AuthenticationProperties { RedirectUri = AuthPaths.LoginPage },
             [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
+    }
 
     private static bool IsOpenedAsAPage(IHeaderDictionary headers) =>
         IsAbsentOrExactly(headers[FetchModeHeader], "navigate") && IsAbsentOrExactly(headers[FetchDestinationHeader], "document");

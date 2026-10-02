@@ -1,5 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
+using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Authentication;
@@ -9,7 +10,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.TokenCacheProviders.InMemory;
+using Microsoft.Identity.Web.TokenCacheProviders;
+using Microsoft.Identity.Web.TokenCacheProviders.Distributed;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 
@@ -109,11 +111,44 @@ public sealed class AuthenticationSchemeTests(ErpApiFactory factory) : IClassFix
     }
 
     [Fact]
-    public void TokenCacheOptions_Expiration_IsTheSessionLifetime()
+    public void TokenCacheProvider_Resolved_IsTheDistributedAdapterAndTheOnlyRegistration()
     {
-        var options = factory.Services.GetRequiredService<IOptions<MsalMemoryTokenCacheOptions>>().Value;
+        Assert.IsType<MsalDistributedTokenCacheAdapter>(factory.Services.GetRequiredService<IMsalTokenCacheProvider>());
+        Assert.Single(factory.Services.GetServices<IMsalTokenCacheProvider>());
+    }
 
-        Assert.Equal(TimeSpan.FromHours(12), options.AbsoluteExpirationRelativeToNow);
+    [Fact]
+    public void TokenCacheOptions_Configured_ExpireEntriesFiveMinutesAfterTheSessionWithoutTheMemoryLevelOrTheAdapterEncryption()
+    {
+        var options = factory.Services.GetRequiredService<IOptions<MsalDistributedTokenCacheAdapterOptions>>().Value;
+
+        Assert.Equal(TimeSpan.FromHours(12) + TimeSpan.FromMinutes(5), options.AbsoluteExpirationRelativeToNow);
+        Assert.Equal(TimeSpan.FromMinutes(30) + TimeSpan.FromMinutes(5), options.SlidingExpiration);
+        Assert.Null(options.AbsoluteExpiration);
+        Assert.True(options.DisableL1Cache);
+        Assert.False(options.Encrypt);
+        Assert.NotNull(options.OnL2CacheFailure);
+    }
+
+    [Fact]
+    public void TokenCacheOptions_OnAStoreFailure_ThrowTheUnavailableExceptionInsteadOfRetrying()
+    {
+        var options = factory.Services.GetRequiredService<IOptions<MsalDistributedTokenCacheAdapterOptions>>().Value;
+        var failure = new TimeoutException("The token cache store did not answer.");
+
+        var thrown = Assert.Throws<TokenCacheUnavailableException>(() => options.OnL2CacheFailure!(failure));
+
+        Assert.Same(failure, thrown.InnerException);
+        Assert.Equal(TokenCacheUnavailableException.DefaultMessage, thrown.Message);
+    }
+
+    [Fact]
+    public void TokenCacheOptions_OnACancelledStoreOperation_RethrowTheCancellationItself()
+    {
+        var options = factory.Services.GetRequiredService<IOptions<MsalDistributedTokenCacheAdapterOptions>>().Value;
+        var cancellation = new OperationCanceledException("The request was cancelled.");
+
+        Assert.Same(cancellation, Assert.Throws<OperationCanceledException>(() => options.OnL2CacheFailure!(cancellation)));
     }
 
     [Fact]
@@ -124,10 +159,11 @@ public sealed class AuthenticationSchemeTests(ErpApiFactory factory) : IClassFix
             .WithConfiguration(ErpApiFactory.IdentitySessionLifetimeKey, "02:00:00");
 
         var cookie = configured.Services.GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>().Get(Cookies);
-        var cache = configured.Services.GetRequiredService<IOptions<MsalMemoryTokenCacheOptions>>().Value;
+        var cache = configured.Services.GetRequiredService<IOptions<MsalDistributedTokenCacheAdapterOptions>>().Value;
 
         Assert.Equal(TimeSpan.FromMinutes(10), cookie.ExpireTimeSpan);
         Assert.True(cookie.SlidingExpiration);
-        Assert.Equal(TimeSpan.FromHours(2), cache.AbsoluteExpirationRelativeToNow);
+        Assert.Equal(TimeSpan.FromHours(2) + TimeSpan.FromMinutes(5), cache.AbsoluteExpirationRelativeToNow);
+        Assert.Equal(TimeSpan.FromMinutes(10) + TimeSpan.FromMinutes(5), cache.SlidingExpiration);
     }
 }

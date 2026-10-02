@@ -10,6 +10,8 @@ public sealed class LayerTests
 
     private const string AuthenticationAssembly = "Dewiride.Erp.BuildingBlocks.Authentication";
 
+    private const string CachingAssembly = "Dewiride.Erp.BuildingBlocks.Caching";
+
     private const string IdentityWebAssemblyPrefix = "Microsoft.Identity.Web";
 
     private const string TestingAssemblyPrefix = "Dewiride.Erp.Testing";
@@ -96,6 +98,20 @@ public sealed class LayerTests
             .ToList();
 
         Assert.Equal([AuthenticationAssembly], referencing);
+    }
+
+    [Theory]
+    [InlineData("Azure.Security.KeyVault.Keys", AuthenticationAssembly)]
+    [InlineData("Azure.Extensions.AspNetCore.DataProtection.Keys", AuthenticationAssembly)]
+    [InlineData("Microsoft.Extensions.Caching.SqlServer", CachingAssembly)]
+    public void KeyRingAndTokenCacheLibraries_AreReferencedOnlyByTheirBuildingBlock(string library, string owner)
+    {
+        var referencing = ErpAssemblies.All
+            .Where(assembly => assembly.GetReferencedAssemblies().Any(reference => string.Equals(reference.Name, library, StringComparison.Ordinal)))
+            .Select(assembly => assembly.GetName().Name)
+            .ToList();
+
+        Assert.Equal([owner], referencing);
     }
 
     [Fact]

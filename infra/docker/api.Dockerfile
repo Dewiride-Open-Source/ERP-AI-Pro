@@ -22,14 +22,18 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
  && dotnet publish Hosts/Migrator/Dewiride.Erp.Host.Migrator/Dewiride.Erp.Host.Migrator.csproj \
       --configuration "$BUILD_CONFIGURATION" --no-restore --output /app/migrator -p:ContinuousIntegrationBuild=true
 
+RUN mkdir /data-protection-keys
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:6385dc0eaef704fad88d3f65c334e791a371bbe448f52ca39d83d2df49251e28 AS runtime
 WORKDIR /app
 ENV ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_EnableDiagnostics=0 \
-    TZ=Asia/Kolkata
+    TZ=Asia/Kolkata \
+    XDG_DATA_HOME=/home/app/.local/share
 COPY --from=build --chown=app:app /app/api/ ./
 COPY --from=build --chown=app:app /app/probe/ ./probe/
 COPY --from=build --chown=app:app /app/migrator/ ./migrator/
+COPY --from=build --chown=app:app --chmod=700 /data-protection-keys/ /home/app/.local/share/ERP-AI-Pro/DataProtection-Keys/
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["dotnet", "/app/probe/Dewiride.Erp.Host.HealthProbe.dll"]

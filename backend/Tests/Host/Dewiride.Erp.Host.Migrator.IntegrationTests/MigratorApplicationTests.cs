@@ -16,7 +16,9 @@ public sealed class MigratorApplicationTests
 
     private const string FilesSchema = "files";
 
-    private static readonly string[] Schemas = [FilesSchema, "platform_idempotency", "platform_system_info"];
+    private const string CachingSchema = "platform_caching";
+
+    private static readonly string[] Schemas = [FilesSchema, CachingSchema, "platform_idempotency", "platform_system_info"];
 
     private static readonly string[] FilesTables = ["Attachments", "DownloadLinks", "DownloadRedemptions", "StoredContents", "UploadReservations"];
 
@@ -50,6 +52,17 @@ public sealed class MigratorApplicationTests
         Assert.False(attachmentSettingsPresent, $"The test process supplies {AttachmentsOptions.SectionName} settings, so this test cannot prove the migrator runs without them.");
         Assert.Equal(MigratorExitCodes.Succeeded, exitCode);
         Assert.Equal(FilesTables, await ListTablesAsync(database.ConnectionString, FilesSchema));
+    }
+
+    [Fact]
+    public async Task RunAsync_MigrateOnAFreshDatabase_CreatesTheDistributedCacheTableTheApiCannotCreateItself()
+    {
+        await using var database = await EmptyTestDatabase.CreateAsync();
+
+        var exitCode = await RunAsync([MigratorApplication.MigrateCommand], database.ConnectionString);
+
+        Assert.Equal(MigratorExitCodes.Succeeded, exitCode);
+        Assert.Equal(["DistributedCacheEntries"], await ListTablesAsync(database.ConnectionString, CachingSchema));
     }
 
     [Fact]

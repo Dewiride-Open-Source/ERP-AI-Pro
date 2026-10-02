@@ -36,6 +36,10 @@ services:
       AZURE_CLIENT_CERTIFICATE_PATH: /run/secrets/erp-runtime-client.pem
     secrets:
       - erp-runtime-client.pem
+    volumes:
+      - type: volume
+        source: data-protection-keys
+        target: /home/app/.local/share/ERP-AI-Pro/DataProtection-Keys
     read_only: true
     tmpfs:
       - /tmp
@@ -71,6 +75,11 @@ services:
       options:
         max-size: 20m
         max-file: "5"
+
+volumes:
+  data-protection-keys:
+    external: true
+    name: erp-ai-pro-data-protection-keys
 
 secrets:
   erp-runtime-client.pem:

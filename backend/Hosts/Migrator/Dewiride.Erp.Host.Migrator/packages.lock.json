@@ -278,7 +278,9 @@
       "dewiride.erp.buildingblocks.caching": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.Caching.Hybrid": "[10.10.0, )"
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
+          "Microsoft.Extensions.Caching.Hybrid": "[10.10.0, )",
+          "Microsoft.Extensions.Caching.SqlServer": "[10.0.12, )"
         }
       },
       "dewiride.erp.buildingblocks.configuration": {
@@ -461,6 +463,16 @@
         "requested": "[10.10.0, )",
         "resolved": "10.10.0",
         "contentHash": "+16+e4EjjvBg8OedpucUqSFeI9liu0S5AQG2FHY7OnBOV1jGYduYBN8KNPh6noNRM1npF4RBWKONQoAR9nFDSA=="
+      },
+      "Microsoft.Extensions.Caching.SqlServer": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.12, )",
+        "resolved": "10.0.12",
+        "contentHash": "RmXTs59q9uuumK2JQ0bOiuvLgr/n8fMIS74KgODH+ZBpckQEBBgcucPjkkVxF9LHJPM/v8k+PD7SRl6YSJjhJQ==",
+        "dependencies": {
+          "Azure.Identity": "1.14.2",
+          "Microsoft.Data.SqlClient": "6.1.1"
+        }
       },
       "Microsoft.Extensions.Configuration.AzureAppConfiguration": {
         "type": "CentralTransitive",

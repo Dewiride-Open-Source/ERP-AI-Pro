@@ -25,6 +25,8 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 
     private readonly ConcurrentQueue<TestTokenRequest> _requests = new();
 
+    private readonly ConcurrentQueue<string> _issuedTokens = new();
+
     private readonly HttpClient _client;
 
     public TestTokenEndpoint()
@@ -33,6 +35,8 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
     }
 
     public IReadOnlyCollection<TestTokenRequest> Requests => _requests;
+
+    public IReadOnlyCollection<string> IssuedTokens => _issuedTokens;
 
     public static string CodeFor(TestUser user)
     {
@@ -99,7 +103,7 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         },
     };
 
-    private static Dictionary<string, object> Tokens(TestUser user)
+    private Dictionary<string, object> Tokens(TestUser user)
     {
         var now = TimeProvider.System.GetUtcNow().ToUnixTimeSeconds();
         var idToken = new Dictionary<string, object>(StringComparer.Ordinal)
@@ -117,15 +121,26 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             ["ver"] = "2.0",
         };
 
+        string[] tokens =
+        [
+            $"test-access-token.{user.ObjectId:N}",
+            $"test-refresh-token.{user.ObjectId:N}",
+            $"{Encode(new Dictionary<string, object>(StringComparer.Ordinal) { ["alg"] = "none", ["typ"] = "JWT" })}.{Encode(idToken)}.",
+        ];
+        foreach (var token in tokens)
+        {
+            _issuedTokens.Enqueue(token);
+        }
+
         return new Dictionary<string, object>(StringComparer.Ordinal)
         {
             ["token_type"] = "Bearer",
             ["scope"] = "openid profile offline_access User.Read",
             ["expires_in"] = 3600,
             ["ext_expires_in"] = 3600,
-            ["access_token"] = $"test-access-token.{user.ObjectId:N}",
-            ["refresh_token"] = $"test-refresh-token.{user.ObjectId:N}",
-            ["id_token"] = $"{Encode(new Dictionary<string, object>(StringComparer.Ordinal) { ["alg"] = "none", ["typ"] = "JWT" })}.{Encode(idToken)}.",
+            ["access_token"] = tokens[0],
+            ["refresh_token"] = tokens[1],
+            ["id_token"] = tokens[2],
             ["client_info"] = ClientInfoFor(user),
         };
     }

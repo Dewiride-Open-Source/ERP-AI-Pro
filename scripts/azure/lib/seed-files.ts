@@ -19,7 +19,7 @@ const scriptOwnedKeys: { script: string; keys: ReadonlySet<string> }[] = [
     script: "scripts/azure/entra.sh",
     keys: new Set(["Erp:Platform:Identity:TenantId", "Erp:Platform:Identity:ClientId", "Erp:Platform:Identity:WebOrigin"]),
   },
-  { script: "scripts/azure/provision.sh", keys: new Set(["Erp:Platform:Attachments:BlobServiceUri"]) },
+  { script: "scripts/azure/provision.sh", keys: new Set(["Erp:Platform:Attachments:BlobServiceUri", "Erp:Platform:DataProtection:KeyIdentifier"]) },
 ];
 const secretLikeSettingPattern = /(Secret|Password|Pwd|Token|ConnectionString|ApiKey|AccessKey|PrivateKey|Certificate|EncryptionKeys?)$/i;
 const controlCharacterPattern = /[\u0000-\u001f\u007f]/;

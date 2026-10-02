@@ -148,15 +148,21 @@ test('the attachments emulator host is host-local and never seeded', () => {
 test('provision.sh-owned keys are never seeded, neither as a value nor as a reference', () => {
   const data = wellFormed();
   data.defaults.set('Erp:Platform:Attachments:BlobServiceUri', 'https://storage.example.test/');
+  data.defaults.set('Erp:Platform:DataProtection:KeyIdentifier', 'https://keys.example.test/keys/data-protection');
   data.labelled['local-dev'].set('Erp:Platform:Attachments:BlobServiceUri', 'https://storage.example.test/dev/');
+  data.labelled.production.set('Erp:Platform:DataProtection:KeyIdentifier', 'https://keys.example.test/keys/data-protection-production');
   data.references.push({ key: 'Erp:Platform:Attachments:BlobServiceUri', secret: 'Erp--Platform--Attachments--BlobServiceUri', labels: ['production'] });
+  data.references.push({ key: 'Erp:Platform:DataProtection:KeyIdentifier', secret: 'Erp--Platform--DataProtection--KeyIdentifier', labels: ['local-dev'] });
   const problems = validateSeedData(data);
   assert.deepEqual(
     problems.filter((p) => p.includes('written by scripts/azure/provision.sh')),
     [
       "defaults.json: key 'Erp:Platform:Attachments:BlobServiceUri' is written by scripts/azure/provision.sh and must not be seeded",
+      "defaults.json: key 'Erp:Platform:DataProtection:KeyIdentifier' is written by scripts/azure/provision.sh and must not be seeded",
       "local-dev.json: key 'Erp:Platform:Attachments:BlobServiceUri' is written by scripts/azure/provision.sh and must not be seeded",
+      "production.json: key 'Erp:Platform:DataProtection:KeyIdentifier' is written by scripts/azure/provision.sh and must not be seeded",
       "key-vault-references.json: key 'Erp:Platform:Attachments:BlobServiceUri' is written by scripts/azure/provision.sh and must not be seeded",
+      "key-vault-references.json: key 'Erp:Platform:DataProtection:KeyIdentifier' is written by scripts/azure/provision.sh and must not be seeded",
     ],
   );
 });
