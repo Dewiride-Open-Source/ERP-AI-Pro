@@ -7,7 +7,7 @@ import { CheckCircle2Icon, CircleAlertIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { ApiError } from "@/shared/api/problem-details";
+import { ApiError, apiErrorMessage } from "@/shared/api/problem-details";
 import { uploadFile } from "@/shared/api/upload";
 import { formatBytes } from "@/shared/format/sizes";
 
@@ -39,8 +39,7 @@ export function UploadPanel({
       setState({ kind: "uploaded", fileName: file.name });
       startTransition(() => router.refresh());
     } catch (error) {
-      const message =
-        error instanceof ApiError ? (error.problem.detail ?? error.message) : "The upload failed.";
+      const message = error instanceof ApiError ? apiErrorMessage(error) : "The upload failed.";
       setState({ kind: "failed", fileName: file.name, message });
     }
   };

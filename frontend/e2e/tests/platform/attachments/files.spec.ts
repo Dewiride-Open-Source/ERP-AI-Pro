@@ -11,6 +11,8 @@ import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 const attachmentsApi = "/api/platform/attachments";
 
+const antiforgeryRenewalApi = "/api/auth/antiforgery";
+
 const listPageSize = 20;
 
 function isUploadRequest(request: Request): boolean {
@@ -303,6 +305,83 @@ test.describe("attachments page", () => {
       await expect(attachments.chooseFile).toBeEnabled();
       await expect(attachments.row(file.name)).toHaveCount(0);
       await capture("attachments-refused-by-api");
+    });
+  });
+
+  test.describe("when the API refuses the upload's antiforgery token", () => {
+    test.use({ expectedConsoleError: /the server responded with a status of 400/ });
+
+    test("renews the token once and sends the upload once more with the renewed token", async ({
+      page,
+      baseURL,
+    }) => {
+      const attachments = new AttachmentsPage(page);
+      const file = png();
+      // WebKit keeps a Secure cookie over http://localhost but neither sends it back nor shows it to scripts (ADR-0033), and it
+      // sometimes forwards an intercepted multipart request with an empty file part, so there the page holds no token and
+      // the upload sent once more is answered with the API's answer to the same file sent by the test.
+      const keepsSecureCookies = page.context().browser()?.browserType().name() !== "webkit";
+      const requestToken = (value: string) => ({
+        name: "__Host-erp-xsrf",
+        value,
+        domain: new URL(baseURL!).hostname,
+        path: "/",
+        secure: true,
+        sameSite: "Strict" as const,
+      });
+      const sentTokens: (string | undefined)[] = [];
+      const stored: Response[] = [];
+      let renewals = 0;
+      page.on("response", (response) => {
+        if (isUpload(response) && response.status() === 201) stored.push(response);
+      });
+      await attachments.goto();
+      if (keepsSecureCookies) await page.context().addCookies([requestToken("first-token")]);
+
+      await page.route(`**${antiforgeryRenewalApi}`, async (route) => {
+        renewals += 1;
+        if (keepsSecureCookies) await page.context().addCookies([requestToken("renewed-token")]);
+        await route.fulfill({ status: 204 });
+      });
+      await page.route(`**${attachmentsApi}`, async (route) => {
+        if (!isUploadRequest(route.request())) {
+          await route.fallback();
+          return;
+        }
+        sentTokens.push(route.request().headers()["x-xsrf-token"]);
+        if (sentTokens.length === 1) {
+          await route.fulfill({
+            status: 400,
+            contentType: "application/problem+json",
+            json: {
+              type: "/problems/antiforgery.token-missing",
+              title: "The request could not be confirmed as coming from this site.",
+              status: 400,
+              code: "antiforgery.token-missing",
+            },
+          });
+          return;
+        }
+        if (keepsSecureCookies) {
+          await route.continue();
+          return;
+        }
+        await route.fulfill({ response: await page.request.post(attachmentsApi, { multipart: { file } }) });
+      });
+
+      try {
+        await attachments.chooseAndUpload(file);
+
+        await expect(attachments.uploadAnnouncement).toHaveText(`${file.name} was uploaded.`);
+        await expect(attachments.uploadStatus).toHaveAttribute("data-state", "uploaded");
+        await expect(attachments.row(file.name)).toBeVisible();
+        expect(renewals).toBe(1);
+        expect(sentTokens).toEqual(
+          keepsSecureCookies ? ["first-token", "renewed-token"] : [undefined, undefined],
+        );
+      } finally {
+        await deleteAttachments(page.request, await Promise.all(stored.map(createdAttachmentId)));
+      }
     });
   });
 

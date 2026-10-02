@@ -116,6 +116,28 @@ test("problemToFormState_BadRequestTheWebAppCausedWithoutFields_AsksToSendAgainW
   }
 });
 
+test("problemToFormState_AntiforgeryRefusal_AsksToSendAgainWithoutTheDetail", () => {
+  for (const code of ["antiforgery.token-missing", "antiforgery.token-invalid"]) {
+    const error = apiError({
+      status: 400,
+      type: `/problems/${code}`,
+      title: "The request could not be confirmed as coming from this site.",
+      detail: "A request that changes data with the session cookie must carry the X-XSRF-TOKEN header.",
+      code,
+      traceId,
+    });
+
+    const state = problemToFormState(error);
+
+    assert.deepEqual(
+      state,
+      { status: "failed", message: formMessages.notSent, code, reference: traceId },
+      code,
+    );
+    assert.ok(!JSON.stringify(state).includes("X-XSRF-TOKEN"), code);
+  }
+});
+
 test("problemToFormState_BadRequestWithoutACode_AsksToSendAgain", () => {
   assert.deepEqual(problemToFormState(apiError({ status: 400, detail: "Bad request." })), {
     status: "failed",

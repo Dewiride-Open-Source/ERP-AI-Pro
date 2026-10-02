@@ -1,11 +1,12 @@
 import "server-only";
 
 import { connect, type ErpApiClient } from "@dewiride/erp-api-client";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { cache } from "react";
 
 import { serverEnv } from "@/shared/config/env";
 
+import { antiforgeryFetch, antiforgeryRenewalPath, type SetCookie } from "./antiforgery";
 import { forwardedHeaders } from "./forwarded-headers";
 import { ApiError, toApiError } from "./problem-details";
 
@@ -13,13 +14,19 @@ import { ApiError, toApiError } from "./problem-details";
 const fetchFromApi = (url: string, init: RequestInit) =>
   fetch(url, { ...init, cache: "no-store", redirect: "error" });
 
-export const apiClient = cache(async (): Promise<ErpApiClient> =>
-  connect({
-    baseUrl: serverEnv().apiInternalUrl,
+export const apiClient = cache(async (): Promise<ErpApiClient> => {
+  const { apiInternalUrl } = serverEnv();
+  return connect({
+    baseUrl: apiInternalUrl,
     headers: forwardedHeaders(await headers()),
-    fetch: fetchFromApi,
-  }),
-);
+    fetch: antiforgeryFetch({
+      fetch: fetchFromApi,
+      renewalUrl: `${apiInternalUrl}${antiforgeryRenewalPath}`,
+      renewalHeaders: async () => forwardedHeaders(await headers()),
+      relay: relayToBrowser,
+    }),
+  });
+});
 
 export async function callApi<T>(request: (client: ErpApiClient) => Promise<T | undefined>): Promise<T> {
   let value: T | undefined;
@@ -39,4 +46,9 @@ export async function sendApi(request: (client: ErpApiClient) => Promise<unknown
   } catch (error) {
     throw toApiError(error);
   }
+}
+
+async function relayToBrowser(renewed: readonly SetCookie[]): Promise<void> {
+  const browserCookies = await cookies();
+  for (const { name, value, ...attributes } of renewed) browserCookies.set(name, value, attributes);
 }

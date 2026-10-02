@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 
 import { callApi, sendApi } from "@/shared/api/client";
-import { ApiError } from "@/shared/api/problem-details";
+import { ApiError, apiErrorMessage } from "@/shared/api/problem-details";
 import type { RowRemovalOutcome } from "@/shared/lists/optimistic-rows";
 
 const attachmentId = z.uuid();
@@ -46,6 +46,6 @@ export async function deleteAttachment(id: string): Promise<RowRemovalOutcome> {
 }
 
 function describe(error: unknown): string {
-  if (error instanceof ApiError) return error.problem.detail ?? error.message;
+  if (error instanceof ApiError) return apiErrorMessage(error);
   return "The API did not respond.";
 }

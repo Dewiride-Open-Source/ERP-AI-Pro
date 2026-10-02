@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Mvc.Testing.Handlers;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
@@ -16,7 +17,10 @@ namespace Dewiride.Erp.Testing.Authentication;
 // Signs a test user in the way a completed Entra callback does: MSAL redeems a code for the person, at the test token
 // endpoint, which puts their account in the token cache, and the cookie scheme issues the real session cookie, so a test
 // gets a session the product accepts without a round trip to Entra. The cookie is Secure, so the client talks https to the
-// test server, and it follows no redirect, since a sign-in or sign-out redirects to Entra.
+// test server, and it follows no redirect, since a sign-in or sign-out redirects to Entra. The client sends the antiforgery
+// request token the sign-in issued on every request that changes data, as the web app does, unless it is created without.
+// The sign-in route itself is exempt from the antiforgery check, like the Entra callback it stands in for, which the
+// authentication middleware answers before the check runs.
 public static class TestSignIn
 {
     public const string PathPrefix = "/__test/sign-in";
@@ -40,10 +44,20 @@ public static class TestSignIn
             await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user.ToPrincipal(CookieAuthenticationDefaults.AuthenticationScheme));
 
             return Results.NoContent();
-        }).AllowAnonymous();
+        }).AllowAnonymous().DisableAntiforgery();
     }
 
     public static HttpClient CreateClient<TEntryPoint>(WebApplicationFactory<TEntryPoint> factory)
+        where TEntryPoint : class
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+
+        var cookies = new CookieContainer();
+
+        return factory.CreateDefaultClient(BaseAddress, new RequestTokenHandler(cookies), new CookieContainerHandler(cookies));
+    }
+
+    public static HttpClient CreateClientWithoutRequestToken<TEntryPoint>(WebApplicationFactory<TEntryPoint> factory)
         where TEntryPoint : class
     {
         ArgumentNullException.ThrowIfNull(factory);

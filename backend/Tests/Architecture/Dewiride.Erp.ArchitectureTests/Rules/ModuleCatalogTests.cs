@@ -1,5 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.Testing;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.Extensions.Options;
@@ -135,6 +136,17 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
             .ToList();
 
         Assert.Empty(offenders);
+    }
+
+    [Fact]
+    public void Endpoints_NeverDisableTheAntiforgeryCheck()
+    {
+        var disabled = _factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
+            .Where(endpoint => endpoint.Metadata.GetMetadata<IAntiforgeryMetadata>() is { RequiresValidation: false })
+            .Select(endpoint => endpoint.RoutePattern.RawText)
+            .ToList();
+
+        Assert.Empty(disabled);
     }
 
     [Fact]

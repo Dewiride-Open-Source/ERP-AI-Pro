@@ -13,6 +13,8 @@ const sendingFaults: ReadonlySet<string> = new Set([
   problemCodes.requestMalformed,
   problemCodes.idempotencyKeyMissing,
   problemCodes.idempotencyKeyInvalid,
+  problemCodes.antiforgeryTokenMissing,
+  problemCodes.antiforgeryTokenInvalid,
 ]);
 
 const nodeFetchFailures: ReadonlySet<string> = new Set(["fetch failed", "terminated"]);
@@ -85,8 +87,8 @@ function refusal(status: number, problem: Problem): string {
   }
 }
 
-// These codes mean the web app built the request wrongly; their detail names request types and parameters and is
-// written for the server log, never for the person filling in the form.
+// These codes mean the web app built the request wrongly; their detail names request types, parameters, cookies or headers
+// and is written for the server log, never for the person filling in the form.
 function isSendingFault(code: string | undefined): boolean {
   return code === undefined || sendingFaults.has(code) || code.startsWith(queryCodePrefix);
 }

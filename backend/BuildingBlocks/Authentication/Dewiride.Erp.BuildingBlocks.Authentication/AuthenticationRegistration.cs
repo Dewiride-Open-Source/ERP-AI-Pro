@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
@@ -7,6 +8,7 @@ using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -52,6 +54,17 @@ public static class AuthenticationRegistration
         builder.Services.AddErpTokenCache();
         builder.AddErpDataProtection();
 
+        // With Cookie.SecurePolicy Always, DefaultAntiforgery refuses every call, validation included, on a request it does not
+        // see as HTTPS, and the web server calls the API over plain HTTP inside the host; the framework therefore issues no
+        // cookie, and AntiforgeryCookies writes both, Secure.
+        builder.Services.AddAntiforgery(static options =>
+        {
+            options.HeaderName = AntiforgeryTokens.HeaderName;
+            options.FormFieldName = AntiforgeryTokens.FormFieldName;
+            options.Cookie.Name = AntiforgeryTokens.CookieName;
+        });
+        builder.Services.TryAddSingleton<AntiforgeryCookies>();
+
         builder.Services.TryAddSingleton<SignInEvents>();
         builder.Services.TryAddSingleton<SessionRevocations>();
         builder.Services.TryAddScoped<SessionCookieEvents>();
@@ -83,5 +96,14 @@ public static class AuthenticationRegistration
         AuthEndpoints.Map(endpoints);
 
         return endpoints;
+    }
+
+    public static IApplicationBuilder UseErpAntiforgery(this IApplicationBuilder app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        app.UseMiddleware<AntiforgeryValidationMiddleware>();
+
+        return app.UseAntiforgery();
     }
 }

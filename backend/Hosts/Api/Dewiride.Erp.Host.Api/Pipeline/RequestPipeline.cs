@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Endpoints;
@@ -55,11 +56,14 @@ internal static class RequestPipeline
         app.UseErpConfigurationRefresh();
         app.UseErpEndpointPipeline();
 
-        // Called explicitly: with an explicit UseRouting, .NET 10 would otherwise insert both ahead of routing. Authentication
-        // precedes the rate limiter so a signed-in person is limited as that person rather than by address.
+        // Called explicitly: with an explicit UseRouting, .NET 10 would otherwise insert authentication, authorization and the
+        // antiforgery middleware ahead of routing. Authentication precedes the rate limiter so a signed-in person is limited as
+        // that person rather than by address; antiforgery follows authorization, so a request without a session answers 401,
+        // and precedes the feature gate and idempotency, so a refused request claims no key and reaches no module.
         app.UseAuthentication();
         app.UseErpRateLimiting();
         app.UseAuthorization();
+        app.UseErpAntiforgery();
         app.UseFeatureGate();
         app.UseErpIdempotency();
 

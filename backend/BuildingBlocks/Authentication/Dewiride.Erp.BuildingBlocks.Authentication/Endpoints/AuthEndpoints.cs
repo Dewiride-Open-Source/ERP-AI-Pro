@@ -1,9 +1,11 @@
 using System.Security.Claims;
+using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Requests;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -24,11 +26,17 @@ internal static class AuthEndpoints
 
     public const string LogoutRouteName = "Auth.Logout";
 
+    public const string AntiforgeryRouteName = "Auth.Antiforgery";
+
     public const string FetchModeHeader = "Sec-Fetch-Mode";
 
     public const string FetchDestinationHeader = "Sec-Fetch-Dest";
 
+    public const string FetchSiteHeader = "Sec-Fetch-Site";
+
     public const string NotAPageMessage = "The sign-in starts only from a page the browser opens itself, never from an image, a frame or a script.";
+
+    public const string NotThisSiteMessage = "The antiforgery tokens are issued again only to a script of this site, never to a page, an image or a frame another site opens.";
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
@@ -45,11 +53,21 @@ internal static class AuthEndpoints
             .ProducesValidationProblem()
             .AllowAnonymous();
 
-        // A cross-site form post carries no SameSite=Lax session cookie, so the fallback policy refuses it before anything is signed out.
+        // A cross-site form post carries no SameSite=Lax session cookie, so the fallback policy refuses it before anything is
+        // signed out. The page signs out with a form it posts, which can carry the antiforgery token only in a form field.
         group.MapPost("/logout", LogoutAsync)
             .WithName(LogoutRouteName)
             .WithSummary("Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.")
+            .WithMetadata(new RequireAntiforgeryTokenAttribute())
             .Produces(StatusCodes.Status302Found)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/antiforgery", IssueAntiforgeryTokens)
+            .WithName(AntiforgeryRouteName)
+            .WithSummary("Issues the signed-in person's antiforgery tokens again: the request token in the readable cookie __Host-erp-xsrf, sent back in the X-XSRF-TOKEN header of every POST, PUT, PATCH and DELETE.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
     }
 
@@ -82,6 +100,21 @@ internal static class AuthEndpoints
         return TypedResults.SignOut(
             new AuthenticationProperties { RedirectUri = AuthPaths.LoginPage },
             [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
+    }
+
+    // A navigation another site starts carries the SameSite=Lax session cookie but not the SameSite=Strict cookie token, so
+    // issuing the pair for it would write a new cookie token and refuse every request token a page of this site holds. The
+    // web app's scripts send same-origin and its server sends no Sec-Fetch-Site, so every other value is refused.
+    private static Results<NoContent, ProblemHttpResult> IssueAntiforgeryTokens(HttpContext httpContext, AntiforgeryCookies cookies)
+    {
+        if (!IsAbsentOrExactly(httpContext.Request.Headers[FetchSiteHeader], "same-origin"))
+        {
+            return Error.Validation(ProblemTypes.RequestInvalid, NotThisSiteMessage).ToProblem();
+        }
+
+        cookies.Issue(httpContext, httpContext.User);
+
+        return TypedResults.NoContent();
     }
 
     private static bool IsOpenedAsAPage(IHeaderDictionary headers) =>

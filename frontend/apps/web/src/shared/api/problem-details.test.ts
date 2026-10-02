@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ApiError, problemFromBody, toApiError } from "./problem-details.ts";
+import { antiforgeryRefusalMessage } from "./antiforgery.ts";
+import { ApiError, apiErrorMessage, problemFromBody, toApiError } from "./problem-details.ts";
 
 const traceId = "0af7651916cd43dd8448eb211c80319c";
 
@@ -111,6 +112,39 @@ test("toApiError_ValueThatIsNotAnHttpFailure_IsReturnedUnchanged", () => {
 
 test("ApiError_WithoutATitle_DescribesTheStatus", () => {
   assert.equal(new ApiError({ status: 503 }).message, "API request failed with status 503");
+});
+
+test("apiErrorMessage_AntiforgeryRefusal_IsThePlainSentenceInsteadOfTheDetail", () => {
+  for (const code of ["antiforgery.token-missing", "antiforgery.token-invalid"]) {
+    const error = new ApiError({
+      status: 400,
+      type: `/problems/${code}`,
+      title: "The request could not be confirmed as coming from this site.",
+      detail: "A request that changes data with the session cookie must carry the X-XSRF-TOKEN header.",
+      code,
+      traceId,
+    });
+
+    assert.equal(apiErrorMessage(error), antiforgeryRefusalMessage, code);
+  }
+});
+
+test("apiErrorMessage_OtherProblem_IsItsDetailOrElseTheErrorMessage", () => {
+  const refusedType = new ApiError({
+    status: 415,
+    title: "Unsupported Media Type",
+    detail: "The file's content does not match its declared type.",
+    code: "attachment.content-mismatch",
+  });
+  const invalid = new ApiError({ status: 400, detail: "The link is not valid.", code: "request.invalid" });
+
+  assert.equal(apiErrorMessage(refusedType), "The file's content does not match its declared type.");
+  assert.equal(apiErrorMessage(invalid), "The link is not valid.");
+  assert.equal(
+    apiErrorMessage(new ApiError({ status: 401, title: "Sign in to use this API." })),
+    "Sign in to use this API.",
+  );
+  assert.equal(apiErrorMessage(new ApiError({ status: 503 })), "API request failed with status 503");
 });
 
 test("problemFromBody_ProblemJsonReadByTheBrowser_KeepsEveryMemberAndTheFieldErrors", () => {
