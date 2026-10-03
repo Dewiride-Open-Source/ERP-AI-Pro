@@ -167,8 +167,9 @@ internal static class AuthEndpoints
         return TypedResults.Ok(SessionTimes(properties.ExpiresUtc!.Value, properties, signIn.Value));
     }
 
-    // The cookie handler renews the cookie with the span it was issued with, from the time SessionCookieEvents records, and
-    // AuthenticationProperties keeps an expiry to the second, so this is the renewed cookie's expiry or a second earlier.
+    // The expiry adds the span the cookie was issued with to the clock reading SessionCookieEvents records; the handler renews
+    // from a reading it takes after that one, and AuthenticationProperties keeps an expiry to the second, so this is the
+    // renewed cookie's expiry or a second earlier.
     private static async Task<Ok<SessionResponse>> RenewSessionAsync(HttpContext httpContext, IOptions<EntraSignInOptions> signIn)
     {
         var properties = await SessionPropertiesAsync(httpContext).ConfigureAwait(false);
