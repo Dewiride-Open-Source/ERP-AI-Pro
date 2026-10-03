@@ -32,6 +32,35 @@ async function holdListNavigation(page: Page): Promise<() => void> {
   return release;
 }
 
+function isClientBundle(url: URL): boolean {
+  return url.pathname.startsWith("/_next/static/") && url.pathname.endsWith(".js");
+}
+
+async function controlPlacements(page: Page): Promise<string[]> {
+  return page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+        .map((animation) => animation.finished),
+    );
+    const seen = new Map<string, number>();
+    return [...document.querySelectorAll("main a, main button, main input")]
+      .filter(
+        (control) => control.getClientRects().length > 0 && control.closest("[aria-hidden='true']") === null,
+      )
+      .map((control) => {
+        const name = control.getAttribute("aria-label") ?? control.textContent?.trim() ?? "";
+        const key = `${control.tagName.toLowerCase()} "${name}"`;
+        const count = (seen.get(key) ?? 0) + 1;
+        seen.set(key, count);
+        const box = control.getBoundingClientRect();
+        return `${key} #${count} at ${Math.round(box.x + window.scrollX)},${Math.round(box.y + window.scrollY)} sized ${Math.round(box.width)}x${Math.round(box.height)}`;
+      });
+  });
+}
+
 test.describe("data table", () => {
   forEachTheme(
     "lists the bills by due date, earliest first, with every control",
@@ -409,6 +438,17 @@ test.describe("data table", () => {
     await expectAddress(page, "");
     await expect(bills.status).toContainText("Showing 1–10 of 64 bills.");
     await expect(bills.selection).toHaveText("");
+  });
+
+  test("keeps every control in place when the page becomes interactive", async ({ page }) => {
+    const demo = new DataTableDemoPage(page);
+    await demo.goto("?page=2");
+    const interactive = await controlPlacements(page);
+
+    await page.route(isClientBundle, (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
+    await page.reload();
+    await expect(demo.bills.columnsButton).toBeDisabled();
+    expect(await controlPlacements(page)).toEqual(interactive);
   });
 
   test.describe("before the page is interactive", () => {

@@ -30,6 +30,10 @@ function choiceValue(columnId: string, direction: DataTableSortDirection): strin
   return `${columnId}:${direction}`;
 }
 
+function choiceLabel(choice: DataTableSortChoice, direction: DataTableSortDirection): string {
+  return `${choice.header}, ${sortDirectionLabel(choice.kind, direction)}`;
+}
+
 export function DataTableSortSelect({
   choices,
   sort,
@@ -44,6 +48,7 @@ export function DataTableSortSelect({
   className?: string | undefined;
 }) {
   const labelId = useId();
+  const sorted = choices.find((choice) => choice.columnId === sort.columnId);
 
   return (
     <div className={cn("flex items-center gap-2 text-sm", className)}>
@@ -62,7 +67,7 @@ export function DataTableSortSelect({
         }}
       >
         <SelectTrigger size="sm" aria-labelledby={labelId} data-testid="data-table-sort">
-          <SelectValue />
+          <SelectValue>{sorted === undefined ? null : choiceLabel(sorted, sort.direction)}</SelectValue>
         </SelectTrigger>
         <SelectContent>
           {choices.flatMap((choice) =>
@@ -71,7 +76,7 @@ export function DataTableSortSelect({
                 key={choiceValue(choice.columnId, direction)}
                 value={choiceValue(choice.columnId, direction)}
               >
-                {`${choice.header}, ${sortDirectionLabel(choice.kind, direction)}`}
+                {choiceLabel(choice, direction)}
               </SelectItem>
             )),
           )}
