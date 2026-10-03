@@ -764,7 +764,7 @@
           "id": "web-foundation-webkit-data-table-column-test-stability",
           "title": "Reliable data table column test on WebKit",
           "scope": "Make the data table test that hides and shows columns and keeps them in the address (frontend/e2e/tests/platform/design/data-table.spec.ts) pass reliably on the WebKit projects on Windows, where it fails about three runs in five on tablet-ios while every CI run passes: find the cause from Playwright traces of failing runs, fix it in the spec, its page object or the data table component without sleeps, fixed timeouts, retries or skips, and prove it with repeated runs on tablet-ios and webkit.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-10-02",
           "acceptance": [
@@ -774,6 +774,7 @@
           ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-03",
           "notes": "From `authentication-antiforgery-for-json-endpoints`: the full local Playwright run of 2026-10-03 on the owner Windows machine timed out once on tablet-ios in another test of the same spec, \"selects rows on a page and across pages, and clears the selection\" (data-table.spec.ts line 374, 30 s test timeout, a page at rest in the failure snapshot), which then passed 10 of 10 runs with --repeat-each=10 on its own; it passes on chromium, firefox and webkit in the same run, so look for one cause shared by both data table tests under the load of the full suite on Windows WebKit."
         }
       ]
