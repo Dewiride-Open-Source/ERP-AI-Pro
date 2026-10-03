@@ -8,6 +8,10 @@ import { LoginRequestBuilderRequestsMetadata, type LoginRequestBuilder } from '.
 // @ts-ignore
 import { LogoutRequestBuilderRequestsMetadata, type LogoutRequestBuilder } from './logout/index.js';
 // @ts-ignore
+import { MeRequestBuilderRequestsMetadata, type MeRequestBuilder } from './me/index.js';
+// @ts-ignore
+import { SessionRequestBuilderRequestsMetadata, type SessionRequestBuilder } from './session/index.js';
+// @ts-ignore
 import { type BaseRequestBuilder, type KeysToExcludeForNavigationMetadata, type NavigationMetadata } from '@microsoft/kiota-abstractions';
 
 /**
@@ -26,6 +30,14 @@ export interface AuthRequestBuilder extends BaseRequestBuilder<AuthRequestBuilde
      * The logout property
      */
     get logout(): LogoutRequestBuilder;
+    /**
+     * The me property
+     */
+    get me(): MeRequestBuilder;
+    /**
+     * The session property
+     */
+    get session(): SessionRequestBuilder;
 }
 /**
  * Uri template for the request builder.
@@ -43,6 +55,12 @@ export const AuthRequestBuilderNavigationMetadata: Record<Exclude<keyof AuthRequ
     },
     logout: {
         requestsMetadata: LogoutRequestBuilderRequestsMetadata,
+    },
+    me: {
+        requestsMetadata: MeRequestBuilderRequestsMetadata,
+    },
+    session: {
+        requestsMetadata: SessionRequestBuilderRequestsMetadata,
     },
 };
 /* tslint:enable */

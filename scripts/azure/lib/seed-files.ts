@@ -9,7 +9,8 @@ export const labels = ["local-dev", "production"] as const;
 export type Label = (typeof labels)[number];
 
 export const keyPattern = /^Erp:[A-Z][A-Za-z0-9]*:[A-Z][A-Za-z0-9]*:[A-Z][A-Za-z0-9]*$/;
-export const flagPattern = /^Erp\.Modules\.[A-Z][A-Za-z0-9]*\.[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)?$/;
+export const moduleFlagPattern = /^Erp\.Modules\.[A-Z][A-Za-z0-9]*\.[A-Z][A-Za-z0-9]*(\.[A-Z][A-Za-z0-9]*)?$/;
+export const platformFlagPattern = /^Erp\.Platform\.[A-Z][A-Za-z0-9]*\.[A-Z][A-Za-z0-9]*$/;
 export const secretPattern = /^Erp--[A-Z][A-Za-z0-9]*--[A-Z][A-Za-z0-9]*--[A-Z][A-Za-z0-9]*$/;
 
 const bootstrapOnlyPrefix = "Erp:Platform:Configuration:";
@@ -151,12 +152,16 @@ function validateOverrides(data: SeedData, problems: string[]): void {
   }
 }
 
+function isFlagId(id: string): boolean {
+  return moduleFlagPattern.test(id) || platformFlagPattern.test(id);
+}
+
 function validateFlags(flags: FeatureFlagSeed[], problems: string[]): void {
   const expectedLabels = [...labels].sort((a, b) => a.localeCompare(b)).join(",");
   const seen = new Set<string>();
   for (const flag of flags) {
     const id = typeof flag?.id === "string" ? flag.id : "";
-    if (!flagPattern.test(id)) problems.push(`feature-flags.json: flag id '${id}' is not Erp.Modules.<Domain>.<Module>[.<Capability>]`);
+    if (!isFlagId(id)) problems.push(`feature-flags.json: flag id '${id}' is not Erp.Modules.<Domain>.<Module>[.<Capability>] or Erp.Platform.<Concern>.<Capability>`);
     if (seen.has(id)) problems.push(`feature-flags.json: flag '${id}' is listed twice`);
     seen.add(id);
     const enabled = flag?.enabled !== null && typeof flag?.enabled === "object" ? flag.enabled : {};

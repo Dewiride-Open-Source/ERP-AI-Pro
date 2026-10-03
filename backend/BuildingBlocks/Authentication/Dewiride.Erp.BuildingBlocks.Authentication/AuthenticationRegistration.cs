@@ -1,11 +1,14 @@
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
+using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
+using Dewiride.Erp.BuildingBlocks.Modules.Features;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -29,7 +32,9 @@ public static class AuthenticationRegistration
 
     // Microsoft.Identity.Web hands the plain OpenID Connect handler only a client secret, and the app registration has a
     // certificate only, so the code is redeemed through its token acquisition, which signs the client assertion with it.
-    // No scope is requested beyond sign-in: the tokens are cached only for as long as a session can live.
+    // No scope is requested beyond sign-in: the tokens are cached only for as long as a session can live. The bearer scheme is
+    // the framework's own handler rather than Microsoft.Identity.Web's web API, whose defaults also accept a v1.0 token of the
+    // tenant and add scope requirements to the default policy; it signs in only the routes that call RequireBearerToken.
     public static IHostApplicationBuilder AddErpAuthentication(this IHostApplicationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -40,17 +45,21 @@ public static class AuthenticationRegistration
             .ValidateOnStart();
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IValidateOptions<EntraSignInOptions>, EntraSignInOptionsValidator>());
 
-        builder.Services
+        var authentication = builder.Services
             .AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultAuthenticateScheme = RouteSignInScheme.Name;
                 options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultSignOutScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultForbidScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
+            .AddPolicyScheme(RouteSignInScheme.Name, displayName: null, static options => options.ForwardDefaultSelector = RouteSignInScheme.Select);
+        authentication
             .AddMicrosoftIdentityWebApp(static _ => { }, cookieScheme: CookieAuthenticationDefaults.AuthenticationScheme)
             .EnableTokenAcquisitionToCallDownstreamApi();
+        authentication.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, static _ => { });
         builder.Services.AddErpTokenCache();
         builder.AddErpDataProtection();
 
@@ -65,6 +74,11 @@ public static class AuthenticationRegistration
         });
         builder.Services.TryAddSingleton<AntiforgeryCookies>();
 
+        builder.Services.AddErpPlatformFeature(BearerTokenFeature.Name, enabledByDefault: false);
+        builder.Services.TryAddSingleton<BearerTokenEvents>();
+        builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, BearerTokenOptionsSetup>();
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, BearerTokenAccessHandler>());
+
         builder.Services.TryAddSingleton<SignInEvents>();
         builder.Services.TryAddSingleton<SessionRevocations>();
         builder.Services.TryAddScoped<SessionCookieEvents>();
@@ -72,7 +86,8 @@ public static class AuthenticationRegistration
         builder.Services.AddSingleton<IConfigureOptions<ConfidentialClientApplicationOptions>, ConfidentialClientOptionsSetup>();
         builder.Services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, SessionCookieOptionsSetup>();
 
-        // No scheme is named, so a caller signed in through any registered scheme satisfies it.
+        // No scheme is named, so the caller the default scheme signed in satisfies it: the session cookie or the bearer token the
+        // route takes (RouteSignInScheme).
         builder.Services.AddAuthorizationBuilder()
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
         builder.Services.AddValidation();

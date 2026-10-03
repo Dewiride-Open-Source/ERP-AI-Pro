@@ -120,7 +120,7 @@ public sealed class CatalogFeatureDefinitionProviderTests
             configuration.AddInMemoryCollection(values);
         }
 
-        var catalog = new FeatureCatalog(new ModuleCatalog([new StubModule("Finance", "Sales", new ModuleCapability("AiDrafts", EnabledByDefault: false))]));
+        var catalog = new FeatureCatalog(new ModuleCatalog([new StubModule("Finance", "Sales", new ModuleCapability("AiDrafts", EnabledByDefault: false))]), []);
         var options = Options.Create(new ConfigurationFeatureDefinitionProviderOptions { CustomConfigurationMergingEnabled = true });
 
         return new CatalogFeatureDefinitionProvider(catalog, configuration.Build(), options, NullLogger<CatalogFeatureDefinitionProvider>.Instance);

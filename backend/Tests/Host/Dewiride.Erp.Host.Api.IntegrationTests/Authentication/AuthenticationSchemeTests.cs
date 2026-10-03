@@ -1,17 +1,21 @@
 using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.TokenCacheProviders;
 using Microsoft.Identity.Web.TokenCacheProviders.Distributed;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 
@@ -21,12 +25,80 @@ public sealed class AuthenticationSchemeTests(ErpApiFactory factory) : IClassFix
 
     private const string OpenIdConnect = OpenIdConnectDefaults.AuthenticationScheme;
 
+    private const string Bearer = JwtBearerDefaults.AuthenticationScheme;
+
     [Fact]
-    public async Task Schemes_Registered_AreTheCookieAndOpenIdConnectSchemesBesideTheTestScheme()
+    public async Task Schemes_Registered_AreTheCookieOpenIdConnectBearerAndRouteSchemesBesideTheTestScheme()
     {
         var schemes = await factory.Services.GetRequiredService<IAuthenticationSchemeProvider>().GetAllSchemesAsync();
 
-        Assert.Equal([Cookies, OpenIdConnect, TestAuthHandler.SchemeName], schemes.Select(scheme => scheme.Name).Order(StringComparer.Ordinal));
+        Assert.Equal([Bearer, Cookies, RouteSignInScheme.Name, OpenIdConnect, TestAuthHandler.SchemeName], schemes.Select(scheme => scheme.Name).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void RouteSignInScheme_ForARouteThatTakesBearerTokens_ForwardsToTheBearerSchemeAndOtherwiseToTheCookie()
+    {
+        var options = factory.Services.GetRequiredService<IOptionsMonitor<PolicySchemeOptions>>().Get(RouteSignInScheme.Name);
+        var bearerRoute = new Endpoint(null, new EndpointMetadataCollection(new BearerTokenRouteMetadata(new BearerTokenAccess(["Erp.Test.Read"], []))), "bearer");
+        var sessionRoute = new Endpoint(null, EndpointMetadataCollection.Empty, "session");
+
+        Assert.NotNull(options.ForwardDefaultSelector);
+        Assert.Equal(Bearer, options.ForwardDefaultSelector(ContextFor(bearerRoute)));
+        Assert.Equal(Cookies, options.ForwardDefaultSelector(ContextFor(sessionRoute)));
+        Assert.Equal(Cookies, options.ForwardDefaultSelector(ContextFor(endpoint: null)));
+    }
+
+    [Fact]
+    public void JwtBearerOptions_Configured_ValidateV2AccessTokensOfTheTenantForTheRegistrationWithRawClaimNames()
+    {
+        var options = factory.Services.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(Bearer);
+        var issuer = $"{TestIdentityProvider.Instance}{TestIdentityProvider.TenantId}/v2.0";
+
+        Assert.Equal(issuer, options.Authority);
+        Assert.Equal(TestIdentityProvider.ClientId, options.TokenValidationParameters.ValidAudience);
+        Assert.Null(options.TokenValidationParameters.ValidAudiences);
+        Assert.Null(options.TokenValidationParameters.AudienceValidator);
+        Assert.Equal(issuer, options.TokenValidationParameters.ValidIssuer);
+        Assert.Null(options.TokenValidationParameters.IssuerValidator);
+        Assert.Equal([SecurityAlgorithms.RsaSha256], options.TokenValidationParameters.ValidAlgorithms);
+        Assert.False(options.MapInboundClaims);
+        Assert.False(options.IncludeErrorDetails);
+        Assert.False(options.SaveToken);
+        Assert.Equal("preferred_username", options.TokenValidationParameters.NameClaimType);
+        Assert.Equal("roles", options.TokenValidationParameters.RoleClaimType);
+        Assert.Equal(typeof(BearerTokenEvents), options.EventsType);
+    }
+
+    [Fact]
+    public void Endpoints_NameNoSchemeButTheOneTheirRouteSignsInWith()
+    {
+        var offenders = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .Select(endpoint => (Endpoint: endpoint, Schemes: endpoint.Metadata.GetOrderedMetadata<AuthorizationPolicy>().SelectMany(policy => policy.AuthenticationSchemes)
+                .Concat(endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().SelectMany(data => data.AuthenticationSchemes?.Split(',', StringSplitOptions.TrimEntries) ?? []))
+                .Distinct(StringComparer.Ordinal)
+                .ToList()))
+            .Where(route => route.Endpoint.Metadata.GetMetadata<BearerTokenRouteMetadata>() is null
+                ? route.Schemes.Any(scheme => scheme != Cookies)
+                : !route.Schemes.SequenceEqual([Bearer]))
+            .Select(route => route.Endpoint.DisplayName)
+            .ToList();
+
+        Assert.Empty(offenders);
+    }
+
+    [Fact]
+    public void AuthenticationOptions_ConfiguredByTheApi_AuthenticateWithTheRouteSchemeAndUseTheCookieForEverythingElse()
+    {
+        var options = new AuthenticationOptions();
+        foreach (var configure in factory.Services.GetServices<IConfigureOptions<AuthenticationOptions>>())
+        {
+            configure.Configure(options);
+        }
+
+        Assert.Equal(RouteSignInScheme.Name, options.DefaultAuthenticateScheme);
+        Assert.Equal(Cookies, options.DefaultScheme);
+        Assert.Equal(Cookies, options.DefaultChallengeScheme);
+        Assert.Equal(Cookies, options.DefaultForbidScheme);
     }
 
     [Fact]
@@ -165,5 +237,13 @@ public sealed class AuthenticationSchemeTests(ErpApiFactory factory) : IClassFix
         Assert.True(cookie.SlidingExpiration);
         Assert.Equal(TimeSpan.FromHours(2) + TimeSpan.FromMinutes(5), cache.AbsoluteExpirationRelativeToNow);
         Assert.Equal(TimeSpan.FromMinutes(10) + TimeSpan.FromMinutes(5), cache.SlidingExpiration);
+    }
+
+    private static DefaultHttpContext ContextFor(Endpoint? endpoint)
+    {
+        var context = new DefaultHttpContext();
+        context.SetEndpoint(endpoint);
+
+        return context;
     }
 }

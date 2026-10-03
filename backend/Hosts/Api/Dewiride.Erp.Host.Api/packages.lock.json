@@ -529,6 +529,8 @@
           "Dewiride.Erp.BuildingBlocks.Caching": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Configuration": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.12, )",
           "Microsoft.Identity.Web": "[4.15.0, )"
         }
       },

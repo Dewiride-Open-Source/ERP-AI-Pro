@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Authentication.OpenApi;
 using Dewiride.Erp.BuildingBlocks.Endpoints.OpenApi;
 using Scalar.AspNetCore;
 
@@ -13,7 +14,11 @@ internal static class OpenApiSetup
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.Services.AddOpenApi("erp", ErpOpenApiOptions.Configure);
+        builder.Services.AddOpenApi("erp", static options =>
+        {
+            ErpOpenApiOptions.Configure(options);
+            options.AddErpSecurityDescription();
+        });
 
         return builder;
     }

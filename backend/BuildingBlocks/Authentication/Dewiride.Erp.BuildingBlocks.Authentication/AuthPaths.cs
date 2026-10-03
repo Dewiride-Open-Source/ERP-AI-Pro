@@ -12,6 +12,10 @@ public static class AuthPaths
 
     public const string Antiforgery = Prefix + "/antiforgery";
 
+    public const string Me = Prefix + "/me";
+
+    public const string Session = Prefix + "/session";
+
     public const string SignInCallback = Prefix + "/signin-oidc";
 
     public const string SignedOutCallback = Prefix + "/signout-callback-oidc";
