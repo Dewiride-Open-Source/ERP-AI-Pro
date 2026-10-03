@@ -199,14 +199,19 @@ test('a labelled override needs an unlabelled default', () => {
   ]);
 });
 
-test('a flag must have an Erp.Modules id and appear once', () => {
+test('a flag must have an Erp.Modules or Erp.Platform id and appear once', () => {
   const data = wellFormed();
   data.flags.push({ id: 'Erp.Modules.Platform.SystemInfo', enabled: { 'local-dev': true, production: false } });
   data.flags.push({ id: 'Erp:Modules:Finance:Sales', enabled: { 'local-dev': true, production: true } });
+  data.flags.push({ id: 'Erp.Platform.Identity.BearerTokens', enabled: { 'local-dev': false, production: false } });
+  data.flags.push({ id: 'Erp.Platform.Identity', enabled: { 'local-dev': false, production: false } });
+  data.flags.push({ id: 'Erp.Platform.Identity.Bearer.Tokens', enabled: { 'local-dev': false, production: false } });
   const problems = validateSeedData(data);
   assert.deepEqual(problems, [
     "feature-flags.json: flag 'Erp.Modules.Platform.SystemInfo' is listed twice",
-    "feature-flags.json: flag id 'Erp:Modules:Finance:Sales' is not Erp.Modules.<Domain>.<Module>[.<Capability>]",
+    "feature-flags.json: flag id 'Erp:Modules:Finance:Sales' is not Erp.Modules.<Domain>.<Module>[.<Capability>] or Erp.Platform.<Concern>.<Capability>",
+    "feature-flags.json: flag id 'Erp.Platform.Identity' is not Erp.Modules.<Domain>.<Module>[.<Capability>] or Erp.Platform.<Concern>.<Capability>",
+    "feature-flags.json: flag id 'Erp.Platform.Identity.Bearer.Tokens' is not Erp.Modules.<Domain>.<Module>[.<Capability>] or Erp.Platform.<Concern>.<Capability>",
   ]);
 });
 
@@ -280,6 +285,8 @@ test('the command line prints tab-separated rows and validates a directory', () 
     'Erp.Modules.Platform.SystemInfo\tproduction\ttrue',
     'Erp.Modules.Platform.Attachments\tlocal-dev\ttrue',
     'Erp.Modules.Platform.Attachments\tproduction\ttrue',
+    'Erp.Platform.Identity.BearerTokens\tlocal-dev\tfalse',
+    'Erp.Platform.Identity.BearerTokens\tproduction\tfalse',
   ]);
   const references = run('references', join(seedDirectory, 'key-vault-references.json'));
   assert.equal(references.status, 0);

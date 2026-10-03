@@ -9,10 +9,11 @@ using Microsoft.Extensions.Primitives;
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 
 // Only the session cookie reaches the API without the page asking for it, so only a request it signs in can be forged; an
-// anonymous request, or one signed in by a header, passes unchecked. The token is read from the header, which another
-// site's form cannot set and its scripts cannot send here without CORS, and from the body only on an endpoint that reads a
-// form (IAntiforgeryMetadata requiring validation, as on the sign-out form a page posts), so an upload is refused before a
-// byte of it is read. This runs ahead of the framework middleware, whose refusal would make any later read of the form throw.
+// anonymous request, one signed in by a header, and one to a route that takes bearer tokens, which ignores the cookie, pass
+// unchecked. The token is read from the header, which another site's form cannot set and its scripts cannot send here
+// without CORS, and from the body only on an endpoint that reads a form (IAntiforgeryMetadata requiring validation, as on
+// the sign-out form a page posts), so an upload is refused before a byte of it is read. This runs ahead of the framework
+// middleware, whose refusal would make any later read of the form throw.
 internal sealed partial class AntiforgeryValidationMiddleware(RequestDelegate next, IAntiforgery antiforgery, ILogger<AntiforgeryValidationMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context, IProblemDetailsService problemDetails)
@@ -20,7 +21,8 @@ internal sealed partial class AntiforgeryValidationMiddleware(RequestDelegate ne
         var metadata = context.GetEndpoint()?.Metadata.GetMetadata<IAntiforgeryMetadata>();
         if (!ChangesData(context.Request.Method)
             || metadata is { RequiresValidation: false }
-            || !(await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme).ConfigureAwait(false)).Succeeded)
+            || RouteSignInScheme.TakesBearerTokens(context)
+            || !await SignedInBySessionCookieAsync(context).ConfigureAwait(false))
         {
             await next(context).ConfigureAwait(false);
             return;
@@ -35,6 +37,15 @@ internal sealed partial class AntiforgeryValidationMiddleware(RequestDelegate ne
 
         LogRefused(logger, context.Request.Method, context.Request.Path, refusal);
         await AntiforgeryProblems.WriteAsync(context, problemDetails, refusal).ConfigureAwait(false);
+    }
+
+    // The cookie handler authenticates once per request and the user is built from its very identities, so they are the
+    // user's exactly when the session cookie, not another scheme, signed the request in.
+    private static async Task<bool> SignedInBySessionCookieAsync(HttpContext context)
+    {
+        var session = await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme).ConfigureAwait(false);
+
+        return session.Succeeded && context.User.Identities.Any(identity => session.Principal.Identities.Contains(identity));
     }
 
     private static bool ChangesData(string method) =>

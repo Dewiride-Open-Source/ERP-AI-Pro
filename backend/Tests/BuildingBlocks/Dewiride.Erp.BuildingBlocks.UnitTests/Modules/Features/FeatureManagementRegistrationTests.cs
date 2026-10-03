@@ -10,6 +10,8 @@ public sealed class FeatureManagementRegistrationTests
 {
     private const string ModuleFlag = "Erp.Modules.Platform.SystemInfo";
 
+    private const string PlatformFlag = "Erp.Platform.Identity.BearerTokens";
+
     [Fact]
     public void AddErpFeatureManagement_ResolvesTheCatalogProviderAsTheDefinitionProvider()
     {
@@ -42,6 +44,37 @@ public sealed class FeatureManagementRegistrationTests
     }
 
     [Fact]
+    public async Task IsEnabledAsync_UndefinedPlatformFlagDisabledByDefault_ReturnsFalseAndTheCatalogListsIt()
+    {
+        using var services = Build(new ConfigurationBuilder().Build(), PlatformFlag);
+        using var scope = services.CreateScope();
+
+        var enabled = await scope.ServiceProvider.GetRequiredService<IVariantFeatureManagerSnapshot>().IsEnabledAsync(PlatformFlag, TestContext.Current.CancellationToken);
+
+        Assert.False(enabled);
+        Assert.True(services.GetRequiredService<FeatureCatalog>().TryGet(PlatformFlag, out var feature));
+        Assert.False(feature.EnabledByDefault);
+    }
+
+    [Fact]
+    public async Task IsEnabledAsync_PlatformFlagEnabledInConfiguration_ReturnsTrue()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["feature_management:feature_flags:0:id"] = PlatformFlag,
+                ["feature_management:feature_flags:0:enabled"] = "true",
+            })
+            .Build();
+        using var services = Build(configuration, PlatformFlag);
+        using var scope = services.CreateScope();
+
+        var enabled = await scope.ServiceProvider.GetRequiredService<IVariantFeatureManagerSnapshot>().IsEnabledAsync(PlatformFlag, TestContext.Current.CancellationToken);
+
+        Assert.True(enabled);
+    }
+
+    [Fact]
     public async Task IsEnabledAsync_FlagDisabledInALaterProviderAtAHigherIndex_ReturnsFalse()
     {
         var configuration = new ConfigurationBuilder()
@@ -67,10 +100,17 @@ public sealed class FeatureManagementRegistrationTests
     private static ServiceProvider Build(params (string Key, string? Value)[] values) =>
         Build(new ConfigurationBuilder().AddInMemoryCollection(values.ToDictionary(v => v.Key, v => v.Value, StringComparer.OrdinalIgnoreCase)).Build());
 
-    private static ServiceProvider Build(IConfiguration configuration) =>
-        new ServiceCollection()
-            .AddSingleton<IConfiguration>(configuration)
+    private static ServiceProvider Build(IConfiguration configuration, params string[] platformFlags)
+    {
+        var services = new ServiceCollection()
+            .AddSingleton(configuration)
             .AddSingleton(new ModuleCatalog([new StubModule("Platform", "SystemInfo")]))
-            .AddErpFeatureManagement()
-            .BuildServiceProvider();
+            .AddErpFeatureManagement();
+        foreach (var flag in platformFlags)
+        {
+            services.AddErpPlatformFeature(flag, enabledByDefault: false);
+        }
+
+        return services.BuildServiceProvider();
+    }
 }

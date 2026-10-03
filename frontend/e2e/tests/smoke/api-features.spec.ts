@@ -1,17 +1,26 @@
 import { gatedApiBaseURL, gatedBaseURL, gatedFeatureFlags } from "../../fixtures/targets";
 import { expect, test } from "../../fixtures/test";
 
+const bearerTokensFlag = "Erp.Platform.Identity.BearerTokens";
+
 test.describe("feature flags", () => {
-  test("the primary stack reports every module flag enabled through the web origin", async ({ request }) => {
+  test("the primary stack reports every module flag enabled and bearer tokens off through the web origin", async ({
+    request,
+  }) => {
     const response = await request.get("/api/platform/features");
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toContain("application/json");
     const body: unknown = await response.json();
     expect(body).toMatchObject({
-      features: expect.arrayContaining(gatedFeatureFlags.map((name) => ({ name, enabled: true }))),
+      features: expect.arrayContaining([
+        ...gatedFeatureFlags.map((name) => ({ name, enabled: true })),
+        { name: bearerTokensFlag, enabled: false },
+      ]),
     });
     expect(body).not.toMatchObject({
-      features: expect.arrayContaining([expect.objectContaining({ enabled: false })]),
+      features: expect.arrayContaining([
+        expect.objectContaining({ name: expect.stringMatching(/^Erp\.Modules\./), enabled: false }),
+      ]),
     });
   });
 

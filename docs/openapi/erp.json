@@ -73,7 +73,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/auth/logout": {
@@ -137,7 +138,13 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
       }
     },
     "/api/auth/antiforgery": {
@@ -201,7 +208,219 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles.",
+        "operationId": "Auth.Me",
+        "responses": {
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Returns when the session ends unless a request renews it and when it ends at the latest, without renewing it.",
+        "operationId": "Auth.Session",
+        "responses": {
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Renews the session at once, for the idle timeout from now within the session lifetime, and returns when it ends.",
+        "operationId": "Auth.RenewSession",
+        "responses": {
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
       }
     },
     "/api/platform/system-info": {
@@ -272,7 +491,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/platform/system-info/startups": {
@@ -356,7 +576,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/platform/attachments": {
@@ -463,7 +684,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "post": {
         "tags": [
@@ -582,7 +804,14 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {},
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
       }
     },
     "/api/platform/attachments/policy": {
@@ -653,7 +882,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/platform/attachments/{id}": {
@@ -735,7 +965,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       },
       "delete": {
         "tags": [
@@ -808,7 +1039,14 @@
           "204": {
             "description": "No Content"
           }
-        }
+        },
+        "security": [
+          {},
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
       }
     },
     "/api/platform/attachments/{id}/download-links": {
@@ -890,7 +1128,14 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {},
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
       }
     },
     "/api/platform/attachments/{id}/content": {
@@ -983,7 +1228,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     },
     "/api/platform/features": {
@@ -1004,7 +1250,8 @@
               }
             }
           }
-        }
+        },
+        "security": []
       }
     }
   },
@@ -1058,6 +1305,33 @@
           "notScanned",
           "clean"
         ]
+      },
+      "CurrentUserResponse": {
+        "required": [
+          "id",
+          "name",
+          "userName",
+          "roles"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "DownloadLinkResponse": {
         "required": [
@@ -1251,6 +1525,23 @@
           }
         }
       },
+      "SessionResponse": {
+        "required": [
+          "expiresAt",
+          "lifetimeEndsAt"
+        ],
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lifetimeEndsAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "StartupResponse": {
         "required": [
           "id",
@@ -1343,6 +1634,20 @@
             }
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "description": "The session cookie __Host-erp-session, HttpOnly and Secure, which the API sets once a Microsoft Entra ID sign-in started at /api/auth/login completes; a browser sends it on every request to this origin.",
+        "name": "__Host-erp-session",
+        "in": "cookie"
+      },
+      "AntiforgeryToken": {
+        "type": "apiKey",
+        "description": "The value of the readable cookie __Host-erp-xsrf, required with the session cookie on every POST, PUT, PATCH and DELETE it signs in, which otherwise answer 400 antiforgery.token-missing or antiforgery.token-invalid; GET /api/auth/antiforgery issues it again, and POST /api/auth/logout also takes it in the form field __RequestVerificationToken.",
+        "name": "X-XSRF-TOKEN",
+        "in": "header"
       }
     }
   },

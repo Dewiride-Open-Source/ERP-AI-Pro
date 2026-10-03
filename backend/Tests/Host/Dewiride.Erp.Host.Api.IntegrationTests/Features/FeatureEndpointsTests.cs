@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Features;
@@ -14,7 +15,7 @@ public sealed class FeatureEndpointsTests
     private static readonly Uri SystemInfoPath = new("/api/platform/system-info", UriKind.Relative);
 
     [Fact]
-    public async Task Get_Features_Default_ListsEveryCatalogFlagAsEnabled()
+    public async Task Get_Features_Default_ListsEveryModuleFlagEnabledAndThePlatformFlagAtItsDefault()
     {
         using var factory = new ErpApiFactory();
         using var client = factory.CreateClient();
@@ -25,8 +26,9 @@ public sealed class FeatureEndpointsTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
         var features = body.RootElement.GetProperty("features").EnumerateArray().ToList();
-        Assert.Equal([AttachmentsFlag, SystemInfoFlag], features.Select(f => f.GetProperty("name").GetString()).Order(StringComparer.Ordinal));
-        Assert.All(features, f => Assert.True(f.GetProperty("enabled").GetBoolean()));
+        Assert.Equal(
+            [(AttachmentsFlag, true), (SystemInfoFlag, true), (BearerTokenFeature.Name, false)],
+            features.Select(f => (f.GetProperty("name").GetString(), f.GetProperty("enabled").GetBoolean())).OrderBy(f => f.Item1, StringComparer.Ordinal));
     }
 
     [Fact]

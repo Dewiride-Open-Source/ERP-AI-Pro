@@ -51,6 +51,15 @@ export function createAttachmentResponseFromDiscriminatorValue(parseNode: ParseN
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {CurrentUserResponse}
+ */
+// @ts-ignore
+export function createCurrentUserResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoCurrentUserResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {DownloadLinkResponse}
  */
 // @ts-ignore
@@ -123,6 +132,15 @@ export function createRecentStartupsResponseFromDiscriminatorValue(parseNode: Pa
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {SessionResponse}
+ */
+// @ts-ignore
+export function createSessionResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoSessionResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {StartupResponse}
  */
 // @ts-ignore
@@ -147,6 +165,24 @@ export function createSystemInfoResponseFromDiscriminatorValue(parseNode: ParseN
 export function createUploadPolicyResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoUploadPolicyResponse;
 }
+export interface CurrentUserResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+    /**
+     * The roles property
+     */
+    roles?: string[] | null;
+    /**
+     * The userName property
+     */
+    userName?: string | null;
+}
 /**
  * The deserialization information for the current model
  * @param AttachmentResponse The instance to deserialize into.
@@ -163,6 +199,20 @@ export function deserializeIntoAttachmentResponse(attachmentResponse: Partial<At
         "scanStatus": n => { attachmentResponse.scanStatus = n.getEnumValue<AttachmentScanStatus>(AttachmentScanStatusObject); },
         "sha256": n => { attachmentResponse.sha256 = n.getStringValue(); },
         "sizeBytes": n => { attachmentResponse.sizeBytes = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param CurrentUserResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoCurrentUserResponse(currentUserResponse: Partial<CurrentUserResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "id": n => { currentUserResponse.id = n.getGuidValue(); },
+        "name": n => { currentUserResponse.name = n.getStringValue(); },
+        "roles": n => { currentUserResponse.roles = n.getCollectionOfPrimitiveValues<string>("string"); },
+        "userName": n => { currentUserResponse.userName = n.getStringValue(); },
     }
 }
 /**
@@ -269,6 +319,18 @@ export function deserializeIntoProblemDetails(problemDetails: Partial<ProblemDet
 export function deserializeIntoRecentStartupsResponse(recentStartupsResponse: Partial<RecentStartupsResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "startups": n => { recentStartupsResponse.startups = n.getCollectionOfObjectValues<StartupResponse>(createStartupResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param SessionResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoSessionResponse(sessionResponse: Partial<SessionResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "expiresAt": n => { sessionResponse.expiresAt = n.getDateValue(); },
+        "lifetimeEndsAt": n => { sessionResponse.lifetimeEndsAt = n.getDateValue(); },
     }
 }
 /**
@@ -456,6 +518,21 @@ export function serializeAttachmentResponse(writer: SerializationWriter, attachm
 }
 /**
  * Serializes information the current object
+ * @param CurrentUserResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeCurrentUserResponse(writer: SerializationWriter, currentUserResponse: Partial<CurrentUserResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!currentUserResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("id", currentUserResponse.id);
+    writer.writeStringValue("name", currentUserResponse.name);
+    writer.writeCollectionOfPrimitiveValues<string>("roles", currentUserResponse.roles);
+    writer.writeStringValue("userName", currentUserResponse.userName);
+    writer.writeAdditionalData(currentUserResponse.additionalData);
+}
+/**
+ * Serializes information the current object
  * @param DownloadLinkResponse The instance to serialize from.
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param writer Serialization writer to use to serialize this model
@@ -571,6 +648,19 @@ export function serializeRecentStartupsResponse(writer: SerializationWriter, rec
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param SessionResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeSessionResponse(writer: SerializationWriter, sessionResponse: Partial<SessionResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!sessionResponse || isSerializingDerivedType) { return; }
+    writer.writeDateValue("expiresAt", sessionResponse.expiresAt);
+    writer.writeDateValue("lifetimeEndsAt", sessionResponse.lifetimeEndsAt);
+    writer.writeAdditionalData(sessionResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param StartupResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -614,6 +704,16 @@ export function serializeUploadPolicyResponse(writer: SerializationWriter, uploa
     writer.writeCollectionOfPrimitiveValues<string>("allowedContentTypes", uploadPolicyResponse.allowedContentTypes);
     writer.writeNumberValue("maxSizeBytes", uploadPolicyResponse.maxSizeBytes);
     writer.writeAdditionalData(uploadPolicyResponse.additionalData);
+}
+export interface SessionResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The expiresAt property
+     */
+    expiresAt?: Date | null;
+    /**
+     * The lifetimeEndsAt property
+     */
+    lifetimeEndsAt?: Date | null;
 }
 export interface StartupResponse extends AdditionalDataHolder, Parsable {
     /**

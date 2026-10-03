@@ -33,7 +33,7 @@
 | Actor | `IActorContext`, `ActorIds`, `SystemActorContext` in `Dewiride.Erp.BuildingBlocks.Application.Actors`; `HttpActorContext` in `Dewiride.Erp.BuildingBlocks.Endpoints.Actors` | `ActorIds.System`, `ActorIds.Anonymous` |
 | Error code | `<area>.<kebab-case-problem>` in ProblemDetails `code` | `request.invalid`, `query.invalid-field`, `concurrency.conflict`, `idempotency.key-reused` |
 | Permission | `<domain>.<module>.<feature>.<action>` | `finance.sales.invoices.issue` |
-| Feature flag | `Erp.Modules.<Domain>.<Module>[.<Capability>]` | `Erp.Modules.Finance.Sales.EInvoicing` |
+| Feature flag | `Erp.Modules.<Domain>.<Module>[.<Capability>]`; a building block capability `Erp.Platform.<Concern>.<Capability>`, declared with `AddErpPlatformFeature` | `Erp.Modules.Finance.Sales.EInvoicing`, `Erp.Platform.Identity.BearerTokens` |
 | Configuration key | `Erp:<Domain>:<Module>:<Setting>` | `Erp:Finance:Sales:InvoicePrefix` |
 | Key Vault secret | `Erp--<Domain>--<Module>--<Name>` | `Erp--Finance--Sales--IrpClientSecret` |
 | OpenTelemetry source | `Dewiride.Erp.<Domain>.<Module>` | `Dewiride.Erp.Finance.Sales` |

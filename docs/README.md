@@ -48,5 +48,6 @@
 | [0031](adr/0031-sign-in-through-entra-in-the-api.md) | Sign-in through Microsoft Entra ID in the API |
 | [0032](adr/0032-token-cache-in-sql-server-and-the-data-protection-key-ring.md) | The token cache in SQL Server and the Data Protection key ring |
 | [0033](adr/0033-antiforgery-for-requests-the-session-cookie-signs-in.md) | Antiforgery for requests the session cookie signs in |
+| [0034](adr/0034-session-endpoints-bearer-tokens-per-route-and-the-security-description.md) | Session endpoints, bearer tokens per route and the security description |
 
 New decisions use [0000-template.md](adr/0000-template.md).

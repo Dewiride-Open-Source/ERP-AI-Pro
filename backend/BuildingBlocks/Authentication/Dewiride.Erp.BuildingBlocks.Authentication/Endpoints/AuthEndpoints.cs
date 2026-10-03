@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Requests;
+using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Responses;
+using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
@@ -9,10 +11,12 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Web;
 
@@ -28,6 +32,12 @@ internal static class AuthEndpoints
 
     public const string AntiforgeryRouteName = "Auth.Antiforgery";
 
+    public const string MeRouteName = "Auth.Me";
+
+    public const string SessionRouteName = "Auth.Session";
+
+    public const string RenewSessionRouteName = "Auth.RenewSession";
+
     public const string FetchModeHeader = "Sec-Fetch-Mode";
 
     public const string FetchDestinationHeader = "Sec-Fetch-Dest";
@@ -37,6 +47,12 @@ internal static class AuthEndpoints
     public const string NotAPageMessage = "The sign-in starts only from a page the browser opens itself, never from an image, a frame or a script.";
 
     public const string NotThisSiteMessage = "The antiforgery tokens are issued again only to a script of this site, never to a page, an image or a frame another site opens.";
+
+    // Only the session cookie has a session: a request another scheme signs in has no expiry to report or extend, so it is
+    // refused like an anonymous one.
+    private static readonly AuthorizationPolicy SessionCookieOnly = new AuthorizationPolicyBuilder(CookieAuthenticationDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser()
+        .Build();
 
     public static void Map(IEndpointRouteBuilder endpoints)
     {
@@ -67,6 +83,26 @@ internal static class AuthEndpoints
             .WithName(AntiforgeryRouteName)
             .WithSummary("Issues the signed-in person's antiforgery tokens again: the request token in the readable cookie __Host-erp-xsrf, sent back in the X-XSRF-TOKEN header of every POST, PUT, PATCH and DELETE.")
             .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/me", GetCurrentUser)
+            .WithName(MeRouteName)
+            .WithSummary("Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles.")
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/session", ReadSessionAsync)
+            .WithName(SessionRouteName)
+            .WithSummary("Returns when the session ends unless a request renews it and when it ends at the latest, without renewing it.")
+            .RequireAuthorization(SessionCookieOnly)
+            .WithMetadata(new SessionRenewalMetadata(Renews: false))
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/session", RenewSessionAsync)
+            .WithName(RenewSessionRouteName)
+            .WithSummary("Renews the session at once, for the idle timeout from now within the session lifetime, and returns when it ends.")
+            .RequireAuthorization(SessionCookieOnly)
+            .WithMetadata(new SessionRenewalMetadata(Renews: true))
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
     }
@@ -116,6 +152,51 @@ internal static class AuthEndpoints
 
         return TypedResults.NoContent();
     }
+
+    private static Ok<CurrentUserResponse> GetCurrentUser(ClaimsPrincipal user) =>
+        TypedResults.Ok(new CurrentUserResponse(
+            Guid.TryParse(RequiredClaim(user, ClaimConstants.Oid), out var objectId) ? objectId : throw MissingClaim(ClaimConstants.Oid),
+            RequiredClaim(user, ClaimConstants.Name),
+            RequiredClaim(user, ClaimConstants.PreferredUserName),
+            [.. user.FindAll(ClaimConstants.Roles).Select(role => role.Value)]));
+
+    private static async Task<Ok<SessionResponse>> ReadSessionAsync(HttpContext httpContext, IOptions<EntraSignInOptions> signIn)
+    {
+        var properties = await SessionPropertiesAsync(httpContext).ConfigureAwait(false);
+
+        return TypedResults.Ok(SessionTimes(properties.ExpiresUtc!.Value, properties, signIn.Value));
+    }
+
+    // The expiry adds the span the cookie was issued with to the clock reading SessionCookieEvents records; the handler renews
+    // from a reading it takes after that one, and AuthenticationProperties keeps an expiry to the second, so this is the
+    // renewed cookie's expiry or a second earlier.
+    private static async Task<Ok<SessionResponse>> RenewSessionAsync(HttpContext httpContext, IOptions<EntraSignInOptions> signIn)
+    {
+        var properties = await SessionPropertiesAsync(httpContext).ConfigureAwait(false);
+        var expiresAt = SessionCookieEvents.RenewedAt(httpContext) is { } renewedAt
+            ? ToTheSecond(renewedAt + (properties.ExpiresUtc!.Value - properties.IssuedUtc!.Value))
+            : properties.ExpiresUtc!.Value;
+
+        return TypedResults.Ok(SessionTimes(expiresAt, properties, signIn.Value));
+    }
+
+    private static async Task<AuthenticationProperties> SessionPropertiesAsync(HttpContext httpContext) =>
+        (await httpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme).ConfigureAwait(false)).Properties!;
+
+    // Both times are to the second and never later than the session really ends.
+    private static SessionResponse SessionTimes(DateTimeOffset idleExpiry, AuthenticationProperties properties, EntraSignInOptions signIn)
+    {
+        var lifetimeEndsAt = ToTheSecond(SessionCookieEvents.SignedInAt(properties)!.Value + signIn.SessionLifetime);
+
+        return new SessionResponse(idleExpiry < lifetimeEndsAt ? idleExpiry : lifetimeEndsAt, lifetimeEndsAt);
+    }
+
+    private static DateTimeOffset ToTheSecond(DateTimeOffset time) => time.AddTicks(-(time.Ticks % TimeSpan.TicksPerSecond));
+
+    private static string RequiredClaim(ClaimsPrincipal user, string type) => user.FindFirstValue(type) ?? throw MissingClaim(type);
+
+    private static InvalidOperationException MissingClaim(string type) =>
+        new($"The signed-in principal carries no valid {type} claim; every ERP sign-in is a Microsoft Entra ID account with an object id, a display name and a sign-in name.");
 
     private static bool IsOpenedAsAPage(IHeaderDictionary headers) =>
         IsAbsentOrExactly(headers[FetchModeHeader], "navigate") && IsAbsentOrExactly(headers[FetchDestinationHeader], "document");
