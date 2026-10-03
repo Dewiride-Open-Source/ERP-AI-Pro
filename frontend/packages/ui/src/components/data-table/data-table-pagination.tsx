@@ -95,7 +95,7 @@ export function DataTablePagination({
               onValueChange={(value) => onPageSizeChange(Number(value))}
             >
               <SelectTrigger size="sm" aria-labelledby={sizeLabelId} data-testid="data-table-page-size">
-                <SelectValue />
+                <SelectValue>{page.pageSize}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {pageSizes.map((size) => (

@@ -764,7 +764,7 @@
           "id": "web-foundation-webkit-data-table-column-test-stability",
           "title": "Reliable data table column test on WebKit",
           "scope": "Make the data table test that hides and shows columns and keeps them in the address (frontend/e2e/tests/platform/design/data-table.spec.ts) pass reliably on the WebKit projects on Windows, where it fails about three runs in five on tablet-ios while every CI run passes: find the cause from Playwright traces of failing runs, fix it in the spec, its page object or the data table component without sleeps, fixed timeouts, retries or skips, and prove it with repeated runs on tablet-ios and webkit.",
-          "status": "planned",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-10-02",
           "acceptance": [
@@ -774,7 +774,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "notes": "From `authentication-antiforgery-for-json-endpoints`: the full local Playwright run of 2026-10-03 on the owner Windows machine timed out once on tablet-ios in another test of the same spec, \"selects rows on a page and across pages, and clears the selection\" (data-table.spec.ts line 374, 30 s test timeout, a page at rest in the failure snapshot), which then passed 10 of 10 runs with --repeat-each=10 on its own; it passes on chromium, firefox and webkit in the same run, so look for one cause shared by both data table tests under the load of the full suite on Windows WebKit."
+          "startedOn": "2026-10-03",
+          "completedOn": "2026-10-03",
+          "notes": "The Sort by and Rows per page selects of the data table pass the chosen option text to SelectValue (Radix fills an empty SelectValue only once it has mounted), so the server HTML already shows it and no control moves when the table hydrates: on Windows WebKit the columns test pressed Next page while the reloaded page hydrated and released it on the page bar after the widened page-size select had pushed the links aside, so the click went to the nav and nothing navigated; data-table.spec.ts now compares every shown control (text, place and size) once hydrated and after a reload whose client bundles are answered empty, on every project, and on the owner Windows machine the columns test passed 20 of 20 on tablet-ios and 20 of 20 on webkit, and the selection test 20 of 20 on tablet-ios."
         }
       ]
     },
@@ -986,7 +988,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From `web-foundation-webkit-data-table-column-test-stability`: a Radix Select fills an empty SelectValue from its chosen item only once it has mounted, so its trigger is empty in the server HTML and widens when the page hydrates; every select these forms render with a value passes that value text to SelectValue, as the data table selects do (design-system.md, Data table, Hydration), and the form kit server-answer select and the kitchen sink quarter and currency specimens, which still fill theirs in on hydration, take the same change when this item builds its forms from the form kit."
         },
         {
           "id": "user-management-web-invitations-organisation-and-my-profile",
