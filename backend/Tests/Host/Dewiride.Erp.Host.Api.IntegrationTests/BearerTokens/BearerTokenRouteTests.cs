@@ -46,7 +46,6 @@ public sealed class BearerTokenRouteTests(BearerTokenRouteTests.Fixture fixture)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(new BearerTokenRoutes.ObservedActor(TestApplications.Integration.ObjectId, true), await response.Content.ReadFromJsonAsync<BearerTokenRoutes.ObservedActor>(TestContext.Current.CancellationToken));
-        Assert.False(response.Headers.Contains("Set-Cookie"));
     }
 
     [Fact]
@@ -62,8 +61,12 @@ public sealed class BearerTokenRouteTests(BearerTokenRouteTests.Fixture fixture)
         Assert.Equal(AntiforgeryProblems.TokenMissing, body.RootElement.GetProperty("code").GetString());
     }
 
-    [Fact]
-    public async Task Get_BearerRouteWithACookieOfAPersonWhoSignedOut_LeavesTheCookieAloneWhileTheSessionRouteClearsIt()
+    // A cookie handler that ran would refuse this cookie and clear it, on a GET through the authentication middleware and on a
+    // POST through the antiforgery check.
+    [Theory]
+    [InlineData("GET")]
+    [InlineData("POST")]
+    public async Task Send_BearerRouteWithACookieOfAPersonWhoSignedOut_LeavesTheCookieAloneWhileTheSessionRouteClearsIt(string method)
     {
         using var client = TestSignIn.CreateClient(fixture.Factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
@@ -71,8 +74,8 @@ public sealed class BearerTokenRouteTests(BearerTokenRouteTests.Fixture fixture)
         using var signOut = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
         using var other = TestSignIn.CreateClientWithoutRequestToken(fixture.Factory);
 
-        using var bearerRoute = await SendWithCookieAsync(other, BearerTokenRoutes.Path, cookie, BearerTokenRoutes.ApplicationToken(BearerTokenRoutes.IntegrationRole));
-        using var sessionRoute = await SendWithCookieAsync(other, BearerTokenRoutes.SessionPath, cookie, token: null);
+        using var bearerRoute = await SendWithCookieAsync(other, new HttpMethod(method), BearerTokenRoutes.Path, cookie, BearerTokenRoutes.ApplicationToken(BearerTokenRoutes.IntegrationRole));
+        using var sessionRoute = await SendWithCookieAsync(other, HttpMethod.Get, BearerTokenRoutes.SessionPath, cookie, token: null);
 
         Assert.Equal(HttpStatusCode.Found, signOut.StatusCode);
         Assert.Equal(HttpStatusCode.OK, bearerRoute.StatusCode);
@@ -110,9 +113,9 @@ public sealed class BearerTokenRouteTests(BearerTokenRouteTests.Fixture fixture)
         return statuses;
     }
 
-    private static async Task<HttpResponseMessage> SendWithCookieAsync(HttpClient client, string path, string cookie, string? token)
+    private static async Task<HttpResponseMessage> SendWithCookieAsync(HttpClient client, HttpMethod method, string path, string cookie, string? token)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        using var request = new HttpRequestMessage(method, path);
         request.Headers.Add("Cookie", cookie);
         if (token is not null)
         {

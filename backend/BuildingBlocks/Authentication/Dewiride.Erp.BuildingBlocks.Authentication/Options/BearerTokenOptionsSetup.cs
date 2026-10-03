@@ -39,6 +39,6 @@ internal sealed class BearerTokenOptionsSetup(IOptions<EntraSignInOptions> signI
     {
         ArgumentNullException.ThrowIfNull(entra);
 
-        return $"{entra.Instance}{entra.TenantId}/v2.0";
+        return new Uri(new Uri(entra.Instance), $"{entra.TenantId}/v2.0").AbsoluteUri;
     }
 }

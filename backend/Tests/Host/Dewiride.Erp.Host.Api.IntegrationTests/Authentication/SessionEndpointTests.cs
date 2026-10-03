@@ -111,6 +111,26 @@ public sealed class SessionEndpointTests
         Assert.Equal(lifetimeEndsAt, expiresAt);
     }
 
+    // Every clock reading moves the clock a second: the cookie handler renews from the reading after the one the session
+    // events record, and any reading taken later in the request, the session check's included, would give a later expiry.
+    [Fact]
+    public async Task Post_WhileTheClockMovesDuringTheRequest_NeverReportsTimesLaterThanTheSessionReallyEnds()
+    {
+        using var session = new Session(afterAWholeSecond: TimeSpan.FromMilliseconds(900));
+        using var signIn = await session.SignInAsync();
+        session.Clock.Advance(TimeSpan.FromMinutes(2));
+        session.Clock.AutoAdvanceAmount = TimeSpan.FromSeconds(1);
+
+        using var renewed = await session.RenewAsync();
+        using var read = await session.ReadAsync();
+
+        var (renewedExpiry, lifetimeEndsAt) = await TimesOfAsync(renewed);
+        var (cookieExpiry, _) = await TimesOfAsync(read);
+        Assert.InRange(cookieExpiry - renewedExpiry, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        Assert.Equal(0, renewedExpiry.Ticks % TimeSpan.TicksPerSecond);
+        Assert.Equal(WholeSecondsOf(session.SignedInAt + Lifetime), lifetimeEndsAt);
+    }
+
     [Fact]
     public async Task Post_WithoutTheRequestToken_AnswersTokenMissing()
     {
@@ -138,6 +158,8 @@ public sealed class SessionEndpointTests
         Assert.Equal(ProblemTypes.RequestUnauthenticated, await CodeOfAsync(response));
     }
 
+    private static DateTimeOffset WholeSecondsOf(DateTimeOffset time) => time.AddTicks(-(time.Ticks % TimeSpan.TicksPerSecond));
+
     private static string? SessionCookieOf(HttpResponseMessage response) =>
         response.Headers.TryGetValues("Set-Cookie", out var cookies)
             ? cookies.SingleOrDefault(cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal))
@@ -158,15 +180,15 @@ public sealed class SessionEndpointTests
         return body.RootElement.GetProperty("code").GetString();
     }
 
-    // The clock starts on a whole second, because the cookie keeps its issue and expiry times to the second.
+    // The clock starts on a whole second unless a test moves it off one, because the cookie keeps its issue and expiry times
+    // to the second.
     private sealed class Session : IDisposable
     {
         private readonly ErpApiFactory _root;
 
-        public Session(string? lifetime = null, bool sendRequestToken = true)
+        public Session(string? lifetime = null, bool sendRequestToken = true, TimeSpan afterAWholeSecond = default)
         {
-            var now = TimeProvider.System.GetUtcNow();
-            Clock = new FakeTimeProvider(now.AddTicks(-(now.Ticks % TimeSpan.TicksPerSecond)));
+            Clock = new FakeTimeProvider(WholeSecondsOf(TimeProvider.System.GetUtcNow()) + afterAWholeSecond);
             _root = new ErpApiFactory().WithTestEndpoints(TestSignIn.Map);
             if (lifetime is not null)
             {

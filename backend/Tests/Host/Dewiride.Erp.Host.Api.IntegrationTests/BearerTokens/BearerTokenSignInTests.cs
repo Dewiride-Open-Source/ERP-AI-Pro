@@ -23,6 +23,7 @@ public sealed class BearerTokenSignInTests(BearerTokenSignInTests.Fixture fixtur
         ["from the v1.0 endpoint of the tenant"] = () => TestTokenIssuer.Issue(Person(("iss", TestTokenIssuer.V1Issuer), ("aud", $"api://{TestIdentityProvider.ClientId}"), ("ver", "1.0"))),
         ["naming another tenant under the tenant's issuer"] = () => TestTokenIssuer.Issue(Person(("tid", OtherTenantId))),
         ["of version 1.0 under the v2.0 issuer"] = () => TestTokenIssuer.Issue(Person(("ver", "1.0"))),
+        ["with an object id that is not a GUID"] = () => TestTokenIssuer.Issue(Person(("oid", "not-a-guid"))),
         ["without an object id"] = () => TestTokenIssuer.Issue(Without(TestTokenIssuer.PersonClaims(TestUsers.Accountant, TestApplications.NativeClient, [BearerTokenRoutes.ReadScope]), "oid")),
         ["an id token of the sign-in"] = () => TestTokenIssuer.Issue(Without(TestTokenIssuer.PersonClaims(TestUsers.Accountant, TestApplications.NativeClient, []), "scp", "azp", "azpacr")),
         ["of an application carrying scopes"] = () => TestTokenIssuer.Issue(Application(("scp", BearerTokenRoutes.ReadScope))),

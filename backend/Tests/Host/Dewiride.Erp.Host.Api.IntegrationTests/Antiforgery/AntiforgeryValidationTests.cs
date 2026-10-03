@@ -168,6 +168,18 @@ public sealed class AntiforgeryValidationTests(AntiforgeryValidationTests.Fixtur
     }
 
     [Fact]
+    public async Task Post_SignedInThroughAHeaderWhileTheSessionCookieTravelsAlong_ReachesTheEndpointUnchecked()
+    {
+        using var client = TestSignIn.CreateClientWithoutRequestToken(fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+        using var request = new HttpRequestMessage(HttpMethod.Post, TokenCookies.ProtectedChangesPath).AsUser(TestUsers.Administrator);
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Post_AnonymouslyToAProtectedEndpointWithoutARequestToken_AnswersUnauthenticatedBeforeTheCheck()
     {
         using var client = TestSignIn.CreateClientWithoutRequestToken(fixture.Factory);

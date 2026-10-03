@@ -36,6 +36,8 @@ internal sealed class SessionCookieEvents(
 
     private static readonly TimeSpan MaxRenewalInterval = TimeSpan.FromMinutes(1);
 
+    private static readonly object RenewedAtItem = new();
+
     public override Task RedirectToLogin(RedirectContext<CookieAuthenticationOptions> context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -99,9 +101,16 @@ internal sealed class SessionCookieEvents(
     {
         ArgumentNullException.ThrowIfNull(context);
 
+        // The handler renews from a clock reading it takes after this event, never before the one it took for it, which is
+        // IssuedUtc plus ElapsedTime, so an expiry computed from that reading is never later than the renewed cookie's.
         if (context.HttpContext.GetEndpoint()?.Metadata.GetMetadata<SessionRenewalMetadata>() is { } renewal)
         {
             context.ShouldRenew = renewal.Renews;
+            if (renewal.Renews)
+            {
+                context.HttpContext.Items[RenewedAtItem] = context.Properties.IssuedUtc!.Value + context.ElapsedTime;
+            }
+
             return Task.CompletedTask;
         }
 
@@ -110,6 +119,9 @@ internal sealed class SessionCookieEvents(
 
         return Task.CompletedTask;
     }
+
+    public static DateTimeOffset? RenewedAt(HttpContext context) =>
+        context.Items.TryGetValue(RenewedAtItem, out var renewedAt) ? (DateTimeOffset?)renewedAt : null;
 
     public static DateTimeOffset? SignedInAt(AuthenticationProperties properties) =>
         properties.Items.TryGetValue(SignedInAtItem, out var stamp)

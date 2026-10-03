@@ -1,5 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
+using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Dewiride.Erp.Testing;
@@ -67,6 +68,17 @@ public sealed class AuthenticationSchemeTests(ErpApiFactory factory) : IClassFix
         Assert.Equal("preferred_username", options.TokenValidationParameters.NameClaimType);
         Assert.Equal("roles", options.TokenValidationParameters.RoleClaimType);
         Assert.Equal(typeof(BearerTokenEvents), options.EventsType);
+    }
+
+    [Fact]
+    public async Task JwtBearerOptions_WithAnInstanceWithoutATrailingSlash_UseTheTenantsV2Authority()
+    {
+        await using var configured = new ErpApiFactory().WithConfiguration($"{EntraSignInOptions.SectionName}:Instance", "https://login.microsoftonline.com");
+
+        var options = configured.Services.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(Bearer);
+
+        Assert.Equal($"https://login.microsoftonline.com/{TestIdentityProvider.TenantId}/v2.0", options.Authority);
+        Assert.Equal(options.Authority, options.TokenValidationParameters.ValidIssuer);
     }
 
     [Fact]

@@ -167,22 +167,25 @@ internal static class AuthEndpoints
         return TypedResults.Ok(SessionTimes(properties.ExpiresUtc!.Value, properties, signIn.Value));
     }
 
-    // The cookie handler renews the cookie with the span it was issued with, from the time it authenticated the request, and
-    // AuthenticationProperties keeps an expiry to the second.
-    private static async Task<Ok<SessionResponse>> RenewSessionAsync(HttpContext httpContext, IOptions<EntraSignInOptions> signIn, TimeProvider timeProvider)
+    // The cookie handler renews the cookie with the span it was issued with, from the time SessionCookieEvents records, and
+    // AuthenticationProperties keeps an expiry to the second, so this is the renewed cookie's expiry or a second earlier.
+    private static async Task<Ok<SessionResponse>> RenewSessionAsync(HttpContext httpContext, IOptions<EntraSignInOptions> signIn)
     {
         var properties = await SessionPropertiesAsync(httpContext).ConfigureAwait(false);
-        var renewedUntil = timeProvider.GetUtcNow() + (properties.ExpiresUtc!.Value - properties.IssuedUtc!.Value);
+        var expiresAt = SessionCookieEvents.RenewedAt(httpContext) is { } renewedAt
+            ? ToTheSecond(renewedAt + (properties.ExpiresUtc!.Value - properties.IssuedUtc!.Value))
+            : properties.ExpiresUtc!.Value;
 
-        return TypedResults.Ok(SessionTimes(ToTheSecond(renewedUntil), properties, signIn.Value));
+        return TypedResults.Ok(SessionTimes(expiresAt, properties, signIn.Value));
     }
 
     private static async Task<AuthenticationProperties> SessionPropertiesAsync(HttpContext httpContext) =>
         (await httpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme).ConfigureAwait(false)).Properties!;
 
+    // Both times are to the second and never later than the session really ends.
     private static SessionResponse SessionTimes(DateTimeOffset idleExpiry, AuthenticationProperties properties, EntraSignInOptions signIn)
     {
-        var lifetimeEndsAt = SessionCookieEvents.SignedInAt(properties)!.Value + signIn.SessionLifetime;
+        var lifetimeEndsAt = ToTheSecond(SessionCookieEvents.SignedInAt(properties)!.Value + signIn.SessionLifetime);
 
         return new SessionResponse(idleExpiry < lifetimeEndsAt ? idleExpiry : lifetimeEndsAt, lifetimeEndsAt);
     }
