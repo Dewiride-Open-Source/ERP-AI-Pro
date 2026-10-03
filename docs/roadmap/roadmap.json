@@ -852,7 +852,7 @@
           "id": "authentication-session-endpoints-openapi-security-and-bearer",
           "title": "Session endpoints, OpenAPI security and bearer scheme",
           "scope": "Implement GET /api/auth/me (id, name, email, Entra roles, permissions placeholder) and a session-ping endpoint, describe cookie and XSRF security schemes in the OpenAPI document, and register AddMicrosoftIdentityWebApi as a JWT bearer scheme behind a feature flag with per-group scheme selection, scope and app-role checks and integration tests with a test token issuer for later integrations and mobile.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
           "acceptance": [
@@ -865,7 +865,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-10-03",
-          "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031): every test host registers the test authentication scheme, so the OpenAPI security schemes describe only the product schemes; a bearer scheme or a change of the default scheme keeps 401 and 403 ProblemDetails without a Location header, and cookie 401s gain a WWW-Authenticate header only when a scheme can be named. From `authentication-antiforgery-for-json-endpoints` (ADR-0033): describe the X-XSRF-TOKEN header, which carries the value of the __Host-erp-xsrf cookie, as the security scheme required with the cookie scheme on POST, PUT, PATCH and DELETE, with the 400 problems antiforgery.token-missing and antiforgery.token-invalid; AntiforgeryValidationMiddleware checks a request only when AuthenticateAsync of the Cookies scheme succeeds, so bearer requests stay unchecked, and a request that carries both a bearer token and the session cookie is checked against HttpContext.User."
+          "completedOn": "2026-10-03",
+          "notes": "BuildingBlocks.Authentication (ADR-0034): GET /api/auth/me answers the signed-in person ({ id, name, userName, roles }); GET and POST /api/auth/session answer { expiresAt, lifetimeEndsAt }, the GET never renewing the session cookie and the POST always renewing it, to the second and never later than the session really ends; the framework's JwtBearer scheme takes v2.0 access tokens of the tenant for the registration (exact issuer and audience, RS256, a person's or an application's token only, never an id token) on routes that call RequireBearerToken, behind the platform flag Erp.Platform.Identity.BearerTokens, declared with AddErpPlatformFeature and seeded off under both labels on 2026-10-03; RouteSignInScheme, the default authenticate scheme, signs a bearer route in with the token alone and every other route with the session cookie alone, before the rate limiter, so bearer callers are limited per actor; a person's token is granted by the route's scopes and an application's by its application roles; the antiforgery check applies exactly to the changes the session cookie signs in; every operation of the OpenAPI document carries its security requirement over the SessionCookie, AntiforgeryToken and BearerToken schemes; and TestTokenIssuer signs the tests' bearer tokens without reaching Entra."
         },
         {
           "id": "authentication-test-authentication-infrastructure",
