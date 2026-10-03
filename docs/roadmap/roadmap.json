@@ -852,12 +852,19 @@
           "id": "authentication-session-endpoints-openapi-security-and-bearer",
           "title": "Session endpoints, OpenAPI security and bearer scheme",
           "scope": "Implement GET /api/auth/me (id, name, email, Entra roles, permissions placeholder) and a session-ping endpoint, describe cookie and XSRF security schemes in the OpenAPI document, and register AddMicrosoftIdentityWebApi as a JWT bearer scheme behind a feature flag with per-group scheme selection, scope and app-role checks and integration tests with a test token issuer for later integrations and mobile.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
-          "acceptance": [],
+          "acceptance": [
+            "GET /api/auth/me answers a person the session cookie signs in with 200 { id, name, userName, roles }, their Entra oid, name, preferred_username and app roles, with Cache-Control no-store, and a request without a session with 401 request.unauthenticated and no Location header.",
+            "GET /api/auth/session answers 200 { expiresAt, lifetimeEndsAt } without renewing the session cookie, and POST /api/auth/session, carrying the antiforgery token, renews the cookie at once and answers the renewed times, never past the session lifetime; both answer 401 to a request the session cookie does not sign in.",
+            "With the platform flag Erp.Platform.Identity.BearerTokens on, a route that calls RequireBearerToken is signed in only by a v2.0 access token of the tenant for the app registration (exact issuer, aud the client id, tid, signature and lifetime): a person token carrying one of its scopes, or an application token without scp carrying one of its application roles, reaches it; no token, or an expired, v1, foreign-tenant, wrong-audience, unsigned or unknown-key token answers 401 request.unauthenticated with WWW-Authenticate Bearer, naming error invalid_token when a token was sent, and a valid token without the access answers 403 request.forbidden with error insufficient_scope; with the flag off, its default and its seeded value under both labels, no token signs anything in, and a route that does not call RequireBearerToken never accepts one.",
+            "The route decides the sign-in before the rate limiter, so a bearer route limits each application or person its tokens name and ignores the session cookie, which neither signs it in nor slides there, and the antiforgery check applies exactly to the POST, PUT, PATCH and DELETE requests the session cookie signs in.",
+            "The OpenAPI document describes the security schemes session (the cookie __Host-erp-session), antiforgery (the header X-XSRF-TOKEN) and, once a route takes bearer tokens, bearer (a JWT), and gives each operation its requirement: none when anonymous, session for GET and HEAD, session with antiforgery for POST, PUT, PATCH and DELETE, and one bearer alternative per scope or application role on a bearer route; the snapshot and the generated client are refreshed, and the shared TestTokenIssuer signs every bearer token the tests send, so no test reaches Entra."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-03",
           "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031): every test host registers the test authentication scheme, so the OpenAPI security schemes describe only the product schemes; a bearer scheme or a change of the default scheme keeps 401 and 403 ProblemDetails without a Location header, and cookie 401s gain a WWW-Authenticate header only when a scheme can be named. From `authentication-antiforgery-for-json-endpoints` (ADR-0033): describe the X-XSRF-TOKEN header, which carries the value of the __Host-erp-xsrf cookie, as the security scheme required with the cookie scheme on POST, PUT, PATCH and DELETE, with the 400 problems antiforgery.token-missing and antiforgery.token-invalid; AntiforgeryValidationMiddleware checks a request only when AuthenticateAsync of the Cookies scheme succeeds, so bearer requests stay unchecked, and a request that carries both a bearer token and the session cookie is checked against HttpContext.User."
         },
         {
