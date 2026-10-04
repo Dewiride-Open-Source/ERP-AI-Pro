@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-10-03",
+  "updatedOn": "2026-10-04",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -874,12 +874,18 @@
           "id": "authentication-test-authentication-infrastructure",
           "title": "Test authentication infrastructure",
           "scope": "Expose the TestAuthHandler scheme and an E2E-only login endpoint issuing the real auth cookie for seeded users solely when ASPNETCORE_ENVIRONMENT=Testing (never in production images), add Playwright fixtures using it into the `web-foundation-e2e-harness-matrix` slot, and document a manual smoke run with a real Entra test user.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
-          "acceptance": [],
+          "acceptance": [
+            "`backend/Tests/EndToEnd/Dewiride.Erp.Testing.EndToEnd` runs the real API for Playwright only when ASPNETCORE_ENVIRONMENT is Testing and refuses to start otherwise, on a SQL Server test database and an Azurite container of its own, with the test identity provider, the test header scheme and `POST /api/__test/sign-in/{persona}`, which signs a new person of that persona in through the session cookie scheme (session cookie and antiforgery pair) without reaching Microsoft Entra ID; no product project references it, so no API image can contain it.",
+            "Every web origin the Playwright suite opens is https, served by a TLS front in front of `next start` locally and in CI, and the `persona` option signs each test in afresh through that origin; the signed-in specs pass on all six projects, the WebKit ones included.",
+            "Signed-in proofs in a real browser: `/api/auth/me` returns the signed-in persona; a signed-in request to an unknown route answers 404 while an anonymous one answers 401; `/api/auth/login` sends an anonymous caller to the authorize endpoint of the test tenant with `redirect_uri` set to the web origin plus `/api/auth/signin-oidc`, and a signed-in caller straight to its return path; signing out redirects to the end-session endpoint and leaves the old session cookie refused; the upload, the download link and the delete send X-XSRF-TOKEN and succeed, and a change sent without it is refused with `antiforgery.token-missing`.",
+            "The testing guide documents a manual smoke run with a real Microsoft Entra ID account against the local-dev store (sign in, read `/api/auth/me`, upload and download a file, sign out), and the run is completed once and recorded in the pull request."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-04",
           "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031): the e2e APIs run with placeholder identity settings and a generated certificate, so no spec performs a real Entra round trip; move the anonymous unknown-route smoke check and the sign-in redirect checks onto the signed-in fixture; verify that WebKit keeps a Secure __Host- cookie over http://localhost, and otherwise serve the e2e web origin over https rather than relaxing the cookie. From `authentication-token-cache-and-data-protection-key` (ADR-0032): the e2e API hosts read no store, so their Data Protection key ring lives in memory and a cookie a fixture mints lives only as long as that API process; host tests share one key ring and token cache between hosts through TestDeployment. From `authentication-antiforgery-for-json-endpoints` (ADR-0033): checked on 2026-10-02 that the WebKit build of Playwright 1.63 on Windows keeps Secure cookies set over http://localhost but neither sends them back nor shows them to document.cookie, while Chromium and Firefox do both, so a signed-in WebKit project needs the e2e web origin over https; the fixture must sign in through the cookie scheme, so that SessionCookieEvents.SignedIn issues the antiforgery pair __Host-erp-antiforgery and __Host-erp-xsrf, and its specs add the signed-in browser proofs that the upload, the download link and the delete send X-XSRF-TOKEN and succeed, and that a request without it is refused with antiforgery.token-missing."
         },
         {
