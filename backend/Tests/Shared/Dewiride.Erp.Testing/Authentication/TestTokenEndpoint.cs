@@ -10,9 +10,10 @@ namespace Dewiride.Erp.Testing.Authentication;
 
 // MSAL sends every request of a test host through this client instead of one that reaches Entra. The token endpoint
 // redeems a code from CodeFor as Entra redeems the code of a person who signed in, with the tokens and client info that
-// put the person's account in the token cache, and refuses every other code as Entra refuses an expired one; instance
-// discovery answers with the aliases of the public cloud. Anything else fails the request that sent it. ClientInfoFor is
-// the client info Entra also posts to the callback with the code, from which Microsoft.Identity.Web adds uid and utid.
+// put the person's account in the token cache, for a persona of TestUsers or a person a test host admitted, and refuses
+// every other code as Entra refuses an expired one; instance discovery answers with the aliases of the public cloud.
+// Anything else fails the request that sent it. ClientInfoFor is the client info Entra also posts to the callback with the
+// code, from which Microsoft.Identity.Web adds uid and utid.
 public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 {
     public const string RefusedCodeError = "invalid_grant";
@@ -26,6 +27,8 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
     private readonly ConcurrentQueue<TestTokenRequest> _requests = new();
 
     private readonly ConcurrentQueue<string> _issuedTokens = new();
+
+    private readonly ConcurrentDictionary<Guid, TestUser> _admitted = new();
 
     private readonly HttpClient _client;
 
@@ -56,6 +59,13 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         });
     }
 
+    public void Admit(TestUser user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        _admitted[user.ObjectId] = user;
+    }
+
     public HttpClient GetHttpClient() => _client;
 
     public void Dispose() => _client.Dispose();
@@ -83,9 +93,9 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         throw new InvalidOperationException($"MSAL sent {request.Method} {address.GetLeftPart(UriPartial.Path)}, which the test token endpoint does not serve; no test host may reach Entra.");
     }
 
-    private static TestUser? UserFor(string? code) =>
+    private TestUser? UserFor(string? code) =>
         code is not null && code.StartsWith(CodePrefix, StringComparison.Ordinal) && Guid.TryParseExact(code[CodePrefix.Length..], "D", out var objectId)
-            ? TestUsers.Find(objectId)
+            ? TestUsers.Find(objectId) ?? _admitted.GetValueOrDefault(objectId)
             : null;
 
     private static Dictionary<string, object> InstanceMetadata() => new(StringComparer.Ordinal)

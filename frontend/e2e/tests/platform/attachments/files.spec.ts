@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
 
 import type { APIRequestContext, Page, Request, Response } from "@playwright/test";
 
 import { png, type FileUpload } from "../../../fixtures/files";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
+import { requestToken, requestTokenCookie, requestTokenHeader } from "../../../fixtures/sign-in";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
@@ -163,11 +163,9 @@ test.describe("attachments page", () => {
     }
     await capture("attachments-uploaded");
 
-    const downloadStarted = page.waitForEvent("download");
-    await row.getByTestId("attachment-download").click();
-    const download = await downloadStarted;
-    expect(download.suggestedFilename()).toBe(file.name);
-    expect(Buffer.compare(await readFile((await download.path())!), file.buffer)).toBe(0);
+    const download = await attachments.download(row);
+    expect(download.name).toBe(file.name);
+    expect(Buffer.compare(download.content, file.buffer)).toBe(0);
     await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
     await expect(attachments.heading).toBeVisible();
     await expect(row.getByTestId("attachment-action-error")).toHaveCount(0);
@@ -317,12 +315,11 @@ test.describe("attachments page", () => {
     }) => {
       const attachments = new AttachmentsPage(page);
       const file = png();
-      // WebKit keeps a Secure cookie over http://localhost but neither sends it back nor shows it to scripts (ADR-0033), and it
-      // sometimes forwards an intercepted multipart request with an empty file part, so there the page holds no token and
-      // the upload sent once more is answered with the API's answer to the same file sent by the test.
-      const keepsSecureCookies = page.context().browser()?.browserType().name() !== "webkit";
-      const requestToken = (value: string) => ({
-        name: "__Host-erp-xsrf",
+      // WebKit sometimes forwards an intercepted multipart request with an empty file part, so there the upload sent once
+      // more is answered with the API's answer to the same file sent by the test.
+      const continuesInterceptedUploads = page.context().browser()?.browserType().name() !== "webkit";
+      const tokenCookie = (value: string) => ({
+        name: requestTokenCookie,
         value,
         domain: new URL(baseURL!).hostname,
         path: "/",
@@ -336,11 +333,11 @@ test.describe("attachments page", () => {
         if (isUpload(response) && response.status() === 201) stored.push(response);
       });
       await attachments.goto();
-      if (keepsSecureCookies) await page.context().addCookies([requestToken("first-token")]);
+      await page.context().addCookies([tokenCookie("first-token")]);
 
       await page.route(`**${antiforgeryRenewalApi}`, async (route) => {
         renewals += 1;
-        if (keepsSecureCookies) await page.context().addCookies([requestToken("renewed-token")]);
+        await page.context().addCookies([tokenCookie("renewed-token")]);
         await route.fulfill({ status: 204 });
       });
       await page.route(`**${attachmentsApi}`, async (route) => {
@@ -362,7 +359,7 @@ test.describe("attachments page", () => {
           });
           return;
         }
-        if (keepsSecureCookies) {
+        if (continuesInterceptedUploads) {
           await route.continue();
           return;
         }
@@ -376,12 +373,51 @@ test.describe("attachments page", () => {
         await expect(attachments.uploadStatus).toHaveAttribute("data-state", "uploaded");
         await expect(attachments.row(file.name)).toBeVisible();
         expect(renewals).toBe(1);
-        expect(sentTokens).toEqual(
-          keepsSecureCookies ? ["first-token", "renewed-token"] : [undefined, undefined],
-        );
+        expect(sentTokens).toEqual(["first-token", "renewed-token"]);
       } finally {
         await deleteAttachments(page.request, await Promise.all(stored.map(createdAttachmentId)));
       }
+    });
+  });
+
+  test.describe("signed in", () => {
+    test.use({ persona: "accountant" });
+
+    test("uploads, downloads and deletes a file carrying the request token, and refuses a change without it", async ({
+      page,
+      context,
+    }) => {
+      // A signed-in person's changes are checked for the antiforgery token: the page sends the upload itself, with the token
+      // in the header, and the web server sends the download link and the delete on its behalf, which the API accepts only
+      // with it.
+      const attachments = new AttachmentsPage(page);
+      const file = png();
+      await attachments.goto();
+
+      const uploadSent = page.waitForRequest(isUploadRequest);
+      const uploaded = page.waitForResponse(isUpload);
+      await attachments.chooseAndUpload(file);
+      expect((await uploadSent).headers()[requestTokenHeader]).toBe(await requestToken(context));
+      const id = await createdAttachmentId(await uploaded);
+      const row = attachments.row(file.name);
+      await expect(row).toBeVisible();
+
+      const download = await attachments.download(row);
+      expect(download.name).toBe(file.name);
+      expect(Buffer.compare(download.content, file.buffer)).toBe(0);
+      await expect(row.getByTestId("attachment-action-error")).toHaveCount(0);
+
+      const withoutToken = await page.request.delete(`${attachmentsApi}/${id}`);
+      expect(withoutToken.status()).toBe(400);
+      expect(await withoutToken.json()).toMatchObject({
+        type: "/problems/antiforgery.token-missing",
+        code: "antiforgery.token-missing",
+      });
+
+      await row.getByTestId("attachment-delete").click();
+      await attachments.confirmDelete.click();
+      await expect(row).toHaveCount(0);
+      await expect(new AppShell(page).toast(`Deleted ${file.name}.`)).toBeVisible();
     });
   });
 

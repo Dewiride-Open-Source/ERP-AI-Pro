@@ -1,9 +1,16 @@
 import { expect, type JSHandle, type Locator, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
 import type { FileUpload } from "../../../fixtures/files";
 import { DataTableRegion } from "../../shared/lists/data-table.page";
 
 export const attachmentsPath = "/platform/attachments";
+
+export type DownloadedFile = { readonly name: string; readonly content: Buffer };
+
+function savesDownloadsFromTheTestOrigin(page: Page): boolean {
+  return !(process.platform === "win32" && page.context().browser()?.browserType().name() === "webkit");
+}
 
 export class AttachmentsPage {
   readonly heading: Locator;
@@ -57,6 +64,15 @@ export class AttachmentsPage {
       .filter({ has: this.page.getByTestId("attachments-file-name").getByText(fileName, { exact: true }) });
   }
 
+  async download(row: Locator): Promise<DownloadedFile> {
+    const button = row.getByTestId("attachment-download");
+    if (!savesDownloadsFromTheTestOrigin(this.page)) return this.fetchOpenedDownload(button);
+    const started = this.page.waitForEvent("download");
+    await button.click();
+    const download = await started;
+    return { name: download.suggestedFilename(), content: await readFile(await download.path()) };
+  }
+
   async upload(file: FileUpload): Promise<void> {
     await this.fileInput.setInputFiles(file);
   }
@@ -85,6 +101,34 @@ export class AttachmentsPage {
   async drop(dataTransfer: JSHandle<DataTransfer>): Promise<void> {
     await this.dispatchDrag(["drop"], dataTransfer);
     await dataTransfer.dispose();
+  }
+
+  private async fetchOpenedDownload(button: Locator): Promise<DownloadedFile> {
+    const opened = await this.page.evaluateHandle(() => {
+      const links: { href: string; name: string }[] = [];
+      document.addEventListener(
+        "click",
+        (event) => {
+          if (event.target instanceof HTMLAnchorElement && event.target.hasAttribute("download")) {
+            links.push({ href: event.target.href, name: event.target.download });
+          }
+        },
+        { capture: true },
+      );
+      return links;
+    });
+    await button.click();
+    await expect
+      .poll(() => opened.evaluate((links) => links.length), { message: "downloads the page started" })
+      .toBe(1);
+    const { href, name } = await opened.evaluate(([link]) => link ?? { href: "", name: "" });
+    await opened.dispose();
+    const response = await this.page.request.get(href);
+    expect(response.status(), "the download link the page opened").toBe(200);
+    const disposition = response.headers()["content-disposition"] ?? "";
+    expect(disposition, "the download link answers with the file as an attachment").toMatch(/^attachment;/);
+    expect(disposition, "the download link names the file").toContain(name);
+    return { name, content: await response.body() };
   }
 
   private async dispatchDrag(types: readonly string[], dataTransfer: JSHandle<DataTransfer>): Promise<void> {

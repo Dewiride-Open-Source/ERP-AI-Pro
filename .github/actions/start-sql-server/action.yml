@@ -1,8 +1,8 @@
 name: Start SQL Server
 description: >-
   Starts SQL Server 2025 Developer in a container published on port 1433 with an sa password generated
-  at run time and masked, waits until it answers, creates the database and outputs the server-level,
-  database and container connection strings. The image runs through docker run rather than a services
+  at run time and masked, waits until it answers, creates the database and outputs the server-level
+  connection string and the container connection string to the database. The image runs through docker run rather than a services
   container so the digest is pinned in this file; Dependabot cannot bump an image inside a docker run
   command, so the digest is bumped by hand when the cumulative update changes.
 inputs:
@@ -16,9 +16,6 @@ outputs:
   server-connection-string:
     description: Server-level connection string for sa with rights to create databases; no Database= part.
     value: ${{ steps.connection.outputs.server-connection-string }}
-  database-connection-string:
-    description: Connection string to the created database for processes running on the runner.
-    value: ${{ steps.connection.outputs.database-connection-string }}
   container-connection-string:
     description: Connection string to the created database for containers that reach the runner through host.docker.internal.
     value: ${{ steps.connection.outputs.container-connection-string }}
@@ -77,6 +74,5 @@ runs:
         credentials="User ID=sa;Password=$MSSQL_SA_PASSWORD;Encrypt=True;TrustServerCertificate=True"
         {
           echo "server-connection-string=Server=localhost,1433;$credentials"
-          echo "database-connection-string=Server=localhost,1433;Database=$DATABASE;$credentials"
           echo "container-connection-string=Server=host.docker.internal,1433;Database=$DATABASE;$credentials"
         } >> "$GITHUB_OUTPUT"

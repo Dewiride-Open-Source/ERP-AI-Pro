@@ -1,9 +1,13 @@
+import { requestToken, requestTokenHeader } from "../../../fixtures/sign-in";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { LoginPage } from "../../../pages/identity/auth/login.page";
+import { attachmentsPath } from "../../../pages/platform/attachments/files.page";
 
 const apiContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
 const failureMessage = "We could not sign you in. Try again, or ask your administrator for access.";
-const storeLabelSuffix = " (local-dev)";
+const sessionCookie = "__Host-erp-session";
+const entraEndpoint = (path: string) =>
+  new RegExp(`^https://login\\.microsoftonline\\.com/[0-9a-f-]{36}/oauth2/v2\\.0/${path}$`);
 
 test.describe("login page", () => {
   forEachTheme("renders the sign-in card with every control", async ({ page, capture, theme }) => {
@@ -64,21 +68,11 @@ test.describe("login page", () => {
       baseURL,
       request,
     }) => {
-      const systemInfo = await request.get("/api/platform/system-info");
-      expect(systemInfo.status()).toBe(200);
-      const { applicationName } = (await systemInfo.json()) as { applicationName?: unknown };
-      expect(typeof applicationName).toBe("string");
-      test.skip(
-        !(applicationName as string).endsWith(storeLabelSuffix),
-        "the API behind the web origin does not report the local-dev label of the App Configuration store, so it runs without the store and signs in with throwaway ids that Microsoft sign-in does not know",
-      );
-
       const response = await request.get("/api/auth/login?returnUrl=%2F", { maxRedirects: 0 });
 
       expect(response.status()).toBe(302);
-      const location = response.headers()["location"];
-      expect(location).toMatch(/^https:\/\/login\.microsoftonline\.com\//);
-      const authorize = new URL(location ?? "");
+      const authorize = new URL(response.headers()["location"] ?? "");
+      expect(`${authorize.origin}${authorize.pathname}`).toMatch(entraEndpoint("authorize"));
       expect(authorize.searchParams.get("redirect_uri")).toBe(`${baseURL}/api/auth/signin-oidc`);
       expect(authorize.searchParams.get("response_type")).toBe("code");
       expect(authorize.searchParams.get("code_challenge_method")).toBe("S256");
@@ -118,6 +112,83 @@ test.describe("login page", () => {
         status: 401,
         instance: "/api/auth/logout",
       });
+    });
+  });
+
+  test.describe("signed in", () => {
+    test.use({ persona: "accountant" });
+
+    test("the browser reads the signed-in person from the API", async ({ page, person }) => {
+      await new LoginPage(page).goto();
+
+      const me = await page.evaluate(async () => {
+        const response = await fetch("/api/auth/me");
+        return { status: response.status, body: (await response.json()) as unknown };
+      });
+
+      expect(me).toEqual({ status: 200, body: person });
+      expect(person?.roles).toEqual(["Erp.User"]);
+    });
+
+    test.describe("on an unknown API route", () => {
+      test.use({ expectedConsoleError: /the server responded with a status of 404/ });
+
+      test("the browser gets a not-found problem instead of the unauthenticated one", async ({ page }) => {
+        await new LoginPage(page).goto();
+
+        const answer = await page.evaluate(async () => {
+          const response = await fetch("/api/platform/does-not-exist");
+          return {
+            status: response.status,
+            contentType: response.headers.get("content-type"),
+            body: (await response.json()) as unknown,
+          };
+        });
+
+        expect(answer).toMatchObject({
+          status: 404,
+          contentType: expect.stringContaining("application/problem+json"),
+          body: {
+            type: "/problems/resource.not-found",
+            code: "resource.not-found",
+            status: 404,
+            instance: "/api/platform/does-not-exist",
+          },
+        });
+      });
+    });
+
+    test("the sign-in sends a signed-in person straight to the return address", async ({ page }) => {
+      await page.goto(`/api/auth/login?returnUrl=${encodeURIComponent(attachmentsPath)}`);
+
+      await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
+    });
+
+    test("signing out ends the session at Microsoft and leaves a copy of its cookie refused", async ({
+      baseURL,
+      context,
+      page,
+      request,
+    }) => {
+      const session = (await context.cookies()).find((cookie) => cookie.name === sessionCookie);
+      expect(session, "the session cookie of the signed-in person").toBeDefined();
+
+      const signOut = await page.request.post("/api/auth/logout", {
+        headers: { [requestTokenHeader]: await requestToken(context) },
+        maxRedirects: 0,
+      });
+
+      expect(signOut.status()).toBe(302);
+      const endSession = new URL(signOut.headers()["location"] ?? "");
+      expect(`${endSession.origin}${endSession.pathname}`).toMatch(entraEndpoint("logout"));
+      expect(endSession.searchParams.get("post_logout_redirect_uri")).toBe(
+        `${baseURL}/api/auth/signout-callback-oidc`,
+      );
+      expect((await page.request.get("/api/auth/me")).status()).toBe(401);
+      const copy = await request.get("/api/auth/me", {
+        headers: { cookie: `${sessionCookie}=${session?.value ?? ""}` },
+      });
+      expect(copy.status()).toBe(401);
     });
   });
 });
