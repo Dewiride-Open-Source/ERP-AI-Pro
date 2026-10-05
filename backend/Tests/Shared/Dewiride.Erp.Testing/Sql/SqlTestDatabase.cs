@@ -11,18 +11,35 @@ public sealed class SqlTestDatabase : IAsyncLifetime
 
     public const string NamePrefix = "ErpAiProTest_";
 
-    private const int LeftoverAgeHours = 24;
-
-    private const string LeftoverLockResource = "ErpAiProTest_leftovers";
+    private const string LeftoverLockSuffix = "leftovers";
 
     private const string CreateStatement = "DECLARE @sql nvarchar(max) = N'CREATE DATABASE ' + QUOTENAME(@name) + N';'; EXEC sp_executesql @sql;";
 
     private const string DropStatement =
         "IF DB_ID(@name) IS NOT NULL BEGIN DECLARE @sql nvarchar(max) = N'ALTER DATABASE ' + QUOTENAME(@name) + N' SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE ' + QUOTENAME(@name) + N';'; EXEC sp_executesql @sql; END";
 
+    private static readonly TimeSpan TestProcessLeftoverAge = TimeSpan.FromHours(24);
+
     private static SqlTestDatabase? _current;
 
+    private readonly string _namePrefix;
+
+    private readonly TimeSpan _leftoverAge;
+
     private string? _serverConnectionString;
+
+    private SqlConnection? _presence;
+
+    public SqlTestDatabase()
+        : this(NamePrefix, TestProcessLeftoverAge)
+    {
+    }
+
+    private SqlTestDatabase(string namePrefix, TimeSpan leftoverAge)
+    {
+        _namePrefix = namePrefix;
+        _leftoverAge = leftoverAge;
+    }
 
     public static SqlTestDatabase Current =>
         _current ?? throw new InvalidOperationException(
@@ -33,6 +50,14 @@ public sealed class SqlTestDatabase : IAsyncLifetime
     public string Name { get; private set; } = string.Empty;
 
     public string ConnectionString { get; private set; } = string.Empty;
+
+    public static SqlTestDatabase WithNamePrefix(string namePrefix, TimeSpan leftoverAge)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(namePrefix);
+        ArgumentOutOfRangeException.ThrowIfLessThan(leftoverAge, TimeSpan.FromMinutes(1));
+
+        return new SqlTestDatabase(namePrefix, leftoverAge);
+    }
 
     public static string ResolveServerConnectionString(Func<string, string?> environmentVariable)
     {
@@ -59,8 +84,11 @@ public sealed class SqlTestDatabase : IAsyncLifetime
     public async ValueTask InitializeAsync()
     {
         _serverConnectionString = ResolveServerConnectionString(Environment.GetEnvironmentVariable);
-        Name = NewName();
+        Name = NewName(_namePrefix);
 
+        _presence = new SqlConnection(new SqlConnectionStringBuilder(_serverConnectionString) { Pooling = false }.ConnectionString);
+        await _presence.OpenAsync();
+        await HoldPresenceAsync(_presence, Name);
         await using (var connection = new SqlConnection(_serverConnectionString))
         {
             await connection.OpenAsync();
@@ -82,23 +110,51 @@ public sealed class SqlTestDatabase : IAsyncLifetime
 
         _current = null;
         SqlConnection.ClearAllPools();
-        await using var connection = new SqlConnection(_serverConnectionString);
-        await connection.OpenAsync();
-        await DropAsync(connection, Name);
+        await using (var connection = new SqlConnection(_serverConnectionString))
+        {
+            await connection.OpenAsync();
+            await DropAsync(connection, Name);
+        }
+
+        if (_presence is not null)
+        {
+            await _presence.DisposeAsync();
+        }
     }
 
-    internal static string NewName() => $"{NamePrefix}{TimeProvider.System.GetUtcNow():yyyyMMddHHmmss}_{Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(4))}";
+    internal static string NewName() => NewName(NamePrefix);
 
     internal static Task CreateAsync(SqlConnection connection, string database) => ExecuteAsync(connection, CreateStatement, database);
 
     internal static Task DropAsync(SqlConnection connection, string database) => ExecuteAsync(connection, DropStatement, database);
 
-    private static async Task DropLeftoversAsync(SqlConnection connection)
+    private static string NewName(string namePrefix) => $"{namePrefix}{TimeProvider.System.GetUtcNow():yyyyMMddHHmmss}_{Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(4))}";
+
+    private static async Task HoldPresenceAsync(SqlConnection connection, string database)
     {
         await using var command = connection.CreateCommand();
         command.CommandText = "sp_getapplock";
         command.CommandType = CommandType.StoredProcedure;
-        command.Parameters.AddWithValue("@Resource", LeftoverLockResource);
+        command.Parameters.AddWithValue("@Resource", database);
+        command.Parameters.AddWithValue("@LockMode", "Exclusive");
+        command.Parameters.AddWithValue("@LockOwner", "Session");
+        command.Parameters.AddWithValue("@LockTimeout", 0);
+        var outcome = command.Parameters.Add("@Result", SqlDbType.Int);
+        outcome.Direction = ParameterDirection.ReturnValue;
+        await command.ExecuteNonQueryAsync();
+        if ((int)outcome.Value < 0)
+        {
+            throw new InvalidOperationException($"The lock '{database}' that marks the test database as in use was not granted (sp_getapplock returned {outcome.Value}).");
+        }
+    }
+
+    private async Task DropLeftoversAsync(SqlConnection connection)
+    {
+        var lockResource = _namePrefix + LeftoverLockSuffix;
+        await using var command = connection.CreateCommand();
+        command.CommandText = "sp_getapplock";
+        command.CommandType = CommandType.StoredProcedure;
+        command.Parameters.AddWithValue("@Resource", lockResource);
         command.Parameters.AddWithValue("@LockMode", "Exclusive");
         command.Parameters.AddWithValue("@LockOwner", "Session");
         command.Parameters.AddWithValue("@LockTimeout", (int)TimeSpan.FromMinutes(2).TotalMilliseconds);
@@ -107,7 +163,7 @@ public sealed class SqlTestDatabase : IAsyncLifetime
         await command.ExecuteNonQueryAsync();
         if ((int)outcome.Value < 0)
         {
-            throw new InvalidOperationException($"The lock '{LeftoverLockResource}' guarding the cleanup of leftover test databases was not granted (sp_getapplock returned {outcome.Value}).");
+            throw new InvalidOperationException($"The lock '{lockResource}' guarding the cleanup of leftover test databases was not granted (sp_getapplock returned {outcome.Value}).");
         }
 
         foreach (var leftover in await FindLeftoversAsync(connection))
@@ -118,18 +174,18 @@ public sealed class SqlTestDatabase : IAsyncLifetime
         await using var release = connection.CreateCommand();
         release.CommandText = "sp_releaseapplock";
         release.CommandType = CommandType.StoredProcedure;
-        release.Parameters.AddWithValue("@Resource", LeftoverLockResource);
+        release.Parameters.AddWithValue("@Resource", lockResource);
         release.Parameters.AddWithValue("@LockOwner", "Session");
         await release.ExecuteNonQueryAsync();
     }
 
-    private static async Task<List<string>> FindLeftoversAsync(SqlConnection connection)
+    private async Task<List<string>> FindLeftoversAsync(SqlConnection connection)
     {
         var leftovers = new List<string>();
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT name FROM sys.databases WHERE name LIKE @pattern AND create_date < DATEADD(hour, -@hours, GETDATE());";
-        command.Parameters.AddWithValue("@pattern", NamePrefix.Replace("_", "[_]", StringComparison.Ordinal) + "%");
-        command.Parameters.AddWithValue("@hours", LeftoverAgeHours);
+        command.CommandText = "SELECT name FROM sys.databases WHERE name LIKE @pattern AND create_date < DATEADD(minute, -@minutes, GETDATE()) AND APPLOCK_TEST('public', name, 'Exclusive', 'Session') = 1;";
+        command.Parameters.AddWithValue("@pattern", _namePrefix.Replace("_", "[_]", StringComparison.Ordinal) + "%");
+        command.Parameters.AddWithValue("@minutes", (int)_leftoverAge.TotalMinutes);
         await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {

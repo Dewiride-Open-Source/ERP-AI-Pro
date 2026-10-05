@@ -39,12 +39,20 @@ public static class TestSignIn
                 return Results.NotFound();
             }
 
-            var application = await ApplicationAsync(context.RequestServices);
-            await application.AcquireTokenByAuthorizationCode([], TestTokenEndpoint.CodeFor(user)).ExecuteAsync(context.RequestAborted);
-            await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user.ToPrincipal(CookieAuthenticationDefaults.AuthenticationScheme));
+            await IssueSessionAsync(context, user);
 
             return Results.NoContent();
         }).AllowAnonymous().DisableAntiforgery();
+    }
+
+    public static async Task IssueSessionAsync(HttpContext context, TestUser user)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(user);
+
+        var application = await ApplicationAsync(context.RequestServices).ConfigureAwait(false);
+        await application.AcquireTokenByAuthorizationCode([], TestTokenEndpoint.CodeFor(user)).ExecuteAsync(context.RequestAborted).ConfigureAwait(false);
+        await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user.ToPrincipal(CookieAuthenticationDefaults.AuthenticationScheme)).ConfigureAwait(false);
     }
 
     public static HttpClient CreateClient<TEntryPoint>(WebApplicationFactory<TEntryPoint> factory)

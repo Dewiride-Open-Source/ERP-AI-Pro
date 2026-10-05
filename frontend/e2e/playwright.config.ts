@@ -1,6 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
 
-import { throwawaySignInCertificate } from "./fixtures/sign-in-certificate";
 import {
   apiBaseURL,
   baseURL,
@@ -15,6 +14,14 @@ import {
 const isCI = Boolean(process.env.CI);
 const browserOnly = { testIgnore: "**/tests/smoke/**" };
 const runnerStartsServers = startServers && process.env.TEST_WORKER_INDEX === undefined;
+const endToEndHost =
+  "dotnet run --project ../../backend/Tests/EndToEnd/Dewiride.Erp.Testing.EndToEndHost --no-build --";
+const testingEnvironment = { ASPNETCORE_ENVIRONMENT: "Testing" };
+const webPorts = { primary: 3100, offline: 3101, gated: 3102 };
+
+const portOf = (origin: string | undefined) => new URL(origin ?? "").port;
+const webOrigin = (port: number) => `http://127.0.0.1:${port}`;
+const nextStart = (port: number) => `pnpm --filter @dewiride/erp-web exec next start -H 127.0.0.1 -p ${port}`;
 
 export default defineConfig({
   testDir: "./tests",
@@ -28,6 +35,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL,
+    ignoreHTTPSErrors: true,
     trace: "on-first-retry",
     video: "retain-on-failure",
     screenshot: "on",
@@ -45,40 +53,39 @@ export default defineConfig({
   ...(runnerStartsServers && {
     webServer: [
       {
-        command: "dotnet run --project ../../backend/Hosts/Api/Dewiride.Erp.Host.Api --no-build",
+        name: "api",
+        command: `${endToEndHost} --port ${portOf(apiBaseURL)} --web-origin ${baseURL}`,
         url: `${apiBaseURL}/healthz/live`,
         reuseExistingServer: !isCI,
-        timeout: 120_000,
+        timeout: 180_000,
+        gracefulShutdown: { signal: "SIGTERM", timeout: 10_000 },
+        env: testingEnvironment,
       },
       {
-        command: "pnpm --filter @dewiride/erp-web start",
-        url: `${baseURL}/healthz`,
+        name: "web",
+        command: nextStart(webPorts.primary),
+        url: `${webOrigin(webPorts.primary)}/healthz`,
         reuseExistingServer: !isCI,
         timeout: 120_000,
         env: { API_INTERNAL_URL: apiBaseURL },
       },
       {
-        command: "pnpm --filter @dewiride/erp-web exec next start -p 3001",
-        url: `${offlineBaseURL}/healthz`,
+        name: "web without an api",
+        command: nextStart(webPorts.offline),
+        url: `${webOrigin(webPorts.offline)}/healthz`,
         reuseExistingServer: !isCI,
         timeout: 120_000,
         env: { API_INTERNAL_URL: unreachableApiURL },
       },
       {
-        command:
-          "dotnet run --project ../../backend/Hosts/Api/Dewiride.Erp.Host.Api --no-build --no-launch-profile",
+        name: "gated api",
+        command: `${endToEndHost} --port ${portOf(gatedApiBaseURL)} --web-origin ${gatedBaseURL ?? ""}`,
         url: `${gatedApiBaseURL}/healthz/live`,
         reuseExistingServer: !isCI,
-        timeout: 120_000,
+        timeout: 180_000,
+        gracefulShutdown: { signal: "SIGTERM", timeout: 10_000 },
         env: {
-          ASPNETCORE_ENVIRONMENT: "Development",
-          ASPNETCORE_URLS: gatedApiBaseURL,
-          APPCONFIG_ENDPOINT: "",
-          AZURE_TOKEN_CREDENTIALS: "AzureCliCredential",
-          Erp__Platform__Identity__TenantId: "11111111-1111-1111-1111-111111111111",
-          Erp__Platform__Identity__ClientId: "22222222-2222-2222-2222-222222222222",
-          Erp__Platform__Identity__WebOrigin: "http://localhost:3002",
-          Erp__Platform__Identity__ClientCertificate: throwawaySignInCertificate(),
+          ...testingEnvironment,
           ...Object.fromEntries(
             gatedFeatureFlags.flatMap((flag, index) => [
               [`feature_management__feature_flags__${index}__id`, flag],
@@ -88,11 +95,25 @@ export default defineConfig({
         },
       },
       {
-        command: "pnpm --filter @dewiride/erp-web exec next start -p 3002",
-        url: `${gatedBaseURL}/healthz`,
+        name: "gated web",
+        command: nextStart(webPorts.gated),
+        url: `${webOrigin(webPorts.gated)}/healthz`,
         reuseExistingServer: !isCI,
         timeout: 120_000,
         env: { API_INTERNAL_URL: gatedApiBaseURL },
+      },
+      {
+        name: "https",
+        command: [
+          "node servers/https-front.ts",
+          `${portOf(baseURL)}=${webOrigin(webPorts.primary)}`,
+          `${portOf(offlineBaseURL)}=${webOrigin(webPorts.offline)}`,
+          `${portOf(gatedBaseURL)}=${webOrigin(webPorts.gated)}`,
+        ].join(" "),
+        url: `${baseURL}/healthz`,
+        ignoreHTTPSErrors: true,
+        reuseExistingServer: !isCI,
+        timeout: 60_000,
       },
     ],
   }),

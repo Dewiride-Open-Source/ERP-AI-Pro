@@ -49,5 +49,6 @@
 | [0032](adr/0032-token-cache-in-sql-server-and-the-data-protection-key-ring.md) | The token cache in SQL Server and the Data Protection key ring |
 | [0033](adr/0033-antiforgery-for-requests-the-session-cookie-signs-in.md) | Antiforgery for requests the session cookie signs in |
 | [0034](adr/0034-session-endpoints-bearer-tokens-per-route-and-the-security-description.md) | Session endpoints, bearer tokens per route and the security description |
+| [0035](adr/0035-signed-in-browser-tests-through-an-end-to-end-api-host.md) | Signed-in browser tests through an end-to-end API host |
 
 New decisions use [0000-template.md](adr/0000-template.md).

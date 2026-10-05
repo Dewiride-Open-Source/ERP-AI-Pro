@@ -24,7 +24,7 @@ test.describe("system information page", () => {
 
     await expect(systemInfo.card).toMatchAriaSnapshot(`
       - term: Application
-      - definition: /^ERP-AI-Pro( \\(local-dev\\))?$/
+      - definition: ERP-AI-Pro
       - term: Version
       - definition: /\\d+\\.\\d+\\.\\d+/
       - term: Started

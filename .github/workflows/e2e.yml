@@ -36,33 +36,9 @@ jobs:
       - name: Start Azurite
         id: azurite
         uses: ./.github/actions/start-azurite
-      - name: Generate the attachments encryption key
-        id: attachments-key
-        run: |
-          material="$(openssl rand -base64 32)"
-          echo "::add-mask::$material"
-          echo "encryption-key=ci:$material" >> "$GITHUB_OUTPUT"
-      - name: Generate a throwaway sign-in certificate
-        id: signin-certificate
-        run: |
-          signin="$(mktemp -d "$RUNNER_TEMP/signin.XXXXXX")"
-          openssl req -x509 -newkey rsa:2048 -noenc -days 2 -subj "/CN=erp-e2e" -keyout "$signin/key.pem" -out "$signin/certificate.pem"
-          openssl pkcs12 -export -inkey "$signin/key.pem" -in "$signin/certificate.pem" -passout pass: -out "$signin/certificate.pfx"
-          certificate="$(base64 -w 0 "$signin/certificate.pfx")"
-          rm -rf -- "$signin"
-          echo "::add-mask::$certificate"
-          echo "client-certificate=$certificate" >> "$GITHUB_OUTPUT"
-      - name: Build API and migrator
+      - name: Build the end-to-end API host
         working-directory: backend
-        run: |
-          dotnet build Hosts/Api/Dewiride.Erp.Host.Api --no-restore -c Release
-          dotnet build Hosts/Migrator/Dewiride.Erp.Host.Migrator --no-restore -c Release
-      - name: Migrate the database
-        working-directory: backend
-        env:
-          DOTNET_ENVIRONMENT: Development
-          Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
-        run: dotnet run --project Hosts/Migrator/Dewiride.Erp.Host.Migrator --no-build -c Release --no-launch-profile -- migrate
+        run: dotnet build Tests/EndToEnd/Dewiride.Erp.Testing.EndToEndHost --no-restore -c Release
       - name: Build web app
         working-directory: frontend
         run: pnpm build
@@ -74,70 +50,65 @@ jobs:
       - name: Start API
         working-directory: backend
         env:
-          Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
-          Erp__Platform__Attachments__EmulatorHost: ${{ steps.azurite.outputs.emulator-host }}
-          Erp__Platform__Attachments__EncryptionKey: ${{ steps.attachments-key.outputs.encryption-key }}
-          Erp__Platform__Identity__TenantId: 11111111-1111-1111-1111-111111111111
-          Erp__Platform__Identity__ClientId: 22222222-2222-2222-2222-222222222222
-          Erp__Platform__Identity__ClientCertificate: ${{ steps.signin-certificate.outputs.client-certificate }}
-          Erp__Platform__Identity__WebOrigin: http://localhost:3000
+          ASPNETCORE_ENVIRONMENT: Testing
+          ERP_TEST_SQL_CONNECTION: ${{ steps.sql.outputs.server-connection-string }}
+          ERP_TEST_BLOB_EMULATOR_HOST: ${{ steps.azurite.outputs.emulator-host }}
         run: |
-          nohup dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api --no-build -c Release > "$RUNNER_TEMP/api.log" 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://localhost:5080/healthz/live && break; sleep 1; done
-          curl -sf http://localhost:5080/healthz/live
+          nohup dotnet run --project Tests/EndToEnd/Dewiride.Erp.Testing.EndToEndHost --no-build -c Release -- --port 5180 --web-origin https://localhost:3200 > "$RUNNER_TEMP/api.log" 2>&1 &
+          for i in $(seq 1 120); do curl -sf http://127.0.0.1:5180/healthz/live && break; sleep 1; done
+          curl -sf http://127.0.0.1:5180/healthz/live
       - name: Start web app
         working-directory: frontend/apps/web
         env:
-          API_INTERNAL_URL: http://localhost:5080
+          API_INTERNAL_URL: http://127.0.0.1:5180
         run: |
-          nohup pnpm exec next start -p 3000 > "$RUNNER_TEMP/web.log" 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://localhost:3000/healthz && break; sleep 1; done
-          curl -sf http://localhost:3000/healthz
+          nohup pnpm exec next start -H 127.0.0.1 -p 3100 > "$RUNNER_TEMP/web.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:3100/healthz && break; sleep 1; done
+          curl -sf http://127.0.0.1:3100/healthz
       - name: Start web app without an API
         working-directory: frontend/apps/web
         env:
           API_INTERNAL_URL: http://127.0.0.1:1
         run: |
-          nohup pnpm exec next start -p 3001 > "$RUNNER_TEMP/web-offline.log" 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://localhost:3001/healthz && break; sleep 1; done
-          curl -sf http://localhost:3001/healthz
+          nohup pnpm exec next start -H 127.0.0.1 -p 3101 > "$RUNNER_TEMP/web-offline.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:3101/healthz && break; sleep 1; done
+          curl -sf http://127.0.0.1:3101/healthz
       - name: Start API with the system-info and attachments modules disabled
         working-directory: backend
         env:
-          ASPNETCORE_ENVIRONMENT: Development
-          ASPNETCORE_URLS: http://localhost:5081
-          APPCONFIG_ENDPOINT: ""
-          Erp__Platform__Database__ConnectionString: ${{ steps.sql.outputs.database-connection-string }}
-          Erp__Platform__Attachments__EmulatorHost: ${{ steps.azurite.outputs.emulator-host }}
-          Erp__Platform__Attachments__EncryptionKey: ${{ steps.attachments-key.outputs.encryption-key }}
-          Erp__Platform__Identity__TenantId: 11111111-1111-1111-1111-111111111111
-          Erp__Platform__Identity__ClientId: 22222222-2222-2222-2222-222222222222
-          Erp__Platform__Identity__ClientCertificate: ${{ steps.signin-certificate.outputs.client-certificate }}
-          Erp__Platform__Identity__WebOrigin: http://localhost:3002
+          ASPNETCORE_ENVIRONMENT: Testing
+          ERP_TEST_SQL_CONNECTION: ${{ steps.sql.outputs.server-connection-string }}
+          ERP_TEST_BLOB_EMULATOR_HOST: ${{ steps.azurite.outputs.emulator-host }}
           feature_management__feature_flags__0__id: Erp.Modules.Platform.SystemInfo
           feature_management__feature_flags__0__enabled: "false"
           feature_management__feature_flags__1__id: Erp.Modules.Platform.Attachments
           feature_management__feature_flags__1__enabled: "false"
         run: |
-          nohup dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api --no-build --no-launch-profile -c Release > "$RUNNER_TEMP/api-gated.log" 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://localhost:5081/healthz/live && break; sleep 1; done
-          curl -sf http://localhost:5081/healthz/live
+          nohup dotnet run --project Tests/EndToEnd/Dewiride.Erp.Testing.EndToEndHost --no-build -c Release -- --port 5181 --web-origin https://localhost:3202 > "$RUNNER_TEMP/api-gated.log" 2>&1 &
+          for i in $(seq 1 120); do curl -sf http://127.0.0.1:5181/healthz/live && break; sleep 1; done
+          curl -sf http://127.0.0.1:5181/healthz/live
       - name: Start web app against the gated API
         working-directory: frontend/apps/web
         env:
-          API_INTERNAL_URL: http://localhost:5081
+          API_INTERNAL_URL: http://127.0.0.1:5181
         run: |
-          nohup pnpm exec next start -p 3002 > "$RUNNER_TEMP/web-gated.log" 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://localhost:3002/healthz && break; sleep 1; done
-          curl -sf http://localhost:3002/healthz
+          nohup pnpm exec next start -H 127.0.0.1 -p 3102 > "$RUNNER_TEMP/web-gated.log" 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:3102/healthz && break; sleep 1; done
+          curl -sf http://127.0.0.1:3102/healthz
+      - name: Serve the web apps over https
+        working-directory: frontend/e2e
+        run: |
+          nohup node servers/https-front.ts 3200=http://127.0.0.1:3100 3201=http://127.0.0.1:3101 3202=http://127.0.0.1:3102 > "$RUNNER_TEMP/https.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sfk https://localhost:3200/healthz && break; sleep 1; done
+          curl -sfk https://localhost:3200/healthz
       - name: Run Playwright
         working-directory: frontend/e2e
         env:
-          E2E_BASE_URL: http://localhost:3000
-          E2E_API_BASE_URL: http://localhost:5080
-          E2E_OFFLINE_BASE_URL: http://localhost:3001
-          E2E_GATED_BASE_URL: http://localhost:3002
-          E2E_GATED_API_BASE_URL: http://localhost:5081
+          E2E_BASE_URL: https://localhost:3200
+          E2E_API_BASE_URL: http://127.0.0.1:5180
+          E2E_OFFLINE_BASE_URL: https://localhost:3201
+          E2E_GATED_BASE_URL: https://localhost:3202
+          E2E_GATED_API_BASE_URL: http://127.0.0.1:5181
           PLAYWRIGHT_BLOB_OUTPUT_NAME: report-${{ matrix.project }}-${{ matrix.shard }}.zip
         run: pnpm exec playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}/2
       - name: Upload blob report

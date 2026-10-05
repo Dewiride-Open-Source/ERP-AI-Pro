@@ -1,8 +1,17 @@
 import AxeBuilder from "@axe-core/playwright";
-import { test as base, expect, type Locator, type Page, type TestInfo } from "@playwright/test";
+import {
+  test as base,
+  expect,
+  type BrowserContext,
+  type Locator,
+  type Page,
+  type TestInfo,
+} from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { signIn, type Persona, type SignedInPerson } from "./sign-in";
 
 export type Theme = "light" | "dark";
 
@@ -10,10 +19,14 @@ export const themes: readonly Theme[] = ["light", "dark"];
 
 type Fixtures = {
   theme: Theme;
+  persona: Persona | undefined;
+  person: SignedInPerson | undefined;
   expectedConsoleError: RegExp | undefined;
   consoleErrors: string[];
   capture: (name: string, target?: Locator) => Promise<void>;
 };
+
+const signedInPeople = new WeakMap<BrowserContext, SignedInPerson>();
 
 const screenshotsRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "screenshots");
 
@@ -35,7 +48,17 @@ const excludedFromScans = [
 
 export const test = base.extend<Fixtures>({
   theme: ["light", { option: true }],
+  persona: [undefined, { option: true }],
   expectedConsoleError: [undefined, { option: true }],
+
+  context: async ({ context, persona }, use) => {
+    if (persona !== undefined) signedInPeople.set(context, await signIn(context.request, persona));
+    await use(context);
+  },
+
+  person: async ({ context }, use) => {
+    await use(signedInPeople.get(context));
+  },
 
   consoleErrors: [
     async ({ page, expectedConsoleError }, use) => {

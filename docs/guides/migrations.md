@@ -40,7 +40,7 @@ The migrator applies them in catalogue order, `platform_caching`, `platform_idem
 | Your machine | `node scripts/ef/ef.ts update --all`, or the migrator: `cd backend && dotnet run --project Hosts/Migrator/Dewiride.Erp.Host.Migrator` (launch profile `migrate`; `--launch-profile status` lists what is pending) |
 | Local containers | the compose `migrator` service runs before the `api` service on every `up`, signing in as the `erp_local_migrator` SQL login ([local development](local-development.md)) |
 | Tests | the `SqlTestDatabase` assembly fixture migrates and seeds a fresh database per test process through the same composition |
-| CI | `e2e.yml` runs the migrator; `docker-build.yml` runs the compose stack, whose migrator container migrates the CI SQL Server |
+| CI | `ci-backend.yml`'s test databases and `e2e.yml`'s end-to-end API hosts are migrated and seeded by `SqlTestDatabase` through `TestDatabaseHost`; `docker-build.yml` runs the compose stack, whose migrator container migrates the CI SQL Server |
 | Production | `docker compose run --rm migrator` on its own, then `up` to roll the API only after it exited 0 ([runbook](../operations/runbooks/migrations.md)) |
 
 The migrator program (`Hosts/Migrator/Dewiride.Erp.Host.Migrator`) applies every context in catalogue order and then runs the seeders. Commands and exit codes:
