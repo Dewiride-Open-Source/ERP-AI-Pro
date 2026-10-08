@@ -11,24 +11,25 @@ using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 
-// Entra ends an Entra session by loading the front-channel logout URL with the issuer and the id of that session (iss and
-// sid), from a hidden frame of its own site that never carries the SameSite=Lax session cookie, so every sign-in records the
-// person's account under the Entra session it came from. The record is the issuer and the account id as JSON, neither
-// secret, so it is stored unprotected. It expires once no session signed in with it can still be within its lifetime.
+// An Entra session is one browser's sign-in to Entra, and its id (sid) names it in the id tokens of every application signed
+// in within it and in the front-channel sign-out Entra sends each of them when it ends. Every sign-in therefore records the
+// person's account under the Entra session it came from, and a session of this API is accepted only while that record names
+// its person (SessionCookieEvents), so removing the record ends exactly the sessions signed in from that Entra session. The
+// record is the account id as JSON, which is not secret, so it is stored unprotected. It expires once no session signed in
+// with it can still be within its lifetime.
 internal sealed class EntraSessions(
     [FromKeyedServices(CachingRegistration.SqlServerCacheKey)] IDistributedCache store,
     IOptions<EntraSignInOptions> signIn)
 {
     public const string KeyPrefix = "entra-session:";
 
-    public const string MalformedRecordMessage = "The record of a Microsoft Entra ID session is not an issuer and an account.";
+    public const string MalformedRecordMessage = "The record of a Microsoft Entra ID session names no account.";
 
     public Task RecordAsync(ClaimsPrincipal person, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(person);
 
         if (person.FindFirst(JwtRegisteredClaimNames.Sid)?.Value is not { Length: > 0 } sessionId
-            || person.FindFirst(JwtRegisteredClaimNames.Iss)?.Value is not { Length: > 0 } issuer
             || person.GetMsalAccountId() is not { } accountId)
         {
             return Task.CompletedTask;
@@ -36,7 +37,7 @@ internal sealed class EntraSessions(
 
         return store.SetAsync(
             KeyPrefix + sessionId,
-            JsonSerializer.SerializeToUtf8Bytes(new EntraSession(issuer, accountId)),
+            JsonSerializer.SerializeToUtf8Bytes(new EntraSession(accountId)),
             new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = signIn.Value.SessionLifetime + TokenCacheRegistration.ExpirationMargin },
             cancellationToken);
     }
@@ -59,8 +60,12 @@ internal sealed class EntraSessions(
             throw new InvalidDataException(MalformedRecordMessage, exception);
         }
 
-        return session is { Issuer.Length: > 0, AccountId.Length: > 0 } ? session : throw new InvalidDataException(MalformedRecordMessage);
+        return session is { AccountId.Length: > 0 } ? session : throw new InvalidDataException(MalformedRecordMessage);
     }
+
+    public async Task<bool> HoldsAsync(string sessionId, string accountId, CancellationToken cancellationToken) =>
+        await FindAsync(sessionId, cancellationToken).ConfigureAwait(false) is { } session
+        && string.Equals(session.AccountId, accountId, StringComparison.Ordinal);
 
     public Task ForgetAsync(string sessionId, CancellationToken cancellationToken) => store.RemoveAsync(KeyPrefix + sessionId, cancellationToken);
 }

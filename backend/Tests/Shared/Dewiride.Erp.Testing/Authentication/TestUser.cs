@@ -5,7 +5,8 @@ using System.Text;
 namespace Dewiride.Erp.Testing.Authentication;
 
 // The Entra session id and the login hint follow from the object id, so a person a test derives from a persona with a new
-// object id has a session and a hint of their own; like Entra's, the hint is opaque and never the sign-in name.
+// object id has a session and a hint of their own, and a principal may name another Entra session of the person, as a
+// sign-in from a second browser does; like Entra's, the hint is opaque and never the sign-in name.
 public sealed record TestUser(Guid ObjectId, string Name, string UserName, IReadOnlyList<string> Roles)
 {
     public const string ObjectIdClaim = "oid";
@@ -22,8 +23,6 @@ public sealed record TestUser(Guid ObjectId, string Name, string UserName, IRead
 
     public const string RoleClaim = "roles";
 
-    public const string IssuerClaim = "iss";
-
     public const string EntraSessionIdClaim = "sid";
 
     public const string LoginHintClaim = "login_hint";
@@ -34,16 +33,15 @@ public sealed record TestUser(Guid ObjectId, string Name, string UserName, IRead
 
     public string LoginHint => Convert.ToBase64String(Derive("login_hint"));
 
-    public ClaimsPrincipal ToPrincipal(string authenticationType)
+    public ClaimsPrincipal ToPrincipal(string authenticationType, string? entraSessionId = null)
     {
         List<Claim> claims =
         [
-            new(IssuerClaim, TestIdentityProvider.Issuer),
             new(ObjectIdClaim, ObjectId.ToString("D")),
             new(TenantIdClaim, TestIdentityProvider.TenantId),
             new(HomeObjectIdClaim, ObjectId.ToString("D")),
             new(HomeTenantIdClaim, TestIdentityProvider.TenantId),
-            new(EntraSessionIdClaim, EntraSessionId),
+            new(EntraSessionIdClaim, entraSessionId ?? EntraSessionId),
             new(NameClaim, Name),
             new(UserNameClaim, UserName),
             new(LoginHintClaim, LoginHint),

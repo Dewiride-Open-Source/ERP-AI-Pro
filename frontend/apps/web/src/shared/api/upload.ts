@@ -1,6 +1,6 @@
 import { antiforgeryHeaderName, isAntiforgeryRefusal, sendWithAntiforgery } from "./antiforgery";
 import { apiBasePath } from "./base-path";
-import { renewBrowserAntiforgeryTokens } from "./browser-antiforgery";
+import { parseJson, renewBrowserAntiforgeryTokens } from "./browser-antiforgery";
 import { ApiError, problemFromBody } from "./problem-details";
 
 export type UploadProgress = { readonly loaded: number; readonly total: number };
@@ -55,13 +55,4 @@ function sendFile(
     form.append("file", file, file.name);
     request.send(form);
   });
-}
-
-function parseJson(text: string): unknown {
-  if (text.length === 0) return undefined;
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return undefined;
-  }
 }

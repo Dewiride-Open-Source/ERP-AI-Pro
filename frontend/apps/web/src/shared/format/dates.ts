@@ -6,7 +6,9 @@ const indiaDateTime = new Intl.DateTimeFormat("en-IN", {
 
 const indiaTime = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
-  timeStyle: "short",
+  hour: "numeric",
+  minute: "2-digit",
+  timeZoneName: "short",
 });
 
 export function formatDateTimeIst(value: Date): string {

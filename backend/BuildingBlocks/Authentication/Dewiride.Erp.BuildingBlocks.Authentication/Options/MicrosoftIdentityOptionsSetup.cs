@@ -8,9 +8,8 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Options;
 
-// Microsoft.Identity.Web builds the OpenID Connect handler options from these, and chains its own handlers onto Events,
-// so the handler options themselves are configured directly only where it merges instead of copying
-// (OpenIdConnectOptionsSetup).
+// Microsoft.Identity.Web builds the OpenID Connect handler options from these and chains its own handlers onto Events, so
+// the handler options themselves are never configured directly.
 internal sealed class MicrosoftIdentityOptionsSetup(IOptions<EntraSignInOptions> signIn, SignInEvents events) : IConfigureNamedOptions<MicrosoftIdentityOptions>
 {
     public const string RoleClaimType = "roles";
@@ -61,5 +60,6 @@ internal sealed class MicrosoftIdentityOptionsSetup(IOptions<EntraSignInOptions>
         options.Events.OnRedirectToIdentityProvider = events.RedirectToIdentityProvider;
         options.Events.OnRedirectToIdentityProviderForSignOut = events.RedirectToIdentityProviderForSignOut;
         options.Events.OnRemoteFailure = events.RemoteFailure;
+        options.Events.OnTicketReceived = events.TicketReceived;
     }
 }

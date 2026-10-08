@@ -51,6 +51,10 @@ const typeRole = ["no-restricted-syntax", /Put a type-role class/];
 const webAppFromPackage = ["no-restricted-imports", /never imports from apps\/web/];
 const moduleStatement = ["no-restricted-syntax", /A web source file only defines exports/];
 const bareLocalImport = ["no-restricted-syntax", /Import a name this file exports instead of the whole file/];
+const serverFunction = [
+  "no-restricted-syntax",
+  /A Server Function starts with `await requireSignedInPerson\(\)`/,
+];
 
 const componentFile = "src/features/platform/attachments/files/components/upload-panel.tsx";
 const startupsConsumer = "src/features/platform/system-info/info/components/system-info-overview.tsx";
@@ -59,6 +63,7 @@ const deepestModuleFile = "src/features/platform/attachments/a/b/c/d/e/f/g/h/dee
 const domainSharedFile = "src/features/platform/_shared/money.ts";
 const pageFile = "src/app/(app)/platform/attachments/page.tsx";
 const loadingFile = "src/app/(app)/platform/attachments/loading.tsx";
+const actionsFile = "src/features/platform/attachments/files/server/actions.ts";
 
 const cases = [
   {
@@ -591,21 +596,120 @@ const cases = [
   },
   {
     title: "nextConfig_DirectiveDeclarationsAndStatementsInsideFunctions_AreAllowed",
-    file: "src/features/platform/attachments/files/server/actions.ts",
+    file: actionsFile,
     code: [
       '"use server";',
       'import { z } from "zod";',
+      'import { requireSignedInPerson } from "@/shared/auth/session";',
       "const removal = z.object({ id: z.uuid() });",
       "export type Removal = z.infer<typeof removal>;",
       "interface Removed {",
       "  readonly id: string;",
       "}",
-      "export class RemovalRefused extends Error {}",
+      "class RemovalRefused extends Error {}",
       "export async function removeAttachment(input: unknown): Promise<Removed> {",
+      "  await requireSignedInPerson();",
       "  const { id } = removal.parse(input);",
       '  if (id === "") throw new RemovalRefused();',
       "  await Promise.resolve();",
       "  return { id };",
+      "}",
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_ServerFunctionsThatStartWithTheSessionCheck_AreAllowed",
+    file: actionsFile,
+    code: [
+      '"use server";',
+      'import { requireSignedInPerson } from "@/shared/auth/session";',
+      'import type { RowRemovalOutcome } from "@/shared/lists/optimistic-rows";',
+      "export type DownloadLinkResult = { readonly url: string };",
+      "export interface Removal {",
+      "  readonly id: string;",
+      "}",
+      'export type { FormState } from "@/shared/forms/state/form-state";',
+      "function describe(id: string): string {",
+      "  return id;",
+      "}",
+      "export async function deleteAttachment(id: string): Promise<RowRemovalOutcome> {",
+      "  await requireSignedInPerson();",
+      '  return { removed: describe(id) !== "" };',
+      "}",
+      "export async function createDownloadLink(id: string): Promise<DownloadLinkResult> {",
+      "  const { roles } = await requireSignedInPerson();",
+      "  return { url: `${id}${roles.length}` };",
+      "}",
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_ServerFunctionThatDoesNotStartWithTheSessionCheck_IsReported",
+    file: actionsFile,
+    code: [
+      '"use server";',
+      'import { requireSession, requireSignedInPerson } from "@/shared/auth/session";',
+      "export async function afterParsing(id: string): Promise<void> {",
+      "  const parsed = id.trim();",
+      "  await requireSignedInPerson();",
+      "  void parsed;",
+      "}",
+      "export async function withTheRenderCheck(): Promise<void> {",
+      "  await requireSession();",
+      "}",
+      "export async function withAnArgument(page: string): Promise<void> {",
+      "  await requireSignedInPerson(page);",
+      "}",
+      "export async function withoutAwait(): Promise<void> {",
+      "  void requireSignedInPerson();",
+      "}",
+      "export async function withTheRefusalCaught(): Promise<void> {",
+      "  await requireSignedInPerson().catch(() => undefined);",
+      "}",
+      "export async function withTwoDeclarations(): Promise<void> {",
+      "  const person = await requireSignedInPerson(), other = person;",
+      "  void other;",
+      "}",
+      "export async function withAnEmptyBody(): Promise<void> {}",
+    ].join("\n"),
+    expected: Array.from({ length: 7 }, () => serverFunction),
+  },
+  {
+    title: "nextConfig_ServerFunctionFileExportingAnythingButFunctionDeclarations_IsReported",
+    file: actionsFile,
+    code: [
+      '"use server";',
+      'import { requireSignedInPerson } from "@/shared/auth/session";',
+      "export const dismiss = async (): Promise<void> => {",
+      "  await requireSignedInPerson();",
+      "};",
+      "export class Refused extends Error {}",
+      "async function restore(): Promise<void> {",
+      "  await requireSignedInPerson();",
+      "}",
+      "export { restore };",
+      'export { reconnect } from "./reconnect";',
+      'export * from "./others";',
+      "export default async function register(): Promise<void> {",
+      "  await requireSignedInPerson();",
+      "}",
+    ].join("\n"),
+    expected: Array.from({ length: 6 }, () => serverFunction),
+  },
+  {
+    title: "nextConfig_ServerFunctionFileOutsideAFeature_IsReported",
+    file: "src/shared/api/actions.ts",
+    code: '"use server";\nexport async function renew(): Promise<void> {\n  await Promise.resolve();\n}',
+    expected: [serverFunction],
+  },
+  {
+    title: "nextConfig_ExportedFunctionsOfAFileWithoutTheUseServerDirective_AreNotChecked",
+    file: "src/features/platform/attachments/files/server/queries.ts",
+    code: [
+      'import "server-only";',
+      "export const attachmentsPerPage = 20;",
+      "export async function getAttachments(): Promise<readonly string[]> {",
+      "  return [];",
       "}",
     ].join("\n"),
     expected: [],

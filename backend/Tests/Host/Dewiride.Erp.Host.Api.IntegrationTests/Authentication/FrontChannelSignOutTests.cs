@@ -2,11 +2,13 @@ using System.Net;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Requests;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
+using Dewiride.Erp.BuildingBlocks.Caching;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.Host.Api.IntegrationTests.TokenCache;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
@@ -15,7 +17,9 @@ public sealed class FrontChannelSignOutTests : IClassFixture<FrontChannelSignOut
 {
     private const string SignedInPath = "/__test/signed-in";
 
-    private const string OtherIssuer = "https://login.microsoftonline.com/0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e/v2.0";
+    private const string OtherTenantId = "0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e";
+
+    private const string OtherIssuer = $"https://login.microsoftonline.com/{OtherTenantId}/v2.0";
 
     private readonly Fixture _fixture;
 
@@ -26,22 +30,29 @@ public sealed class FrontChannelSignOutTests : IClassFixture<FrontChannelSignOut
     }
 
     [Fact]
-    public async Task Get_EntraSessionOfASignedInPerson_EndsEverySessionOfThePersonAndRemovesTheirAccount()
+    public async Task Get_EntraSessionOfASignedInPerson_EndsTheSessionsSignedInFromItAndNoOtherSessionOfThePerson()
     {
+        var phoneEntraSession = Guid.CreateVersion7().ToString("D");
+        var revocationKey = _fixture.KeyPrefix + SessionRevocations.KeyPrefix + TestUsers.Accountant.AccountId;
         using var laptop = TestSignIn.CreateClient(_fixture.Factory);
+        using var laptopWindow = TestSignIn.CreateClient(_fixture.Factory);
         using var phone = TestSignIn.CreateClient(_fixture.Factory);
         using var laptopSignIn = await TestSignIn.SignInAsync(laptop, TestUsers.Accountant);
-        using var phoneSignIn = await TestSignIn.SignInAsync(phone, TestUsers.Accountant);
+        using var laptopWindowSignIn = await TestSignIn.SignInAsync(laptopWindow, TestUsers.Accountant);
+        using var phoneSignIn = await TestSignIn.SignInAsync(phone, TestUsers.Accountant, phoneEntraSession);
         await AssertStatusAsync(laptop, HttpStatusCode.OK);
+        var revocation = await TokenCacheRow.FindAsync(revocationKey);
 
         using var response = await SignOutFromEntraAsync(TestIdentityProvider.Issuer, TestUsers.Accountant.EntraSessionId);
 
         await AssertAnsweredWithoutABodyAsync(response);
         await AssertStatusAsync(laptop, HttpStatusCode.Unauthorized);
-        await AssertStatusAsync(phone, HttpStatusCode.Unauthorized);
-        Assert.False(await TestSignIn.IsAccountCachedAsync(_fixture.Factory.Services, TestUsers.Accountant));
+        await AssertStatusAsync(laptopWindow, HttpStatusCode.Unauthorized);
+        await AssertStatusAsync(phone, HttpStatusCode.OK);
+        Assert.True(await TestSignIn.IsAccountCachedAsync(_fixture.Factory.Services, TestUsers.Accountant));
         Assert.Null(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId));
-        Assert.NotNull(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + SessionRevocations.KeyPrefix + TestUsers.Accountant.AccountId));
+        Assert.NotNull(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + phoneEntraSession));
+        Assert.Equal(revocation?.Value, (await TokenCacheRow.FindAsync(revocationKey))?.Value);
     }
 
     [Fact]
@@ -61,17 +72,37 @@ public sealed class FrontChannelSignOutTests : IClassFixture<FrontChannelSignOut
     }
 
     [Fact]
-    public async Task Get_EntraSessionWithAnotherIssuer_ChangesNothingAndAnswersAlike()
+    public async Task Get_EntraSessionNamedWithTheV1IssuerOfTheTenant_EndsItsSessions()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
 
-        using var response = await SignOutFromEntraAsync(OtherIssuer, TestUsers.Administrator.EntraSessionId);
+        using var response = await SignOutFromEntraAsync($"https://sts.windows.net/{TestIdentityProvider.TenantId}/", TestUsers.Administrator.EntraSessionId);
+
+        await AssertAnsweredWithoutABodyAsync(response);
+        await AssertStatusAsync(client, HttpStatusCode.Unauthorized);
+        Assert.Null(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + TestUsers.Administrator.EntraSessionId));
+    }
+
+    [Theory]
+    [InlineData("https://login.microsoftonline.com/{other-tenant}/v2.0")]
+    [InlineData("https://sts.windows.net/{other-tenant}/")]
+    [InlineData("https://login.microsoftonline.com/{tenant}/v2.0/")]
+    [InlineData("https://issuer.example.com/{tenant}/v2.0")]
+    public async Task Get_EntraSessionNamedWithAnIssuerThatIsNotTheTenants_ChangesNothingAndAnswersAlike(string issuer)
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
+
+        using var response = await SignOutFromEntraAsync(
+            issuer.Replace("{tenant}", TestIdentityProvider.TenantId, StringComparison.Ordinal).Replace("{other-tenant}", OtherTenantId, StringComparison.Ordinal),
+            TestUsers.Administrator.EntraSessionId);
 
         await AssertAnsweredWithoutABodyAsync(response);
         await AssertStatusAsync(client, HttpStatusCode.OK);
-        Assert.True(await TestSignIn.IsAccountCachedAsync(_fixture.Factory.Services, TestUsers.Administrator));
         Assert.NotNull(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + TestUsers.Administrator.EntraSessionId));
+        var own = Assert.Single(_fixture.Logs.GetSnapshot(), record => record.Category == typeof(FrontChannelSignOut).FullName);
+        Assert.Equal(LogLevel.Warning, own.Level);
     }
 
     [Fact]
@@ -88,17 +119,42 @@ public sealed class FrontChannelSignOutTests : IClassFixture<FrontChannelSignOut
     }
 
     [Fact]
-    public async Task Get_EntraSessionOfAPersonWhoAlreadySignedOut_AnswersAlike()
+    public async Task Get_EntraSessionAPersonSignedOutOf_IsUnknownAndLeavesTheirNextSessionSignedIn()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
-        using var signOut = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
-        Assert.Equal(HttpStatusCode.Found, signOut.StatusCode);
+        using (var signOut = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.Found, signOut.StatusCode);
+        }
+
+        Assert.Null(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + TestUsers.Administrator.EntraSessionId));
+        using var nextSignIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator, Guid.CreateVersion7().ToString("D"));
+        _fixture.Logs.Clear();
 
         using var response = await SignOutFromEntraAsync(TestIdentityProvider.Issuer, TestUsers.Administrator.EntraSessionId);
 
         await AssertAnsweredWithoutABodyAsync(response);
-        Assert.Null(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + TestUsers.Administrator.EntraSessionId));
+        await AssertStatusAsync(client, HttpStatusCode.OK);
+        var own = Assert.Single(_fixture.Logs.GetSnapshot(), record => record.Category == typeof(FrontChannelSignOut).FullName);
+        Assert.Equal(LogLevel.Debug, own.Level);
+    }
+
+    [Fact]
+    public async Task Get_EntraSessionWhoseRecordNamesNoAccount_AnswersAServerErrorAndKeepsTheRecord()
+    {
+        var entraSession = Guid.CreateVersion7().ToString("D");
+        var store = _fixture.Factory.Services.GetRequiredKeyedService<IDistributedCache>(CachingRegistration.SqlServerCacheKey);
+        await store.SetAsync(
+            EntraSessions.KeyPrefix + entraSession,
+            "{}"u8.ToArray(),
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) },
+            TestContext.Current.CancellationToken);
+
+        using var response = await SignOutFromEntraAsync(TestIdentityProvider.Issuer, entraSession);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.NotNull(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + entraSession));
     }
 
     [Theory]
@@ -145,8 +201,9 @@ public sealed class FrontChannelSignOutTests : IClassFixture<FrontChannelSignOut
     }
 
     [Fact]
-    public async Task Get_EntraSessionOfASignedInPerson_LogsTheSignOutWithoutTheSessionTheIssuerOrTheAccount()
+    public async Task Get_EntraSessions_LogTheOutcomeWithoutTheSessionTheIssuerOrTheAccount()
     {
+        var unknownEntraSession = Guid.CreateVersion7().ToString("D");
         using var accountant = TestSignIn.CreateClient(_fixture.Factory);
         using var administrator = TestSignIn.CreateClient(_fixture.Factory);
         using var accountantSignIn = await TestSignIn.SignInAsync(accountant, TestUsers.Accountant);
@@ -155,12 +212,12 @@ public sealed class FrontChannelSignOutTests : IClassFixture<FrontChannelSignOut
 
         using var ended = await SignOutFromEntraAsync(TestIdentityProvider.Issuer, TestUsers.Accountant.EntraSessionId);
         using var otherIssuer = await SignOutFromEntraAsync(OtherIssuer, TestUsers.Administrator.EntraSessionId);
+        using var unknown = await SignOutFromEntraAsync(TestIdentityProvider.Issuer, unknownEntraSession);
 
         var records = _fixture.Logs.GetSnapshot();
         var own = records.Where(record => record.Category == typeof(FrontChannelSignOut).FullName).ToList();
-        Assert.Contains(own, record => record.Level == LogLevel.Information);
-        Assert.Contains(own, record => record.Level == LogLevel.Warning);
-        string[] personal = [TestUsers.Accountant.EntraSessionId, TestUsers.Accountant.AccountId, TestUsers.Administrator.EntraSessionId, TestUsers.Administrator.AccountId];
+        Assert.Equal([LogLevel.Information, LogLevel.Warning, LogLevel.Debug], own.Select(record => record.Level));
+        string[] personal = [TestUsers.Accountant.EntraSessionId, TestUsers.Accountant.AccountId, TestUsers.Administrator.EntraSessionId, TestUsers.Administrator.AccountId, unknownEntraSession];
         Assert.DoesNotContain(records, record => personal.Any(value => Carries(record, value)));
         Assert.DoesNotContain(own, record => Carries(record, TestIdentityProvider.Issuer) || Carries(record, OtherIssuer));
     }
@@ -216,11 +273,13 @@ public sealed class FrontChannelSignOutTests : IClassFixture<FrontChannelSignOut
 
     public sealed class Fixture : IAsyncDisposable
     {
-        private readonly ErpApiFactory _root = new ErpApiFactory().WithTestEndpoints(routes =>
-        {
-            TestSignIn.Map(routes);
-            routes.MapGet(SignedInPath, () => Results.Ok());
-        });
+        private readonly ErpApiFactory _root = new ErpApiFactory()
+            .WithConfiguration($"Logging:LogLevel:{typeof(FrontChannelSignOut).FullName}", "Debug")
+            .WithTestEndpoints(routes =>
+            {
+                TestSignIn.Map(routes);
+                routes.MapGet(SignedInPath, () => Results.Ok());
+            });
 
         public Fixture()
         {

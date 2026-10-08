@@ -11,7 +11,7 @@ import { type BaseRequestBuilder, type Parsable, type ParsableFactory, type Requ
  */
 export interface LogoutRequestBuilder extends BaseRequestBuilder<LogoutRequestBuilder> {
     /**
-     * Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.
+     * Ends the session, when the request carries one, and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @throws {ProblemDetails} error when the service returns a 400 status code
      * @throws {ProblemDetails} error when the service returns a 401 status code
@@ -21,7 +21,7 @@ export interface LogoutRequestBuilder extends BaseRequestBuilder<LogoutRequestBu
      */
      post(requestConfiguration?: RequestConfiguration<object> | undefined) : Promise<void>;
     /**
-     * Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.
+     * Ends the session, when the request carries one, and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {RequestInformation}
      */

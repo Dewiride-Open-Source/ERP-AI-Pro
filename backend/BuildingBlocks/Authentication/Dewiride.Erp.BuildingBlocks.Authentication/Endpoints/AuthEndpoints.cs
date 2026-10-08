@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
 
@@ -71,15 +72,20 @@ internal static class AuthEndpoints
             .ProducesValidationProblem()
             .AllowAnonymous();
 
-        // A cross-site form post carries no SameSite=Lax session cookie, so the fallback policy refuses it before anything is
-        // signed out. The page signs out with a form it posts, which can carry the antiforgery token only in a form field.
+        // The page signs out with a form it posts, which can carry the antiforgery token only in a form field. A request
+        // without a session, from a page whose session already ended, still goes on to Entra's end-session endpoint, so the
+        // Microsoft sign-in of a shared browser ends too; it changes no cookie and does no more than a link to that public
+        // address does. The fetch metadata a browser sends confines that to a page of this site: another site's form post,
+        // which carries no SameSite=Lax session cookie, is refused as any anonymous request is, so it sends no browser to
+        // Entra either.
         group.MapPost("/logout", LogoutAsync)
             .WithName(LogoutRouteName)
-            .WithSummary("Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.")
+            .WithSummary("Ends the session, when the request carries one, and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.")
             .WithMetadata(new RequireAntiforgeryTokenAttribute())
             .Produces(StatusCodes.Status302Found)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .AllowAnonymous();
 
         group.MapGet("/antiforgery", IssueAntiforgeryTokens)
             .WithName(AntiforgeryRouteName)
@@ -109,12 +115,12 @@ internal static class AuthEndpoints
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         // Entra loads this from a hidden frame of its own site, which carries no session cookie, so the route is anonymous and
-        // finds the person from the Entra session it names. It is a protocol callback like those the OpenID Connect handler
-        // answers, so the API client has no method for it, and it answers every well-formed request alike, so the answer
-        // never says whether a session ended.
+        // ends the sessions of the Entra session it names (FrontChannelSignOut). It is a protocol callback like those the
+        // OpenID Connect handler answers, so the API client has no method for it, and it answers every well-formed request
+        // alike, so the answer never says whether a session ended.
         group.MapGet("/signout-oidc", SignOutFrontChannelAsync)
             .WithName(FrontChannelSignOutRouteName)
-            .WithSummary("Ends every session of the person whose Microsoft Entra ID session the front-channel sign-out names.")
+            .WithSummary("Ends the sessions signed in from the Microsoft Entra ID session the front-channel sign-out names.")
             .ExcludeFromDescription()
             .AllowAnonymous();
     }
@@ -134,25 +140,38 @@ internal static class AuthEndpoints
             : TypedResults.Challenge(new AuthenticationProperties { RedirectUri = login.LocalReturnUrl }, [OpenIdConnectDefaults.AuthenticationScheme]);
     }
 
-    private static async Task<SignOutHttpResult> LogoutAsync(ClaimsPrincipal user, SessionRevocations revocations)
+    // A browser without a session reaches only Entra's end-session endpoint, which then asks which account to sign out. When
+    // the request carries a session, the sign-out is recorded before anything is signed out: a record that cannot be written
+    // fails the request and leaves the person signed in, and a written one refuses every older session of the person even if
+    // removing their account fails. The record of the Entra session the person signed in from is removed next, so nothing of
+    // that Entra session outlives the sign-out. Both run whatever happens to the request meanwhile, so a sign-out the browser
+    // abandons still takes effect; the retry limits and the command timeout bound them.
+    private static async Task<Results<SignOutHttpResult, ChallengeHttpResult>> LogoutAsync(HttpContext httpContext, SessionRevocations revocations, EntraSessions entraSessions)
     {
-        // The sign-out is recorded before anything is signed out: a record that cannot be written fails the request and leaves
-        // the person signed in, and a written one refuses every older session of the person even if removing their account fails.
-        // It is written whatever happens to the request meanwhile, so a sign-out the browser abandons still takes effect; the
-        // retry limits and the command timeout bound it.
+        var user = httpContext.User;
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            return IsAbsentOrExactly(httpContext.Request.Headers[FetchSiteHeader], "same-origin")
+                ? TypedResults.SignOut(SignedOut(), [OpenIdConnectDefaults.AuthenticationScheme])
+                : TypedResults.Challenge(authenticationSchemes: [CookieAuthenticationDefaults.AuthenticationScheme]);
+        }
+
         if (user.GetMsalAccountId() is { } accountId)
         {
             await revocations.RevokeAsync(accountId, CancellationToken.None).ConfigureAwait(false);
         }
 
-        return TypedResults.SignOut(
-            new AuthenticationProperties { RedirectUri = AuthPaths.SignedOutPage },
-            [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
+        if (user.FindFirst(JwtRegisteredClaimNames.Sid)?.Value is { Length: > 0 } entraSessionId)
+        {
+            await entraSessions.ForgetAsync(entraSessionId, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        return TypedResults.SignOut(SignedOut(), [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
     }
 
-    private static async Task<Ok> SignOutFrontChannelAsync([AsParameters] FrontChannelSignOutRequest request, FrontChannelSignOut signOut, CancellationToken cancellationToken)
+    private static async Task<Ok> SignOutFrontChannelAsync([AsParameters] FrontChannelSignOutRequest request, FrontChannelSignOut signOut)
     {
-        await signOut.SignOutAsync(request.Iss!, request.Sid!, cancellationToken).ConfigureAwait(false);
+        await signOut.SignOutAsync(request.Iss!, request.Sid!).ConfigureAwait(false);
 
         return TypedResults.Ok();
     }
@@ -211,6 +230,8 @@ internal static class AuthEndpoints
     }
 
     private static DateTimeOffset ToTheSecond(DateTimeOffset time) => time.AddTicks(-(time.Ticks % TimeSpan.TicksPerSecond));
+
+    private static AuthenticationProperties SignedOut() => new() { RedirectUri = AuthPaths.SignedOutPage };
 
     private static string RequiredClaim(ClaimsPrincipal user, string type) => user.FindFirstValue(type) ?? throw MissingClaim(type);
 

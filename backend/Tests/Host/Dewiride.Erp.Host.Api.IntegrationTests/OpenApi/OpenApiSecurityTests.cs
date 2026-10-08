@@ -20,7 +20,7 @@ public sealed class OpenApiSecurityTests(ErpApiFactory factory) : IClassFixture<
     public static TheoryData<string, string, string> Requirements => new()
     {
         { "/api/auth/login", "get", Anonymous },
-        { "/api/auth/logout", "post", SessionWithAntiforgeryToken },
+        { "/api/auth/logout", "post", AnonymousOrSessionWithAntiforgeryToken },
         { "/api/auth/antiforgery", "get", Session },
         { "/api/auth/me", "get", Session },
         { "/api/auth/session", "get", Session },

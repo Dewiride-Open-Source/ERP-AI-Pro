@@ -13,6 +13,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  microsoftSignInOrigin,
   requestToken,
   requestTokenHeader,
   signIn,
@@ -66,13 +67,15 @@ const excludedFromScans = [
 ];
 
 // Every page outside the sign-in page needs a session, so a test signs a new person of a persona in unless it sets persona
-// to null to visit as nobody.
+// to null to visit as nobody. No test may reach Microsoft, so every request to its sign-in origin is refused before it
+// leaves the browser, and a page that tries fails visibly.
 export const test = base.extend<Fixtures>({
   theme: ["light", { option: true }],
   persona: ["accountant", { option: true }],
   expectedConsoleError: [undefined, { option: true }],
 
   context: async ({ context, persona }, use) => {
+    await context.route(`${microsoftSignInOrigin}/**`, (route) => route.abort());
     if (persona !== null) signIns.set(context, await signIn(context.request, persona));
     await use(context);
   },

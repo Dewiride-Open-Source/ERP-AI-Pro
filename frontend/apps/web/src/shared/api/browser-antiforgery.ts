@@ -27,7 +27,10 @@ export async function renewBrowserAntiforgeryTokens<TAnswer>(
 }
 
 export async function readJson(response: Response): Promise<unknown> {
-  const text = await response.text().catch(() => "");
+  return parseJson(await response.text().catch(() => ""));
+}
+
+export function parseJson(text: string): unknown {
   if (text.length === 0) return undefined;
   try {
     return JSON.parse(text) as unknown;

@@ -16,29 +16,87 @@ import { useEffect, useRef, useState } from "react";
 import { readSessionTimes, renewSessionTimes, type SessionAnswer } from "@/shared/api/session/session-watch";
 import { signInHref } from "@/shared/auth/sign-in-addresses";
 import { formatTimeIst } from "@/shared/format/dates";
+import { mainContentId } from "@/shared/layout/main-content";
 
 import { SignOutButton } from "../../account/components/sign-out-button";
 
-import { endCheckDelay, planSession, renewalDue } from "./session-timing";
+import {
+  activityRenews,
+  checkDue,
+  dismissNotice,
+  disposeKeeper,
+  initialKeeperState,
+  requestExchange,
+  settleExchange,
+  type ExchangeKind,
+  type KeeperNotice,
+  type KeeperState,
+  type KeeperStep,
+} from "./session-keeper-state";
 
-type Notice =
-  | { readonly kind: "none" }
-  | { readonly kind: "idle"; readonly endsAt: Date }
-  | { readonly kind: "lifetime"; readonly endsAt: Date }
-  | { readonly kind: "ended"; readonly returnPath: string };
-
-type Watch = {
-  lastRenewedAt: number | undefined;
-  busy: boolean;
-  ended: boolean;
-  lifetimeNoticeSeen: boolean;
-  notice: Notice["kind"];
-  timers: number[];
+type Shown = {
+  readonly notice: KeeperNotice;
+  readonly endsAt: number | undefined;
+  readonly returnPath: string;
 };
 
-const quiet: Notice = { kind: "none" };
+type Keeper = {
+  readonly request: (kind: ExchangeKind) => void;
+  readonly noteActivity: () => void;
+  readonly dismiss: (kind: "idle" | "lifetime") => void;
+  readonly current: () => KeeperState;
+  readonly dispose: () => void;
+};
 
-const unknownRetryDelay = 30 * 1000;
+const exchanges: Readonly<Record<ExchangeKind, () => Promise<SessionAnswer>>> = {
+  check: readSessionTimes,
+  renew: renewSessionTimes,
+};
+
+const saidNothing: SessionAnswer = { state: "unknown" };
+
+function startKeeper(show: (notice: KeeperNotice) => void): Keeper {
+  let state = initialKeeperState();
+  let timer: number | undefined;
+
+  function apply({ state: next, send }: KeeperStep): void {
+    const previous = state;
+    state = next;
+    if (next.nextCheckAt !== previous.nextCheckAt) arm(next.nextCheckAt);
+    if (next.notice !== previous.notice) show(next.notice);
+    if (send !== undefined) void exchange(send);
+  }
+
+  function arm(at: number | undefined): void {
+    window.clearTimeout(timer);
+    timer =
+      at === undefined
+        ? undefined
+        : window.setTimeout(() => apply(checkDue(state, Date.now())), Math.max(0, at - Date.now()));
+  }
+
+  async function exchange(kind: ExchangeKind): Promise<void> {
+    const answer = await exchanges[kind]().catch(() => saidNothing);
+    apply(settleExchange(state, answer, Date.now()));
+  }
+
+  function request(kind: ExchangeKind): void {
+    apply(requestExchange(state, kind, Date.now()));
+  }
+
+  return {
+    request,
+    noteActivity: () => {
+      if (activityRenews(state, Date.now())) request("renew");
+    },
+    dismiss: (kind) => apply({ state: dismissNotice(state, kind), send: undefined }),
+    current: () => state,
+    dispose: () => {
+      state = disposeKeeper(state);
+      arm(undefined);
+    },
+  };
+}
 
 // The session cookie slides only on answers the browser receives itself, so this keeps it alive while the person uses the
 // page (a load, a navigation, a click or a key press, at most once a minute), warns before the idle timeout or the lifetime
@@ -46,105 +104,36 @@ const unknownRetryDelay = 30 * 1000;
 // reads the session again, because another tab of the same browser renews the same cookie.
 export function SessionKeeper() {
   const pathname = usePathname();
-  const [notice, setNotice] = useState<Notice>(quiet);
+  const [shown, setShown] = useState<Shown>({ notice: { kind: "none" }, endsAt: undefined, returnPath: "/" });
+  const keeper = useRef<Keeper | null>(null);
+  const focusBeforeNotice = useRef<Element | null>(null);
   const signInAgain = useRef<HTMLAnchorElement>(null);
-  const watch = useRef<Watch>({
-    lastRenewedAt: undefined,
-    busy: false,
-    ended: false,
-    lifetimeNoticeSeen: false,
-    notice: "none",
-    timers: [],
-  });
-
-  const actions = useRef({
-    show(next: Notice) {
-      watch.current.notice = next.kind;
-      setNotice(next);
-    },
-
-    clearTimers() {
-      for (const timer of watch.current.timers) window.clearTimeout(timer);
-      watch.current.timers = [];
-    },
-
-    at(time: number, run: () => void) {
-      watch.current.timers.push(window.setTimeout(run, Math.max(0, time - Date.now())));
-    },
-
-    apply(answer: SessionAnswer) {
-      const current = watch.current;
-      if (current.ended) return;
-      if (answer.state === "unknown") {
-        actions.current.at(Date.now() + unknownRetryDelay, () => void actions.current.check());
-        return;
-      }
-      actions.current.clearTimers();
-      if (answer.state === "ended") {
-        current.ended = true;
-        actions.current.show({
-          kind: "ended",
-          returnPath: `${window.location.pathname}${window.location.search}`,
-        });
-        return;
-      }
-
-      const plan = planSession(answer.times);
-      const endsAt = new Date(plan.endsAt + answer.times.clockOffset);
-      const now = Date.now();
-      if (now < plan.warnAt) {
-        if (current.notice !== "none") actions.current.show(quiet);
-        actions.current.at(plan.warnAt, () => void actions.current.check());
-      } else if (plan.extendable) {
-        actions.current.show({ kind: "idle", endsAt });
-      } else if (!current.lifetimeNoticeSeen) {
-        actions.current.show({ kind: "lifetime", endsAt });
-      }
-      // The API counts the end to the second, so a check that still finds the session waits a second before the next one.
-      actions.current.at(Math.max(plan.endsAt, now) + endCheckDelay, () => void actions.current.check());
-    },
-
-    async exchange(request: () => Promise<SessionAnswer>) {
-      const current = watch.current;
-      if (current.busy || current.ended) return;
-      current.busy = true;
-      try {
-        actions.current.apply(await request());
-      } finally {
-        current.busy = false;
-      }
-    },
-
-    async check() {
-      await actions.current.exchange(readSessionTimes);
-    },
-
-    async renew() {
-      watch.current.lastRenewedAt = Date.now();
-      await actions.current.exchange(renewSessionTimes);
-    },
-
-    noteActivity() {
-      const current = watch.current;
-      if (current.notice === "none" && renewalDue(current.lastRenewedAt, Date.now()))
-        void actions.current.renew();
-    },
-  });
+  const lifetimeContent = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const keeper = actions.current;
-    const onActivity = () => keeper.noteActivity();
+    // Each mount starts a keeper of its own and disposes it when it unmounts, so an exchange still running then arms no timer
+    // and sends nothing more.
+    const started = startKeeper((notice) =>
+      setShown((previous) => ({
+        notice,
+        endsAt: notice.kind === "idle" || notice.kind === "lifetime" ? notice.endsAt : previous.endsAt,
+        returnPath: `${window.location.pathname}${window.location.search}`,
+      })),
+    );
+    keeper.current = started;
+    const onActivity = () => started.noteActivity();
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") void keeper.check();
+      if (document.visibilityState === "visible") started.request("check");
     };
     const listening = { capture: true, passive: true } as const;
 
-    keeper.noteActivity();
+    started.noteActivity();
     document.addEventListener("pointerdown", onActivity, listening);
     document.addEventListener("keydown", onActivity, listening);
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
-      keeper.clearTimers();
+      started.dispose();
+      if (keeper.current === started) keeper.current = null;
       document.removeEventListener("pointerdown", onActivity, listening);
       document.removeEventListener("keydown", onActivity, listening);
       document.removeEventListener("visibilitychange", onVisibilityChange);
@@ -152,18 +141,39 @@ export function SessionKeeper() {
   }, []);
 
   useEffect(() => {
-    actions.current.noteActivity();
+    keeper.current?.noteActivity();
   }, [pathname]);
 
   const staySignedIn = () => {
-    actions.current.show(quiet);
-    void actions.current.renew();
+    keeper.current?.dismiss("idle");
+    keeper.current?.request("renew");
   };
 
-  const continueWorking = () => {
-    watch.current.lifetimeNoticeSeen = true;
-    actions.current.show(quiet);
+  const continueWorking = () => keeper.current?.dismiss("lifetime");
+
+  // Radix runs this before it moves focus into the warning, so the element the person was using is still the active one; a
+  // warning that replaces another keeps what the first one found.
+  const rememberFocus = () => {
+    focusBeforeNotice.current ??= document.activeElement;
   };
+
+  // Without a trigger Radix would return focus to nothing, and the button that held it leaves with the warning, so focus goes
+  // back where the person was, or to the page's main content when that is gone. A notice that replaced the warning keeps the
+  // focus it took.
+  const restoreFocus = (event: Event) => {
+    event.preventDefault();
+    if (keeper.current?.current().notice.kind !== "none") return;
+    const previous = focusBeforeNotice.current;
+    focusBeforeNotice.current = null;
+    const target =
+      (previous instanceof HTMLElement || previous instanceof SVGElement) && previous.isConnected
+        ? previous
+        : document.getElementById(mainContentId);
+    target?.focus({ preventScroll: true });
+  };
+
+  const { notice, returnPath } = shown;
+  const endsAt = shown.endsAt === undefined ? "" : formatTimeIst(new Date(shown.endsAt));
 
   return (
     <>
@@ -173,12 +183,12 @@ export function SessionKeeper() {
           if (!open) staySignedIn();
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent onOpenAutoFocus={rememberFocus} onCloseAutoFocus={restoreFocus}>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you still there?</AlertDialogTitle>
             <AlertDialogDescription>
               Nothing has happened for a while, so you will be signed out at{" "}
-              {notice.kind === "idle" ? formatTimeIst(notice.endsAt) : ""}. Stay signed in to keep working.
+              <span className="whitespace-nowrap">{endsAt}</span>. Stay signed in to keep working.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -194,13 +204,21 @@ export function SessionKeeper() {
           if (!open) continueWorking();
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent
+          ref={lifetimeContent}
+          onOpenAutoFocus={(event) => {
+            rememberFocus();
+            event.preventDefault();
+            lifetimeContent.current?.focus();
+          }}
+          onCloseAutoFocus={restoreFocus}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Your session ends soon</AlertDialogTitle>
             <AlertDialogDescription>
               You have been signed in for as long as a session can last, so you will be signed out at{" "}
-              {notice.kind === "lifetime" ? formatTimeIst(notice.endsAt) : ""}. Save your work, then sign in
-              again to carry on.
+              <span className="whitespace-nowrap">{endsAt}</span>. Save your work before then; you can sign in
+              again afterwards.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -220,12 +238,14 @@ export function SessionKeeper() {
           <AlertDialogHeader>
             <AlertDialogTitle>Your session has ended</AlertDialogTitle>
             <AlertDialogDescription>
-              For your security you have been signed out. Sign in again to come back to this page.
+              For your security you have been signed out of the ERP. Sign in again to come back to this page,
+              or sign out to also end your Microsoft sign-in on this device.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            <SignOutButton variant="outline" />
             <AlertDialogAction asChild>
-              <a ref={signInAgain} href={signInHref(notice.kind === "ended" ? notice.returnPath : undefined)}>
+              <a ref={signInAgain} href={signInHref(returnPath)}>
                 Sign in again
               </a>
             </AlertDialogAction>

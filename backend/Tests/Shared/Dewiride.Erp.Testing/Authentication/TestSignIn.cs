@@ -16,11 +16,12 @@ namespace Dewiride.Erp.Testing.Authentication;
 
 // Signs a test user in the way a completed Entra callback does: MSAL redeems a code for the person, at the test token
 // endpoint, which puts their account in the token cache, and the cookie scheme issues the real session cookie, so a test
-// gets a session the product accepts without a round trip to Entra. The cookie is Secure, so the client talks https to the
-// test server, and it follows no redirect, since a sign-in or sign-out redirects to Entra. The client sends the antiforgery
-// request token the sign-in issued on every request that changes data, as the web app does, unless it is created without.
-// The sign-in route itself is exempt from the antiforgery check, like the Entra callback it stands in for, which the
-// authentication middleware answers before the check runs.
+// gets a session the product accepts without a round trip to Entra. The session comes from the person's own Entra session
+// unless the test names another, as a sign-in from a second browser would. The cookie is Secure, so the client talks https
+// to the test server, and it follows no redirect, since a sign-in or sign-out redirects to Entra. The client sends the
+// antiforgery request token the sign-in issued on every request that changes data, as the web app does, unless it is
+// created without. The sign-in route itself is exempt from the antiforgery check, like the Entra callback it stands in for,
+// which the authentication middleware answers before the check runs.
 public static class TestSignIn
 {
     public const string PathPrefix = "/__test/sign-in";
@@ -31,7 +32,7 @@ public static class TestSignIn
     {
         ArgumentNullException.ThrowIfNull(routes);
 
-        routes.MapPost($"{PathPrefix}/{{objectId:guid}}", async (Guid objectId, HttpContext context) =>
+        routes.MapPost($"{PathPrefix}/{{objectId:guid}}", async (Guid objectId, string? entraSessionId, HttpContext context) =>
         {
             var user = TestUsers.Find(objectId);
             if (user is null)
@@ -39,20 +40,20 @@ public static class TestSignIn
                 return Results.NotFound();
             }
 
-            await IssueSessionAsync(context, user);
+            await IssueSessionAsync(context, user, entraSessionId);
 
             return Results.NoContent();
         }).AllowAnonymous().DisableAntiforgery();
     }
 
-    public static async Task IssueSessionAsync(HttpContext context, TestUser user)
+    public static async Task IssueSessionAsync(HttpContext context, TestUser user, string? entraSessionId = null)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(user);
 
         var application = await ApplicationAsync(context.RequestServices).ConfigureAwait(false);
         await application.AcquireTokenByAuthorizationCode([], TestTokenEndpoint.CodeFor(user)).ExecuteAsync(context.RequestAborted).ConfigureAwait(false);
-        await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user.ToPrincipal(CookieAuthenticationDefaults.AuthenticationScheme)).ConfigureAwait(false);
+        await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, user.ToPrincipal(CookieAuthenticationDefaults.AuthenticationScheme, entraSessionId)).ConfigureAwait(false);
     }
 
     public static HttpClient CreateClient<TEntryPoint>(WebApplicationFactory<TEntryPoint> factory)
@@ -73,12 +74,15 @@ public static class TestSignIn
         return factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = BaseAddress, AllowAutoRedirect = false });
     }
 
-    public static async Task<HttpResponseMessage> SignInAsync(HttpClient client, TestUser user)
+    public static async Task<HttpResponseMessage> SignInAsync(HttpClient client, TestUser user, string? entraSessionId = null)
     {
         ArgumentNullException.ThrowIfNull(client);
         ArgumentNullException.ThrowIfNull(user);
 
-        var response = await client.PostAsync(new Uri($"{PathPrefix}/{user.ObjectId:D}", UriKind.Relative), content: null, TestContext.Current.CancellationToken).ConfigureAwait(false);
+        var path = entraSessionId is null
+            ? $"{PathPrefix}/{user.ObjectId:D}"
+            : $"{PathPrefix}/{user.ObjectId:D}?entraSessionId={Uri.EscapeDataString(entraSessionId)}";
+        var response = await client.PostAsync(new Uri(path, UriKind.Relative), content: null, TestContext.Current.CancellationToken).ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.NoContent)
         {

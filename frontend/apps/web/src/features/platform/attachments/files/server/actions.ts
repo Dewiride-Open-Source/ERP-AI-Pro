@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { callApi, sendApi } from "@/shared/api/client";
 import { ApiError, apiErrorMessage } from "@/shared/api/problem-details";
-import { requireSession } from "@/shared/auth/session";
+import { requireSignedInPerson } from "@/shared/auth/session";
 import type { RowRemovalOutcome } from "@/shared/lists/optimistic-rows";
 
 const attachmentId = z.uuid();
@@ -16,7 +16,7 @@ const attachmentNotFound = "attachment.not-found";
 export type DownloadLinkResult = { readonly url: string } | { readonly error: string };
 
 export async function createDownloadLink(id: string): Promise<DownloadLinkResult> {
-  await requireSession();
+  await requireSignedInPerson();
   const parsed = attachmentId.safeParse(id);
   if (!parsed.success) return { error: "That attachment does not exist." };
 
@@ -32,7 +32,7 @@ export async function createDownloadLink(id: string): Promise<DownloadLinkResult
 }
 
 export async function deleteAttachment(id: string): Promise<RowRemovalOutcome> {
-  await requireSession();
+  await requireSignedInPerson();
   const parsed = attachmentId.safeParse(id);
   if (!parsed.success) return { removed: false, message: "That attachment does not exist." };
 

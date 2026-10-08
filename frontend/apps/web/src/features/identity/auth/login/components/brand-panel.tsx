@@ -33,7 +33,7 @@ export function BrandPanel() {
     <div className="hidden gap-8 lg:order-first lg:grid" data-testid="sign-in-brand">
       <div className="grid animate-fade-up gap-3">
         <p className="text-eyebrow text-primary uppercase">Dewiride Technologies</p>
-        <p className="text-heading text-balance">One workspace for the whole company.</p>
+        <h2 className="text-heading text-balance">One workspace for the whole company.</h2>
       </div>
       <ul className="grid gap-5">
         {facts.map(({ icon: Icon, title, text, entrance }) => (

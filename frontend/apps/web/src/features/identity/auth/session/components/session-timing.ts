@@ -6,13 +6,15 @@ export type SessionPlan = {
   readonly extendable: boolean;
 };
 
-export const idleWarningLead = 2 * 60 * 1000;
+const idleWarningLead = 2 * 60 * 1000;
 
-export const lifetimeWarningLead = 5 * 60 * 1000;
+const lifetimeWarningLead = 5 * 60 * 1000;
 
-export const renewalInterval = 60 * 1000;
+const renewalInterval = 60 * 1000;
 
 export const endCheckDelay = 1000;
+
+export const unknownRetryDelay = 30 * 1000;
 
 // The API never renews a session past its lifetime, so once the idle expiry is the lifetime's end, staying signed in cannot
 // extend it and the warning comes earlier, with time to save work before signing in again. WCAG 2.2.1 asks for at least twenty

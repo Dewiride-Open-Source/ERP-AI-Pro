@@ -13,8 +13,14 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 namespace Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 
 // Microsoft.Identity.Web chains these handlers into multicast delegates, which await only the task of the last one, so
-// every handler here completes before it returns. A failure is logged by category and OAuth error code only: the error
-// description, the query and the posted form can carry personal data or tokens.
+// every handler here completes before it returns, except TicketReceived: Microsoft.Identity.Web chains that one only after
+// the event's default handler, which does nothing, so its task is the one awaited. TicketReceived issues the session
+// itself, so a session that cannot be started lands on the sign-in failed page like any failed callback instead of on an
+// error page, and signs out again whatever the cookie handler wrote before it failed. A failed callback is logged by
+// category and OAuth error code only: the error description, the query and the posted form can carry personal data or
+// tokens. A session that cannot be started is logged with its exception, because only the Entra session record, the
+// ticket's protection and the antiforgery tokens fail there, and none of their exceptions names a token or the account; a
+// callback the browser abandoned is no failed sign-in, so its cancellation is left to the request pipeline.
 internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, ILogger<SignInEvents> logger)
 {
     public const string IdentityProviderFailure = "identity-provider";
@@ -28,6 +34,8 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
     public const string CodeRedemptionFailure = "code-redemption";
 
     public const string TokenCacheFailure = "token-cache";
+
+    public const string SessionFailure = "session";
 
     public const string UnexpectedFailure = "unexpected";
 
@@ -77,6 +85,29 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
         return Task.CompletedTask;
     }
 
+    public async Task TicketReceived(TicketReceivedContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        var httpContext = context.HttpContext;
+        try
+        {
+            await httpContext.SignInAsync(context.Options.SignInScheme, context.Principal!, context.Properties).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (!httpContext.RequestAborted.IsCancellationRequested)
+        {
+            await httpContext.SignOutAsync(context.Options.SignInScheme).ConfigureAwait(false);
+            LogSessionNotStarted(logger, exception, SessionFailure, NoOAuthError);
+            context.Response.Redirect(AuthPaths.SignInFailedPage);
+            context.HandleResponse();
+
+            return;
+        }
+
+        context.Response.Redirect(string.IsNullOrEmpty(context.ReturnUri) ? "/" : context.ReturnUri);
+        context.HandleResponse();
+    }
+
     public static (string Failure, string OAuthError) Describe(Exception? failure) =>
         failure switch
         {
@@ -103,4 +134,7 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "A sign-in did not complete: {Failure} failure with OAuth error {OAuthError}")]
     private static partial void LogSignInFailed(ILogger logger, string failure, string oAuthError);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "A sign-in did not complete: {Failure} failure with OAuth error {OAuthError}")]
+    private static partial void LogSessionNotStarted(ILogger logger, Exception exception, string failure, string oAuthError);
 }

@@ -5,10 +5,13 @@ using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Dewiride.Erp.BuildingBlocks.UnitTests.Authentication;
 
@@ -19,6 +22,10 @@ public sealed class SignInEventsTests
     private const string WebOrigin = "https://erp.example.com";
 
     private const string LoginHint = "O.aW50ZXJuYWwtb3BhcXVlLWhpbnQ=";
+
+    private const string ReturnPath = "/platform/attachments";
+
+    private const string SignInScheme = "Cookies";
 
     [Theory]
     [InlineData("identity-provider error", SignInEvents.IdentityProviderFailure, "access_denied")]
@@ -77,8 +84,83 @@ public sealed class SignInEventsTests
         Assert.Equal($"{WebOrigin}/api/auth/signout-callback-oidc", context.ProtocolMessage.PostLogoutRedirectUri);
     }
 
-    private static SignInEvents Events() =>
-        new(Microsoft.Extensions.Options.Options.Create(new EntraSignInOptions { WebOrigin = WebOrigin }), NullLogger<SignInEvents>.Instance);
+    [Fact]
+    public async Task TicketReceived_SessionIssued_SignsTheTicketInAndRedirectsToItsReturnPath()
+    {
+        var authentication = new RecordingAuthentication();
+        var context = TicketContext(authentication, ReturnPath);
+
+        await Events().TicketReceived(context);
+
+        var signIn = Assert.Single(authentication.SignIns);
+        Assert.Equal(SignInScheme, signIn.Scheme);
+        Assert.Same(context.Principal, signIn.Principal);
+        Assert.Same(context.Properties, signIn.Properties);
+        Assert.True(context.Result?.Handled);
+        Assert.Equal(ReturnPath, context.Response.Headers.Location.ToString());
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task TicketReceived_SessionIssuedWithoutAReturnPath_RedirectsToTheStartPage(string? returnUri)
+    {
+        var context = TicketContext(new RecordingAuthentication(), returnUri);
+
+        await Events().TicketReceived(context);
+
+        Assert.True(context.Result?.Handled);
+        Assert.Equal("/", context.Response.Headers.Location.ToString());
+    }
+
+    [Fact]
+    public async Task TicketReceived_SessionThatCannotBeIssued_SignsOutAgainAndLandsOnTheSignInFailedPageWithTheFailureLogged()
+    {
+        var logger = new FakeLogger<SignInEvents>();
+        var failure = new TimeoutException(Description);
+        var authentication = new RecordingAuthentication { Failure = failure };
+        var context = TicketContext(authentication, ReturnPath);
+
+        await Events(logger).TicketReceived(context);
+
+        Assert.True(context.Result?.Handled);
+        Assert.Equal("/login?error=sign-in-failed", context.Response.Headers.Location.ToString());
+        Assert.Equal([SignInScheme], authentication.SignOuts);
+        var record = Assert.Single(logger.Collector.GetSnapshot());
+        Assert.Equal(LogLevel.Error, record.Level);
+        Assert.Equal(SignInEvents.SessionFailure, record.GetStructuredStateValue("Failure"));
+        Assert.Equal(SignInEvents.NoOAuthError, record.GetStructuredStateValue("OAuthError"));
+        Assert.Same(failure, record.Exception);
+        Assert.DoesNotContain(Description, record.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task TicketReceived_CallbackTheBrowserAbandoned_LetsItsCancellationThroughUnlogged()
+    {
+        var logger = new FakeLogger<SignInEvents>();
+        var authentication = new RecordingAuthentication { Failure = new OperationCanceledException() };
+        var context = TicketContext(authentication, ReturnPath);
+        context.HttpContext.RequestAborted = new CancellationToken(canceled: true);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => Events(logger).TicketReceived(context));
+
+        Assert.Null(context.Result);
+        Assert.Empty(authentication.SignOuts);
+        Assert.Empty(logger.Collector.GetSnapshot());
+    }
+
+    private static SignInEvents Events(ILogger<SignInEvents>? logger = null) =>
+        new(Microsoft.Extensions.Options.Options.Create(new EntraSignInOptions { WebOrigin = WebOrigin }), logger ?? NullLogger<SignInEvents>.Instance);
+
+    private static TicketReceivedContext TicketContext(RecordingAuthentication authentication, string? returnUri) =>
+        new(
+            new DefaultHttpContext { RequestServices = authentication },
+            new AuthenticationScheme(OpenIdConnectDefaults.AuthenticationScheme, displayName: null, typeof(OpenIdConnectHandler)),
+            new OpenIdConnectOptions { SignInScheme = SignInScheme },
+            new AuthenticationTicket(new ClaimsPrincipal(new ClaimsIdentity([new Claim("sid", "7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f")], OpenIdConnectDefaults.AuthenticationScheme)), OpenIdConnectDefaults.AuthenticationScheme))
+        {
+            ReturnUri = returnUri,
+        };
 
     private static RedirectContext SignOutContext(params Claim[] claims) =>
         new(
@@ -117,5 +199,41 @@ public sealed class SignInEventsTests
         exception.Data["error_description"] = Description;
 
         return exception;
+    }
+
+    private sealed class RecordingAuthentication : IAuthenticationService, IServiceProvider
+    {
+        public List<(string? Scheme, ClaimsPrincipal Principal, AuthenticationProperties? Properties)> SignIns { get; } = [];
+
+        public Exception? Failure { get; init; }
+
+        public List<string?> SignOuts { get; } = [];
+
+        public object? GetService(Type serviceType) => serviceType == typeof(IAuthenticationService) ? this : null;
+
+        public Task SignInAsync(HttpContext context, string? scheme, ClaimsPrincipal principal, AuthenticationProperties? properties)
+        {
+            if (Failure is not null)
+            {
+                return Task.FromException(Failure);
+            }
+
+            SignIns.Add((scheme, principal, properties));
+
+            return Task.CompletedTask;
+        }
+
+        public Task<AuthenticateResult> AuthenticateAsync(HttpContext context, string? scheme) => throw new NotSupportedException("A received ticket is only signed in.");
+
+        public Task ChallengeAsync(HttpContext context, string? scheme, AuthenticationProperties? properties) => throw new NotSupportedException("A received ticket is only signed in.");
+
+        public Task ForbidAsync(HttpContext context, string? scheme, AuthenticationProperties? properties) => throw new NotSupportedException("A received ticket is only signed in.");
+
+        public Task SignOutAsync(HttpContext context, string? scheme, AuthenticationProperties? properties)
+        {
+            SignOuts.Add(scheme);
+
+            return Task.CompletedTask;
+        }
     }
 }

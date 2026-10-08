@@ -15,6 +15,14 @@ test.describe("start page with every module disabled", () => {
 
     await expect(start.areas).toHaveCount(0);
     await expect(start.noAreas).toHaveText("Nothing is open to you yet. Ask your administrator for access.");
+    await expect(page.getByRole("main")).toMatchAriaSnapshot(`
+      - paragraph: Home
+      - heading /^Welcome, / [level=1]
+      - paragraph: Choose where to start.
+      - region "Areas you can open":
+        - heading "Areas you can open" [level=2]
+        - paragraph: Nothing is open to you yet. Ask your administrator for access.
+    `);
     await capture("start-no-areas");
   });
 });

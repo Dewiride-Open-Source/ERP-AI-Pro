@@ -1,15 +1,24 @@
-import { requestToken, requestTokenHeader, sessionCookie } from "../../../fixtures/sign-in";
+import {
+  answerMicrosoftSignIn,
+  requestToken,
+  requestTokenHeader,
+  sessionCookie,
+} from "../../../fixtures/sign-in";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
-import { LoginPage } from "../../../pages/identity/auth/login.page";
+import {
+  isSignInPage,
+  LoginPage,
+  sessionEndedNotice,
+  signedOutNotice,
+} from "../../../pages/identity/auth/login.page";
 import { attachmentsPath } from "../../../pages/platform/attachments/files.page";
 
 const apiContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
 const failureMessage = "We could not sign you in. Try again, or ask your administrator for access.";
-const sessionEndedMessage = "Your session has ended. Sign in again to carry on where you left off.";
-const signedOutMessage = "You have signed out.";
 const entraEndpoint = (path: string) =>
   new RegExp(`^https://login\\.microsoftonline\\.com/[0-9a-f-]{36}/oauth2/v2\\.0/${path}$`);
 const signInHref = (path: string) => `/api/auth/login?returnUrl=${encodeURIComponent(path)}`;
+const originOf = (baseURL: string | undefined) => new URL(baseURL ?? "").origin;
 
 // Every page of the shell, the home page among them, and an address no page answers.
 const signedInPages = [
@@ -33,10 +42,11 @@ test.describe("login page", () => {
       const login = new LoginPage(page);
       await login.goto();
 
-      await expect(page).toHaveTitle(/Sign in · ERP-AI-Pro/);
+      await expect(page).toHaveTitle("Sign in · ERP-AI-Pro");
       await expect(login.wordmark).toBeVisible();
       await expect(login.signInButton).toBeVisible();
       await expect(login.signInButton).toHaveAttribute("href", "/api/auth/login?returnUrl=%2F");
+      await expect(login.signInButton).toHaveAccessibleDescription("");
       await expect(page.getByText("Single sign-on through Microsoft Entra ID")).toBeVisible();
       await expect(login.failure).toHaveCount(0);
       await expect(login.notice).toHaveCount(0);
@@ -54,7 +64,7 @@ test.describe("login page", () => {
         await expect(login.brand).toBeVisible();
         await expect(login.brand).toMatchAriaSnapshot(`
           - paragraph: Dewiride Technologies
-          - paragraph: One workspace for the whole company.
+          - heading "One workspace for the whole company." [level=2]
           - list:
             - listitem: /One Microsoft sign-in/
             - listitem: /Sessions that end on their own/
@@ -72,8 +82,10 @@ test.describe("login page", () => {
       const login = new LoginPage(page);
       await login.goto("?error=sign-in-failed");
 
+      await expect(page).toHaveTitle("Sign-in failed · ERP-AI-Pro");
       await expect(login.failure).toHaveText(failureMessage);
       await expect(login.signInButton).toHaveAttribute("href", "/api/auth/login?returnUrl=%2F");
+      await expect(login.signInButton).toHaveAccessibleDescription(failureMessage);
       await expect(page.getByRole("main")).toMatchAriaSnapshot(`
         - heading "Sign in to your workspace" [level=1]
         - alert: ${failureMessage}
@@ -90,13 +102,15 @@ test.describe("login page", () => {
         const returnPath = `${attachmentsPath}?page=2`;
         await login.goto(`?returnUrl=${encodeURIComponent(returnPath)}&reason=session-ended`);
 
-        await expect(login.notice).toHaveText(sessionEndedMessage);
+        await expect(page).toHaveTitle("Session ended · ERP-AI-Pro");
+        await expect(login.notice).toHaveText(sessionEndedNotice);
         await expect(login.notice).toHaveRole("status");
         await expect(login.failure).toHaveCount(0);
         await expect(login.signInButton).toHaveAttribute("href", signInHref(returnPath));
+        await expect(login.signInButton).toHaveAccessibleDescription(sessionEndedNotice);
         await expect(page.getByRole("main")).toMatchAriaSnapshot(`
           - heading "Sign in to your workspace" [level=1]
-          - status: ${sessionEndedMessage}
+          - status: ${sessionEndedNotice}
           - link "Continue with Microsoft"
         `);
 
@@ -108,9 +122,16 @@ test.describe("login page", () => {
       const login = new LoginPage(page);
       await login.goto("?reason=signed-out");
 
-      await expect(login.notice).toHaveText(signedOutMessage);
+      await expect(page).toHaveTitle("Signed out · ERP-AI-Pro");
+      await expect(login.notice).toHaveText(signedOutNotice);
       await expect(login.notice).toHaveRole("status");
       await expect(login.signInButton).toHaveAttribute("href", "/api/auth/login?returnUrl=%2F");
+      await expect(login.signInButton).toHaveAccessibleDescription(signedOutNotice);
+      await expect(page.getByRole("main")).toMatchAriaSnapshot(`
+        - heading "Sign in to your workspace" [level=1]
+        - status: ${signedOutNotice}
+        - link "Continue with Microsoft"
+      `);
 
       await capture("login-signed-out");
     });
@@ -121,39 +142,43 @@ test.describe("login page", () => {
         `?error=${encodeURIComponent("Your account is locked")}&reason=${encodeURIComponent("Call 555-0100")}`,
       );
 
+      await expect(page).toHaveTitle("Sign in · ERP-AI-Pro");
       await expect(login.failure).toHaveCount(0);
       await expect(login.notice).toHaveCount(0);
       await expect(page.getByRole("main")).not.toContainText("Your account is locked");
       await expect(page.getByRole("main")).not.toContainText("555-0100");
     });
 
-    test("drops a return address on another site before the page offers it", async ({ page }) => {
+    test("drops a return address on another site before the page offers it", async ({ baseURL, page }) => {
       const login = new LoginPage(page);
       await login.goto(
         `?returnUrl=${encodeURIComponent("https://example.com/platform")}&reason=session-ended`,
       );
 
-      await expect(page).toHaveURL(
-        (url) => url.pathname === "/login" && url.search === "?reason=session-ended",
-      );
-      await expect(login.notice).toHaveText(sessionEndedMessage);
+      await expect(page).toHaveURL(isSignInPage(originOf(baseURL), undefined, "session-ended"));
+      await expect(page).toHaveURL((url) => url.search === "?reason=session-ended");
+      await expect(login.notice).toHaveText(sessionEndedNotice);
       await expect(login.signInButton).toHaveAttribute("href", "/api/auth/login?returnUrl=%2F");
     });
 
-    test("root redirects to the login page", async ({ page }) => {
+    test("root redirects to the login page", async ({ baseURL, page }) => {
       await page.goto("/");
-      await expect(page).toHaveURL(/\/login$/);
+      await expect(page).toHaveURL(isSignInPage(originOf(baseURL), undefined, undefined));
     });
 
     // The return address keeps the page's path and query as the web server received them, which may escape characters the
     // test wrote plainly, so the addresses are compared as the browser will read them.
-    test("sends every page to the sign-in page with the page as its return address", async ({ request }) => {
-      const origin = "https://erp.invalid";
+    test("sends every page to the sign-in page of this origin with the page as its return address", async ({
+      baseURL,
+      request,
+    }) => {
+      const origin = originOf(baseURL);
       for (const path of signedInPages) {
         const response = await request.get(path, { maxRedirects: 0 });
 
         expect(response.status(), path).toBe(307);
-        const location = new URL(response.headers()["location"] ?? "", origin);
+        const location = new URL(response.headers()["location"] ?? "", baseURL);
+        expect(location.origin, path).toBe(origin);
         expect(location.pathname, path).toBe("/login");
         const returnUrl = location.searchParams.get("returnUrl");
         if (path === "/") {
@@ -167,15 +192,37 @@ test.describe("login page", () => {
       }
     });
 
-    test("a page opened without a session offers a sign-in that comes back to it", async ({ page }) => {
+    test("a page opened without a session offers a sign-in that comes back to it", async ({
+      baseURL,
+      page,
+    }) => {
       const login = new LoginPage(page);
       const returnPath = `${attachmentsPath}?page=2`;
 
       await page.goto(returnPath);
 
       await expect(login.heading).toBeVisible();
-      await expect(page).toHaveURL((url) => url.searchParams.get("returnUrl") === returnPath);
+      await expect(page).toHaveURL(isSignInPage(originOf(baseURL), returnPath, undefined));
       await expect(login.signInButton).toHaveAttribute("href", signInHref(returnPath));
+    });
+
+    test("Continue with Microsoft sends the browser to Microsoft's sign-in with the page to come back to", async ({
+      baseURL,
+      page,
+    }) => {
+      const login = new LoginPage(page);
+      const returnPath = `${attachmentsPath}?page=2`;
+      const authorize = await answerMicrosoftSignIn(page);
+      await login.goto(`?returnUrl=${encodeURIComponent(returnPath)}&reason=session-ended`);
+
+      const signIn = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/auth/login");
+      await login.signInButton.click();
+
+      expect(new URL((await signIn).url()).searchParams.get("returnUrl")).toBe(returnPath);
+      await expect(page).toHaveTitle("Microsoft sign-in");
+      const sentTo = authorize();
+      expect(`${sentTo?.origin ?? ""}${sentTo?.pathname ?? ""}`).toMatch(entraEndpoint("authorize"));
+      expect(sentTo?.searchParams.get("redirect_uri")).toBe(`${baseURL}/api/auth/signin-oidc`);
     });
 
     test.describe("sign-in endpoints through the web origin", () => {
@@ -212,10 +259,28 @@ test.describe("login page", () => {
         });
       });
 
-      test("answer an anonymous sign-out with an unauthenticated problem instead of a redirect", async ({
+      test("send a sign-out without a session to Microsoft's sign-out without the account hint", async ({
+        baseURL,
         request,
       }) => {
         const response = await request.post("/api/auth/logout", { maxRedirects: 0 });
+
+        expect(response.status()).toBe(302);
+        const endSession = new URL(response.headers()["location"] ?? "");
+        expect(`${endSession.origin}${endSession.pathname}`).toMatch(entraEndpoint("logout"));
+        expect(endSession.searchParams.get("post_logout_redirect_uri")).toBe(
+          `${baseURL}/api/auth/signout-callback-oidc`,
+        );
+        expect(endSession.searchParams.get("logout_hint")).toBeNull();
+      });
+
+      test("answer a sign-out posted from another site with an unauthenticated problem instead of a redirect", async ({
+        request,
+      }) => {
+        const response = await request.post("/api/auth/logout", {
+          headers: { "sec-fetch-site": "cross-site" },
+          maxRedirects: 0,
+        });
 
         expect(response.status()).toBe(401);
         expect(response.headers()["location"]).toBeUndefined();
@@ -232,8 +297,6 @@ test.describe("login page", () => {
   });
 
   test.describe("signed in", () => {
-    test.use({ persona: "accountant" });
-
     test("the browser reads the signed-in person from the API", async ({ page, person }) => {
       await page.goto("/");
 
@@ -274,18 +337,21 @@ test.describe("login page", () => {
       });
     });
 
-    test("the sign-in page sends a person who is signed in straight on", async ({ page }) => {
+    test("the sign-in page sends a person who is signed in straight on", async ({ baseURL, page }) => {
+      const origin = originOf(baseURL);
       await page.goto("/login");
-      await expect(page).toHaveURL((url) => url.pathname === "/");
+      await expect(page).toHaveURL((url) => url.origin === origin && url.pathname === "/");
 
       await page.goto(`/login?returnUrl=${encodeURIComponent(attachmentsPath)}&reason=session-ended`);
-      await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
+      await expect(page).toHaveURL((url) => url.origin === origin && url.pathname === attachmentsPath);
     });
 
-    test("the sign-in sends a signed-in person straight to the return address", async ({ page }) => {
+    test("the sign-in sends a signed-in person straight to the return address", async ({ baseURL, page }) => {
       await page.goto(signInHref(attachmentsPath));
 
-      await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
+      await expect(page).toHaveURL(
+        (url) => url.origin === originOf(baseURL) && url.pathname === attachmentsPath,
+      );
     });
 
     test("signing out ends the session at Microsoft and leaves a copy of its cookie refused", async ({

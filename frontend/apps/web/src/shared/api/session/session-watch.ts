@@ -69,6 +69,8 @@ async function send(method: "GET" | "POST", token: string | undefined): Promise<
     method,
     credentials: "same-origin",
     cache: "no-store",
+    // A renewal the person's activity started still reaches the API when they leave the page before it is answered.
+    keepalive: true,
     headers: {
       Accept: "application/json",
       ...(token === undefined ? {} : { [antiforgeryHeaderName]: token }),

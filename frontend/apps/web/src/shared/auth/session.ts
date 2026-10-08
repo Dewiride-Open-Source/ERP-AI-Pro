@@ -19,7 +19,7 @@ export type SignedInPerson = {
 export type Session =
   | { readonly status: "signed-in"; readonly person: SignedInPerson }
   | { readonly status: "signed-out" }
-  | { readonly status: "unavailable" };
+  | { readonly status: "unavailable"; readonly failure: unknown };
 
 export type HeldSession = Exclude<Session, { readonly status: "signed-out" }>;
 
@@ -33,15 +33,23 @@ export const readSession = cache(async (): Promise<Session> => {
   } catch (error) {
     return error instanceof ApiError && error.status === 401
       ? { status: "signed-out" }
-      : { status: "unavailable" };
+      : { status: "unavailable", failure: error };
   }
 });
 
-// The first statement of every Server Function and the check of every page in the (app) group: a visitor without a session
-// goes to the sign-in page and comes back here afterwards, while an API that cannot be reached leaves the page to show what
-// it can, as it does for every other read.
+// The check of every render in the (app) group: a visitor without a session goes to the sign-in page and comes back here
+// afterwards, while a render whose API cannot answer shows what it can, because every read it makes is refused without a
+// session anyway.
 export async function requireSession(): Promise<HeldSession> {
   const session = await readSession();
   if (session.status === "signed-out") redirect(loginHref(await currentPagePath(), "session-ended"));
   return session;
+}
+
+// The first statement of every Server Function: a Server Function changes something, so it runs only for a person the API
+// has just confirmed, and a session that cannot be read refuses the call with the failure of that read.
+export async function requireSignedInPerson(): Promise<SignedInPerson> {
+  const session = await requireSession();
+  if (session.status === "unavailable") throw session.failure;
+  return session.person;
 }

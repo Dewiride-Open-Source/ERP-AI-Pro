@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Claims;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Microsoft.AspNetCore.Authentication;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.Extensibility;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 
@@ -16,17 +18,19 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 // of it could be signed out; renewing on the first request more than a minute, or half the idle timeout when that is
 // shorter, after the cookie was issued keeps every session alive for the idle timeout less at most that interval, and lets
 // a session of the shortest idle timeout slide. The session endpoints decide renewal themselves (SessionRenewalMetadata).
-// A session is accepted only when it was issued after the person last signed out, which SessionRevocations records, and while
-// the person's account is in the token cache, the one entry per person in SQL Server that signing out removes; the record is
-// read first, so a refused copy of a cookie costs one read and never slides the person's token cache entry:
-// signing out ends every session of that person, on every device and browser and on every instance of the API, at once, and
-// a copy of one of those cookies stays refused after the person signs in again, while a restart of the API ends none. A
-// token cache or sign-out record that cannot be read fails the request instead, and leaves the cookie as it is, so a passing
-// database failure signs nobody out. Every sign-in records the person under the Entra session it came from (EntraSessions),
-// which Entra's front-channel sign-out names; a record that cannot be written fails the sign-in before the cookie is
-// issued, so no session exists that the front-channel sign-out could not end. Every sign-in issues the person's antiforgery
-// tokens, and every sign-out, a refused cookie's included, clears them, so a browser holds tokens only for the person signed
-// in on it.
+// A session is accepted only when it was issued after the person last signed out, which SessionRevocations records, while
+// the Entra session it was signed in from is recorded for the person (EntraSessions), and while the person's account is in
+// the token cache, the one entry per person in SQL Server that signing out removes; both records are read first, so a
+// refused copy of a cookie never slides the person's token cache entry. Signing out ends every session of that person, on
+// every device and browser and on every instance of the API, at once, and a copy of one of those cookies stays refused after
+// the person signs in again; Entra's front-channel sign-out ends only the sessions signed in from the Entra session it
+// names; a restart of the API ends none. Entra always sends an Entra session id, and a principal without one cannot be
+// named by that sign-out, so only the other two checks apply to it. A token cache entry or record that cannot be read fails
+// the request instead, and leaves the cookie as it is, so a passing database failure signs nobody out. Every sign-in
+// records the Entra session it came from, and a record that cannot be written fails the sign-in before the cookie is
+// issued, so a store failure never leaves a session the front-channel sign-out cannot end. Every sign-in issues the
+// person's antiforgery tokens, and every sign-out, a refused cookie's included, clears them, so a browser holds tokens only
+// for the person signed in on it.
 internal sealed class SessionCookieEvents(
     TimeProvider timeProvider,
     IOptions<EntraSignInOptions> signIn,
@@ -92,6 +96,7 @@ internal sealed class SessionCookieEvents(
             && timeProvider.GetUtcNow() - signedInAt < signIn.Value.SessionLifetime
             && context.Principal?.GetMsalAccountId() is { } accountId
             && !await revocations.IsRevokedAsync(accountId, signedInAt, context.HttpContext.RequestAborted).ConfigureAwait(false)
+            && await IsInItsEntraSessionAsync(context.Principal, accountId, context.HttpContext.RequestAborted).ConfigureAwait(false)
             && await IsAccountCachedAsync(accountId).ConfigureAwait(false))
         {
             return;
@@ -132,6 +137,11 @@ internal sealed class SessionCookieEvents(
         && DateTimeOffset.TryParseExact(stamp, "O", CultureInfo.InvariantCulture, DateTimeStyles.None, out var signedInAt)
             ? signedInAt
             : null;
+
+    private Task<bool> IsInItsEntraSessionAsync(ClaimsPrincipal principal, string accountId, CancellationToken cancellationToken) =>
+        principal.FindFirst(JwtRegisteredClaimNames.Sid)?.Value is { Length: > 0 } entraSessionId
+            ? entraSessions.HoldsAsync(entraSessionId, accountId, cancellationToken)
+            : Task.FromResult(true);
 
     private async Task<bool> IsAccountCachedAsync(string accountId)
     {

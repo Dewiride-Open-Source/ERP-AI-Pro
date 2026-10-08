@@ -82,7 +82,7 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.",
+        "summary": "Ends the session, when the request carries one, and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.",
         "operationId": "Auth.Logout",
         "responses": {
           "429": {
@@ -140,6 +140,7 @@
           }
         },
         "security": [
+          {},
           {
             "SessionCookie": [],
             "AntiforgeryToken": []

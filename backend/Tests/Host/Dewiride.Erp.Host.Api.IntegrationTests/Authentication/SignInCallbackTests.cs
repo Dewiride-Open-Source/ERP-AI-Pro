@@ -106,7 +106,7 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
 
         Assert.Equal(HttpStatusCode.OK, signOut.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
-        Assert.False(await TestSignIn.IsAccountCachedAsync(_fixture.Factory.Services, TestUsers.Administrator));
+        Assert.True(await TestSignIn.IsAccountCachedAsync(_fixture.Factory.Services, TestUsers.Administrator));
     }
 
     [Fact]

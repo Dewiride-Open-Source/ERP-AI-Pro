@@ -2,10 +2,12 @@ using System.Net;
 using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
+using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.EndToEnd;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.EndToEnd;
 
@@ -27,7 +29,7 @@ public sealed class PersonaSignInTests(PersonaSignInTests.Fixture fixture) : ICl
         Assert.Equal(TestUsers.Administrator.Name, person.Name);
         Assert.Equal(TestUsers.Administrator.UserName, person.UserName);
         Assert.Equal(TestUsers.Administrator.Roles, person.Roles);
-        Assert.Equal(TestIdentityProvider.Issuer, person.Issuer);
+        Assert.Equal(BearerTokenOptionsSetup.IssuerOf(fixture.Factory.Services.GetRequiredService<IOptions<EntraSignInOptions>>().Value), person.Issuer);
         Assert.True(Guid.TryParse(person.EntraSessionId, out var entraSessionId));
         Assert.NotEqual(person.Id, entraSessionId);
         Assert.NotEqual(TestUsers.Administrator.EntraSessionId, person.EntraSessionId);

@@ -1,8 +1,12 @@
 import type { Page, Request } from "@playwright/test";
 
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
+import { endEntraSession } from "../../../fixtures/sign-in";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { isSignInPage, LoginPage, sessionEndedNotice } from "../../../pages/identity/auth/login.page";
+import { sessionRenewed } from "../../../pages/identity/auth/session.page";
 import {
+  dismissedApprovalsCookie,
   FeedbackPage,
   feedbackPath,
   SlowReportPage,
@@ -323,6 +327,54 @@ test.describe("feedback", () => {
       expect(calls.count(), "Server Function calls").toBe(1);
     },
   );
+
+  test.describe("once Microsoft has ended this browser's session", () => {
+    test("loading the bank feed again goes to the sign-in page and comes back to this page", async ({
+      baseURL,
+      entraSession,
+      page,
+      request,
+    }) => {
+      const feedback = new FeedbackPage(page);
+      const renewed = sessionRenewed(page);
+      await feedback.goto();
+      await renewed;
+      await endEntraSession(request, entraSession);
+
+      await feedback.retryCard.getByRole("button", { name: "Try again" }).click();
+
+      await expect(page).toHaveURL(
+        isSignInPage(new URL(baseURL ?? "").origin, feedbackPath, "session-ended"),
+      );
+      await expect(new LoginPage(page).notice).toHaveText(sessionEndedNotice);
+    });
+
+    test("dismissing a request goes to the sign-in page and dismisses nothing", async ({
+      baseURL,
+      context,
+      entraSession,
+      page,
+      request,
+    }) => {
+      const feedback = new FeedbackPage(page);
+      const renewed = sessionRenewed(page);
+      await feedback.goto();
+      await renewed;
+      await endEntraSession(request, entraSession);
+
+      await feedback.dismissButton(travel).click();
+
+      await expect(page).toHaveURL(
+        isSignInPage(new URL(baseURL ?? "").origin, feedbackPath, "session-ended"),
+      );
+      await expect(new LoginPage(page).notice).toHaveText(sessionEndedNotice);
+      const cookies = await context.cookies();
+      expect(
+        cookies.find((cookie) => cookie.name === dismissedApprovalsCookie),
+        "the dismissed requests of the page",
+      ).toBeUndefined();
+    });
+  });
 
   test.describe("when the page itself fails", () => {
     // React logs the caught error object; Firefox reports an Error object logged to the console as the bare text "Error".

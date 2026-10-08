@@ -32,7 +32,7 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
             .SelectMany(endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? [HttpMethods.Get])
                 .Select(method => (Endpoint: endpoint, Method: method, Path: SamplePath(endpoint.RoutePattern.RawText!))))
             .ToList();
-        Assert.Contains(protectedRoutes, route => route.Method == HttpMethods.Post && route.Path == "/api/auth/logout");
+        Assert.Contains(protectedRoutes, route => route.Method == HttpMethods.Post && route.Path == "/api/auth/session");
 
         foreach (var (endpoint, method, path) in protectedRoutes)
         {
@@ -65,6 +65,7 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
 
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
+        Assert.Equal(DescriptionOf(EndpointFor(method, route)), Uri.UnescapeDataString(Assert.Single(response.Headers.GetValues(SelectedEndpointHeader))));
         await AssertUnauthenticatedAsync(response, $"{method} {route}");
     }
 
@@ -183,6 +184,12 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
 
     private static string DescriptionOf(RouteEndpoint endpoint) =>
         $"{string.Join(',', endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? [])} {endpoint.RoutePattern.RawText} {endpoint.DisplayName}";
+
+    private RouteEndpoint EndpointFor(string method, string route) =>
+        Assert.Single(
+            fixture.Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>(),
+            endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? []).Contains(method, StringComparer.Ordinal)
+                && RouteParameter().Replace(endpoint.RoutePattern.RawText!.TrimEnd('/'), "{id}") == route.Split('?')[0]);
 
     private static string SamplePath(string pattern) =>
         RouteParameter().Replace(pattern, match => match.Value.Contains(":guid", StringComparison.Ordinal) ? Guid.CreateVersion7().ToString("D") : "sample");

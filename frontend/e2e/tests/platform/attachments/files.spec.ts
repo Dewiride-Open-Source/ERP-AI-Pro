@@ -4,8 +4,16 @@ import type { Page, Request, Response } from "@playwright/test";
 
 import { png, type FileUpload } from "../../../fixtures/files";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
-import { requestToken, requestTokenCookie, requestTokenHeader } from "../../../fixtures/sign-in";
+import {
+  endEntraSession,
+  requestToken,
+  requestTokenCookie,
+  requestTokenHeader,
+  signIn,
+} from "../../../fixtures/sign-in";
 import { expect, forEachTheme, signedInApi, test, type SignedInApi } from "../../../fixtures/test";
+import { isSignInPage, LoginPage, sessionEndedNotice } from "../../../pages/identity/auth/login.page";
+import { sessionRenewed } from "../../../pages/identity/auth/session.page";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
@@ -322,9 +330,12 @@ test.describe("attachments page", () => {
       page.on("response", (response) => {
         if (isUpload(response) && response.status() === 201) stored.push(response);
       });
+      const renewed = sessionRenewed(page);
       await attachments.goto();
+      await renewed;
       // The first upload carries a token the API never issued, as after a sign-in in another tab, and the renewal is the
-      // API's own, whose pair the upload sent once more must carry.
+      // API's own, whose pair the upload sent once more must carry. The page's own session renewal is answered first, or it
+      // would carry that token too and renew the pair a second time.
       await page
         .context()
         .addCookies([
@@ -421,6 +432,46 @@ test.describe("attachments page", () => {
       await attachments.confirmDelete.click();
       await expect(row).toHaveCount(0);
       await expect(new AppShell(page).toast(`Deleted ${file.name}.`)).toBeVisible();
+    });
+  });
+
+  test.describe("once Microsoft has ended this browser's session", () => {
+    test("a delete goes to the sign-in page, comes back to the list there and deletes nothing", async ({
+      api,
+      baseURL,
+      context,
+      entraSession,
+      page,
+      request,
+    }) => {
+      const attachments = new AttachmentsPage(page);
+      const file = png({ name: `e2e-ended-${randomUUID().slice(-12)}.png` });
+      const query = `?name=${file.name}`;
+      const id = await createdAttachmentId(await api.post(attachmentsApi, { multipart: { file } }));
+
+      try {
+        const renewed = sessionRenewed(page);
+        await attachments.goto(query);
+        await attachments.list.waitUntilInteractive();
+        await renewed;
+        await expect(attachments.row(file.name)).toBeVisible();
+        await endEntraSession(request, entraSession);
+
+        await attachments.row(file.name).getByTestId("attachment-delete").click();
+        await attachments.confirmDelete.click();
+
+        await expect(page).toHaveURL(
+          isSignInPage(new URL(baseURL ?? "").origin, `${attachmentsPath}${query}`, "session-ended"),
+        );
+        await expect(new LoginPage(page).notice).toHaveText(sessionEndedNotice);
+
+        await signIn(context.request, "accountant");
+        await attachments.goto(query);
+        await expect(attachments.row(file.name)).toBeVisible();
+      } finally {
+        await signIn(context.request, "accountant");
+        await deleteLeftoverAttachments(api, [id]);
+      }
     });
   });
 

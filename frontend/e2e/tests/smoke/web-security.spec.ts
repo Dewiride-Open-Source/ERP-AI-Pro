@@ -2,7 +2,7 @@ import { signIn } from "../../fixtures/sign-in";
 import { expect, test } from "../../fixtures/test";
 
 test.describe("web origin security", () => {
-  test.describe("on the sign-in page", () => {
+  test.describe("without a session", () => {
     test.use({ persona: null });
 
     test("pages carry a nonce-based content security policy and hardening headers", async ({ page }) => {
@@ -16,7 +16,9 @@ test.describe("web origin security", () => {
       expect(csp).toContain("'strict-dynamic'");
       expect(csp).toContain("frame-ancestors 'none'");
       expect(csp).toContain("object-src 'none'");
-      expect(csp).toContain("form-action 'self' https://login.microsoftonline.com");
+      expect(csp).toContain(
+        "form-action 'self' https://login.microsoftonline.com/common/oauth2/v2.0/logout;",
+      );
       expect(csp).toContain("upgrade-insecure-requests");
       expect(headers["x-content-type-options"]).toBe("nosniff");
       expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
@@ -35,6 +37,14 @@ test.describe("web origin security", () => {
       const second = await page.goto("/login");
       const secondNonce = /'nonce-([^']+)'/.exec(second?.headers()["content-security-policy"] ?? "")?.[1];
       expect(secondNonce).not.toBe(nonce);
+    });
+
+    test("crawlers read the rules of robots.txt", async ({ request }) => {
+      const response = await request.get("/robots.txt", { maxRedirects: 0 });
+
+      expect(response.status()).toBe(200);
+      expect(response.headers()["content-type"]).toContain("text/plain");
+      expect(await response.text()).toContain("Disallow: /");
     });
   });
 

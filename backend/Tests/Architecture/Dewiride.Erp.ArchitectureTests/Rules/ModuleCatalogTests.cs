@@ -15,6 +15,7 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         "/healthz/live",
         "/healthz/ready",
         "/api/auth/login",
+        "/api/auth/logout",
         "/api/auth/signout-oidc",
         "/openapi/{documentName}.json",
     ];

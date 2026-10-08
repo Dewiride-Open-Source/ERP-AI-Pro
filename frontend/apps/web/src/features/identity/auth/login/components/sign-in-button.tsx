@@ -3,10 +3,16 @@ import { ArrowRightIcon } from "lucide-react";
 
 import { signInHref } from "@/shared/auth/sign-in-addresses";
 
-export function SignInButton({ returnPath }: { returnPath: string | undefined }) {
+export function SignInButton({
+  returnPath,
+  describedBy,
+}: {
+  returnPath: string | undefined;
+  describedBy: string | undefined;
+}) {
   return (
     <Button asChild size="lg" className="group h-11 w-full justify-between text-base">
-      <a href={signInHref(returnPath)} data-testid="sign-in-microsoft">
+      <a href={signInHref(returnPath)} aria-describedby={describedBy} data-testid="sign-in-microsoft">
         <span className="inline-flex items-center gap-3">
           <MicrosoftLogo />
           Continue with Microsoft

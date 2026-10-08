@@ -13,23 +13,20 @@ import { redirect } from "next/navigation";
 
 import { sessionCookieName } from "@/shared/auth/page-access";
 import { readSession } from "@/shared/auth/session";
-import {
-  localReturnPath,
-  reasonParameter,
-  returnUrlParameter,
-  signInReason,
-} from "@/shared/auth/sign-in-addresses";
+import { localReturnPath, returnUrlParameter } from "@/shared/auth/sign-in-addresses";
 import { Wordmark } from "@/shared/brand/wordmark";
 import type { SearchParameters } from "@/shared/lists/list-query";
 
 import { BrandPanel } from "./brand-panel";
+import { loginPageState } from "./login-page-state";
 import { SignInButton } from "./sign-in-button";
 import { SignInNotice } from "./sign-in-notice";
 
-const signInFailedError = "sign-in-failed";
+const noticeId = "sign-in-notice";
 
 export async function LoginCard({ searchParameters }: { searchParameters: SearchParameters }) {
   const returnPath = localReturnPath(searchParameters[returnUrlParameter]);
+  const state = loginPageState(searchParameters);
 
   // A visitor whose session still holds has nothing to do here and goes straight on. Only the API can tell whether the
   // session cookie still names a session, so it is asked only when the browser sent one.
@@ -50,11 +47,8 @@ export async function LoginCard({ searchParameters }: { searchParameters: Search
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <SignInNotice
-            failed={searchParameters.error === signInFailedError}
-            reason={signInReason(searchParameters[reasonParameter])}
-          />
-          <SignInButton returnPath={returnPath} />
+          <SignInNotice id={noticeId} state={state} />
+          <SignInButton returnPath={returnPath} describedBy={state === undefined ? undefined : noticeId} />
           <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
             <ShieldCheckIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
             <span>Single sign-on through Microsoft Entra ID. Your session stays on this device only.</span>

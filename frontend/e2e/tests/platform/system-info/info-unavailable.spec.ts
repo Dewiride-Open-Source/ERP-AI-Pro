@@ -1,6 +1,7 @@
 import { addUnverifiedSessionCookie } from "../../../fixtures/sign-in";
 import { offlineBaseURL } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { sessionRenewed } from "../../../pages/identity/auth/session.page";
 import { SystemInfoPage } from "../../../pages/platform/system-info/info.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
@@ -9,7 +10,11 @@ test.describe("system information page without the API", () => {
     !offlineBaseURL,
     "E2E_OFFLINE_BASE_URL is not set and Playwright did not start the offline web instance",
   );
-  test.use({ baseURL: offlineBaseURL ?? "", persona: null });
+  test.use({
+    baseURL: offlineBaseURL ?? "",
+    persona: null,
+    expectedConsoleError: /the server responded with a status of 500/,
+  });
   test.beforeEach(async ({ context }) => {
     await addUnverifiedSessionCookie(context, offlineBaseURL ?? "");
   });
@@ -18,8 +23,12 @@ test.describe("system information page without the API", () => {
     "explains that the API is unreachable and keeps the refresh control",
     async ({ page, capture }) => {
       const systemInfo = new SystemInfoPage(page);
+      const shell = new AppShell(page);
+      const renewal = sessionRenewed(page);
       await systemInfo.goto();
-      await expect(new AppShell(page).account, "the person the API could not report").toHaveCount(0);
+      await expect(shell.signOut, "the sign-out of a session the API could not report").toBeVisible();
+      await expect(shell.account).not.toContainText("Signed in as");
+      expect((await renewal).status(), "the renewal the page sends without its API").toBe(500);
 
       await expect(systemInfo.card).toBeVisible();
       await expect(systemInfo.unavailable).toBeVisible();
@@ -44,6 +53,7 @@ test.describe("system information page without the API", () => {
       await expect(systemInfo.refresh).toBeEnabled();
       await expect(systemInfo.unavailable).toBeVisible();
       await expect(systemInfo.startupsUnavailable).toBeVisible();
+      await expect(shell.signOut, "the sign-out after the page refreshed without its API").toBeVisible();
 
       await capture("system-info-unavailable");
     },

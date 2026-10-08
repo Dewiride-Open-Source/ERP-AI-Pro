@@ -69,7 +69,7 @@ public sealed class TokenCacheStorageTests
     }
 
     [Fact]
-    public async Task Post_SignIn_RecordsTheIssuerAndAccountOfTheEntraSessionUnprotectedUntilItsSessionsHaveEnded()
+    public async Task Post_SignIn_RecordsTheAccountOfTheEntraSessionUnprotectedUntilItsSessionsHaveEnded()
     {
         await using var factory = new ErpApiFactory().WithTestEndpoints(SessionCookies.MapSignInAndObjectId);
         using var client = TestSignIn.CreateClient(factory);
@@ -82,8 +82,7 @@ public sealed class TokenCacheStorageTests
         var row = await TokenCacheRow.FindAsync(factory.Deployment.TokenCacheKeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId);
         Assert.NotNull(row);
         using var record = JsonDocument.Parse(row.Value);
-        Assert.Equal(["Issuer", "AccountId"], record.RootElement.EnumerateObject().Select(member => member.Name));
-        Assert.Equal(TestIdentityProvider.Issuer, record.RootElement.GetProperty("Issuer").GetString());
+        Assert.Equal(["AccountId"], record.RootElement.EnumerateObject().Select(member => member.Name));
         Assert.Equal(TestUsers.Accountant.AccountId, record.RootElement.GetProperty("AccountId").GetString());
         Assert.Null(row.SlidingExpirationInSeconds);
         Assert.NotNull(row.AbsoluteExpiration);

@@ -105,7 +105,7 @@ const apiClientDynamicImports = [
 ].map((selector) => ({ selector, message: apiClientMessage }));
 
 const httpMessage =
-  "Only shared/api sends HTTP requests: call the API through callApi or sendApi (shared/api/client.ts), or uploadFile (shared/api/upload.ts).";
+  "Only shared/api sends HTTP requests: call the API through callApi or sendApi (shared/api/client.ts), uploadFile (shared/api/upload.ts), or readSessionTimes or renewSessionTimes (shared/api/session/session-watch.ts).";
 
 const httpGlobals = ["fetch", "XMLHttpRequest", "EventSource"];
 
@@ -179,6 +179,31 @@ const moduleEffects = [
   },
 ];
 
+const serverFunctionMessage =
+  "A Server Function starts with `await requireSignedInPerson()`: it changes something only for a person the API has just confirmed (ADR-0036, rule X4).";
+
+const serverFunctionExport = 'Program > ExpressionStatement[directive="use server"] ~ ';
+
+function awaitsSignedInPerson(path) {
+  return [
+    `[${path}.type="AwaitExpression"]`,
+    `[${path}.argument.type="CallExpression"]`,
+    `[${path}.argument.callee.type="Identifier"]`,
+    `[${path}.argument.callee.name="requireSignedInPerson"]`,
+    `[${path}.argument.arguments.length=0]`,
+  ].join("");
+}
+
+const sessionCheck = `:matches(ExpressionStatement${awaitsSignedInPerson("expression")}, VariableDeclaration[declarations.length=1]${awaitsSignedInPerson("declarations.0.init")})`;
+
+const serverFunctions = [
+  `${serverFunctionExport}ExportNamedDeclaration > FunctionDeclaration > BlockStatement > :first-child:not(${sessionCheck})`,
+  `${serverFunctionExport}ExportNamedDeclaration > FunctionDeclaration > BlockStatement[body.length=0]`,
+  `${serverFunctionExport}ExportNamedDeclaration:not([exportKind="type"]):not([declaration.type="FunctionDeclaration"])`,
+  `${serverFunctionExport}ExportDefaultDeclaration`,
+  `${serverFunctionExport}ExportAllDeclaration:not([exportKind="type"])`,
+].map((selector) => ({ selector, message: serverFunctionMessage }));
+
 function restrictedImports(patterns, { apiClient = true } = {}) {
   return ["error", apiClient ? { paths: [apiClientValues], patterns } : { patterns }];
 }
@@ -188,6 +213,7 @@ function restrictedSyntax(restrictions, { moduleEffectsAllowed = false } = {}) {
     "error",
     ...typeRoleRestrictions,
     ...objectHrefs,
+    ...serverFunctions,
     ...(moduleEffectsAllowed ? [] : moduleEffects),
     ...restrictions,
   ];

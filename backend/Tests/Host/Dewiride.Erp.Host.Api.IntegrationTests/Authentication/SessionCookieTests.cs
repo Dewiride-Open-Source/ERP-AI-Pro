@@ -1,9 +1,16 @@
 using System.Globalization;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
 using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
+using Dewiride.Erp.BuildingBlocks.Caching;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
@@ -13,6 +20,8 @@ public sealed class SessionCookieTests
     private const string SessionCookie = "__Host-erp-session";
 
     private const string ObjectIdPath = "/__test/object-id";
+
+    private const string WithoutEntraSessionPath = "/__test/sign-in-without-entra-session";
 
     private const string ClearedCookie = "expires=Thu, 01 Jan 1970";
 
@@ -248,6 +257,68 @@ public sealed class SessionCookieTests
         Assert.Equal(HttpStatusCode.Unauthorized, afterwards.StatusCode);
     }
 
+    [Fact]
+    public async Task Get_WhenTheEntraSessionOfTheSessionIsNoLongerRecorded_AnswersUnauthenticatedAndClearsTheCookie()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+        await session.Store.RemoveAsync(EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId, TestContext.Current.CancellationToken);
+
+        using var response = await session.GetAsync();
+        using var afterwards = await session.GetAsync();
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains(ClearedCookie, SessionCookieOf(response), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(HttpStatusCode.Unauthorized, afterwards.StatusCode);
+        Assert.True(await TestSignIn.IsAccountCachedAsync(session.Factory.Services, TestUsers.Accountant));
+    }
+
+    [Fact]
+    public async Task Get_WhenTheEntraSessionOfTheSessionIsRecordedForAnotherPerson_AnswersUnauthenticatedAndClearsTheCookie()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+        await session.RecordEntraSessionAsync(TestUsers.Accountant.EntraSessionId, $$"""{"AccountId":"{{TestUsers.Administrator.AccountId}}"}""");
+
+        using var response = await session.GetAsync();
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains(ClearedCookie, SessionCookieOf(response), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Get_WhenTheRecordOfTheEntraSessionNamesNoAccount_AnswersAServerErrorAndKeepsTheCookie()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+        await session.RecordEntraSessionAsync(TestUsers.Accountant.EntraSessionId, "{}");
+
+        using var response = await session.GetAsync();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Null(SessionCookieOf(response));
+    }
+
+    [Fact]
+    public async Task Get_WithASessionWhosePrincipalNamesNoEntraSession_IsAcceptedWithoutARecord()
+    {
+        using var session = new Session();
+        using var signIn = await session.SignInAsync();
+        using var withoutEntraSession = TestSignIn.CreateClient(session.Factory);
+        using (var issued = await withoutEntraSession.PostAsync(new Uri(WithoutEntraSessionPath, UriKind.Relative), content: null, TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, issued.StatusCode);
+        }
+
+        await session.Store.RemoveAsync(EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId, TestContext.Current.CancellationToken);
+        using var refused = await session.GetAsync();
+        using var accepted = await GetObjectIdAsync(withoutEntraSession);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+        Assert.Equal(TestUsers.Accountant.ObjectId.ToString("D"), await accepted.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
     private static TimeSpan IdleTimeoutOf(string? idleTimeout) =>
         idleTimeout is null ? DefaultIdleTimeout : TimeSpan.Parse(idleTimeout, CultureInfo.InvariantCulture);
 
@@ -274,6 +345,15 @@ public sealed class SessionCookieTests
             {
                 TestSignIn.Map(routes);
                 routes.MapGet(ObjectIdPath, (HttpContext context) => context.User.FindFirst(TestUser.ObjectIdClaim)?.Value);
+                routes.MapPost(WithoutEntraSessionPath, async (HttpContext context) =>
+                {
+                    var person = TestUsers.Accountant.ToPrincipal(CookieAuthenticationDefaults.AuthenticationScheme);
+                    var identity = (ClaimsIdentity)person.Identity!;
+                    identity.RemoveClaim(identity.FindFirst(TestUser.EntraSessionIdClaim));
+                    await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, person);
+
+                    return Results.NoContent();
+                }).AllowAnonymous().DisableAntiforgery();
             });
             if (idleTimeout is not null)
             {
@@ -293,7 +373,16 @@ public sealed class SessionCookieTests
 
         public WebApplicationFactory<Program> Factory { get; }
 
+        public IDistributedCache Store => Factory.Services.GetRequiredKeyedService<IDistributedCache>(CachingRegistration.SqlServerCacheKey);
+
         public Task<HttpResponseMessage> SignInAsync() => TestSignIn.SignInAsync(_client, TestUsers.Accountant);
+
+        public Task RecordEntraSessionAsync(string entraSessionId, string record) =>
+            Store.SetAsync(
+                EntraSessions.KeyPrefix + entraSessionId,
+                Encoding.UTF8.GetBytes(record),
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) },
+                TestContext.Current.CancellationToken);
 
         public Task<HttpResponseMessage> SignOutAsync() => _client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
 

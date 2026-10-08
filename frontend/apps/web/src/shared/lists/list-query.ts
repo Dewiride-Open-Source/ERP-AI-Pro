@@ -1,7 +1,7 @@
 import { compareIsoDates, isIsoDate } from "@dewiride/erp-ui/lib/calendar-date";
 import type { Route } from "next";
 
-import { readPageParameter } from "../api/paging.ts";
+import { readPageParameter } from "../api/paging/paging.ts";
 
 import {
   filterParameters,

@@ -1,5 +1,25 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+export const loginPath = "/login";
+
+export const sessionEndedNotice = "Your session has ended. Sign in again to go back to the page you were on.";
+
+export const signedOutNotice = "You have signed out.";
+
+export type SignInReason = "session-ended" | "signed-out";
+
+export function isSignInPage(
+  origin: string,
+  returnPath: string | undefined,
+  reason: SignInReason | undefined,
+): (url: URL) => boolean {
+  return (url) =>
+    url.origin === origin &&
+    url.pathname === loginPath &&
+    url.searchParams.get("returnUrl") === (returnPath ?? null) &&
+    url.searchParams.get("reason") === (reason ?? null);
+}
+
 export class LoginPage {
   readonly heading: Locator;
   readonly signInButton: Locator;
@@ -20,7 +40,7 @@ export class LoginPage {
   }
 
   async goto(query = ""): Promise<void> {
-    await this.page.goto(`/login${query}`);
+    await this.page.goto(`${loginPath}${query}`);
     await expect(this.heading).toBeVisible();
   }
 }
