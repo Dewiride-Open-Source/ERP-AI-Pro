@@ -25,7 +25,7 @@ test("contentSecurityPolicy_ProductionOverPlainHttp_ReturnsEveryDirectiveInOrder
       "connect-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      "form-action 'self' https://login.microsoftonline.com",
       "frame-ancestors 'none'",
     ].join("; "),
   );
@@ -77,13 +77,13 @@ test("contentSecurityPolicy_DifferentNonces_AppearOnlyInTheirOwnPolicy", () => {
   assert.doesNotMatch(second, /Zmlyc3Q=/);
 });
 
-test("contentSecurityPolicy_AnyRequest_DeniesFramingPluginsAndForeignForms", () => {
+test("contentSecurityPolicy_AnyRequest_DeniesFramingAndPluginsAndPostsFormsOnlyHereOrToMicrosoftSignIn", () => {
   const policy = directives(contentSecurityPolicy({ nonce, secure: false, development: true }));
 
   assert.deepEqual(policy.get("frame-ancestors"), ["'none'"]);
   assert.deepEqual(policy.get("object-src"), ["'none'"]);
   assert.deepEqual(policy.get("base-uri"), ["'self'"]);
-  assert.deepEqual(policy.get("form-action"), ["'self'"]);
+  assert.deepEqual(policy.get("form-action"), ["'self'", "https://login.microsoftonline.com"]);
   assert.deepEqual(policy.get("connect-src"), ["'self'"]);
 });
 

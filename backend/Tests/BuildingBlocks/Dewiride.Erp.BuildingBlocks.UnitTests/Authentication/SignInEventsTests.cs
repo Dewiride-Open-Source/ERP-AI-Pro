@@ -1,6 +1,11 @@
+using System.Security.Claims;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
+using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +15,10 @@ namespace Dewiride.Erp.BuildingBlocks.UnitTests.Authentication;
 public sealed class SignInEventsTests
 {
     private const string Description = "AADSTS70008: The provided authorization code or refresh token has expired due to inactivity.";
+
+    private const string WebOrigin = "https://erp.example.com";
+
+    private const string LoginHint = "O.aW50ZXJuYWwtb3BhcXVlLWhpbnQ=";
 
     [Theory]
     [InlineData("identity-provider error", SignInEvents.IdentityProviderFailure, "access_denied")]
@@ -42,6 +51,44 @@ public sealed class SignInEventsTests
 
         Assert.Equal((SignInEvents.IdentityProviderFailure, error), described);
     }
+
+    [Fact]
+    public async Task RedirectToIdentityProviderForSignOut_PersonWithALoginHint_SendsItAsTheLogoutHint()
+    {
+        var context = SignOutContext(new Claim(SignInEvents.LoginHintClaim, LoginHint));
+
+        await Events().RedirectToIdentityProviderForSignOut(context);
+
+        Assert.Equal(LoginHint, context.ProtocolMessage.GetParameter(SignInEvents.LogoutHintParameter));
+        Assert.Equal($"{WebOrigin}/api/auth/signout-callback-oidc", context.ProtocolMessage.PostLogoutRedirectUri);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RedirectToIdentityProviderForSignOut_PersonWithoutALoginHint_SendsNoLogoutHint(bool emptyClaim)
+    {
+        var context = emptyClaim ? SignOutContext(new Claim(SignInEvents.LoginHintClaim, string.Empty)) : SignOutContext();
+
+        await Events().RedirectToIdentityProviderForSignOut(context);
+
+        Assert.Null(context.ProtocolMessage.GetParameter(SignInEvents.LogoutHintParameter));
+        Assert.DoesNotContain(SignInEvents.LogoutHintParameter, context.ProtocolMessage.CreateLogoutRequestUrl(), StringComparison.Ordinal);
+        Assert.Equal($"{WebOrigin}/api/auth/signout-callback-oidc", context.ProtocolMessage.PostLogoutRedirectUri);
+    }
+
+    private static SignInEvents Events() =>
+        new(Microsoft.Extensions.Options.Options.Create(new EntraSignInOptions { WebOrigin = WebOrigin }), NullLogger<SignInEvents>.Instance);
+
+    private static RedirectContext SignOutContext(params Claim[] claims) =>
+        new(
+            new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Cookies")) },
+            new AuthenticationScheme(OpenIdConnectDefaults.AuthenticationScheme, displayName: null, typeof(OpenIdConnectHandler)),
+            new OpenIdConnectOptions(),
+            new AuthenticationProperties())
+        {
+            ProtocolMessage = new OpenIdConnectMessage { IssuerAddress = "https://login.microsoftonline.com/5d7c3b9a-1e2f-4a6b-8c0d-9e8f7a6b5c4d/oauth2/v2.0/logout" },
+        };
 
     private static Exception? FailureOf(string failure) =>
         failure switch

@@ -11,7 +11,7 @@ const file = (path: string, content = ""): WebSourceFile => ({ path, content });
 
 const compliantTree: readonly WebSourceFile[] = [
   file("app/layout.tsx"),
-  file("app/page.tsx"),
+  file("app/(app)/page.tsx"),
   file("app/error.tsx"),
   file("app/global-error.tsx"),
   file("app/not-found.tsx"),
@@ -125,6 +125,11 @@ const cases: readonly Case[] = [
     condition: "PageOutsideTheGroups",
     files: [file("app/dashboard/page.tsx")],
     expected: ["S3 app/dashboard/page.tsx"],
+  },
+  {
+    condition: "HomePageAtTheRootOfApp",
+    files: [file("app/page.tsx")],
+    expected: ["S3 app/page.tsx"],
   },
   {
     condition: "LayoutBesideARootRouteHandler",

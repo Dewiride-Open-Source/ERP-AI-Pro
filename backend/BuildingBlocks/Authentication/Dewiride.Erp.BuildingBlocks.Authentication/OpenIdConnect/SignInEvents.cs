@@ -35,6 +35,10 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
 
     public const string UnrecognisedOAuthError = "unrecognised";
 
+    public const string LoginHintClaim = "login_hint";
+
+    public const string LogoutHintParameter = "logout_hint";
+
     private const string OAuthErrorKey = "error";
 
     public Task RedirectToIdentityProvider(RedirectContext context)
@@ -51,6 +55,12 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
         ArgumentNullException.ThrowIfNull(context);
 
         context.ProtocolMessage.PostLogoutRedirectUri = signIn.Value.WebOrigin + AuthPaths.SignedOutCallback;
+
+        // The login_hint optional claim names the account, so Entra signs it out without asking which account to sign out.
+        if (context.HttpContext.User.FindFirst(LoginHintClaim)?.Value is { Length: > 0 } loginHint)
+        {
+            context.ProtocolMessage.SetParameter(LogoutHintParameter, loginHint);
+        }
 
         return Task.CompletedTask;
     }

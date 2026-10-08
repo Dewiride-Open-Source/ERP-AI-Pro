@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import {
+  Agent,
   request,
   type IncomingHttpHeaders,
   type IncomingMessage,
@@ -27,6 +28,11 @@ const hopByHopHeaders: ReadonlySet<string> = new Set([
 ]);
 
 const idleConnectionTimeout = 60_000;
+
+// next start closes an idle connection when its keep-alive timeout runs out, and a request sent on a connection it is closing
+// at that moment fails with ECONNRESET, which the front could only answer with 502; a new loopback connection per request
+// costs nothing.
+const upstreamAgent = new Agent({ keepAlive: false });
 
 function routes(args: readonly string[]): Route[] {
   if (args.length === 0)
@@ -118,6 +124,7 @@ function forward(upstream: URL) {
         port: upstream.port,
         method: incoming.method,
         path: incoming.url,
+        agent: upstreamAgent,
         headers: {
           ...endToEndHeaders(incoming.headers),
           "x-forwarded-proto": "https",

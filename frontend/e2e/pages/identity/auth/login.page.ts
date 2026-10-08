@@ -6,6 +6,8 @@ export class LoginPage {
   readonly wordmark: Locator;
   readonly glows: Locator;
   readonly failure: Locator;
+  readonly notice: Locator;
+  readonly brand: Locator;
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole("heading", { name: "Sign in to your workspace" });
@@ -13,6 +15,8 @@ export class LoginPage {
     this.wordmark = page.getByText("ERP-AI-Pro", { exact: true }).first();
     this.glows = page.locator(".animate-glow");
     this.failure = page.getByRole("main").getByRole("alert");
+    this.notice = page.getByTestId("sign-in-notice");
+    this.brand = page.getByTestId("sign-in-brand");
   }
 
   async goto(query = ""): Promise<void> {

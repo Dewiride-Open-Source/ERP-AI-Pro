@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@dewiride/erp-ui/components/ui/card";
 import { ActivityIcon, ServerIcon } from "lucide-react";
+import { unstable_rethrow } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { ApiError } from "@/shared/api/problem-details";
@@ -27,6 +28,7 @@ export async function SystemInfoCard() {
   try {
     info = await getSystemInfo();
   } catch (error) {
+    unstable_rethrow(error);
     failure = error instanceof ApiError ? error.message : "The API did not respond.";
   }
 

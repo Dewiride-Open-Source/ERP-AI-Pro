@@ -7,6 +7,7 @@ using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Domain;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Endpoints.Responses;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Hosting;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.Startups.Endpoints;
@@ -18,7 +19,7 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Get_Startups_ListsTheRunningApisOwnStartWithoutTheMachineName()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var recorded = await factory.Services.GetRequiredService<StartupRecorder>().Recorded.WaitAsync(TestContext.Current.CancellationToken);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
         var application = factory.Services.GetRequiredService<ApplicationInfo>();
@@ -43,7 +44,7 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Get_Startups_WithMoreThanTwentyRows_ReturnsTheTwentyNewestFirst()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         await factory.Services.GetRequiredService<StartupRecorder>().Recorded.WaitAsync(TestContext.Current.CancellationToken);
         var oldest = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var seededNewestFirst = new List<Guid>();

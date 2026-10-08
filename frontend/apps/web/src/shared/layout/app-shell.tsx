@@ -12,9 +12,11 @@ import type { NavigationEntry } from "./navigation-entry";
 
 export async function AppShell({
   navigation,
+  account,
   children,
 }: {
   navigation: readonly NavigationEntry[];
+  account: ReactNode;
   children: ReactNode;
 }) {
   const flags = await getFeatureFlags();
@@ -25,7 +27,7 @@ export async function AppShell({
       <header className="sticky top-0 z-(--layer-sticky) h-header border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-full w-full max-w-page items-center justify-between gap-4 px-gutter">
           <div className="flex items-center gap-6">
-            <Link href="/login" className="rounded-md focus-ring">
+            <Link href="/" className="rounded-md focus-ring">
               <Wordmark />
             </Link>
             <nav aria-label="Primary" className="hidden items-center gap-1 sm:flex">
@@ -40,7 +42,10 @@ export async function AppShell({
               ))}
             </nav>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            {account}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       <main

@@ -1,12 +1,12 @@
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { ArrowRightIcon } from "lucide-react";
 
-import { apiBasePath } from "@/shared/api/base-path";
+import { signInHref } from "@/shared/auth/sign-in-addresses";
 
-export function SignInButton() {
+export function SignInButton({ returnPath }: { returnPath: string | undefined }) {
   return (
     <Button asChild size="lg" className="group h-11 w-full justify-between text-base">
-      <a href={`${apiBasePath}/auth/login?returnUrl=%2F`} data-testid="sign-in-microsoft">
+      <a href={signInHref(returnPath)} data-testid="sign-in-microsoft">
         <span className="inline-flex items-center gap-3">
           <MicrosoftLogo />
           Continue with Microsoft

@@ -81,8 +81,11 @@ public static class AuthenticationRegistration
 
         builder.Services.TryAddSingleton<SignInEvents>();
         builder.Services.TryAddSingleton<SessionRevocations>();
+        builder.Services.TryAddSingleton<EntraSessions>();
+        builder.Services.TryAddScoped<FrontChannelSignOut>();
         builder.Services.TryAddScoped<SessionCookieEvents>();
         builder.Services.AddSingleton<IConfigureOptions<MicrosoftIdentityOptions>, MicrosoftIdentityOptionsSetup>();
+        builder.Services.AddSingleton<IPostConfigureOptions<OpenIdConnectOptions>, OpenIdConnectOptionsSetup>();
         builder.Services.AddSingleton<IConfigureOptions<ConfidentialClientApplicationOptions>, ConfidentialClientOptionsSetup>();
         builder.Services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, SessionCookieOptionsSetup>();
 

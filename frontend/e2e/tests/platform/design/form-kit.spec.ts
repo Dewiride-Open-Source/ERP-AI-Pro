@@ -1,7 +1,7 @@
 import type { Locator, Page, Request, Response } from "@playwright/test";
 
 import { png } from "../../../fixtures/files";
-import { expect, forEachTheme, tabOntoLink, test } from "../../../fixtures/test";
+import { expect, forEachTheme, signedInApi, tabOntoLink, test } from "../../../fixtures/test";
 import {
   FormKitPage,
   formKitPath,
@@ -679,7 +679,7 @@ test.describe("form kit", () => {
         await expect(formKit.dropZone).toBeVisible();
         await expect(formKit.documentAnnouncement).toHaveText("");
       } finally {
-        const deleted = await page.request.delete(`${attachmentsApi}/${String(id)}`);
+        const deleted = await signedInApi(page.context()).delete(`${attachmentsApi}/${String(id)}`);
         expect(deleted.status(), "attachment deleted").toBe(204);
       }
     },

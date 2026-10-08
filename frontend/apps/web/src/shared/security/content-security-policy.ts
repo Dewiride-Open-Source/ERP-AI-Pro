@@ -4,6 +4,10 @@ export type ContentSecurityPolicyOptions = {
   readonly development: boolean;
 };
 
+// Chrome checks every redirect a form submission follows against form-action, and the sign-out form's answer redirects to
+// the end-session endpoint of Microsoft Entra ID in the public cloud, the instance every app registration of the ERP uses.
+const microsoftSignInOrigin = "https://login.microsoftonline.com";
+
 export function contentSecurityPolicy({ nonce, secure, development }: ContentSecurityPolicyOptions): string {
   const scriptSources = [
     "'self'",
@@ -20,7 +24,7 @@ export function contentSecurityPolicy({ nonce, secure, development }: ContentSec
     "connect-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    `form-action 'self' ${microsoftSignInOrigin}`,
     "frame-ancestors 'none'",
     ...(secure ? ["upgrade-insecure-requests"] : []),
   ];

@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 
-import type { APIRequestContext, Page, Request, Response } from "@playwright/test";
+import type { Page, Request, Response } from "@playwright/test";
 
 import { png, type FileUpload } from "../../../fixtures/files";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { requestToken, requestTokenCookie, requestTokenHeader } from "../../../fixtures/sign-in";
-import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { expect, forEachTheme, signedInApi, test, type SignedInApi } from "../../../fixtures/test";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
@@ -57,25 +57,25 @@ async function createdAttachmentId(response: {
   return id as string;
 }
 
-async function seedAttachments(request: APIRequestContext, count: number, ids: string[]): Promise<void> {
+async function seedAttachments(api: SignedInApi, count: number, ids: string[]): Promise<void> {
   for (let index = 0; index < count; index += 1) {
-    const response = await request.post(attachmentsApi, { multipart: { file: png() } });
+    const response = await api.post(attachmentsApi, { multipart: { file: png() } });
     ids.push(await createdAttachmentId(response));
   }
 }
 
-async function deleteAttachments(request: APIRequestContext, ids: readonly string[]): Promise<void> {
+async function deleteAttachments(api: SignedInApi, ids: readonly string[]): Promise<void> {
   for (const id of ids) {
-    const response = await request.delete(`${attachmentsApi}/${id}`);
+    const response = await api.delete(`${attachmentsApi}/${id}`);
     expect(response.status()).toBe(204);
   }
 }
 
 // A test that deletes some of its files itself cleans up whatever is left, so a failure midway reports its own cause rather
 // than a cleanup that found a file already gone.
-async function deleteLeftoverAttachments(request: APIRequestContext, ids: readonly string[]): Promise<void> {
+async function deleteLeftoverAttachments(api: SignedInApi, ids: readonly string[]): Promise<void> {
   for (const id of ids) {
-    const response = await request.delete(`${attachmentsApi}/${id}`);
+    const response = await api.delete(`${attachmentsApi}/${id}`);
     expect([204, 404]).toContain(response.status());
   }
 }
@@ -188,7 +188,7 @@ test.describe("attachments page", () => {
 
   test("takes a deleted file off the list at once and treats one deleted elsewhere as gone", async ({
     page,
-    request,
+    api,
   }) => {
     const attachments = new AttachmentsPage(page);
     const shell = new AppShell(page);
@@ -197,10 +197,7 @@ test.describe("attachments page", () => {
     const gone = png({ name: `${prefix}-second.png` });
     const ids = new Map<string, string>();
     for (const file of [kept, gone]) {
-      ids.set(
-        file.name,
-        await createdAttachmentId(await request.post(attachmentsApi, { multipart: { file } })),
-      );
+      ids.set(file.name, await createdAttachmentId(await api.post(attachmentsApi, { multipart: { file } })));
     }
 
     try {
@@ -217,7 +214,7 @@ test.describe("attachments page", () => {
       await expect(shell.toast(`Deleted ${kept.name}.`)).toBeVisible();
       await expect(attachments.row(kept.name)).toHaveCount(0);
 
-      const deletedElsewhere = await request.delete(`${attachmentsApi}/${ids.get(gone.name) ?? ""}`);
+      const deletedElsewhere = await api.delete(`${attachmentsApi}/${ids.get(gone.name) ?? ""}`);
       expect(deletedElsewhere.status()).toBe(204);
       await attachments.row(gone.name).getByTestId("attachment-delete").click();
       await attachments.confirmDelete.click();
@@ -227,7 +224,7 @@ test.describe("attachments page", () => {
       await expect(attachments.row(gone.name)).toHaveCount(0);
       await expect(attachments.list.noMatches).toBeVisible();
     } finally {
-      await deleteLeftoverAttachments(request, [...ids.values()]);
+      await deleteLeftoverAttachments(api, [...ids.values()]);
     }
   });
 
@@ -252,7 +249,7 @@ test.describe("attachments page", () => {
       await expect(attachments.uploadAnnouncement).toHaveText(`${file.name} was uploaded.`);
       await expect(attachments.row(file.name)).toBeVisible();
     } finally {
-      await deleteAttachments(page.request, [id]);
+      await deleteAttachments(signedInApi(page.context()), [id]);
     }
   });
 
@@ -312,20 +309,13 @@ test.describe("attachments page", () => {
     test("renews the token once and sends the upload once more with the renewed token", async ({
       page,
       baseURL,
+      context,
     }) => {
       const attachments = new AttachmentsPage(page);
       const file = png();
       // WebKit sometimes forwards an intercepted multipart request with an empty file part, so there the upload sent once
       // more is answered with the API's answer to the same file sent by the test.
       const continuesInterceptedUploads = page.context().browser()?.browserType().name() !== "webkit";
-      const tokenCookie = (value: string) => ({
-        name: requestTokenCookie,
-        value,
-        domain: new URL(baseURL!).hostname,
-        path: "/",
-        secure: true,
-        sameSite: "Strict" as const,
-      });
       const sentTokens: (string | undefined)[] = [];
       const stored: Response[] = [];
       let renewals = 0;
@@ -333,12 +323,17 @@ test.describe("attachments page", () => {
         if (isUpload(response) && response.status() === 201) stored.push(response);
       });
       await attachments.goto();
-      await page.context().addCookies([tokenCookie("first-token")]);
+      // The first upload carries a token the API never issued, as after a sign-in in another tab, and the renewal is the
+      // API's own, whose pair the upload sent once more must carry.
+      await page
+        .context()
+        .addCookies([
+          { name: requestTokenCookie, value: "first-token", url: baseURL!, secure: true, sameSite: "Strict" },
+        ]);
 
       await page.route(`**${antiforgeryRenewalApi}`, async (route) => {
         renewals += 1;
-        await page.context().addCookies([tokenCookie("renewed-token")]);
-        await route.fulfill({ status: 204 });
+        await route.continue();
       });
       await page.route(`**${attachmentsApi}`, async (route) => {
         if (!isUploadRequest(route.request())) {
@@ -363,7 +358,12 @@ test.describe("attachments page", () => {
           await route.continue();
           return;
         }
-        await route.fulfill({ response: await page.request.post(attachmentsApi, { multipart: { file } }) });
+        await route.fulfill({
+          response: await page.request.post(attachmentsApi, {
+            multipart: { file },
+            headers: { [requestTokenHeader]: route.request().headers()[requestTokenHeader] ?? "" },
+          }),
+        });
       });
 
       try {
@@ -373,16 +373,19 @@ test.describe("attachments page", () => {
         await expect(attachments.uploadStatus).toHaveAttribute("data-state", "uploaded");
         await expect(attachments.row(file.name)).toBeVisible();
         expect(renewals).toBe(1);
-        expect(sentTokens).toEqual(["first-token", "renewed-token"]);
+        const renewedToken = await requestToken(context);
+        expect(renewedToken).not.toBe("first-token");
+        expect(sentTokens).toEqual(["first-token", renewedToken]);
       } finally {
-        await deleteAttachments(page.request, await Promise.all(stored.map(createdAttachmentId)));
+        await deleteAttachments(
+          signedInApi(page.context()),
+          await Promise.all(stored.map(createdAttachmentId)),
+        );
       }
     });
   });
 
-  test.describe("signed in", () => {
-    test.use({ persona: "accountant" });
-
+  test.describe("with the request token", () => {
     test("uploads, downloads and deletes a file carrying the request token, and refuses a change without it", async ({
       page,
       context,
@@ -461,14 +464,14 @@ test.describe("attachments page", () => {
 
     test("moves between pages and brings a page outside the list back to one that exists", async ({
       page,
-      request,
+      api,
     }) => {
       test.slow();
       const attachments = new AttachmentsPage(page);
       const seeded: string[] = [];
 
       try {
-        await seedAttachments(request, listPageSize + 1, seeded);
+        await seedAttachments(api, listPageSize + 1, seeded);
         await attachments.goto();
         const { list } = attachments;
         await list.waitUntilInteractive();
@@ -501,12 +504,12 @@ test.describe("attachments page", () => {
           await expect(list.pageLabel).toHaveText(/^Page 1 of \d+$/);
         }
       } finally {
-        await deleteAttachments(request, seeded);
+        await deleteAttachments(api, seeded);
       }
     });
   });
 
-  test("sorts, filters and hides a column of the stored files through the API", async ({ page, request }) => {
+  test("sorts, filters and hides a column of the stored files through the API", async ({ page, api }) => {
     const attachments = new AttachmentsPage(page);
     const { list } = attachments;
     const token = `e2e-${randomUUID().slice(-8)}`;
@@ -516,7 +519,7 @@ test.describe("attachments page", () => {
 
     try {
       for (const file of [small, large]) {
-        seeded.push(await createdAttachmentId(await request.post(attachmentsApi, { multipart: { file } })));
+        seeded.push(await createdAttachmentId(await api.post(attachmentsApi, { multipart: { file } })));
       }
       await attachments.goto();
       await list.waitUntilInteractive();
@@ -568,7 +571,7 @@ test.describe("attachments page", () => {
         await expect(list.columnHeader("Type")).toHaveCount(0);
       }
     } finally {
-      await deleteAttachments(request, seeded);
+      await deleteAttachments(api, seeded);
     }
   });
 });

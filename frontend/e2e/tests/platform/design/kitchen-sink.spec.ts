@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
 import { png, type FileUpload } from "../../../fixtures/files";
+import { signIn } from "../../../fixtures/sign-in";
 import { expect, forEachTheme, pressArrowUntilChecked, tabOntoLink, test } from "../../../fixtures/test";
 import { LoginPage } from "../../../pages/identity/auth/login.page";
 import {
@@ -2449,6 +2450,9 @@ test.describe("design system kitchen sink", () => {
   });
 
   test.describe("motion", () => {
+    // The sign-in page shows its glows only to a visitor who is not signed in, so the person signs in after it.
+    test.use({ persona: null });
+
     test("runs token durations when motion is allowed", async ({ page }) => {
       const login = new LoginPage(page);
       await login.goto();
@@ -2458,6 +2462,7 @@ test.describe("design system kitchen sink", () => {
         expect(await longestDurationSeconds(glow, "animationDuration")).toBeCloseTo(6, 3);
       }
 
+      await signIn(page.context().request, "accountant");
       const kitchenSink = new KitchenSinkPage(page);
       await kitchenSink.goto();
       await expect(kitchenSink.motionPreference).toHaveAttribute("data-reduced-motion", "false");
@@ -2499,6 +2504,7 @@ test.describe("design system kitchen sink", () => {
         );
       }
 
+      await signIn(page.context().request, "accountant");
       const kitchenSink = new KitchenSinkPage(page);
       await kitchenSink.goto();
       await expect(kitchenSink.motionPreference).toHaveAttribute("data-reduced-motion", "true");

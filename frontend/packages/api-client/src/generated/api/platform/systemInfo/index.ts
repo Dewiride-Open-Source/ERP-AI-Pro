@@ -21,6 +21,7 @@ export interface SystemInfoRequestBuilder extends BaseRequestBuilder<SystemInfoR
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {Promise<SystemInfoResponse>}
      * @throws {HttpValidationProblemDetails} error when the service returns a 400 status code
+     * @throws {ProblemDetails} error when the service returns a 401 status code
      * @throws {ProblemDetails} error when the service returns a 404 status code
      * @throws {ProblemDetails} error when the service returns a 429 status code
      * @throws {ProblemDetails} error when the service returns a 500 status code
@@ -55,6 +56,7 @@ export const SystemInfoRequestBuilderRequestsMetadata: RequestsMetadata = {
         responseBodyContentType: "application/json",
         errorMappings: {
             400: createHttpValidationProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
+            401: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             404: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             429: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             500: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,

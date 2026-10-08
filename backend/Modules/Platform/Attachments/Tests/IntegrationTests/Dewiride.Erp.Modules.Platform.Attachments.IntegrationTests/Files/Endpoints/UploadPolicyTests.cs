@@ -3,6 +3,7 @@ using System.Net;
 using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Responses;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints;
 
@@ -13,7 +14,7 @@ public sealed class UploadPolicyTests(UploadPolicyTests.Fixture fixture) : IClas
     [Fact]
     public async Task Get_Policy_ReturnsTheConfiguredLimitAndTheAllowedTypesInOrder()
     {
-        using var client = fixture.Factory.CreateClient();
+        using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(AttachmentsApi.Path("/policy"), TestContext.Current.CancellationToken);
 
@@ -27,7 +28,7 @@ public sealed class UploadPolicyTests(UploadPolicyTests.Fixture fixture) : IClas
     [Fact]
     public async Task Post_FileOfExactlyTheLimit_IsStored()
     {
-        using var client = fixture.Factory.CreateClient();
+        using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text(AttachmentsApi.UniqueToken().PadRight(MaxSizeBytes, 'x'));
 
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "exactly-the-limit.txt");
@@ -38,7 +39,7 @@ public sealed class UploadPolicyTests(UploadPolicyTests.Fixture fixture) : IClas
     [Fact]
     public async Task Post_FileOneByteOverTheLimit_AnswersTooLarge()
     {
-        using var client = fixture.Factory.CreateClient();
+        using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text(AttachmentsApi.UniqueToken().PadRight(MaxSizeBytes + 1, 'x'));
 
         using var response = await AttachmentsApi.PostFileAsync(client, text, SampleFiles.TextType, "over-the-limit.txt");
@@ -49,7 +50,7 @@ public sealed class UploadPolicyTests(UploadPolicyTests.Fixture fixture) : IClas
     [Fact]
     public async Task Post_TypeLeftOutOfTheConfiguredAllowList_AnswersUnsupportedType()
     {
-        using var client = fixture.Factory.CreateClient();
+        using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.OnePixelPng(), SampleFiles.PngType, "pixel.png");
 

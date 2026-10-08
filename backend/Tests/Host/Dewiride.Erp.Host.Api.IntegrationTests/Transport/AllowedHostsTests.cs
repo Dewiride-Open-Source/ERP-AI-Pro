@@ -3,6 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Transport;
@@ -15,7 +16,7 @@ public sealed class AllowedHostsTests : IClassFixture<AllowedHostsTests.Fixture>
 
     public AllowedHostsTests(Fixture fixture)
     {
-        _client = fixture.Factory.CreateClient();
+        _client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Theory]
@@ -69,7 +70,7 @@ public sealed class AllowedHostsTests : IClassFixture<AllowedHostsTests.Fixture>
     public async Task Get_AnyHostWithTheDefaultWildcard_IsServed()
     {
         await using var factory = new ErpApiFactory();
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/platform/system-info");
         request.Headers.Host = "anything.example";
 

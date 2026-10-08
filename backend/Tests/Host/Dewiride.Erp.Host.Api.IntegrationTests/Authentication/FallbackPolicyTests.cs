@@ -47,6 +47,27 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
         }
     }
 
+    [Theory]
+    [InlineData("GET", "/api/platform/system-info")]
+    [InlineData("GET", "/api/platform/system-info/startups")]
+    [InlineData("GET", "/api/platform/features")]
+    [InlineData("GET", "/api/platform/attachments")]
+    [InlineData("GET", "/api/platform/attachments/policy")]
+    [InlineData("POST", "/api/platform/attachments")]
+    [InlineData("GET", "/api/platform/attachments/{id}")]
+    [InlineData("DELETE", "/api/platform/attachments/{id}")]
+    [InlineData("POST", "/api/platform/attachments/{id}/download-links")]
+    [InlineData("GET", "/api/platform/attachments/{id}/content?link=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
+    public async Task Send_PlatformRouteWithoutASession_AnswersUnauthenticated(string method, string route)
+    {
+        using var client = fixture.Factory.CreateClient(new() { AllowAutoRedirect = false });
+        using var request = new HttpRequestMessage(new HttpMethod(method), route.Replace("{id}", Guid.CreateVersion7().ToString("D"), StringComparison.Ordinal));
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        await AssertUnauthenticatedAsync(response, $"{method} {route}");
+    }
+
     [Fact]
     public async Task Get_UnknownRouteAnonymously_AnswersUnauthenticated()
     {

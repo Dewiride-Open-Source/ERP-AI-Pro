@@ -11,7 +11,8 @@ developers group and the runtime service principal, and the labelled
 Erp:Sentinel keys. Never writes.
 
 Options:
-  --entra           Check the Entra app registrations, service principals,
+  --entra           Check the Entra app registrations (with their optional
+                    claims and front-channel logout URLs), service principals,
                     certificates, role assignments and identity keys written
                     by entra.sh instead of the provisioned resources.
   --labels          Check the seeded settings, feature flags and Key Vault
@@ -363,6 +364,19 @@ verify_signin_registration_shape() {
   assert_equals "'$display_name' redirect URIs are [$expected_uris]" "$expected_uris" "$actual_uris"
   if [[ "$label" == production && -z "$ERP_AZURE_PRODUCTION_WEB_ORIGIN" ]]; then
     warn "'$display_name' has no redirect URI: production sign-in stays impossible until ERP_AZURE_PRODUCTION_WEB_ORIGIN is set and entra.sh re-run"
+  fi
+  local expected_logout_url actual_logout_url
+  expected_logout_url="$(signin_logout_url "$label")"
+  actual_logout_url="$(json_eval "$registration_json" '(value.web && value.web.logoutUrl) || ""')"
+  if [[ -n "$expected_logout_url" ]]; then
+    assert_equals_exact "'$display_name' front-channel logout URL is $expected_logout_url" "$expected_logout_url" "$actual_logout_url"
+  else
+    assert_equals_exact "'$display_name' has no front-channel logout URL (its web origin is not set or not https)" '' "$actual_logout_url"
+  fi
+  if optional_claims_match "$registration_json"; then
+    pass "'$display_name' optional claims are exactly the id token claim login_hint ($OPTIONAL_CLAIMS_FILE)"
+  else
+    fail "'$display_name' optional claims are exactly the id token claim login_hint (got $(json_eval "$registration_json" 'JSON.stringify(value.optionalClaims ?? null)')); $ENTRA_HINT"
   fi
   assert_equals "'$display_name' implicit id token issuance off" 'false' \
     "$(json_eval "$registration_json" 'value.web && value.web.implicitGrantSettings && value.web.implicitGrantSettings.enableIdTokenIssuance')"

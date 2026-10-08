@@ -3,6 +3,7 @@ using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Configuration.AppConfiguration;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Configuration;
@@ -16,7 +17,7 @@ public sealed class InMemoryConfigurationTests
     public async Task Get_SystemInfo_WithInMemoryApplicationName_ReportsTheOverride()
     {
         using var factory = new ErpApiFactory().WithConfiguration(ApplicationNameKey, "ERP-AI-Pro (in-memory)");
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(new Uri("/api/platform/system-info", UriKind.Relative), TestContext.Current.CancellationToken);
 

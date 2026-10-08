@@ -22,14 +22,18 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 // signing out ends every session of that person, on every device and browser and on every instance of the API, at once, and
 // a copy of one of those cookies stays refused after the person signs in again, while a restart of the API ends none. A
 // token cache or sign-out record that cannot be read fails the request instead, and leaves the cookie as it is, so a passing
-// database failure signs nobody out. Every sign-in issues the person's antiforgery tokens, and every sign-out, a refused
-// cookie's included, clears them, so a browser holds tokens only for the person signed in on it.
+// database failure signs nobody out. Every sign-in records the person under the Entra session it came from (EntraSessions),
+// which Entra's front-channel sign-out names; a record that cannot be written fails the sign-in before the cookie is
+// issued, so no session exists that the front-channel sign-out could not end. Every sign-in issues the person's antiforgery
+// tokens, and every sign-out, a refused cookie's included, clears them, so a browser holds tokens only for the person signed
+// in on it.
 internal sealed class SessionCookieEvents(
     TimeProvider timeProvider,
     IOptions<EntraSignInOptions> signIn,
     IProblemDetailsService problemDetails,
     IConfidentialClientApplicationProvider applications,
     SessionRevocations revocations,
+    EntraSessions entraSessions,
     AntiforgeryCookies antiforgeryCookies) : CookieAuthenticationEvents
 {
     public const string SignedInAtItem = "erp.signed-in-at";
@@ -59,7 +63,7 @@ internal sealed class SessionCookieEvents(
         context.Properties.IsPersistent = false;
         context.Properties.Items[SignedInAtItem] = timeProvider.GetUtcNow().ToString("O", CultureInfo.InvariantCulture);
 
-        return Task.CompletedTask;
+        return entraSessions.RecordAsync(context.Principal!, context.HttpContext.RequestAborted);
     }
 
     public override Task SignedIn(CookieSignedInContext context)

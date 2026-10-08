@@ -2,6 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { apiBasePath } from "./shared/api/base-path";
 import { withoutForwardedHeaders } from "./shared/api/forwarded-headers";
+import {
+  loginAddressWithoutForeignReturn,
+  sessionCookieName,
+  signInRedirectFor,
+} from "./shared/auth/page-access";
+import { loginPath, pagePathHeaderName } from "./shared/auth/sign-in-addresses";
 import { readServerEnv, type ServerEnv } from "./shared/config/env.schema";
 import { contentSecurityPolicy, isSecureRequest } from "./shared/security/content-security-policy";
 
@@ -16,11 +22,24 @@ function serverEnv(): ServerEnv {
 }
 
 export function proxy(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
+  const { pathname, search, searchParams } = request.nextUrl;
   if (apiPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.rewrite(new URL(`${pathname}${search}`, serverEnv().apiInternalUrl), {
       request: { headers: withoutForwardedHeaders(request.headers) },
     });
+  }
+
+  const signIn = signInRedirectFor({
+    method: request.method,
+    pathname,
+    search,
+    hasSessionCookie: request.cookies.has(sessionCookieName),
+  });
+  if (signIn !== undefined) return NextResponse.redirect(new URL(signIn, request.url));
+
+  if (pathname === loginPath) {
+    const login = loginAddressWithoutForeignReturn(searchParams);
+    if (login !== undefined) return NextResponse.redirect(new URL(login, request.url));
   }
 
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
@@ -33,6 +52,7 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
+  requestHeaders.set(pagePathHeaderName, `${pathname}${search}`);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);

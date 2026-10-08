@@ -16,7 +16,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Post_DownloadLinks_ReturnsTheContentPathValidForTheLinkLifetime()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Pdf(AttachmentsApi.UniqueToken()), SampleFiles.PdfType, "statement.pdf");
         var lifetime = factory.Services.GetRequiredService<IOptions<AttachmentsOptions>>().Value.DownloadLinkLifetime;
         var before = TimeProvider.System.GetUtcNow();
@@ -32,7 +32,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Post_DownloadLinksWithATrailingSlash_ReturnsAContentPathThatServesTheFile()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text($"trailing slash {AttachmentsApi.UniqueToken()}");
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "slash.txt");
         using var created = await client.PostAsync(AttachmentsApi.Path($"/{attachment.Id}/download-links/"), content: null, TestContext.Current.CancellationToken);
@@ -50,7 +50,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Post_DownloadLinksTwice_ReturnsDistinctTokens()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"two links {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "links.txt");
 
         var first = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
@@ -62,7 +62,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Post_DownloadLinksForAnUnknownId_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.PostAsync(AttachmentsApi.Path($"/{Guid.CreateVersion7()}/download-links"), content: null, TestContext.Current.CancellationToken);
 
@@ -72,7 +72,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentWithTheLink_StreamsTheOriginalBytesAsAnAttachment()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var pdf = SampleFiles.Pdf(token);
         var fileName = $"statement-{token}.pdf";
@@ -96,7 +96,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentOfANonAsciiFileName_NamesItInTheExtendedFileNameParameter()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         const string FileName = "प्रस्ताव-résumé.txt";
         var text = SampleFiles.Text($"नमस्ते, résumé {AttachmentsApi.UniqueToken()}");
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, FileName);
@@ -113,7 +113,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentOfAFileNameWithADoubleQuote_NamesItExactly()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         const string FileName = "quote\"d.txt";
         var file = new ByteArrayContent(SampleFiles.Text($"quoted {AttachmentsApi.UniqueToken()}"));
         file.Headers.ContentType = new MediaTypeHeaderValue(SampleFiles.TextType);
@@ -139,7 +139,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [InlineData("per%20cent.txt")]
     public async Task Get_ContentOfAFileNameWithHeaderDelimiters_NamesItExactly(string fileName)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"delimiters {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, fileName);
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
 
@@ -156,7 +156,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentOfAFileOfSeveralHundredKilobytes_StreamsEveryByte()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var text = SampleFiles.Text(string.Concat(Enumerable.Range(0, 20_000).Select(line => $"{token} line {line}\n")));
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "ledger.txt");
@@ -172,7 +172,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentOfASecondUploadOfTheSameBytes_StreamsThoseBytesUnderItsOwnName()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text($"shared content {AttachmentsApi.UniqueToken()}");
         await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "original.txt");
         var duplicate = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "duplicate.txt");
@@ -188,7 +188,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentTwiceWithinTheLinkLifetime_ServesBothTimes()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text($"read twice {AttachmentsApi.UniqueToken()}");
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "twice.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
@@ -204,7 +204,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentWithATamperedLink_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"tampered {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "tampered.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
         var token = Token(link.Url);
@@ -220,7 +220,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [InlineData("not-a-token-of-the-right-length-at-all-but-still-short")]
     public async Task Get_ContentWithATokenOfTheWrongShape_AnswersNotFound(string token)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"wrong shape {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "shape.txt");
 
         using var response = await client.GetAsync(ContentPath(attachment.Id, token), TestContext.Current.CancellationToken);
@@ -229,31 +229,10 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     }
 
     [Fact]
-    public async Task Get_ContentWithTheLinkOfTheSignedInPersonWhoCreatedIt_StreamsTheFile()
-    {
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
-        var text = SampleFiles.Text($"own link {AttachmentsApi.UniqueToken()}");
-        var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "own.txt");
-        var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
-
-        using var response = await client.GetAsync(new Uri(link.Url, UriKind.Relative), TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(text, await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task Get_ContentWithTheLinkOfAnotherSignedInPerson_AnswersNotFound(bool redeemerSignedIn)
+    public async Task Get_ContentWithTheLinkOfAnotherSignedInPerson_AnswersNotFound()
     {
         using var creator = factory.CreateClient().AsUser(TestUsers.Accountant);
-        using var redeemer = factory.CreateClient();
-        if (redeemerSignedIn)
-        {
-            redeemer.AsUser(TestUsers.Administrator);
-        }
-
+        using var redeemer = factory.CreateClient().AsUser(TestUsers.Administrator);
         var attachment = await AttachmentsApi.UploadAsync(creator, SampleFiles.Text($"someone else {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "private.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(creator, attachment.Id);
 
@@ -265,7 +244,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentOfAnotherAttachmentWithThisLink_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var linked = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"linked {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "linked.txt");
         var other = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"other {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "other.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, linked.Id);
@@ -278,7 +257,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentAfterTheAttachmentWasDeleted_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"deleted {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "deleted.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
         using var deleted = await client.DeleteAsync(AttachmentsApi.Path($"/{attachment.Id}"), TestContext.Current.CancellationToken);
@@ -292,7 +271,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Post_DownloadLinksForADeletedAttachment_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"gone {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "gone.txt");
         using var deleted = await client.DeleteAsync(AttachmentsApi.Path($"/{attachment.Id}"), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
@@ -307,7 +286,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [InlineData(LinkParameter)]
     public async Task Get_ContentWithoutALink_AnswersValidationProblemForTheLink(string query)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(AttachmentsApi.Path($"/{Guid.CreateVersion7()}/content{query}"), TestContext.Current.CancellationToken);
 
@@ -317,7 +296,7 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public async Task Get_ContentWithALinkOverSixtyFourCharacters_AnswersValidationProblemForTheLink()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(ContentPath(Guid.CreateVersion7(), new string('A', 65)), TestContext.Current.CancellationToken);
 

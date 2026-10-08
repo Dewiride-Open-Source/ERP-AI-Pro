@@ -1,5 +1,6 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
@@ -16,8 +17,6 @@ public sealed class LogoutEndpointTests(LogoutEndpointTests.Fixture fixture) : I
     private const string SessionCookie = "__Host-erp-session";
 
     private const string SignedInPath = "/__test/signed-in";
-
-    private const string RemoteSignOutPath = "/api/auth/signout-oidc";
 
     [Fact]
     public async Task Post_LogoutWithASession_ClearsTheCookieAndRedirectsToTheEndSessionEndpoint()
@@ -36,10 +35,24 @@ public sealed class LogoutEndpointTests(LogoutEndpointTests.Fixture fixture) : I
         Assert.Equal(TestIdentityProvider.EndSessionEndpoint.AbsoluteUri, location.GetLeftPart(UriPartial.Path));
         var query = QueryHelpers.ParseQuery(location.Query);
         Assert.Equal($"{TestIdentityProvider.WebOrigin}{AuthPaths.SignedOutCallback}", Assert.Single(query["post_logout_redirect_uri"]));
-        Assert.Equal(AuthPaths.LoginPage, StateOf(Assert.Single(query["state"])!)?.RedirectUri);
+        Assert.Equal(AuthPaths.SignedOutPage, StateOf(Assert.Single(query["state"])!)?.RedirectUri);
         var cleared = Assert.Single(response.Headers.GetValues("Set-Cookie"), cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
         Assert.Contains("expires=Thu, 01 Jan 1970", cleared, StringComparison.OrdinalIgnoreCase);
         await AssertStatusAsync(client, HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Post_LogoutWithASession_SendsTheLoginHintOfThePersonAsTheLogoutHint()
+    {
+        using var client = TestSignIn.CreateClient(fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
+
+        using var response = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        var query = QueryHelpers.ParseQuery(response.Headers.Location!.Query);
+        Assert.Equal(TestUsers.Administrator.LoginHint, Assert.Single(query[SignInEvents.LogoutHintParameter]));
+        Assert.DoesNotContain(Uri.EscapeDataString(TestUsers.Administrator.UserName), response.Headers.Location.Query, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -57,7 +70,7 @@ public sealed class LogoutEndpointTests(LogoutEndpointTests.Fixture fixture) : I
     }
 
     [Fact]
-    public async Task Get_SignedOutCallback_RedirectsToTheSignInPage()
+    public async Task Get_SignedOutCallback_RedirectsToTheSignedOutNoticeOfTheSignInPage()
     {
         using var client = TestSignIn.CreateClient(fixture.Factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
@@ -67,20 +80,20 @@ public sealed class LogoutEndpointTests(LogoutEndpointTests.Fixture fixture) : I
         using var response = await client.GetAsync(new Uri($"{AuthPaths.SignedOutCallback}?state={Uri.EscapeDataString(state!)}", UriKind.Relative), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
-        Assert.Equal(AuthPaths.LoginPage, response.Headers.Location?.OriginalString);
+        Assert.Equal(AuthPaths.SignedOutPage, response.Headers.Location?.OriginalString);
     }
 
     [Fact]
-    public async Task Get_RemoteSignOutPathOfTheHandlerWithASession_LeavesThePersonSignedIn()
+    public async Task Get_FrontChannelSignOutWithOnlyTheSessionCookie_AnswersAValidationProblemAndLeavesThePersonSignedIn()
     {
         using var client = TestSignIn.CreateClient(fixture.Factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
 
-        using var response = await client.GetAsync(new Uri(RemoteSignOutPath, UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(new Uri(AuthPaths.FrontChannelSignOut, UriKind.Relative), TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
-        Assert.Equal(ProblemTypes.ResourceNotFound, problem!.Extensions["code"]?.ToString());
+        Assert.Equal(ProblemTypes.RequestInvalid, problem!.Extensions["code"]?.ToString());
         var cookies = response.Headers.TryGetValues("Set-Cookie", out var values) ? values : [];
         Assert.DoesNotContain(cookies, cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
         await AssertStatusAsync(client, HttpStatusCode.OK);

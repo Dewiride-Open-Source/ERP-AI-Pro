@@ -10,8 +10,9 @@ public sealed class TransportSecurityTests
     private const string SchemePath = "/__test/scheme";
 
     [Theory]
-    [InlineData("Development", "/api/platform/system-info", false, HttpStatusCode.OK)]
-    [InlineData("Production", "/api/platform/system-info", false, HttpStatusCode.OK)]
+    [InlineData("Development", "/api/platform/system-info", true, HttpStatusCode.OK)]
+    [InlineData("Production", "/api/platform/system-info", true, HttpStatusCode.OK)]
+    [InlineData("Production", "/api/platform/system-info", false, HttpStatusCode.Unauthorized)]
     [InlineData("Development", "/api/platform/does-not-exist", true, HttpStatusCode.NotFound)]
     [InlineData("Production", "/api/platform/does-not-exist", true, HttpStatusCode.NotFound)]
     [InlineData("Development", "/api/platform/does-not-exist", false, HttpStatusCode.Unauthorized)]
@@ -48,7 +49,7 @@ public sealed class TransportSecurityTests
     public async Task Get_OverPlainHttpWithAnHttpsPortKnown_IsServedWithoutARedirectAnHstsPolicyOrAServerHeader(string environment)
     {
         await using var factory = ErpApiFactory.ForEnvironment(environment).WithConfiguration("https_port", "443").WithKestrel();
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(new Uri("/api/platform/system-info", UriKind.Relative), TestContext.Current.CancellationToken);
 

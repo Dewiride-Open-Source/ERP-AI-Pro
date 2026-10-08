@@ -2,6 +2,7 @@ using System.Net;
 using System.Reflection;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Info.Endpoints.Responses;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.Info.Endpoints;
 
@@ -11,7 +12,7 @@ public sealed class SystemInfoEndpointsTests : IClassFixture<ErpApiFactory>
 
     public SystemInfoEndpointsTests(ErpApiFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Fact]

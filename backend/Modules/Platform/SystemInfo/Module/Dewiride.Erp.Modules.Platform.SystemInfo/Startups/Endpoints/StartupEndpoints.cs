@@ -16,8 +16,7 @@ internal static class StartupEndpoints
     {
         group.MapGet("/startups", ListAsync)
             .WithName("Platform.SystemInfo.ListStartups")
-            .WithSummary("Lists the most recent starts of the API, newest first.")
-            .AllowAnonymous();
+            .WithSummary("Lists the most recent starts of the API, newest first.");
     }
 
     private static async Task<Results<Ok<RecentStartupsResponse>, ProblemHttpResult>> ListAsync(

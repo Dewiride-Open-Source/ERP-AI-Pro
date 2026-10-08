@@ -83,6 +83,52 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     }
 
     [Fact]
+    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_RecordsTheEntraSessionThatTheFrontChannelSignOutEnds()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+        using var callback = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(TestUsers.Administrator)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Administrator)));
+        using var browser = TestSignIn.CreateClient(_fixture.Factory);
+        using (var signedIn = await GetAccountWithOnlyTheSessionCookieAsync(browser, SessionCookieValueOf(callback)))
+        {
+            Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        }
+
+        using var entra = _fixture.Factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = false });
+        using var signOut = await entra.GetAsync(
+            new Uri($"{AuthPaths.FrontChannelSignOut}?iss={Uri.EscapeDataString(TestIdentityProvider.Issuer)}&sid={Uri.EscapeDataString(TestUsers.Administrator.EntraSessionId)}", UriKind.Relative),
+            TestContext.Current.CancellationToken);
+        using var refused = await GetAccountWithOnlyTheSessionCookieAsync(browser, SessionCookieValueOf(callback));
+
+        Assert.Equal(HttpStatusCode.OK, signOut.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+        Assert.False(await TestSignIn.IsAccountCachedAsync(_fixture.Factory.Services, TestUsers.Administrator));
+    }
+
+    [Fact]
+    public async Task Post_LogoutAfterACompletedCallback_SendsTheLoginHintOfTheIdTokenAsTheLogoutHint()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+        using var callback = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(TestUsers.Administrator)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Administrator)));
+
+        using var logout = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Found, callback.StatusCode);
+        Assert.Equal(HttpStatusCode.Found, logout.StatusCode);
+        Assert.Equal(TestIdentityProvider.EndSessionEndpoint.AbsoluteUri, logout.Headers.Location?.GetLeftPart(UriPartial.Path));
+        Assert.Equal(TestUsers.Administrator.LoginHint, Single(QueryHelpers.ParseQuery(logout.Headers.Location!.Query), SignInEvents.LogoutHintParameter));
+    }
+
+    [Fact]
     public async Task Post_CallbackWithoutClientInfo_IssuesASessionTheNextRequestRefusesAndClears()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);

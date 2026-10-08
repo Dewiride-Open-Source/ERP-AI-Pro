@@ -38,6 +38,8 @@ internal static class AuthEndpoints
 
     public const string RenewSessionRouteName = "Auth.RenewSession";
 
+    public const string FrontChannelSignOutRouteName = "Auth.FrontChannelSignOut";
+
     public const string FetchModeHeader = "Sec-Fetch-Mode";
 
     public const string FetchDestinationHeader = "Sec-Fetch-Dest";
@@ -105,6 +107,16 @@ internal static class AuthEndpoints
             .WithMetadata(new SessionRenewalMetadata(Renews: true))
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
+
+        // Entra loads this from a hidden frame of its own site, which carries no session cookie, so the route is anonymous and
+        // finds the person from the Entra session it names. It is a protocol callback like those the OpenID Connect handler
+        // answers, so the API client has no method for it, and it answers every well-formed request alike, so the answer
+        // never says whether a session ended.
+        group.MapGet("/signout-oidc", SignOutFrontChannelAsync)
+            .WithName(FrontChannelSignOutRouteName)
+            .WithSummary("Ends every session of the person whose Microsoft Entra ID session the front-channel sign-out names.")
+            .ExcludeFromDescription()
+            .AllowAnonymous();
     }
 
     private static Results<RedirectHttpResult, ChallengeHttpResult, ProblemHttpResult> Login([AsParameters] LoginRequest login, HttpContext httpContext)
@@ -134,8 +146,15 @@ internal static class AuthEndpoints
         }
 
         return TypedResults.SignOut(
-            new AuthenticationProperties { RedirectUri = AuthPaths.LoginPage },
+            new AuthenticationProperties { RedirectUri = AuthPaths.SignedOutPage },
             [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
+    }
+
+    private static async Task<Ok> SignOutFrontChannelAsync([AsParameters] FrontChannelSignOutRequest request, FrontChannelSignOut signOut, CancellationToken cancellationToken)
+    {
+        await signOut.SignOutAsync(request.Iss!, request.Sid!, cancellationToken).ConfigureAwait(false);
+
+        return TypedResults.Ok();
     }
 
     // A navigation another site starts carries the SameSite=Lax session cookie but not the SameSite=Strict cookie token, so

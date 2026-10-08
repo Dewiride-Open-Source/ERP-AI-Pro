@@ -3,6 +3,7 @@ using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Responses;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints;
 
@@ -11,7 +12,7 @@ public sealed class ListAttachmentsTests(ErpApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Get_List_FilteredByFileName_AnswersThePagingEnvelopeNewestFirst()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var (text, pdf, png) = await UploadThreeAsync(client, token);
 
@@ -33,7 +34,7 @@ public sealed class ListAttachmentsTests(ErpApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Get_List_SortedByFileNameAscending_OrdersByName()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var (text, pdf, png) = await UploadThreeAsync(client, token);
 
@@ -45,7 +46,7 @@ public sealed class ListAttachmentsTests(ErpApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Get_List_SortedBySizeDescending_OrdersByTheOriginalFileSize()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var (text, pdf, png) = await UploadThreeAsync(client, token);
 
@@ -58,7 +59,7 @@ public sealed class ListAttachmentsTests(ErpApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Get_List_FilteredByContentType_ReturnsOnlyThatType()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var (_, pdf, _) = await UploadThreeAsync(client, token);
 
@@ -71,7 +72,7 @@ public sealed class ListAttachmentsTests(ErpApiFactory factory) : IClassFixture<
     [Fact]
     public async Task Get_List_SecondPageOfTwo_ReturnsTheOldestAttachment()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var (text, _, _) = await UploadThreeAsync(client, token);
 
@@ -95,7 +96,7 @@ public sealed class ListAttachmentsTests(ErpApiFactory factory) : IClassFixture<
     [InlineData("pageSize=201", "query.invalid-page")]
     public async Task Get_List_QueryOutsideTheAllowLists_AnswersTheQueryErrorCode(string query, string code)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(ListPath(query), TestContext.Current.CancellationToken);
 

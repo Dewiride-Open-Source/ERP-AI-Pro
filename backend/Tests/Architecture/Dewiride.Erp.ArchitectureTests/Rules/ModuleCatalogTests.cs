@@ -15,22 +15,11 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         "/healthz/live",
         "/healthz/ready",
         "/api/auth/login",
+        "/api/auth/signout-oidc",
         "/openapi/{documentName}.json",
     ];
 
     private static readonly string[] DevelopmentOnlyRoutePrefixes = ["/scalar"];
-
-    private static readonly string[] TransitionalAnonymousRoutes =
-    [
-        "/api/platform/system-info",
-        "/api/platform/system-info/startups",
-        "/api/platform/attachments",
-        "/api/platform/attachments/policy",
-        "/api/platform/attachments/{id:guid}",
-        "/api/platform/attachments/{id:guid}/download-links",
-        "/api/platform/attachments/{id:guid}/content",
-        "/api/platform/features",
-    ];
 
     private static readonly string[] GeneratedBaseTypes = ["Microsoft.EntityFrameworkCore.Migrations.Migration", "Microsoft.EntityFrameworkCore.Infrastructure.ModelSnapshot"];
 
@@ -128,10 +117,10 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
     }
 
     [Fact]
-    public void AnonymousEndpoints_AreOnThePermanentOrTheTransitionalList()
+    public void AnonymousEndpoints_AreOnThePermanentList()
     {
         var offenders = AnonymousRoutes()
-            .Where(route => !PermanentAnonymousRoutes.Contains(route, StringComparer.Ordinal) && !TransitionalAnonymousRoutes.Contains(route, StringComparer.Ordinal))
+            .Where(route => !PermanentAnonymousRoutes.Contains(route, StringComparer.Ordinal))
             .Where(route => !DevelopmentOnlyRoutePrefixes.Any(prefix => route.StartsWith(prefix, StringComparison.Ordinal)))
             .ToList();
 
@@ -154,7 +143,7 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
     {
         var anonymous = AnonymousRoutes();
 
-        var stale = PermanentAnonymousRoutes.Concat(TransitionalAnonymousRoutes)
+        var stale = PermanentAnonymousRoutes
             .Where(route => !anonymous.Contains(route, StringComparer.Ordinal))
             .Concat(DevelopmentOnlyRoutePrefixes.Where(prefix => !anonymous.Any(route => route.StartsWith(prefix, StringComparison.Ordinal))))
             .ToList();

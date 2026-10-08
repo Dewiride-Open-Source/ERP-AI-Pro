@@ -12,10 +12,10 @@ internal static class FeatureEndpoints
     {
         api.MapGroup("/platform/features")
             .WithTags("Platform.Features")
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
             .MapGet(string.Empty, ListAsync)
             .WithName("Platform.Features.List")
-            .WithSummary("Returns every feature flag of the catalog with its evaluated state.")
-            .AllowAnonymous();
+            .WithSummary("Returns every feature flag of the catalog with its evaluated state.");
     }
 
     private static async Task<Ok<FeaturesResponse>> ListAsync(

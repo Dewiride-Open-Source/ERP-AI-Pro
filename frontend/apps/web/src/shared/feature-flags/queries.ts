@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 
 import { callApi } from "@/shared/api/client";
@@ -14,7 +15,8 @@ export const getFeatureFlags = cache(async (): Promise<FeatureFlags> => {
         name && typeof enabled === "boolean" ? [[name, enabled] as const] : [],
       ),
     );
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error);
     return new Map();
   }
 });

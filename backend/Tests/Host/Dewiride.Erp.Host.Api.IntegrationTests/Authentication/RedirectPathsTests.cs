@@ -1,11 +1,14 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 
-// The Entra app registrations get their redirect URIs, and the store its identity settings, from the graph.sh script; a
-// path or key that differs from the API's would make Entra refuse the sign-in or leave the API without its settings.
+// The Entra app registrations get their redirect URIs, front-channel logout URL and optional claims, and the store its
+// identity settings, from the graph.sh script; a path, claim or key that differs from the API's would make Entra refuse the
+// sign-in, call a route the API does not serve, leave out the hint the sign-out sends, or leave the API without its settings.
 public sealed partial class RedirectPathsTests
 {
     private static readonly string GraphScript = File.ReadAllText(RepositoryPaths.Combine("scripts", "azure", "lib", "graph.sh"));
@@ -22,9 +25,26 @@ public sealed partial class RedirectPathsTests
     }
 
     [Fact]
-    public void Registration_DeclaresNoFrontChannelLogoutUrl()
+    public void RegisteredFrontChannelSignOutPath_IsTheFrontChannelSignOutRouteOfTheApi()
     {
-        Assert.DoesNotContain("logoutUrl", GraphScript, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(AuthPaths.FrontChannelSignOut, ReadonlyValue("FRONT_CHANNEL_SIGN_OUT_PATH"));
+    }
+
+    [Fact]
+    public void RegisteredOptionalClaims_AreExactlyTheLoginHintOfIdTokens()
+    {
+        using var claims = JsonDocument.Parse(File.ReadAllText(RepositoryPaths.Combine(ReadonlyValue("OPTIONAL_CLAIMS_FILE").Split('/'))));
+
+        var tokenTypes = claims.RootElement.EnumerateObject().ToDictionary(tokenType => tokenType.Name, tokenType => tokenType.Value.EnumerateArray().ToList(), StringComparer.Ordinal);
+
+        Assert.Equal(["accessToken", "idToken", "saml2Token"], tokenTypes.Keys.Order(StringComparer.Ordinal));
+        Assert.Empty(tokenTypes["accessToken"]);
+        Assert.Empty(tokenTypes["saml2Token"]);
+        var loginHint = Assert.Single(tokenTypes["idToken"]);
+        Assert.Equal(SignInEvents.LoginHintClaim, loginHint.GetProperty("name").GetString());
+        Assert.Equal(JsonValueKind.Null, loginHint.GetProperty("source").ValueKind);
+        Assert.False(loginHint.GetProperty("essential").GetBoolean());
+        Assert.Empty(loginHint.GetProperty("additionalProperties").EnumerateArray());
     }
 
     [Theory]
@@ -33,10 +53,15 @@ public sealed partial class RedirectPathsTests
     [InlineData("IDENTITY_WEB_ORIGIN_KEY", ErpApiFactory.IdentityWebOriginKey)]
     public void RegistrationScriptKeys_AreTheSettingsTheApiBinds(string variable, string key)
     {
-        var match = Regex.Match(GraphScript, $"^readonly {variable}='(?<key>[^']+)'\r?$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
+        Assert.Equal(key, ReadonlyValue(variable));
+    }
 
+    private static string ReadonlyValue(string variable)
+    {
+        var match = Regex.Match(GraphScript, $"^readonly {variable}='(?<value>[^']+)'\r?$", RegexOptions.Multiline | RegexOptions.CultureInvariant);
         Assert.True(match.Success, $"scripts/azure/lib/graph.sh declares no readonly {variable}.");
-        Assert.Equal(key, match.Groups["key"].Value);
+
+        return match.Groups["value"].Value;
     }
 
     [GeneratedRegex(@"^readonly REDIRECT_PATHS=\((?<paths>[^)]*)\)\r?$", RegexOptions.Multiline | RegexOptions.CultureInvariant)]

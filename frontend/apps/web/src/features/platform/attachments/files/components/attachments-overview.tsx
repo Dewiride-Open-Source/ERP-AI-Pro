@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@dewiride/erp-ui/components/ui/card";
 import { FilesIcon, UploadIcon } from "lucide-react";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 
 import { ApiError } from "@/shared/api/problem-details";
 import { listApiParameters } from "@/shared/lists/list-api";
@@ -30,6 +30,9 @@ export async function AttachmentsOverview({ searchParameters }: { searchParamete
     getUploadPolicy(),
     getAttachments(listApiParameters(query, attachmentsList)),
   ]);
+  for (const result of [policy, attachments]) {
+    if (result.status === "rejected") unstable_rethrow(result.reason);
+  }
   if (attachments.status === "fulfilled") {
     const totalPages = attachments.value.totalPages ?? 0;
     if (query.page > 1 && query.page > totalPages) {

@@ -30,12 +30,12 @@ test.describe("app shell navigation with the system-info module disabled", () =>
           - paragraph: "404"
           - heading "This page does not exist" [level=1]
           - paragraph: The link may be outdated or the page may have moved.
-          - link "Go to sign in"
+          - link "Go to the home page"
       `);
       await capture("module-disabled");
 
-      await page.getByRole("link", { name: "Go to sign in" }).click();
-      await expect(page).toHaveURL(/\/login$/);
+      await page.getByRole("link", { name: "Go to the home page" }).click();
+      await expect(page).toHaveURL((url) => url.pathname === "/");
     },
   );
 });

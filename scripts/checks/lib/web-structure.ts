@@ -13,7 +13,7 @@ const segmentFiles = new Set([
   "default.tsx",
   "route.ts",
 ]);
-const rootFiles = new Set(["layout.tsx", "page.tsx", "error.tsx", "not-found.tsx", "global-error.tsx"]);
+const rootFiles = new Set(["layout.tsx", "error.tsx", "not-found.tsx", "global-error.tsx"]);
 const segmentMetadataFile =
   /^(?:icon\d*\.(?:ico|jpe?g|png|svg)|icon\.tsx?|apple-icon\d*\.(?:jpe?g|png)|apple-icon\.tsx?|(?:opengraph|twitter)-image\.(?:jpe?g|png|gif|alt\.txt|tsx?)|sitemap\.(?:xml|ts))$/;
 const rootMetadataFile = /^(?:favicon\.ico|robots\.(?:txt|ts)|manifest\.(?:json|webmanifest|ts))$/;
@@ -84,7 +84,7 @@ function checkApp(segments: readonly string[], report: Report): void {
       report(
         path,
         "S3",
-        "the root of app/ holds only layout.tsx, the redirect page.tsx, error.tsx, global-error.tsx, not-found.tsx and metadata files",
+        "the root of app/ holds only layout.tsx, error.tsx, global-error.tsx, not-found.tsx and metadata files; the home page is (app)/page.tsx",
       );
     }
     return;
