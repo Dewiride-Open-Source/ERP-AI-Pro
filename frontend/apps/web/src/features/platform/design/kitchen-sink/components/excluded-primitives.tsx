@@ -38,12 +38,6 @@ const excludedPrimitives: readonly {
   decidedIn: RoadmapItem | undefined;
 }[] = [
   {
-    primitives: "sidebar",
-    needs:
-      "Its generated use-mobile hook sets state inside an effect, which the React hooks lint rules refuse.",
-    decidedIn: authenticatedShell,
-  },
-  {
     primitives: "combobox",
     needs:
       "@base-ui/react; the design system builds on Radix only, so the combobox under Forms is built in-house on the popover.",
@@ -55,7 +49,12 @@ const excludedPrimitives: readonly {
       "Not a registry item but a recipe: calendar inside a popover. The date and date-range inputs under Forms are built that way.",
     decidedIn: formsKit,
   },
-  { primitives: "command", needs: "cmdk, which is not an approved package.", decidedIn: authenticatedShell },
+  {
+    primitives: "command",
+    needs:
+      "cmdk, which is not an approved package; the command palette under Composites, opened with Ctrl+K in the shell, is built in-house.",
+    decidedIn: authenticatedShell,
+  },
   {
     primitives: "drawer",
     needs: "vaul, which is not an approved package; the shell uses sheet for mobile navigation.",

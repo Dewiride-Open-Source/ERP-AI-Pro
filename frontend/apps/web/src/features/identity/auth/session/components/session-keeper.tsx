@@ -192,7 +192,7 @@ export function SessionKeeper() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <SignOutButton variant="outline" />
+            <SignOutButton />
             <AlertDialogCancel variant="default">Stay signed in</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -243,7 +243,7 @@ export function SessionKeeper() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <SignOutButton variant="outline" />
+            <SignOutButton />
             <AlertDialogAction asChild>
               <a ref={signInAgain} href={signInHref(returnPath)}>
                 Sign in again

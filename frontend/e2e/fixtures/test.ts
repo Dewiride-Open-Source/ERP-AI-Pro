@@ -58,6 +58,8 @@ const accessibilityTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa
 
 const blockingImpacts: ReadonlySet<string> = new Set(["serious", "critical"]);
 
+const cancelledRouterFetch = /\?_rsc=[\w-]+ due to access control checks\.$/;
+
 // Radix marks everything outside an open modal layer with aria-hidden and data-aria-hidden and keeps focus inside the
 // layer, so that content cannot be reached while the layer is open and is scanned in the captures taken without it. An open
 // Radix navigation menu renders an aria-hidden, focusable span beside its trigger that hands focus to the open content.
@@ -65,6 +67,13 @@ const excludedFromScans = [
   "[data-aria-hidden='true']",
   "[data-slot='navigation-menu-item'] > span[aria-hidden='true']",
 ];
+
+// Playwright's WebKit port on Windows crashes or stalls in about half of the client navigations that run a view transition,
+// while Linux WebKit, which CI runs, does not, so the transitions keep their coverage in CI. A browser reached through
+// PW_TEST_CONNECT_WS_ENDPOINT runs on the remote server, whatever the runner's system.
+export function changesPagesWithoutTransitions(browserName: string): boolean {
+  return browserName === "webkit" && process.platform === "win32" && !process.env.PW_TEST_CONNECT_WS_ENDPOINT;
+}
 
 // Every page outside the sign-in page needs a session, so a test signs a new person of a persona in unless it sets persona
 // to null to visit as nobody. No test may reach Microsoft, so every request to its sign-in origin is refused before it
@@ -74,7 +83,12 @@ export const test = base.extend<Fixtures>({
   persona: ["accountant", { option: true }],
   expectedConsoleError: [undefined, { option: true }],
 
-  context: async ({ context, persona }, use) => {
+  context: async ({ context, persona, browserName }, use) => {
+    if (changesPagesWithoutTransitions(browserName)) {
+      await context.addInitScript(() => {
+        Reflect.deleteProperty(Document.prototype, "startViewTransition");
+      });
+    }
     await context.route(`${microsoftSignInOrigin}/**`, (route) => route.abort());
     if (persona !== null) signIns.set(context, await signIn(context.request, persona));
     await use(context);
@@ -95,7 +109,11 @@ export const test = base.extend<Fixtures>({
   consoleErrors: [
     async ({ page, expectedConsoleError }, use) => {
       const errors: string[] = [];
-      const isExpected = (text: string) => expectedConsoleError?.test(text) ?? false;
+      // WebKit reports a router fetch that a navigation cancels as an access-control failure, which Playwright raises as a
+      // page error, and the shell prefetches its links on every page, so a test that loads one page after another can cancel
+      // one; a router fetch goes to the page's own origin and cannot fail an access-control check otherwise.
+      const isExpected = (text: string) =>
+        cancelledRouterFetch.test(text) || (expectedConsoleError?.test(text) ?? false);
       page.on("console", (message) => {
         if (message.type() === "error" && !isExpected(message.text())) errors.push(message.text());
       });
@@ -195,6 +213,25 @@ export async function tabOntoLink(page: Page, link: Locator): Promise<void> {
   if (page.context().browser()?.browserType().name() === "webkit") await link.focus();
   else await page.keyboard.press("Tab");
   await expect(link).toBeFocused();
+}
+
+export async function settleAnimations(target: Locator): Promise<void> {
+  await target.evaluate(async (element) => {
+    await Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+  });
+}
+
+export async function centreOf(target: Locator): Promise<{ x: number; y: number }> {
+  const box = await target.boundingBox();
+  expect(box, "bounding box").not.toBeNull();
+  return { x: (box?.x ?? 0) + (box?.width ?? 0) / 2, y: (box?.y ?? 0) + (box?.height ?? 0) / 2 };
+}
+
+export async function holdShortcut(page: Page, key: string, { repeats }: { repeats: number }): Promise<void> {
+  await page.keyboard.down("ControlOrMeta");
+  for (let keydown = 0; keydown <= repeats; keydown += 1) await page.keyboard.down(key);
+  await page.keyboard.up(key);
+  await page.keyboard.up("ControlOrMeta");
 }
 
 // A capture shows the page as a person meets it once it works, so it waits until no component still shows its server-rendered

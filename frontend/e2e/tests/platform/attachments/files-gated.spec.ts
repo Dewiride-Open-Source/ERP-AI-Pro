@@ -14,7 +14,7 @@ test.describe("attachments page with the attachments module disabled", () => {
 
   forEachTheme(
     "hides the module and answers not found for its page inside the shell",
-    async ({ page, capture }, isMobile) => {
+    async ({ page, capture }) => {
       const shell = new AppShell(page);
 
       const response = await page.goto("/platform/attachments");
@@ -22,10 +22,11 @@ test.describe("attachments page with the attachments module disabled", () => {
       expect(response?.status()).toBe(404);
       await expect(shell.banner).toBeVisible();
       await expect(page.getByRole("heading", { name: "This page does not exist" })).toBeVisible();
-      if (!isMobile) {
-        await expect(shell.primaryNavigation).toBeAttached();
-        await expect(shell.navigationLink("Attachments")).toHaveCount(0);
-      }
+      await shell.openNavigation();
+      await expect(shell.primaryNavigation).toBeVisible();
+      await expect(shell.navigationLink("Attachments")).toHaveCount(0);
+      await expect(shell.primaryNavigation.getByRole("link")).toHaveText(["Home"]);
+      await shell.closeDrawer();
       await capture("attachments-disabled");
     },
   );

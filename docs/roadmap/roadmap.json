@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-10-08",
+  "updatedOn": "2026-10-09",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -913,13 +913,21 @@
           "id": "authentication-authenticated-application-shell",
           "title": "Authenticated application shell",
           "scope": "Implement the (app) layout with a collapsible sidebar generated from a typed, permission-gated module/feature navigation registry, top bar with command palette (Ctrl+K), breadcrumbs, user menu and theme toggle, responsive drawer navigation on phones, and React ViewTransition route transitions, covered by the nav-crawl e2e on desktop and mobile in light and dark with screenshots.",
-          "status": "planned",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
-          "acceptance": [],
+          "acceptance": [
+            "Every page of the signed-in area renders the shell: a sidebar built from the typed navigation registry, grouped by area, with Home and every enabled module entry (gated by its feature flag; permission gating arrives with user-management-roles-and-permissions) and the current page marked with aria-current. On desktop it collapses to icons through the menu button or Ctrl/Cmd+B and keeps the state across reloads; below 768 px it is a drawer opened from the top bar that closes on navigation and on Escape.",
+            "The top bar holds the menu button, breadcrumbs of the navigation hierarchy (Home, area, page, with the current page marked), the Ctrl/Cmd+K command palette, the theme toggle and the user menu. The command palette is in-house (owner decision of 2026-10-09): it searches the pages of the registry, moves with the arrow keys, opens a page with Enter and returns focus on Escape. The user menu shows the person's name and user name and signs out through the sign-out form, which fills the request token when it is sent; SessionKeeper stays on every page.",
+            "A navigation between pages runs a React ViewTransition page transition on the motion tokens (instant under reduced motion) while the sidebar and the top bar stay still; the CSS page entrance it replaces is removed.",
+            "The shadcn sidebar primitive is installed with its use-mobile hook on useSyncExternalStore (recorded in the patch register), @dewiride/erp-ui exports ./hooks/*, and the kitchen sink shows the sidebar and the command palette.",
+            "Playwright covers the sidebar, the drawer, the breadcrumbs, the command palette, the user menu and sign-out on every project, and the navigation crawl visits every registry entry through the sidebar on desktop and the drawer on mobile, in light and dark, with screenshots, axe scans and no console errors."
+          ],
           "tags": [],
           "dependsOn": [],
-          "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): the shadcn sidebar primitive is not installed because its generated hooks/use-mobile.ts fails react-hooks/set-state-in-effect; this item installs it and resolves that (a useSyncExternalStore media-query hook, recorded in the patch register of docs/architecture/design-system.md) and adds the ./hooks/* export of @dewiride/erp-ui. The shell keeps the tokens h-header, px-gutter, max-w-page and z-(--layer-sticky), and html scroll-padding-top already reserves the header height for focus and anchors. From authentication-web-login-page-and-session-integration (ADR-0036): AppShell takes the account area (AccountArea: SignOutButton and SessionKeeper on every page, the person's name once the session was read) in its account slot; the user menu replaces that area and keeps the sign-out form, which fills __RequestVerificationToken when it is sent, and SessionKeeper; the start page at / lists the navigation entries with their descriptions, and the wordmark and the not-found page lead home."
+          "startedOn": "2026-10-09",
+          "completedOn": "2026-10-09",
+          "notes": "The (app) shell of ADR-0037: the shadcn sidebar (use-mobile on useSyncExternalStore, the drawer named Navigation) from the navigation registry, grouped by area, collapsing to icons from md through the Navigation button or Ctrl/Cmd+B and kept in the sidebar_state cookie, and a drawer below md that returns focus; breadcrumbs of the registry trail; the in-house CommandPalette on Ctrl/Cmd+K over Home and the enabled entries (owner decision of 2026-10-09); the user menu with the sign-out form outside it; React ViewTransition page transitions keyed by the path in place of the CSS entrance."
         },
         {
           "id": "authentication-login-hardening",
@@ -973,7 +981,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031, owner decision of 2026-09-29): require platform.attachments.files.upload, .read and .delete on the seven attachment routes, add platform.system-info permissions to the SystemInfoModule descriptor and require them, show navigation entries only to holders of their read permissions (owner expectation of 2026-09-27), and re-check the permissions in the attachment Server Functions. From `authentication-session-endpoints-openapi-security-and-bearer` (ADR-0034): add the person's permissions to CurrentUserResponse of GET /api/auth/me, which has no placeholder member for them; a permission check on a route that takes bearer tokens reads the holder BearerTokenClaims.HolderOf gives: a person's permissions follow from their app roles and an application's from its application roles, and a person's roles never count as an application's. From `authentication-test-authentication-infrastructure` (ADR-0035): PersonaSignIn of the end-to-end API host signs in people that exist only in the token cache; once users and permissions are stored, it must create the person and grant the permissions of the persona in the same request, and a persona without permissions joins accountant and administrator for the refusal paths. From authentication-web-login-page-and-session-integration (ADR-0036): requireSignedInPerson() (shared/auth/session.ts) is the first statement of every Server Function (lint rule X4), so the permission check goes beside it; filter the start page cards with the navigation entries; the person it returns carries the roles the permissions will be derived from."
+          "notes": "From `authentication-oidc-bff-in-the-api` (ADR-0031, owner decision of 2026-09-29): require platform.attachments.files.upload, .read and .delete on the seven attachment routes, add platform.system-info permissions to the SystemInfoModule descriptor and require them, show navigation entries only to holders of their read permissions (owner expectation of 2026-09-27), and re-check the permissions in the attachment Server Functions. From `authentication-session-endpoints-openapi-security-and-bearer` (ADR-0034): add the person's permissions to CurrentUserResponse of GET /api/auth/me, which has no placeholder member for them; a permission check on a route that takes bearer tokens reads the holder BearerTokenClaims.HolderOf gives: a person's permissions follow from their app roles and an application's from its application roles, and a person's roles never count as an application's. From `authentication-test-authentication-infrastructure` (ADR-0035): PersonaSignIn of the end-to-end API host signs in people that exist only in the token cache; once users and permissions are stored, it must create the person and grant the permissions of the persona in the same request, and a persona without permissions joins accountant and administrator for the refusal paths. From authentication-web-login-page-and-session-integration (ADR-0036): requireSignedInPerson() (shared/auth/session.ts) is the first statement of every Server Function (lint rule X4), so the permission check goes beside it; filter the start page cards with the navigation entries; the person it returns carries the roles the permissions will be derived from. From authentication-authenticated-application-shell (ADR-0037): AppShell filters the registry once for the sidebar, the command palette and the breadcrumbs, and StartPage filters its cards; NavigationEntry has no permission member, so add the read permission of each entry with the catalogue and filter in those two places."
         },
         {
           "id": "user-management-departments-designations-and-reporting-lines",

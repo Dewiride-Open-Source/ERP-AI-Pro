@@ -51,5 +51,6 @@
 | [0034](adr/0034-session-endpoints-bearer-tokens-per-route-and-the-security-description.md) | Session endpoints, bearer tokens per route and the security description |
 | [0035](adr/0035-signed-in-browser-tests-through-an-end-to-end-api-host.md) | Signed-in browser tests through an end-to-end API host |
 | [0036](adr/0036-web-sign-in-the-session-in-the-browser-and-single-sign-out.md) | Web sign-in, the session in the browser and single sign-out |
+| [0037](adr/0037-the-authenticated-application-shell.md) | The authenticated application shell |
 
 New decisions use [0000-template.md](adr/0000-template.md).

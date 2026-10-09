@@ -27,7 +27,22 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@dewiride/erp-ui/components/ui/pagination";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuBadge,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSkeleton,
+} from "@dewiride/erp-ui/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dewiride/erp-ui/components/ui/tabs";
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
+import { BanknoteIcon, FileTextIcon, ReceiptIcon, UsersIcon } from "lucide-react";
 import { useState, type MouseEvent } from "react";
 
 import { Specimen, SpecimenGrid, SpecimenRow } from "../specimen";
@@ -111,37 +126,112 @@ export function NavigationShowcase() {
         <PagedList />
       </Specimen>
 
+      <Specimen
+        title="Sidebar"
+        description="The shell's navigation: a labelled group, a count, the current page marked, an entry that is not open and one still loading. In the shell it collapses to icons and becomes a drawer on phones."
+      >
+        <SidebarSpecimen />
+      </Specimen>
+
       <Specimen title="Navigation menu" description="Menus of links that open on hover, click or keyboard.">
-        <NavigationMenu>
-          <NavigationMenuList>
-            {menuGroups.map((group) => (
-              <NavigationMenuItem key={group.title}>
-                <NavigationMenuTrigger>{group.title}</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid gap-1 md:w-64">
-                    {group.links.map((link) => (
-                      <li key={link.href}>
-                        <NavigationMenuLink asChild>
-                          <a href={link.href} className="grid gap-0.5">
-                            <span className="font-medium">{link.title}</span>
-                            <span className="text-caption text-muted-foreground">{link.description}</span>
-                          </a>
-                        </NavigationMenuLink>
-                      </li>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            ))}
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                <a href="#excluded">Excluded</a>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+        <NavigationMenuSpecimen />
       </Specimen>
     </SpecimenGrid>
+  );
+}
+
+function SidebarSpecimen() {
+  const hydrated = useHydrated();
+
+  return (
+    <div
+      className="h-80 overflow-hidden rounded-lg border"
+      data-testid="navigation-sidebar"
+      data-hydrating={hydrated ? undefined : ""}
+    >
+      <Sidebar collapsible="none" className="h-full">
+        <SidebarHeader className="px-4 pt-3 text-sm font-semibold">Acme Private Limited</SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel id="navigation-sidebar-finance">Finance</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu aria-labelledby="navigation-sidebar-finance">
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive>
+                    <a href="#navigation" aria-current="page">
+                      <FileTextIcon aria-hidden />
+                      <span>Invoices</span>
+                    </a>
+                  </SidebarMenuButton>
+                  <SidebarMenuBadge>12</SidebarMenuBadge>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="#data-display">
+                      <ReceiptIcon aria-hidden />
+                      <span>Credit notes</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="#composites">
+                      <UsersIcon aria-hidden />
+                      <span>Customers</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton disabled>
+                    <BanknoteIcon aria-hidden />
+                    <span>Payments</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                {hydrated ? (
+                  <SidebarMenuItem data-testid="navigation-sidebar-loading">
+                    <SidebarMenuSkeleton showIcon />
+                    <span className="sr-only">Loading</span>
+                  </SidebarMenuItem>
+                ) : null}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>
+    </div>
+  );
+}
+
+function NavigationMenuSpecimen() {
+  return (
+    <NavigationMenu>
+      <NavigationMenuList>
+        {menuGroups.map((group) => (
+          <NavigationMenuItem key={group.title}>
+            <NavigationMenuTrigger>{group.title}</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="grid gap-1 md:w-64">
+                {group.links.map((link) => (
+                  <li key={link.href}>
+                    <NavigationMenuLink asChild>
+                      <a href={link.href} className="grid gap-0.5">
+                        <span className="font-medium">{link.title}</span>
+                        <span className="text-caption text-muted-foreground">{link.description}</span>
+                      </a>
+                    </NavigationMenuLink>
+                  </li>
+                ))}
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        ))}
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+            <a href="#excluded">Excluded</a>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 }
 

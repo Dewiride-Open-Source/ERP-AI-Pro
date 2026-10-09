@@ -8,7 +8,6 @@ import {
   lastEnabledIndex,
   nextEnabledIndex,
   rememberChosenOption,
-  searchText,
   type ComboboxOption,
 } from "./combobox-options.ts";
 
@@ -19,11 +18,6 @@ const categories: readonly ComboboxOption[] = [
   { value: "freight", label: "Freight", disabled: true },
   { value: "software", label: "Software licences" },
 ];
-
-test("searchText_AccentsCaseAndOuterSpaces_AreRemoved", () => {
-  assert.equal(searchText("  Café  "), "cafe");
-  assert.equal(searchText("ÉLAN"), "elan");
-});
 
 test("filterComboboxOptions_Query_MatchesLabelsIgnoringCaseAndAccents", () => {
   assert.deepEqual(

@@ -18,7 +18,7 @@ export type ComboboxListProps = {
   emptyMessage: string;
   optionId: (index: number) => string;
   onSelect: (option: ComboboxOption) => void;
-  onActivate: (option: ComboboxOption) => void;
+  onActivate: (option: ComboboxOption, pointer: { x: number; y: number }) => void;
   "aria-labelledby"?: string | undefined;
   "aria-label"?: string | undefined;
 };
@@ -96,10 +96,10 @@ export function ComboboxList({
             data-active={active || undefined}
             data-checked={chosen || undefined}
             onClick={() => onSelect(option)}
-            onMouseMove={() => {
-              if (!option.disabled && !active) onActivate(option);
+            onMouseMove={(event) => {
+              if (!option.disabled && !active) onActivate(option, { x: event.clientX, y: event.clientY });
             }}
-            className="flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm select-none aria-disabled:opacity-50 data-active:bg-accent data-active:text-accent-foreground data-active:**:text-accent-foreground"
+            className="flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm select-none aria-disabled:opacity-50 data-active:bg-accent data-active:text-accent-foreground data-active:outline-2 data-active:-outline-offset-2 data-active:outline-ring data-active:**:text-accent-foreground"
           >
             <span className="grid min-w-0 flex-1 gap-0.5">
               <span className="truncate">{option.label}</span>

@@ -29,7 +29,7 @@ export function DataTableColumnsMenu({
   onVisibleChange: (columnId: string, visible: boolean) => void;
 }) {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"

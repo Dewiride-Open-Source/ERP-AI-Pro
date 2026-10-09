@@ -469,6 +469,9 @@ test.describe("attachments page", () => {
         await attachments.goto(query);
         await expect(attachments.row(file.name)).toBeVisible();
       } finally {
+        // The open page renews its session once it has loaded, and a sign-in through the same browser context while that
+        // renewal is under way leaves the page sending one person's request token with the next person's cookie.
+        await page.goto("about:blank");
         await signIn(context.request, "accountant");
         await deleteLeftoverAttachments(api, [id]);
       }
@@ -509,10 +512,6 @@ test.describe("attachments page", () => {
   });
 
   test.describe("across pages", () => {
-    // WebKit reports a router prefetch that a navigation cancels as an access-control failure, and this test navigates while
-    // the previous page is still prefetching its links; a same-origin request cannot fail an access-control check otherwise.
-    test.use({ expectedConsoleError: /\?_rsc=[\w-]+ due to access control checks\.$/ });
-
     test("moves between pages and brings a page outside the list back to one that exists", async ({
       page,
       api,

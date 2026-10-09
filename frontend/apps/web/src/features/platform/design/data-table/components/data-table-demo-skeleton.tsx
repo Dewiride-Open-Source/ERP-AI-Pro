@@ -14,12 +14,12 @@ export function DataTableDemoSkeleton() {
       <header className="grid gap-2">
         <Skeleton className="h-3 w-20" />
         <Skeleton className="h-9 w-48" />
-        <Skeleton className="h-4 w-96 max-w-full" />
+        <Skeleton className="h-4 w-full max-w-96" />
       </header>
       <Card>
         <CardHeader className="gap-2">
           <Skeleton className="h-5 w-48" />
-          <Skeleton className="h-4 w-80 max-w-full" />
+          <Skeleton className="h-4 w-full max-w-80" />
         </CardHeader>
         <CardContent>
           <DataTableSkeleton columns={6} rows={10} />
