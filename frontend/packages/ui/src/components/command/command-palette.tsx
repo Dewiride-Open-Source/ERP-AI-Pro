@@ -51,7 +51,8 @@ type SearchProps<T extends CommandPaletteItem> = Omit<
 
 // The palette opens from state, not from a dialog trigger, so Radix would return focus to nothing when it closes. Radix
 // runs the open handler before it moves focus inside, so the element the person was using is still the active one. A
-// dismissed palette sends focus back there, or to returnFocusTo when that was the page itself or is gone; after a choice,
+// dismissed palette sends focus back there, or to returnFocusTo when that was the page itself, a container around
+// returnFocusTo (WebKit focuses the nearest focusable ancestor of a button it clicks) or is gone; after a choice,
 // which usually changes the page under the palette and so removes that element moments later, focus goes to returnFocusTo.
 // The content unmounts only after its exit animation, so focus that another layer or the chosen page has taken by then
 // stays where it is.
@@ -82,11 +83,12 @@ export function CommandPalette<T extends CommandPaletteItem>({
     const previous = focusBeforeOpen.current;
     focusBeforeOpen.current = null;
     if (document.activeElement !== null && document.activeElement !== document.body) return;
+    const opener = returnFocusTo?.current;
     const usable =
       (previous instanceof HTMLElement || previous instanceof SVGElement) &&
       previous !== document.body &&
-      previous.isConnected;
-    const opener = returnFocusTo?.current;
+      previous.isConnected &&
+      !(opener && previous.contains(opener));
     const target = chose.current && opener ? opener : usable ? previous : opener;
     target?.focus({ preventScroll: true });
   };
@@ -185,7 +187,7 @@ function CommandSearch<T extends CommandPaletteItem>({
           className="h-9 min-w-0 flex-1 rounded-md bg-transparent px-1 text-sm focus-ring placeholder:text-muted-foreground"
         />
         <DialogClose asChild>
-          <Button variant="ghost" size="xs" className="px-1">
+          <Button variant="ghost" size="xs" tabIndex={-1} className="px-1">
             <span className="sr-only">Close</span>
             <Kbd>Esc</Kbd>
           </Button>

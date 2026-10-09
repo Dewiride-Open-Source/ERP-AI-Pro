@@ -214,10 +214,20 @@ function Sidebar({
             target?.focus({ preventScroll: true });
           }}
           onClick={(event) => {
-            if (event.target instanceof Element && event.target.closest("a[href]")) {
-              followedLink.current = true;
-              setOpenMobile(false);
+            const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+            if (
+              link === null ||
+              event.button !== 0 ||
+              event.metaKey ||
+              event.ctrlKey ||
+              event.shiftKey ||
+              event.altKey ||
+              (link.getAttribute("target") ?? "_self") !== "_self"
+            ) {
+              return;
             }
+            followedLink.current = true;
+            setOpenMobile(false);
           }}
         >
           <SheetHeader className="sr-only">

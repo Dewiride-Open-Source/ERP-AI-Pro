@@ -17,9 +17,7 @@ import { useState } from "react";
 
 import { useSignOutForm } from "../hooks/use-sign-out-form";
 
-import { personInitials } from "./person-initials";
-
-export type MenuPerson = { readonly name: string; readonly userName: string };
+export type MenuPerson = { readonly name: string; readonly userName: string; readonly initials: string };
 
 // The sign-out form stays outside the menu, because the menu unmounts its items as it closes and a removed form cannot be
 // sent. While the sign-out is under way the menu stays shut and the button keeps its focus until the page leaves. The
@@ -29,7 +27,7 @@ export function UserMenu({ person }: { person: MenuPerson | undefined }) {
   const [open, setOpen] = useState(false);
   const { pending, formProps, tokenFieldProps, signOut } = useSignOutForm();
   const name = person?.name ?? "";
-  const initials = personInitials(name);
+  const initials = person?.initials ?? "";
 
   return (
     <>

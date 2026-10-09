@@ -10,7 +10,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { opensPageSearch, pageSearchShortcutLabel, togglesNavigation } from "./shortcut-keys";
+import { isNavigationShortcut, isPageSearchShortcut, pageSearchShortcutLabel } from "./shortcut-keys";
 
 export type PageSearchItem = CommandPaletteItem & { readonly href: Route };
 
@@ -30,8 +30,9 @@ export function PageSearch({ items }: { items: readonly PageSearchItem[] }) {
 
   useEffect(() => {
     const toggle = (event: KeyboardEvent) => {
-      if (!opensPageSearch(event)) return;
+      if (!isPageSearchShortcut(event)) return;
       event.preventDefault();
+      if (event.repeat) return;
       setOpenMobile(false);
       setOpen((shown) => !shown);
     };
@@ -42,7 +43,7 @@ export function PageSearch({ items }: { items: readonly PageSearchItem[] }) {
   useEffect(() => {
     if (!open) return undefined;
     const holdBackNavigation = (event: KeyboardEvent) => {
-      if (!togglesNavigation(event)) return;
+      if (!isNavigationShortcut(event)) return;
       event.preventDefault();
       event.stopPropagation();
     };

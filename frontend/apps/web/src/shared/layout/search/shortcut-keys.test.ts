@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  opensPageSearch,
+  isNavigationShortcut,
+  isPageSearchShortcut,
   pageSearchShortcutLabel,
-  togglesNavigation,
   type ShortcutKeyEvent,
 } from "./shortcut-keys.ts";
 
@@ -20,42 +20,46 @@ const press = (
   ...modifiers,
 });
 
-test("opensPageSearch_ControlOrCommandWithK_Opens", () => {
-  assert.equal(opensPageSearch(press("k", { ctrlKey: true })), true);
-  assert.equal(opensPageSearch(press("k", { metaKey: true })), true);
-  assert.equal(opensPageSearch(press("K", { ctrlKey: true })), true);
+const heldDown = (event: ShortcutKeyEvent): ShortcutKeyEvent => {
+  const repeated = { ...event, repeat: true };
+  return repeated;
+};
+
+test("isPageSearchShortcut_ControlOrCommandWithK_Matches", () => {
+  assert.equal(isPageSearchShortcut(press("k", { ctrlKey: true })), true);
+  assert.equal(isPageSearchShortcut(press("k", { metaKey: true })), true);
+  assert.equal(isPageSearchShortcut(press("K", { ctrlKey: true })), true);
 });
 
-test("opensPageSearch_KWithoutTheModifierOrWithAnotherOne_DoesNotOpen", () => {
-  assert.equal(opensPageSearch(press("k")), false);
-  assert.equal(opensPageSearch(press("k", { ctrlKey: true, shiftKey: true })), false);
-  assert.equal(opensPageSearch(press("k", { metaKey: true, altKey: true })), false);
-  assert.equal(opensPageSearch(press("b", { ctrlKey: true })), false);
+test("isPageSearchShortcut_KWithoutTheModifierOrWithAnotherOne_DoesNotMatch", () => {
+  assert.equal(isPageSearchShortcut(press("k")), false);
+  assert.equal(isPageSearchShortcut(press("k", { ctrlKey: true, shiftKey: true })), false);
+  assert.equal(isPageSearchShortcut(press("k", { metaKey: true, altKey: true })), false);
+  assert.equal(isPageSearchShortcut(press("b", { ctrlKey: true })), false);
 });
 
-test("opensPageSearch_KeyHeldDown_CountsOnlyTheFirstPress", () => {
-  assert.equal(opensPageSearch(press("k", { ctrlKey: true, repeat: false })), true);
-  assert.equal(opensPageSearch(press("k", { ctrlKey: true, repeat: true })), false);
+test("isPageSearchShortcut_KeyHeldDown_StillMatches", () => {
+  assert.equal(isPageSearchShortcut(heldDown(press("k", { ctrlKey: true }))), true);
 });
 
-test("opensPageSearch_KeydownWithoutAKey_DoesNotOpen", () => {
-  assert.equal(opensPageSearch(press(undefined, { ctrlKey: true })), false);
+test("isPageSearchShortcut_KeydownWithoutAKey_DoesNotMatch", () => {
+  assert.equal(isPageSearchShortcut(press(undefined, { ctrlKey: true })), false);
 });
 
-test("togglesNavigation_ControlOrCommandWithB_IsTheSidebarShortcut", () => {
-  assert.equal(togglesNavigation(press("b", { ctrlKey: true })), true);
-  assert.equal(togglesNavigation(press("b", { metaKey: true })), true);
-  assert.equal(togglesNavigation(press("b")), false);
-  assert.equal(togglesNavigation(press("k", { ctrlKey: true })), false);
-  assert.equal(togglesNavigation(press(undefined, { ctrlKey: true })), false);
+test("isNavigationShortcut_ControlOrCommandWithB_IsTheSidebarShortcut", () => {
+  assert.equal(isNavigationShortcut(press("b", { ctrlKey: true })), true);
+  assert.equal(isNavigationShortcut(press("b", { metaKey: true })), true);
+  assert.equal(isNavigationShortcut(press("b")), false);
+  assert.equal(isNavigationShortcut(press("k", { ctrlKey: true })), false);
+  assert.equal(isNavigationShortcut(press(undefined, { ctrlKey: true })), false);
 });
 
-test("togglesNavigation_KeyHeldDown_KeepsMatchingWhatTheSidebarHears", () => {
-  assert.equal(togglesNavigation(press("b", { ctrlKey: true, repeat: true })), true);
+test("isNavigationShortcut_KeyHeldDown_StillMatches", () => {
+  assert.equal(isNavigationShortcut(heldDown(press("b", { ctrlKey: true }))), true);
 });
 
-test("togglesNavigation_CapitalB_IsNotTheSidebarShortcut", () => {
-  assert.equal(togglesNavigation(press("B", { ctrlKey: true, shiftKey: true })), false);
+test("isNavigationShortcut_CapitalB_IsNotTheSidebarShortcut", () => {
+  assert.equal(isNavigationShortcut(press("B", { ctrlKey: true, shiftKey: true })), false);
 });
 
 test("pageSearchShortcutLabel_ApplePlatforms_NameTheCommandKey", () => {

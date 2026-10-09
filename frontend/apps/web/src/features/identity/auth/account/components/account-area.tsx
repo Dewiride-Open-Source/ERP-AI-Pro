@@ -2,6 +2,7 @@ import { requireSession } from "@/shared/auth/session";
 
 import { SessionKeeper } from "../../session/components/session-keeper";
 
+import { personInitials } from "./person-initials";
 import { UserMenu } from "./user-menu";
 
 // The shell renders this on every full page load, so the session check runs before anything of the page is shown. The
@@ -16,7 +17,11 @@ export async function AccountArea() {
       <UserMenu
         person={
           session.status === "signed-in"
-            ? { name: session.person.name, userName: session.person.userName }
+            ? {
+                name: session.person.name,
+                userName: session.person.userName,
+                initials: personInitials(session.person.name),
+              }
             : undefined
         }
       />

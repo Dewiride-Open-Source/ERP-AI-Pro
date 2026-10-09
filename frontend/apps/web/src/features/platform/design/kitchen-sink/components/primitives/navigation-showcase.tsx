@@ -190,6 +190,7 @@ function SidebarSpecimen() {
                 {hydrated ? (
                   <SidebarMenuItem data-testid="navigation-sidebar-loading">
                     <SidebarMenuSkeleton showIcon />
+                    <span className="sr-only">Loading</span>
                   </SidebarMenuItem>
                 ) : null}
               </SidebarMenu>
