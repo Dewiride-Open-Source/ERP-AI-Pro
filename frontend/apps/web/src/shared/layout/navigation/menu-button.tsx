@@ -2,22 +2,26 @@
 
 import { SidebarTrigger, useSidebar } from "@dewiride/erp-ui/components/ui/sidebar";
 import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 // The server cannot know whether the drawer or the sidebar is shown, so the state is told only once the page runs. The
 // drawer opens from state, not from a dialog trigger, so Radix would return focus to nothing when it closes: focus goes
 // back to the element the person was using before it opened, or to this button when that was the page itself or is gone.
-// A layout effect records that element before the drawer's own effect moves focus inside it.
+// A layout effect records that element before the drawer's own effect moves focus inside it, and a passive effect moves
+// focus back, because the drawer releases its focus trap in a passive cleanup, which React runs before any passive setup.
 export function MenuButton() {
   const { isMobile, open, openMobile } = useSidebar();
   const hydrated = useHydrated();
   const button = useRef<HTMLButtonElement>(null);
   const focusBeforeDrawer = useRef<Element | null>(null);
   const drawerWasOpen = useRef(false);
+  const drawerOpen = isMobile && openMobile;
 
   useLayoutEffect(() => {
-    const drawerOpen = isMobile && openMobile;
     if (drawerOpen && !drawerWasOpen.current) focusBeforeDrawer.current = document.activeElement;
+  }, [drawerOpen]);
+
+  useEffect(() => {
     if (!drawerOpen && drawerWasOpen.current) {
       const previous = focusBeforeDrawer.current;
       focusBeforeDrawer.current = null;
@@ -30,7 +34,7 @@ export function MenuButton() {
       target?.focus({ preventScroll: true });
     }
     drawerWasOpen.current = drawerOpen;
-  }, [isMobile, openMobile]);
+  }, [drawerOpen]);
 
   return (
     <SidebarTrigger
