@@ -162,6 +162,7 @@ function Sidebar({
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
   const focusBeforeDrawer = React.useRef<Element | null>(null);
   const followedLink = React.useRef(false);
+  const focusTakenAway = React.useRef(false);
 
   if (collapsible === "none") {
     return (
@@ -196,12 +197,26 @@ function Sidebar({
           onOpenAutoFocus={() => {
             focusBeforeDrawer.current = document.activeElement;
             followedLink.current = false;
+            focusTakenAway.current = false;
+          }}
+          onFocus={() => {
+            focusTakenAway.current = false;
+          }}
+          onBlur={(event) => {
+            if (event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) {
+              focusTakenAway.current = true;
+            }
           }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             const previous = focusBeforeDrawer.current;
             focusBeforeDrawer.current = null;
-            if (document.activeElement !== null && document.activeElement !== document.body) return;
+            if (
+              focusTakenAway.current ||
+              (document.activeElement !== null && document.activeElement !== document.body)
+            ) {
+              return;
+            }
             const target =
               !followedLink.current &&
               (previous instanceof HTMLElement || previous instanceof SVGElement) &&

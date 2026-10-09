@@ -5,6 +5,7 @@ import {
   useId,
   useRef,
   useState,
+  type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
   type ReactNode,
@@ -54,8 +55,8 @@ type SearchProps<T extends CommandPaletteItem> = Omit<
 // dismissed palette sends focus back there, or to returnFocusTo when that was the page itself, a container around
 // returnFocusTo (WebKit focuses the nearest focusable ancestor of a button it clicks) or is gone; after a choice,
 // which usually changes the page under the palette and so removes that element moments later, focus goes to returnFocusTo.
-// The content unmounts only after its exit animation, so focus that another layer or the chosen page has taken by then
-// stays where it is.
+// The content unmounts only after its exit animation, so the palette leaves focus alone when another layer took it from
+// the palette, or when anything but the page body holds it by then.
 export function CommandPalette<T extends CommandPaletteItem>({
   open,
   onOpenChange,
@@ -67,10 +68,22 @@ export function CommandPalette<T extends CommandPaletteItem>({
   const hintId = useId();
   const focusBeforeOpen = useRef<Element | null>(null);
   const chose = useRef(false);
+  const focusTakenAway = useRef(false);
 
   const rememberFocus = () => {
     focusBeforeOpen.current = document.activeElement;
     chose.current = false;
+    focusTakenAway.current = false;
+  };
+
+  const noteFocusInside = () => {
+    focusTakenAway.current = false;
+  };
+
+  const noteFocusLeaving = (event: FocusEvent<HTMLDivElement>) => {
+    if (event.relatedTarget instanceof Node && !event.currentTarget.contains(event.relatedTarget)) {
+      focusTakenAway.current = true;
+    }
   };
 
   const select = (item: T) => {
@@ -82,7 +95,12 @@ export function CommandPalette<T extends CommandPaletteItem>({
     event.preventDefault();
     const previous = focusBeforeOpen.current;
     focusBeforeOpen.current = null;
-    if (document.activeElement !== null && document.activeElement !== document.body) return;
+    if (
+      focusTakenAway.current ||
+      (document.activeElement !== null && document.activeElement !== document.body)
+    ) {
+      return;
+    }
     const opener = returnFocusTo?.current;
     const usable =
       (previous instanceof HTMLElement || previous instanceof SVGElement) &&
@@ -100,6 +118,8 @@ export function CommandPalette<T extends CommandPaletteItem>({
         aria-describedby={hintId}
         onOpenAutoFocus={rememberFocus}
         onCloseAutoFocus={restoreFocus}
+        onFocus={noteFocusInside}
+        onBlur={noteFocusLeaving}
         onMouseDown={keepFocusInTheSearch}
         className="top-24 flex max-h-[calc(100dvh-8rem)] translate-y-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
       >
