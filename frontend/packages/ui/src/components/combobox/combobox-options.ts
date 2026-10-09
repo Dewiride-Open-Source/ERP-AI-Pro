@@ -1,3 +1,5 @@
+import { searchText } from "@dewiride/erp-ui/lib/search/search-text";
+
 export interface ComboboxOption {
   readonly value: string;
   readonly label: string;
@@ -6,12 +8,6 @@ export interface ComboboxOption {
 }
 
 export type ComboboxDirection = 1 | -1;
-
-const combiningMarkPattern = /\p{M}/gu;
-
-export function searchText(text: string): string {
-  return text.normalize("NFD").replace(combiningMarkPattern, "").toLowerCase().trim();
-}
 
 export function filterComboboxOptions(
   options: readonly ComboboxOption[],

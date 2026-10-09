@@ -1,4 +1,4 @@
-import { searchText } from "../combobox/combobox-options.ts";
+import { searchText } from "@dewiride/erp-ui/lib/search/search-text";
 
 export interface CommandItem {
   readonly id: string;
