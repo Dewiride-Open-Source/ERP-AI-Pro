@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-10-08",
+  "updatedOn": "2026-10-09",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -913,12 +913,19 @@
           "id": "authentication-authenticated-application-shell",
           "title": "Authenticated application shell",
           "scope": "Implement the (app) layout with a collapsible sidebar generated from a typed, permission-gated module/feature navigation registry, top bar with command palette (Ctrl+K), breadcrumbs, user menu and theme toggle, responsive drawer navigation on phones, and React ViewTransition route transitions, covered by the nav-crawl e2e on desktop and mobile in light and dark with screenshots.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-09-29",
-          "acceptance": [],
+          "acceptance": [
+            "Every page of the signed-in area renders the shell: a sidebar built from the typed navigation registry, grouped by area, with Home and every enabled module entry (gated by its feature flag; permission gating arrives with user-management-roles-and-permissions) and the current page marked with aria-current. On desktop it collapses to icons through the menu button or Ctrl/Cmd+B and keeps the state across reloads; below 768 px it is a drawer opened from the top bar that closes on navigation and on Escape.",
+            "The top bar holds the menu button, breadcrumbs of the navigation hierarchy (Home, area, page, with the current page marked), the Ctrl/Cmd+K command palette, the theme toggle and the user menu. The command palette is in-house (owner decision of 2026-10-09): it searches the pages of the registry, moves with the arrow keys, opens a page with Enter and returns focus on Escape. The user menu shows the person's name and user name and signs out through the sign-out form, which fills the request token when it is sent; SessionKeeper stays on every page.",
+            "A navigation between pages runs a React ViewTransition page transition on the motion tokens (instant under reduced motion) while the sidebar and the top bar stay still; the CSS page entrance it replaces is removed.",
+            "The shadcn sidebar primitive is installed with its use-mobile hook on useSyncExternalStore (recorded in the patch register), @dewiride/erp-ui exports ./hooks/*, and the kitchen sink shows the sidebar and the command palette.",
+            "Playwright covers the sidebar, the drawer, the breadcrumbs, the command palette, the user menu and sign-out on every project, and the navigation crawl visits every registry entry through the sidebar on desktop and the drawer on mobile, in light and dark, with screenshots, axe scans and no console errors."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-09",
           "notes": "From web-foundation-design-tokens-and-theme-package (ADR-0023): the shadcn sidebar primitive is not installed because its generated hooks/use-mobile.ts fails react-hooks/set-state-in-effect; this item installs it and resolves that (a useSyncExternalStore media-query hook, recorded in the patch register of docs/architecture/design-system.md) and adds the ./hooks/* export of @dewiride/erp-ui. The shell keeps the tokens h-header, px-gutter, max-w-page and z-(--layer-sticky), and html scroll-padding-top already reserves the header height for focus and anchors. From authentication-web-login-page-and-session-integration (ADR-0036): AppShell takes the account area (AccountArea: SignOutButton and SessionKeeper on every page, the person's name once the session was read) in its account slot; the user menu replaces that area and keeps the sign-out form, which fills __RequestVerificationToken when it is sent, and SessionKeeper; the start page at / lists the navigation entries with their descriptions, and the wordmark and the not-found page lead home."
         },
         {
