@@ -15,6 +15,7 @@ import {
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@dewiride/erp-ui/components/ui/dialog";
 import { Kbd } from "@dewiride/erp-ui/components/ui/kbd";
+import { followPointer, type PointerRest } from "@dewiride/erp-ui/lib/pointer/pointer-rest";
 
 import {
   commandSections,
@@ -161,6 +162,7 @@ function CommandSearch<T extends CommandPaletteItem>({
   const optionId = (index: number) => `${baseId}-option-${index}`;
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
+  const pointerRest = useRef<PointerRest>("unseen");
 
   const results = filterCommands(items, query);
   const active = results.length === 0 ? -1 : Math.min(Math.max(activeIndex, 0), results.length - 1);
@@ -176,6 +178,7 @@ function CommandSearch<T extends CommandPaletteItem>({
     if (event.nativeEvent.isComposing) return;
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
+      pointerRest.current = "unseen";
       setActiveIndex(nextCommandIndex(results.length, active, event.key === "ArrowDown" ? 1 : -1));
     } else if (event.key === "Enter") {
       event.preventDefault();
@@ -201,6 +204,7 @@ function CommandSearch<T extends CommandPaletteItem>({
           value={query}
           onChange={(event) => {
             setQuery(event.currentTarget.value);
+            pointerRest.current = "unseen";
             setActiveIndex(0);
           }}
           onKeyDown={handleKeyDown}
@@ -240,8 +244,10 @@ function CommandSearch<T extends CommandPaletteItem>({
                   aria-describedby={item.description ? `${optionId(index)}-description` : undefined}
                   data-active={index === active || undefined}
                   onClick={() => choose(item)}
-                  onMouseMove={() => {
-                    if (index !== active) setActiveIndex(index);
+                  onMouseMove={(event) => {
+                    const step = followPointer(pointerRest.current, event.clientX, event.clientY);
+                    pointerRest.current = step.rest;
+                    if (step.follows && index !== active) setActiveIndex(index);
                   }}
                   className="flex cursor-default items-center gap-3 rounded-md px-2 py-2 text-sm select-none data-active:bg-accent data-active:text-accent-foreground data-active:outline-2 data-active:-outline-offset-2 data-active:outline-ring data-active:**:text-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
                 >

@@ -21,6 +21,7 @@ import {
   InputGroupInput,
 } from "@dewiride/erp-ui/components/ui/input-group";
 import { Popover, PopoverAnchor, PopoverContent } from "@dewiride/erp-ui/components/ui/popover";
+import { followPointer, type PointerRest } from "@dewiride/erp-ui/lib/pointer/pointer-rest";
 
 import { ComboboxList } from "./combobox-list";
 import {
@@ -122,6 +123,12 @@ export function Combobox({
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState<string | null>(null);
   const [activeValue, setActiveValue] = useState<string | null>(null);
+  const pointerRest = useRef<PointerRest>("unseen");
+
+  const chooseActive = (next: string | null) => {
+    pointerRest.current = "unseen";
+    setActiveValue(next);
+  };
   const [remembered, setRemembered] = useState<ComboboxOption | null>(null);
   const [labelLookup, setLabelLookup] = useState<string | undefined>(undefined);
 
@@ -155,19 +162,19 @@ export function Combobox({
   const openPopup = (activation: Activation) => {
     setOpen(true);
     if (activation === "none") {
-      setActiveValue(null);
+      chooseActive(null);
       return;
     }
     let index = visibleOptions.findIndex((option) => option.value === value && !option.disabled);
     if (index < 0) {
       index = activation === "first" ? firstEnabledIndex(visibleOptions) : lastEnabledIndex(visibleOptions);
     }
-    setActiveValue(visibleOptions[index]?.value ?? null);
+    chooseActive(visibleOptions[index]?.value ?? null);
   };
 
   const closePopup = () => {
     setOpen(false);
-    setActiveValue(null);
+    chooseActive(null);
   };
 
   const revertText = () => {
@@ -177,7 +184,7 @@ export function Combobox({
 
   const move = (direction: ComboboxDirection) => {
     const index = nextEnabledIndex(visibleOptions, activeIndex, direction);
-    setActiveValue(visibleOptions[index]?.value ?? null);
+    chooseActive(visibleOptions[index]?.value ?? null);
   };
 
   const select = (option: ComboboxOption) => {
@@ -206,7 +213,7 @@ export function Combobox({
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const next = event.currentTarget.value;
     setTyped(next);
-    setActiveValue(null);
+    chooseActive(null);
     reportText(next);
     if (next === "" && value !== null) onValueChange(null);
     if (!open) setOpen(true);
@@ -249,7 +256,7 @@ export function Combobox({
     else if (event.key === "ArrowUp") handleVerticalArrow(event, -1);
     else if (event.key === "Enter") handleEnter(event);
     else if (event.key === "Escape") handleEscape(event);
-    else if (caretKeys.has(event.key) && activeValue !== null) setActiveValue(null);
+    else if (caretKeys.has(event.key) && activeValue !== null) chooseActive(null);
   };
 
   const handleClick = (event: MouseEvent<HTMLInputElement>) => {
@@ -349,7 +356,11 @@ export function Combobox({
           emptyMessage={emptyMessage}
           optionId={optionId}
           onSelect={select}
-          onActivate={(option) => setActiveValue(option.value)}
+          onActivate={(option, pointer) => {
+            const step = followPointer(pointerRest.current, pointer.x, pointer.y);
+            pointerRest.current = step.rest;
+            if (step.follows) setActiveValue(option.value);
+          }}
           aria-labelledby={fieldLabelId}
           aria-label={ariaLabel}
         />
