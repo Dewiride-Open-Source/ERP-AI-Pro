@@ -1,11 +1,15 @@
 import type { Page } from "@playwright/test";
 
-import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { expect, forEachTheme, holdShortcut, tabOntoLink, test } from "../../../fixtures/test";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { formKitPath } from "../../../pages/platform/design/form-kit.page";
 import { homePath, StartPage } from "../../../pages/platform/home/start.page";
 import { SystemInfoPage } from "../../../pages/platform/system-info/info.page";
-import { AppShell, showsNavigationDrawer } from "../../../pages/shared/layout/app-shell.page";
+import {
+  AppShell,
+  showsBreadcrumbs,
+  showsNavigationDrawer,
+} from "../../../pages/shared/layout/app-shell.page";
 
 const sidebarStateCookie = "sidebar_state";
 
@@ -83,6 +87,10 @@ const narrowBanner = `
     - button /^Signed in as .+/
 `;
 
+async function afterPendingTimers(page: Page): Promise<void> {
+  await page.evaluate(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
+}
+
 async function expectSidebarState(
   page: Page,
   shell: AppShell,
@@ -141,7 +149,6 @@ test.describe("app shell navigation", () => {
       },
     );
 
-    // Radix keeps a tooltip open while the pointer may still be on its way to it, so a tooltip is closed with Escape.
     forEachTheme(
       "the Navigation button and Ctrl+B collapse the sidebar to icons named by tooltips, and a reload keeps it so",
       async ({ page, capture }) => {
@@ -175,6 +182,7 @@ test.describe("app shell navigation", () => {
         await page.keyboard.press("ControlOrMeta+b");
         await expectSidebarState(page, shell, "expanded");
         await shell.navigationLink("Attachments").hover();
+        await expect(shell.navigationLink("Attachments")).toHaveAttribute("data-state", /open$/);
         await expect(tooltip, "a tooltip beside a label that already shows").toHaveCount(0);
         await page.keyboard.press("ControlOrMeta+b");
         await expectSidebarState(page, shell, "collapsed");
@@ -183,52 +191,127 @@ test.describe("app shell navigation", () => {
       },
     );
 
-    test("the breadcrumb shows where each page sits in the navigation", async ({ page }) => {
+    test("holding Ctrl+B toggles the sidebar once", async ({ page }) => {
       const shell = new AppShell(page);
-      const home = shell.breadcrumbs.getByRole("link", { name: "Home" });
+      await new SystemInfoPage(page).goto();
+      await shell.waitUntilInteractive();
+      await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
 
-      await new StartPage(page).goto();
-      await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
-        - navigation "Breadcrumb":
-          - list:
-            - listitem:
-              - link "Home" [disabled]
-      `);
-      await expect(shell.breadcrumbs.getByRole("listitem")).toHaveCount(1);
-      await expect(home).toHaveAttribute("aria-current", "page");
+      await holdShortcut(page, "b", { repeats: 3 });
 
+      await expectSidebarState(page, shell, "collapsed");
+    });
+
+    test("the breadcrumb shows from 1024 px wide, where it fits beside the expanded sidebar", async ({
+      isMobile,
+      page,
+    }) => {
+      test.skip(isMobile, "a phone or a tablet keeps the width of its screen");
+      const shell = new AppShell(page);
+      const height = page.viewportSize()?.height ?? 0;
+      await page.setViewportSize({ width: 1023, height });
       await new AttachmentsPage(page).goto();
-      await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
-        - navigation "Breadcrumb":
-          - list:
-            - listitem:
-              - link "Home":
-                - /url: /
-            - listitem: Platform
-            - listitem:
-              - link "Attachments" [disabled]
-      `);
-      await expect(shell.breadcrumbs.getByRole("listitem")).toHaveCount(3);
-      await expect(shell.breadcrumbs.getByRole("link", { name: "Platform" })).toHaveCount(0);
-      await expect(shell.breadcrumbs.getByRole("link", { name: "Attachments" })).toHaveAttribute(
-        "aria-current",
-        "page",
-      );
-      await expect(home).not.toHaveAttribute("aria-current");
+      await shell.waitUntilInteractive();
+      await expect(shell.breadcrumbs).toBeHidden();
 
-      await page.goto(formKitPath);
-      await expect(page.getByRole("heading", { name: "Form kit", level: 1 })).toBeVisible();
-      await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
-        - navigation "Breadcrumb":
-          - list:
-            - listitem:
-              - link "Home":
-                - /url: /
-      `);
-      await expect(shell.breadcrumbs.getByRole("listitem")).toHaveCount(1);
-      await home.click();
-      await expect(page).toHaveURL((url) => url.pathname === homePath);
-      await expect(new StartPage(page).heading).toBeVisible();
+      await page.setViewportSize({ width: 1024, height });
+      await expect(shell.breadcrumbs).toBeVisible();
+      await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
+      const banner = await shell.banner.boundingBox();
+      expect(banner?.height, "height of the top bar").toBe(56);
+      const rows = await shell.breadcrumbs
+        .getByRole("listitem")
+        .evaluateAll(
+          (items) => new Set(items.map((item) => Math.round(item.getBoundingClientRect().top))).size,
+        );
+      expect(rows, "rows the trail takes").toBe(1);
+      const trail = await shell.breadcrumbs.boundingBox();
+      expect((trail?.y ?? 0) + (trail?.height ?? 0), "bottom of the trail").toBeLessThanOrEqual(
+        (banner?.y ?? 0) + (banner?.height ?? 0),
+      );
+    });
+
+    test.describe("with room for the breadcrumb", () => {
+      test.skip(({ viewport }) => !showsBreadcrumbs(viewport), "the breadcrumb shows from 1024 px wide");
+
+      test("the breadcrumb follows a client navigation", async ({ page }) => {
+        const shell = new AppShell(page);
+        const home = shell.breadcrumbs.getByRole("link", { name: "Home" });
+        await new StartPage(page).goto();
+        await shell.waitUntilInteractive();
+
+        await shell.navigationLink("Attachments").click();
+        await expect(new AttachmentsPage(page).heading).toBeVisible();
+        await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
+          - navigation "Breadcrumb":
+            - list:
+              - listitem:
+                - link "Home":
+                  - /url: /
+              - listitem: Platform
+              - listitem:
+                - link "Attachments" [disabled]
+        `);
+        await expect(shell.breadcrumbs.getByRole("listitem")).toHaveCount(3);
+        await expect(shell.breadcrumbs.getByRole("link", { name: "Attachments" })).toHaveAttribute(
+          "aria-current",
+          "page",
+        );
+
+        await home.click();
+        await expect(page).toHaveURL((url) => url.pathname === homePath);
+        await expect(new StartPage(page).heading).toBeVisible();
+        await expect(shell.breadcrumbs.getByRole("listitem")).toHaveCount(1);
+        await expect(home).toHaveAttribute("aria-current", "page");
+      });
+
+      test("the breadcrumb shows where each page sits in the navigation", async ({ page }) => {
+        const shell = new AppShell(page);
+        const home = shell.breadcrumbs.getByRole("link", { name: "Home" });
+
+        await new StartPage(page).goto();
+        await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
+          - navigation "Breadcrumb":
+            - list:
+              - listitem:
+                - link "Home" [disabled]
+        `);
+        await expect(shell.breadcrumbs.getByRole("listitem")).toHaveCount(1);
+        await expect(home).toHaveAttribute("aria-current", "page");
+
+        await new AttachmentsPage(page).goto();
+        await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
+          - navigation "Breadcrumb":
+            - list:
+              - listitem:
+                - link "Home":
+                  - /url: /
+              - listitem: Platform
+              - listitem:
+                - link "Attachments" [disabled]
+        `);
+        await expect(shell.breadcrumbs.getByRole("listitem")).toHaveCount(3);
+        await expect(shell.breadcrumbs.getByRole("link", { name: "Platform" })).toHaveCount(0);
+        await expect(shell.breadcrumbs.getByRole("link", { name: "Attachments" })).toHaveAttribute(
+          "aria-current",
+          "page",
+        );
+        await expect(home).not.toHaveAttribute("aria-current");
+
+        await page.goto(formKitPath);
+        await expect(page.getByRole("heading", { name: "Form kit", level: 1 })).toBeVisible();
+        await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
+          - navigation "Breadcrumb":
+            - list:
+              - listitem:
+                - link "Home":
+                  - /url: /
+        `);
+        await expect(shell.breadcrumbs.getByRole("listitem")).toHaveCount(1);
+        await home.click();
+        await expect(page).toHaveURL((url) => url.pathname === homePath);
+        await expect(new StartPage(page).heading).toBeVisible();
+      });
     });
   });
 
@@ -321,6 +404,165 @@ test.describe("app shell navigation", () => {
       await expect(shell.drawer).toBeHidden();
       await expect(shell.menuButton).toHaveAttribute("aria-expanded", "false");
       await expect(shell.menuButton).toBeFocused();
+    });
+
+    test("the ERP-AI-Pro mark in the drawer opens the start page and closes the drawer", async ({ page }) => {
+      const shell = new AppShell(page);
+      await new SystemInfoPage(page).goto();
+      await shell.openNavigation();
+
+      await shell.drawer.getByRole("link", { name: "ERP-AI-Pro", exact: true }).click();
+      await expect(page).toHaveURL((url) => url.pathname === homePath);
+      await expect(new StartPage(page).heading).toBeVisible();
+      await expect(shell.drawer).toBeHidden();
+      await expect(shell.menuButton).toHaveAttribute("aria-expanded", "false");
+      await expect(shell.menuButton).toBeFocused();
+    });
+
+    test("a page chosen in the drawer with the keyboard leaves focus on the Navigation button", async ({
+      page,
+    }) => {
+      const shell = new AppShell(page);
+      const systemInfo = new SystemInfoPage(page);
+      await systemInfo.goto();
+      await shell.waitUntilInteractive();
+      await systemInfo.refresh.focus();
+      await page.keyboard.press("ControlOrMeta+b");
+      await expect(shell.drawer).toBeVisible();
+
+      await tabOntoLink(page, shell.navigationLink("Attachments"));
+      await page.keyboard.press("Enter");
+      await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
+      await expect(new AttachmentsPage(page).heading).toBeVisible();
+      await expect(shell.drawer).toBeHidden();
+      await expect(shell.menuButton).toBeFocused();
+    });
+
+    test("tapping beside the drawer closes it and gives focus back to the Navigation button", async ({
+      hasTouch,
+      page,
+    }) => {
+      const shell = new AppShell(page);
+      await new SystemInfoPage(page).goto();
+      await shell.openNavigation();
+
+      const { width, height } = page.viewportSize() ?? { width: 0, height: 0 };
+      const besideTheDrawer = { x: width - 16, y: height / 2 };
+      expect(besideTheDrawer.x, "a point right of the 18rem drawer").toBeGreaterThan(300);
+      if (hasTouch) await page.touchscreen.tap(besideTheDrawer.x, besideTheDrawer.y);
+      else await page.mouse.click(besideTheDrawer.x, besideTheDrawer.y);
+      await expect(shell.drawer).toBeHidden();
+      await expect(shell.menuButton).toHaveAttribute("aria-expanded", "false");
+      await expect(shell.menuButton).toBeFocused();
+    });
+
+    test("widening the screen closes the drawer, and narrowing it again leaves it closed", async ({
+      page,
+    }) => {
+      const shell = new AppShell(page);
+      const narrow = page.viewportSize() ?? { width: 0, height: 0 };
+      await new SystemInfoPage(page).goto();
+      await shell.openNavigation();
+
+      await page.setViewportSize({ width: 1024, height: narrow.height });
+      await expect(shell.sidebar).toBeVisible();
+      await expect(shell.drawer).toHaveCount(0);
+      await page.setViewportSize(narrow);
+      await expect(shell.sidebar).toHaveCount(0);
+      await expect(shell.menuButton).toHaveAttribute("aria-expanded", "false");
+      await expect(shell.drawer).toHaveCount(0);
+    });
+
+    test("Ctrl+K closes the drawer and opens the page search, and a page chosen there opens with the drawer closed", async ({
+      page,
+    }) => {
+      const shell = new AppShell(page);
+      await new SystemInfoPage(page).goto();
+      await shell.waitUntilInteractive();
+      await page.keyboard.press("ControlOrMeta+b");
+      await expect(shell.drawer).toBeVisible();
+
+      await page.keyboard.press("ControlOrMeta+k");
+      await expect(shell.drawer).toBeHidden();
+      await expect(shell.palette).toBeVisible();
+      await expect(shell.paletteSearch).toBeFocused();
+      await page.keyboard.type("att");
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
+      await page.keyboard.press("Enter");
+
+      await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
+      await expect(new AttachmentsPage(page).heading).toBeVisible();
+      await expect(shell.palettePanel).toHaveCount(0);
+      await expect(shell.drawerPanel).toHaveCount(0);
+      await expect(shell.searchButton).toBeFocused();
+    });
+
+    test("a drawer link opened in a new tab leaves the drawer open", async ({ context, page }) => {
+      const shell = new AppShell(page);
+      await new SystemInfoPage(page).goto();
+      await shell.openNavigation();
+      const address = page.url();
+      const opened: Page[] = [];
+      context.on("page", (popup) => opened.push(popup));
+
+      await shell.navigationLink("Attachments").click({ modifiers: ["ControlOrMeta"] });
+      await expect(shell.drawer).toBeVisible();
+      await expect(shell.menuButton).toHaveAttribute("aria-expanded", "true");
+      await expect(page).toHaveURL(address);
+      await expect
+        .poll(
+          () =>
+            page.evaluate(() => {
+              const focused = document.activeElement;
+              return (
+                focused !== null && focused.closest("[data-sidebar='sidebar'][data-mobile='true']") !== null
+              );
+            }),
+          { message: "focus inside the drawer" },
+        )
+        .toBe(true);
+      test.info().annotations.push({
+        type: "popup",
+        description: `the browser opened ${opened.length} new page(s) for the modified click`,
+      });
+      for (const popup of opened) await popup.close();
+    });
+
+    test("Ctrl+B pressed as the page search closes opens the drawer, and focus stays inside it", async ({
+      page,
+    }) => {
+      const shell = new AppShell(page);
+      await new SystemInfoPage(page).goto();
+      await shell.waitUntilInteractive();
+      await page.keyboard.press("ControlOrMeta+k");
+      await expect(shell.paletteSearch).toBeFocused();
+      await page.evaluate(() => {
+        const landings: boolean[] = [];
+        Object.assign(window, { focusLandings: landings });
+        document.addEventListener(
+          "focusin",
+          (event) =>
+            landings.push(
+              event.target instanceof Element &&
+                event.target.closest("[data-sidebar='sidebar'][data-mobile='true']") !== null,
+            ),
+          true,
+        );
+      });
+
+      await page.keyboard.press("Escape");
+      await page.keyboard.press("ControlOrMeta+b");
+      await expect(shell.palettePanel).toHaveCount(0);
+      await expect(shell.drawer).toBeVisible();
+      await afterPendingTimers(page);
+
+      const landings = await page.evaluate(
+        () => (window as unknown as { focusLandings: boolean[] }).focusLandings,
+      );
+      const opened = landings.indexOf(true);
+      expect(opened, "focus moving into the drawer").toBeGreaterThanOrEqual(0);
+      expect(landings.slice(opened), "where focus landed once the drawer was open").not.toContain(false);
+      await expect(shell.drawer.locator(":focus")).toHaveCount(1);
     });
   });
 

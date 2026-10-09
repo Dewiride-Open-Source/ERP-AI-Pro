@@ -1,4 +1,6 @@
-import { expect, forEachTheme, test } from "../../../fixtures/test";
+import type { Locator, Page } from "@playwright/test";
+
+import { centreOf, expect, forEachTheme, holdShortcut, settleAnimations, test } from "../../../fixtures/test";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { homePath, StartPage } from "../../../pages/platform/home/start.page";
 import { SystemInfoPage } from "../../../pages/platform/system-info/info.page";
@@ -20,6 +22,18 @@ async function expectActive(shell: AppShell, name: string): Promise<void> {
     "aria-activedescendant",
     (await option.getAttribute("id")) ?? "",
   );
+}
+
+async function pointAt(page: Page, option: Locator): Promise<{ x: number; y: number }> {
+  const centre = await centreOf(option);
+  await page.mouse.move(centre.x - 4, centre.y);
+  await page.mouse.move(centre.x, centre.y);
+  return centre;
+}
+
+async function bottomOnceOpened(dialog: Locator): Promise<number> {
+  await settleAnimations(dialog);
+  return dialog.evaluate((element) => element.getBoundingClientRect().bottom);
 }
 
 test.describe("page search", () => {
@@ -50,6 +64,7 @@ test.describe("page search", () => {
         - dialog "Go to a page":
           - heading "Go to a page" [level=2]
           - combobox "Search pages" [expanded]
+          - button "Close Esc"
           - status
           - listbox "Pages":
             - option "Home" [selected]
@@ -139,6 +154,9 @@ test.describe("page search", () => {
       await page.keyboard.press(key);
       await expectActive(shell, active);
     }
+    await expect(shell.paletteOption("System")).toHaveCSS("outline-style", "solid");
+    await expect(shell.paletteOption("System")).toHaveCSS("outline-width", "2px");
+    await expect(shell.paletteOption("Home")).toHaveCSS("outline-style", "none");
     await expect(shell.paletteSearch).toBeFocused();
     await page.keyboard.press("Enter");
 
@@ -155,10 +173,11 @@ test.describe("page search", () => {
     await shell.waitUntilInteractive();
     await shell.searchButton.click();
     await expectActive(shell, "Home");
+    await settleAnimations(shell.palette);
 
-    await shell.paletteOption("Attachments").hover();
+    await pointAt(page, shell.paletteOption("Attachments"));
     await expectActive(shell, "Attachments");
-    await shell.paletteOption("System").hover();
+    await pointAt(page, shell.paletteOption("System"));
     await expectActive(shell, "System");
     await shell.paletteOption("Attachments").click();
 
@@ -166,6 +185,25 @@ test.describe("page search", () => {
     await expect(shell.palette).toBeHidden();
     await expect(new AttachmentsPage(page).heading).toBeVisible();
     await expect(shell.searchButton).toBeFocused();
+  });
+
+  test("a pointer at rest does not take the active page from the keyboard", async ({ hasTouch, page }) => {
+    test.skip(hasTouch, "a touch screen has no pointer that rests on a page without choosing it");
+    const shell = new AppShell(page);
+    await new StartPage(page).goto();
+    await shell.waitUntilInteractive();
+    await shell.searchButton.click();
+    await expectActive(shell, "Home");
+    await settleAnimations(shell.palette);
+
+    const overSystem = await pointAt(page, shell.paletteOption("System"));
+    await expectActive(shell, "System");
+    await page.keyboard.press("ArrowDown");
+    await expectActive(shell, "Attachments");
+    await page.mouse.move(overSystem.x, overSystem.y);
+    await expectActive(shell, "Attachments");
+    await page.mouse.move(overSystem.x + 4, overSystem.y);
+    await expectActive(shell, "System");
   });
 
   test("Escape closes it and gives focus back to the Search button", async ({ page }) => {
@@ -178,6 +216,54 @@ test.describe("page search", () => {
     await page.keyboard.press("Escape");
     await expect(shell.palette).toBeHidden();
     await expect(shell.searchButton).toBeFocused();
+  });
+
+  test("the Close button closes it and gives focus back to the Search button", async ({ page }) => {
+    const shell = new AppShell(page);
+    await new StartPage(page).goto();
+    await shell.waitUntilInteractive();
+    await shell.searchButton.click();
+    await expect(shell.palette).toBeVisible();
+
+    await shell.paletteClose.click();
+    await expect(shell.palette).toBeHidden();
+    await expect(shell.searchButton).toBeFocused();
+  });
+
+  test("a click inside it keeps the typing in the search", async ({ hasTouch, page }) => {
+    const shell = new AppShell(page);
+    await new StartPage(page).goto();
+    await shell.waitUntilInteractive();
+    await shell.searchButton.click();
+    await expect(shell.paletteSearch).toBeFocused();
+
+    const groupHeading = shell.paletteResults.getByText("Platform", { exact: true });
+    if (hasTouch) await groupHeading.tap();
+    else await groupHeading.click();
+    await page.keyboard.type("att");
+
+    await expect(shell.paletteSearch).toBeFocused();
+    await expect(shell.paletteSearch).toHaveValue("att");
+    await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
+    await expect(shell.paletteOption("Attachments")).toBeVisible();
+  });
+
+  test("it fits a short screen and keeps the active page in view", async ({ page }) => {
+    const screen = { width: 320, height: 256 };
+    await page.setViewportSize(screen);
+    const shell = new AppShell(page);
+    await new StartPage(page).goto();
+    await shell.waitUntilInteractive();
+    await shell.searchButton.click();
+    await expect(shell.palette).toBeVisible();
+
+    expect(await bottomOnceOpened(shell.palette), "bottom edge of the page search").toBeLessThanOrEqual(
+      screen.height,
+    );
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown");
+    await expectActive(shell, "Attachments");
+    await expect(shell.paletteOption("Attachments")).toBeInViewport({ ratio: 0.99 });
   });
 
   test.describe("with a keyboard", () => {
@@ -234,6 +320,35 @@ test.describe("page search", () => {
       await expect(shell.palette).toBeHidden();
       await expect(new AttachmentsPage(page).heading).toBeVisible();
       await expect(shell.searchButton).toBeFocused();
+    });
+
+    test("Ctrl+B waits while it is open", async ({ page }) => {
+      const shell = new AppShell(page);
+      await new StartPage(page).goto();
+      await shell.waitUntilInteractive();
+      await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
+
+      await page.keyboard.press("ControlOrMeta+k");
+      await expect(shell.palette).toBeVisible();
+      await page.keyboard.press("ControlOrMeta+b");
+      await expect(shell.palette).toBeVisible();
+      await expect(shell.paletteSearch).toBeFocused();
+      await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
+
+      await page.keyboard.press("Escape");
+      await expect(shell.palette).toBeHidden();
+      await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
+    });
+
+    test("holding Ctrl+K opens it once", async ({ page }) => {
+      const shell = new AppShell(page);
+      await new StartPage(page).goto();
+      await shell.waitUntilInteractive();
+
+      await holdShortcut(page, "k", { repeats: 3 });
+
+      await expect(shell.palette).toBeVisible();
+      await expect(shell.paletteSearch).toBeFocused();
     });
   });
 });

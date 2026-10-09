@@ -67,9 +67,10 @@ const excludedFromScans = [
 ];
 
 // Playwright's WebKit port on Windows crashes or stalls in about half of the client navigations that run a view transition,
-// while Linux WebKit, which CI runs, does not, so the transitions keep their coverage in CI.
+// while Linux WebKit, which CI runs, does not, so the transitions keep their coverage in CI. A browser reached through
+// PW_TEST_CONNECT_WS_ENDPOINT runs on the remote server, whatever the runner's system.
 export function changesPagesWithoutTransitions(browserName: string): boolean {
-  return browserName === "webkit" && process.platform === "win32";
+  return browserName === "webkit" && process.platform === "win32" && !process.env.PW_TEST_CONNECT_WS_ENDPOINT;
 }
 
 // Every page outside the sign-in page needs a session, so a test signs a new person of a persona in unless it sets persona
@@ -206,6 +207,25 @@ export async function tabOntoLink(page: Page, link: Locator): Promise<void> {
   if (page.context().browser()?.browserType().name() === "webkit") await link.focus();
   else await page.keyboard.press("Tab");
   await expect(link).toBeFocused();
+}
+
+export async function settleAnimations(target: Locator): Promise<void> {
+  await target.evaluate(async (element) => {
+    await Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => undefined)));
+  });
+}
+
+export async function centreOf(target: Locator): Promise<{ x: number; y: number }> {
+  const box = await target.boundingBox();
+  expect(box, "bounding box").not.toBeNull();
+  return { x: (box?.x ?? 0) + (box?.width ?? 0) / 2, y: (box?.y ?? 0) + (box?.height ?? 0) / 2 };
+}
+
+export async function holdShortcut(page: Page, key: string, { repeats }: { repeats: number }): Promise<void> {
+  await page.keyboard.down("ControlOrMeta");
+  for (let keydown = 0; keydown <= repeats; keydown += 1) await page.keyboard.down(key);
+  await page.keyboard.up(key);
+  await page.keyboard.up("ControlOrMeta");
 }
 
 // A capture shows the page as a person meets it once it works, so it waits until no component still shows its server-rendered

@@ -2,7 +2,15 @@ import type { Locator, Page } from "@playwright/test";
 
 import { png, type FileUpload } from "../../../fixtures/files";
 import { signIn } from "../../../fixtures/sign-in";
-import { expect, forEachTheme, pressArrowUntilChecked, tabOntoLink, test } from "../../../fixtures/test";
+import {
+  centreOf,
+  expect,
+  forEachTheme,
+  pressArrowUntilChecked,
+  settleAnimations,
+  tabOntoLink,
+  test,
+} from "../../../fixtures/test";
 import { LoginPage } from "../../../pages/identity/auth/login.page";
 import {
   KitchenSinkPage,
@@ -527,6 +535,9 @@ test.describe("design system kitchen sink", () => {
     for (const name of ["Credit notes", "Customers"]) {
       await expect(sidebarSpecimen.getByRole("link", { name })).not.toHaveAttribute("aria-current");
     }
+    await expect(sidebarSpecimen).not.toHaveAttribute("data-hydrating");
+    await expect(sidebarSpecimen.getByRole("button", { name: "Payments" })).toBeDisabled();
+    await expect(sidebarSpecimen.getByTestId("navigation-sidebar-loading")).toBeVisible();
     await expect(
       kitchenSink.section("data-display").getByRole("button", { name: "Late fee (not configured)" }),
     ).toBeDisabled();
@@ -755,6 +766,9 @@ test.describe("design system kitchen sink", () => {
           - listitem:
             - link "Customers":
               - /url: "#composites"
+          - listitem:
+            - button "Payments" [disabled]
+          - listitem: Loading
         - heading "Navigation menu" [level=3]
         - navigation "Main":
           - list:
@@ -1898,6 +1912,7 @@ test.describe("design system kitchen sink", () => {
         - dialog "Example commands":
           - heading "Example commands" [level=2]
           - combobox "Search the examples" [expanded]
+          - button "Close Esc"
           - status
           - listbox "Examples":
             - option "Home" [selected]
@@ -1915,6 +1930,14 @@ test.describe("design system kitchen sink", () => {
       await expect(examples.getByRole("option")).toHaveCount(5);
       await expect(status).toHaveText("");
       await capture("composites-command-palette-open", palette);
+      await page.keyboard.press("ArrowUp");
+      const timesheets = examples.getByRole("option", { name: "Timesheets" });
+      await expect(timesheets).toHaveAttribute("aria-selected", "true");
+      await expect(timesheets).toBeInViewport({ ratio: 0.99 });
+      await page.keyboard.press("ArrowDown");
+      const home = examples.getByRole("option", { name: "Home" });
+      await expect(home).toHaveAttribute("aria-selected", "true");
+      await expect(home).toBeInViewport({ ratio: 0.99 });
 
       await search.pressSequentially("refund");
       const creditNotes = examples.getByRole("option", { name: "Credit notes" });
@@ -2369,6 +2392,9 @@ test.describe("design system kitchen sink", () => {
         "aria-selected",
         "true",
       );
+      await expect(accounts.getByRole("option", { name: "Electricity" })).toHaveCSS("outline-style", "solid");
+      await expect(accounts.getByRole("option", { name: "Electricity" })).toHaveCSS("outline-width", "2px");
+      await expect(accounts.getByRole("option", { name: "Conveyance" })).toHaveCSS("outline-style", "none");
       await account.press("Enter");
       await expect(accountValue).toHaveText("Value: electricity");
       await account.fill("zzz");
@@ -2427,6 +2453,37 @@ test.describe("design system kitchen sink", () => {
       await expect(calendars.getByRole("grid", { name: "October 2026" })).toBeVisible();
       await capture("forms-calendar-operated", calendars);
       expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
+    });
+
+    test("a pointer at rest does not take the active option from the keyboard", async ({
+      hasTouch,
+      page,
+    }) => {
+      test.skip(hasTouch, "a touch screen has no pointer that rests on an option without choosing it");
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+      const account = kitchenSink
+        .specimen("Combobox")
+        .getByRole("combobox", { name: "Expense account", exact: true });
+      const accounts = page.getByRole("listbox", { name: "Expense account", exact: true });
+      const bankCharges = accounts.getByRole("option", { name: "Bank charges" });
+      const books = accounts.getByRole("option", { name: "Books and periodicals" });
+
+      await account.click();
+      await expect(accounts).toBeVisible();
+      await settleAnimations(page.locator("[data-slot='popover-content']").filter({ has: accounts }));
+      const overBankCharges = await centreOf(bankCharges);
+      await page.mouse.move(overBankCharges.x - 4, overBankCharges.y);
+      await page.mouse.move(overBankCharges.x, overBankCharges.y);
+      await expect(bankCharges).toHaveAttribute("aria-selected", "true");
+
+      await account.press("ArrowDown");
+      await expect(books).toHaveAttribute("aria-selected", "true");
+      await page.mouse.move(overBankCharges.x, overBankCharges.y);
+      await expect(books).toHaveAttribute("aria-selected", "true");
+      await expect(bankCharges).toHaveAttribute("aria-selected", "false");
+      await page.mouse.move(overBankCharges.x + 4, overBankCharges.y);
+      await expect(bankCharges).toHaveAttribute("aria-selected", "true");
     });
   });
 

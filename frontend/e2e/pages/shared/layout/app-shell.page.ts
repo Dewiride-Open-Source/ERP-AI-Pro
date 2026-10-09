@@ -4,10 +4,14 @@ export type ThemeOption = "light" | "dark" | "system";
 
 const sidebarMinWidth = 768;
 
-// The shell shows its navigation as the sidebar from the md breakpoint up. Below it the navigation lives in a drawer that is
-// rendered only while it is open, so a narrow page holds no sidebar markup at all.
+const breadcrumbsMinWidth = 1024;
+
 export function showsNavigationDrawer(viewport: ViewportSize | null): boolean {
   return (viewport?.width ?? 0) < sidebarMinWidth;
+}
+
+export function showsBreadcrumbs(viewport: ViewportSize | null): boolean {
+  return (viewport?.width ?? 0) >= breadcrumbsMinWidth;
 }
 
 export class AppShell {
@@ -19,12 +23,15 @@ export class AppShell {
   readonly sidebar: Locator;
   readonly sidebarPanel: Locator;
   readonly drawer: Locator;
+  readonly drawerPanel: Locator;
   readonly closeNavigation: Locator;
   readonly primaryNavigation: Locator;
   readonly breadcrumbs: Locator;
   readonly searchButton: Locator;
   readonly palette: Locator;
+  readonly palettePanel: Locator;
   readonly paletteSearch: Locator;
+  readonly paletteClose: Locator;
   readonly paletteResults: Locator;
   readonly paletteStatus: Locator;
   readonly paletteEmpty: Locator;
@@ -39,19 +46,19 @@ export class AppShell {
     this.skipLink = page.getByRole("link", { name: "Skip to main content" });
     this.main = page.getByRole("main");
     this.notifications = page.getByRole("region", { name: /^Notifications/ });
-    // An open drawer, page search or menu hides the rest of the page from assistive technology, the header included, while
-    // the controls that opened them are still the ones whose state a test reads.
     this.menuButton = page.getByRole("button", { name: "Navigation", exact: true, includeHidden: true });
-    // The kitchen sink shows a sidebar of its own inside the page, so the shell's is the one the provider holds directly.
     this.sidebar = page.locator("[data-slot='sidebar-wrapper'] > [data-slot='sidebar']");
     this.sidebarPanel = this.sidebar.locator("[data-slot='sidebar-container']");
     this.drawer = page.getByRole("dialog", { name: "Navigation" });
+    this.drawerPanel = page.locator("[data-sidebar='sidebar'][data-mobile='true']");
     this.closeNavigation = this.drawer.getByRole("button", { name: "Close navigation" });
     this.primaryNavigation = page.getByRole("navigation", { name: "Primary" });
     this.breadcrumbs = page.getByRole("navigation", { name: "Breadcrumb" });
     this.searchButton = this.banner.getByRole("button", { name: "Search", exact: true });
     this.palette = page.getByRole("dialog", { name: "Go to a page" });
+    this.palettePanel = page.locator("[data-slot='dialog-content']:has(input[aria-label='Search pages'])");
     this.paletteSearch = this.palette.getByRole("combobox", { name: "Search pages" });
+    this.paletteClose = this.palette.getByRole("button", { name: "Close Esc" });
     this.paletteResults = this.palette.getByRole("listbox", { name: "Pages" });
     this.paletteStatus = this.palette.getByRole("status");
     this.paletteEmpty = this.palette
@@ -68,7 +75,6 @@ export class AppShell {
     return showsNavigationDrawer(this.page.viewportSize());
   }
 
-  // The mark sits in the sidebar on a wide screen and in the header on a narrow one, and only one of them is ever shown.
   get wordmarkLink(): Locator {
     return this.page.getByRole("link", { name: "ERP-AI-Pro", exact: true });
   }
@@ -89,7 +95,6 @@ export class AppShell {
     return this.notifications.getByRole("listitem").filter({ hasText: title });
   }
 
-  // The header's buttons stay disabled until the page hydrates, and its keyboard shortcuts are listened for from then on.
   async waitUntilInteractive(): Promise<void> {
     await expect(this.menuButton).toBeEnabled();
     await expect(this.searchButton).toBeEnabled();

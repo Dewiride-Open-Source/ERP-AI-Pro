@@ -26,8 +26,6 @@ const endSessionEndpoint = /^https:\/\/login\.microsoftonline\.com\/[0-9a-f-]{36
 
 const originOf = (baseURL: string | undefined) => new URL(baseURL ?? "").origin;
 
-// A sign-out without the request token first fetches a new pair before it posts its form, and holding that fetch keeps the
-// page as it is while the sign-out is under way; a held form post would leave the page navigating, where nothing can be read.
 async function holdAntiforgeryRenewal(page: Page): Promise<() => void> {
   let release: () => void = () => undefined;
   const released = new Promise<void>((resolve) => {

@@ -116,10 +116,6 @@ async function reminderMotion(
   return { between, milliseconds: clicked === undefined || settled === undefined ? 0 : settled - clicked };
 }
 
-// React runs each change of page through document.startViewTransition, whose ready promise settles once the transition's
-// pseudo-elements exist and their animations have started, so the animations of every change are read there. The wrapper
-// sits on the prototype, because the order of a page's and its context's init scripts is not defined and the context
-// fixture may remove the prototype's method; a page without it changes without a transition and records nothing.
 function recordPageChanges(): void {
   const changes: PageChange[] = [];
   window.pageChanges = changes;
@@ -163,8 +159,6 @@ async function animatedPageChanges(page: Page, count: number): Promise<PageChang
   return animated();
 }
 
-// The page being left fades out over the fast duration and the arriving one rises in over the normal one, while the root
-// snapshot, the shell around the page, stays still.
 function expectPageChange(change: PageChange, durations: MotionDurations): void {
   expect(change.skipped, "a change of page the browser skipped").toBeUndefined();
   expect(change.animations.map(({ name }) => name).sort(), "animations of the change of page").toEqual([

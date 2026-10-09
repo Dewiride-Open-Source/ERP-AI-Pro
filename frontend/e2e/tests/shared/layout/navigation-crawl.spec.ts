@@ -8,7 +8,6 @@ test.describe("navigation crawl", () => {
     "follows every entry of the primary navigation to its page without a console error",
     async ({ page, capture, consoleErrors }) => {
       const shell = new AppShell(page);
-      // The registry does not reach this page, so following any entry from it opens another page.
       await page.goto(formKitPath);
       await shell.waitUntilInteractive();
       const entries = await registeredNavigationEntries(page);
