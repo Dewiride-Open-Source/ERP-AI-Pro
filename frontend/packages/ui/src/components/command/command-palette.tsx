@@ -41,32 +41,41 @@ type SearchProps<T extends CommandPaletteItem> = Omit<
 };
 
 // The palette opens from state, not from a dialog trigger, so Radix would return focus to nothing when it closes. Radix
-// runs the open handler before it moves focus inside, so the element the person was using is still the active one; focus
-// goes back there, or to returnFocusTo when that was the page itself or is gone.
+// runs the open handler before it moves focus inside, so the element the person was using is still the active one. A
+// dismissed palette sends focus back there, or to returnFocusTo when that was the page itself or is gone; after a choice,
+// which usually changes the page under the palette and so removes that element moments later, focus goes to returnFocusTo.
 export function CommandPalette<T extends CommandPaletteItem>({
   open,
   onOpenChange,
+  onSelect,
   title,
   returnFocusTo,
   ...search
 }: CommandPaletteProps<T>) {
   const hintId = useId();
   const focusBeforeOpen = useRef<Element | null>(null);
+  const chose = useRef(false);
 
   const rememberFocus = () => {
     focusBeforeOpen.current = document.activeElement;
+    chose.current = false;
+  };
+
+  const select = (item: T) => {
+    chose.current = true;
+    onSelect(item);
   };
 
   const restoreFocus = (event: Event) => {
     event.preventDefault();
     const previous = focusBeforeOpen.current;
     focusBeforeOpen.current = null;
-    const target =
+    const usable =
       (previous instanceof HTMLElement || previous instanceof SVGElement) &&
       previous !== document.body &&
-      previous.isConnected
-        ? previous
-        : returnFocusTo?.current;
+      previous.isConnected;
+    const opener = returnFocusTo?.current;
+    const target = chose.current && opener ? opener : usable ? previous : opener;
     target?.focus({ preventScroll: true });
   };
 
@@ -80,7 +89,7 @@ export function CommandPalette<T extends CommandPaletteItem>({
         className="top-24 translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-lg"
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
-        <CommandSearch {...search} hintId={hintId} />
+        <CommandSearch {...search} onSelect={select} hintId={hintId} />
       </DialogContent>
     </Dialog>
   );
