@@ -58,6 +58,8 @@ const accessibilityTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa
 
 const blockingImpacts: ReadonlySet<string> = new Set(["serious", "critical"]);
 
+const cancelledRouterFetch = /\?_rsc=[\w-]+ due to access control checks\.$/;
+
 // Radix marks everything outside an open modal layer with aria-hidden and data-aria-hidden and keeps focus inside the
 // layer, so that content cannot be reached while the layer is open and is scanned in the captures taken without it. An open
 // Radix navigation menu renders an aria-hidden, focusable span beside its trigger that hands focus to the open content.
@@ -107,7 +109,11 @@ export const test = base.extend<Fixtures>({
   consoleErrors: [
     async ({ page, expectedConsoleError }, use) => {
       const errors: string[] = [];
-      const isExpected = (text: string) => expectedConsoleError?.test(text) ?? false;
+      // WebKit reports a router fetch that a navigation cancels as an access-control failure, which Playwright raises as a
+      // page error, and the shell prefetches its links on every page, so a test that loads one page after another can cancel
+      // one; a router fetch goes to the page's own origin and cannot fail an access-control check otherwise.
+      const isExpected = (text: string) =>
+        cancelledRouterFetch.test(text) || (expectedConsoleError?.test(text) ?? false);
       page.on("console", (message) => {
         if (message.type() === "error" && !isExpected(message.text())) errors.push(message.text());
       });

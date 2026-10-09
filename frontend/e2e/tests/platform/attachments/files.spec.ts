@@ -512,10 +512,6 @@ test.describe("attachments page", () => {
   });
 
   test.describe("across pages", () => {
-    // WebKit reports a router prefetch that a navigation cancels as an access-control failure, and this test navigates while
-    // the previous page is still prefetching its links; a same-origin request cannot fail an access-control check otherwise.
-    test.use({ expectedConsoleError: /\?_rsc=[\w-]+ due to access control checks\.$/ });
-
     test("moves between pages and brings a page outside the list back to one that exists", async ({
       page,
       api,

@@ -475,10 +475,6 @@ test.describe("data table", () => {
   });
 
   test.describe("from an address typed by hand", () => {
-    // WebKit reports the shell's navigation prefetches that a full page load cancels as access-control failures, and this test
-    // loads one address after another; a same-origin request cannot fail an access-control check otherwise.
-    test.use({ expectedConsoleError: /\?_rsc=[\w-]+ due to access control checks\.$/ });
-
     test("brings an address it cannot show back to one it can", async ({ page }) => {
       const demo = new DataTableDemoPage(page);
       await demo.goto("?page=abc&size=7&sort=state%3Aasc&tab=open");
