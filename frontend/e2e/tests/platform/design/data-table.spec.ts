@@ -258,6 +258,13 @@ test.describe("data table", () => {
       await expect(supplier).toBeFocused();
       await expect(supplier).toHaveValue("ganesh");
 
+      await bills.optionsFilter("Status").click();
+      await expect(page.getByRole("menu")).toBeVisible();
+      await expect(page.locator("body"), "the page keeps its scrollbar").not.toHaveAttribute(
+        "data-scroll-locked",
+      );
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("menu")).toHaveCount(0);
       await bills.chooseOptions("Status", ["Paid"]);
       await expect(bills.optionsFilter("Status")).toHaveAccessibleName("Status Paid");
       await bills.applyFilters.click();
@@ -363,6 +370,9 @@ test.describe("data table", () => {
           - menuitemcheckbox "Amount" [checked]
           - menuitemcheckbox "Status" [checked]
     `);
+    await expect(page.locator("body"), "the page keeps its scrollbar").not.toHaveAttribute(
+      "data-scroll-locked",
+    );
     await capture("data-table-columns-menu");
     await page.keyboard.press("Escape");
     await expect(page.getByRole("menu")).toHaveCount(0);

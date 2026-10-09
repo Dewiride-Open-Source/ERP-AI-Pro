@@ -597,6 +597,9 @@ test.describe("app shell navigation", () => {
 
     await shell.openUserMenu();
     await expect(shell.userMenuButton).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator("body"), "the page keeps its scrollbar").not.toHaveAttribute(
+      "data-scroll-locked",
+    );
     await expect(shell.userMenu).toMatchAriaSnapshot(`
       - menu "Account":
         - text: /.+/

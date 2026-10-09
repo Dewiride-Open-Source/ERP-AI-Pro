@@ -41,7 +41,7 @@ export function DataTableOptionsFilter({
     <FormField label={label} className={cn("w-full sm:w-48", className)}>
       {(control) => (
         <>
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 id={control.id}

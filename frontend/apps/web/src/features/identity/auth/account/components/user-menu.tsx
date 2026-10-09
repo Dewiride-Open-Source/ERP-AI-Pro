@@ -31,7 +31,7 @@ export function UserMenu({ person }: { person: MenuPerson | undefined }) {
 
   return (
     <>
-      <DropdownMenu open={open} onOpenChange={(next) => setOpen(next && !pending)}>
+      <DropdownMenu modal={false} open={open} onOpenChange={(next) => setOpen(next && !pending)}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
