@@ -66,6 +66,12 @@ const excludedFromScans = [
   "[data-slot='navigation-menu-item'] > span[aria-hidden='true']",
 ];
 
+// Playwright's WebKit port on Windows crashes or stalls in about half of the client navigations that run a view transition,
+// while Linux WebKit, which CI runs, does not, so the transitions keep their coverage in CI.
+export function changesPagesWithoutTransitions(browserName: string): boolean {
+  return browserName === "webkit" && process.platform === "win32";
+}
+
 // Every page outside the sign-in page needs a session, so a test signs a new person of a persona in unless it sets persona
 // to null to visit as nobody. No test may reach Microsoft, so every request to its sign-in origin is refused before it
 // leaves the browser, and a page that tries fails visibly.
@@ -74,7 +80,12 @@ export const test = base.extend<Fixtures>({
   persona: ["accountant", { option: true }],
   expectedConsoleError: [undefined, { option: true }],
 
-  context: async ({ context, persona }, use) => {
+  context: async ({ context, persona, browserName }, use) => {
+    if (changesPagesWithoutTransitions(browserName)) {
+      await context.addInitScript(() => {
+        Reflect.deleteProperty(Document.prototype, "startViewTransition");
+      });
+    }
     await context.route(`${microsoftSignInOrigin}/**`, (route) => route.abort());
     if (persona !== null) signIns.set(context, await signIn(context.request, persona));
     await use(context);

@@ -26,8 +26,15 @@ test.describe("attachments page without the API", () => {
       const shell = new AppShell(page);
       const renewal = sessionRenewed(page);
       await attachments.goto();
-      await expect(shell.signOut, "the sign-out of a session the API could not report").toBeVisible();
-      await expect(shell.account).not.toContainText("Signed in as");
+      await expect(
+        shell.userMenuButton,
+        "the user menu of a session the API could not report",
+      ).toHaveAccessibleName("Account");
+      await shell.openUserMenu();
+      await expect(shell.userMenu).toContainText("Your account");
+      await expect(shell.signOutItem).toBeEnabled();
+      await page.keyboard.press("Escape");
+      await expect(shell.userMenu).toBeHidden();
       expect((await renewal).status(), "the renewal the page sends without its API").toBe(500);
 
       await expect(attachments.uploadCard).toBeVisible();

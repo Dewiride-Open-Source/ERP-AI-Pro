@@ -2,7 +2,7 @@ import type { Page, Request } from "@playwright/test";
 
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { endEntraSession } from "../../../fixtures/sign-in";
-import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { changesPagesWithoutTransitions, expect, forEachTheme, test } from "../../../fixtures/test";
 import { isSignInPage, LoginPage, sessionEndedNotice } from "../../../pages/identity/auth/login.page";
 import { sessionRenewed } from "../../../pages/identity/auth/session.page";
 import {
@@ -15,10 +15,21 @@ import {
 
 type ReminderEvent = { readonly kind: "click" | "height"; readonly height: string; readonly at: number };
 
+type PageChangeAnimation = {
+  readonly name: string;
+  readonly pseudoElement: string;
+  readonly duration: number;
+};
+
+type PageChange = { readonly animations: readonly PageChangeAnimation[]; readonly skipped?: string };
+
+type MotionDurations = { readonly fast: number; readonly normal: number };
+
 declare global {
   interface Window {
     reminderEvents?: ReminderEvent[];
     returnedRows?: string[];
+    pageChanges?: PageChange[];
   }
 }
 
@@ -103,6 +114,81 @@ async function reminderMotion(
   const clicked = events.find(({ kind }) => kind === "click")?.at;
   const settled = heights.at(-1)?.at;
   return { between, milliseconds: clicked === undefined || settled === undefined ? 0 : settled - clicked };
+}
+
+// React runs each change of page through document.startViewTransition, whose ready promise settles once the transition's
+// pseudo-elements exist and their animations have started, so the animations of every change are read there. The wrapper
+// sits on the prototype, because the order of a page's and its context's init scripts is not defined and the context
+// fixture may remove the prototype's method; a page without it changes without a transition and records nothing.
+function recordPageChanges(): void {
+  const changes: PageChange[] = [];
+  window.pageChanges = changes;
+  const prototype = Document.prototype;
+  if (!("startViewTransition" in prototype)) return;
+  const start = prototype.startViewTransition;
+  prototype.startViewTransition = function (this: Document, update) {
+    const transition = start.call(this, update);
+    void transition.ready.then(
+      () => {
+        changes.push({
+          animations: document.getAnimations().flatMap((animation) => {
+            const effect = animation.effect;
+            if (!(animation instanceof CSSAnimation) || !(effect instanceof KeyframeEffect)) return [];
+            const pseudoElement = effect.pseudoElement ?? "";
+            if (!pseudoElement.startsWith("::view-transition")) return [];
+            return [
+              {
+                name: animation.animationName,
+                pseudoElement,
+                duration: Number(effect.getComputedTiming().duration),
+              },
+            ];
+          }),
+        });
+      },
+      (reason: unknown) => changes.push({ animations: [], skipped: String(reason) }),
+    );
+    return transition;
+  };
+}
+
+async function animatedPageChanges(page: Page, count: number): Promise<PageChange[]> {
+  const animated = async () =>
+    (await page.evaluate(() => window.pageChanges ?? [])).filter(
+      (change) => change.skipped !== undefined || change.animations.length > 0,
+    );
+  await expect
+    .poll(async () => (await animated()).length, { message: "changes of page that animated" })
+    .toBe(count);
+  return animated();
+}
+
+// The page being left fades out over the fast duration and the arriving one rises in over the normal one, while the root
+// snapshot, the shell around the page, stays still.
+function expectPageChange(change: PageChange, durations: MotionDurations): void {
+  expect(change.skipped, "a change of page the browser skipped").toBeUndefined();
+  expect(change.animations.map(({ name }) => name).sort(), "animations of the change of page").toEqual([
+    "page-enter",
+    "page-exit",
+  ]);
+  for (const { name, pseudoElement, duration } of change.animations) {
+    const entering = name === "page-enter";
+    expect(pseudoElement, `the pseudo-element ${name} runs on`).toMatch(
+      entering ? /^::view-transition-new\(/ : /^::view-transition-old\(/,
+    );
+    expect(duration, `milliseconds of ${name}`).toBeCloseTo(entering ? durations.normal : durations.fast, 3);
+  }
+}
+
+async function motionDurations(page: Page): Promise<MotionDurations> {
+  const { fast, normal } = await page.evaluate(() => {
+    const root = getComputedStyle(document.documentElement);
+    return {
+      fast: root.getPropertyValue("--motion-duration-fast"),
+      normal: root.getPropertyValue("--motion-duration-normal"),
+    };
+  });
+  return { fast: seconds(fast) * 1000, normal: seconds(normal) * 1000 };
 }
 
 function seconds(duration: string): number {
@@ -409,10 +495,10 @@ test.describe("feedback", () => {
   // A capture of the skeleton would outlast its three seconds in Firefox and WebKit; the kitchen sink's skeleton specimen, a
   // LoadingStatus too, is the one captured and scanned.
   forEachTheme(
-    "shows the report's own loading status while it is prepared, then fades it in",
+    "shows the report's own loading status while it is prepared, then the report without a transition",
     async ({ page, capture }) => {
-      const feedback = new FeedbackPage(page);
       const report = new SlowReportPage(page);
+      await page.addInitScript(recordPageChanges);
       await page.goto(slowReportPath, { waitUntil: "commit" });
 
       await expect(report.loading).toBeVisible();
@@ -421,7 +507,10 @@ test.describe("feedback", () => {
       );
       await expect(report.heading).toBeVisible({ timeout: 15_000 });
       await expect(report.loading).toHaveCount(0);
-      await expect(feedback.shell.pageTransition).toHaveCSS("animation-name", "page-enter");
+      expect(
+        (await page.evaluate(() => window.pageChanges ?? [])).flatMap(({ animations }) => animations),
+        "animations of the first load and of the report replacing its skeleton",
+      ).toEqual([]);
       await capture("report");
     },
   );
@@ -455,23 +544,28 @@ test.describe("feedback", () => {
   });
 
   for (const reducedMotion of ["no-preference", "reduce"] as const) {
-    test(`moves the page and the list only when motion is allowed (${reducedMotion})`, async ({ page }) => {
+    test(`moves the page and the list only when motion is allowed (${reducedMotion})`, async ({
+      browserName,
+      page,
+    }) => {
       await page.emulateMedia({ reducedMotion });
+      await page.addInitScript(recordPageChanges);
       const feedback = new FeedbackPage(page);
+      const report = new SlowReportPage(page);
       await feedback.goto();
       const moves = reducedMotion === "no-preference";
 
-      await expect(feedback.shell.pageTransition).toHaveCSS("animation-name", "page-enter");
-      const entrance = seconds(
-        await feedback.shell.pageTransition.evaluate(
-          (element) => getComputedStyle(element).animationDuration,
-        ),
-      );
-      if (moves) expect(entrance).toBeCloseTo(0.2, 5);
-      else expect(entrance).toBeLessThanOrEqual(0.00001);
+      const durations = await motionDurations(page);
+      if (moves) {
+        expect(durations.fast, "--motion-duration-fast in milliseconds").toBeCloseTo(150, 3);
+        expect(durations.normal, "--motion-duration-normal in milliseconds").toBeCloseTo(200, 3);
+      } else {
+        expect(durations.fast, "--motion-duration-fast in milliseconds").toBeLessThanOrEqual(0.01);
+        expect(durations.normal, "--motion-duration-normal in milliseconds").toBeLessThanOrEqual(0.01);
+      }
 
-      // An AnimatedList item moves over the same normal duration as the page, and clock readings in the page are coarsened.
-      const shortestMove = entrance * 1000 * 0.9;
+      // An AnimatedList item moves over the normal duration, and clock readings in the page are coarsened.
+      const shortestMove = durations.normal * 0.9;
       const openHeight = (await feedback.reminderItems.last().boundingBox())?.height ?? 0;
       expect(openHeight).toBeGreaterThan(0);
       await watchReminders(page);
@@ -496,6 +590,22 @@ test.describe("feedback", () => {
           shortestMove,
         );
       } else expect(leaving.between, "heights the removed item passed through").toEqual([]);
+
+      const viewTransitions = await page.evaluate(() => "startViewTransition" in document);
+      await feedback.designPageLink("Receivables ageing (takes three seconds)").click();
+      await expect(report.heading).toBeVisible({ timeout: 15_000 });
+      await report.backToFeedback.click();
+      await expect(feedback.heading).toBeVisible();
+      if (!viewTransitions) {
+        test.info().annotations.push({
+          type: "skip",
+          description: changesPagesWithoutTransitions(browserName)
+            ? "the context fixture removes document.startViewTransition in WebKit on Windows, whose port crashes or stalls in about half of the client navigations that run a view transition; Linux WebKit in CI keeps the check"
+            : "this browser has no document.startViewTransition, so its pages change without a transition",
+        });
+        return;
+      }
+      for (const change of await animatedPageChanges(page, 2)) expectPageChange(change, durations);
     });
   }
 });

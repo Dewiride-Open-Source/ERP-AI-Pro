@@ -28,8 +28,15 @@ test.describe("start page without the API", () => {
       await expect(start.heading).toHaveText("Welcome");
       await expect(start.areas).toHaveCount(2);
       await expect(start.noAreas).toHaveCount(0);
-      await expect(start.shell.signOut).toBeVisible();
-      await expect(start.shell.account).not.toContainText("Signed in as");
+      await expect(
+        start.shell.userMenuButton,
+        "the user menu of a session the API could not report",
+      ).toHaveAccessibleName("Account");
+      await start.shell.openUserMenu();
+      await expect(start.shell.userMenu).toContainText("Your account");
+      await expect(start.shell.signOutItem).toBeEnabled();
+      await page.keyboard.press("Escape");
+      await expect(start.shell.userMenu).toBeHidden();
       expect((await renewal).status(), "the renewal the page sends without its API").toBe(500);
       await expect(page.getByRole("main")).toMatchAriaSnapshot(`
         - paragraph: Home

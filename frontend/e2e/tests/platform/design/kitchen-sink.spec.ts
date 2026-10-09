@@ -519,6 +519,14 @@ test.describe("design system kitchen sink", () => {
       "aria-disabled",
       "true",
     );
+    const sidebarSpecimen = navigation.getByTestId("navigation-sidebar");
+    await expect(sidebarSpecimen.getByRole("link", { name: "Invoices" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    for (const name of ["Credit notes", "Customers"]) {
+      await expect(sidebarSpecimen.getByRole("link", { name })).not.toHaveAttribute("aria-current");
+    }
     await expect(
       kitchenSink.section("data-display").getByRole("button", { name: "Late fee (not configured)" }),
     ).toBeDisabled();
@@ -528,13 +536,14 @@ test.describe("design system kitchen sink", () => {
       "Item",
       "Why it is not installed, and where it is decided",
     ]);
-    await expect(excluded.getByRole("row")).toHaveCount(15);
-    await expect(excluded.getByRole("row", { name: /^sidebar / })).toContainText(
-      "Decided in Authenticated application shell",
+    await expect(excluded.getByRole("row")).toHaveCount(14);
+    await expect(excluded.getByRole("row", { name: /^sidebar / })).toHaveCount(0);
+    const command = excluded.getByRole("row", { name: /^command / });
+    await expect(command).toContainText(
+      "cmdk, which is not an approved package; the command palette under Composites, opened with Ctrl+K in the shell, is built in-house.",
     );
-    await expect(excluded.getByRole("row", { name: /^sidebar / })).toContainText(
-      "authentication-authenticated-application-shell",
-    );
+    await expect(command).toContainText("Decided in Authenticated application shell");
+    await expect(command).toContainText("authentication-authenticated-application-shell");
     await expect(excluded.getByRole("row", { name: /^combobox / })).toContainText("@base-ui/react");
     await expect(excluded.getByRole("row", { name: /^combobox / })).toContainText("built in-house");
     await expect(excluded.getByRole("row", { name: /^date-picker / })).toContainText(
@@ -733,6 +742,19 @@ test.describe("design system kitchen sink", () => {
             - listitem:
               - link "Go to next page"
         - paragraph: Page 1 of 5
+        - heading "Sidebar" [level=3]
+        - text: Acme Private Limited Finance
+        - list "Finance":
+          - listitem:
+            - link "Invoices":
+              - /url: "#navigation"
+            - text: "12"
+          - listitem:
+            - link "Credit notes":
+              - /url: "#data-display"
+          - listitem:
+            - link "Customers":
+              - /url: "#composites"
         - heading "Navigation menu" [level=3]
         - navigation "Main":
           - list:
@@ -1775,6 +1797,15 @@ test.describe("design system kitchen sink", () => {
       await pagination.getByRole("link", { name: "1", exact: true }).click();
       await expect(status).toHaveText("Page 1 of 5");
       await expect(page).toHaveURL(/#colours$/);
+      const sidebar = navigation.getByTestId("navigation-sidebar");
+      for (const { link, section } of [
+        { link: "Credit notes", section: "data-display" },
+        { link: "Customers", section: "composites" },
+        { link: "Invoices", section: "navigation" },
+      ] as const) {
+        await sidebar.getByRole("link", { name: link }).click();
+        await expect(page).toHaveURL(new RegExp(`#${section}$`));
+      }
 
       const dataDisplay = kitchenSink.section("data-display");
       for (const title of ["Card", "Item"]) {
@@ -1845,6 +1876,78 @@ test.describe("design system kitchen sink", () => {
       await expectTheme(page, theme);
 
       expect(await hasHorizontalOverflow(page), "horizontal overflow").toBe(false);
+    });
+
+    forEachTheme("the command palette", async ({ page, capture }) => {
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+      const specimen = kitchenSink.specimen("Command palette");
+      const open = specimen.getByRole("button", { name: "Open the command palette" });
+      const choice = specimen.getByTestId("composites-command-palette-choice");
+      const palette = page.getByRole("dialog", { name: "Example commands" });
+      const search = palette.getByRole("combobox", { name: "Search the examples" });
+      const examples = palette.getByRole("listbox", { name: "Examples" });
+      const status = palette.getByRole("status");
+      await expect(choice).toHaveText("Nothing chosen yet.");
+
+      await open.click();
+      await expect(palette).toBeVisible();
+      await expect(search).toBeFocused();
+      await expect(search).toHaveAttribute("placeholder", "Search the examples…");
+      await expect(palette).toMatchAriaSnapshot(`
+        - dialog "Example commands":
+          - heading "Example commands" [level=2]
+          - combobox "Search the examples" [expanded]
+          - status
+          - listbox "Examples":
+            - option "Home" [selected]
+            - group "Finance":
+              - text: Finance
+              - option "Invoices"
+              - option "Credit notes"
+            - group "Clients":
+              - text: Clients
+              - option "Customers"
+            - group "Timesheets":
+              - text: Timesheets
+              - option "Timesheets"
+      `);
+      await expect(examples.getByRole("option")).toHaveCount(5);
+      await expect(status).toHaveText("");
+      await capture("composites-command-palette-open", palette);
+
+      await search.pressSequentially("refund");
+      const creditNotes = examples.getByRole("option", { name: "Credit notes" });
+      await expect(status).toHaveText("1 example");
+      await expect(examples.getByRole("option")).toHaveCount(1);
+      await expect(creditNotes).toHaveAttribute("aria-selected", "true");
+      await expect(search).toHaveAttribute(
+        "aria-activedescendant",
+        (await creditNotes.getAttribute("id")) ?? "",
+      );
+      await capture("composites-command-palette-filtered", palette);
+      await page.keyboard.press("Enter");
+      await expect(palette).toBeHidden();
+      await expect(choice).toHaveText("Chosen: Credit notes");
+      await expect(open).toBeFocused();
+
+      await open.click();
+      await expect(search).toHaveValue("");
+      await expect(examples.getByRole("option")).toHaveCount(5);
+      await search.fill("zzz");
+      await expect(examples).toHaveCount(0);
+      await expect(status).toHaveText("No example matches your search.");
+      await expect(
+        palette.getByRole("paragraph").filter({ hasText: "No example matches your search." }),
+      ).toBeVisible();
+      await search.fill("clients");
+      await expect(status).toHaveText("1 example");
+      await expect(examples.getByRole("option", { name: "Customers" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+      await dismissWithEscape(page, palette, open);
+      await expect(choice).toHaveText("Chosen: Credit notes");
     });
 
     forEachTheme(

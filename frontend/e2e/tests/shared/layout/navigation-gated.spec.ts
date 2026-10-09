@@ -14,17 +14,18 @@ test.describe("app shell navigation with the system-info module disabled", () =>
 
   forEachTheme(
     "hides the disabled module and answers not found for its pages inside the shell",
-    async ({ page, capture }, isMobile) => {
+    async ({ page, capture }) => {
       const shell = new AppShell(page);
 
       const response = await page.goto("/platform/system-info");
       expect(response?.status()).toBe(404);
       await expect(shell.banner).toBeVisible();
       await expect(page.getByRole("heading", { name: "This page does not exist" })).toBeVisible();
-      if (!isMobile) {
-        await expect(shell.primaryNavigation).toBeAttached();
-        await expect(shell.navigationLink("System")).toHaveCount(0);
-      }
+      await shell.openNavigation();
+      await expect(shell.primaryNavigation).toBeVisible();
+      await expect(shell.navigationLink("System")).toHaveCount(0);
+      await expect(shell.primaryNavigation.getByRole("link")).toHaveText(["Home"]);
+      await shell.closeDrawer();
       await expect(page.getByRole("main")).toMatchAriaSnapshot(`
         - main:
           - paragraph: "404"

@@ -1,3 +1,5 @@
+import type { Page } from "@playwright/test";
+
 import {
   answerEndSession,
   endEntraSession,
@@ -24,6 +26,23 @@ const endSessionEndpoint = /^https:\/\/login\.microsoftonline\.com\/[0-9a-f-]{36
 
 const originOf = (baseURL: string | undefined) => new URL(baseURL ?? "").origin;
 
+// A sign-out without the request token first fetches a new pair before it posts its form, and holding that fetch keeps the
+// page as it is while the sign-out is under way; a held form post would leave the page navigating, where nothing can be read.
+async function holdAntiforgeryRenewal(page: Page): Promise<() => void> {
+  let release: () => void = () => undefined;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(
+    (url) => url.pathname === antiforgeryRenewalPath,
+    async (route) => {
+      await released;
+      await route.fallback();
+    },
+  );
+  return release;
+}
+
 test.describe("signing out", () => {
   test("Sign out ends the session through Microsoft and lands on the signed-out sign-in page", async ({
     baseURL,
@@ -41,8 +60,8 @@ test.describe("signing out", () => {
     const session = (await context.cookies()).find((cookie) => cookie.name === sessionCookie);
     expect(session, "the session cookie of the signed-in person").toBeDefined();
 
-    await expect(start.shell.account).toContainText(person?.name ?? "");
-    await start.shell.signOut.click();
+    await expect(start.shell.userMenuButton).toHaveAccessibleName(`Signed in as ${person?.name ?? ""}`);
+    await start.shell.signOut();
 
     await expect(login.notice).toHaveText(signedOutNotice);
     await expect(page).toHaveURL(isSignInPage(originOf(baseURL), undefined, "signed-out"));
@@ -82,7 +101,7 @@ test.describe("signing out", () => {
     await renewed;
     await context.clearCookies({ name: requestTokenCookie });
 
-    await start.shell.signOut.click();
+    await start.shell.signOut();
 
     await expect(new LoginPage(page).notice).toHaveText(signedOutNotice);
     await expect(page).toHaveURL(isSignInPage(originOf(baseURL), undefined, "signed-out"));
@@ -93,13 +112,51 @@ test.describe("signing out", () => {
     ).toBeTruthy();
   });
 
-  test("the sign-out control keeps its name when only its icon shows", async ({ page }) => {
+  test("the user menu keeps the person's name where only the initials show and offers an enabled Sign out", async ({
+    page,
+    person,
+  }) => {
     const start = new StartPage(page);
+    const { shell } = start;
     await start.goto();
 
-    await expect(start.shell.signOut).toBeVisible();
-    await expect(start.shell.signOut).toBeEnabled();
-    await expect(start.shell.signOut).toHaveAccessibleName("Sign out");
+    await expect(shell.userMenuButton).toBeVisible();
+    await expect(shell.userMenuButton).toHaveAccessibleName(`Signed in as ${person?.name ?? ""}`);
+    await shell.openUserMenu();
+    await expect(shell.signOutItem).toBeEnabled();
+    await expect(shell.signOutItem).toHaveAccessibleName("Sign out");
+    await page.keyboard.press("Escape");
+    await expect(shell.userMenu).toBeHidden();
+  });
+
+  test("while the sign-out is under way the user menu stays shut and its button says it is busy", async ({
+    baseURL,
+    context,
+    page,
+  }) => {
+    const start = new StartPage(page);
+    const { shell } = start;
+    const endSession = await answerEndSession(page);
+    const renewed = sessionRenewed(page);
+    await start.goto();
+    await renewed;
+    await context.clearCookies({ name: requestTokenCookie });
+    const release = await holdAntiforgeryRenewal(page);
+
+    await shell.signOut();
+    await expect(shell.userMenuButton).toHaveAttribute("aria-busy", "true");
+    await expect(shell.userMenuButton).toHaveAttribute("aria-disabled", "true");
+    await expect(shell.userMenuButton).toBeFocused();
+    for (const key of ["Enter", "ArrowDown"]) {
+      await page.keyboard.press(key);
+      await expect(shell.userMenuButton, `the menu after ${key}`).toHaveAttribute("aria-expanded", "false");
+      await expect(shell.userMenu, `the menu after ${key}`).toHaveCount(0);
+    }
+    release();
+
+    await expect(new LoginPage(page).notice).toHaveText(signedOutNotice);
+    await expect(page).toHaveURL(isSignInPage(originOf(baseURL), undefined, "signed-out"));
+    expect(endSession(), "the end-session request").toBeDefined();
   });
 
   test.describe("when Microsoft reports a sign-out from another app", () => {

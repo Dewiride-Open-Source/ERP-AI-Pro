@@ -26,8 +26,15 @@ test.describe("system information page without the API", () => {
       const shell = new AppShell(page);
       const renewal = sessionRenewed(page);
       await systemInfo.goto();
-      await expect(shell.signOut, "the sign-out of a session the API could not report").toBeVisible();
-      await expect(shell.account).not.toContainText("Signed in as");
+      await expect(
+        shell.userMenuButton,
+        "the user menu of a session the API could not report",
+      ).toHaveAccessibleName("Account");
+      await shell.openUserMenu();
+      await expect(shell.userMenu).toContainText("Your account");
+      await expect(shell.signOutItem).toBeEnabled();
+      await page.keyboard.press("Escape");
+      await expect(shell.userMenu).toBeHidden();
       expect((await renewal).status(), "the renewal the page sends without its API").toBe(500);
 
       await expect(systemInfo.card).toBeVisible();
@@ -53,7 +60,11 @@ test.describe("system information page without the API", () => {
       await expect(systemInfo.refresh).toBeEnabled();
       await expect(systemInfo.unavailable).toBeVisible();
       await expect(systemInfo.startupsUnavailable).toBeVisible();
-      await expect(shell.signOut, "the sign-out after the page refreshed without its API").toBeVisible();
+      await expect(
+        shell.userMenuButton,
+        "the user menu after the page refreshed without its API",
+      ).toHaveAccessibleName("Account");
+      await expect(shell.userMenuButton).toBeEnabled();
 
       await capture("system-info-unavailable");
     },
