@@ -7,7 +7,7 @@ import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { SearchIcon } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { opensPageSearch, pageSearchShortcutLabel } from "./shortcut-keys";
 
@@ -19,6 +19,7 @@ export function PageSearch({ items }: { items: readonly PageSearchItem[] }) {
   const router = useRouter();
   const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
+  const button = useRef<HTMLButtonElement>(null);
   const shortcut = useSyncExternalStore(
     noChanges,
     () => pageSearchShortcutLabel(navigator.userAgent),
@@ -38,6 +39,7 @@ export function PageSearch({ items }: { items: readonly PageSearchItem[] }) {
   return (
     <>
       <Button
+        ref={button}
         variant="outline"
         size="sm"
         aria-keyshortcuts="Control+K Meta+K"
@@ -66,6 +68,7 @@ export function PageSearch({ items }: { items: readonly PageSearchItem[] }) {
         listLabel="Pages"
         emptyMessage="No page matches your search."
         countMessage={(count) => (count === 1 ? "1 page" : `${count} pages`)}
+        returnFocusTo={button}
       />
     </>
   );

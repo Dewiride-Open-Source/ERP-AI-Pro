@@ -1,7 +1,7 @@
 "use client";
 
 import { SearchIcon } from "lucide-react";
-import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 
 import { Dialog, DialogContent, DialogTitle } from "@dewiride/erp-ui/components/ui/dialog";
 import { Kbd } from "@dewiride/erp-ui/components/ui/kbd";
@@ -30,27 +30,53 @@ export interface CommandPaletteProps<T extends CommandPaletteItem> {
   listLabel: string;
   emptyMessage: string;
   countMessage: (count: number) => string;
+  returnFocusTo?: RefObject<HTMLElement | null> | undefined;
 }
 
 type SearchProps<T extends CommandPaletteItem> = Omit<
   CommandPaletteProps<T>,
-  "open" | "onOpenChange" | "title"
+  "open" | "onOpenChange" | "title" | "returnFocusTo"
 > & {
   hintId: string;
 };
 
+// The palette opens from state, not from a dialog trigger, so Radix would return focus to nothing when it closes. Radix
+// runs the open handler before it moves focus inside, so the element the person was using is still the active one; focus
+// goes back there, or to returnFocusTo when that was the page itself or is gone.
 export function CommandPalette<T extends CommandPaletteItem>({
   open,
   onOpenChange,
   title,
+  returnFocusTo,
   ...search
 }: CommandPaletteProps<T>) {
   const hintId = useId();
+  const focusBeforeOpen = useRef<Element | null>(null);
+
+  const rememberFocus = () => {
+    focusBeforeOpen.current = document.activeElement;
+  };
+
+  const restoreFocus = (event: Event) => {
+    event.preventDefault();
+    const previous = focusBeforeOpen.current;
+    focusBeforeOpen.current = null;
+    const target =
+      (previous instanceof HTMLElement || previous instanceof SVGElement) &&
+      previous !== document.body &&
+      previous.isConnected
+        ? previous
+        : returnFocusTo?.current;
+    target?.focus({ preventScroll: true });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
         aria-describedby={hintId}
+        onOpenAutoFocus={rememberFocus}
+        onCloseAutoFocus={restoreFocus}
         className="top-24 translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-lg"
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>

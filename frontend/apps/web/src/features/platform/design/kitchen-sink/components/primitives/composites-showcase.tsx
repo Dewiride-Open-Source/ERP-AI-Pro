@@ -5,7 +5,7 @@ import { ThemeToggle } from "@dewiride/erp-ui/components/theme/theme-toggle";
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { FileDropZone, type FileRejection } from "@dewiride/erp-ui/components/upload/file-drop-zone";
 import { ClockIcon, FileTextIcon, HouseIcon, ReceiptIcon, UsersIcon } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Specimen, SpecimenGrid } from "../specimen";
@@ -56,6 +56,7 @@ export function CompositesShowcase() {
 function CommandPaletteSpecimen() {
   const [open, setOpen] = useState(false);
   const [chosen, setChosen] = useState<string | undefined>(undefined);
+  const opener = useRef<HTMLButtonElement>(null);
   const examples: readonly CommandPaletteItem[] = [
     { id: "home", label: "Home", icon: <HouseIcon aria-hidden /> },
     {
@@ -95,7 +96,7 @@ function CommandPaletteSpecimen() {
       description="Ctrl+K or ⌘K opens it in the shell. Typing filters the list, the arrow keys move and Enter chooses."
     >
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="outline" onClick={() => setOpen(true)}>
+        <Button ref={opener} variant="outline" onClick={() => setOpen(true)}>
           Open the command palette
         </Button>
         <p
@@ -120,6 +121,7 @@ function CommandPaletteSpecimen() {
         listLabel="Examples"
         emptyMessage="No example matches your search."
         countMessage={(count) => (count === 1 ? "1 example" : `${count} examples`)}
+        returnFocusTo={opener}
       />
     </Specimen>
   );
