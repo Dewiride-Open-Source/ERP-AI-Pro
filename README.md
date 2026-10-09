@@ -34,7 +34,7 @@ docs/        roadmap, architecture, guides, operations, ADRs, contributor licenc
 Prerequisites: .NET SDK 10, Node.js 24, pnpm 12 (`npm i -g pnpm@12`), Docker Desktop, SQL Server 2025 Developer, and the Azure CLI signed in to the Dewiride tenant (the API keeps attachments in the development storage account as your own identity). The API refuses to start without its database connection string and the attachments storage endpoint and encryption key, which come from App Configuration or `dotnet user-secrets`, and without its sign-in settings, which come only from the App Configuration store: `dotnet run` needs `APPCONFIG_ENDPOINT` in the API's user secrets and an `az login` session that can read the store and the local-dev vault. [docs/guides/local-development.md](docs/guides/local-development.md) sets them up, including the Azurite container and the two variables the backend tests need (`ERP_TEST_SQL_CONNECTION`, `ERP_TEST_BLOB_EMULATOR_HOST`); a run without the store starts only with the throwaway sign-in values of its section [Sign-in](docs/guides/local-development.md#sign-in), and such a run can never sign anyone in.
 
 ```bash
-# API on http://localhost:5080 (health, /api/platform/system-info, /scalar)
+# API on http://localhost:5080 (health, /scalar; every other API route needs a session, so use it through the web app)
 cd backend && dotnet restore && dotnet build --no-restore && dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api
 
 # Web app on http://localhost:3000 (redirects to /login)

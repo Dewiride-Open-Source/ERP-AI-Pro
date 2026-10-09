@@ -10,6 +10,8 @@ export class AppShell {
   readonly main: Locator;
   readonly notifications: Locator;
   readonly pageTransition: Locator;
+  readonly account: Locator;
+  readonly signOut: Locator;
 
   constructor(private readonly page: Page) {
     this.banner = page.getByRole("banner");
@@ -19,6 +21,8 @@ export class AppShell {
     this.main = page.getByRole("main");
     this.notifications = page.getByRole("region", { name: /^Notifications/ });
     this.pageTransition = page.locator("[data-slot='page-transition']");
+    this.account = page.getByTestId("account-area");
+    this.signOut = this.account.getByRole("button", { name: "Sign out" });
   }
 
   get wordmarkLink(): Locator {

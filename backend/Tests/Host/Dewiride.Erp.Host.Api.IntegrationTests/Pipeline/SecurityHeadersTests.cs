@@ -1,4 +1,5 @@
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Pipeline;
 
@@ -8,7 +9,7 @@ public sealed class SecurityHeadersTests : IClassFixture<ErpApiFactory>
 
     public SecurityHeadersTests(ErpApiFactory factory)
     {
-        _client = factory.CreateClient();
+        _client = factory.CreateClient().AsUser(TestUsers.Accountant);
     }
 
     [Fact]

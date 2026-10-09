@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Attachments.Scanning;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Responses;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints.Scanning;
@@ -16,7 +17,7 @@ public sealed class VirusScanTests
         var scanner = new FixedVerdictScanner(AttachmentScanVerdict.Clean);
         using var root = new ErpApiFactory();
         using var factory = WithScanner(root, scanner);
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var text = SampleFiles.Text(string.Concat(Enumerable.Range(0, 10_000).Select(line => $"{token} scanned line {line}\n")));
 
@@ -32,7 +33,7 @@ public sealed class VirusScanTests
         var scanner = new FixedVerdictScanner(AttachmentScanVerdict.Infected);
         using var root = new ErpApiFactory();
         using var factory = WithScanner(root, scanner);
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
 
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.Text($"infected {token}"), SampleFiles.TextType, $"{token}-infected.txt");

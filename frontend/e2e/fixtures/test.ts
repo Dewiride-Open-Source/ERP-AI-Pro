@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import {
   test as base,
   expect,
+  type APIResponse,
   type BrowserContext,
   type Locator,
   type Page,
@@ -11,22 +12,41 @@ import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { signIn, type Persona, type SignedInPerson } from "./sign-in";
+import {
+  microsoftSignInOrigin,
+  requestToken,
+  requestTokenHeader,
+  signIn,
+  type EntraSession,
+  type Persona,
+  type SignIn,
+  type SignedInPerson,
+} from "./sign-in";
 
 export type Theme = "light" | "dark";
 
 export const themes: readonly Theme[] = ["light", "dark"];
 
+type ApiRequestOptions = NonNullable<Parameters<BrowserContext["request"]["fetch"]>[1]>;
+
+export type SignedInApi = {
+  readonly get: (path: string, options?: ApiRequestOptions) => Promise<APIResponse>;
+  readonly post: (path: string, options?: ApiRequestOptions) => Promise<APIResponse>;
+  readonly delete: (path: string, options?: ApiRequestOptions) => Promise<APIResponse>;
+};
+
 type Fixtures = {
   theme: Theme;
-  persona: Persona | undefined;
+  persona: Persona | null;
   person: SignedInPerson | undefined;
+  entraSession: EntraSession | undefined;
+  api: SignedInApi;
   expectedConsoleError: RegExp | undefined;
   consoleErrors: string[];
   capture: (name: string, target?: Locator) => Promise<void>;
 };
 
-const signedInPeople = new WeakMap<BrowserContext, SignedInPerson>();
+const signIns = new WeakMap<BrowserContext, SignIn>();
 
 const screenshotsRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "screenshots");
 
@@ -46,18 +66,30 @@ const excludedFromScans = [
   "[data-slot='navigation-menu-item'] > span[aria-hidden='true']",
 ];
 
+// Every page outside the sign-in page needs a session, so a test signs a new person of a persona in unless it sets persona
+// to null to visit as nobody. No test may reach Microsoft, so every request to its sign-in origin is refused before it
+// leaves the browser, and a page that tries fails visibly.
 export const test = base.extend<Fixtures>({
   theme: ["light", { option: true }],
-  persona: [undefined, { option: true }],
+  persona: ["accountant", { option: true }],
   expectedConsoleError: [undefined, { option: true }],
 
   context: async ({ context, persona }, use) => {
-    if (persona !== undefined) signedInPeople.set(context, await signIn(context.request, persona));
+    await context.route(`${microsoftSignInOrigin}/**`, (route) => route.abort());
+    if (persona !== null) signIns.set(context, await signIn(context.request, persona));
     await use(context);
   },
 
   person: async ({ context }, use) => {
-    await use(signedInPeople.get(context));
+    await use(signIns.get(context)?.person);
+  },
+
+  entraSession: async ({ context }, use) => {
+    await use(signIns.get(context)?.entraSession);
+  },
+
+  api: async ({ context }, use) => {
+    await use(signedInApi(context));
   },
 
   consoleErrors: [
@@ -105,6 +137,22 @@ export const test = base.extend<Fixtures>({
     });
   },
 });
+
+// The browser's own session reaches the API through the web origin, and every change it sends carries the request token
+// the sign-in issued, as the pages do.
+export function signedInApi(context: BrowserContext): SignedInApi {
+  const change = (method: string) => async (path: string, options?: ApiRequestOptions) =>
+    context.request.fetch(path, {
+      ...options,
+      method,
+      headers: { ...options?.headers, [requestTokenHeader]: await requestToken(context) },
+    });
+  return {
+    get: (path, options) => context.request.get(path, options),
+    post: change("POST"),
+    delete: change("DELETE"),
+  };
+}
 
 export type ThemedFixtures = {
   page: Page;

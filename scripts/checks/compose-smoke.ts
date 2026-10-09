@@ -29,19 +29,30 @@ export type TarEntry = { name: string; type: string; mode: number; uid: number; 
 
 const expectedKeyRingEntry: TarEntry = { name: `${posix.basename(keyRingDirectory)}/`, type: "5", mode: 0o700, uid: appUserId, gid: appUserId };
 
+const stackTenantIssuer = "https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0";
+
+const unknownEntraSession = new URLSearchParams({ iss: stackTenantIssuer, sid: "00000000-0000-0000-0000-000000000000" });
+
+const unauthenticated = (name: string, url: string): Check => ({ name, url, status: 401, header: ["content-type", "application/problem+json"], body: '"request.unauthenticated"' });
+
 const checks: Check[] = [
   { name: "api liveness", url: `${apiBaseUrl}/healthz/live`, status: 200 },
   { name: "api readiness", url: `${apiBaseUrl}/healthz/ready`, status: 200 },
-  { name: "api system info", url: `${apiBaseUrl}/api/platform/system-info`, status: 200, header: ["content-type", "application/json"] },
+  unauthenticated("anonymous api system info", `${apiBaseUrl}/api/platform/system-info`),
   { name: "web health", url: `${webBaseUrl}/healthz`, status: 200 },
   { name: "web root redirects to login", url: `${webBaseUrl}/`, status: 307, redirect: "/login" },
   { name: "web login page", url: `${webBaseUrl}/login`, status: 200, header: ["content-security-policy", "'nonce-"] },
-  { name: "api through the web origin", url: `${webBaseUrl}/api/platform/system-info`, status: 200, header: ["content-type", "application/json"] },
-  { name: "api feature flags", url: `${apiBaseUrl}/api/platform/features`, status: 200, header: ["content-type", "application/json"], body: "Erp.Modules.Platform.SystemInfo" },
-  { name: "feature flags through the web origin", url: `${webBaseUrl}/api/platform/features`, status: 200, header: ["content-type", "application/json"], body: "Erp.Modules.Platform.SystemInfo" },
-  { name: "api startups", url: `${apiBaseUrl}/api/platform/system-info/startups`, status: 200, header: ["content-type", "application/json"], body: '"startups"' },
-  { name: "startups through the web origin", url: `${webBaseUrl}/api/platform/system-info/startups`, status: 200, header: ["content-type", "application/json"], body: '"startups"' },
-  { name: "anonymous unknown api route", url: `${apiBaseUrl}/api/platform/does-not-exist`, status: 401, header: ["content-type", "application/problem+json"], body: '"request.unauthenticated"' },
+  { name: "web robots.txt without a session", url: `${webBaseUrl}/robots.txt`, status: 200, header: ["content-type", "text/plain"], body: "Disallow: /" },
+  unauthenticated("anonymous api through the web origin", `${webBaseUrl}/api/platform/system-info`),
+  unauthenticated("anonymous api feature flags", `${apiBaseUrl}/api/platform/features`),
+  unauthenticated("anonymous feature flags through the web origin", `${webBaseUrl}/api/platform/features`),
+  unauthenticated("anonymous api startups", `${apiBaseUrl}/api/platform/system-info/startups`),
+  unauthenticated("anonymous startups through the web origin", `${webBaseUrl}/api/platform/system-info/startups`),
+  unauthenticated("anonymous api attachments", `${apiBaseUrl}/api/platform/attachments`),
+  unauthenticated("anonymous attachments through the web origin", `${webBaseUrl}/api/platform/attachments`),
+  unauthenticated("anonymous unknown api route", `${apiBaseUrl}/api/platform/does-not-exist`),
+  { name: "api front-channel sign-out of an unknown Entra session", url: `${apiBaseUrl}/api/auth/signout-oidc?${unknownEntraSession}`, status: 200 },
+  { name: "front-channel sign-out through the web origin", url: `${webBaseUrl}/api/auth/signout-oidc?${unknownEntraSession}`, status: 200 },
   { name: "sign-in refuses a return address on another site through the web origin", url: `${webBaseUrl}/api/auth/login?returnUrl=https%3A%2F%2Fexample.com`, status: 400, header: ["content-type", "application/problem+json"], body: '"request.invalid"' },
 ];
 
@@ -123,7 +134,7 @@ export function keyRingDirectoryOutcome(image: string): string | undefined {
 async function verify(check: Check): Promise<string | undefined> {
   const response = await fetch(check.url, { redirect: "manual" });
   if (response.status !== check.status) return `${check.name}: expected ${check.status}, got ${response.status}`;
-  if (check.redirect && !(response.headers.get("location") ?? "").endsWith(check.redirect)) {
+  if (check.redirect && response.headers.get("location") !== check.redirect) {
     return `${check.name}: expected a redirect to ${check.redirect}, got ${response.headers.get("location")}`;
   }
   if (check.header) {

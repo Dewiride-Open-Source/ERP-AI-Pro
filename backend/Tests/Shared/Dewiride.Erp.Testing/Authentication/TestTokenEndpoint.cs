@@ -126,8 +126,10 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             ["oid"] = user.ObjectId.ToString("D"),
             ["tid"] = TestIdentityProvider.TenantId,
             ["sub"] = user.ObjectId.ToString("N"),
+            ["sid"] = user.EntraSessionId,
             ["name"] = user.Name,
             ["preferred_username"] = user.UserName,
+            ["login_hint"] = user.LoginHint,
             ["ver"] = "2.0",
         };
 

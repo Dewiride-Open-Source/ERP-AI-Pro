@@ -1,10 +1,13 @@
 using System.Net;
+using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
+using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.EndToEnd;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.EndToEnd;
 
@@ -26,10 +29,47 @@ public sealed class PersonaSignInTests(PersonaSignInTests.Fixture fixture) : ICl
         Assert.Equal(TestUsers.Administrator.Name, person.Name);
         Assert.Equal(TestUsers.Administrator.UserName, person.UserName);
         Assert.Equal(TestUsers.Administrator.Roles, person.Roles);
-        var me = await client.GetFromJsonAsync<PersonaSignInResponse>(new Uri(AuthPaths.Me, UriKind.Relative), TestContext.Current.CancellationToken);
-        Assert.NotNull(me);
-        Assert.Equal((person.Id, person.Name, person.UserName), (me.Id, me.Name, me.UserName));
-        Assert.Equal(person.Roles, me.Roles);
+        Assert.Equal(BearerTokenOptionsSetup.IssuerOf(fixture.Factory.Services.GetRequiredService<IOptions<EntraSignInOptions>>().Value), person.Issuer);
+        Assert.True(Guid.TryParse(person.EntraSessionId, out var entraSessionId));
+        Assert.NotEqual(person.Id, entraSessionId);
+        Assert.NotEqual(TestUsers.Administrator.EntraSessionId, person.EntraSessionId);
+        using var me = JsonDocument.Parse(await client.GetStringAsync(new Uri(AuthPaths.Me, UriKind.Relative), TestContext.Current.CancellationToken));
+        Assert.Equal(person.Id, me.RootElement.GetProperty("id").GetGuid());
+        Assert.Equal(person.Name, me.RootElement.GetProperty("name").GetString());
+        Assert.Equal(person.UserName, me.RootElement.GetProperty("userName").GetString());
+        Assert.Equal(person.Roles, me.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()));
+    }
+
+    [Fact]
+    public async Task Post_KnownPersona_AnswersThePersonTheirEntraSessionAndItsIssuerInThisShape()
+    {
+        using var client = TestSignIn.CreateClient(fixture.Factory);
+
+        using var response = await SignInAsync(client, "accountant");
+
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(["id", "name", "userName", "roles", "entraSessionId", "issuer"], body.RootElement.EnumerateObject().Select(member => member.Name));
+    }
+
+    [Fact]
+    public async Task Get_FrontChannelSignOutOfTheEntraSessionAPersonaSignInNames_EndsThatSessionOnly()
+    {
+        using var leaving = TestSignIn.CreateClient(fixture.Factory);
+        using var staying = TestSignIn.CreateClient(fixture.Factory);
+        using var leavingSignIn = await SignInAsync(leaving, "accountant");
+        using var stayingSignIn = await SignInAsync(staying, "accountant");
+        var person = await leavingSignIn.Content.ReadFromJsonAsync<PersonaSignInResponse>(TestContext.Current.CancellationToken);
+        using var entra = fixture.Factory.CreateClient(new() { AllowAutoRedirect = false });
+
+        using var signOut = await entra.GetAsync(
+            new Uri($"{AuthPaths.FrontChannelSignOut}?iss={Uri.EscapeDataString(person!.Issuer)}&sid={Uri.EscapeDataString(person.EntraSessionId)}", UriKind.Relative),
+            TestContext.Current.CancellationToken);
+        using var left = await leaving.GetAsync(new Uri(AuthPaths.Me, UriKind.Relative), TestContext.Current.CancellationToken);
+        using var stayed = await staying.GetAsync(new Uri(AuthPaths.Me, UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, signOut.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, left.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, stayed.StatusCode);
     }
 
     [Fact]
@@ -46,6 +86,7 @@ public sealed class PersonaSignInTests(PersonaSignInTests.Fixture fixture) : ICl
         Assert.NotNull(firstPerson);
         Assert.NotNull(secondPerson);
         Assert.NotEqual(firstPerson.Id, secondPerson.Id);
+        Assert.NotEqual(firstPerson.EntraSessionId, secondPerson.EntraSessionId);
     }
 
     [Fact]

@@ -8,7 +8,7 @@ export function NotFoundMessage() {
       <h1 className="text-title">This page does not exist</h1>
       <p className="max-w-md text-muted-foreground">The link may be outdated or the page may have moved.</p>
       <Button asChild>
-        <Link href="/">Go to sign in</Link>
+        <Link href="/">Go to the home page</Link>
       </Button>
     </div>
   );

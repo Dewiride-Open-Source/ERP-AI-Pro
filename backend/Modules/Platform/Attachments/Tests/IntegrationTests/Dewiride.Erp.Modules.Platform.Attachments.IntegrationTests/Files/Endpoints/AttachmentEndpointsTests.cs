@@ -3,6 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Responses;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints;
 
@@ -11,7 +12,7 @@ public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixt
     [Fact]
     public async Task Get_UploadedAttachment_ReturnsItsDetails()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var uploaded = await AttachmentsApi.UploadAsync(client, SampleFiles.OnePixelPng(), SampleFiles.PngType, $"pixel-{AttachmentsApi.UniqueToken()}.png");
 
         using var response = await client.GetAsync(AttachmentsApi.Path($"/{uploaded.Id}"), TestContext.Current.CancellationToken);
@@ -23,7 +24,7 @@ public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixt
     [Fact]
     public async Task Get_UnknownId_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.GetAsync(AttachmentsApi.Path($"/{Guid.CreateVersion7()}"), TestContext.Current.CancellationToken);
 
@@ -33,7 +34,7 @@ public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixt
     [Fact]
     public async Task Delete_UploadedAttachment_AnswersNoContentAndRemovesItFromGetAndList()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var token = AttachmentsApi.UniqueToken();
         var uploaded = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"to be deleted {token}"), SampleFiles.TextType, $"{token}-deleted.txt");
 
@@ -54,7 +55,7 @@ public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixt
     [Fact]
     public async Task Delete_AttachmentDeletedBefore_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var uploaded = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"deleted twice {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "twice.txt");
         using var first = await client.DeleteAsync(AttachmentsApi.Path($"/{uploaded.Id}"), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
@@ -67,7 +68,7 @@ public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixt
     [Fact]
     public async Task Delete_UnknownId_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await client.DeleteAsync(AttachmentsApi.Path($"/{Guid.CreateVersion7()}"), TestContext.Current.CancellationToken);
 

@@ -5,6 +5,8 @@ import { DataTableRegion } from "../../shared/lists/data-table.page";
 
 export const feedbackPath = "/design/feedback";
 
+export const dismissedApprovalsCookie = "erp-design-dismissed-approvals";
+
 export class FeedbackPage {
   readonly shell: AppShell;
   readonly heading: Locator;

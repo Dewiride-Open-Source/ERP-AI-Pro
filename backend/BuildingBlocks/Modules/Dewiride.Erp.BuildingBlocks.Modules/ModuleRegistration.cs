@@ -39,6 +39,7 @@ public static class ModuleRegistration
                 .WithTags(descriptor.Id)
                 .RequireFeature(descriptor.FeatureFlag)
                 .ProducesValidationProblem()
+                .ProducesProblem(StatusCodes.Status401Unauthorized)
                 .ProducesProblem(StatusCodes.Status404NotFound)
                 .ProducesProblem(StatusCodes.Status429TooManyRequests)
                 .ProducesProblem(StatusCodes.Status500InternalServerError)

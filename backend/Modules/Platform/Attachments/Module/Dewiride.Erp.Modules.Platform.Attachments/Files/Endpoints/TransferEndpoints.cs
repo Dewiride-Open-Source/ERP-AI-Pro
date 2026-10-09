@@ -64,21 +64,18 @@ internal static class TransferEndpoints
                 };
 
                 return Task.CompletedTask;
-            })
-            .AllowAnonymous();
+            });
         upload.Add(endpoint => endpoint.Metadata.Add(new UploadSizeLimit(endpoint.ApplicationServices.GetRequiredService<IOptionsMonitor<AttachmentsOptions>>())));
 
         group.MapPost("/{id:guid}/download-links", CreateDownloadLinkAsync)
             .WithName("Platform.Attachments.CreateDownloadLink")
-            .WithSummary("Creates a short-lived link that downloads the attachment for the person asking.")
-            .AllowAnonymous();
+            .WithSummary("Creates a short-lived link that downloads the attachment for the person asking.");
 
         group.MapGet("/{id:guid}/content", RedeemDownloadLinkAsync)
             .WithName(DownloadRouteName)
             .WithSummary("Streams the original file for a valid, unexpired link of the person asking.")
             .Produces<Stream>(StatusCodes.Status200OK, "application/octet-stream")
-            .WithRequestTimeout(TimeoutPolicy)
-            .AllowAnonymous();
+            .WithRequestTimeout(TimeoutPolicy);
     }
 
     // Any IOException other than a BadHttpRequestException (the size limit or a malformed body, which the exception handler

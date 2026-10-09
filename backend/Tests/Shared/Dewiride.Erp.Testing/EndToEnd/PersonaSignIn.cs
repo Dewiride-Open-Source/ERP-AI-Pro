@@ -11,7 +11,8 @@ namespace Dewiride.Erp.Testing.EndToEnd;
 // Playwright signs a test in through the web origin, where a browser completes a real sign-in, so the session cookie and
 // the antiforgery pair land on the origin the pages come from; the route is under /api, a prefix the web app hands to the
 // API. Every sign-in is a new person of the persona, admitted to the test token endpoint first: a test that signs out ends
-// the sessions of its own account only, and tests running side by side never share a rate limit.
+// the sessions of its own account only, and tests running side by side never share a rate limit. The answer names the
+// person's Entra session and its issuer, which a spec sends to the front-channel sign-out the way Entra would.
 public static class PersonaSignIn
 {
     public const string PathPrefix = "/api/__test/sign-in";
@@ -47,6 +48,6 @@ public static class PersonaSignIn
         tokenEndpoint.Admit(person);
         await TestSignIn.IssueSessionAsync(context, person).ConfigureAwait(false);
 
-        return TypedResults.Ok(new PersonaSignInResponse(person.ObjectId, person.Name, person.UserName, person.Roles));
+        return TypedResults.Ok(new PersonaSignInResponse(person.ObjectId, person.Name, person.UserName, person.Roles, person.EntraSessionId, TestIdentityProvider.Issuer));
     }
 }

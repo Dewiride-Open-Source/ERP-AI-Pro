@@ -25,23 +25,19 @@ internal static class AttachmentEndpoints
     {
         group.MapGet("/", ListAsync)
             .WithName("Platform.Attachments.List")
-            .WithSummary("Lists stored attachments, newest first unless the caller sorts them.")
-            .AllowAnonymous();
+            .WithSummary("Lists stored attachments, newest first unless the caller sorts them.");
 
         group.MapGet("/policy", GetPolicyAsync)
             .WithName("Platform.Attachments.GetUploadPolicy")
-            .WithSummary("Describes the largest file and the media types an upload may have.")
-            .AllowAnonymous();
+            .WithSummary("Describes the largest file and the media types an upload may have.");
 
         group.MapGet("/{id:guid}", GetAsync)
             .WithName(GetRouteName)
-            .WithSummary("Describes one stored attachment.")
-            .AllowAnonymous();
+            .WithSummary("Describes one stored attachment.");
 
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("Platform.Attachments.Delete")
-            .WithSummary("Deletes an attachment; its download links stop working.")
-            .AllowAnonymous();
+            .WithSummary("Deletes an attachment; its download links stop working.");
     }
 
     public static AttachmentResponse ToResponse(AttachmentDetails details) =>

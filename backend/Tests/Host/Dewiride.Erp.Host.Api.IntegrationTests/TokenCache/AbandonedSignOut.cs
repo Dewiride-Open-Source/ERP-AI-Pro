@@ -1,29 +1,31 @@
-using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.TokenCache;
 
-// Cancels the browser's request the moment the store receives the person's sign-out record, as a browser closed during the
-// sign-out would, and reports how writing that record ended.
-internal sealed class AbandonedSignOut(CancellationTokenSource browser)
+// Cancels the browser's request the moment the store receives the chosen write or removal of a key with the chosen prefix,
+// as a browser closed during a sign-out would, and reports how that operation ended.
+internal sealed class AbandonedSignOut(CancellationTokenSource browser, TokenCacheOperations operation, string keyPrefix)
 {
-    private readonly TaskCompletionSource _recorded = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    public Task Recorded => _recorded.Task;
+    public Task Completed => _completed.Task;
 
     public IDistributedCache Wrap(IDistributedCache store) => new AbandoningStore(this, store);
 
-    private async Task AbandonWhileRecordingAsync(Func<Task> record)
+    private bool Abandons(TokenCacheOperations received, string key) =>
+        received == operation && key.StartsWith(keyPrefix, StringComparison.Ordinal);
+
+    private async Task AbandonWhileStoringAsync(Func<Task> store)
     {
         await browser.CancelAsync();
         try
         {
-            await record();
-            _recorded.TrySetResult();
+            await store();
+            _completed.TrySetResult();
         }
         catch (Exception exception)
         {
-            _recorded.TrySetException(exception);
+            _completed.TrySetException(exception);
             throw;
         }
     }
@@ -37,8 +39,8 @@ internal sealed class AbandonedSignOut(CancellationTokenSource browser)
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options) => store.Set(key, value, options);
 
         public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default) =>
-            key.StartsWith(SessionRevocations.KeyPrefix, StringComparison.Ordinal)
-                ? signOut.AbandonWhileRecordingAsync(() => store.SetAsync(key, value, options, token))
+            signOut.Abandons(TokenCacheOperations.Write, key)
+                ? signOut.AbandonWhileStoringAsync(() => store.SetAsync(key, value, options, token))
                 : store.SetAsync(key, value, options, token);
 
         public void Refresh(string key) => store.Refresh(key);
@@ -47,6 +49,9 @@ internal sealed class AbandonedSignOut(CancellationTokenSource browser)
 
         public void Remove(string key) => store.Remove(key);
 
-        public Task RemoveAsync(string key, CancellationToken token = default) => store.RemoveAsync(key, token);
+        public Task RemoveAsync(string key, CancellationToken token = default) =>
+            signOut.Abandons(TokenCacheOperations.Remove, key)
+                ? signOut.AbandonWhileStoringAsync(() => store.RemoveAsync(key, token))
+                : store.RemoveAsync(key, token);
     }
 }

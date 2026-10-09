@@ -1,0 +1,12 @@
+{
+  "idToken": [
+    {
+      "name": "login_hint",
+      "source": null,
+      "essential": false,
+      "additionalProperties": []
+    }
+  ],
+  "accessToken": [],
+  "saml2Token": []
+}

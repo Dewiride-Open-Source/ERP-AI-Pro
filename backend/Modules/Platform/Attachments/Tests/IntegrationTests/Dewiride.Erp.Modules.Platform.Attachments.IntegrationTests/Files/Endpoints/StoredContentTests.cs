@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using Azure.Storage.Blobs;
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Blob;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.Data.SqlClient;
@@ -15,7 +16,7 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
     [Fact]
     public async Task Get_ContentWhoseStoredBytesWereAltered_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"altered {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "altered.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
         var blob = await BlobOfAsync(attachment.Id);
@@ -31,7 +32,7 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
     [Fact]
     public async Task Get_ContentWhoseStoredBytesAreMissing_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"missing {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "missing.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
         var blob = await BlobOfAsync(attachment.Id);
@@ -45,7 +46,7 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
     [Fact]
     public async Task Get_ContentWhoseStoredBytesAreAnotherFilesEnvelope_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var target = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"target {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "target.txt");
         var other = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"other {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "other.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, target.Id);
@@ -64,12 +65,12 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
         var text = SampleFiles.Text($"stored under a removed key {token}");
         using (var removed = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"removed-{token}")))
         {
-            using var removedClient = removed.CreateClient();
+            using var removedClient = removed.CreateClient().AsUser(TestUsers.Accountant);
             await AttachmentsApi.UploadAsync(removedClient, text, SampleFiles.TextType, "under-the-removed-key.txt");
         }
 
         using var current = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"current-{token}"));
-        using var client = current.CreateClient();
+        using var client = current.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "under-the-current-key.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
 
@@ -82,7 +83,7 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
     [Fact]
     public async Task Post_ContentMatchingStoredBytesWhoseBlobIsMissing_StoresItsOwnCopy()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text($"blob lost {AttachmentsApi.UniqueToken()}");
         var lost = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "lost.txt");
         await (await BlobOfAsync(lost.Id)).DeleteAsync(cancellationToken: TestContext.Current.CancellationToken);
@@ -99,12 +100,12 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
         var text = SampleFiles.Text($"key id reused {token}");
         using (var earlier = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"reused-{token}")))
         {
-            using var earlierClient = earlier.CreateClient();
+            using var earlierClient = earlier.CreateClient().AsUser(TestUsers.Accountant);
             await AttachmentsApi.UploadAsync(earlierClient, text, SampleFiles.TextType, "under-the-earlier-material.txt");
         }
 
         using var current = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"reused-{token}"));
-        using var client = current.CreateClient();
+        using var client = current.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "under-the-current-material.txt");
 
         Assert.Equal(text, await DownloadAsync(client, attachment.Id));
@@ -117,12 +118,12 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
         var text = SampleFiles.Text($"key id case {token}");
         using (var lower = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"archive-{token}")))
         {
-            using var lowerClient = lower.CreateClient();
+            using var lowerClient = lower.CreateClient().AsUser(TestUsers.Accountant);
             await AttachmentsApi.UploadAsync(lowerClient, text, SampleFiles.TextType, "under-the-lower-case-id.txt");
         }
 
         using var upper = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"ARCHIVE-{token.ToUpperInvariant()}"));
-        using var client = upper.CreateClient();
+        using var client = upper.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "under-the-upper-case-id.txt");
 
         Assert.Equal(text, await DownloadAsync(client, attachment.Id));
@@ -131,7 +132,7 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
     [Fact]
     public async Task PostDownloadLink_ContentWhoseStoredBytesAreMissing_AnswersNotFound()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"no link {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "no-link.txt");
         await (await BlobOfAsync(attachment.Id)).DeleteAsync(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -147,12 +148,12 @@ public sealed class StoredContentTests(ErpApiFactory factory) : IClassFixture<Er
         Guid id;
         using (var removed = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"gone-{token}")))
         {
-            using var removedClient = removed.CreateClient();
+            using var removedClient = removed.CreateClient().AsUser(TestUsers.Accountant);
             id = (await AttachmentsApi.UploadAsync(removedClient, SampleFiles.Text($"key gone {token}"), SampleFiles.TextType, "key-gone.txt")).Id;
         }
 
         using var current = new ErpApiFactory().WithConfiguration(ErpApiFactory.AttachmentsEncryptionKeyKey, EncryptionKey($"now-{token}"));
-        using var client = current.CreateClient();
+        using var client = current.CreateClient().AsUser(TestUsers.Accountant);
         using var response = await client.PostAsync(AttachmentsApi.Path($"/{id}/download-links"), content: null, TestContext.Current.CancellationToken);
 
         await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.NotFound, AttachmentErrors.NotFound.Code);

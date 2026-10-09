@@ -3,13 +3,15 @@
 import { ConfirmDialog } from "@dewiride/erp-ui/components/feedback/confirm-dialog";
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { DownloadIcon, Trash2Icon } from "lucide-react";
+import { unstable_isUnrecognizedActionError, unstable_rethrow } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { showFailureToast } from "@/shared/feedback/failure-toast";
+import { rejectedActionState } from "@/shared/forms/client/rejected-action";
 import { useRemoveRow } from "@/shared/lists/list-row-removal";
 
-import { createDownloadLink, deleteAttachment } from "../server/actions";
+import { createDownloadLink, deleteAttachment, type DownloadLinkResult } from "../server/actions";
 
 export function AttachmentActions({
   id,
@@ -27,7 +29,14 @@ export function AttachmentActions({
   const download = () =>
     startDownload(async () => {
       setError(undefined);
-      const result = await createDownloadLink(id);
+      let result: DownloadLinkResult;
+      try {
+        result = await createDownloadLink(id);
+      } catch (failure) {
+        unstable_rethrow(failure);
+        setError(rejectedActionState(failure, unstable_isUnrecognizedActionError).message);
+        return;
+      }
       if ("url" in result) downloadWithoutLeavingPage(result.url, fileName);
       else setError(result.error);
     });

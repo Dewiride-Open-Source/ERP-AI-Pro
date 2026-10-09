@@ -15,8 +15,7 @@ internal static class SystemInfoEndpoints
     {
         group.MapGet(string.Empty, GetAsync)
             .WithName("Platform.SystemInfo.Get")
-            .WithSummary("Returns the application name, version and uptime of the API.")
-            .AllowAnonymous();
+            .WithSummary("Returns the application name, version and uptime of the API.");
     }
 
     private static async Task<Results<Ok<SystemInfoResponse>, ProblemHttpResult>> GetAsync(

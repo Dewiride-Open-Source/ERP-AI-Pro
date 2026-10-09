@@ -1,3 +1,4 @@
+import { signIn } from "../../fixtures/sign-in";
 import { expect, test } from "../../fixtures/test";
 
 const correlationHeader = "x-correlation-id";
@@ -6,6 +7,7 @@ test.describe("api problem details", () => {
   test("a request outside the allowed range answers a validation problem naming the field", async ({
     request,
   }) => {
+    await signIn(request, "accountant");
     const response = await request.get("/api/platform/system-info/startups?take=0", {
       headers: { [correlationHeader]: "e2e-validation-1" },
     });
@@ -24,6 +26,7 @@ test.describe("api problem details", () => {
   });
 
   test("a query value that is not a number answers a malformed-request problem", async ({ request }) => {
+    await signIn(request, "accountant");
     const response = await request.get("/api/platform/system-info/startups?take=many");
 
     expect(response.status()).toBe(400);
@@ -54,6 +57,7 @@ test.describe("api problem details", () => {
   });
 
   test("every api response echoes a well-formed correlation id sent by the caller", async ({ request }) => {
+    await signIn(request, "accountant");
     const response = await request.get("/api/platform/system-info", {
       headers: { [correlationHeader]: "e2e-echo.1" },
     });

@@ -145,7 +145,7 @@ public sealed class AuthenticationSchemeTests(ErpApiFactory factory) : IClassFix
         Assert.Equal(AuthPaths.SignInCallback, options.CallbackPath);
         Assert.Equal(AuthPaths.SignedOutCallback, options.SignedOutCallbackPath);
         Assert.False(options.RemoteSignOutPath.HasValue);
-        Assert.Equal(AuthPaths.LoginPage, options.SignedOutRedirectUri);
+        Assert.Equal(AuthPaths.SignedOutPage, options.SignedOutRedirectUri);
         Assert.Equal("roles", options.TokenValidationParameters.RoleClaimType);
         Assert.Equal("preferred_username", options.TokenValidationParameters.NameClaimType);
         Assert.All(new[] { options.CorrelationCookie, options.NonceCookie }, cookie =>

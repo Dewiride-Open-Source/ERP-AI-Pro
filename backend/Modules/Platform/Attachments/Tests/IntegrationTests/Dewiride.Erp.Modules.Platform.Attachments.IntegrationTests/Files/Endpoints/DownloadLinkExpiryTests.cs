@@ -2,6 +2,7 @@ using System.Net;
 using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
@@ -16,7 +17,7 @@ public sealed class DownloadLinkExpiryTests
         var time = new FakeTimeProvider(TimeProvider.System.GetUtcNow());
         using var root = new ErpApiFactory();
         using var factory = WithClock(root, time);
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text($"almost expired {AttachmentsApi.UniqueToken()}");
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "almost.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
@@ -34,7 +35,7 @@ public sealed class DownloadLinkExpiryTests
         var time = new FakeTimeProvider(TimeProvider.System.GetUtcNow());
         using var root = new ErpApiFactory();
         using var factory = WithClock(root, time);
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"expired {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "expired.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
         Assert.Equal(time.GetUtcNow() + LinkLifetime(factory), link.ExpiresAt);

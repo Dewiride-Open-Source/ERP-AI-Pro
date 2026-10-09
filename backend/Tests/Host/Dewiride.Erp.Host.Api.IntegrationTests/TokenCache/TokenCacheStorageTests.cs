@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
@@ -62,6 +63,27 @@ public sealed class TokenCacheStorageTests
         var row = await TokenCacheRow.FindAsync(factory.Deployment.TokenCacheKeyPrefix + SessionRevocations.KeyPrefix + TestUsers.Accountant.AccountId);
         Assert.NotNull(row);
         Assert.InRange(new DateTimeOffset(BinaryPrimitives.ReadInt64BigEndian(row.Value), TimeSpan.Zero), before, after);
+        Assert.Null(row.SlidingExpirationInSeconds);
+        Assert.NotNull(row.AbsoluteExpiration);
+        Assert.InRange(row.AbsoluteExpiration.Value, before + Lifetime + Margin - TimeSpan.FromSeconds(1), after + Lifetime + Margin);
+    }
+
+    [Fact]
+    public async Task Post_SignIn_RecordsTheAccountOfTheEntraSessionUnprotectedUntilItsSessionsHaveEnded()
+    {
+        await using var factory = new ErpApiFactory().WithTestEndpoints(SessionCookies.MapSignInAndObjectId);
+        using var client = TestSignIn.CreateClient(factory);
+        var before = TimeProvider.System.GetUtcNow();
+
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+
+        var after = TimeProvider.System.GetUtcNow();
+        Assert.Null(await TokenCacheRow.FindAsync(EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId));
+        var row = await TokenCacheRow.FindAsync(factory.Deployment.TokenCacheKeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId);
+        Assert.NotNull(row);
+        using var record = JsonDocument.Parse(row.Value);
+        Assert.Equal(["AccountId"], record.RootElement.EnumerateObject().Select(member => member.Name));
+        Assert.Equal(TestUsers.Accountant.AccountId, record.RootElement.GetProperty("AccountId").GetString());
         Assert.Null(row.SlidingExpirationInSeconds);
         Assert.NotNull(row.AbsoluteExpiration);
         Assert.InRange(row.AbsoluteExpiration.Value, before + Lifetime + Margin - TimeSpan.FromSeconds(1), after + Lifetime + Margin);

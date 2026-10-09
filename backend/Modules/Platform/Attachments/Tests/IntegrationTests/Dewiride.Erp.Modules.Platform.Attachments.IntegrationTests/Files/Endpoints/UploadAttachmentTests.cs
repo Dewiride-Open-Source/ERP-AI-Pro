@@ -3,10 +3,10 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Responses;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints;
 
@@ -15,7 +15,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_Png_AnswersCreatedWithTheLocationAndTheStoredDetails()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var png = SampleFiles.OnePixelPng();
         var fileName = $"pixel-{AttachmentsApi.UniqueToken()}.png";
         var before = TimeProvider.System.GetUtcNow();
@@ -39,13 +39,13 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
         Assert.Equal(Convert.ToHexStringLower(SHA256.HashData(png)), attachment.GetProperty("sha256").GetString());
         Assert.Equal("notScanned", attachment.GetProperty("scanStatus").GetString());
         Assert.InRange(attachment.GetProperty("createdAt").GetDateTimeOffset(), before, after);
-        Assert.Equal(ActorIds.Anonymous, attachment.GetProperty("createdBy").GetGuid());
+        Assert.Equal(TestUsers.Accountant.ObjectId, attachment.GetProperty("createdBy").GetGuid());
     }
 
     [Fact]
     public async Task Post_TextWithACharsetParameter_StoresTheBareMediaType()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"plain text {AttachmentsApi.UniqueToken()}"), "text/plain; charset=utf-8", "notes.txt");
 
@@ -57,7 +57,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [InlineData("C:\\fakepath\\invoice.pdf")]
     public async Task Post_FileNameWithDirectories_KeepsOnlyTheFileName(string fileName)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Pdf(AttachmentsApi.UniqueToken()), SampleFiles.PdfType, fileName);
 
@@ -67,7 +67,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_SameContentTwice_CreatesTwoAttachmentsWithTheSameDigest()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text($"identical content {AttachmentsApi.UniqueToken()}");
 
         var first = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "first.txt");
@@ -82,7 +82,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_JsonBody_AnswersMultipartRequired()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         using var content = JsonContent.Create(new { fileName = "invoice.pdf" });
 
         using var response = await client.PostAsync(AttachmentsApi.Path(), content, TestContext.Current.CancellationToken);
@@ -93,7 +93,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_MultipartWithoutAFilePart_AnswersFileMissing()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         using var content = new MultipartFormDataContent();
         content.Add(new StringContent("only a note"), "note");
 
@@ -105,7 +105,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_EmptyFile_AnswersEmpty()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await AttachmentsApi.PostFileAsync(client, [], SampleFiles.TextType, "empty.txt");
 
@@ -119,7 +119,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [InlineData(null)]
     public async Task Post_DeclaredTypeOutsideTheAllowList_AnswersUnsupportedType(string? contentType)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.Text("<html></html>"), contentType, "page.html");
 
@@ -132,7 +132,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [InlineData("image/jpeg", "disguised.jpg")]
     public async Task Post_TextDeclaredAsABinaryType_AnswersContentMismatch(string contentType, string fileName)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.Text("this is plain text, not an image"), contentType, fileName);
 
@@ -142,7 +142,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_PngDeclaredAsText_AnswersContentMismatch()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.OnePixelPng(), SampleFiles.TextType, "pixel.txt");
 
@@ -154,7 +154,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [InlineData(0xFF)]
     public async Task Post_TextWithANonTextByteAfterTheLeadingBytes_AnswersContentMismatch(byte stray)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         byte[] bytes = [.. SampleFiles.Text(new string('a', 20_000)), stray, .. SampleFiles.Text(" " + AttachmentsApi.UniqueToken())];
 
         using var response = await AttachmentsApi.PostFileAsync(client, bytes, SampleFiles.TextType, "late-binary.txt");
@@ -165,7 +165,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_LargeTextOfMultibyteCharacters_IsStoredWhole()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text(string.Concat(Enumerable.Repeat("\u00e9\u20ac\ud834\udd1e ", 50_000)) + AttachmentsApi.UniqueToken());
 
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "multibyte.txt");
@@ -181,7 +181,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [InlineData(SampleFiles.PngType, "pixel.jpg")]
     public async Task Post_FileNameWithoutAnExtensionOfTheDeclaredType_AnswersExtensionMismatch(string contentType, string fileName)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var bytes = contentType switch
         {
             SampleFiles.PdfType => SampleFiles.Pdf(AttachmentsApi.UniqueToken()),
@@ -199,7 +199,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [InlineData("reports/")]
     public async Task Post_FileNameWithoutAVisibleName_AnswersFileNameInvalid(string fileName)
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.Text("named badly"), SampleFiles.TextType, fileName);
 
@@ -209,7 +209,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_FileNameOf255Characters_KeepsTheWholeName()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var fileName = new string('n', 251) + ".txt";
 
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"long name {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, fileName);
@@ -220,7 +220,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_FileNameOver255Characters_AnswersFileNameInvalid()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.Text("too long a name"), SampleFiles.TextType, new string('n', 252) + ".txt");
 
@@ -230,7 +230,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_BodyEndingBeforeTheClosingBoundary_AnswersIncomplete()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         const string Boundary = "erp-truncated-upload";
         using var content = new ByteArrayContent(Encoding.UTF8.GetBytes(
             $"--{Boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"cut.txt\"\r\nContent-Type: text/plain\r\n\r\nthe upload stops here"));
@@ -244,7 +244,7 @@ public sealed class UploadAttachmentTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Post_Upload_ReturnsTheSameDetailsAsAGetOfTheLocation()
     {
-        using var client = factory.CreateClient();
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         using var upload = await AttachmentsApi.PostFileAsync(client, SampleFiles.Pdf(AttachmentsApi.UniqueToken()), SampleFiles.PdfType, "statement.pdf");
         var created = await upload.Content.ReadFromJsonAsync<AttachmentResponse>(AttachmentsApi.Json, TestContext.Current.CancellationToken);
 

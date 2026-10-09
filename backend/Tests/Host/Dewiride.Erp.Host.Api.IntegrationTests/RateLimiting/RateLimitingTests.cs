@@ -20,14 +20,16 @@ public sealed class RateLimitingTests
 
     private static readonly Uri SystemInfoPath = new("/api/platform/system-info", UriKind.Relative);
 
+    private static readonly Uri AnonymousPath = new("/__test/anonymous", UriKind.Relative);
+
     [Fact]
     public async Task Get_AnonymousCallerOverTheLimit_AnswersATooManyRequestsProblemWithRetryAfter()
     {
-        await using var factory = new ErpApiFactory().WithConfiguration(LimitKey, "2");
+        await using var factory = new ErpApiFactory().WithConfiguration(LimitKey, "2").WithTestEndpoints(MapAnonymous);
         using var client = factory.CreateClient();
-        await AssertServedAsync(client, SystemInfoPath, times: 2);
+        await AssertServedAsync(client, AnonymousPath, times: 2);
 
-        using var response = await client.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(AnonymousPath, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.TooManyRequests, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -42,13 +44,13 @@ public sealed class RateLimitingTests
     [Fact]
     public async Task Get_HealthEndpointsBeyondTheLimit_AreNeverLimitedAndSpendNoAllowance()
     {
-        await using var factory = new ErpApiFactory().WithConfiguration(LimitKey, "2");
+        await using var factory = new ErpApiFactory().WithConfiguration(LimitKey, "2").WithTestEndpoints(MapAnonymous);
         using var client = factory.CreateClient();
 
         await AssertServedAsync(client, new Uri("/healthz/live", UriKind.Relative), times: 5);
         await AssertServedAsync(client, new Uri("/healthz/ready", UriKind.Relative), times: 5);
 
-        await AssertServedAsync(client, SystemInfoPath, times: 2);
+        await AssertServedAsync(client, AnonymousPath, times: 2);
     }
 
     [Fact]
@@ -56,10 +58,11 @@ public sealed class RateLimitingTests
     {
         await using var factory = new ErpApiFactory()
             .WithConfiguration(LimitKey, "1")
-            .WithConfiguration($"{RateLimitingOptions.SectionName}:Enabled", "false");
+            .WithConfiguration($"{RateLimitingOptions.SectionName}:Enabled", "false")
+            .WithTestEndpoints(MapAnonymous);
         using var client = factory.CreateClient();
 
-        await AssertServedAsync(client, SystemInfoPath, times: 5);
+        await AssertServedAsync(client, AnonymousPath, times: 5);
     }
 
     [Fact]
@@ -68,6 +71,7 @@ public sealed class RateLimitingTests
         await using var factory = new ErpApiFactory()
             .WithConfiguration(LimitKey, "2")
             .WithConfiguration($"{ErpHostOptions.SectionName}:KnownNetworks:0", "127.0.0.1/32")
+            .WithTestEndpoints(MapAnonymous)
             .WithKestrel();
         using var client = factory.CreateClient();
 
@@ -80,7 +84,7 @@ public sealed class RateLimitingTests
     [Fact]
     public async Task Get_SignedInPeopleBehindOneAddress_EachHaveTheirOwnAllowanceApartFromAnonymousCallers()
     {
-        await using var factory = new ErpApiFactory().WithConfiguration(ActorLimitKey, "2").WithConfiguration(LimitKey, "2");
+        await using var factory = new ErpApiFactory().WithConfiguration(ActorLimitKey, "2").WithConfiguration(LimitKey, "2").WithTestEndpoints(MapAnonymous);
         using var accountant = factory.CreateClient().AsUser(TestUsers.Accountant);
         using var administrator = factory.CreateClient().AsUser(TestUsers.Administrator);
         using var anonymous = factory.CreateClient();
@@ -90,14 +94,14 @@ public sealed class RateLimitingTests
 
         Assert.Equal(HttpStatusCode.TooManyRequests, overTheLimit.StatusCode);
         await AssertServedAsync(administrator, SystemInfoPath, times: 2);
-        await AssertServedAsync(anonymous, SystemInfoPath, times: 2);
+        await AssertServedAsync(anonymous, AnonymousPath, times: 2);
     }
 
     [Fact]
     public async Task Get_DisabledModuleBeyondTheLimit_IsLimitedBeforeTheFeatureGateAnswers()
     {
-        await using var factory = new ErpApiFactory().WithConfiguration(LimitKey, "1").WithFeature(SystemInfoFlag, enabled: false);
-        using var client = factory.CreateClient();
+        await using var factory = new ErpApiFactory().WithConfiguration(ActorLimitKey, "1").WithFeature(SystemInfoFlag, enabled: false);
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var first = await client.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);
         using var second = await client.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);
@@ -107,6 +111,8 @@ public sealed class RateLimitingTests
         Assert.Equal("feature.disabled", body.RootElement.GetProperty("code").GetString());
         Assert.Equal(HttpStatusCode.TooManyRequests, second.StatusCode);
     }
+
+    private static void MapAnonymous(IEndpointRouteBuilder routes) => routes.MapGet(AnonymousPath.OriginalString, () => Results.Ok()).AllowAnonymous();
 
     private static async Task AssertServedAsync(HttpClient client, Uri path, int times)
     {
@@ -119,7 +125,7 @@ public sealed class RateLimitingTests
 
     private static async Task<HttpStatusCode> StatusForAsync(HttpClient client, string forwardedFor)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, SystemInfoPath);
+        using var request = new HttpRequestMessage(HttpMethod.Get, AnonymousPath);
         request.Headers.TryAddWithoutValidation("X-Forwarded-For", forwardedFor);
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 

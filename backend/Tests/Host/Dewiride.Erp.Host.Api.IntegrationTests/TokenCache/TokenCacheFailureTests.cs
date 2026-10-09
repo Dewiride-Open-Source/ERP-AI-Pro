@@ -85,7 +85,7 @@ public sealed class TokenCacheFailureTests
     public async Task Post_LogoutAbandonedByTheBrowserWhileTheSignOutIsRecorded_StillRecordsItAndRefusesACopyOfTheCookie()
     {
         using var browser = new CancellationTokenSource();
-        var signOut = new AbandonedSignOut(browser);
+        var signOut = new AbandonedSignOut(browser, TokenCacheOperations.Write, SessionRevocations.KeyPrefix);
         await using var root = new ErpApiFactory().WithTestEndpoints(SessionCookies.MapSignInAndObjectId);
         await using var factory = root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.DecorateTokenCacheStore(signOut.Wrap)));
         using var client = TestSignIn.CreateClient(factory);
@@ -93,7 +93,7 @@ public sealed class TokenCacheFailureTests
         var copy = SessionCookies.ValueOf(signIn);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, browser.Token));
-        await signOut.Recorded.WaitAsync(TestContext.Current.CancellationToken);
+        await signOut.Completed.WaitAsync(TestContext.Current.CancellationToken);
         using var refused = await SessionCookies.GetObjectIdWithAsync(factory, copy);
 
         Assert.NotNull(await TokenCacheRow.FindAsync(root.Deployment.TokenCacheKeyPrefix + SessionRevocations.KeyPrefix + TestUsers.Accountant.AccountId));
@@ -132,7 +132,7 @@ public sealed class TokenCacheFailureTests
         using var client = TestSignIn.CreateClient(factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
 
-        outage.Begin(TokenCacheOperations.Remove);
+        outage.Begin(TokenCacheOperations.Remove, TestUsers.Accountant.AccountId);
         using var response = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
         outage.End();
         using var afterwards = await SessionCookies.GetObjectIdAsync(client);
@@ -143,6 +143,7 @@ public sealed class TokenCacheFailureTests
         Assert.Equal(HttpStatusCode.Unauthorized, afterwards.StatusCode);
         Assert.Contains(SessionCookies.Cleared, SessionCookies.SetCookieOf(afterwards), StringComparison.OrdinalIgnoreCase);
         Assert.True(await TestSignIn.IsAccountCachedAsync(factory.Services, TestUsers.Accountant));
+        Assert.Null(await TokenCacheRow.FindAsync(root.Deployment.TokenCacheKeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId));
     }
 
     [Fact]
@@ -159,7 +160,7 @@ public sealed class TokenCacheFailureTests
         Assert.Equal(AuthPaths.SignInFailedPage, response.Headers.Location?.OriginalString);
         Assert.Null(SessionCookies.SetCookieOf(response));
         Assert.False(await TestSignIn.IsAccountCachedAsync(factory.Services, TestUsers.Accountant));
-        AssertTokenCacheFailureLogged(factory);
+        AssertSignInFailureLogged(factory, SignInEvents.TokenCacheFailure);
     }
 
     [Fact]
@@ -180,9 +181,113 @@ public sealed class TokenCacheFailureTests
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal(AuthPaths.SignInFailedPage, response.Headers.Location?.OriginalString);
         Assert.Null(SessionCookies.SetCookieOf(response));
-        AssertTokenCacheFailureLogged(factory);
+        AssertSignInFailureLogged(factory, SignInEvents.TokenCacheFailure);
         Assert.Equal(HttpStatusCode.OK, otherSession.StatusCode);
         Assert.True(await TestSignIn.IsAccountCachedAsync(factory.Services, TestUsers.Accountant));
+    }
+
+    [Fact]
+    public async Task Post_CallbackWhenTheEntraSessionCannotBeRecorded_LandsOnTheSignInFailedPageWithoutASession()
+    {
+        var outage = new TokenCacheOutage();
+        await using var root = new ErpApiFactory();
+        await using var factory = WithOutageAndLogs(root, outage);
+        using var client = TestSignIn.CreateClient(factory);
+
+        using var response = await CompleteCallbackAsync(client, TestUsers.Accountant, outage, TokenCacheOperations.Write, EntraSessions.KeyPrefix);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(AuthPaths.SignInFailedPage, response.Headers.Location?.OriginalString);
+        Assert.Contains(SessionCookies.Cleared, SessionCookies.SetCookieOf(response), StringComparison.OrdinalIgnoreCase);
+        Assert.Null(await TokenCacheRow.FindAsync(root.Deployment.TokenCacheKeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId));
+        AssertSignInFailureLogged(factory, SignInEvents.SessionFailure, LogLevel.Error);
+    }
+
+    [Fact]
+    public async Task Get_FrontChannelSignOutWhenTheEntraSessionCannotBeRead_AnswersAServerErrorAndChangesNothing()
+    {
+        var outage = new TokenCacheOutage();
+        await using var root = new ErpApiFactory().WithTestEndpoints(SessionCookies.MapSignInAndObjectId);
+        await using var factory = WithOutage(root, outage);
+        using var client = TestSignIn.CreateClient(factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+
+        outage.Begin(TokenCacheOperations.Read, EntraSessions.KeyPrefix);
+        using var response = await SignOutFromEntraAsync(factory, TestUsers.Accountant, TestContext.Current.CancellationToken);
+        outage.End();
+        using var stillSignedIn = await SessionCookies.GetObjectIdAsync(client);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, stillSignedIn.StatusCode);
+        Assert.NotNull(await TokenCacheRow.FindAsync(root.Deployment.TokenCacheKeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId));
+        Assert.True(await TestSignIn.IsAccountCachedAsync(factory.Services, TestUsers.Accountant));
+    }
+
+    [Fact]
+    public async Task Get_FrontChannelSignOutWhenTheEntraSessionCannotBeRemoved_AnswersAServerErrorAndLeavesThePersonSignedIn()
+    {
+        var outage = new TokenCacheOutage();
+        await using var root = new ErpApiFactory().WithTestEndpoints(SessionCookies.MapSignInAndObjectId);
+        await using var factory = WithOutage(root, outage);
+        using var client = TestSignIn.CreateClient(factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+
+        outage.Begin(TokenCacheOperations.Remove, EntraSessions.KeyPrefix);
+        using var response = await SignOutFromEntraAsync(factory, TestUsers.Accountant, TestContext.Current.CancellationToken);
+        outage.End();
+        using var stillSignedIn = await SessionCookies.GetObjectIdAsync(client);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, stillSignedIn.StatusCode);
+        Assert.NotNull(await TokenCacheRow.FindAsync(root.Deployment.TokenCacheKeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId));
+    }
+
+    [Fact]
+    public async Task Get_FrontChannelSignOutAbandonedByEntraOnceTheEntraSessionWasFound_StillEndsItsSessions()
+    {
+        using var frame = new CancellationTokenSource();
+        var signOut = new AbandonedSignOut(frame, TokenCacheOperations.Remove, EntraSessions.KeyPrefix);
+        await using var root = new ErpApiFactory().WithTestEndpoints(SessionCookies.MapSignInAndObjectId);
+        await using var factory = root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.DecorateTokenCacheStore(signOut.Wrap)));
+        using var client = TestSignIn.CreateClient(factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SignOutFromEntraAsync(factory, TestUsers.Accountant, frame.Token));
+        await signOut.Completed.WaitAsync(TestContext.Current.CancellationToken);
+        using var refused = await SessionCookies.GetObjectIdAsync(client);
+
+        Assert.Null(await TokenCacheRow.FindAsync(root.Deployment.TokenCacheKeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId));
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+        Assert.Contains(SessionCookies.Cleared, SessionCookies.SetCookieOf(refused), StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Get_WithASessionWhoseEntraSessionSignedOutWhileTheirEntryCannotBeRead_RefusesItFromTheRecordAlone()
+    {
+        var outage = new TokenCacheOutage();
+        await using var root = new ErpApiFactory().WithTestEndpoints(SessionCookies.MapSignInAndObjectId);
+        await using var factory = WithOutage(root, outage);
+        using var client = TestSignIn.CreateClient(factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+        using var signOut = await SignOutFromEntraAsync(factory, TestUsers.Accountant, TestContext.Current.CancellationToken);
+
+        outage.Begin(TokenCacheOperations.Read, TestUsers.Accountant.AccountId);
+        using var refused = await SessionCookies.GetObjectIdAsync(client);
+        outage.End();
+
+        Assert.Equal(HttpStatusCode.OK, signOut.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, refused.StatusCode);
+        Assert.Contains(SessionCookies.Cleared, SessionCookies.SetCookieOf(refused), StringComparison.OrdinalIgnoreCase);
+        Assert.True(await TestSignIn.IsAccountCachedAsync(factory.Services, TestUsers.Accountant));
+    }
+
+    private static async Task<HttpResponseMessage> SignOutFromEntraAsync(WebApplicationFactory<Program> factory, TestUser user, CancellationToken cancellationToken)
+    {
+        using var entra = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = false });
+
+        return await entra.GetAsync(
+            new Uri($"{AuthPaths.FrontChannelSignOut}?iss={Uri.EscapeDataString(TestIdentityProvider.Issuer)}&sid={Uri.EscapeDataString(user.EntraSessionId)}", UriKind.Relative),
+            cancellationToken);
     }
 
     private static WebApplicationFactory<Program> WithOutage(ErpApiFactory root, TokenCacheOutage outage) =>
@@ -195,7 +300,7 @@ public sealed class TokenCacheFailureTests
             services.DecorateTokenCacheStore(outage.Wrap);
         }));
 
-    private static async Task<HttpResponseMessage> CompleteCallbackAsync(HttpClient client, TestUser user, TokenCacheOutage outage, TokenCacheOperations failing)
+    private static async Task<HttpResponseMessage> CompleteCallbackAsync(HttpClient client, TestUser user, TokenCacheOutage outage, TokenCacheOperations failing, string? keyPrefix = null)
     {
         using var challenge = await client.GetAsync(new Uri($"{AuthPaths.Login}?returnUrl={Uri.EscapeDataString(ReturnPath)}", UriKind.Relative), TestContext.Current.CancellationToken);
         var state = Assert.Single(QueryHelpers.ParseQuery(challenge.Headers.Location!.Query)["state"]);
@@ -206,7 +311,7 @@ public sealed class TokenCacheFailureTests
             ["client_info"] = TestTokenEndpoint.ClientInfoFor(user),
         });
 
-        outage.Begin(failing);
+        outage.Begin(failing, keyPrefix);
         try
         {
             return await client.PostAsync(new Uri(AuthPaths.SignInCallback, UriKind.Relative), form, TestContext.Current.CancellationToken);
@@ -217,10 +322,11 @@ public sealed class TokenCacheFailureTests
         }
     }
 
-    private static void AssertTokenCacheFailureLogged(WebApplicationFactory<Program> factory)
+    private static void AssertSignInFailureLogged(WebApplicationFactory<Program> factory, string category, LogLevel level = LogLevel.Warning)
     {
         var failure = Assert.Single(factory.Services.GetRequiredService<FakeLogCollector>().GetSnapshot(), record => record.Category == typeof(SignInEvents).FullName);
-        Assert.Equal(SignInEvents.TokenCacheFailure, failure.GetStructuredStateValue("Failure"));
+        Assert.Equal(level, failure.Level);
+        Assert.Equal(category, failure.GetStructuredStateValue("Failure"));
         Assert.Equal(SignInEvents.NoOAuthError, failure.GetStructuredStateValue("OAuthError"));
     }
 }

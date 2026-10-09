@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Endpoints.OpenApi;
 using Dewiride.Erp.Testing;
 
@@ -58,6 +59,25 @@ public sealed class OpenApiDocumentTests : IClassFixture<ErpApiFactory>
             Assert.True(body.TryGetProperty("summary", out var summary), $"{method} {route} has no summary");
             Assert.False(string.IsNullOrWhiteSpace(summary.GetString()), $"{method} {route} has an empty summary");
             Assert.True(body.TryGetProperty("operationId", out _), $"{method} {route} has no operationId");
+        }
+    }
+
+    [Fact]
+    public async Task Get_OpenApiDocument_DeclaresTheUnauthenticatedProblemOnEveryOperationOutsideTheAuthRoutes()
+    {
+        using var document = await GetAsync();
+
+        var operations = document.RootElement.GetProperty("paths").EnumerateObject()
+            .Where(path => !path.Name.StartsWith(AuthPaths.Prefix + "/", StringComparison.Ordinal))
+            .SelectMany(path => path.Value.EnumerateObject().Select(operation => (Route: path.Name, Method: operation.Name, Body: operation.Value)))
+            .ToList();
+
+        Assert.Contains(operations, operation => operation.Route == "/api/platform/features");
+        Assert.Contains(operations, operation => operation.Route == "/api/platform/attachments/{id}/content");
+        foreach (var (route, method, body) in operations)
+        {
+            Assert.True(body.GetProperty("responses").TryGetProperty("401", out var unauthenticated), $"{method} {route} declares no 401");
+            Assert.True(unauthenticated.GetProperty("content").TryGetProperty("application/problem+json", out _), $"{method} {route} declares its 401 without a problem body");
         }
     }
 

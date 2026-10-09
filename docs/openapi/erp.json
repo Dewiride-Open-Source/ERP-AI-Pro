@@ -82,7 +82,7 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Ends the session and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.",
+        "summary": "Ends the session, when the request carries one, and redirects to the Microsoft Entra end-session endpoint, which returns to the sign-in page.",
         "operationId": "Auth.Logout",
         "responses": {
           "429": {
@@ -140,6 +140,7 @@
           }
         },
         "security": [
+          {},
           {
             "SessionCookie": [],
             "AntiforgeryToken": []
@@ -441,6 +442,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -492,7 +503,11 @@
             }
           }
         },
-        "security": []
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/api/platform/system-info/startups": {
@@ -522,6 +537,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -577,7 +602,11 @@
             }
           }
         },
-        "security": []
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/api/platform/attachments": {
@@ -634,6 +663,16 @@
               }
             }
           },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -685,7 +724,11 @@
             }
           }
         },
-        "security": []
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -720,6 +763,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -806,7 +859,6 @@
           }
         },
         "security": [
-          {},
           {
             "SessionCookie": [],
             "AntiforgeryToken": []
@@ -828,6 +880,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -883,7 +945,11 @@
             }
           }
         },
-        "security": []
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/api/platform/attachments/{id}": {
@@ -911,6 +977,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -966,7 +1042,11 @@
             }
           }
         },
-        "security": []
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       },
       "delete": {
         "tags": [
@@ -992,6 +1072,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1041,7 +1131,6 @@
           }
         },
         "security": [
-          {},
           {
             "SessionCookie": [],
             "AntiforgeryToken": []
@@ -1074,6 +1163,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1130,7 +1229,6 @@
           }
         },
         "security": [
-          {},
           {
             "SessionCookie": [],
             "AntiforgeryToken": []
@@ -1174,6 +1272,16 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1229,7 +1337,11 @@
             }
           }
         },
-        "security": []
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     },
     "/api/platform/features": {
@@ -1240,6 +1352,16 @@
         "summary": "Returns every feature flag of the catalog with its evaluated state.",
         "operationId": "Platform.Features.List",
         "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "200": {
             "description": "OK",
             "content": {
@@ -1251,7 +1373,11 @@
             }
           }
         },
-        "security": []
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
       }
     }
   },

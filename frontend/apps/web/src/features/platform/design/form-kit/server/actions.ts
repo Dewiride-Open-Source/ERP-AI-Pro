@@ -1,6 +1,7 @@
 "use server";
 
 import { ApiError } from "@/shared/api/problem-details";
+import { requireSignedInPerson } from "@/shared/auth/session";
 import { problemToFormState } from "@/shared/forms/errors/problem-to-form-state";
 import { parseSubmission } from "@/shared/forms/schemas/parse-submission";
 import { formSucceeded, type FormState } from "@/shared/forms/state/form-state";
@@ -16,6 +17,7 @@ import {
 const exampleTraceId = "4bf92f3577b34da6a3ce929d0e0e4736";
 
 export async function registerSupplierExample(_previous: FormState, submission: unknown): Promise<FormState> {
+  await requireSignedInPerson();
   const parsed = await parseSubmission(supplierExampleSchema, submission, { idempotent: true });
   if (!parsed.ok) return parsed.state;
 

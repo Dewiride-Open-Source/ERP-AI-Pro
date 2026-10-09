@@ -1,3 +1,4 @@
+import { signIn } from "../../fixtures/sign-in";
 import { expect, test } from "../../fixtures/test";
 
 const applicationName = /^ERP-AI-Pro$/;
@@ -11,6 +12,12 @@ test.describe("api smoke", () => {
     expect(health.status()).toBe(200);
     expect(await health.json()).toEqual({ status: "Healthy" });
 
+    const unknown = await request.get("/api/platform/does-not-exist", { maxRedirects: 0 });
+    expect(unknown.status()).toBe(401);
+    expect(unknown.headers()["content-type"]).toContain("application/problem+json");
+    expect(await unknown.json()).toMatchObject({ code: "request.unauthenticated" });
+
+    await signIn(request, "accountant");
     const info = await request.get("/api/platform/system-info");
     expect(info.status()).toBe(200);
     expect(await info.json()).toMatchObject({
@@ -39,10 +46,5 @@ test.describe("api smoke", () => {
     expect(await one.json()).toMatchObject({
       startups: [expect.objectContaining({ id: expect.any(String) })],
     });
-
-    const unknown = await request.get("/api/platform/does-not-exist", { maxRedirects: 0 });
-    expect(unknown.status()).toBe(401);
-    expect(unknown.headers()["content-type"]).toContain("application/problem+json");
-    expect(await unknown.json()).toMatchObject({ code: "request.unauthenticated" });
   });
 });

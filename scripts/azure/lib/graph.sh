@@ -13,6 +13,7 @@ readonly GRAPH_APP_ID='00000003-0000-0000-c000-000000000000'
 readonly GRAPH_SCOPE_VALUES=(openid profile offline_access User.Read)
 readonly PENDING_ID='<pending>'
 readonly APP_ROLES_FILE='scripts/azure/entra/app-roles.json'
+readonly OPTIONAL_CLAIMS_FILE='scripts/azure/entra/optional-claims.json'
 readonly CERTIFICATE_POLICY_TEMPLATE='scripts/azure/entra/certificate-policy.json'
 readonly ENTRA_TEMP_DIR='scripts/azure/out'
 readonly APP_ROLE_ADMIN_VALUE='Erp.Admin'
@@ -27,6 +28,7 @@ readonly IDENTITY_TENANT_ID_KEY='Erp:Platform:Identity:TenantId'
 readonly IDENTITY_CLIENT_ID_KEY='Erp:Platform:Identity:ClientId'
 readonly IDENTITY_WEB_ORIGIN_KEY='Erp:Platform:Identity:WebOrigin'
 readonly REDIRECT_PATHS=(/api/auth/signin-oidc /api/auth/signout-callback-oidc)
+readonly FRONT_CHANNEL_SIGN_OUT_PATH='/api/auth/signout-oidc'
 readonly CERTIFICATE_EXPIRY_WARNING_SECONDS=$((30 * 24 * 3600))
 
 GRAPH_SP_OBJECT_ID=''
@@ -142,6 +144,29 @@ signin_redirect_uris() {
   done
 }
 
+signin_logout_url() {
+  local origin
+  origin="$(signin_web_origin "$1")" || return 1
+  # Entra refuses a front-channel logout URL that is not https, http://localhost included, so a registration whose web
+  # origin is http gets none, and signing out of Entra elsewhere leaves its ERP sessions to their own sign-out or expiry.
+  [[ "$origin" == https://* ]] || return 0
+  printf '%s%s' "$origin" "$FRONT_CHANNEL_SIGN_OUT_PATH"
+}
+
+logout_url_patch_body() {
+  if [[ -n "$1" ]]; then
+    printf '{"web":{"logoutUrl":"%s"}}' "$1"
+  else
+    printf '{"web":{"logoutUrl":null}}'
+  fi
+}
+
+optional_claims_match() {
+  local app_json="$1"
+  require_repo_root_cwd
+  node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const normalise = (claims) => ["idToken", "accessToken", "saml2Token"].map((type) => [...((claims ?? {})[type] ?? [])].map((claim) => JSON.stringify({ name: claim.name, source: claim.source ?? null, essential: claim.essential === true, additionalProperties: [...(claim.additionalProperties ?? [])].sort() })).sort().join(",")).join("|"); const desired = normalise(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))); process.exit(normalise(JSON.parse(raw).optionalClaims) === desired ? 0 : 1); });' "$OPTIONAL_CLAIMS_FILE" <<< "$app_json"
+}
+
 app_role_id() {
   local value="$1"
   require_repo_root_cwd
@@ -228,32 +253,39 @@ ensure_app_owner() {
 }
 
 app_differences() {
-  local app_json="$1"
-  shift
-  node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const app = JSON.parse(raw); const expected = process.argv.slice(1).sort(); const differences = []; if (app.signInAudience !== "AzureADMyOrg") differences.push("signInAudience"); const web = app.web ?? {}; const current = [...(web.redirectUris ?? [])].sort(); if (current.length !== expected.length || current.some((uri, index) => uri !== expected[index])) differences.push("redirectUris"); const implicit = web.implicitGrantSettings ?? {}; if (implicit.enableIdTokenIssuance === true || implicit.enableAccessTokenIssuance === true) differences.push("implicitGrant"); if ((app.api ?? {}).requestedAccessTokenVersion !== 2) differences.push("requestedAccessTokenVersion"); if (((app.spa ?? {}).redirectUris ?? []).length > 0 || ((app.publicClient ?? {}).redirectUris ?? []).length > 0 || app.isFallbackPublicClient === true) differences.push("otherPlatforms"); process.stdout.write(differences.join("\n")); });' "$@" <<< "$app_json"
+  local app_json="$1" kind="$2" logout_url="$3"
+  shift 3
+  local differences
+  differences="$(node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const app = JSON.parse(raw); const [kind, logoutUrl, ...redirectUris] = process.argv.slice(1); const expected = redirectUris.sort(); const differences = []; if (app.signInAudience !== "AzureADMyOrg") differences.push("signInAudience"); const web = app.web ?? {}; const current = [...(web.redirectUris ?? [])].sort(); if (current.length !== expected.length || current.some((uri, index) => uri !== expected[index])) differences.push("redirectUris"); if (kind === "web" && (web.logoutUrl ?? "") !== logoutUrl) differences.push("logoutUrl"); const implicit = web.implicitGrantSettings ?? {}; if (implicit.enableIdTokenIssuance === true || implicit.enableAccessTokenIssuance === true) differences.push("implicitGrant"); if ((app.api ?? {}).requestedAccessTokenVersion !== 2) differences.push("requestedAccessTokenVersion"); if (((app.spa ?? {}).redirectUris ?? []).length > 0 || ((app.publicClient ?? {}).redirectUris ?? []).length > 0 || app.isFallbackPublicClient === true) differences.push("otherPlatforms"); process.stdout.write(differences.join("\n")); });' "$kind" "$logout_url" "$@" <<< "$app_json")"
+  if [[ "$kind" == web ]] && ! optional_claims_match "$app_json"; then
+    differences+="${differences:+$'\n'}optionalClaims"
+  fi
+  printf '%s' "$differences"
 }
 
 converge_app() {
-  local object_id="$1" display_name="$2"
-  shift 2
+  local object_id="$1" display_name="$2" kind="$3" logout_url="$4"
+  shift 4
   local -a redirect_uris=("$@")
   local app_json
   app_json="$(az_read ad app show --id "$object_id" --output json)" || die "cannot read app registration '$display_name'"
   require_operator_owns_app "$object_id" "$display_name"
   local differences
-  differences="$(app_differences "$app_json" "${redirect_uris[@]}")"
+  differences="$(app_differences "$app_json" "$kind" "$logout_url" "${redirect_uris[@]}")"
   if [[ -z "$differences" ]]; then
     log_info "'$display_name' unchanged"
     return 0
   fi
   local -a update_args=()
-  local clear_redirect_uris=0 clear_other_platforms=0 difference
+  local clear_redirect_uris=0 clear_other_platforms=0 patch_logout_url=0 difference
   while IFS= read -r difference; do
     case "$difference" in
       signInAudience) update_args+=(--sign-in-audience AzureADMyOrg) ;;
       implicitGrant) update_args+=(--enable-id-token-issuance false --enable-access-token-issuance false) ;;
       requestedAccessTokenVersion) update_args+=(--requested-access-token-version 2) ;;
       otherPlatforms) clear_other_platforms=1 ;;
+      optionalClaims) update_args+=(--optional-claims "@$OPTIONAL_CLAIMS_FILE") ;;
+      logoutUrl) patch_logout_url=1 ;;
       redirectUris)
         if (( ${#redirect_uris[@]} > 0 )); then
           update_args+=(--web-redirect-uris "${redirect_uris[@]}")
@@ -273,6 +305,9 @@ converge_app() {
   if (( clear_redirect_uris )); then
     graph_patch "applications/$object_id" '{"web":{"redirectUris":[]}}' || die "cannot clear the redirect URIs of '$display_name'"
   fi
+  if (( patch_logout_url )); then
+    graph_patch "applications/$object_id" "$(logout_url_patch_body "$logout_url")" || die "cannot set the front-channel logout URL of '$display_name'"
+  fi
   if (( clear_other_platforms )); then
     graph_patch "applications/$object_id" '{"spa":{"redirectUris":[]},"publicClient":{"redirectUris":[]},"isFallbackPublicClient":false}' || die "cannot remove the non-web platforms of '$display_name'"
   fi
@@ -280,19 +315,19 @@ converge_app() {
 }
 
 ensure_app() {
-  (( $# >= 2 )) || die "ensure_app: usage ensure_app <display-name> <web|none> [<redirect-uri>...]"
-  local display_name="$1" kind="$2"
-  shift 2
+  (( $# >= 3 )) || die "ensure_app: usage ensure_app <display-name> <web|none> <logout-url or ''> [<redirect-uri>...]"
+  local display_name="$1" kind="$2" logout_url="$3"
+  shift 3
   local -a redirect_uris=("$@")
   case "$kind" in
     web) ;;
-    none) (( ${#redirect_uris[@]} == 0 )) || die "ensure_app: kind none takes no redirect URIs" ;;
+    none) (( ${#redirect_uris[@]} == 0 )) && [[ -z "$logout_url" ]] || die "ensure_app: kind none takes no redirect URI and no logout URL" ;;
     *) die "ensure_app: kind must be web or none" ;;
   esac
   local found
   found="$(find_app "$display_name")" || die "cannot resolve app registration '$display_name'"
   if [[ -n "$found" ]]; then
-    converge_app "${found%%$'\t'*}" "$display_name" "${redirect_uris[@]}"
+    converge_app "${found%%$'\t'*}" "$display_name" "$kind" "$logout_url" "${redirect_uris[@]}"
     ensure_app_owner "${found%%$'\t'*}" "${found#*$'\t'}" "$display_name"
     printf '%s' "$found"
     return 0
@@ -302,8 +337,15 @@ ensure_app() {
   if (( ${#redirect_uris[@]} > 0 )); then
     create_args+=(--web-redirect-uris "${redirect_uris[@]}")
   fi
+  if [[ "$kind" == web ]]; then
+    require_repo_root_cwd
+    create_args+=(--optional-claims "@$OPTIONAL_CLAIMS_FILE")
+  fi
   if (( DRY_RUN )); then
     run az ad app create "${create_args[@]}" --query '[id, appId]' --output tsv --only-show-errors
+    if [[ -n "$logout_url" ]]; then
+      graph_patch "applications/$PENDING_ID" "$(logout_url_patch_body "$logout_url")"
+    fi
     log_change "'$display_name'" created
     ensure_app_owner "$PENDING_ID" "$PENDING_ID" "$display_name"
     printf '%s\t%s' "$PENDING_ID" "$PENDING_ID"
@@ -318,6 +360,10 @@ ensure_app() {
     die "unexpected response while creating app registration '$display_name'"
   fi
   log_info "'$display_name' created (application id $app_id)"
+  if [[ -n "$logout_url" ]]; then
+    retry 6 10 -- graph_patch "applications/$object_id" "$(logout_url_patch_body "$logout_url")"
+    log_info "'$display_name' front-channel logout URL set ($logout_url)"
+  fi
   retry 6 10 -- ensure_app_owner "$object_id" "$app_id" "$display_name"
   printf '%s\t%s' "$object_id" "$app_id"
 }

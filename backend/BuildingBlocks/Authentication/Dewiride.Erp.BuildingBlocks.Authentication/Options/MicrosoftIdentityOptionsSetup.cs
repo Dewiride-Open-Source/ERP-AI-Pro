@@ -8,8 +8,8 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Options;
 
-// Microsoft.Identity.Web builds the OpenID Connect handler options from these, and chains its own handlers onto Events,
-// so the handler options themselves are never configured directly.
+// Microsoft.Identity.Web builds the OpenID Connect handler options from these and chains its own handlers onto Events, so
+// the handler options themselves are never configured directly.
 internal sealed class MicrosoftIdentityOptionsSetup(IOptions<EntraSignInOptions> signIn, SignInEvents events) : IConfigureNamedOptions<MicrosoftIdentityOptions>
 {
     public const string RoleClaimType = "roles";
@@ -32,10 +32,11 @@ internal sealed class MicrosoftIdentityOptionsSetup(IOptions<EntraSignInOptions>
 
         options.CallbackPath = AuthPaths.SignInCallback;
         options.SignedOutCallbackPath = AuthPaths.SignedOutCallback;
-        options.SignedOutRedirectUri = AuthPaths.LoginPage;
+        options.SignedOutRedirectUri = AuthPaths.SignedOutPage;
 
-        // The app registrations have no front-channel logout URL, so Entra never calls one; a path left to answer would
-        // let any site sign a person out by pointing the browser at it.
+        // The handler's own remote sign-out signs out only the session cookie the request carries, and Entra calls the
+        // front-channel logout URL from a hidden frame of its own site, which never carries the SameSite=Lax cookie; that
+        // path is a route of AuthEndpoints, which ends the person's sessions by their Entra session id instead.
         options.RemoteSignOutPath = PathString.Empty;
 
         options.ResponseType = OpenIdConnectResponseType.Code;
@@ -59,5 +60,6 @@ internal sealed class MicrosoftIdentityOptionsSetup(IOptions<EntraSignInOptions>
         options.Events.OnRedirectToIdentityProvider = events.RedirectToIdentityProvider;
         options.Events.OnRedirectToIdentityProviderForSignOut = events.RedirectToIdentityProviderForSignOut;
         options.Events.OnRemoteFailure = events.RemoteFailure;
+        options.Events.OnTicketReceived = events.TicketReceived;
     }
 }

@@ -32,7 +32,7 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
             .SelectMany(endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? [HttpMethods.Get])
                 .Select(method => (Endpoint: endpoint, Method: method, Path: SamplePath(endpoint.RoutePattern.RawText!))))
             .ToList();
-        Assert.Contains(protectedRoutes, route => route.Method == HttpMethods.Post && route.Path == "/api/auth/logout");
+        Assert.Contains(protectedRoutes, route => route.Method == HttpMethods.Post && route.Path == "/api/auth/session");
 
         foreach (var (endpoint, method, path) in protectedRoutes)
         {
@@ -45,6 +45,28 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
                 $"{method} {path} reached '{selected}' instead of '{DescriptionOf(endpoint)}'; give SamplePath a value the route's constraints accept.");
             await AssertUnauthenticatedAsync(response, $"{method} {path}");
         }
+    }
+
+    [Theory]
+    [InlineData("GET", "/api/platform/system-info")]
+    [InlineData("GET", "/api/platform/system-info/startups")]
+    [InlineData("GET", "/api/platform/features")]
+    [InlineData("GET", "/api/platform/attachments")]
+    [InlineData("GET", "/api/platform/attachments/policy")]
+    [InlineData("POST", "/api/platform/attachments")]
+    [InlineData("GET", "/api/platform/attachments/{id}")]
+    [InlineData("DELETE", "/api/platform/attachments/{id}")]
+    [InlineData("POST", "/api/platform/attachments/{id}/download-links")]
+    [InlineData("GET", "/api/platform/attachments/{id}/content?link=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
+    public async Task Send_PlatformRouteWithoutASession_AnswersUnauthenticated(string method, string route)
+    {
+        using var client = fixture.Factory.CreateClient(new() { AllowAutoRedirect = false });
+        using var request = new HttpRequestMessage(new HttpMethod(method), route.Replace("{id}", Guid.CreateVersion7().ToString("D"), StringComparison.Ordinal));
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(DescriptionOf(EndpointFor(method, route)), Uri.UnescapeDataString(Assert.Single(response.Headers.GetValues(SelectedEndpointHeader))));
+        await AssertUnauthenticatedAsync(response, $"{method} {route}");
     }
 
     [Fact]
@@ -162,6 +184,12 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
 
     private static string DescriptionOf(RouteEndpoint endpoint) =>
         $"{string.Join(',', endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? [])} {endpoint.RoutePattern.RawText} {endpoint.DisplayName}";
+
+    private RouteEndpoint EndpointFor(string method, string route) =>
+        Assert.Single(
+            fixture.Factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>(),
+            endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? []).Contains(method, StringComparer.Ordinal)
+                && RouteParameter().Replace(endpoint.RoutePattern.RawText!.TrimEnd('/'), "{id}") == route.Split('?')[0]);
 
     private static string SamplePath(string pattern) =>
         RouteParameter().Replace(pattern, match => match.Value.Contains(":guid", StringComparison.Ordinal) ? Guid.CreateVersion7().ToString("D") : "sample");

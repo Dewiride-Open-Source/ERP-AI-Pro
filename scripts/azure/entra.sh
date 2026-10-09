@@ -7,9 +7,11 @@ USAGE='Usage: bash scripts/azure/entra.sh [--dry-run] [--params <file>]
 
 Creates or converges the three single-tenant app registrations (sign-in for
 local-dev, sign-in for production, runtime for the server), their service
-principals, app roles, Microsoft Graph consent, Key Vault certificates, key
-credentials, the Erp.Admin assignment of the operator and the App Configuration
-identity ids and web origins. Safe to run repeatedly; never deletes a registration.
+principals, app roles, the login_hint optional claim and the front-channel
+logout URL of the sign-in registrations (for an https web origin only),
+Microsoft Graph consent, Key Vault certificates, key credentials, the Erp.Admin
+assignment of the operator and the App Configuration identity ids and web
+origins. Safe to run repeatedly; never deletes a registration.
 
 Options:
   --dry-run                              Print every write that would run; write nothing.
@@ -126,12 +128,19 @@ converge_signin_app() {
     redirect_uris+=("$uri")
   done <<< "$uris"
 
+  local web_origin logout_url
+  web_origin="$(signin_web_origin "$label")" || die "cannot compute the web origin of the $label registration"
+  logout_url="$(signin_logout_url "$label")" || die "cannot compute the front-channel logout URL of the $label registration"
+
   log_step "Sign-in registration '$display_name' ($label)"
   if [[ "$label" == production ]] && (( ${#redirect_uris[@]} == 0 )); then
     log_warn "ERP_AZURE_PRODUCTION_WEB_ORIGIN is empty: no redirect URI is requested for production and $IDENTITY_WEB_ORIGIN_KEY [production] is not written, so its sign-in stays impossible until the parameter is set and entra.sh re-run"
   fi
+  if [[ -n "$web_origin" && -z "$logout_url" ]]; then
+    log_info "web origin $web_origin is not https, so no front-channel logout URL is registered for $label"
+  fi
   local ids object_id app_id
-  ids="$(ensure_app "$display_name" web "${redirect_uris[@]}")"
+  ids="$(ensure_app "$display_name" web "$logout_url" "${redirect_uris[@]}")"
   split_ids object_id app_id "$ids"
   ensure_app_roles "$object_id"
   ensure_required_resource_access "$object_id"
@@ -145,8 +154,6 @@ converge_signin_app() {
   ensure_app_role_assignment "$sp_id" "$operator_id" "$admin_role_id"
   ensure_kv "$IDENTITY_TENANT_ID_KEY" "$label" "$ERP_AZURE_TENANT_ID"
   ensure_kv "$IDENTITY_CLIENT_ID_KEY" "$label" "$app_id"
-  local web_origin
-  web_origin="$(signin_web_origin "$label")" || die "cannot compute the web origin of the $label registration"
   if [[ -n "$web_origin" ]]; then
     ensure_kv "$IDENTITY_WEB_ORIGIN_KEY" "$label" "$web_origin"
   fi
@@ -157,7 +164,7 @@ converge_runtime_app() {
   local app_id_variable="$1"
   log_step "Runtime registration '$ERP_AZURE_APP_RUNTIME_NAME'"
   local ids object_id app_id
-  ids="$(ensure_app "$ERP_AZURE_APP_RUNTIME_NAME" none)"
+  ids="$(ensure_app "$ERP_AZURE_APP_RUNTIME_NAME" none '')"
   split_ids object_id app_id "$ids"
   ensure_service_principal "$app_id" > /dev/null
   local thumbprint

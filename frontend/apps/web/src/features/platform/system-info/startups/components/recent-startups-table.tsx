@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@dewiride/erp-ui/components/ui/table";
 import { HistoryIcon } from "lucide-react";
+import { unstable_rethrow } from "next/navigation";
 
 import { ApiError } from "@/shared/api/problem-details";
 import { formatDateTimeIst } from "@/shared/format/dates";
@@ -33,6 +34,7 @@ export async function RecentStartupsTable() {
   try {
     startups = (await getRecentStartups()).startups ?? [];
   } catch (error) {
+    unstable_rethrow(error);
     failure = error instanceof ApiError ? error.message : "The API did not respond.";
   }
 

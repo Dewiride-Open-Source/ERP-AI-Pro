@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Uploads;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints.Uploads;
 
@@ -16,7 +17,7 @@ public sealed class UploadBodyLimitTests(UploadBodyLimitTests.Fixture fixture) :
     [Fact]
     public async Task Post_FileOverTheHostBodyLimitWithinTheAttachmentLimit_IsStored()
     {
-        using var client = fixture.Factory.CreateClient();
+        using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text(AttachmentsApi.UniqueToken().PadRight(MaxSizeBytes, 'x'));
 
         var attachment = await AttachmentsApi.UploadAsync(client, text, SampleFiles.TextType, "over-the-host-limit.txt");
@@ -27,7 +28,7 @@ public sealed class UploadBodyLimitTests(UploadBodyLimitTests.Fixture fixture) :
     [Fact]
     public async Task Post_BodyOverTheAttachmentLimitAndItsMultipartAllowance_AnswersRequestTooLarge()
     {
-        using var client = fixture.Factory.CreateClient();
+        using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
         var text = SampleFiles.Text(AttachmentsApi.UniqueToken().PadRight((int)(MaxSizeBytes + UploadSizeLimit.MultipartAllowanceBytes), 'x'));
 
         using var response = await AttachmentsApi.PostFileAsync(client, text, SampleFiles.TextType, "over-the-body-limit.txt");

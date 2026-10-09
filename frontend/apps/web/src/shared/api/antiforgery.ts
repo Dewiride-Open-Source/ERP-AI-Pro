@@ -4,6 +4,8 @@ export const antiforgeryHeaderName = "X-XSRF-TOKEN";
 
 export const requestTokenCookieName = "__Host-erp-xsrf";
 
+export const requestTokenFieldName = "__RequestVerificationToken";
+
 export const antiforgeryRenewalPath = `${apiBasePath}/auth/antiforgery`;
 
 export const antiforgeryCodePrefix = "antiforgery.";

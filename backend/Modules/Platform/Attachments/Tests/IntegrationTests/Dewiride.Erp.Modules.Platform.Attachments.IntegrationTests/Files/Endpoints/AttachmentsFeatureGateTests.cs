@@ -1,5 +1,6 @@
 using System.Net;
 using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints;
 
@@ -16,7 +17,7 @@ public sealed class AttachmentsFeatureGateTests(AttachmentsFeatureGateTests.Fixt
     [InlineData("GET", "/{id}/content?link=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")]
     public async Task Request_ModuleDisabled_AnswersFeatureDisabled(string method, string route)
     {
-        using var client = fixture.Factory.CreateClient();
+        using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
         using var request = new HttpRequestMessage(new HttpMethod(method), AttachmentsApi.Path(route.Replace("{id}", Guid.CreateVersion7().ToString(), StringComparison.Ordinal)));
 
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
@@ -27,7 +28,7 @@ public sealed class AttachmentsFeatureGateTests(AttachmentsFeatureGateTests.Fixt
     [Fact]
     public async Task Post_UploadWithTheModuleDisabled_AnswersFeatureDisabled()
     {
-        using var client = fixture.Factory.CreateClient();
+        using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
 
         using var response = await AttachmentsApi.PostFileAsync(client, SampleFiles.OnePixelPng(), SampleFiles.PngType, "pixel.png");
 

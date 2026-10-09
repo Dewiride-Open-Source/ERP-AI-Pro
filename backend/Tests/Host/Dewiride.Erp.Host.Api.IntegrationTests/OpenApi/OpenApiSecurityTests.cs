@@ -15,18 +15,22 @@ public sealed class OpenApiSecurityTests(ErpApiFactory factory) : IClassFixture<
 
     private const string AnonymousOrSessionWithAntiforgeryToken = """[{},{"SessionCookie":[],"AntiforgeryToken":[]}]""";
 
+    private const string AnonymousChangesPath = "/__test/anonymous-changes";
+
     public static TheoryData<string, string, string> Requirements => new()
     {
         { "/api/auth/login", "get", Anonymous },
-        { "/api/auth/logout", "post", SessionWithAntiforgeryToken },
+        { "/api/auth/logout", "post", AnonymousOrSessionWithAntiforgeryToken },
         { "/api/auth/antiforgery", "get", Session },
         { "/api/auth/me", "get", Session },
         { "/api/auth/session", "get", Session },
         { "/api/auth/session", "post", SessionWithAntiforgeryToken },
-        { "/api/platform/features", "get", Anonymous },
-        { "/api/platform/attachments", "get", Anonymous },
-        { "/api/platform/attachments", "post", AnonymousOrSessionWithAntiforgeryToken },
-        { "/api/platform/attachments/{id}", "delete", AnonymousOrSessionWithAntiforgeryToken },
+        { "/api/platform/features", "get", Session },
+        { "/api/platform/system-info", "get", Session },
+        { "/api/platform/attachments", "get", Session },
+        { "/api/platform/attachments", "post", SessionWithAntiforgeryToken },
+        { "/api/platform/attachments/{id}", "delete", SessionWithAntiforgeryToken },
+        { "/api/platform/attachments/{id}/content", "get", Session },
     };
 
     [Fact]
@@ -83,6 +87,25 @@ public sealed class OpenApiSecurityTests(ErpApiFactory factory) : IClassFixture<
             JsonSerializer.Serialize(operation.GetProperty("post").GetProperty("security")));
         AssertScheme(document.RootElement.GetProperty("components").GetProperty("securitySchemes").GetProperty("BearerToken"), ("type", "http"), ("scheme", "bearer"), ("bearerFormat", "JWT"));
         Assert.Equal(Session, JsonSerializer.Serialize(document.RootElement.GetProperty("paths").GetProperty(BearerTokenRoutes.SessionPath).GetProperty("get").GetProperty("security")));
+    }
+
+    [Fact]
+    public async Task Document_AnonymousRouteThatChangesData_AllowsAnonymousCallersOrTheSessionCookieWithItsAntiforgeryToken()
+    {
+        await using var withAnonymousChanges = new ErpApiFactory().WithTestEndpoints(routes => routes.MapPost(AnonymousChangesPath, () => Results.NoContent()).AllowAnonymous());
+
+        using var document = await DocumentAsync(withAnonymousChanges);
+
+        var security = document.RootElement.GetProperty("paths").GetProperty(AnonymousChangesPath).GetProperty("post").GetProperty("security");
+        Assert.Equal(AnonymousOrSessionWithAntiforgeryToken, JsonSerializer.Serialize(security));
+    }
+
+    [Fact]
+    public async Task Document_FrontChannelSignOut_IsNotDescribed()
+    {
+        using var document = await DocumentAsync(factory);
+
+        Assert.False(document.RootElement.GetProperty("paths").TryGetProperty("/api/auth/signout-oidc", out _));
     }
 
     private static async Task<JsonDocument> DocumentAsync(ErpApiFactory host) =>
