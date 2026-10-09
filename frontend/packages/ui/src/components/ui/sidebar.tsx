@@ -201,6 +201,7 @@ function Sidebar({
             event.preventDefault();
             const previous = focusBeforeDrawer.current;
             focusBeforeDrawer.current = null;
+            if (document.activeElement !== null && document.activeElement !== document.body) return;
             const target =
               !followedLink.current &&
               (previous instanceof HTMLElement || previous instanceof SVGElement) &&

@@ -53,6 +53,8 @@ type SearchProps<T extends CommandPaletteItem> = Omit<
 // runs the open handler before it moves focus inside, so the element the person was using is still the active one. A
 // dismissed palette sends focus back there, or to returnFocusTo when that was the page itself or is gone; after a choice,
 // which usually changes the page under the palette and so removes that element moments later, focus goes to returnFocusTo.
+// The content unmounts only after its exit animation, so focus that another layer or the chosen page has taken by then
+// stays where it is.
 export function CommandPalette<T extends CommandPaletteItem>({
   open,
   onOpenChange,
@@ -79,6 +81,7 @@ export function CommandPalette<T extends CommandPaletteItem>({
     event.preventDefault();
     const previous = focusBeforeOpen.current;
     focusBeforeOpen.current = null;
+    if (document.activeElement !== null && document.activeElement !== document.body) return;
     const usable =
       (previous instanceof HTMLElement || previous instanceof SVGElement) &&
       previous !== document.body &&
