@@ -1,9 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { opensPageSearch, pageSearchShortcutLabel, type ShortcutKeyEvent } from "./shortcut-keys.ts";
+import {
+  opensPageSearch,
+  pageSearchShortcutLabel,
+  togglesNavigation,
+  type ShortcutKeyEvent,
+} from "./shortcut-keys.ts";
 
-const press = (key: string, modifiers: Partial<Omit<ShortcutKeyEvent, "key">> = {}): ShortcutKeyEvent => ({
+const press = (
+  key: string | undefined,
+  modifiers: Partial<Omit<ShortcutKeyEvent, "key">> = {},
+): ShortcutKeyEvent => ({
   key,
   ctrlKey: false,
   metaKey: false,
@@ -23,6 +31,31 @@ test("opensPageSearch_KWithoutTheModifierOrWithAnotherOne_DoesNotOpen", () => {
   assert.equal(opensPageSearch(press("k", { ctrlKey: true, shiftKey: true })), false);
   assert.equal(opensPageSearch(press("k", { metaKey: true, altKey: true })), false);
   assert.equal(opensPageSearch(press("b", { ctrlKey: true })), false);
+});
+
+test("opensPageSearch_KeyHeldDown_CountsOnlyTheFirstPress", () => {
+  assert.equal(opensPageSearch(press("k", { ctrlKey: true, repeat: false })), true);
+  assert.equal(opensPageSearch(press("k", { ctrlKey: true, repeat: true })), false);
+});
+
+test("opensPageSearch_KeydownWithoutAKey_DoesNotOpen", () => {
+  assert.equal(opensPageSearch(press(undefined, { ctrlKey: true })), false);
+});
+
+test("togglesNavigation_ControlOrCommandWithB_IsTheSidebarShortcut", () => {
+  assert.equal(togglesNavigation(press("b", { ctrlKey: true })), true);
+  assert.equal(togglesNavigation(press("b", { metaKey: true })), true);
+  assert.equal(togglesNavigation(press("b")), false);
+  assert.equal(togglesNavigation(press("k", { ctrlKey: true })), false);
+  assert.equal(togglesNavigation(press(undefined, { ctrlKey: true })), false);
+});
+
+test("togglesNavigation_KeyHeldDown_KeepsMatchingWhatTheSidebarHears", () => {
+  assert.equal(togglesNavigation(press("b", { ctrlKey: true, repeat: true })), true);
+});
+
+test("togglesNavigation_CapitalB_IsNotTheSidebarShortcut", () => {
+  assert.equal(togglesNavigation(press("B", { ctrlKey: true, shiftKey: true })), false);
 });
 
 test("pageSearchShortcutLabel_ApplePlatforms_NameTheCommandKey", () => {

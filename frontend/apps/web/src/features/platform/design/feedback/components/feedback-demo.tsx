@@ -136,11 +136,12 @@ export async function FeedbackDemo({ searchParameters }: { searchParameters: Sea
       <Card data-testid="feedback-navigation">
         <CardHeader>
           <CardTitle>
-            <h2>Loading and page entrances</h2>
+            <h2>Loading and page transitions</h2>
           </CardTitle>
           <CardDescription>
-            While a page is prepared its loading status shows, and the page fades in when it arrives. The
-            report takes three seconds, long enough to see its loading status.
+            While a page is prepared its loading status shows. Moving to another page fades the old one out
+            and the new one in, and the prepared report then takes its loading status&apos;s place. The report
+            takes three seconds, long enough to see its loading status.
           </CardDescription>
         </CardHeader>
         <CardContent>

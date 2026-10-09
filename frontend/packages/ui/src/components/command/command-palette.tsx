@@ -1,9 +1,18 @@
 "use client";
 
 import { SearchIcon } from "lucide-react";
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
+import {
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
-import { Dialog, DialogContent, DialogTitle } from "@dewiride/erp-ui/components/ui/dialog";
+import { Button } from "@dewiride/erp-ui/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogTitle } from "@dewiride/erp-ui/components/ui/dialog";
 import { Kbd } from "@dewiride/erp-ui/components/ui/kbd";
 
 import {
@@ -86,13 +95,18 @@ export function CommandPalette<T extends CommandPaletteItem>({
         aria-describedby={hintId}
         onOpenAutoFocus={rememberFocus}
         onCloseAutoFocus={restoreFocus}
-        className="top-24 translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-lg"
+        onMouseDown={keepFocusInTheSearch}
+        className="top-24 flex max-h-[calc(100dvh-8rem)] translate-y-0 flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <CommandSearch {...search} onSelect={select} hintId={hintId} />
       </DialogContent>
     </Dialog>
   );
+}
+
+function keepFocusInTheSearch(event: MouseEvent<HTMLDivElement>): void {
+  if (event.target instanceof Element && !event.target.closest("input, button")) event.preventDefault();
 }
 
 // Only the list scrolls, measured in its own offsets, because the dialog is still scaling in when it opens. The ref sits
@@ -167,7 +181,12 @@ function CommandSearch<T extends CommandPaletteItem>({
           onKeyDown={handleKeyDown}
           className="h-9 min-w-0 flex-1 rounded-md bg-transparent px-1 text-sm focus-ring placeholder:text-muted-foreground"
         />
-        <Kbd aria-hidden="true">Esc</Kbd>
+        <DialogClose asChild>
+          <Button variant="ghost" size="xs" className="px-1">
+            <span className="sr-only">Close</span>
+            <Kbd>Esc</Kbd>
+          </Button>
+        </DialogClose>
       </div>
       <span role="status" className="sr-only">
         {status}
@@ -177,7 +196,7 @@ function CommandSearch<T extends CommandPaletteItem>({
           id={listboxId}
           role="listbox"
           aria-label={listLabel}
-          className="relative max-h-80 overflow-y-auto p-2"
+          className="relative max-h-80 min-h-0 flex-1 overflow-y-auto p-2"
         >
           {commandSections(results).map((section, sectionIndex) => (
             <CommandGroup
@@ -199,7 +218,7 @@ function CommandSearch<T extends CommandPaletteItem>({
                   onMouseMove={() => {
                     if (index !== active) setActiveIndex(index);
                   }}
-                  className="flex cursor-default items-center gap-3 rounded-md px-2 py-2 text-sm select-none data-active:bg-accent data-active:text-accent-foreground data-active:**:text-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
+                  className="flex cursor-default items-center gap-3 rounded-md px-2 py-2 text-sm select-none data-active:bg-accent data-active:text-accent-foreground data-active:outline-2 data-active:-outline-offset-2 data-active:outline-ring data-active:**:text-accent-foreground [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
                 >
                   {item.icon}
                   <span className="grid min-w-0 flex-1 gap-0.5">

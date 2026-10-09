@@ -2,14 +2,11 @@ import { cn } from "@dewiride/erp-ui/lib/utils";
 
 import { publicEnv } from "@/shared/config/public-env";
 
-export function WordmarkMark({ className }: { className?: string }) {
+export function WordmarkMark() {
   return (
     <span
       aria-hidden
-      className={cn(
-        "inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-sm",
-        className,
-      )}
+      className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-sm"
     >
       D
     </span>

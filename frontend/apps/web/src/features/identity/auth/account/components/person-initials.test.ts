@@ -21,6 +21,10 @@ test("personInitials_LettersOutsideLatin_KeepWholeCharacters", () => {
   assert.equal(personInitials("𝒜sha 𝒭ao"), "𝒜𝒭");
 });
 
+test("personInitials_NameWithCombiningMarks_KeepsTheAccentedLetters", () => {
+  assert.equal(personInitials("Ádám Ödön"), "ÁÖ");
+});
+
 test("personInitials_NoName_IsEmpty", () => {
   assert.equal(personInitials(""), "");
   assert.equal(personInitials("   "), "");

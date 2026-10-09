@@ -63,6 +63,11 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+  const [mobileLayout, setMobileLayout] = React.useState(isMobile);
+  if (mobileLayout !== isMobile) {
+    setMobileLayout(isMobile);
+    if (!isMobile) setOpenMobile(false);
+  }
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -93,7 +98,7 @@ function SidebarProvider({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        toggleSidebar();
+        if (!event.repeat) toggleSidebar();
       }
     };
 
@@ -155,6 +160,8 @@ function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const focusBeforeDrawer = React.useRef<Element | null>(null);
+  const followedLink = React.useRef(false);
 
   if (collapsible === "none") {
     return (
@@ -186,6 +193,31 @@ function Sidebar({
             } as React.CSSProperties
           }
           side={side}
+          onOpenAutoFocus={() => {
+            focusBeforeDrawer.current = document.activeElement;
+            followedLink.current = false;
+          }}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const previous = focusBeforeDrawer.current;
+            focusBeforeDrawer.current = null;
+            const target =
+              !followedLink.current &&
+              (previous instanceof HTMLElement || previous instanceof SVGElement) &&
+              previous !== document.body &&
+              previous.isConnected
+                ? previous
+                : document.querySelector<HTMLElement>(
+                    '[data-slot="sidebar-wrapper"] [data-sidebar="trigger"]',
+                  );
+            target?.focus({ preventScroll: true });
+          }}
+          onClick={(event) => {
+            if (event.target instanceof Element && event.target.closest("a[href]")) {
+              followedLink.current = true;
+              setOpenMobile(false);
+            }
+          }}
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation</SheetTitle>

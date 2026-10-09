@@ -99,7 +99,7 @@ export function ComboboxList({
             onMouseMove={() => {
               if (!option.disabled && !active) onActivate(option);
             }}
-            className="flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm select-none aria-disabled:opacity-50 data-active:bg-accent data-active:text-accent-foreground data-active:**:text-accent-foreground"
+            className="flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm select-none aria-disabled:opacity-50 data-active:bg-accent data-active:text-accent-foreground data-active:outline-2 data-active:-outline-offset-2 data-active:outline-ring data-active:**:text-accent-foreground"
           >
             <span className="grid min-w-0 flex-1 gap-0.5">
               <span className="truncate">{option.label}</span>

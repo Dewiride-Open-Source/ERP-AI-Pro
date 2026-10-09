@@ -64,9 +64,9 @@ export async function AppShell({
           </Link>
           <Separator
             orientation="vertical"
-            className="max-md:hidden data-vertical:h-4 data-vertical:self-center"
+            className="max-lg:hidden data-vertical:h-4 data-vertical:self-center"
           />
-          <AppBreadcrumbs sources={trailSources} className="min-w-0 max-md:hidden" />
+          <AppBreadcrumbs sources={trailSources} className="min-w-0 max-lg:hidden" />
           <div className="ml-auto flex items-center gap-2">
             <PageSearch items={searchItems} />
             <ThemeToggle />

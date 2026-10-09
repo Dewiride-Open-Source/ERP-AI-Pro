@@ -21,8 +21,6 @@ function isWithin(pathname: string, basePath: string): boolean {
   return pathname === basePath || pathname.startsWith(`${basePath}/`);
 }
 
-// Home is current only on the start page itself; an entry is current on its own page and stays marked as the section of
-// any page below it.
 export function currentPage(pathname: string, href: Route): CurrentPage | undefined {
   if (pathname === href) return "page";
   if (href !== homePath && isWithin(pathname, href)) return "section";
