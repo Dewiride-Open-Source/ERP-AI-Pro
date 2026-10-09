@@ -305,14 +305,14 @@ export const motionDurations = [
   {
     token: "--motion-duration-fast",
     value: "150ms",
-    utility: "duration-(--motion-duration-fast)",
-    use: "Default of every transition utility: hover, focus and colour changes",
+    utility: "duration-(--motion-duration-fast), ::view-transition-old(.page-exit)",
+    use: "Default of every transition utility: hover, focus and colour changes; the page being left fades out when the shell moves to another page",
   },
   {
     token: "--motion-duration-normal",
     value: "200ms",
-    utility: "duration-(--motion-duration-normal), animate-page-enter",
-    use: "Toggles and short movements; animate-page-enter fades each page in the app shell up 4px as it arrives, and AnimatedList items grow in and shrink out",
+    utility: "duration-(--motion-duration-normal), ::view-transition-new(.page-enter)",
+    use: "Toggles and short movements; the arriving page fades in and rises 4px when the shell moves to another page, and AnimatedList items grow in and shrink out",
   },
   {
     token: "--motion-duration-slow",

@@ -10,7 +10,7 @@ export const cn = createCn({
       spacing: ["gutter", "section", "header"],
       container: ["page"],
       ease: ["standard", "enter"],
-      animate: ["fade-up", "glow", "page-enter"],
+      animate: ["fade-up", "glow"],
     },
     classGroups: { "font-size": [{ text: [...typeRoles] }] },
   },

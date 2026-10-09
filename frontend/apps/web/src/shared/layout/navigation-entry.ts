@@ -1,4 +1,10 @@
+import type { LucideIcon } from "lucide-react";
 import type { Route } from "next";
+
+export type NavigationArea = {
+  id: string;
+  title: string;
+};
 
 export type NavigationEntry = {
   id: string;
@@ -6,5 +12,6 @@ export type NavigationEntry = {
   description: string;
   basePath: Route;
   featureFlag: string;
-  permission?: string;
+  area: NavigationArea;
+  icon: LucideIcon;
 };

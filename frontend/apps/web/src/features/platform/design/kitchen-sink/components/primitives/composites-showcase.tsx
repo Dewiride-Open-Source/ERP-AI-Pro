@@ -1,7 +1,11 @@
 "use client";
 
+import { CommandPalette, type CommandPaletteItem } from "@dewiride/erp-ui/components/command/command-palette";
 import { ThemeToggle } from "@dewiride/erp-ui/components/theme/theme-toggle";
+import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { FileDropZone, type FileRejection } from "@dewiride/erp-ui/components/upload/file-drop-zone";
+import { ClockIcon, FileTextIcon, HouseIcon, ReceiptIcon, UsersIcon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Specimen, SpecimenGrid } from "../specimen";
@@ -43,7 +47,80 @@ export function CompositesShowcase() {
           }
         />
       </Specimen>
+      <CommandPaletteSpecimen />
       <DataTableSpecimens />
     </SpecimenGrid>
+  );
+}
+
+function CommandPaletteSpecimen() {
+  const [open, setOpen] = useState(false);
+  const [chosen, setChosen] = useState<string | undefined>(undefined);
+  const examples: readonly CommandPaletteItem[] = [
+    { id: "home", label: "Home", icon: <HouseIcon aria-hidden /> },
+    {
+      id: "invoices",
+      label: "Invoices",
+      description: "Issue and track tax invoices.",
+      group: "Finance",
+      icon: <FileTextIcon aria-hidden />,
+    },
+    {
+      id: "credit-notes",
+      label: "Credit notes",
+      description: "Correct an invoice that was issued.",
+      group: "Finance",
+      keywords: ["refund"],
+      icon: <ReceiptIcon aria-hidden />,
+    },
+    {
+      id: "customers",
+      label: "Customers",
+      description: "Clients with their GSTINs and contacts.",
+      group: "Clients",
+      icon: <UsersIcon aria-hidden />,
+    },
+    {
+      id: "timesheets",
+      label: "Timesheets",
+      description: "Hours worked this week.",
+      group: "Timesheets",
+      icon: <ClockIcon aria-hidden />,
+    },
+  ];
+
+  return (
+    <Specimen
+      title="Command palette"
+      description="Ctrl+K or ⌘K opens it in the shell. Typing filters the list, the arrow keys move and Enter chooses."
+    >
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          Open the command palette
+        </Button>
+        <p
+          aria-live="polite"
+          data-testid="composites-command-palette-choice"
+          className="text-caption text-muted-foreground"
+        >
+          {chosen === undefined ? "Nothing chosen yet." : `Chosen: ${chosen}`}
+        </p>
+      </div>
+      <CommandPalette
+        open={open}
+        onOpenChange={setOpen}
+        items={examples}
+        onSelect={(item) => {
+          setChosen(item.label);
+          setOpen(false);
+        }}
+        title="Example commands"
+        inputLabel="Search the examples"
+        placeholder="Search the examples…"
+        listLabel="Examples"
+        emptyMessage="No example matches your search."
+        countMessage={(count) => (count === 1 ? "1 example" : `${count} examples`)}
+      />
+    </Specimen>
   );
 }
