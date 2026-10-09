@@ -586,7 +586,13 @@ test.describe("feedback", () => {
       } else expect(leaving.between, "heights the removed item passed through").toEqual([]);
 
       const viewTransitions = await page.evaluate(() => "startViewTransition" in document);
-      await feedback.designPageLink("Receivables ageing (takes three seconds)").click();
+      // React leaves a page that arrives outside the viewport unanimated, and WebKit, and at times Firefox, measure the
+      // shorter report while the window is still scrolled to the link, so the link is followed from the top of this page.
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await feedback
+        .designPageLink("Receivables ageing (takes three seconds)")
+        .evaluate((link: HTMLElement) => link.focus({ preventScroll: true }));
+      await page.keyboard.press("Enter");
       await expect(report.heading).toBeVisible({ timeout: 15_000 });
       await report.backToFeedback.click();
       await expect(feedback.heading).toBeVisible();

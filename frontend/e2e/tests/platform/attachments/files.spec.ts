@@ -469,6 +469,9 @@ test.describe("attachments page", () => {
         await attachments.goto(query);
         await expect(attachments.row(file.name)).toBeVisible();
       } finally {
+        // The open page renews its session once it has loaded, and a sign-in through the same browser context while that
+        // renewal is under way leaves the page sending one person's request token with the next person's cookie.
+        await page.goto("about:blank");
         await signIn(context.request, "accountant");
         await deleteLeftoverAttachments(api, [id]);
       }
