@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { Page, Request, Response } from "@playwright/test";
 
+import { withholdClientBundles } from "../../../fixtures/client-bundles";
 import { png, type FileUpload } from "../../../fixtures/files";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import {
@@ -89,11 +90,26 @@ async function deleteLeftoverAttachments(api: SignedInApi, ids: readonly string[
 }
 
 test.describe("attachments page", () => {
+  test.describe("before the page is interactive", () => {
+    test("keeps the drop zone disabled so no chosen file is ignored", async ({ page }) => {
+      const attachments = new AttachmentsPage(page);
+      await withholdClientBundles(page);
+      await page.goto(attachmentsPath);
+
+      await expect(attachments.heading).toBeVisible();
+      await expect(attachments.dropZone).toHaveAttribute("data-hydrating", "");
+      await expect(attachments.dropZone).toHaveAttribute("aria-disabled", "true");
+      await expect(attachments.chooseFile).toBeDisabled();
+      await expect(attachments.fileInput).toBeDisabled();
+    });
+  });
+
   forEachTheme("uploads, lists, downloads and deletes a file", async ({ page, capture }) => {
     const attachments = new AttachmentsPage(page);
     const file = png();
     await attachments.goto();
 
+    await expect(attachments.dropZone).not.toHaveAttribute("data-hydrating");
     await expect(page).toHaveTitle(/Attachments · ERP-AI-Pro/);
     await expect(attachments.unavailable).toHaveCount(0);
     await expect(attachments.dropZone).toMatchAriaSnapshot(`

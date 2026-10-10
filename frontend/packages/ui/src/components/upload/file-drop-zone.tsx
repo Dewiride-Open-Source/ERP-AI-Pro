@@ -4,6 +4,7 @@ import { UploadCloudIcon } from "lucide-react";
 import { useId, useRef, useState, type DragEvent, type ReactNode } from "react";
 
 import { Button } from "@dewiride/erp-ui/components/ui/button";
+import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { cn } from "@dewiride/erp-ui/lib/utils";
 
 export type FileRejection = "empty" | "too-large" | "unsupported-type";
@@ -41,9 +42,11 @@ export function FileDropZone({
   onFileAccepted,
   onFileRejected,
 }: FileDropZoneProps) {
+  const hydrated = useHydrated();
   const inputRef = useRef<HTMLInputElement>(null);
   const hintId = useId();
   const [dragging, setDragging] = useState(false);
+  const inactive = disabled || !hydrated;
 
   const take = (files: FileList | null) => {
     const file = files?.item(0);
@@ -69,16 +72,17 @@ export function FileDropZone({
       role="group"
       aria-label={label}
       aria-describedby={hint ? hintId : undefined}
-      aria-disabled={disabled || undefined}
+      aria-disabled={inactive || undefined}
       data-testid="file-drop-zone"
       data-dragging={dragging || undefined}
+      data-hydrating={hydrated ? undefined : ""}
       onDragOver={onDragOver}
       onDragLeave={() => setDragging(false)}
       onDrop={onDrop}
       className={cn(
         "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-muted/30 p-6 text-center transition-colors duration-(--motion-duration-normal) ease-standard",
         dragging ? "border-primary bg-primary/5" : "border-border",
-        disabled && "opacity-60",
+        inactive && "opacity-60",
         className,
       )}
     >
@@ -94,7 +98,7 @@ export function FileDropZone({
       <Button
         type="button"
         variant="outline"
-        disabled={disabled}
+        disabled={inactive}
         onClick={() => inputRef.current?.click()}
         data-testid="file-drop-zone-choose"
       >
@@ -107,7 +111,7 @@ export function FileDropZone({
         tabIndex={-1}
         aria-hidden
         accept={accept.join(",")}
-        disabled={disabled}
+        disabled={inactive}
         data-testid="file-drop-zone-input"
         onChange={(event) => {
           take(event.currentTarget.files);
