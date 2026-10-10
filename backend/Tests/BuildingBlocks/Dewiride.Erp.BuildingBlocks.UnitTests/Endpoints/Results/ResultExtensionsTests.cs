@@ -15,6 +15,7 @@ public sealed class ResultExtensionsTests
     [InlineData(ErrorKind.TooLarge, StatusCodes.Status413PayloadTooLarge)]
     [InlineData(ErrorKind.UnsupportedType, StatusCodes.Status415UnsupportedMediaType)]
     [InlineData(ErrorKind.Failure, StatusCodes.Status422UnprocessableEntity)]
+    [InlineData(ErrorKind.Unavailable, StatusCodes.Status503ServiceUnavailable)]
     public void ToProblem_MapsEveryKindToAStatusAndCarriesTheCode(ErrorKind kind, int expectedStatus)
     {
         var error = new Error("sample.code", "Something specific happened.", kind);

@@ -115,16 +115,14 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
     }
 
     [Fact]
-    public async Task Register_EntraObjectIdOfAnotherRecord_Returns409()
+    public async Task Register_ObjectIdInTheBody_RegistersByWorkEmailOnly()
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
-        var objectId = Guid.CreateVersion7();
-        await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail(), entraObjectId: objectId));
+        var body = new { entraObjectId = Guid.CreateVersion7(), displayName = "Meera Nair", workEmail = PeopleApi.UniqueWorkEmail() };
 
-        using var response = await PeopleApi.PostAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail(), entraObjectId: objectId));
+        var person = await PeopleApi.RegisterAsync(client, body);
 
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        Assert.Equal("user.entra-object-id-taken", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
+        Assert.Null(person.EntraObjectId);
     }
 
     [Theory]
@@ -134,6 +132,8 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
     [InlineData("PUT", "/{id}")]
     [InlineData("PUT", "/{id}/status")]
     [InlineData("DELETE", "/{id}")]
+    [InlineData("GET", "/directory?search=meera")]
+    [InlineData("POST", "/invitations")]
     public async Task EveryRoute_AsPersonWithoutTheAdministratorRole_Returns403(string method, string suffix)
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
@@ -462,7 +462,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
             var context = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
             if (!await context.Users.AnyAsync(u => u.EntraObjectId == user.ObjectId, TestContext.Current.CancellationToken))
             {
-                context.Users.Add(User.Register(user.ObjectId, user.Name, user.UserName, null, null, null, null).Value);
+                context.Users.Add(User.Invite(user.ObjectId, user.Name, user.UserName, null, null, null, null).Value);
                 await context.SaveChangesAsync(TestContext.Current.CancellationToken);
             }
         }

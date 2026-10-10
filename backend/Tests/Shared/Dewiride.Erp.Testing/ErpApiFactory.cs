@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
+using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
@@ -8,6 +9,7 @@ using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Authentication.BearerTokens;
 using Dewiride.Erp.Testing.Blob;
 using Dewiride.Erp.Testing.Deployment;
+using Dewiride.Erp.Testing.Graph;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -245,6 +247,8 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
             services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, TestTokenIssuer.Configure);
             services.AddSingleton<TestTokenEndpoint>();
             services.AddSingleton<IMsalHttpClientFactory>(provider => provider.GetRequiredService<TestTokenEndpoint>());
+            services.AddSingleton<TestDirectory>();
+            services.AddHttpClient(MicrosoftGraph.HttpClientName).ConfigurePrimaryHttpMessageHandler(provider => provider.GetRequiredService<TestDirectory>().CreateHandler());
             services.AddTransient<IStartupFilter, ThrowingRouteStartupFilter>();
             services.AddTransient<IStartupFilter>(_ => new TestEndpointsStartupFilter(_testEndpoints));
             deployment.Register(services);

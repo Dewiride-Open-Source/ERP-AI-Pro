@@ -39,12 +39,15 @@ internal static class PersonRecords
         ArgumentNullException.ThrowIfNull(person);
 
         await using var scope = factory.Services.CreateAsyncScope();
+        var workEmail = User.NormaliseWorkEmail(person.UserName);
 
         return await scope.ServiceProvider.GetRequiredService<UsersDbContext>().Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.EntraObjectId == person.ObjectId, TestContext.Current.CancellationToken);
+            .SingleOrDefaultAsync(u => u.EntraObjectId == person.ObjectId || (u.EntraObjectId == null && u.WorkEmail == workEmail), TestContext.Current.CancellationToken);
     }
 
+    // The record names the person's work email only, as an administrator registers someone outside the company directory, so
+    // the person's first sign-in links it.
     public static async Task<Guid> RegisterAsync(WebApplicationFactory<Program> factory, TestUser person)
     {
         ArgumentNullException.ThrowIfNull(factory);
@@ -53,7 +56,7 @@ internal static class PersonRecords
         using var administrator = factory.CreateClient().AsUser(TestUsers.Administrator);
         using var request = new HttpRequestMessage(HttpMethod.Post, PeoplePath)
         {
-            Content = JsonContent.Create(new { entraObjectId = person.ObjectId, displayName = person.Name, workEmail = person.UserName }, options: Json),
+            Content = JsonContent.Create(new { displayName = person.Name, workEmail = person.UserName }, options: Json),
         };
         request.Headers.Add(IdempotencyKeyHeader.Name, Guid.CreateVersion7().ToString());
         using var response = await administrator.SendAsync(request, TestContext.Current.CancellationToken);

@@ -11,16 +11,25 @@ namespace Dewiride.Erp.Testing.Authentication;
 // MSAL sends every request of a test host through this client instead of one that reaches Entra. The token endpoint
 // redeems a code from CodeFor as Entra redeems the code of a person who signed in, with the tokens and client info that
 // put the person's account in the token cache, for a persona of TestUsers or a person a test host admitted, and refuses
-// every other code as Entra refuses an expired one; instance discovery answers with the aliases of the public cloud.
-// Anything else fails the request that sent it. ClientInfoFor is the client info Entra also posts to the callback with the
-// code, from which Microsoft.Identity.Web adds uid and utid.
+// every other code as Entra refuses an expired one. It redeems a refresh token it issued for the scopes MSAL asks, as
+// Entra does when the API calls Microsoft Graph for the person, unless a test made the person's consent missing; instance
+// discovery answers with the aliases of the public cloud. Anything else fails the request that sent it. ClientInfoFor is
+// the client info Entra also posts to the callback with the code, from which Microsoft.Identity.Web adds uid and utid.
 public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 {
     public const string RefusedCodeError = "invalid_grant";
 
     public const string RefusedCodeDescription = "AADSTS70008: The provided authorization code or refresh token has expired due to inactivity. Send a new interactive authorization request for this user and resource.";
 
+    public const string ConsentRequiredDescription = "AADSTS65001: The user or administrator has not consented to use the application. Send an interactive authorization request for this user and resource.";
+
+    private const string SignInScope = "openid profile offline_access User.Read";
+
     private const string CodePrefix = "test-sign-in.";
+
+    private const string RefreshTokenPrefix = "test-refresh-token.";
+
+    private const string RefreshTokenGrant = "refresh_token";
 
     private const string InstanceDiscoveryPath = "/common/discovery/instance";
 
@@ -28,9 +37,15 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 
     private readonly ConcurrentQueue<string> _issuedTokens = new();
 
+    private readonly ConcurrentDictionary<string, string> _accessTokenScopes = new(StringComparer.Ordinal);
+
     private readonly ConcurrentDictionary<Guid, TestUser> _admitted = new();
 
+    private readonly ConcurrentDictionary<Guid, bool> _consentMissing = new();
+
     private readonly HttpClient _client;
+
+    private long _issuedAccessTokens;
 
     public TestTokenEndpoint()
     {
@@ -68,6 +83,22 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 
     public TestUser? Find(Guid objectId) => TestUsers.Find(objectId) ?? _admitted.GetValueOrDefault(objectId);
 
+    // Entra refuses the refresh token of a person whose consent the API lacks for the scopes it asks, which MSAL reports as a
+    // sign-in interaction the person must complete.
+    public void WithholdConsent(TestUser user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        _consentMissing[user.ObjectId] = true;
+    }
+
+    public string? ScopeOf(string accessToken)
+    {
+        ArgumentNullException.ThrowIfNull(accessToken);
+
+        return _accessTokenScopes.GetValueOrDefault(accessToken);
+    }
+
     public HttpClient GetHttpClient() => _client;
 
     public void Dispose() => _client.Dispose();
@@ -87,16 +118,38 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
                 .ToDictionary(field => field.Key, field => field.Value.ToString(), StringComparer.Ordinal);
             _requests.Enqueue(new TestTokenRequest(address, form));
 
-            return UserFor(form.GetValueOrDefault("code")) is { } user
-                ? Json(HttpStatusCode.OK, Tokens(user))
-                : Json(HttpStatusCode.BadRequest, Refusal());
+            return form.GetValueOrDefault("grant_type") == RefreshTokenGrant
+                ? Refresh(form.GetValueOrDefault("refresh_token"), form.GetValueOrDefault("scope"))
+                : Redeem(form.GetValueOrDefault("code"));
         }
 
         throw new InvalidOperationException($"MSAL sent {request.Method} {address.GetLeftPart(UriPartial.Path)}, which the test token endpoint does not serve; no test host may reach Entra.");
     }
 
+    private HttpResponseMessage Redeem(string? code) =>
+        UserFor(code) is { } user
+            ? Json(HttpStatusCode.OK, Tokens(user, SignInScope))
+            : Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeDescription, 70008));
+
+    private HttpResponseMessage Refresh(string? refreshToken, string? scope)
+    {
+        if (RefreshedUserFor(refreshToken) is not { } user || string.IsNullOrWhiteSpace(scope))
+        {
+            return Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeDescription, 70008));
+        }
+
+        return _consentMissing.ContainsKey(user.ObjectId)
+            ? Json(HttpStatusCode.BadRequest, Refusal(ConsentRequiredDescription, 65001))
+            : Json(HttpStatusCode.OK, Tokens(user, scope));
+    }
+
     private TestUser? UserFor(string? code) =>
         code is not null && code.StartsWith(CodePrefix, StringComparison.Ordinal) && Guid.TryParseExact(code[CodePrefix.Length..], "D", out var objectId)
+            ? Find(objectId)
+            : null;
+
+    private TestUser? RefreshedUserFor(string? refreshToken) =>
+        refreshToken is not null && refreshToken.StartsWith(RefreshTokenPrefix, StringComparison.Ordinal) && Guid.TryParseExact(refreshToken[RefreshTokenPrefix.Length..], "N", out var objectId)
             ? Find(objectId)
             : null;
 
@@ -115,7 +168,7 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         },
     };
 
-    private Dictionary<string, object> Tokens(TestUser user)
+    private Dictionary<string, object> Tokens(TestUser user, string scope)
     {
         var now = TimeProvider.System.GetUtcNow().ToUnixTimeSeconds();
         var idToken = new Dictionary<string, object>(StringComparer.Ordinal)
@@ -137,8 +190,8 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 
         string[] tokens =
         [
-            $"test-access-token.{user.ObjectId:N}",
-            $"test-refresh-token.{user.ObjectId:N}",
+            $"test-access-token.{user.ObjectId:N}.{Interlocked.Increment(ref _issuedAccessTokens)}",
+            $"{RefreshTokenPrefix}{user.ObjectId:N}",
             $"{Encode(new Dictionary<string, object>(StringComparer.Ordinal) { ["alg"] = "none", ["typ"] = "JWT" })}.{Encode(idToken)}.",
         ];
         foreach (var token in tokens)
@@ -146,10 +199,12 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             _issuedTokens.Enqueue(token);
         }
 
+        _accessTokenScopes[tokens[0]] = scope;
+
         return new Dictionary<string, object>(StringComparer.Ordinal)
         {
             ["token_type"] = "Bearer",
-            ["scope"] = "openid profile offline_access User.Read",
+            ["scope"] = scope,
             ["expires_in"] = 3600,
             ["ext_expires_in"] = 3600,
             ["access_token"] = tokens[0],
@@ -159,11 +214,11 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         };
     }
 
-    private static Dictionary<string, object> Refusal() => new(StringComparer.Ordinal)
+    private static Dictionary<string, object> Refusal(string description, int errorCode) => new(StringComparer.Ordinal)
     {
         ["error"] = RefusedCodeError,
-        ["error_description"] = RefusedCodeDescription,
-        ["error_codes"] = new[] { 70008 },
+        ["error_description"] = description,
+        ["error_codes"] = new[] { errorCode },
     };
 
     private static string Encode(Dictionary<string, object> json) => Base64Url.EncodeToString(JsonSerializer.SerializeToUtf8Bytes(json));

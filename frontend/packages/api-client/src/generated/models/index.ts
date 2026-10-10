@@ -79,6 +79,24 @@ export function createCurrentUserResponseFromDiscriminatorValue(parseNode: Parse
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {DirectoryPersonResponse}
+ */
+// @ts-ignore
+export function createDirectoryPersonResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoDirectoryPersonResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {DirectorySearchResponse}
+ */
+// @ts-ignore
+export function createDirectorySearchResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoDirectorySearchResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {DownloadLinkResponse}
  */
 // @ts-ignore
@@ -120,6 +138,15 @@ export function createHttpValidationProblemDetails_errorsFromDiscriminatorValue(
 // @ts-ignore
 export function createHttpValidationProblemDetailsFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoHttpValidationProblemDetails;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {InvitePersonRequest}
+ */
+// @ts-ignore
+export function createInvitePersonRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoInvitePersonRequest;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -284,6 +311,33 @@ export function deserializeIntoCurrentUserResponse(currentUserResponse: Partial<
 }
 /**
  * The deserialization information for the current model
+ * @param DirectoryPersonResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoDirectoryPersonResponse(directoryPersonResponse: Partial<DirectoryPersonResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "displayName": n => { directoryPersonResponse.displayName = n.getStringValue(); },
+        "entraObjectId": n => { directoryPersonResponse.entraObjectId = n.getGuidValue(); },
+        "mail": n => { directoryPersonResponse.mail = n.getStringValue(); },
+        "personId": n => { directoryPersonResponse.personId = n.getGuidValue(); },
+        "userPrincipalName": n => { directoryPersonResponse.userPrincipalName = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param DirectorySearchResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoDirectorySearchResponse(directorySearchResponse: Partial<DirectorySearchResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "hasMore": n => { directorySearchResponse.hasMore = n.getBooleanValue(); },
+        "people": n => { directorySearchResponse.people = n.getCollectionOfObjectValues<DirectoryPersonResponse>(createDirectoryPersonResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param DownloadLinkResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -343,6 +397,21 @@ export function deserializeIntoHttpValidationProblemDetails(httpValidationProble
 // @ts-ignore
 export function deserializeIntoHttpValidationProblemDetails_errors(httpValidationProblemDetails_errors: Partial<HttpValidationProblemDetails_errors> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param InvitePersonRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoInvitePersonRequest(invitePersonRequest: Partial<InvitePersonRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "dateOfJoining": n => { invitePersonRequest.dateOfJoining = n.getDateOnlyValue(); },
+        "designation": n => { invitePersonRequest.designation = n.getStringValue(); },
+        "employeeCode": n => { invitePersonRequest.employeeCode = n.getStringValue(); },
+        "entraObjectId": n => { invitePersonRequest.entraObjectId = n.getGuidValue(); },
+        "phoneNumber": n => { invitePersonRequest.phoneNumber = n.getStringValue(); },
     }
 }
 /**
@@ -437,7 +506,6 @@ export function deserializeIntoRegisterPersonRequest(registerPersonRequest: Part
         "designation": n => { registerPersonRequest.designation = n.getStringValue(); },
         "displayName": n => { registerPersonRequest.displayName = n.getStringValue(); },
         "employeeCode": n => { registerPersonRequest.employeeCode = n.getStringValue(); },
-        "entraObjectId": n => { registerPersonRequest.entraObjectId = n.getGuidValue(); },
         "phoneNumber": n => { registerPersonRequest.phoneNumber = n.getStringValue(); },
         "workEmail": n => { registerPersonRequest.workEmail = n.getStringValue(); },
     }
@@ -513,6 +581,38 @@ export function deserializeIntoUploadPolicyResponse(uploadPolicyResponse: Partia
         "maxSizeBytes": n => { uploadPolicyResponse.maxSizeBytes = n.getNumberValue(); },
     }
 }
+export interface DirectoryPersonResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The displayName property
+     */
+    displayName?: string | null;
+    /**
+     * The entraObjectId property
+     */
+    entraObjectId?: Guid | null;
+    /**
+     * The mail property
+     */
+    mail?: string | null;
+    /**
+     * The personId property
+     */
+    personId?: Guid | null;
+    /**
+     * The userPrincipalName property
+     */
+    userPrincipalName?: string | null;
+}
+export interface DirectorySearchResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The hasMore property
+     */
+    hasMore?: boolean | null;
+    /**
+     * The people property
+     */
+    people?: DirectoryPersonResponse[] | null;
+}
 export interface DownloadLinkResponse extends AdditionalDataHolder, Parsable {
     /**
      * The expiresAt property
@@ -574,6 +674,28 @@ export interface HttpValidationProblemDetails extends AdditionalDataHolder, ApiE
     type?: string | null;
 }
 export interface HttpValidationProblemDetails_errors extends AdditionalDataHolder, Parsable {
+}
+export interface InvitePersonRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Date the person joined the company.
+     */
+    dateOfJoining?: DateOnly | null;
+    /**
+     * Designation, as free text.
+     */
+    designation?: string | null;
+    /**
+     * Employee code: letters, digits, hyphens, slashes and underscores, starting with a letter or a digit, unique among the people of the ERP.
+     */
+    employeeCode?: string | null;
+    /**
+     * Entra object id of the person in the company directory, as the directory search returned it.
+     */
+    entraObjectId?: Guid | null;
+    /**
+     * Phone number: an international number starting with + and its country code, or a 10-digit Indian mobile number.
+     */
+    phoneNumber?: string | null;
 }
 export interface PagedResponseOfAttachmentResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -724,15 +846,11 @@ export interface RegisterPersonRequest extends AdditionalDataHolder, Parsable {
      */
     employeeCode?: string | null;
     /**
-     * Entra object id of the person's account, when it is known; without it the person's first sign-in links the record by its work email.
-     */
-    entraObjectId?: Guid | null;
-    /**
      * Phone number: an international number starting with + and its country code, or a 10-digit Indian mobile number.
      */
     phoneNumber?: string | null;
     /**
-     * Work email of the person, which their first sign-in matches when the record names no Entra account.
+     * Work email of the person, which their first sign-in matches to link the record to their Entra account.
      */
     workEmail?: string | null;
 }
@@ -782,6 +900,35 @@ export function serializeCurrentUserResponse(writer: SerializationWriter, curren
     writer.writeCollectionOfPrimitiveValues<string>("roles", currentUserResponse.roles);
     writer.writeStringValue("userName", currentUserResponse.userName);
     writer.writeAdditionalData(currentUserResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param DirectoryPersonResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeDirectoryPersonResponse(writer: SerializationWriter, directoryPersonResponse: Partial<DirectoryPersonResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!directoryPersonResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("displayName", directoryPersonResponse.displayName);
+    writer.writeGuidValue("entraObjectId", directoryPersonResponse.entraObjectId);
+    writer.writeStringValue("mail", directoryPersonResponse.mail);
+    writer.writeGuidValue("personId", directoryPersonResponse.personId);
+    writer.writeStringValue("userPrincipalName", directoryPersonResponse.userPrincipalName);
+    writer.writeAdditionalData(directoryPersonResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param DirectorySearchResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeDirectorySearchResponse(writer: SerializationWriter, directorySearchResponse: Partial<DirectorySearchResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!directorySearchResponse || isSerializingDerivedType) { return; }
+    writer.writeBooleanValue("hasMore", directorySearchResponse.hasMore);
+    writer.writeCollectionOfObjectValues<DirectoryPersonResponse>("people", directorySearchResponse.people, serializeDirectoryPersonResponse);
+    writer.writeAdditionalData(directorySearchResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -850,6 +997,22 @@ export function serializeHttpValidationProblemDetails(writer: SerializationWrite
 export function serializeHttpValidationProblemDetails_errors(writer: SerializationWriter, httpValidationProblemDetails_errors: Partial<HttpValidationProblemDetails_errors> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
     if (!httpValidationProblemDetails_errors || isSerializingDerivedType) { return; }
     writer.writeAdditionalData(httpValidationProblemDetails_errors.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param InvitePersonRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeInvitePersonRequest(writer: SerializationWriter, invitePersonRequest: Partial<InvitePersonRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!invitePersonRequest || isSerializingDerivedType) { return; }
+    writer.writeDateOnlyValue("dateOfJoining", invitePersonRequest.dateOfJoining);
+    writer.writeStringValue("designation", invitePersonRequest.designation);
+    writer.writeStringValue("employeeCode", invitePersonRequest.employeeCode);
+    writer.writeGuidValue("entraObjectId", invitePersonRequest.entraObjectId);
+    writer.writeStringValue("phoneNumber", invitePersonRequest.phoneNumber);
+    writer.writeAdditionalData(invitePersonRequest.additionalData);
 }
 /**
  * Serializes information the current object
@@ -949,7 +1112,6 @@ export function serializeRegisterPersonRequest(writer: SerializationWriter, regi
     writer.writeStringValue("designation", registerPersonRequest.designation);
     writer.writeStringValue("displayName", registerPersonRequest.displayName);
     writer.writeStringValue("employeeCode", registerPersonRequest.employeeCode);
-    writer.writeGuidValue("entraObjectId", registerPersonRequest.entraObjectId);
     writer.writeStringValue("phoneNumber", registerPersonRequest.phoneNumber);
     writer.writeStringValue("workEmail", registerPersonRequest.workEmail);
     writer.writeAdditionalData(registerPersonRequest.additionalData);

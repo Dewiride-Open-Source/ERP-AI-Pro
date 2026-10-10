@@ -399,7 +399,7 @@ verify_app_roles() {
 verify_required_resource_access() {
   local registration_json="$1" display_name="$2"
   local requested_ids index scope scope_id
-  local -a scope_ids=("$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ")
+  local -a scope_ids=("$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ" "$GRAPH_SCOPE_USER_READ_BASIC_ALL")
   requested_ids="$(json_eval "$registration_json" '(value.requiredResourceAccess || []).filter((r) => String(r.resourceAppId).toLowerCase() === args[0].toLowerCase()).flatMap((r) => r.resourceAccess || []).filter((a) => a.type === "Scope").map((a) => String(a.id).toLowerCase())' "$GRAPH_APP_ID")"
   for index in "${!GRAPH_SCOPE_VALUES[@]}"; do
     scope="${GRAPH_SCOPE_VALUES[$index]}"

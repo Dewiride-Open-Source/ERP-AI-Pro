@@ -43,8 +43,9 @@ internal static class PeopleEndpoints
 
         people.MapPost("/", RegisterAsync)
             .WithName("Identity.Users.Register")
-            .WithSummary("Registers a person before their first sign-in, which links the record to their Entra account.")
-            .RequireIdempotencyKey();
+            .WithSummary("Registers a person by work email before their first sign-in, which links the record to their Entra account.")
+            .RequireIdempotencyKey()
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         people.MapPut("/{id:guid}", UpdateAsync)
             .WithName("Identity.Users.Update")
@@ -61,6 +62,27 @@ internal static class PeopleEndpoints
             .WithName("Identity.Users.Delete")
             .WithSummary("Deletes a person's record; their sessions end at their next request.")
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        InvitationEndpoints.Map(people);
+    }
+
+    public static async Task<Results<Created<PersonResponse>, ProblemHttpResult>> CreatedAsync(
+        Guid id,
+        IQueryHandler<GetPersonQuery, PersonDetails> people,
+        LinkGenerator links,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var person = await people.HandleAsync(new GetPersonQuery(id), cancellationToken);
+        if (person.IsFailure)
+        {
+            return person.Error!.ToProblem();
+        }
+
+        var location = links.GetPathByName(httpContext, GetRouteName, new { id })
+            ?? throw new InvalidOperationException($"No endpoint is named '{GetRouteName}'.");
+
+        return TypedResults.Created(location, ToResponse(person.Value));
     }
 
     private static PersonResponse ToResponse(PersonDetails details) =>
@@ -110,7 +132,6 @@ internal static class PeopleEndpoints
     {
         var registered = await handler.HandleAsync(
             new RegisterPersonCommand(
-                request.EntraObjectId,
                 request.DisplayName!,
                 request.WorkEmail!,
                 request.EmployeeCode,
@@ -118,21 +139,10 @@ internal static class PeopleEndpoints
                 request.Designation,
                 request.DateOfJoining),
             cancellationToken);
-        if (registered.IsFailure)
-        {
-            return registered.Error!.ToProblem();
-        }
 
-        var person = await people.HandleAsync(new GetPersonQuery(registered.Value), cancellationToken);
-        if (person.IsFailure)
-        {
-            return person.Error!.ToProblem();
-        }
-
-        var location = links.GetPathByName(httpContext, GetRouteName, new { id = registered.Value })
-            ?? throw new InvalidOperationException($"No endpoint is named '{GetRouteName}'.");
-
-        return TypedResults.Created(location, ToResponse(person.Value));
+        return registered.IsFailure
+            ? registered.Error!.ToProblem()
+            : await CreatedAsync(registered.Value, people, links, httpContext, cancellationToken);
     }
 
     private static async Task<Results<Ok<PersonResponse>, ProblemHttpResult>> UpdateAsync(

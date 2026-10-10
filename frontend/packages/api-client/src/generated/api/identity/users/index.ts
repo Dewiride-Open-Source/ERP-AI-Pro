@@ -4,6 +4,10 @@
 // @ts-ignore
 import { createHttpValidationProblemDetailsFromDiscriminatorValue, createPagedResponseOfPersonResponseFromDiscriminatorValue, createPersonResponseFromDiscriminatorValue, createProblemDetailsFromDiscriminatorValue, serializePersonResponse, serializeRegisterPersonRequest, type HttpValidationProblemDetails, type PagedResponseOfPersonResponse, type PersonResponse, type ProblemDetails, type RegisterPersonRequest } from '../../../models/index.js';
 // @ts-ignore
+import { DirectoryRequestBuilderRequestsMetadata, type DirectoryRequestBuilder } from './directory/index.js';
+// @ts-ignore
+import { InvitationsRequestBuilderRequestsMetadata, type InvitationsRequestBuilder } from './invitations/index.js';
+// @ts-ignore
 import { type UsersItemRequestBuilder, UsersItemRequestBuilderNavigationMetadata, UsersItemRequestBuilderRequestsMetadata } from './item/index.js';
 // @ts-ignore
 import { type BaseRequestBuilder, type Guid, type KeysToExcludeForNavigationMetadata, type NavigationMetadata, type Parsable, type ParsableFactory, type RequestConfiguration, type RequestInformation, type RequestsMetadata } from '@microsoft/kiota-abstractions';
@@ -12,6 +16,14 @@ import { type BaseRequestBuilder, type Guid, type KeysToExcludeForNavigationMeta
  * Builds and executes requests for operations under /api/identity/users
  */
 export interface UsersRequestBuilder extends BaseRequestBuilder<UsersRequestBuilder> {
+    /**
+     * The directory property
+     */
+    get directory(): DirectoryRequestBuilder;
+    /**
+     * The invitations property
+     */
+    get invitations(): InvitationsRequestBuilder;
     /**
      * Gets an item from the ErpApi.api.identity.users.item collection
      * @param id Unique identifier of the item
@@ -32,7 +44,7 @@ export interface UsersRequestBuilder extends BaseRequestBuilder<UsersRequestBuil
      */
      get(requestConfiguration?: RequestConfiguration<UsersRequestBuilderGetQueryParameters> | undefined) : Promise<PagedResponseOfPersonResponse | undefined>;
     /**
-     * Registers a person before their first sign-in, which links the record to their Entra account.
+     * Registers a person by work email before their first sign-in, which links the record to their Entra account.
      * @param body The request body
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {Promise<PersonResponse>}
@@ -54,7 +66,7 @@ export interface UsersRequestBuilder extends BaseRequestBuilder<UsersRequestBuil
      */
      toGetRequestInformation(requestConfiguration?: RequestConfiguration<UsersRequestBuilderGetQueryParameters> | undefined) : RequestInformation;
     /**
-     * Registers a person before their first sign-in, which links the record to their Entra account.
+     * Registers a person by work email before their first sign-in, which links the record to their Entra account.
      * @param body The request body
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {RequestInformation}
@@ -94,6 +106,12 @@ export const UsersRequestBuilderNavigationMetadata: Record<Exclude<keyof UsersRe
         requestsMetadata: UsersItemRequestBuilderRequestsMetadata,
         navigationMetadata: UsersItemRequestBuilderNavigationMetadata,
         pathParametersMappings: ["id"],
+    },
+    directory: {
+        requestsMetadata: DirectoryRequestBuilderRequestsMetadata,
+    },
+    invitations: {
+        requestsMetadata: InvitationsRequestBuilderRequestsMetadata,
     },
 };
 /**

@@ -5,8 +5,9 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 namespace Dewiride.Erp.Modules.Identity.Users.People.Domain;
 
 // Entra keeps a person's name and work email, so every sign-in brings them up to date; the employee code, phone number,
-// designation and date of joining are kept here by administrators. A record an administrator registers before the
-// person's first sign-in is linked to their Entra account at that sign-in.
+// designation and date of joining are kept here by administrators. A record an administrator registers by work email is
+// linked to the person's Entra account at their first sign-in; one invited from the company directory is linked from the
+// start.
 internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, IVersioned
 {
     public const int DisplayNameMaxLength = 256;
@@ -64,25 +65,23 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
     public bool IsActive => Status == UserStatus.Active;
 
     public static Result<User> Register(
-        Guid? entraObjectId,
         string displayName,
         string workEmail,
         string? employeeCode,
         string? phoneNumber,
         string? designation,
-        DateOnly? dateOfJoining)
-    {
-        var user = new User(UserId.Create()) { EntraObjectId = entraObjectId, Status = UserStatus.Active };
-        var named = user.Name(displayName, workEmail);
-        if (named.IsFailure)
-        {
-            return named.Error!;
-        }
+        DateOnly? dateOfJoining) =>
+        Create(null, displayName, workEmail, employeeCode, phoneNumber, designation, dateOfJoining);
 
-        var described = user.Describe(employeeCode, phoneNumber, designation, dateOfJoining);
-
-        return described.IsFailure ? described.Error! : user;
-    }
+    public static Result<User> Invite(
+        Guid entraObjectId,
+        string displayName,
+        string workEmail,
+        string? employeeCode,
+        string? phoneNumber,
+        string? designation,
+        DateOnly? dateOfJoining) =>
+        Create(entraObjectId, displayName, workEmail, employeeCode, phoneNumber, designation, dateOfJoining);
 
     public static Result<User> FirstSignIn(Guid entraObjectId, string displayName, string workEmail, DateTimeOffset signedInAt)
     {
@@ -149,6 +148,27 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
     public void Deactivate() => Status = UserStatus.Deactivated;
 
     public void Reactivate() => Status = UserStatus.Active;
+
+    private static Result<User> Create(
+        Guid? entraObjectId,
+        string displayName,
+        string workEmail,
+        string? employeeCode,
+        string? phoneNumber,
+        string? designation,
+        DateOnly? dateOfJoining)
+    {
+        var user = new User(UserId.Create()) { EntraObjectId = entraObjectId, Status = UserStatus.Active };
+        var named = user.Name(displayName, workEmail);
+        if (named.IsFailure)
+        {
+            return named.Error!;
+        }
+
+        var described = user.Describe(employeeCode, phoneNumber, designation, dateOfJoining);
+
+        return described.IsFailure ? described.Error! : user;
+    }
 
     private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 

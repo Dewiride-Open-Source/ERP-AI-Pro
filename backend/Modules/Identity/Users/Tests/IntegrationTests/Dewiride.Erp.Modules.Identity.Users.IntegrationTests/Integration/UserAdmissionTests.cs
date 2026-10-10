@@ -46,7 +46,7 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     public async Task AdmitAsync_RecordRegisteredWithTheWorkEmail_LinksItInsteadOfCreatingAnother()
     {
         var workEmail = PeopleApi.UniqueWorkEmail();
-        var registered = await RegisterAsync(User.Register(null, "Meera", workEmail, "DW-0042", null, null, null).Value);
+        var registered = await RegisterAsync(User.Register("Meera", workEmail, "DW-0042", null, null, null).Value);
         var objectId = Guid.CreateVersion7();
 
         Assert.True(await AdmitAsync(new SignedInPerson(objectId, "Meera Nair", workEmail.ToUpperInvariant())));
@@ -59,10 +59,10 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     }
 
     [Fact]
-    public async Task AdmitAsync_RecordRegisteredWithTheObjectId_LinksItWhateverItsEmail()
+    public async Task AdmitAsync_RecordInvitedWithTheObjectId_LinksItWhateverItsEmail()
     {
         var objectId = Guid.CreateVersion7();
-        var registered = await RegisterAsync(User.Register(objectId, "Meera", PeopleApi.UniqueWorkEmail(), null, null, null, null).Value);
+        var registered = await RegisterAsync(User.Invite(objectId, "Meera", PeopleApi.UniqueWorkEmail(), null, null, null, null).Value);
         var workEmail = PeopleApi.UniqueWorkEmail();
 
         Assert.True(await AdmitAsync(new SignedInPerson(objectId, "Meera Nair", workEmail)));

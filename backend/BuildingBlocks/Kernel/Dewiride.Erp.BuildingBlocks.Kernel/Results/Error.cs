@@ -23,4 +23,6 @@ public sealed record Error(string Code, string Message, ErrorKind Kind)
     public static Error UnsupportedType(string code, string message) => new(code, message, ErrorKind.UnsupportedType);
 
     public static Error Failure(string code, string message) => new(code, message, ErrorKind.Failure);
+
+    public static Error Unavailable(string code, string message) => new(code, message, ErrorKind.Unavailable);
 }

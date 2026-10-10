@@ -1479,7 +1479,7 @@
         "tags": [
           "Identity.Users"
         ],
-        "summary": "Registers a person before their first sign-in, which links the record to their Entra account.",
+        "summary": "Registers a person by work email before their first sign-in, which links the record to their Entra account.",
         "operationId": "Identity.Users.Register",
         "parameters": [
           {
@@ -2093,6 +2093,274 @@
         ]
       }
     },
+    "/api/identity/users/directory": {
+      "get": {
+        "tags": [
+          "Identity.Users"
+        ],
+        "summary": "Searches the company directory in Microsoft Entra on the administrator's behalf and names the people the ERP already holds.",
+        "operationId": "Identity.Users.SearchDirectory",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Text to look for at the start of a word of a person's display name, or at the start of their email address or sign-in name: 2 to 100 characters besides spaces at either end, without & or control characters.",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectorySearchResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/identity/users/invitations": {
+      "post": {
+        "tags": [
+          "Identity.Users"
+        ],
+        "summary": "Registers a person of the company directory by their Entra object id, with the name and sign-in name the directory holds, so their first sign-in finds the record.",
+        "operationId": "Identity.Users.Invite",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "A UUID chosen by the client for this request; repeating the request with the same key replays the first response instead of acting twice.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitePersonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
     "/api/platform/features": {
       "get": {
         "tags": [
@@ -2230,6 +2498,59 @@
           }
         }
       },
+      "DirectoryPersonResponse": {
+        "required": [
+          "entraObjectId",
+          "displayName",
+          "userPrincipalName",
+          "mail",
+          "personId"
+        ],
+        "type": "object",
+        "properties": {
+          "entraObjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "userPrincipalName": {
+            "type": "string"
+          },
+          "mail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "personId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "DirectorySearchResponse": {
+        "required": [
+          "people",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DirectoryPersonResponse"
+            }
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        }
+      },
       "DownloadLinkResponse": {
         "required": [
           "url",
@@ -2326,6 +2647,61 @@
           "traceId": {
             "type": "string",
             "description": "Correlation id of the request, the same value the X-Correlation-ID response header carries."
+          }
+        }
+      },
+      "InvitePersonRequest": {
+        "required": [
+          "entraObjectId",
+          "employeeCode",
+          "phoneNumber",
+          "designation",
+          "dateOfJoining"
+        ],
+        "type": "object",
+        "properties": {
+          "entraObjectId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Entra object id of the person in the company directory, as the directory search returned it.",
+            "format": "uuid"
+          },
+          "employeeCode": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Employee code: letters, digits, hyphens, slashes and underscores, starting with a letter or a digit, unique among the people of the ERP."
+          },
+          "phoneNumber": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Phone number: an international number starting with + and its country code, or a 10-digit Indian mobile number."
+          },
+          "designation": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Designation, as free text."
+          },
+          "dateOfJoining": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Date the person joined the company.",
+            "format": "date"
           }
         }
       },
@@ -2542,7 +2918,6 @@
       },
       "RegisterPersonRequest": {
         "required": [
-          "entraObjectId",
           "displayName",
           "workEmail",
           "employeeCode",
@@ -2552,14 +2927,6 @@
         ],
         "type": "object",
         "properties": {
-          "entraObjectId": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "Entra object id of the person's account, when it is known; without it the person's first sign-in links the record by its work email.",
-            "format": "uuid"
-          },
           "displayName": {
             "maxLength": 256,
             "minLength": 0,
@@ -2576,7 +2943,7 @@
               "null",
               "string"
             ],
-            "description": "Work email of the person, which their first sign-in matches when the record names no Entra account."
+            "description": "Work email of the person, which their first sign-in matches to link the record to their Entra account."
           },
           "employeeCode": {
             "maxLength": 32,

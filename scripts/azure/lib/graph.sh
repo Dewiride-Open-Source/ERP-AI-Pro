@@ -10,7 +10,7 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
 
 readonly GRAPH_BASE_URL='https://graph.microsoft.com/v1.0'
 readonly GRAPH_APP_ID='00000003-0000-0000-c000-000000000000'
-readonly GRAPH_SCOPE_VALUES=(openid profile offline_access User.Read)
+readonly GRAPH_SCOPE_VALUES=(openid profile offline_access User.Read User.ReadBasic.All)
 readonly PENDING_ID='<pending>'
 readonly APP_ROLES_FILE='scripts/azure/entra/app-roles.json'
 readonly OPTIONAL_CLAIMS_FILE='scripts/azure/entra/optional-claims.json'
@@ -36,6 +36,7 @@ GRAPH_SCOPE_OPENID=''
 GRAPH_SCOPE_PROFILE=''
 GRAPH_SCOPE_OFFLINE_ACCESS=''
 GRAPH_SCOPE_USER_READ=''
+GRAPH_SCOPE_USER_READ_BASIC_ALL=''
 PERMISSION_GRANT_FAILURES=()
 CERTIFICATE_POLICY_FILE=''
 CLEAR_REDIRECT_URIS_ALLOWED="${CLEAR_REDIRECT_URIS_ALLOWED:-0}"
@@ -392,29 +393,31 @@ ensure_app_roles() {
 resolve_graph_scope_ids() {
   local json
   json="$(az_read ad sp show --id "$GRAPH_APP_ID" --output json \
-    --query "{id: id, openid: oauth2PermissionScopes[?value=='openid'].id | [0], profile: oauth2PermissionScopes[?value=='profile'].id | [0], offlineAccess: oauth2PermissionScopes[?value=='offline_access'].id | [0], userRead: oauth2PermissionScopes[?value=='User.Read'].id | [0]}")" \
+    --query "{id: id, openid: oauth2PermissionScopes[?value=='openid'].id | [0], profile: oauth2PermissionScopes[?value=='profile'].id | [0], offlineAccess: oauth2PermissionScopes[?value=='offline_access'].id | [0], userRead: oauth2PermissionScopes[?value=='User.Read'].id | [0], userReadBasicAll: oauth2PermissionScopes[?value=='User.ReadBasic.All'].id | [0]}")" \
     || die "cannot read the Microsoft Graph service principal ($GRAPH_APP_ID)"
   GRAPH_SP_OBJECT_ID="$(json_field "$json" id)"
   GRAPH_SCOPE_OPENID="$(json_field "$json" openid)"
   GRAPH_SCOPE_PROFILE="$(json_field "$json" profile)"
   GRAPH_SCOPE_OFFLINE_ACCESS="$(json_field "$json" offlineAccess)"
   GRAPH_SCOPE_USER_READ="$(json_field "$json" userRead)"
+  GRAPH_SCOPE_USER_READ_BASIC_ALL="$(json_field "$json" userReadBasicAll)"
   is_guid "$GRAPH_SP_OBJECT_ID" || die "the Microsoft Graph service principal has no object id"
   is_guid "$GRAPH_SCOPE_OPENID" || die "Microsoft Graph delegated permission 'openid' not found"
   is_guid "$GRAPH_SCOPE_PROFILE" || die "Microsoft Graph delegated permission 'profile' not found"
   is_guid "$GRAPH_SCOPE_OFFLINE_ACCESS" || die "Microsoft Graph delegated permission 'offline_access' not found"
   is_guid "$GRAPH_SCOPE_USER_READ" || die "Microsoft Graph delegated permission 'User.Read' not found"
+  is_guid "$GRAPH_SCOPE_USER_READ_BASIC_ALL" || die "Microsoft Graph delegated permission 'User.ReadBasic.All' not found"
 }
 
 required_resource_access_json() {
-  printf '[{"resourceAppId":"%s","resourceAccess":[{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"}]}]' \
-    "$GRAPH_APP_ID" "$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ"
+  printf '[{"resourceAppId":"%s","resourceAccess":[{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"}]}]' \
+    "$GRAPH_APP_ID" "$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ" "$GRAPH_SCOPE_USER_READ_BASIC_ALL"
 }
 
 required_resource_access_matches() {
   local current_json="$1"
   node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const current = JSON.parse(raw) ?? []; const [resourceAppId, ...scopeIds] = process.argv.slice(1).map((value) => value.toLowerCase()); const expected = scopeIds.map((id) => id + ":scope").sort().join(","); const matches = current.length === 1 && String(current[0].resourceAppId).toLowerCase() === resourceAppId && (current[0].resourceAccess ?? []).map((access) => String(access.id).toLowerCase() + ":" + String(access.type).toLowerCase()).sort().join(",") === expected; process.exit(matches ? 0 : 1); });' \
-    "$GRAPH_APP_ID" "$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ" <<< "$current_json"
+    "$GRAPH_APP_ID" "$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ" "$GRAPH_SCOPE_USER_READ_BASIC_ALL" <<< "$current_json"
 }
 
 ensure_required_resource_access() {

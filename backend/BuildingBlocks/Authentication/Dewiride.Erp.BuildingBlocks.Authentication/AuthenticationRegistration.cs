@@ -1,7 +1,9 @@
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
+using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 using Dewiride.Erp.BuildingBlocks.Authentication.Logging;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
@@ -63,6 +65,7 @@ public static class AuthenticationRegistration
             .EnableTokenAcquisitionToCallDownstreamApi();
         authentication.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, static _ => { });
         builder.Services.AddErpTokenCache();
+        builder.Services.AddHttpClient<IPeopleDirectory, GraphPeopleDirectory>(MicrosoftGraph.HttpClientName, static client => client.BaseAddress = MicrosoftGraph.BaseAddress);
         builder.AddErpDataProtection();
 
         // With Cookie.SecurePolicy Always, DefaultAntiforgery refuses every call, validation included, on a request it does not
