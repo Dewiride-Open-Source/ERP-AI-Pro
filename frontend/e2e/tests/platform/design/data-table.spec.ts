@@ -2,6 +2,7 @@ import type { Page, Route } from "@playwright/test";
 
 import { expect, forEachTheme, tabOntoLink, test } from "../../../fixtures/test";
 import { DataTableDemoPage, dataTablePath } from "../../../pages/platform/design/data-table.page";
+import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 function search(page: Page): URLSearchParams {
   return new URL(page.url()).searchParams;
@@ -34,6 +35,29 @@ async function holdListNavigation(page: Page): Promise<() => void> {
 
 function isClientBundle(url: URL): boolean {
   return url.pathname.startsWith("/_next/static/") && url.pathname.endsWith(".js");
+}
+
+async function holdAnimationFrames(page: Page): Promise<() => Promise<void>> {
+  await page.addInitScript(() => {
+    const requestFrame = window.requestAnimationFrame.bind(window);
+    const cancelFrame = window.cancelAnimationFrame.bind(window);
+    const held = new Map<number, FrameRequestCallback>();
+    let nextHandle = 1_000_000_000;
+    window.requestAnimationFrame = (callback) => {
+      held.set(nextHandle, callback);
+      return nextHandle++;
+    };
+    window.cancelAnimationFrame = (handle) => {
+      held.delete(handle);
+    };
+    Reflect.set(window, "releaseAnimationFrames", () => {
+      window.requestAnimationFrame = requestFrame;
+      window.cancelAnimationFrame = cancelFrame;
+      for (const callback of held.values()) requestFrame(callback);
+      held.clear();
+    });
+  });
+  return () => page.evaluate(() => (Reflect.get(window, "releaseAnimationFrames") as () => void)());
 }
 
 async function controlPlacements(page: Page): Promise<string[]> {
@@ -457,8 +481,25 @@ test.describe("data table", () => {
 
     await page.route(isClientBundle, (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
     await page.reload();
+    await expect(demo.bills.columnsButton).toBeVisible();
     await expect(demo.bills.columnsButton).toBeDisabled();
     expect(await controlPlacements(page)).toEqual(interactive);
+  });
+
+  test("keeps the list the server sent when the page becomes interactive before the list is shown", async ({
+    page,
+  }) => {
+    const demo = new DataTableDemoPage(page);
+    const shell = new AppShell(page);
+    const releaseAnimationFrames = await holdAnimationFrames(page);
+
+    await page.goto(dataTablePath, { waitUntil: "commit" });
+    await expect(shell.menuButton).toBeEnabled();
+    await expect(demo.bills.columnsButton).toBeHidden();
+
+    await releaseAnimationFrames();
+    await expect(demo.bills.columnsButton).toBeVisible();
+    await expect(demo.bills.columnsButton).toBeEnabled();
   });
 
   test.describe("before the page is interactive", () => {

@@ -8,10 +8,10 @@ function subscribe(onChange: () => void) {
   return () => mql.removeEventListener("change", onChange);
 }
 
+export function matchesMobileLayout() {
+  return window.matchMedia(mobileQuery).matches;
+}
+
 export function useIsMobile() {
-  return React.useSyncExternalStore(
-    subscribe,
-    () => window.matchMedia(mobileQuery).matches,
-    () => false,
-  );
+  return React.useSyncExternalStore(subscribe, matchesMobileLayout, () => false);
 }

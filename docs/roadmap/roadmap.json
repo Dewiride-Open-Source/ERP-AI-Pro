@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-10-09",
+  "updatedOn": "2026-10-10",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -927,7 +927,7 @@
           "dependsOn": [],
           "startedOn": "2026-10-09",
           "completedOn": "2026-10-09",
-          "notes": "The (app) shell of ADR-0037: the shadcn sidebar (use-mobile on useSyncExternalStore, the drawer named Navigation) from the navigation registry, grouped by area, collapsing to icons from md through the Navigation button or Ctrl/Cmd+B and kept in the sidebar_state cookie, and a drawer below md that returns focus; breadcrumbs of the registry trail; the in-house CommandPalette on Ctrl/Cmd+K over Home and the enabled entries (owner decision of 2026-10-09); the user menu with the sign-out form outside it; React ViewTransition page transitions keyed by the path in place of the CSS entrance."
+          "notes": "The (app) shell of ADR-0037: the shadcn sidebar (use-mobile on useSyncExternalStore, the drawer named Navigation) from the navigation registry, grouped by area, collapsing to icons from md through the Navigation button or Ctrl/Cmd+B and kept in the sidebar_state cookie, and a drawer below md that returns focus; breadcrumbs of the registry trail; the in-house CommandPalette on Ctrl/Cmd+K over Home and the enabled entries (owner decision of 2026-10-09); the user menu with the sign-out form outside it; React ViewTransition page transitions keyed by the path in place of the CSS entrance; the sidebar context carries no isMobile, so a phone page that becomes interactive before its streamed content is shown hydrates the server copy instead of rendering a second one."
         },
         {
           "id": "authentication-login-hardening",
