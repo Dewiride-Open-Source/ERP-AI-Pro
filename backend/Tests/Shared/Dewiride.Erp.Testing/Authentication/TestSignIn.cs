@@ -32,9 +32,9 @@ public static class TestSignIn
     {
         ArgumentNullException.ThrowIfNull(routes);
 
-        routes.MapPost($"{PathPrefix}/{{objectId:guid}}", async (Guid objectId, string? entraSessionId, HttpContext context) =>
+        routes.MapPost($"{PathPrefix}/{{objectId:guid}}", async (Guid objectId, string? entraSessionId, HttpContext context, TestTokenEndpoint tokenEndpoint) =>
         {
-            var user = TestUsers.Find(objectId);
+            var user = tokenEndpoint.Find(objectId);
             if (user is null)
             {
                 return Results.NotFound();

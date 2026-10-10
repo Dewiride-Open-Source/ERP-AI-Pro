@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
@@ -14,7 +15,8 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 
 // While the flag is off the scheme signs nothing in and names itself in no challenge, as if it were not registered. A token
 // signed for the registration is also refused unless it is a v2.0 access token of the tenant held by a person or an
-// application, which leaves out the id tokens the sign-in receives for the same audience. A refused token is answered
+// application, which leaves out the id tokens the sign-in receives for the same audience, and a person's token is refused
+// while the person's record does not admit them (IPersonAdmission), as their session would be. A refused token is answered
 // invalid_token without the reason (RFC 6750, section 3.1), and every refusal carries a problem like the session cookie's
 // and is recorded as a security event with its reason and the client application the token names. The handler also reports
 // a request its caller abandoned while the token was read, which refused no token, so that one is not recorded.
@@ -29,6 +31,10 @@ internal sealed class BearerTokenEvents(IOptions<EntraSignInOptions> signIn, IPr
     public const string NotAnAccessTokenMessage = "The token is not a v2.0 access token issued in this tenant to a person or an application.";
 
     public const string NotAnAccessTokenRefusal = "not-an-access-token";
+
+    public const string NotAdmittedMessage = "The person the token was issued to is not admitted.";
+
+    public const string NotAdmittedRefusal = "not-admitted";
 
     public const string InsufficientScopeRefusal = "insufficient-scope";
 
@@ -71,6 +77,21 @@ internal sealed class BearerTokenEvents(IOptions<EntraSignInOptions> signIn, IPr
                 NotAnAccessTokenRefusal,
                 SignInAudit.ObjectIdOf(context.Principal),
                 BearerTokenRefusals.ClientApplicationOf(context.Principal)).ConfigureAwait(false);
+
+            return;
+        }
+
+        if (BearerTokenClaims.HolderOf(token) is BearerTokenHolder.Person
+            && SignInAudit.ObjectIdOf(token) is { } person
+            && !await context.HttpContext.RequestServices.GetRequiredService<IPersonAdmission>().IsAdmittedAsync(person, context.HttpContext.RequestAborted).ConfigureAwait(false))
+        {
+            context.Fail(NotAdmittedMessage);
+            await SignInAudit.TryRecordAsync(
+                context.HttpContext,
+                SecurityEventKind.BearerTokenRefused,
+                NotAdmittedRefusal,
+                person,
+                BearerTokenRefusals.ClientApplicationOf(token)).ConfigureAwait(false);
         }
     }
 

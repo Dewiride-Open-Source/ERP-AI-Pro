@@ -125,9 +125,11 @@ public sealed class BearerTokenRouteTests(BearerTokenRouteTests.Fixture fixture)
         return await client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
-    public sealed class Fixture : IAsyncDisposable
+    public sealed class Fixture : IAsyncLifetime
     {
         public ErpApiFactory Factory { get; } = BearerTokenRoutes.Factory();
+
+        public ValueTask InitializeAsync() => BearerTokenRoutes.AdmitPersonAsync(Factory);
 
         public ValueTask DisposeAsync() => Factory.DisposeAsync();
     }

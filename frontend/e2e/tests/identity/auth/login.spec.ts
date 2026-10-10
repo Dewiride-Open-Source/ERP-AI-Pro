@@ -15,6 +15,8 @@ import { attachmentsPath } from "../../../pages/platform/attachments/files.page"
 
 const apiContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
 const failureMessage = "We could not sign you in. Try again, or ask your administrator for access.";
+const deactivatedMessage =
+  "Your account has been deactivated, so you cannot sign in. Ask your administrator if you need access again.";
 const entraEndpoint = (path: string) =>
   new RegExp(`^https://login\\.microsoftonline\\.com/[0-9a-f-]{36}/oauth2/v2\\.0/${path}$`);
 const signInHref = (path: string) => `/api/auth/login?returnUrl=${encodeURIComponent(path)}`;
@@ -94,6 +96,26 @@ test.describe("login page", () => {
 
       await capture("login-sign-in-failed");
     });
+
+    forEachTheme(
+      "explains a sign-in refused to a deactivated account above the sign-in link",
+      async ({ page, capture }) => {
+        const login = new LoginPage(page);
+        await login.goto("?error=account-deactivated");
+
+        await expect(page).toHaveTitle("Account deactivated · ERP-AI-Pro");
+        await expect(login.failure).toHaveText(deactivatedMessage);
+        await expect(login.signInButton).toHaveAttribute("href", "/api/auth/login?returnUrl=%2F");
+        await expect(login.signInButton).toHaveAccessibleDescription(deactivatedMessage);
+        await expect(page.getByRole("main")).toMatchAriaSnapshot(`
+        - heading "Sign in to your workspace" [level=1]
+        - alert: ${deactivatedMessage}
+        - link "Continue with Microsoft"
+      `);
+
+        await capture("login-account-deactivated");
+      },
+    );
 
     forEachTheme(
       "explains that the session ended and signs in again to the page it came from",

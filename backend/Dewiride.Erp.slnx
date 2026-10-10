@@ -19,6 +19,14 @@
     <Project Path="Hosts/HealthProbe/Dewiride.Erp.Host.HealthProbe/Dewiride.Erp.Host.HealthProbe.csproj" />
     <Project Path="Hosts/Migrator/Dewiride.Erp.Host.Migrator/Dewiride.Erp.Host.Migrator.csproj" />
   </Folder>
+  <Folder Name="/Modules/Identity/Users/">
+    <Project Path="Modules/Identity/Users/Contracts/Dewiride.Erp.Modules.Identity.Users.Contracts/Dewiride.Erp.Modules.Identity.Users.Contracts.csproj" />
+    <Project Path="Modules/Identity/Users/Module/Dewiride.Erp.Modules.Identity.Users/Dewiride.Erp.Modules.Identity.Users.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Identity/Users/Tests/">
+    <Project Path="Modules/Identity/Users/Tests/UnitTests/Dewiride.Erp.Modules.Identity.Users.UnitTests/Dewiride.Erp.Modules.Identity.Users.UnitTests.csproj" />
+    <Project Path="Modules/Identity/Users/Tests/IntegrationTests/Dewiride.Erp.Modules.Identity.Users.IntegrationTests/Dewiride.Erp.Modules.Identity.Users.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/Modules/Platform/Attachments/">
     <Project Path="Modules/Platform/Attachments/Contracts/Dewiride.Erp.Modules.Platform.Attachments.Contracts/Dewiride.Erp.Modules.Platform.Attachments.Contracts.csproj" />
     <Project Path="Modules/Platform/Attachments/Module/Dewiride.Erp.Modules.Platform.Attachments/Dewiride.Erp.Modules.Platform.Attachments.csproj" />

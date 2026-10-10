@@ -66,6 +66,8 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         _admitted[user.ObjectId] = user;
     }
 
+    public TestUser? Find(Guid objectId) => TestUsers.Find(objectId) ?? _admitted.GetValueOrDefault(objectId);
+
     public HttpClient GetHttpClient() => _client;
 
     public void Dispose() => _client.Dispose();
@@ -95,7 +97,7 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 
     private TestUser? UserFor(string? code) =>
         code is not null && code.StartsWith(CodePrefix, StringComparison.Ordinal) && Guid.TryParseExact(code[CodePrefix.Length..], "D", out var objectId)
-            ? TestUsers.Find(objectId) ?? _admitted.GetValueOrDefault(objectId)
+            ? Find(objectId)
             : null;
 
     private static Dictionary<string, object> InstanceMetadata() => new(StringComparer.Ordinal)

@@ -54,5 +54,6 @@
 | [0036](adr/0036-web-sign-in-the-session-in-the-browser-and-single-sign-out.md) | Web sign-in, the session in the browser and single sign-out |
 | [0037](adr/0037-the-authenticated-application-shell.md) | The authenticated application shell |
 | [0038](adr/0038-sign-in-limit-security-events-and-the-audit-schema.md) | The sign-in limit, security events and the audit schema |
+| [0039](adr/0039-people-and-their-admission.md) | People and their admission |
 
 New decisions use [0000-template.md](adr/0000-template.md).

@@ -2,6 +2,7 @@ using Dewiride.Erp.BuildingBlocks.Application.Events;
 using Dewiride.Erp.BuildingBlocks.Application.Pipeline;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
@@ -11,6 +12,10 @@ public static class EfUnitOfWork
     public const string ConcurrencyConflictCode = "concurrency.conflict";
 
     public const int MaxDispatchRounds = 10;
+
+    private const int UniqueIndexViolation = 2601;
+
+    private const int UniqueConstraintViolation = 2627;
 
     public static async Task<Result<TResult>> RunAsync<TResult>(DbContext context, DomainEventDispatcher dispatcher, UnitOfWorkSignal signal, PipelineContinuation<TResult> handler, CancellationToken cancellationToken)
     {
@@ -76,9 +81,16 @@ public static class EfUnitOfWork
         }
         catch (DbUpdateConcurrencyException exception)
         {
-            return Error.Conflict(ConcurrencyConflictCode, $"{string.Join(", ", exception.Entries.Select(entry => entry.Metadata.ClrType.Name).Distinct())} changed since it was read; reload and try again.");
+            return Error.Conflict(ConcurrencyConflictCode, $"{EntityNames(exception)} changed since it was read; reload and try again.");
+        }
+        catch (DbUpdateException exception) when (exception.InnerException is SqlException { Number: UniqueIndexViolation or UniqueConstraintViolation })
+        {
+            return Error.Conflict(ConcurrencyConflictCode, $"{EntityNames(exception)} duplicates a row saved since it was read; reload and try again.");
         }
     }
+
+    private static string EntityNames(DbUpdateException exception) =>
+        string.Join(", ", exception.Entries.Select(entry => entry.Metadata.ClrType.Name).Distinct());
 
     private static List<IDomainEvent> TakeDomainEvents(DbContext context)
     {

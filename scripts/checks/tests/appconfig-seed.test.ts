@@ -285,6 +285,8 @@ test('the command line prints tab-separated rows and validates a directory', () 
     'Erp.Modules.Platform.SystemInfo\tproduction\ttrue',
     'Erp.Modules.Platform.Attachments\tlocal-dev\ttrue',
     'Erp.Modules.Platform.Attachments\tproduction\ttrue',
+    'Erp.Modules.Identity.Users\tlocal-dev\ttrue',
+    'Erp.Modules.Identity.Users\tproduction\ttrue',
     'Erp.Platform.Identity.BearerTokens\tlocal-dev\tfalse',
     'Erp.Platform.Identity.BearerTokens\tproduction\tfalse',
   ]);

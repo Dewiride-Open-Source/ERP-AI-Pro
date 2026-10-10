@@ -5,6 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
+using Dewiride.Erp.Host.Api.IntegrationTests.Admission;
 using Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
@@ -51,6 +52,34 @@ public sealed class BearerTokenSignInTests(BearerTokenSignInTests.Fixture fixtur
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(new BearerTokenRoutes.ObservedActor(TestUsers.Accountant.ObjectId, true), await response.Content.ReadFromJsonAsync<BearerTokenRoutes.ObservedActor>(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Get_PersonTokenOfADeactivatedPerson_AnswersAnInvalidTokenAndRecordsThatThePersonIsNotAdmitted()
+    {
+        var person = PersonRecords.NewPerson(fixture.Factory);
+        await PersonRecords.RegisterAsync(fixture.Factory, person);
+        await PersonRecords.DeactivateAsync(fixture.Factory, person);
+        using var client = fixture.Factory.CreateClient();
+
+        using var response = await BearerTokenRoutes.SendAsync(client, HttpMethod.Get, BearerTokenRoutes.Path, TestTokenIssuer.ForPerson(person, TestApplications.NativeClient, [BearerTokenRoutes.ReadScope]));
+
+        await AssertUnauthenticatedAsync(response, "Bearer error=\"invalid_token\"");
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(fixture.Factory.Services, response));
+        Assert.Equal(
+            (SecurityEventKind.BearerTokenRefused, BearerTokenEvents.NotAdmittedRefusal, NativeClient, person.ObjectId),
+            (entry.Kind, entry.Detail, entry.ClientApplicationId, entry.ActorObjectId));
+    }
+
+    [Fact]
+    public async Task Get_PersonTokenOfAPersonWithoutARecord_AnswersAnInvalidToken()
+    {
+        var person = PersonRecords.NewPerson(fixture.Factory);
+        using var client = fixture.Factory.CreateClient();
+
+        using var response = await BearerTokenRoutes.SendAsync(client, HttpMethod.Get, BearerTokenRoutes.Path, TestTokenIssuer.ForPerson(person, TestApplications.NativeClient, [BearerTokenRoutes.ReadScope]));
+
+        await AssertUnauthenticatedAsync(response, "Bearer error=\"invalid_token\"");
     }
 
     [Fact]
@@ -183,9 +212,11 @@ public sealed class BearerTokenSignInTests(BearerTokenSignInTests.Fixture fixtur
         return claims;
     }
 
-    public sealed class Fixture : IAsyncDisposable
+    public sealed class Fixture : IAsyncLifetime
     {
         public ErpApiFactory Factory { get; } = BearerTokenRoutes.Factory();
+
+        public ValueTask InitializeAsync() => BearerTokenRoutes.AdmitPersonAsync(Factory);
 
         public ValueTask DisposeAsync() => Factory.DisposeAsync();
     }

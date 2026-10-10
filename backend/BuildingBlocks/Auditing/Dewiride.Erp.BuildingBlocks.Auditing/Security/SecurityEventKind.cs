@@ -8,4 +8,5 @@ public enum SecurityEventKind : byte
     FrontChannelSignedOut = 4,
     FrontChannelSignOutRefused = 5,
     BearerTokenRefused = 6,
+    SignInRefused = 7,
 }

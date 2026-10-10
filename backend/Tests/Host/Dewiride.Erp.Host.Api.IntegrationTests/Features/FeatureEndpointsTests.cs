@@ -12,6 +12,8 @@ public sealed class FeatureEndpointsTests
 
     private const string AttachmentsFlag = "Erp.Modules.Platform.Attachments";
 
+    private const string UsersFlag = "Erp.Modules.Identity.Users";
+
     private static readonly Uri FeaturesPath = new("/api/platform/features", UriKind.Relative);
     private static readonly Uri SystemInfoPath = new("/api/platform/system-info", UriKind.Relative);
 
@@ -28,7 +30,7 @@ public sealed class FeatureEndpointsTests
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
         var features = body.RootElement.GetProperty("features").EnumerateArray().ToList();
         Assert.Equal(
-            [(AttachmentsFlag, true), (SystemInfoFlag, true), (BearerTokenFeature.Name, false)],
+            [(UsersFlag, true), (AttachmentsFlag, true), (SystemInfoFlag, true), (BearerTokenFeature.Name, false)],
             features.Select(f => (f.GetProperty("name").GetString(), f.GetProperty("enabled").GetBoolean())).OrderBy(f => f.Item1, StringComparer.Ordinal));
     }
 

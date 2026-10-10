@@ -3,8 +3,8 @@ import { CircleAlertIcon, CircleCheckIcon, ClockIcon } from "lucide-react";
 
 import type { LoginPageState } from "./login-page-state";
 
-// A failed sign-in needs the person to act, so it is an alert; the other two confirm what already happened, so they are a
-// status.
+// A failed or refused sign-in needs the person to act, so it is an alert; the other two confirm what already happened, so
+// they are a status.
 export function SignInNotice({ id, state }: { id: string; state: LoginPageState | undefined }) {
   switch (state) {
     case "sign-in-failed":
@@ -13,6 +13,16 @@ export function SignInNotice({ id, state }: { id: string; state: LoginPageState 
           <CircleAlertIcon aria-hidden />
           <AlertDescription>
             We could not sign you in. Try again, or ask your administrator for access.
+          </AlertDescription>
+        </Alert>
+      );
+    case "account-deactivated":
+      return (
+        <Alert id={id} variant="destructive">
+          <CircleAlertIcon aria-hidden />
+          <AlertDescription>
+            Your account has been deactivated, so you cannot sign in. Ask your administrator if you need
+            access again.
           </AlertDescription>
         </Alert>
       );

@@ -1,0 +1,42 @@
+{
+  "solution": {
+    "path": "..\\Dewiride.Erp.slnx",
+    "projects": [
+      "BuildingBlocks\\Application\\Dewiride.Erp.BuildingBlocks.Application\\Dewiride.Erp.BuildingBlocks.Application.csproj",
+      "BuildingBlocks\\Attachments\\Dewiride.Erp.BuildingBlocks.Attachments\\Dewiride.Erp.BuildingBlocks.Attachments.csproj",
+      "BuildingBlocks\\Auditing\\Dewiride.Erp.BuildingBlocks.Auditing\\Dewiride.Erp.BuildingBlocks.Auditing.csproj",
+      "BuildingBlocks\\Authentication\\Dewiride.Erp.BuildingBlocks.Authentication\\Dewiride.Erp.BuildingBlocks.Authentication.csproj",
+      "BuildingBlocks\\Caching\\Dewiride.Erp.BuildingBlocks.Caching\\Dewiride.Erp.BuildingBlocks.Caching.csproj",
+      "BuildingBlocks\\Configuration\\Dewiride.Erp.BuildingBlocks.Configuration\\Dewiride.Erp.BuildingBlocks.Configuration.csproj",
+      "BuildingBlocks\\Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints.csproj",
+      "BuildingBlocks\\Idempotency\\Dewiride.Erp.BuildingBlocks.Idempotency\\Dewiride.Erp.BuildingBlocks.Idempotency.csproj",
+      "BuildingBlocks\\Kernel\\Dewiride.Erp.BuildingBlocks.Kernel\\Dewiride.Erp.BuildingBlocks.Kernel.csproj",
+      "BuildingBlocks\\Modules\\Dewiride.Erp.BuildingBlocks.Modules\\Dewiride.Erp.BuildingBlocks.Modules.csproj",
+      "BuildingBlocks\\Observability\\Dewiride.Erp.BuildingBlocks.Observability\\Dewiride.Erp.BuildingBlocks.Observability.csproj",
+      "BuildingBlocks\\Persistence\\Dewiride.Erp.BuildingBlocks.Persistence\\Dewiride.Erp.BuildingBlocks.Persistence.csproj",
+      "Hosts\\Api\\Dewiride.Erp.Host.Api\\Dewiride.Erp.Host.Api.csproj",
+      "Hosts\\Composition\\Dewiride.Erp.Host.Composition\\Dewiride.Erp.Host.Composition.csproj",
+      "Hosts\\HealthProbe\\Dewiride.Erp.Host.HealthProbe\\Dewiride.Erp.Host.HealthProbe.csproj",
+      "Hosts\\Migrator\\Dewiride.Erp.Host.Migrator\\Dewiride.Erp.Host.Migrator.csproj",
+      "Modules\\Identity\\Users\\Contracts\\Dewiride.Erp.Modules.Identity.Users.Contracts\\Dewiride.Erp.Modules.Identity.Users.Contracts.csproj",
+      "Modules\\Identity\\Users\\Module\\Dewiride.Erp.Modules.Identity.Users\\Dewiride.Erp.Modules.Identity.Users.csproj",
+      "Modules\\Identity\\Users\\Tests\\IntegrationTests\\Dewiride.Erp.Modules.Identity.Users.IntegrationTests\\Dewiride.Erp.Modules.Identity.Users.IntegrationTests.csproj",
+      "Modules\\Identity\\Users\\Tests\\UnitTests\\Dewiride.Erp.Modules.Identity.Users.UnitTests\\Dewiride.Erp.Modules.Identity.Users.UnitTests.csproj",
+      "Modules\\Platform\\Attachments\\Contracts\\Dewiride.Erp.Modules.Platform.Attachments.Contracts\\Dewiride.Erp.Modules.Platform.Attachments.Contracts.csproj",
+      "Modules\\Platform\\Attachments\\Module\\Dewiride.Erp.Modules.Platform.Attachments\\Dewiride.Erp.Modules.Platform.Attachments.csproj",
+      "Modules\\Platform\\Attachments\\Tests\\IntegrationTests\\Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests\\Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.csproj",
+      "Modules\\Platform\\Attachments\\Tests\\UnitTests\\Dewiride.Erp.Modules.Platform.Attachments.UnitTests\\Dewiride.Erp.Modules.Platform.Attachments.UnitTests.csproj",
+      "Modules\\Platform\\SystemInfo\\Contracts\\Dewiride.Erp.Modules.Platform.SystemInfo.Contracts\\Dewiride.Erp.Modules.Platform.SystemInfo.Contracts.csproj",
+      "Modules\\Platform\\SystemInfo\\Module\\Dewiride.Erp.Modules.Platform.SystemInfo\\Dewiride.Erp.Modules.Platform.SystemInfo.csproj",
+      "Modules\\Platform\\SystemInfo\\Tests\\IntegrationTests\\Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests\\Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.csproj",
+      "Modules\\Platform\\SystemInfo\\Tests\\UnitTests\\Dewiride.Erp.Modules.Platform.SystemInfo.UnitTests\\Dewiride.Erp.Modules.Platform.SystemInfo.UnitTests.csproj",
+      "Tests\\Architecture\\Dewiride.Erp.ArchitectureTests\\Dewiride.Erp.ArchitectureTests.csproj",
+      "Tests\\BuildingBlocks\\Dewiride.Erp.BuildingBlocks.IntegrationTests\\Dewiride.Erp.BuildingBlocks.IntegrationTests.csproj",
+      "Tests\\BuildingBlocks\\Dewiride.Erp.BuildingBlocks.UnitTests\\Dewiride.Erp.BuildingBlocks.UnitTests.csproj",
+      "Tests\\EndToEnd\\Dewiride.Erp.Testing.EndToEndHost\\Dewiride.Erp.Testing.EndToEndHost.csproj",
+      "Tests\\Host\\Dewiride.Erp.Host.Api.IntegrationTests\\Dewiride.Erp.Host.Api.IntegrationTests.csproj",
+      "Tests\\Host\\Dewiride.Erp.Host.Migrator.IntegrationTests\\Dewiride.Erp.Host.Migrator.IntegrationTests.csproj",
+      "Tests\\Shared\\Dewiride.Erp.Testing\\Dewiride.Erp.Testing.csproj"
+    ]
+  }
+}

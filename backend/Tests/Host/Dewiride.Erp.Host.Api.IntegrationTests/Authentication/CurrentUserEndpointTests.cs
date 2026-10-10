@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.Testing;
@@ -37,7 +38,7 @@ public sealed class CurrentUserEndpointTests(CurrentUserEndpointTests.Fixture fi
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal(TestUsers.Accountant.ObjectId, body.RootElement.GetProperty("id").GetGuid());
-        Assert.Equal([TestUsers.UserRole], body.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()));
+        Assert.Equal([AppRoles.User], body.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()));
     }
 
     [Fact]
