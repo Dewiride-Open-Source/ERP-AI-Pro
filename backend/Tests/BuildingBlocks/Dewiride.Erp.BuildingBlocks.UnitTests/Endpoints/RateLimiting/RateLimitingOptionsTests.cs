@@ -19,6 +19,8 @@ public sealed class RateLimitingOptionsTests
         Assert.Equal(600, options.ActorPermitLimit);
         Assert.Equal(TimeSpan.FromMinutes(1), options.ActorWindow);
         Assert.Equal(6, options.ActorSegmentsPerWindow);
+        Assert.Equal(60, options.SignInPermitLimit);
+        Assert.Equal(TimeSpan.FromMinutes(1), options.SignInWindow);
     }
 
     [Theory]
@@ -30,6 +32,10 @@ public sealed class RateLimitingOptionsTests
     [InlineData(nameof(RateLimitingOptions.ActorWindow), "01:00:01")]
     [InlineData(nameof(RateLimitingOptions.ActorSegmentsPerWindow), "0")]
     [InlineData(nameof(RateLimitingOptions.ActorSegmentsPerWindow), "61")]
+    [InlineData(nameof(RateLimitingOptions.SignInPermitLimit), "0")]
+    [InlineData(nameof(RateLimitingOptions.SignInPermitLimit), "1000001")]
+    [InlineData(nameof(RateLimitingOptions.SignInWindow), "00:00:00.999")]
+    [InlineData(nameof(RateLimitingOptions.SignInWindow), "01:00:01")]
     public void Validate_ValueOutsideTheBound_Fails(string property, string value)
     {
         var options = new RateLimitingOptions();

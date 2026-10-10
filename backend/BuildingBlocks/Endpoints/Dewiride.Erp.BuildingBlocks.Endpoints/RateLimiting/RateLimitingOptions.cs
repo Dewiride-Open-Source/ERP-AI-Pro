@@ -22,4 +22,10 @@ public sealed class RateLimitingOptions
 
     [Range(1, 60)]
     public int ActorSegmentsPerWindow { get; set; } = 6;
+
+    [Range(1, 1_000_000)]
+    public int SignInPermitLimit { get; set; } = 60;
+
+    [Range(typeof(TimeSpan), "00:00:01", "01:00:00")]
+    public TimeSpan SignInWindow { get; set; } = TimeSpan.FromMinutes(1);
 }

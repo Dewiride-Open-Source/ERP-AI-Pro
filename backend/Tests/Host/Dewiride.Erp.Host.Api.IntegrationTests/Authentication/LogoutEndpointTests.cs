@@ -1,4 +1,5 @@
 using System.Net;
+using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
@@ -42,6 +43,30 @@ public sealed class LogoutEndpointTests(LogoutEndpointTests.Fixture fixture) : I
         var cleared = Assert.Single(response.Headers.GetValues("Set-Cookie"), cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal));
         Assert.Contains("expires=Thu, 01 Jan 1970", cleared, StringComparison.OrdinalIgnoreCase);
         await AssertStatusAsync(client, HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Post_LogoutWithASession_RecordsTheSignOutOfThePerson()
+    {
+        using var client = TestSignIn.CreateClient(fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+
+        using var response = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(fixture.Factory.Services, response));
+        Assert.Equal((SecurityEventKind.SignedOut, null, TestUsers.Accountant.ObjectId), (entry.Kind, entry.Detail, entry.ActorObjectId));
+    }
+
+    [Fact]
+    public async Task Post_LogoutWithoutASession_RecordsNoSignOut()
+    {
+        using var client = TestSignIn.CreateClient(fixture.Factory);
+
+        using var response = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Empty(await SecurityEventRecords.OfAsync(fixture.Factory.Services, response));
     }
 
     [Fact]

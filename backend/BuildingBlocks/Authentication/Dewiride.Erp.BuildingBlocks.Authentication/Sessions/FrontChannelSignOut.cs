@@ -1,4 +1,7 @@
+using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -11,20 +14,24 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 // not which form of the issuer it sends, so both forms of this tenant's issuer are accepted: the v2.0 one of the id tokens
 // and the v1.0 one Entra also issues workforce tokens under; any other changes nothing. Both store calls ignore the
 // request's cancellation, so a frame Entra tears down mid-request still ends the sessions; the command timeout and the
-// retry limits bound them. No log record names the session, the issuer or the account.
+// retry limits bound them. No log record names the session, the issuer or the account; the security event of a sign-out
+// names the account by its object id, and one naming another issuer is recorded with no account.
 internal sealed partial class FrontChannelSignOut(EntraSessions entraSessions, IOptions<EntraSignInOptions> signIn, ILogger<FrontChannelSignOut> logger)
 {
+    public const string OtherIssuerDetail = "other-issuer";
+
     private const string V1IssuerBase = "https://sts.windows.net/";
 
-    public async Task SignOutAsync(string issuer, string sessionId)
+    public async Task SignOutAsync(HttpContext context, string issuer, string sessionId)
     {
         if (!NamesThisTenant(issuer))
         {
             LogOtherIssuer(logger);
+            await SignInAudit.TryRecordAsync(context, SecurityEventKind.FrontChannelSignOutRefused, OtherIssuerDetail).ConfigureAwait(false);
             return;
         }
 
-        if (await entraSessions.FindAsync(sessionId, CancellationToken.None).ConfigureAwait(false) is null)
+        if (await entraSessions.FindAsync(sessionId, CancellationToken.None).ConfigureAwait(false) is not { } session)
         {
             LogUnknownSession(logger);
             return;
@@ -32,6 +39,16 @@ internal sealed partial class FrontChannelSignOut(EntraSessions entraSessions, I
 
         await entraSessions.ForgetAsync(sessionId, CancellationToken.None).ConfigureAwait(false);
         LogSignedOut(logger);
+        await SignInAudit.TryRecordAsync(context, SecurityEventKind.FrontChannelSignedOut, actor: ObjectIdOf(session)).ConfigureAwait(false);
+    }
+
+    // The MSAL account id of a Microsoft Entra ID account is its object id and its tenant id, joined by a dot.
+    private static Guid? ObjectIdOf(EntraSession session)
+    {
+        var dot = session.AccountId.IndexOf('.', StringComparison.Ordinal);
+        var objectId = dot < 0 ? session.AccountId : session.AccountId[..dot];
+
+        return Guid.TryParse(objectId, out var parsed) ? parsed : null;
     }
 
     private bool NamesThisTenant(string issuer) =>

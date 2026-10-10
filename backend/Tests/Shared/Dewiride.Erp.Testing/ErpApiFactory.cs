@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Authentication.BearerTokens;
@@ -52,6 +53,10 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
     public const string IdentitySessionLifetimeKey = $"{EntraSignInOptions.SectionName}:SessionLifetime";
 
     public const string DataProtectionKeyIdentifierKey = KeyRingOptions.KeyIdentifierKey;
+
+    public const string SignInPermitLimitKey = $"{RateLimitingOptions.SectionName}:{nameof(RateLimitingOptions.SignInPermitLimit)}";
+
+    public const string TestSignInPermitLimit = "600";
 
     private const string FeatureFlagsSection = "feature_management:feature_flags:";
 
@@ -221,6 +226,7 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         UseSettingUnlessSupplied(builder, IdentityClientIdKey, TestIdentityProvider.ClientId);
         UseSettingUnlessSupplied(builder, IdentityWebOriginKey, TestIdentityProvider.WebOrigin);
         UseSettingUnlessSupplied(builder, IdentityClientCertificateKey, TestSignInCertificate.Base64);
+        UseSettingUnlessSupplied(builder, SignInPermitLimitKey, TestSignInPermitLimit);
 
         var deployment = Deployment;
         if (deployment.KeyIdentifier is { } keyIdentifier)

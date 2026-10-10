@@ -532,6 +532,7 @@
         "dependencies": {
           "Azure.Extensions.AspNetCore.DataProtection.Keys": "[1.6.4, )",
           "Azure.Security.KeyVault.Keys": "[4.10.1, )",
+          "Dewiride.Erp.BuildingBlocks.Auditing": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Caching": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Configuration": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",

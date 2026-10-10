@@ -1,4 +1,5 @@
 using System.Net;
+using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Requests;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
@@ -53,6 +54,41 @@ public sealed class FrontChannelSignOutTests : IClassFixture<FrontChannelSignOut
         Assert.Null(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + TestUsers.Accountant.EntraSessionId));
         Assert.NotNull(await TokenCacheRow.FindAsync(_fixture.KeyPrefix + EntraSessions.KeyPrefix + phoneEntraSession));
         Assert.Equal(revocation?.Value, (await TokenCacheRow.FindAsync(revocationKey))?.Value);
+    }
+
+    [Fact]
+    public async Task Get_EntraSessionOfASignedInPerson_RecordsTheSignOutOfThatPerson()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
+
+        using var response = await SignOutFromEntraAsync(TestIdentityProvider.Issuer, TestUsers.Administrator.EntraSessionId);
+
+        await AssertAnsweredWithoutABodyAsync(response);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
+        Assert.Equal((SecurityEventKind.FrontChannelSignedOut, null, TestUsers.Administrator.ObjectId), (entry.Kind, entry.Detail, entry.ActorObjectId));
+    }
+
+    [Fact]
+    public async Task Get_EntraSessionNamedWithAnotherIssuer_RecordsTheRefusalWithoutAnAccount()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
+
+        using var response = await SignOutFromEntraAsync(OtherIssuer, TestUsers.Administrator.EntraSessionId);
+
+        await AssertAnsweredWithoutABodyAsync(response);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
+        Assert.Equal((SecurityEventKind.FrontChannelSignOutRefused, FrontChannelSignOut.OtherIssuerDetail, null), (entry.Kind, entry.Detail, entry.ActorObjectId));
+    }
+
+    [Fact]
+    public async Task Get_UnknownEntraSession_RecordsNoSignOut()
+    {
+        using var response = await SignOutFromEntraAsync(TestIdentityProvider.Issuer, Guid.CreateVersion7().ToString("D"));
+
+        await AssertAnsweredWithoutABodyAsync(response);
+        Assert.Empty(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
     }
 
     [Fact]

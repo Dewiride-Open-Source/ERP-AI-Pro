@@ -2,6 +2,7 @@ using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
+using Dewiride.Erp.BuildingBlocks.Authentication.Logging;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
@@ -79,6 +80,8 @@ public static class AuthenticationRegistration
         builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, BearerTokenOptionsSetup>();
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, BearerTokenAccessHandler>());
 
+        builder.Services.TryAddSingleton<BoundedIdentityModelLogger>();
+        builder.Services.AddHostedService<IdentityModelLoggerInstaller>();
         builder.Services.TryAddSingleton<SignInEvents>();
         builder.Services.TryAddSingleton<SessionRevocations>();
         builder.Services.TryAddSingleton<EntraSessions>();

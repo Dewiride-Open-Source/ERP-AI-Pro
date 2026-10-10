@@ -3,9 +3,11 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
+using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -60,6 +62,23 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
         Assert.Equal(TestUsers.Accountant.AccountId, await signedIn.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.DoesNotContain(_fixture.Logs.GetSnapshot(), record => record.Category == typeof(SignInEvents).FullName);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_RecordsTheSignInOfThePerson()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Accountant)));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
+        Assert.Equal((SecurityEventKind.SignedIn, null, TestUsers.Accountant.ObjectId, null), (entry.Kind, entry.Detail, entry.ActorObjectId, entry.ClientApplicationId));
     }
 
     [Fact]
@@ -195,6 +214,51 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         Assert.DoesNotContain("AADSTS65004", record.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(state, record.Message, StringComparison.Ordinal);
         AssertNoRecordContains(records, Description);
+    }
+
+    [Fact]
+    public async Task Post_CallbackWhereThePersonDeclined_RecordsTheFailedSignInByCategoryAndErrorCodeOnly()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(client, ("state", state), ("error", "access_denied"), ("error_description", Description));
+
+        AssertSignInFailed(response);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
+        Assert.Equal((SecurityEventKind.SignInFailed, "identity-provider:access_denied", null), (entry.Kind, entry.Detail, entry.ActorObjectId));
+    }
+
+    [Fact]
+    public async Task Post_CallbackWithACodeEntraRefuses_RecordsTheFailedSignInByTheErrorCodeOfTheRedemption()
+    {
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(client, ("state", state), ("code", "another-code-that-entra-refuses"));
+
+        AssertSignInFailed(response);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
+        Assert.Equal((SecurityEventKind.SignInFailed, $"{SignInEvents.CodeRedemptionFailure}:{TestTokenEndpoint.RefusedCodeError}"), (entry.Kind, entry.Detail));
+    }
+
+    [Fact]
+    public async Task Post_CallbackForwardedByATrustedProxy_RecordsTheClientAddressTheProxyNamed()
+    {
+        await using var factory = new ErpApiFactory()
+            .WithConfiguration($"{ErpHostOptions.SectionName}:KnownNetworks:0", "127.0.0.1/32")
+            .WithKestrel();
+        factory.StartServer();
+        using var client = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { BaseAddress = factory.ClientOptions.BaseAddress };
+        using var form = new FormUrlEncodedContent([KeyValuePair.Create("code", "stolen-code")]);
+        using var request = new HttpRequestMessage(HttpMethod.Post, AuthPaths.SignInCallback) { Content = form };
+        request.Headers.TryAddWithoutValidation("X-Forwarded-For", "203.0.113.7");
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(factory.Services, response));
+        Assert.Equal((SecurityEventKind.SignInFailed, $"{SignInEvents.CallbackFailure}:{SignInEvents.NoOAuthError}", "203.0.113.7"), (entry.Kind, entry.Detail, entry.ClientAddress));
     }
 
     [Fact]

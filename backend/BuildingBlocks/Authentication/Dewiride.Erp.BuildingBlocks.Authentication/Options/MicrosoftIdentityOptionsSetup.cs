@@ -14,6 +14,10 @@ internal sealed class MicrosoftIdentityOptionsSetup(IOptions<EntraSignInOptions>
 {
     public const string RoleClaimType = "roles";
 
+    public const string CorrelationCookiePrefix = "__Secure-erp-correlation.";
+
+    public const string NonceCookiePrefix = "__Secure-erp-nonce.";
+
     public void Configure(MicrosoftIdentityOptions options) => Configure(Microsoft.Extensions.Options.Options.DefaultName, options);
 
     public void Configure(string? name, MicrosoftIdentityOptions options)
@@ -49,7 +53,11 @@ internal sealed class MicrosoftIdentityOptionsSetup(IOptions<EntraSignInOptions>
         options.MapInboundClaims = false;
         options.TokenValidationParameters.RoleClaimType = RoleClaimType;
 
-        // The identity provider posts the callback from its own site, so these cookies must travel cross-site.
+        // The identity provider posts the callback from its own site, so these cookies must travel cross-site; the __Secure-
+        // prefix makes the browser refuse one set without the Secure attribute, so a page served over plain HTTP cannot plant
+        // a correlation or a nonce of its own.
+        options.CorrelationCookie.Name = CorrelationCookiePrefix;
+        options.NonceCookie.Name = NonceCookiePrefix;
         foreach (var cookie in new[] { options.CorrelationCookie, options.NonceCookie })
         {
             cookie.HttpOnly = true;
