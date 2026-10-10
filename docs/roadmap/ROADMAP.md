@@ -4,7 +4,7 @@
 
 Updated 2026-10-10 · Sub-phases done: 43/262 · Phases done: 5/30
 
-Editions: 187 Community · 75 Enterprise · 219 awaiting the owner's confirmation
+Editions: 187 Community · 75 Enterprise · 211 awaiting the owner's confirmation
 
 `████░░░░░░░░░░░░░░░░░░░░ 16%`
 
@@ -40,7 +40,7 @@ Edition: Community (this repository, LGPL-3.0-only) · Enterprise (built in the 
 | P03 | [Backend Platform Kernel](#phase-backend-platform) | M1 Platform foundations | Community | done | 10/10 |
 | P04 | [Web Foundation & Design System](#phase-web-foundation) | M1 Platform foundations | Community | done | 7/7 |
 | P05 | [Authentication (Microsoft Entra ID, BFF)](#phase-authentication) | M2 Sign-in works | Community | done | 8/8 |
-| P06 | [User Management & Authorisation](#phase-user-management) | M3 First on-prem deployment | Community | planned | 0/8 |
+| P06 | [User Management & Authorisation](#phase-user-management) | M3 First on-prem deployment | Community | ⏳ in progress | 0/8 |
 | P07 | [First On-Prem Deployment](#phase-first-deployment) | M3 First on-prem deployment | Community | planned | 0/9 |
 | P08 | [Business Building Blocks & Reference Data](#phase-business-building-blocks) | M4 Master data live | Mixed | planned | 0/13 |
 | P09 | [Clients (Customer Master & Engagements)](#phase-clients) | M4 Master data live | Community | planned | 0/8 |
@@ -68,11 +68,12 @@ Edition: Community (this repository, LGPL-3.0-only) · Enterprise (built in the 
 
 ## Next up
 
-- **P06.1** Users module and just-in-time provisioning (`user-management-users-module-and-just-in-time`) · Community (recommended) — Create backend/Modules/Identity/Users with a User aggregate linked to the Entra object id (employee code, display name, work email, phone, designation, date of joining, status) in schema `identity`, create or update the user from Entra claims on first sign-in, deny sign-in for deactivated users, bootstrap the first administrator from configuration, and add admin CRUD endpoints with validation plus unit and integration tests.
-- **P06.2** Directory invitation via Microsoft Graph (`user-management-directory-invitation-via-microsoft-graph`) · Community (recommended) — Add an invitation flow that searches directory users through Microsoft Graph, pre-registers invitees with an intended role, matches them by object id or email on first login, and covers the flow with integration tests using a fake Graph client.
-- **P06.3** Roles and permissions (`user-management-roles-and-permissions`) · Community (recommended) — Add a permission catalogue generated from module declarations (e.g. finance.sales.invoices.approve), Role and RolePermission entities with seeded system roles (Owner, Admin, Finance, HR, Manager, Employee) mapped from Entra app roles, a permission authorisation handler and RequirePermission endpoint extension with permission claims returned by /api/auth/me, and an architecture test that every non-anonymous endpoint declares a permission.
-- **P06.4** Departments, designations and reporting lines (`user-management-departments-designations-and-reporting-lines`) · Community (recommended) — Model a department tree, designations, manager assignment with effective dates, position history and an org-chart query exposed through admin endpoints under /api/identity/organisation, consumed by approvals and timesheets later and extended (not replaced) by `hr-core`.
-- **P06.5** Audit trail building block (`user-management-audit-trail-building-block`) · Community (recommended) — Add backend/BuildingBlocks/Auditing with an EF Core SaveChanges interceptor recording append-only entries (actor, timestamp, before/after JSON diff, IP, correlation id) into an `audit` schema for user, role and department changes, a filterable exportable audit endpoint, an audit timeline component, and an architecture test requiring aggregates to implement IAuditable.
+- ⏳ **P06.1** Users module and just-in-time provisioning (`user-management-users-module-and-just-in-time`) · Community (confirmed 2026-10-10) — in progress since 2026-10-10
+- **P06.2** Directory invitation via Microsoft Graph (`user-management-directory-invitation-via-microsoft-graph`) · Community (confirmed 2026-10-10) — Add an invitation flow that searches directory users through Microsoft Graph, pre-registers invitees with an intended role, matches them by object id or email on first login, and covers the flow with integration tests using a fake Graph client.
+- **P06.3** Roles and permissions (`user-management-roles-and-permissions`) · Community (confirmed 2026-10-10) — Add a permission catalogue generated from module declarations (e.g. finance.sales.invoices.approve), Role and RolePermission entities with seeded system roles (Owner, Admin, Finance, HR, Manager, Employee) mapped from Entra app roles, a permission authorisation handler and RequirePermission endpoint extension with permission claims returned by /api/auth/me, and an architecture test that every non-anonymous endpoint declares a permission.
+- **P06.4** Departments, designations and reporting lines (`user-management-departments-designations-and-reporting-lines`) · Community (confirmed 2026-10-10) — Model a department tree, designations, manager assignment with effective dates, position history and an org-chart query exposed through admin endpoints under /api/identity/organisation, consumed by approvals and timesheets later and extended (not replaced) by `hr-core`.
+- **P06.5** Audit trail building block (`user-management-audit-trail-building-block`) · Community (confirmed 2026-10-10) — Add backend/BuildingBlocks/Auditing with an EF Core SaveChanges interceptor recording append-only entries (actor, timestamp, before/after JSON diff, IP, correlation id) into an `audit` schema for user, role and department changes, a filterable exportable audit endpoint, an audit timeline component, and an architecture test requiring aggregates to implement IAuditable.
+- **P06.6** Web: users, roles and permissions (`user-management-web-users-roles-and-permissions`) · Community (confirmed 2026-10-10) — Build the users list (data table with search, sort, filter, pagination, mobile cards), user detail and create/edit forms, role assignment dialog and a roles/permissions matrix page, with Playwright clicking every control on desktop and mobile in light and dark with screenshots.
 
 ## P01 — Monorepo skeleton, roadmap tooling, engineering docs, CI and Docker skeleton <a id="phase-foundation"></a>
 
@@ -462,35 +463,39 @@ Id `authentication` · Milestone: M2 Sign-in works · Edition: Community · Stat
 
 Manage employees as ERP users (contractors are vendors), their profiles, departments, designations, roles and permissions with a full audit trail, forming the first business module, the hand-built reference for the `business-building-blocks-module-and-feature-scaffolders` scaffolder and the gate for the first deployment.
 
-Id `user-management` · Milestone: M3 First on-prem deployment · Edition: Community · Status: planned · Depends on: `authentication`
+Id `user-management` · Milestone: M3 First on-prem deployment · Edition: Community · Status: ⏳ in progress · Depends on: `authentication`
 
-- [ ] **P06.1** Users module and just-in-time provisioning (`user-management-users-module-and-just-in-time`) <a id="user-management-users-module-and-just-in-time"></a>
+- [ ] **P06.1** Users module and just-in-time provisioning (`user-management-users-module-and-just-in-time`) — ⏳ in progress since 2026-10-10 <a id="user-management-users-module-and-just-in-time"></a>
   Create backend/Modules/Identity/Users with a User aggregate linked to the Entra object id (employee code, display name, work email, phone, designation, date of joining, status) in schema `identity`, create or update the user from Entra claims on first sign-in, deny sign-in for deactivated users, bootstrap the first administrator from configuration, and add admin CRUD endpoints with validation plus unit and integration tests.
-  - Edition: Community (recommended)
+  - A person's first sign-in, through Entra or the test persona sign-in, creates an active record in identity_users.Users linked to their Entra object id with the name and work email of their claims; each later sign-in refreshes both and stamps the sign-in time, and a record an administrator registered beforehand with the same object id, or with the same work email and no object id, is linked instead of a second one being created.
+  - A deactivated person's sign-in is refused with a redirect to /login?error=account-deactivated and a SignInRefused security event, and from the next request on every open session or bearer token of a person whose record is deactivated or deleted is refused with 401; reactivation lets the person sign in again, and a deleted person's next sign-in creates a new record.
+  - Holders of the Erp.Admin app role can list (paged, sorted, filtered), read, register, update (employee code, phone, designation, date of joining; refused with 409 when the version is stale), deactivate, reactivate and delete people under /api/identity/users; everyone else is refused with 403, an administrator cannot deactivate or delete their own record, every invalid input answers ProblemDetails, and the OpenAPI document and the Kiota client carry the routes.
+  - The sign-in page explains a refused sign-in of a deactivated account, and unit, integration, architecture and Playwright tests cover the record, the admission at sign-in and on every request, and the endpoints.
+  - Edition: Community (confirmed 2026-10-10)
 - [ ] **P06.2** Directory invitation via Microsoft Graph (`user-management-directory-invitation-via-microsoft-graph`) <a id="user-management-directory-invitation-via-microsoft-graph"></a>
   Add an invitation flow that searches directory users through Microsoft Graph, pre-registers invitees with an intended role, matches them by object id or email on first login, and covers the flow with integration tests using a fake Graph client.
-  - Edition: Community (recommended)
+  - Edition: Community (confirmed 2026-10-10)
 - [ ] **P06.3** Roles and permissions (`user-management-roles-and-permissions`) <a id="user-management-roles-and-permissions"></a>
   Add a permission catalogue generated from module declarations (e.g. finance.sales.invoices.approve), Role and RolePermission entities with seeded system roles (Owner, Admin, Finance, HR, Manager, Employee) mapped from Entra app roles, a permission authorisation handler and RequirePermission endpoint extension with permission claims returned by /api/auth/me, and an architecture test that every non-anonymous endpoint declares a permission.
-  - Edition: Community (recommended)
+  - Edition: Community (confirmed 2026-10-10)
   - Note: From `authentication-oidc-bff-in-the-api` (ADR-0031, owner decision of 2026-09-29): require platform.attachments.files.upload, .read and .delete on the seven attachment routes, add platform.system-info permissions to the SystemInfoModule descriptor and require them, show navigation entries only to holders of their read permissions (owner expectation of 2026-09-27), and re-check the permissions in the attachment Server Functions. From `authentication-session-endpoints-openapi-security-and-bearer` (ADR-0034): add the person's permissions to CurrentUserResponse of GET /api/auth/me, which has no placeholder member for them; a permission check on a route that takes bearer tokens reads the holder BearerTokenClaims.HolderOf gives: a person's permissions follow from their app roles and an application's from its application roles, and a person's roles never count as an application's. From `authentication-test-authentication-infrastructure` (ADR-0035): PersonaSignIn of the end-to-end API host signs in people that exist only in the token cache; once users and permissions are stored, it must create the person and grant the permissions of the persona in the same request, and a persona without permissions joins accountant and administrator for the refusal paths. From authentication-web-login-page-and-session-integration (ADR-0036): requireSignedInPerson() (shared/auth/session.ts) is the first statement of every Server Function (lint rule X4), so the permission check goes beside it; filter the start page cards with the navigation entries; the person it returns carries the roles the permissions will be derived from. From authentication-authenticated-application-shell (ADR-0037): AppShell filters the registry once for the sidebar, the command palette and the breadcrumbs, and StartPage filters its cards; NavigationEntry has no permission member, so add the read permission of each entry with the catalogue and filter in those two places.
 - [ ] **P06.4** Departments, designations and reporting lines (`user-management-departments-designations-and-reporting-lines`) <a id="user-management-departments-designations-and-reporting-lines"></a>
   Model a department tree, designations, manager assignment with effective dates, position history and an org-chart query exposed through admin endpoints under /api/identity/organisation, consumed by approvals and timesheets later and extended (not replaced) by `hr-core`.
-  - Edition: Community (recommended)
+  - Edition: Community (confirmed 2026-10-10)
 - [ ] **P06.5** Audit trail building block (`user-management-audit-trail-building-block`) <a id="user-management-audit-trail-building-block"></a>
   Add backend/BuildingBlocks/Auditing with an EF Core SaveChanges interceptor recording append-only entries (actor, timestamp, before/after JSON diff, IP, correlation id) into an `audit` schema for user, role and department changes, a filterable exportable audit endpoint, an audit timeline component, and an architecture test requiring aggregates to implement IAuditable.
-  - Edition: Community (recommended)
+  - Edition: Community (confirmed 2026-10-10)
   - Note: From `authentication-login-hardening` (ADR-0038): backend/BuildingBlocks/Auditing and the schema audit already exist, with AuditingDbContext, AuditingOptions and the table SecurityEvents (inserts through ISecurityEventRecorder only, deletions only by SecurityEventRetentionSweeper past Erp:Platform:Auditing:SecurityEventRetention); add the change records to that building block and schema instead of creating them, and decide whether to enforce append-only in the database (DENY UPDATE and DELETE on the audit tables for the login of the api, with the retention sweep running under another principal), because today a compromised API could rewrite its own records.
 - [ ] **P06.6** Web: users, roles and permissions (`user-management-web-users-roles-and-permissions`) <a id="user-management-web-users-roles-and-permissions"></a>
   Build the users list (data table with search, sort, filter, pagination, mobile cards), user detail and create/edit forms, role assignment dialog and a roles/permissions matrix page, with Playwright clicking every control on desktop and mobile in light and dark with screenshots.
-  - Edition: Community (recommended)
+  - Edition: Community (confirmed 2026-10-10)
   - Note: From `web-foundation-webkit-data-table-column-test-stability`: a Radix Select fills an empty SelectValue from its chosen item only once it has mounted, so its trigger is empty in the server HTML and widens when the page hydrates; every select these forms render with a value passes that value text to SelectValue, as the data table selects do (design-system.md, Data table, Hydration), and the form kit server-answer select and the kitchen sink quarter and currency specimens, which still fill theirs in on hydration, take the same change when this item builds its forms from the form kit.
 - [ ] **P06.7** Web: invitations, organisation and my profile (`user-management-web-invitations-organisation-and-my-profile`) <a id="user-management-web-invitations-organisation-and-my-profile"></a>
   Build the invite dialog with directory search, department and designation admin pages with an org-tree preview, and my-profile with Graph photo and theme preference, with e2e on desktop and mobile with screenshots.
-  - Edition: Community (recommended)
+  - Edition: Community (confirmed 2026-10-10)
 - [ ] **P06.8** User lifecycle (`user-management-user-lifecycle`) <a id="user-management-user-lifecycle"></a>
   Implement deactivate/reactivate with immediate session invalidation via a server-side security stamp validated on each request, an offboarding checklist hook for `hr-core`, and the contract for the nightly Entra directory sync job that `business-building-blocks-background-jobs-and-scheduling` schedules to flag disabled or deleted accounts.
-  - Edition: Community (recommended)
+  - Edition: Community (confirmed 2026-10-10)
 
 ## P07 — First On-Prem Deployment <a id="phase-first-deployment"></a>
 

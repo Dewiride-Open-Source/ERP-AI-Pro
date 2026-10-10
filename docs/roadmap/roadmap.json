@@ -964,11 +964,18 @@
           "id": "user-management-users-module-and-just-in-time",
           "title": "Users module and just-in-time provisioning",
           "scope": "Create backend/Modules/Identity/Users with a User aggregate linked to the Entra object id (employee code, display name, work email, phone, designation, date of joining, status) in schema `identity`, create or update the user from Entra claims on first sign-in, deny sign-in for deactivated users, bootstrap the first administrator from configuration, and add admin CRUD endpoints with validation plus unit and integration tests.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
-          "acceptance": [],
+          "editionConfirmedOn": "2026-10-10",
+          "acceptance": [
+            "A person's first sign-in, through Entra or the test persona sign-in, creates an active record in identity_users.Users linked to their Entra object id with the name and work email of their claims; each later sign-in refreshes both and stamps the sign-in time, and a record an administrator registered beforehand with the same object id, or with the same work email and no object id, is linked instead of a second one being created.",
+            "A deactivated person's sign-in is refused with a redirect to /login?error=account-deactivated and a SignInRefused security event, and from the next request on every open session or bearer token of a person whose record is deactivated or deleted is refused with 401; reactivation lets the person sign in again, and a deleted person's next sign-in creates a new record.",
+            "Holders of the Erp.Admin app role can list (paged, sorted, filtered), read, register, update (employee code, phone, designation, date of joining; refused with 409 when the version is stale), deactivate, reactivate and delete people under /api/identity/users; everyone else is refused with 403, an administrator cannot deactivate or delete their own record, every invalid input answers ProblemDetails, and the OpenAPI document and the Kiota client carry the routes.",
+            "The sign-in page explains a refused sign-in of a deactivated account, and unit, integration, architecture and Playwright tests cover the record, the admission at sign-in and on every request, and the endpoints."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-10-10"
         },
         {
           "id": "user-management-directory-invitation-via-microsoft-graph",
@@ -976,6 +983,7 @@
           "scope": "Add an invitation flow that searches directory users through Microsoft Graph, pre-registers invitees with an intended role, matches them by object id or email on first login, and covers the flow with integration tests using a fake Graph client.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-10-10",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -986,6 +994,7 @@
           "scope": "Add a permission catalogue generated from module declarations (e.g. finance.sales.invoices.approve), Role and RolePermission entities with seeded system roles (Owner, Admin, Finance, HR, Manager, Employee) mapped from Entra app roles, a permission authorisation handler and RequirePermission endpoint extension with permission claims returned by /api/auth/me, and an architecture test that every non-anonymous endpoint declares a permission.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-10-10",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -997,6 +1006,7 @@
           "scope": "Model a department tree, designations, manager assignment with effective dates, position history and an org-chart query exposed through admin endpoints under /api/identity/organisation, consumed by approvals and timesheets later and extended (not replaced) by `hr-core`.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-10-10",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1007,6 +1017,7 @@
           "scope": "Add backend/BuildingBlocks/Auditing with an EF Core SaveChanges interceptor recording append-only entries (actor, timestamp, before/after JSON diff, IP, correlation id) into an `audit` schema for user, role and department changes, a filterable exportable audit endpoint, an audit timeline component, and an architecture test requiring aggregates to implement IAuditable.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-10-10",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1018,6 +1029,7 @@
           "scope": "Build the users list (data table with search, sort, filter, pagination, mobile cards), user detail and create/edit forms, role assignment dialog and a roles/permissions matrix page, with Playwright clicking every control on desktop and mobile in light and dark with screenshots.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-10-10",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1029,6 +1041,7 @@
           "scope": "Build the invite dialog with directory search, department and designation admin pages with an org-tree preview, and my-profile with Graph photo and theme preference, with e2e on desktop and mobile with screenshots.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-10-10",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1039,6 +1052,7 @@
           "scope": "Implement deactivate/reactivate with immediate session invalidation via a server-side security stamp validated on each request, an offboarding checklist hook for `hr-core`, and the contract for the nightly Entra directory sync job that `business-building-blocks-background-jobs-and-scheduling` schedules to flag disabled or deleted accounts.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-10-10",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
