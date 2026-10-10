@@ -74,6 +74,7 @@ export class AttachmentsPage {
   }
 
   async upload(file: FileUpload): Promise<void> {
+    await this.untilDropZoneTakesFiles();
     await this.fileInput.setInputFiles(file);
   }
 
@@ -131,7 +132,13 @@ export class AttachmentsPage {
     return { name, content: await response.body() };
   }
 
+  private async untilDropZoneTakesFiles(): Promise<void> {
+    // "Choose a file" is disabled until the drop zone has hydrated and while it uploads a file, the times it ignores one.
+    await expect(this.chooseFile).toBeEnabled();
+  }
+
   private async dispatchDrag(types: readonly string[], dataTransfer: JSHandle<DataTransfer>): Promise<void> {
+    await this.untilDropZoneTakesFiles();
     await this.dropZone.evaluate(
       (zone, { types, dataTransfer }) => {
         for (const type of types) {

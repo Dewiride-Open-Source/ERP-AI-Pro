@@ -1,5 +1,6 @@
 import type { Page, Route } from "@playwright/test";
 
+import { withholdClientBundles } from "../../../fixtures/client-bundles";
 import { expect, forEachTheme, tabOntoLink, test } from "../../../fixtures/test";
 import { DataTableDemoPage, dataTablePath } from "../../../pages/platform/design/data-table.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
@@ -31,10 +32,6 @@ async function holdListNavigation(page: Page): Promise<() => void> {
     },
   );
   return release;
-}
-
-function isClientBundle(url: URL): boolean {
-  return url.pathname.startsWith("/_next/static/") && url.pathname.endsWith(".js");
 }
 
 async function holdAnimationFrames(page: Page): Promise<() => Promise<void>> {
@@ -479,7 +476,7 @@ test.describe("data table", () => {
     await demo.goto("?page=2");
     const interactive = await controlPlacements(page);
 
-    await page.route(isClientBundle, (route) => route.fulfill({ contentType: "text/javascript", body: "" }));
+    await withholdClientBundles(page);
     await page.reload();
     await expect(demo.bills.columnsButton).toBeVisible();
     await expect(demo.bills.columnsButton).toBeDisabled();
