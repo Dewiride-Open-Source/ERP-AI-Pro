@@ -983,12 +983,18 @@
           "id": "user-management-directory-invitation-via-microsoft-graph",
           "title": "Directory invitation via Microsoft Graph",
           "scope": "Add an invitation flow that searches directory users through Microsoft Graph, pre-registers invitees with an intended role, matches them by object id or email on first login, and covers the flow with integration tests using a fake Graph client.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-10-10",
-          "acceptance": [],
+          "acceptance": [
+            "Holders of the Erp.Admin app role search the company directory through GET /api/identity/users/directory?search= (2 to 100 characters): the API asks Microsoft Graph on behalf of the signed-in administrator with the delegated permission User.ReadBasic.All, answers at most 25 people ordered by display name with their Entra object id, display name, user principal name and mail, names the record of each one the ERP already holds (by Entra object id, or by the work email of a record linked to no Entra account) and says whether more people matched; everyone else is refused with 403.",
+            "POST /api/identity/users/invitations, with an idempotency key, pre-registers a directory person by Entra object id with the display name and user principal name Microsoft Graph returns and the administered details, and answers 201 with the record; an object id the directory does not hold answers 404 directory.person-not-found, an object id or employee code another record holds, or a work email that a record linked to no Entra account holds, answers 409, and the first sign-in of the person links the invited record by its object id. POST /api/identity/users registers by work email only.",
+            "A directory that refuses the administrator (consent missing, a sign-in interaction required, Microsoft Graph answering 401 or 403) answers 403 directory.access-denied, and one that cannot be reached or keeps throttling answers 503 directory.unavailable through the new ErrorKind.Unavailable; neither the search text nor a token reaches a log or a span.",
+            "entra.sh adds User.ReadBasic.All with consent for the whole organisation to both sign-in registrations and verify.sh --entra checks it; integration tests drive the search and the invitation through the real token acquisition against TestTokenEndpoint and a fake Microsoft Graph (TestDirectory) that every test host uses, and the OpenAPI document and the Kiota client carry both routes."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-10",
           "notes": "From `user-management-users-module-and-just-in-time` (ADR-0039): an administrator already registers a person before their first sign-in through POST /api/identity/users (entraObjectId optional, displayName, workEmail), and the first sign-in links that record by its Entra object id, else by the normalised work email of a record that names no Entra account yet (AdmitPersonHandler); the invitation reuses that registration and matching and adds the directory search and the intended role."
         },
         {
