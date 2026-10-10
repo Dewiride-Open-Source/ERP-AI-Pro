@@ -1,5 +1,6 @@
 using System.Reflection;
 using Dewiride.Erp.BuildingBlocks.Attachments;
+using Dewiride.Erp.BuildingBlocks.Auditing;
 using Dewiride.Erp.BuildingBlocks.Caching;
 using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Idempotency;
@@ -24,6 +25,7 @@ public static class ErpHostComposition
         builder.AddErpHttpClientDefaults();
         builder.AddErpPersistence();
         builder.AddErpIdempotency();
+        builder.AddErpAuditing();
         builder.AddErpAttachments();
         builder.AddModules(Modules.All);
 

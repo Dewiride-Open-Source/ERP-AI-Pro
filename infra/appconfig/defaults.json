@@ -13,7 +13,9 @@
         "AnonymousWindow": "00:01:00",
         "ActorPermitLimit": "600",
         "ActorWindow": "00:01:00",
-        "ActorSegmentsPerWindow": "6"
+        "ActorSegmentsPerWindow": "6",
+        "SignInPermitLimit": "60",
+        "SignInWindow": "00:01:00"
       },
       "Caching": {
         "DefaultExpiration": "00:05:00",
@@ -34,6 +36,10 @@
         "RetentionPeriod": "1.00:00:00",
         "MaxStoredResponseBytes": "1048576",
         "CleanupInterval": "01:00:00"
+      },
+      "Auditing": {
+        "SecurityEventRetention": "365.00:00:00",
+        "SweepInterval": "1.00:00:00"
       },
       "Attachments": {
         "MaxSizeBytes": "26214400",

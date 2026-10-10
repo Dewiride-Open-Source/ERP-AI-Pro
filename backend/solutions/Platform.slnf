@@ -4,6 +4,7 @@
     "projects": [
       "BuildingBlocks\\Application\\Dewiride.Erp.BuildingBlocks.Application\\Dewiride.Erp.BuildingBlocks.Application.csproj",
       "BuildingBlocks\\Attachments\\Dewiride.Erp.BuildingBlocks.Attachments\\Dewiride.Erp.BuildingBlocks.Attachments.csproj",
+      "BuildingBlocks\\Auditing\\Dewiride.Erp.BuildingBlocks.Auditing\\Dewiride.Erp.BuildingBlocks.Auditing.csproj",
       "BuildingBlocks\\Authentication\\Dewiride.Erp.BuildingBlocks.Authentication\\Dewiride.Erp.BuildingBlocks.Authentication.csproj",
       "BuildingBlocks\\Caching\\Dewiride.Erp.BuildingBlocks.Caching\\Dewiride.Erp.BuildingBlocks.Caching.csproj",
       "BuildingBlocks\\Configuration\\Dewiride.Erp.BuildingBlocks.Configuration\\Dewiride.Erp.BuildingBlocks.Configuration.csproj",

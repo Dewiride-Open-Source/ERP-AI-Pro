@@ -124,23 +124,11 @@ signin_web_origin() {
 }
 
 signin_redirect_uris() {
-  local label="$1"
-  require_signin_label "$label"
-  local -a origins=()
-  if [[ "$label" == local-dev ]]; then
-    require_origin ERP_AZURE_LOCAL_WEB_ORIGIN "$ERP_AZURE_LOCAL_WEB_ORIGIN"
-    require_origin ERP_AZURE_LOCAL_API_ORIGIN "$ERP_AZURE_LOCAL_API_ORIGIN"
-    origins=("$ERP_AZURE_LOCAL_WEB_ORIGIN" "$ERP_AZURE_LOCAL_API_ORIGIN")
-  else
-    [[ -n "$ERP_AZURE_PRODUCTION_WEB_ORIGIN" ]] || return 0
-    require_origin ERP_AZURE_PRODUCTION_WEB_ORIGIN "$ERP_AZURE_PRODUCTION_WEB_ORIGIN"
-    origins=("$ERP_AZURE_PRODUCTION_WEB_ORIGIN")
-  fi
   local origin path
-  for origin in "${origins[@]}"; do
-    for path in "${REDIRECT_PATHS[@]}"; do
-      printf '%s%s\n' "$origin" "$path"
-    done
+  origin="$(signin_web_origin "$1")" || return 1
+  [[ -n "$origin" ]] || return 0
+  for path in "${REDIRECT_PATHS[@]}"; do
+    printf '%s%s\n' "$origin" "$path"
   done
 }
 

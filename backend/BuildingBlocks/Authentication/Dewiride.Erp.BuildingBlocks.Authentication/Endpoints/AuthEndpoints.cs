@@ -1,8 +1,10 @@
 using System.Security.Claims;
+using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Requests;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Responses;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
@@ -145,7 +147,8 @@ internal static class AuthEndpoints
     // fails the request and leaves the person signed in, and a written one refuses every older session of the person even if
     // removing their account fails. The record of the Entra session the person signed in from is removed next, so nothing of
     // that Entra session outlives the sign-out. Both run whatever happens to the request meanwhile, so a sign-out the browser
-    // abandons still takes effect; the retry limits and the command timeout bound them.
+    // abandons still takes effect; the retry limits and the command timeout bound them. The security event of the sign-out is
+    // recorded last, and one that cannot be written is logged without keeping the person signed in.
     private static async Task<Results<SignOutHttpResult, ChallengeHttpResult>> LogoutAsync(HttpContext httpContext, SessionRevocations revocations, EntraSessions entraSessions)
     {
         var user = httpContext.User;
@@ -166,12 +169,14 @@ internal static class AuthEndpoints
             await entraSessions.ForgetAsync(entraSessionId, CancellationToken.None).ConfigureAwait(false);
         }
 
+        await SignInAudit.TryRecordAsync(httpContext, SecurityEventKind.SignedOut, actor: SignInAudit.ObjectIdOf(user)).ConfigureAwait(false);
+
         return TypedResults.SignOut(SignedOut(), [CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme]);
     }
 
-    private static async Task<Ok> SignOutFrontChannelAsync([AsParameters] FrontChannelSignOutRequest request, FrontChannelSignOut signOut)
+    private static async Task<Ok> SignOutFrontChannelAsync([AsParameters] FrontChannelSignOutRequest request, FrontChannelSignOut signOut, HttpContext httpContext)
     {
-        await signOut.SignOutAsync(request.Iss!, request.Sid!).ConfigureAwait(false);
+        await signOut.SignOutAsync(httpContext, request.Iss!, request.Sid!).ConfigureAwait(false);
 
         return TypedResults.Ok();
     }

@@ -275,6 +275,12 @@
           "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )"
         }
       },
+      "dewiride.erp.buildingblocks.auditing": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )"
+        }
+      },
       "dewiride.erp.buildingblocks.caching": {
         "type": "Project",
         "dependencies": {

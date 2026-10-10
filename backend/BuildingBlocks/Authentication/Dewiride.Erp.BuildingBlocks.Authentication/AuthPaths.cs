@@ -28,4 +28,6 @@ public static class AuthPaths
     public const string SignInFailedPage = LoginPage + "?error=sign-in-failed";
 
     public const string SignedOutPage = LoginPage + "?reason=signed-out";
+
+    public static IReadOnlyCollection<string> SignInPaths { get; } = [Login, SignInCallback, SignedOutCallback, FrontChannelSignOut, Logout];
 }

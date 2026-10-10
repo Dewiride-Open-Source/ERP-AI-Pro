@@ -1,7 +1,10 @@
 using System.Net;
 using System.Text.Json;
+using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
+using Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Authentication.BearerTokens;
@@ -18,6 +21,34 @@ public sealed class BearerTokenAccessTests(BearerTokenAccessTests.Fixture fixtur
         using var response = await BearerTokenRoutes.SendAsync(client, HttpMethod.Get, BearerTokenRoutes.Path, BearerTokenRoutes.PersonToken("Erp.Test.Write"));
 
         await AssertForbiddenAsync(response);
+    }
+
+    [Fact]
+    public async Task Get_PersonTokenWithAnotherScope_RecordsAnInsufficientScopeOfThePersonAndTheirClientApplication()
+    {
+        using var client = fixture.Factory.CreateClient();
+
+        using var response = await BearerTokenRoutes.SendAsync(client, HttpMethod.Get, BearerTokenRoutes.Path, BearerTokenRoutes.PersonToken("Erp.Test.Write"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(fixture.Factory.Services, response));
+        Assert.Equal(
+            (SecurityEventKind.BearerTokenRefused, BearerTokenEvents.InsufficientScopeRefusal, TestUsers.Accountant.ObjectId, TestApplications.NativeClient.ClientId),
+            (entry.Kind, entry.Detail, entry.ActorObjectId, entry.ClientApplicationId));
+    }
+
+    [Fact]
+    public async Task Get_ApplicationTokenWithAnotherRole_RecordsAnInsufficientScopeOfTheApplication()
+    {
+        using var client = fixture.Factory.CreateClient();
+
+        using var response = await BearerTokenRoutes.SendAsync(client, HttpMethod.Get, BearerTokenRoutes.Path, BearerTokenRoutes.ApplicationToken("Erp.Test.Other"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(fixture.Factory.Services, response));
+        Assert.Equal(
+            (SecurityEventKind.BearerTokenRefused, BearerTokenEvents.InsufficientScopeRefusal, TestApplications.Integration.ObjectId, TestApplications.Integration.ClientId),
+            (entry.Kind, entry.Detail, entry.ActorObjectId, entry.ClientApplicationId));
     }
 
     [Fact]

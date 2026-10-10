@@ -23,6 +23,8 @@ export const microsoftSignInOrigin = "https://login.microsoftonline.com";
 
 export const sessionCookie = "__Host-erp-session";
 
+export const antiforgeryCookie = "__Host-erp-antiforgery";
+
 export const requestTokenCookie = "__Host-erp-xsrf";
 
 export const requestTokenHeader = "x-xsrf-token";

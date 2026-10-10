@@ -72,4 +72,14 @@ public static class ErpEndpointsExtensions
 
         return app.UseRateLimiter();
     }
+
+    public static IApplicationBuilder UseErpSignInRateLimiting(this IApplicationBuilder app, IReadOnlyCollection<string> paths)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        ArgumentNullException.ThrowIfNull(paths);
+
+        return app.ApplicationServices.GetRequiredService<IOptions<RateLimitingOptions>>().Value.Enabled
+            ? app.UseMiddleware<SignInRateLimitingMiddleware>(paths)
+            : app;
+    }
 }

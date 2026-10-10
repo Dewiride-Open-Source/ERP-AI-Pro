@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
+using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
@@ -40,7 +41,7 @@ public sealed class LoginEndpointTests(ErpApiFactory factory) : IClassFixture<Er
     }
 
     [Fact]
-    public async Task Get_LoginAnonymously_SetsOnlyTheCrossSiteCorrelationAndNonceCookies()
+    public async Task Get_LoginAnonymously_SetsOnlyTheCrossSiteSecurePrefixedCorrelationAndNonceCookies()
     {
         using var client = CreateClient();
 
@@ -48,8 +49,8 @@ public sealed class LoginEndpointTests(ErpApiFactory factory) : IClassFixture<Er
 
         var cookies = response.Headers.GetValues("Set-Cookie").ToList();
         Assert.Equal(2, cookies.Count);
-        Assert.Contains(cookies, cookie => cookie.StartsWith(".AspNetCore.Correlation.", StringComparison.Ordinal));
-        Assert.Contains(cookies, cookie => cookie.StartsWith(".AspNetCore.OpenIdConnect.Nonce.", StringComparison.Ordinal));
+        Assert.Contains(cookies, cookie => cookie.StartsWith(MicrosoftIdentityOptionsSetup.CorrelationCookiePrefix, StringComparison.Ordinal));
+        Assert.Contains(cookies, cookie => cookie.StartsWith(MicrosoftIdentityOptionsSetup.NonceCookiePrefix, StringComparison.Ordinal));
         Assert.All(cookies, cookie =>
         {
             var attributes = cookie.ToUpperInvariant();

@@ -175,7 +175,6 @@ converge_runtime_app() {
 
 run_converge() {
   require_origin ERP_AZURE_LOCAL_WEB_ORIGIN "$ERP_AZURE_LOCAL_WEB_ORIGIN"
-  require_origin ERP_AZURE_LOCAL_API_ORIGIN "$ERP_AZURE_LOCAL_API_ORIGIN"
   [[ -z "$ERP_AZURE_PRODUCTION_WEB_ORIGIN" ]] || require_origin ERP_AZURE_PRODUCTION_WEB_ORIGIN "$ERP_AZURE_PRODUCTION_WEB_ORIGIN"
   log_step "Resolving the operator and Microsoft Graph"
   local operator_id admin_role_id

@@ -57,9 +57,11 @@ internal static class RequestPipeline
         app.UseErpEndpointPipeline();
 
         // Called explicitly: with an explicit UseRouting, .NET 10 would otherwise insert authentication, authorization and the
-        // antiforgery middleware ahead of routing. Authentication precedes the rate limiter so a signed-in person is limited as
-        // that person rather than by address; antiforgery follows authorization, so a request without a session answers 401,
-        // and precedes the feature gate and idempotency, so a refused request claims no key and reaches no module.
+        // antiforgery middleware ahead of routing. The sign-in limit precedes authentication, which answers the OpenID Connect
+        // callbacks itself; authentication precedes the global rate limiter so a signed-in person is limited as that person
+        // rather than by address; antiforgery follows authorization, so a request without a session answers 401, and precedes
+        // the feature gate and idempotency, so a refused request claims no key and reaches no module.
+        app.UseErpSignInRateLimiting(AuthPaths.SignInPaths);
         app.UseAuthentication();
         app.UseErpRateLimiting();
         app.UseAuthorization();
