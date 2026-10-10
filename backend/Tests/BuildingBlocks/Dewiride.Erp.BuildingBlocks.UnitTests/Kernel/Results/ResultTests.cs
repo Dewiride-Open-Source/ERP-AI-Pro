@@ -56,6 +56,7 @@ public sealed class ResultTests
     [InlineData(ErrorKind.TooLarge)]
     [InlineData(ErrorKind.UnsupportedType)]
     [InlineData(ErrorKind.Failure)]
+    [InlineData(ErrorKind.Unavailable)]
     public void ErrorFactories_StampTheKind(ErrorKind kind)
     {
         var error = kind switch
@@ -66,6 +67,7 @@ public sealed class ResultTests
             ErrorKind.Forbidden => Error.Forbidden("c", "m"),
             ErrorKind.TooLarge => Error.TooLarge("c", "m"),
             ErrorKind.UnsupportedType => Error.UnsupportedType("c", "m"),
+            ErrorKind.Unavailable => Error.Unavailable("c", "m"),
             _ => Error.Failure("c", "m"),
         };
 

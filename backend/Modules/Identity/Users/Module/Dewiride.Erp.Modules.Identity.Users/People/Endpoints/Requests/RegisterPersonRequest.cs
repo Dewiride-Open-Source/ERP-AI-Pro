@@ -5,13 +5,11 @@ using Dewiride.Erp.Modules.Identity.Users.People.Application;
 namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Requests;
 
 public sealed record RegisterPersonRequest(
-    [property: Description("Entra object id of the person's account, when it is known; without it the person's first sign-in links the record by its work email.")]
-    Guid? EntraObjectId,
     [property: Description("Name the ERP shows for the person until their first sign-in brings the one Entra keeps.")]
     [property: Required]
     [property: StringLength(PersonLimits.DisplayNameMaxLength)]
     string? DisplayName,
-    [property: Description("Work email of the person, which their first sign-in matches when the record names no Entra account.")]
+    [property: Description("Work email of the person, which their first sign-in matches to link the record to their Entra account.")]
     [property: Required]
     [property: StringLength(PersonLimits.WorkEmailMaxLength)]
     [property: EmailAddress]

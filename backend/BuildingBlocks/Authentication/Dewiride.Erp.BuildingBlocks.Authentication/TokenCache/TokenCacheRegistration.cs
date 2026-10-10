@@ -51,11 +51,15 @@ internal static class TokenCacheRegistration
         });
 
         services.AddSingleton<IMsalTokenCacheProvider>(static provider => new MsalDistributedTokenCacheAdapter(
-            new ProtectedTokenCacheStore(
-                provider.GetRequiredKeyedService<IDistributedCache>(CachingRegistration.SqlServerCacheKey),
-                provider.GetRequiredService<IDataProtectionProvider>(),
+            new SessionBoundTokenCacheStore(
+                new ProtectedTokenCacheStore(
+                    provider.GetRequiredKeyedService<IDistributedCache>(CachingRegistration.SqlServerCacheKey),
+                    provider.GetRequiredService<IDataProtectionProvider>(),
+                    provider.GetRequiredService<IHttpContextAccessor>(),
+                    provider.GetRequiredService<ILogger<ProtectedTokenCacheStore>>()),
                 provider.GetRequiredService<IHttpContextAccessor>(),
-                provider.GetRequiredService<ILogger<ProtectedTokenCacheStore>>()),
+                provider.GetRequiredService<IOptions<EntraSignInOptions>>(),
+                provider.GetRequiredService<TimeProvider>()),
             provider.GetRequiredService<IOptions<MsalDistributedTokenCacheAdapterOptions>>(),
             provider.GetRequiredService<ILogger<MsalDistributedTokenCacheAdapter>>(),
             provider));

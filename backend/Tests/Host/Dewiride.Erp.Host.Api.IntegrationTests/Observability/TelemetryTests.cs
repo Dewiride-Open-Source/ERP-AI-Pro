@@ -5,9 +5,12 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Graph;
 using Dewiride.Erp.Testing.Telemetry;
 using Microsoft.AspNetCore.WebUtilities;
 using OpenTelemetry.Logs;
@@ -21,9 +24,13 @@ public sealed class TelemetryTests
 
     private const string AttachmentsPath = "/api/platform/attachments";
 
+    private const string DirectoryPath = "/api/identity/users/directory";
+
     private const string BlobSourcePrefix = "Azure.Storage.Blobs.";
 
     private const string SqlCommandLogCategory = "Microsoft.EntityFrameworkCore.Database.Command";
+
+    private const string GraphClientLogCategory = $"System.Net.Http.HttpClient.{MicrosoftGraph.HttpClientName}.LogicalHandler";
 
     private static readonly TimeSpan ExportWait = TimeSpan.FromSeconds(10);
 
@@ -120,6 +127,45 @@ public sealed class TelemetryTests
         Assert.DoesNotContain(spans, span => Carries(span, token));
         WaitFor(logs, record => record.TraceId == server.TraceId);
         Assert.DoesNotContain(logs, record => Carries(record, token));
+    }
+
+    [Fact]
+    public async Task Get_DirectorySearch_ExportsNoSpanOrLogCarryingTheSearchTextOrTheDirectoryToken()
+    {
+        var spans = new ExportedItemCollection<Activity>();
+        var logs = new ExportedItemCollection<LogRecord>();
+        await using var listener = await DirectoryListener.StartAsync();
+        await using var factory = new ErpApiFactory().WithTestEndpoints(TestSignIn.Map);
+        using var traced = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+        {
+            services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans));
+            services.ConfigureOpenTelemetryLoggerProvider(logging => logging.AddInMemoryExporter(logs));
+            services.AddHttpClient(MicrosoftGraph.HttpClientName).ConfigurePrimaryHttpMessageHandler(listener.CreateHandler);
+        }));
+        var objectId = Guid.CreateVersion7();
+        var administrator = new TestUser(objectId, "Vikram Iyer", $"vikram.iyer.{objectId:N}@dewiride.test", [AppRoles.User, AppRoles.Administrator]);
+        traced.Services.GetRequiredService<TestTokenEndpoint>().Admit(administrator);
+        var word = $"w{Guid.CreateVersion7().ToString("N")[^10..]}";
+        var directory = traced.Services.GetRequiredService<TestDirectory>();
+        directory.Add(new TestDirectoryPerson(Guid.CreateVersion7(), $"Meera {word}", $"meera.{word}@dewiride.test", null));
+        listener.Serve(directory);
+        using var client = TestSignIn.CreateClient(traced);
+        using var signIn = await TestSignIn.SignInAsync(client, administrator);
+
+        using var response = await client.GetAsync(new Uri($"{DirectoryPath}?search={word}", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains(word, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+        var traceId = TraceIdOf(response);
+        var server = WaitFor(spans, span => span.Kind == ActivityKind.Server && span.TraceId.ToHexString() == traceId && Equals(span.GetTagItem("url.path"), DirectoryPath));
+        Assert.NotNull(server.GetTagItem("url.query"));
+        var graph = WaitFor(spans, span => span.Kind == ActivityKind.Client && span.TraceId == server.TraceId && Equals(span.GetTagItem("server.address"), MicrosoftGraph.BaseAddress.Host));
+        Assert.EndsWith("/v1.0/users?*", graph.GetTagItem("url.full") as string, StringComparison.Ordinal);
+        var tokens = directory.Requests.Select(request => request.AccessToken).OfType<string>().ToList();
+        Assert.NotEmpty(tokens);
+        Assert.DoesNotContain(spans, span => Carries(span, word) || tokens.Exists(token => Carries(span, token)));
+        WaitFor(logs, record => record.TraceId == server.TraceId && record.CategoryName == GraphClientLogCategory);
+        Assert.DoesNotContain(logs, record => Carries(record, word) || tokens.Exists(token => Carries(record, token)));
     }
 
     private static async Task<HttpResponseMessage> UploadAsync(HttpClient client, string text)

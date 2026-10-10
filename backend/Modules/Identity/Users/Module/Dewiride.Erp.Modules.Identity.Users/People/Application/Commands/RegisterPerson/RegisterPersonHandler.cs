@@ -13,7 +13,6 @@ internal sealed class RegisterPersonHandler(UsersDbContext context) : ICommandHa
         ArgumentNullException.ThrowIfNull(command);
 
         var registered = User.Register(
-            command.EntraObjectId,
             command.DisplayName,
             command.WorkEmail,
             command.EmployeeCode,
@@ -26,11 +25,6 @@ internal sealed class RegisterPersonHandler(UsersDbContext context) : ICommandHa
         }
 
         var user = registered.Value;
-        if (user.EntraObjectId is { } objectId && await context.Users.AnyAsync(u => u.EntraObjectId == objectId, cancellationToken).ConfigureAwait(false))
-        {
-            return UserErrors.EntraObjectIdTaken;
-        }
-
         if (await context.Users.AnyAsync(u => u.WorkEmail == user.WorkEmail, cancellationToken).ConfigureAwait(false))
         {
             return UserErrors.WorkEmailTaken;

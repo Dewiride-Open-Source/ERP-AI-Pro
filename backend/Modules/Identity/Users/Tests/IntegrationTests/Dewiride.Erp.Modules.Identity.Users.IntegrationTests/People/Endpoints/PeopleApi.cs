@@ -24,8 +24,8 @@ internal static class PeopleApi
 
     public static string UniqueEmployeeCode() => $"T-{Guid.CreateVersion7().ToString("N")[^12..]}";
 
-    public static object Person(string workEmail, string? employeeCode = null, Guid? entraObjectId = null) =>
-        new { entraObjectId, displayName = "Meera Nair", workEmail, employeeCode, phoneNumber = "98765 43210", designation = "Accountant", dateOfJoining = "2026-04-01" };
+    public static object Person(string workEmail, string? employeeCode = null) =>
+        new { displayName = "Meera Nair", workEmail, employeeCode, phoneNumber = "98765 43210", designation = "Accountant", dateOfJoining = "2026-04-01" };
 
     public static Task<HttpResponseMessage> PostAsync(HttpClient client, object body, string? idempotencyKey = null)
     {

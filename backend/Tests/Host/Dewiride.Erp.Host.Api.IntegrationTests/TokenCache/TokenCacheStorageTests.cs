@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
@@ -12,6 +13,7 @@ using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging.Testing;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.TokenCache;
 
@@ -45,6 +47,34 @@ public sealed class TokenCacheStorageTests
         Assert.InRange(row.ExpiresAtTime, before + IdleTimeout + Margin - TimeSpan.FromSeconds(1), after + IdleTimeout + Margin);
         Assert.NotNull(row.AbsoluteExpiration);
         Assert.InRange(row.AbsoluteExpiration.Value, before + Lifetime + Margin - TimeSpan.FromSeconds(1), after + Lifetime + Margin);
+    }
+
+    [Fact]
+    public async Task Get_DirectorySearch_WritesTheEntryAgainExpiringWhenTheSessionEndsNotALifetimeAfterTheWrite()
+    {
+        var clock = new FakeTimeProvider(TimeProvider.System.GetUtcNow() - TimeSpan.FromHours(6));
+        await using var root = new ErpApiFactory().WithTestEndpoints(TestSignIn.Map);
+        await using var factory = root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddSingleton<TimeProvider>(clock)));
+        var objectId = Guid.CreateVersion7();
+        var administrator = new TestUser(objectId, "Vikram Iyer", $"vikram.iyer.{objectId:N}@dewiride.test", [AppRoles.User, AppRoles.Administrator]);
+        factory.Services.GetRequiredService<TestTokenEndpoint>().Admit(administrator);
+        using var client = TestSignIn.CreateClient(factory);
+        using var signIn = await TestSignIn.SignInAsync(client, administrator);
+        var signedInAt = clock.GetUtcNow();
+        var key = root.Deployment.TokenCacheKeyFor(administrator);
+        var written = await TokenCacheRow.FindAsync(key);
+
+        using var search = await client.GetAsync(new Uri("/api/identity/users/directory?search=meera", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, search.StatusCode);
+        var rewritten = await TokenCacheRow.FindAsync(key);
+        Assert.NotNull(written);
+        Assert.NotNull(rewritten);
+        Assert.NotNull(written.AbsoluteExpiration);
+        Assert.NotNull(rewritten.AbsoluteExpiration);
+        Assert.NotEqual(written.Value, rewritten.Value);
+        Assert.InRange(rewritten.AbsoluteExpiration.Value, signedInAt + Lifetime + Margin - TimeSpan.FromSeconds(1), signedInAt + Lifetime + Margin + TimeSpan.FromSeconds(1));
+        Assert.True(rewritten.AbsoluteExpiration < written.AbsoluteExpiration);
     }
 
     [Fact]

@@ -9,4 +9,5 @@ public enum ErrorKind
     TooLarge,
     UnsupportedType,
     Failure,
+    Unavailable,
 }

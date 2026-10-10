@@ -31,7 +31,7 @@ public sealed class SessionAdmissionTests(SessionAdmissionTests.Fixture fixture)
     }
 
     [Fact]
-    public async Task SignIn_PersonRegisteredBeforehandWithTheirObjectId_SignsInToThatRecord()
+    public async Task SignIn_PersonRegisteredBeforehandByTheirWorkEmail_SignsInToThatRecordAndLinksIt()
     {
         var person = PersonRecords.NewPerson(fixture.Factory);
         var registered = await PersonRecords.RegisterAsync(fixture.Factory, person);
@@ -42,6 +42,7 @@ public sealed class SessionAdmissionTests(SessionAdmissionTests.Fixture fixture)
         var record = await PersonRecords.OfAsync(fixture.Factory, person);
         Assert.NotNull(record);
         Assert.Equal(registered, record.Id.Value);
+        Assert.Equal(person.ObjectId, record.EntraObjectId);
         Assert.NotNull(record.LastSignedInAt);
     }
 

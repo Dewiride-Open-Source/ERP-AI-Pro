@@ -538,7 +538,8 @@
           "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.12, )",
-          "Microsoft.Identity.Web": "[4.15.0, )"
+          "Microsoft.Identity.Web": "[4.15.0, )",
+          "Polly.Core": "[8.8.0, )"
         }
       },
       "dewiride.erp.buildingblocks.caching": {
