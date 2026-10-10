@@ -618,8 +618,26 @@
           "Dewiride.Erp.BuildingBlocks.Idempotency": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Identity.Users": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.Attachments": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.SystemInfo": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.identity.users": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Idempotency": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Identity.Users.Contracts": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.identity.users.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
         }
       },
       "dewiride.erp.modules.platform.attachments": {

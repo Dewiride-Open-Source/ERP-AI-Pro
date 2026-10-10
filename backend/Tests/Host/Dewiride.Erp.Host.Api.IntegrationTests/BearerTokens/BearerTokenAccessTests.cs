@@ -107,9 +107,11 @@ public sealed class BearerTokenAccessTests(BearerTokenAccessTests.Fixture fixtur
         Assert.Equal(AuthenticationProblems.ForbiddenTitle, body.RootElement.GetProperty("title").GetString());
     }
 
-    public sealed class Fixture : IAsyncDisposable
+    public sealed class Fixture : IAsyncLifetime
     {
         public ErpApiFactory Factory { get; } = BearerTokenRoutes.Factory();
+
+        public ValueTask InitializeAsync() => BearerTokenRoutes.AdmitPersonAsync(Factory);
 
         public ValueTask DisposeAsync() => Factory.DisposeAsync();
     }

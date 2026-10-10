@@ -106,6 +106,29 @@ public sealed class UnitOfWorkTests(SampleDatabase database) : IClassFixture<Sam
     }
 
     [Fact]
+    public async Task RunAsync_RowWithTheSameKeySavedSinceTheHandlerLooked_ReturnsAConcurrencyConflict()
+    {
+        var id = await AddAsync("Earlier");
+        await using var scope = database.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
+        var dispatcher = scope.ServiceProvider.GetRequiredService<DomainEventDispatcher>();
+        var signal = scope.ServiceProvider.GetRequiredService<UnitOfWorkSignal>();
+
+        var result = await EfUnitOfWork.RunAsync(context, dispatcher, signal, _ =>
+        {
+            context.Samples.Add(new SampleAggregate(id, "Later", new Money(1m, Currency.Inr), new SampleAddress("1", "Pune"), database.Clock.GetUtcNow()));
+
+            return Task.FromResult(Result.Success("done"));
+        }, TestContext.Current.CancellationToken);
+
+        Assert.False(signal.Committed);
+        Assert.Equal(EfUnitOfWork.ConcurrencyConflictCode, result.Error!.Code);
+        Assert.Equal(ErrorKind.Conflict, result.Error.Kind);
+        Assert.Contains(nameof(SampleAggregate), result.Error.Message, StringComparison.Ordinal);
+        Assert.Equal("Earlier", (await database.FindAsync(id)).Name);
+    }
+
+    [Fact]
     public async Task RunAsync_InsideAnAmbientTransaction_JoinsItInsteadOfCommitting()
     {
         var id = await AddAsync("Ambient");

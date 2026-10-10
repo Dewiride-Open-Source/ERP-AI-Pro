@@ -9,6 +9,7 @@ using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
+using Dewiride.Erp.Host.Api.IntegrationTests.Admission;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -80,6 +81,56 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
         Assert.Equal((SecurityEventKind.SignedIn, null, TestUsers.Accountant.ObjectId, null), (entry.Kind, entry.Detail, entry.ActorObjectId, entry.ClientApplicationId));
+    }
+
+    [Fact]
+    public async Task Post_CallbackOfAPersonWithoutARecord_CreatesTheirActiveRecordFromTheIdTokenAsTheirOwn()
+    {
+        var person = PersonRecords.NewPerson(_fixture.Factory);
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(person)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(person)));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(ReturnPath, response.Headers.Location?.OriginalString);
+        var record = await PersonRecords.OfAsync(_fixture.Factory, person);
+        Assert.NotNull(record);
+        Assert.Equal((person.Name, person.UserName, true, person.ObjectId), (record.DisplayName, record.WorkEmail, record.IsActive, record.CreatedBy));
+        Assert.NotNull(record.LastSignedInAt);
+    }
+
+    [Fact]
+    public async Task Post_CallbackOfADeactivatedPerson_LandsOnTheAccountDeactivatedPageWithoutASessionAndRecordsTheRefusal()
+    {
+        var person = PersonRecords.NewPerson(_fixture.Factory);
+        await PersonRecords.RegisterAsync(_fixture.Factory, person);
+        await PersonRecords.DeactivateAsync(_fixture.Factory, person);
+        _fixture.Logs.Clear();
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(person)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(person)));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        Assert.Equal(AuthPaths.AccountDeactivatedPage, response.Headers.Location?.OriginalString);
+        var cookies = response.Headers.TryGetValues("Set-Cookie", out var values) ? values : [];
+        Assert.DoesNotContain(cookies, cookie => cookie.StartsWith($"{SessionCookie}=", StringComparison.Ordinal) && !cookie.Contains(ClearedCookie, StringComparison.OrdinalIgnoreCase));
+        var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
+        Assert.Equal(
+            (SecurityEventKind.SignInRefused, SignInEvents.DeactivatedRefusal, person.ObjectId, null),
+            (entry.Kind, entry.Detail, entry.ActorObjectId, entry.ClientApplicationId));
+        var record = Assert.Single(_fixture.Logs.GetSnapshot(), log => log.Category == typeof(SignInEvents).FullName);
+        Assert.Equal(LogLevel.Warning, record.Level);
+        Assert.Equal(SignInEvents.DeactivatedRefusal, record.GetStructuredStateValue("Refusal"));
     }
 
     [Fact]

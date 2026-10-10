@@ -29,7 +29,7 @@ This repository is the Community edition, licensed LGPL-3.0-only. The Enterprise
 | Database | SQL Server (owner's instance) / Azure SQL | one database, schema per module, migrations per module, applied by the migrator container in production |
 | Attachments | Azure Blob Storage (Azurite in tests, CI and the local containers) | `BuildingBlocks.Attachments` behind `IAttachmentService`: files encrypted by the API with an AES-256-GCM envelope, each file's data key wrapped by a key-encryption key kept as a Key Vault secret, before they reach one Entra-only storage account per environment, metadata in the `files` schema, routes in the `Platform/Attachments` module ([attachments](attachments.md), ADR-0022) |
 | Configuration | Azure App Configuration + Key Vault | one store, environment labels, secrets as Key Vault references |
-| Identity | Microsoft Entra ID | BFF cookie session issued by the API; permissions stored by the identity module |
+| Identity | Microsoft Entra ID | BFF cookie session issued by the API to a person whose record the module `Identity/Users` admits ([ADR-0039](../adr/0039-people-and-their-admission.md)); permissions stored by the identity modules from `user-management-roles-and-permissions` |
 | Observability | OpenTelemetry | OTLP exporter when configured; Aspire dashboard locally |
 | AI | Microsoft.Extensions.AI | the Community AI foundation: one `IChatClient` pipeline, the prompt library and tool registry, evaluation and safety; AI features are Enterprise modules, every capability behind a feature flag ([AI capabilities](ai-capabilities.md)) |
 

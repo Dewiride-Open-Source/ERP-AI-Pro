@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.Testing;
@@ -202,7 +203,7 @@ public sealed partial class FallbackPolicyTests(FallbackPolicyTests.Fixture fixt
         private readonly ErpApiFactory _root = new ErpApiFactory().WithTestEndpoints(routes =>
         {
             routes.MapGet(SignedInPath, () => Results.Ok());
-            routes.MapGet(AdministratorsPath, () => Results.Ok()).RequireAuthorization(policy => policy.RequireRole(TestUsers.AdminRole));
+            routes.MapGet(AdministratorsPath, () => Results.Ok()).RequireAuthorization(policy => policy.RequireRole(AppRoles.Administrator));
         });
 
         public Fixture()

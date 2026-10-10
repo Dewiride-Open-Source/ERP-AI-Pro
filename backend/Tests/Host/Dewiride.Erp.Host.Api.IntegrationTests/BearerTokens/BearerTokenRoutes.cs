@@ -30,6 +30,17 @@ internal static class BearerTokenRoutes
     public static ErpApiFactory Factory(bool bearerTokensEnabled = true) =>
         new ErpApiFactory().WithFeature(BearerTokenFeature.Name, bearerTokensEnabled).WithTestEndpoints(Map);
 
+    // A person's token is accepted only while the person's record admits them, so a host the tokens are sent to holds the
+    // record of the person they are issued to.
+    public static async ValueTask AdmitPersonAsync(ErpApiFactory factory)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var person = TestUsers.Accountant;
+        Assert.True(await scope.ServiceProvider.GetRequiredService<IPersonAdmission>().AdmitAsync(new SignedInPerson(person.ObjectId, person.Name, person.UserName), TestContext.Current.CancellationToken));
+    }
+
     public static string PersonToken(params string[] scopes) => TestTokenIssuer.ForPerson(TestUsers.Accountant, TestApplications.NativeClient, scopes);
 
     public static string ApplicationToken(params string[] roles) => TestTokenIssuer.ForApplication(TestApplications.Integration, roles);

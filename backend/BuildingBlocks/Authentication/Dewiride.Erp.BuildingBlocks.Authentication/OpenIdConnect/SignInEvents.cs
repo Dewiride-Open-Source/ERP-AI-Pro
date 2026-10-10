@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
+using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -19,7 +20,9 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 // those only after the event's default handler, which does nothing, so their tasks are the ones awaited. TicketReceived
 // issues the session itself, so a session that cannot be started lands on the sign-in failed page like any failed
 // callback instead of on an error page, and signs out again whatever the cookie handler wrote before it failed; a session
-// is started only once its sign-in is recorded. A failed callback is logged and recorded by category and OAuth error code
+// is started only once its sign-in is recorded. A sign-in whose person's record does not admit them is a refusal, not a
+// failure: it lands on the account deactivated page and is recorded as refused. A failed callback is logged and recorded by
+// category and OAuth error code
 // only: the error description, the query and the posted form can carry personal data or tokens. A session that cannot be
 // started is logged with its exception, because only the Entra session record, the ticket's protection, the antiforgery
 // tokens and the sign-in record fail there, and none of their exceptions names a token or the account; a callback the
@@ -45,6 +48,8 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
     public const string NoOAuthError = "none";
 
     public const string UnrecognisedOAuthError = "unrecognised";
+
+    public const string DeactivatedRefusal = "deactivated";
 
     public const string LoginHintClaim = "login_hint";
 
@@ -98,6 +103,16 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
             await httpContext.SignInAsync(context.Options.SignInScheme, context.Principal!, context.Properties).ConfigureAwait(false);
             await SignInAudit.RecordAsync(httpContext, SecurityEventKind.SignedIn, actor: person).ConfigureAwait(false);
         }
+        catch (SignInRefusedException)
+        {
+            await httpContext.SignOutAsync(context.Options.SignInScheme).ConfigureAwait(false);
+            LogSignInRefused(logger, DeactivatedRefusal);
+            await SignInAudit.TryRecordAsync(httpContext, SecurityEventKind.SignInRefused, DeactivatedRefusal, person).ConfigureAwait(false);
+            context.Response.Redirect(AuthPaths.AccountDeactivatedPage);
+            context.HandleResponse();
+
+            return;
+        }
         catch (Exception exception) when (!httpContext.RequestAborted.IsCancellationRequested)
         {
             await httpContext.SignOutAsync(context.Options.SignInScheme).ConfigureAwait(false);
@@ -144,4 +159,7 @@ internal sealed partial class SignInEvents(IOptions<EntraSignInOptions> signIn, 
 
     [LoggerMessage(Level = LogLevel.Error, Message = "A sign-in did not complete: {Failure} failure with OAuth error {OAuthError}")]
     private static partial void LogSessionNotStarted(ILogger logger, Exception exception, string failure, string oAuthError);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "A sign-in was refused: the person's record is {Refusal}")]
+    private static partial void LogSignInRefused(ILogger logger, string refusal);
 }

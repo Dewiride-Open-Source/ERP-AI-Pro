@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Modules;
+using Dewiride.Erp.Modules.Identity.Users;
 using Dewiride.Erp.Modules.Platform.Attachments;
 using Dewiride.Erp.Modules.Platform.SystemInfo;
 
@@ -10,5 +11,6 @@ public static class Modules
     [
         new SystemInfoModule(),
         new AttachmentsModule(),
+        new UsersModule(),
     ];
 }

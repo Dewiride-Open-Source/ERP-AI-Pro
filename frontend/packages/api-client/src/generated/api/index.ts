@@ -4,6 +4,8 @@
 // @ts-ignore
 import { AuthRequestBuilderNavigationMetadata, type AuthRequestBuilder } from './auth/index.js';
 // @ts-ignore
+import { IdentityRequestBuilderNavigationMetadata, type IdentityRequestBuilder } from './identity/index.js';
+// @ts-ignore
 import { PlatformRequestBuilderNavigationMetadata, type PlatformRequestBuilder } from './platform/index.js';
 // @ts-ignore
 import { type BaseRequestBuilder, type KeysToExcludeForNavigationMetadata, type NavigationMetadata } from '@microsoft/kiota-abstractions';
@@ -16,6 +18,10 @@ export interface ApiRequestBuilder extends BaseRequestBuilder<ApiRequestBuilder>
      * The auth property
      */
     get auth(): AuthRequestBuilder;
+    /**
+     * The identity property
+     */
+    get identity(): IdentityRequestBuilder;
     /**
      * The platform property
      */
@@ -31,6 +37,9 @@ export const ApiRequestBuilderUriTemplate = "{+baseurl}/api";
 export const ApiRequestBuilderNavigationMetadata: Record<Exclude<keyof ApiRequestBuilder, KeysToExcludeForNavigationMetadata>, NavigationMetadata> = {
     auth: {
         navigationMetadata: AuthRequestBuilderNavigationMetadata,
+    },
+    identity: {
+        navigationMetadata: IdentityRequestBuilderNavigationMetadata,
     },
     platform: {
         navigationMetadata: PlatformRequestBuilderNavigationMetadata,
