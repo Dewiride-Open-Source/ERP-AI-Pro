@@ -66,13 +66,7 @@ test.describe("system information page", () => {
       await expect(scroller).not.toHaveAttribute("role");
     }
 
-    const refreshed = page.waitForResponse(
-      (response) =>
-        response.url().includes("/platform/system-info") && response.request().headers()["rsc"] === "1",
-    );
-    await systemInfo.refresh.click();
-    expect((await refreshed).ok()).toBe(true);
-    await expect(systemInfo.refresh).toBeEnabled();
+    await systemInfo.refreshPage();
     await expect(systemInfo.uptime).toContainText(/\d+s/);
     await expect(systemInfo.startupsRows.first()).toBeVisible();
 
