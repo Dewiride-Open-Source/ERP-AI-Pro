@@ -39,4 +39,17 @@ export class SystemInfoPage {
     await this.page.goto("/platform/system-info");
     await expect(this.heading).toBeVisible();
   }
+
+  async refreshPage(): Promise<void> {
+    const refreshed = this.page.waitForResponse(
+      (response) =>
+        response.url().includes("/platform/system-info") &&
+        response.request().headers()["rsc"] === "1" &&
+        response.request().headers()["next-router-prefetch"] === undefined,
+    );
+    await this.refresh.click();
+    expect((await refreshed).ok()).toBe(true);
+    await expect(this.refresh).toBeEnabled();
+    await expect(this.page).toHaveTitle(/System information · ERP-AI-Pro/);
+  }
 }
