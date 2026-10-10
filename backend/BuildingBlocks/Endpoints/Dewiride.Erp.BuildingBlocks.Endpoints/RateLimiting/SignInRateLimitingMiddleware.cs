@@ -5,9 +5,9 @@ using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
 
-// The framework's rate limiting middleware also applies the policy an endpoint names, and only the global _limiter's options
+// The framework's rate limiting middleware also applies the policy an endpoint names, and only the global limiter's options
 // define those policies, so a second instance of it refuses every endpoint that names one; this one applies the sign-in limit
-// alone and answers a refused request as the global _limiter does.
+// alone and answers a refused request as the global limiter does.
 internal sealed class SignInRateLimitingMiddleware(RequestDelegate next, IOptions<RateLimitingOptions> options, IReadOnlyCollection<string> paths)
 {
     private readonly PartitionedRateLimiter<HttpContext> _limiter = SignInRateLimiter.Create(options.Value, paths);

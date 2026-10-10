@@ -7,6 +7,7 @@ using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
+using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
@@ -240,6 +241,24 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         AssertSignInFailed(response);
         var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
         Assert.Equal((SecurityEventKind.SignInFailed, $"{SignInEvents.CodeRedemptionFailure}:{TestTokenEndpoint.RefusedCodeError}"), (entry.Kind, entry.Detail));
+    }
+
+    [Fact]
+    public async Task Post_FailedCallbacksNamingNobodyOverTheBudget_LeaveOnlyTheBudgetsRecordsInTheMinute()
+    {
+        await using var factory = new ErpApiFactory();
+        using var client = TestSignIn.CreateClientWithoutRequestToken(factory);
+        var recorded = new List<int>();
+
+        for (var i = 0; i <= AnonymousSecurityEventBudget.EventsPerWindow; i++)
+        {
+            using var response = await PostCallbackAsync(client, ("code", "stolen-code"));
+            AssertSignInFailed(response);
+            recorded.Add((await SecurityEventRecords.OfAsync(factory.Services, response)).Count);
+        }
+
+        Assert.Equal(AnonymousSecurityEventBudget.EventsPerWindow, recorded.Sum());
+        Assert.Equal(0, recorded[^1]);
     }
 
     [Fact]

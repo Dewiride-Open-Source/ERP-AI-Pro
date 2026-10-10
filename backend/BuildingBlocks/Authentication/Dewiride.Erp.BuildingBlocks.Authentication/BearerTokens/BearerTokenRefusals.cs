@@ -6,7 +6,9 @@ using Microsoft.IdentityModel.Tokens;
 namespace Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 
 // A refusal is recorded by what was wrong with the token, never by its content. The client application of a token that
-// failed validation is the one its payload claims, unverified, because nothing in such a token can be trusted.
+// failed validation is the one its payload claims, unverified, because nothing in such a token can be trusted; reading it is
+// best effort, since the token can be malformed in ways IdentityModel reports with any exception type (an encrypted token's
+// key segment that is not base64url fails with FormatException), and a token that cannot be read names no application.
 internal static class BearerTokenRefusals
 {
     public const string AuthorizedPartyClaim = "azp";
@@ -25,7 +27,7 @@ internal static class BearerTokenRefusals
             SecurityTokenSignatureKeyNotFoundException => "unknown-signing-key",
             SecurityTokenInvalidSignatureException => "invalid-signature",
             SecurityTokenInvalidAlgorithmException => "invalid-algorithm",
-            SecurityTokenMalformedException => "malformed",
+            ArgumentException or FormatException => "malformed",
             SecurityTokenException => "invalid",
             _ => "validation-error",
         };
@@ -51,7 +53,7 @@ internal static class BearerTokenRefusals
                 ? ApplicationIdOf(application)
                 : null;
         }
-        catch (Exception exception) when (exception is ArgumentException or SecurityTokenMalformedException)
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
             return null;
         }

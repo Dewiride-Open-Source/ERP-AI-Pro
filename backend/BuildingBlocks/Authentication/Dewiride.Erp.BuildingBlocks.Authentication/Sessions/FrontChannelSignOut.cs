@@ -15,7 +15,7 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 // and the v1.0 one Entra also issues workforce tokens under; any other changes nothing. Both store calls ignore the
 // request's cancellation, so a frame Entra tears down mid-request still ends the sessions; the command timeout and the
 // retry limits bound them. No log record names the session, the issuer or the account; the security event of a sign-out
-// names the account by its object id, and one naming another issuer is recorded with no account.
+// names the account by its object id in this tenant, and one naming another issuer is recorded with no account.
 internal sealed partial class FrontChannelSignOut(EntraSessions entraSessions, IOptions<EntraSignInOptions> signIn, ILogger<FrontChannelSignOut> logger)
 {
     public const string OtherIssuerDetail = "other-issuer";
@@ -39,16 +39,21 @@ internal sealed partial class FrontChannelSignOut(EntraSessions entraSessions, I
 
         await entraSessions.ForgetAsync(sessionId, CancellationToken.None).ConfigureAwait(false);
         LogSignedOut(logger);
-        await SignInAudit.TryRecordAsync(context, SecurityEventKind.FrontChannelSignedOut, actor: ObjectIdOf(session)).ConfigureAwait(false);
+        await SignInAudit.TryRecordAsync(context, SecurityEventKind.FrontChannelSignedOut, actor: ObjectIdOf(session.AccountId, signIn.Value.TenantId)).ConfigureAwait(false);
     }
 
-    // The MSAL account id of a Microsoft Entra ID account is its object id and its tenant id, joined by a dot.
-    private static Guid? ObjectIdOf(EntraSession session)
+    // The MSAL account id is the object id and the tenant id of the account's home tenant, joined by a dot. For a member of
+    // this tenant that object id is the oid every other security event names; a guest's belongs to its account in another
+    // tenant, so a guest's sign-out names no account rather than one no other record of the person carries.
+    internal static Guid? ObjectIdOf(string accountId, string? tenantId)
     {
-        var dot = session.AccountId.IndexOf('.', StringComparison.Ordinal);
-        var objectId = dot < 0 ? session.AccountId : session.AccountId[..dot];
+        var dot = accountId.IndexOf('.', StringComparison.Ordinal);
+        if (dot < 0 || !string.Equals(accountId[(dot + 1)..], tenantId, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
 
-        return Guid.TryParse(objectId, out var parsed) ? parsed : null;
+        return Guid.TryParse(accountId.AsSpan(0, dot), out var objectId) ? objectId : null;
     }
 
     private bool NamesThisTenant(string issuer) =>

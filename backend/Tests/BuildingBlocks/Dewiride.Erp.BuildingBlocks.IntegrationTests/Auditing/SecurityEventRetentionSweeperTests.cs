@@ -16,7 +16,9 @@ public sealed class SecurityEventRetentionSweeperTests(SampleDatabase database) 
     {
         var older = Guid.CreateVersion7().ToString("N");
         var newer = Guid.CreateVersion7().ToString("N");
-        var clock = new FakeTimeProvider(TimeProvider.System.GetUtcNow());
+
+        // A month ahead of the real clock, so no sweep of another host, which runs on the real clock, reaches the older event.
+        var clock = new FakeTimeProvider(TimeProvider.System.GetUtcNow().AddDays(30));
         await AddAsync(older, clock.GetUtcNow().AddDays(-366));
         await AddAsync(newer, clock.GetUtcNow().AddDays(-364));
 
@@ -28,7 +30,7 @@ public sealed class SecurityEventRetentionSweeperTests(SampleDatabase database) 
         var events = check.ServiceProvider.GetRequiredService<AuditingDbContext>().SecurityEvents;
         Assert.False(await events.AnyAsync(e => e.CorrelationId == older, TestContext.Current.CancellationToken));
         Assert.True(await events.AnyAsync(e => e.CorrelationId == newer, TestContext.Current.CancellationToken));
-        Assert.StartsWith("Deleted ", Assert.Single(logger.Collector.GetSnapshot()).Message, StringComparison.Ordinal);
+        Assert.Equal("1", Assert.Single(logger.Collector.GetSnapshot()).GetStructuredStateValue("Count"));
     }
 
     private async Task AddAsync(string correlationId, DateTimeOffset occurredAt)

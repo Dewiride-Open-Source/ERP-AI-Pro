@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Testing;
+using Microsoft.Extensions.Time.Testing;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
@@ -253,6 +254,8 @@ public sealed class SignInEventsTests
         services.AddFakeLogging();
         services.AddSingleton<IAuthenticationService>(authentication);
         services.AddSingleton<ISecurityEventRecorder>(recorder);
+        services.AddSingleton<TimeProvider>(new FakeTimeProvider());
+        services.AddSingleton<AnonymousSecurityEventBudget>();
 
         return services.BuildServiceProvider();
     }

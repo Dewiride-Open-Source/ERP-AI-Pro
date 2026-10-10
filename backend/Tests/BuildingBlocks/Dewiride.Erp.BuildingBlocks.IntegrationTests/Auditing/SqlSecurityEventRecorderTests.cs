@@ -33,4 +33,26 @@ public sealed class SqlSecurityEventRecorderTests(SampleDatabase database) : ICl
         Assert.Equal("198.51.100.23", recorded.ClientAddress);
         Assert.Equal(clock.GetUtcNow(), recorded.OccurredAt);
     }
+
+    [Fact]
+    public async Task RecordAsync_AfterARecordWhoseSaveFailedInTheSameScope_WritesOnlyTheLaterRecord()
+    {
+        var failed = Guid.CreateVersion7().ToString("N");
+        var later = Guid.CreateVersion7().ToString("N");
+        var clock = new FakeTimeProvider(TimeProvider.System.GetUtcNow());
+        await using (var scope = database.CreateScope())
+        {
+            var recorder = new SqlSecurityEventRecorder(scope.ServiceProvider.GetRequiredService<AuditingDbContext>(), clock);
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => recorder.RecordAsync(
+                new SecurityEventEntry(SecurityEventKind.SignedIn, ActorObjectId: Guid.CreateVersion7(), CorrelationId: failed),
+                new CancellationToken(canceled: true)));
+
+            await recorder.RecordAsync(new SecurityEventEntry(SecurityEventKind.SignInFailed, "session:none", CorrelationId: later), TestContext.Current.CancellationToken);
+        }
+
+        await using var check = database.CreateScope();
+        var events = check.ServiceProvider.GetRequiredService<AuditingDbContext>().SecurityEvents.AsNoTracking();
+        Assert.False(await events.AnyAsync(e => e.CorrelationId == failed, TestContext.Current.CancellationToken));
+        Assert.True(await events.AnyAsync(e => e.CorrelationId == later, TestContext.Current.CancellationToken));
+    }
 }

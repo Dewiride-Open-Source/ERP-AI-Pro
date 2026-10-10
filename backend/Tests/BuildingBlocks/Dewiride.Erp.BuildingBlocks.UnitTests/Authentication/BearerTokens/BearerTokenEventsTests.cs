@@ -1,11 +1,13 @@
 using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.UnitTests.Authentication.SecurityEvents;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
@@ -47,6 +49,8 @@ public sealed class BearerTokenEventsTests
         var services = new ServiceCollection();
         services.AddFakeLogging();
         services.AddSingleton<ISecurityEventRecorder>(recorder);
+        services.AddSingleton<TimeProvider>(new FakeTimeProvider());
+        services.AddSingleton<AnonymousSecurityEventBudget>();
 
         return services.BuildServiceProvider();
     }

@@ -1,11 +1,41 @@
-import { antiforgeryCookie, requestTokenCookie, sessionCookie, signIn } from "../../fixtures/sign-in";
+import type { APIResponse } from "@playwright/test";
+
+import {
+  antiforgeryCookie,
+  requestTokenCookie,
+  sessionCookie,
+  signIn,
+  signInPath,
+} from "../../fixtures/sign-in";
 import { expect, test } from "../../fixtures/test";
 
 const signInCallbackPath = "/api/auth/signin-oidc";
 
 const signInCookiePrefixes = ["__Secure-erp-correlation.", "__Secure-erp-nonce."];
 
-const signInWindowSeconds = 15 * 60;
+const remoteAuthenticationTimeoutSeconds = 15 * 60;
+
+type SetCookie = { readonly name: string; readonly attributes: ReadonlyMap<string, string> };
+
+function setCookiesOf(response: APIResponse): SetCookie[] {
+  return response
+    .headersArray()
+    .filter((header) => header.name.toLowerCase() === "set-cookie")
+    .map((header) => {
+      const [pair = "", ...attributes] = header.value.split(";").map((part) => part.trim());
+      return {
+        name: pair.slice(0, pair.indexOf("=")),
+        attributes: new Map(
+          attributes.map((attribute): [string, string] => {
+            const separator = attribute.indexOf("=");
+            return separator < 0
+              ? [attribute.toLowerCase(), ""]
+              : [attribute.slice(0, separator).toLowerCase(), attribute.slice(separator + 1)];
+          }),
+        ),
+      };
+    });
+}
 
 test.describe("web origin security", () => {
   test.describe("without a session", () => {
@@ -46,29 +76,55 @@ test.describe("web origin security", () => {
     });
 
     test("the sign-in start writes only Secure-prefixed correlation and nonce cookies for the sign-in callback", async ({
-      context,
+      request,
     }) => {
-      const startedAt = Date.now() / 1000;
+      const startedAt = Date.now();
 
-      const answer = await context.request.get("/api/auth/login?returnUrl=%2F", { maxRedirects: 0 });
+      const answer = await request.get("/api/auth/login?returnUrl=%2F", { maxRedirects: 0 });
 
       expect(answer.status()).toBe(302);
-      const cookies = await context.cookies();
+      const cookies = setCookiesOf(answer);
       expect(cookies.map((cookie) => cookie.name.slice(0, cookie.name.indexOf(".") + 1)).sort()).toEqual(
         signInCookiePrefixes,
       );
-      for (const cookie of cookies) {
-        expect(cookie, cookie.name).toMatchObject({
-          path: signInCallbackPath,
-          secure: true,
-          httpOnly: true,
-          sameSite: "None",
-        });
-        expect(cookie.expires, `${cookie.name} lasts the sign-in only`).toBeGreaterThan(startedAt);
-        expect(cookie.expires, `${cookie.name} lasts the sign-in only`).toBeLessThanOrEqual(
-          startedAt + signInWindowSeconds + 60,
+      for (const { name, attributes } of cookies) {
+        expect(attributes.get("path"), name).toBe(signInCallbackPath);
+        expect(attributes.has("secure"), `${name} is Secure`).toBe(true);
+        expect(attributes.has("httponly"), `${name} is HttpOnly`).toBe(true);
+        expect(attributes.get("samesite")?.toLowerCase(), name).toBe("none");
+        const expires = Date.parse(attributes.get("expires") ?? "");
+        expect(expires, `${name} lasts the sign-in only`).toBeGreaterThan(startedAt);
+        expect(expires, `${name} lasts the sign-in only`).toBeLessThanOrEqual(
+          startedAt + (remoteAuthenticationTimeoutSeconds + 60) * 1000,
         );
       }
+    });
+
+    test("the sign-in writes the session and antiforgery cookies as Secure host-only cookies that end with the browser session", async ({
+      request,
+    }) => {
+      const answer = await request.post(`${signInPath}/accountant`);
+
+      expect(answer.status()).toBe(200);
+      const cookies = new Map(setCookiesOf(answer).map((cookie) => [cookie.name, cookie.attributes]));
+      expect([...cookies.keys()].sort()).toEqual(
+        [antiforgeryCookie, sessionCookie, requestTokenCookie].sort(),
+      );
+      for (const [name, attributes] of cookies) {
+        expect(attributes.get("path"), name).toBe("/");
+        expect(attributes.has("secure"), `${name} is Secure`).toBe(true);
+        expect(attributes.has("domain"), `${name} is host-only`).toBe(false);
+        expect(
+          attributes.has("expires") || attributes.has("max-age"),
+          `${name} ends with the browser session`,
+        ).toBe(false);
+      }
+      expect(cookies.get(sessionCookie)?.has("httponly")).toBe(true);
+      expect(cookies.get(sessionCookie)?.get("samesite")?.toLowerCase()).toBe("lax");
+      expect(cookies.get(antiforgeryCookie)?.has("httponly")).toBe(true);
+      expect(cookies.get(antiforgeryCookie)?.get("samesite")?.toLowerCase()).toBe("strict");
+      expect(cookies.get(requestTokenCookie)?.has("httponly")).toBe(false);
+      expect(cookies.get(requestTokenCookie)?.get("samesite")?.toLowerCase()).toBe("strict");
     });
 
     test("crawlers read the rules of robots.txt", async ({ request }) => {
@@ -77,25 +133,6 @@ test.describe("web origin security", () => {
       expect(response.status()).toBe(200);
       expect(response.headers()["content-type"]).toContain("text/plain");
       expect(await response.text()).toContain("Disallow: /");
-    });
-  });
-
-  test("the session and antiforgery cookies are host-only cookies that end with the browser session", async ({
-    context,
-  }) => {
-    const cookies = new Map((await context.cookies()).map((cookie) => [cookie.name, cookie]));
-
-    const sessionOnly = { path: "/", secure: true, expires: -1 };
-    expect(cookies.get(sessionCookie)).toMatchObject({ ...sessionOnly, httpOnly: true, sameSite: "Lax" });
-    expect(cookies.get(antiforgeryCookie)).toMatchObject({
-      ...sessionOnly,
-      httpOnly: true,
-      sameSite: "Strict",
-    });
-    expect(cookies.get(requestTokenCookie)).toMatchObject({
-      ...sessionOnly,
-      httpOnly: false,
-      sameSite: "Strict",
     });
   });
 

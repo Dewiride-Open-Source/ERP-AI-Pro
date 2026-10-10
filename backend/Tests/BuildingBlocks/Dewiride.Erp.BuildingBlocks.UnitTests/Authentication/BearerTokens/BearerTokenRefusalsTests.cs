@@ -21,6 +21,8 @@ public sealed class BearerTokenRefusalsTests
     [InlineData("an invalid signature", "invalid-signature")]
     [InlineData("another algorithm", "invalid-algorithm")]
     [InlineData("malformed", "malformed")]
+    [InlineData("a segment that is not base64url", "malformed")]
+    [InlineData("a refused argument", "malformed")]
     [InlineData("an invalid lifetime", "invalid")]
     [InlineData("no expiry", "invalid")]
     [InlineData("several failures", "validation-error")]
@@ -80,6 +82,10 @@ public sealed class BearerTokenRefusalsTests
     [InlineData("Bearer ")]
     [InlineData("Bearer not-a-token")]
     [InlineData("Bearer a.b.c")]
+    [InlineData("Bearer eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.a.a.a.a")]
+    [InlineData("Bearer e30.a.a.a.a")]
+    [InlineData("Bearer eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.AAAA.AAAA.AAAA.AAAA")]
+    [InlineData("Bearer a.b.c.d.e.f")]
     [InlineData("Basic dXNlcjpwYXNzd29yZA==")]
     public void ClientApplicationClaimedBy_NoReadableBearerToken_IsNoApplication(string? authorization)
     {
@@ -105,6 +111,8 @@ public sealed class BearerTokenRefusalsTests
             "an invalid signature" => new SecurityTokenInvalidSignatureException("The signature is invalid."),
             "another algorithm" => new SecurityTokenInvalidAlgorithmException("The algorithm is not allowed."),
             "malformed" => new SecurityTokenMalformedException("The token is malformed."),
+            "a segment that is not base64url" => new FormatException("IDX10400: Unable to decode the encoded value."),
+            "a refused argument" => new ArgumentException("IDX10209: The token is larger than the maximum size."),
             "an invalid lifetime" => new SecurityTokenInvalidLifetimeException("The lifetime is invalid."),
             "no expiry" => new SecurityTokenNoExpirationException("The token has no expiry."),
             "several failures" => new AggregateException(new SecurityTokenExpiredException("The token is expired."), new SecurityTokenInvalidSignatureException("The signature is invalid.")),

@@ -53,6 +53,39 @@ public sealed class SignInRateLimitingTests
         Assert.Empty(await SecurityEventRecords.OfAsync(factory.Services, refused));
     }
 
+    [Theory]
+    [InlineData("GET", AuthPaths.SignedOutCallback)]
+    [InlineData("GET", AuthPaths.FrontChannelSignOut + "?iss=https%3A%2F%2Fissuer.example.com%2F&sid=7c1d2e3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f")]
+    [InlineData("POST", AuthPaths.Logout)]
+    public async Task Send_SignOutPathOverTheSignInLimit_AnswersATooManyRequestsProblemWithRetryAfter(string method, string path)
+    {
+        await using var factory = new ErpApiFactory().WithConfiguration(ErpApiFactory.SignInPermitLimitKey, "1");
+        using var client = Client(factory);
+        using var answered = await SendAsync(client, method, path);
+
+        using var refused = await SendAsync(client, method, path);
+
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, answered.StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, refused.StatusCode);
+        Assert.InRange(refused.Headers.RetryAfter?.Delta ?? TimeSpan.Zero, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1));
+        var problem = await refused.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+        Assert.Equal(ProblemTypes.RateLimitExceeded, problem!.Extensions["code"]?.ToString());
+    }
+
+    [Fact]
+    public async Task Send_SignOutOfAnAddressWhoseLoginsSpentTheirAllowance_IsServed()
+    {
+        await using var factory = new ErpApiFactory().WithConfiguration(ErpApiFactory.SignInPermitLimitKey, "1");
+        using var client = Client(factory);
+        await AssertSentToEntraAsync(client, LoginPath, times: 1);
+        using var refusedLogin = await client.GetAsync(LoginPath, TestContext.Current.CancellationToken);
+
+        using var logout = await SendAsync(client, "POST", AuthPaths.Logout);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, refusedLogin.StatusCode);
+        Assert.Equal(HttpStatusCode.Found, logout.StatusCode);
+    }
+
     [Fact]
     public async Task Get_LoginWithATrailingSlashOrInAnotherCase_StartsTheSignInAndSharesTheAllowance()
     {
@@ -124,6 +157,13 @@ public sealed class SignInRateLimitingTests
             Assert.Equal(HttpStatusCode.Found, response.StatusCode);
             Assert.Equal(TestIdentityProvider.AuthorizationEndpoint.GetLeftPart(UriPartial.Path), response.Headers.Location?.GetLeftPart(UriPartial.Path));
         }
+    }
+
+    private static async Task<HttpResponseMessage> SendAsync(HttpClient client, string method, string path)
+    {
+        using var request = new HttpRequestMessage(new HttpMethod(method), path);
+
+        return await client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
     private static async Task<HttpResponseMessage> PostCallbackAsync(HttpClient client)

@@ -5,6 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
 using Dewiride.Erp.BuildingBlocks.Authentication.Logging;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
 using Dewiride.Erp.BuildingBlocks.Modules.Features;
@@ -81,6 +82,7 @@ public static class AuthenticationRegistration
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, BearerTokenAccessHandler>());
 
         builder.Services.TryAddSingleton<BoundedIdentityModelLogger>();
+        builder.Services.TryAddSingleton<AnonymousSecurityEventBudget>();
         builder.Services.AddHostedService<IdentityModelLoggerInstaller>();
         builder.Services.TryAddSingleton<SignInEvents>();
         builder.Services.TryAddSingleton<SessionRevocations>();

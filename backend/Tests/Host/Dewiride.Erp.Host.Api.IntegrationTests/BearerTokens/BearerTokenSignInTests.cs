@@ -37,6 +37,7 @@ public sealed class BearerTokenSignInTests(BearerTokenSignInTests.Fixture fixtur
         ["unsigned"] = new(() => TestTokenIssuer.IssueUnsigned(Person()), "invalid-signature", NativeClient),
         ["signed with an unknown key"] = new(() => TestTokenIssuer.Issue(Person(), signedWith: TestTokenIssuer.CreateSigningCredentials("erp-test-unknown-key")), "unknown-signing-key", NativeClient),
         ["not a token at all"] = new(() => "not-a-token", "malformed", null),
+        ["an encrypted token whose key segment is not base64url"] = new(() => "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.a.a.a.a", "malformed", null),
     };
 
     public static TheoryData<string> RefusedTokens => [.. Refused.Keys];

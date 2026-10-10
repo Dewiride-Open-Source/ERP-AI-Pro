@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Dewiride.Erp.BuildingBlocks.UnitTests.Authentication.SecurityEvents;
 
@@ -111,6 +112,36 @@ public sealed class SignInAuditTests
     }
 
     [Fact]
+    public async Task TryRecordAsync_EventsWithoutAnActorOverTheBudget_AreCountedNotRecorded()
+    {
+        var recorder = new RecordingSecurityEventRecorder();
+        await using var services = Services(recorder);
+
+        for (var i = 0; i <= AnonymousSecurityEventBudget.EventsPerWindow; i++)
+        {
+            await SignInAudit.TryRecordAsync(Request(services, "203.0.113.7"), SecurityEventKind.SignInFailed, "callback:none");
+        }
+
+        Assert.Equal(AnonymousSecurityEventBudget.EventsPerWindow, recorder.Entries.Count);
+        Assert.Contains(services.GetRequiredService<FakeLogCollector>().GetSnapshot(), record => record.Category == typeof(AnonymousSecurityEventBudget).FullName && record.Level == LogLevel.Warning);
+    }
+
+    [Fact]
+    public async Task TryRecordAsync_EventWithAnActorOnceTheBudgetIsSpent_IsStillRecorded()
+    {
+        var recorder = new RecordingSecurityEventRecorder();
+        await using var services = Services(recorder);
+        for (var i = 0; i <= AnonymousSecurityEventBudget.EventsPerWindow; i++)
+        {
+            await SignInAudit.TryRecordAsync(Request(services, "203.0.113.7"), SecurityEventKind.FrontChannelSignOutRefused, "other-issuer");
+        }
+
+        await SignInAudit.TryRecordAsync(Request(services, "203.0.113.7"), SecurityEventKind.SignedOut, actor: Person);
+
+        Assert.Equal(new SecurityEventEntry(SecurityEventKind.SignedOut, ActorObjectId: Person, ClientAddress: "203.0.113.7", CorrelationId: Correlation), recorder.Entries[^1]);
+    }
+
+    [Fact]
     public void ObjectIdOf_PrincipalWithAnObjectId_IsThatObjectId()
     {
         var principal = new ClaimsPrincipal(new ClaimsIdentity([new Claim("oid", Person.ToString())], "Cookies"));
@@ -135,6 +166,8 @@ public sealed class SignInAuditTests
         var services = new ServiceCollection();
         services.AddFakeLogging();
         services.AddSingleton<ISecurityEventRecorder>(recorder);
+        services.AddSingleton<TimeProvider>(new FakeTimeProvider());
+        services.AddSingleton<AnonymousSecurityEventBudget>();
 
         return services.BuildServiceProvider();
     }

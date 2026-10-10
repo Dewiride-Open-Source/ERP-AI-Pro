@@ -11,7 +11,8 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 // Every record carries the client address forwarded headers resolved and the request's correlation id. It is written whatever
 // happens to the request meanwhile, like the session records, so a browser that leaves before the answer still leaves it.
 // RecordAsync throws when the record cannot be written, for the events the request must not complete without; TryRecordAsync
-// logs that failure and lets the request go on.
+// logs that failure and lets the request go on, and writes an event that names no actor only within
+// AnonymousSecurityEventBudget, because anyone can cause one.
 internal static partial class SignInAudit
 {
     public static Task RecordAsync(HttpContext context, SecurityEventKind kind, string? detail = null, Guid? actor = null, Guid? clientApplication = null)
@@ -24,6 +25,13 @@ internal static partial class SignInAudit
 
     public static async Task TryRecordAsync(HttpContext context, SecurityEventKind kind, string? detail = null, Guid? actor = null, Guid? clientApplication = null)
     {
+        ArgumentNullException.ThrowIfNull(context);
+
+        if (actor is null && !context.RequestServices.GetRequiredService<AnonymousSecurityEventBudget>().TryTake())
+        {
+            return;
+        }
+
         try
         {
             await RecordAsync(context, kind, detail, actor, clientApplication).ConfigureAwait(false);
