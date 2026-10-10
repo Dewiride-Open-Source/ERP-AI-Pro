@@ -54,7 +54,6 @@ cp scripts/azure/params.env.example scripts/azure/params.env
 | `ERP_AZURE_DEVELOPERS_GROUP` | no | empty | display name or object id of an Entra security group whose members read the store and the development vault and write blobs in the development `attachments` container; empty skips those role assignments |
 | `ERP_AZURE_PRODUCTION_WEB_ORIGIN` | no | empty | public origin of the production web app (`https://erp.example.com`); empty until the host name exists; `entra.sh` registers the production redirect URIs on it and writes it as `Erp:Platform:Identity:WebOrigin` under `production` |
 | `ERP_AZURE_LOCAL_WEB_ORIGIN` | no | `http://localhost:3000` | origin of the local web app; `entra.sh` registers the local-dev redirect URIs on it and writes it as `Erp:Platform:Identity:WebOrigin` under `local-dev` |
-| `ERP_AZURE_LOCAL_API_ORIGIN` | no | `http://localhost:5080` | origin of the local API |
 | `ERP_AZURE_APP_WEB_LOCAL_DEV_NAME` | no | `ERP-AI-Pro Web (local-dev)` | display name of the local-dev sign-in registration |
 | `ERP_AZURE_APP_WEB_PRODUCTION_NAME` | no | `ERP-AI-Pro Web (production)` | display name of the production sign-in registration |
 | `ERP_AZURE_APP_RUNTIME_NAME` | no | `ERP-AI-Pro Runtime (production)` | display name of the runtime registration whose service principal the server signs in as |
@@ -134,7 +133,7 @@ Properties every registration converges to: `signInAudience` `AzureADMyOrg`; imp
 
 | Registration | Redirect URIs |
 |---|---|
-| local-dev sign-in | `<ERP_AZURE_LOCAL_WEB_ORIGIN>/api/auth/signin-oidc`, `<ERP_AZURE_LOCAL_WEB_ORIGIN>/api/auth/signout-callback-oidc`, `<ERP_AZURE_LOCAL_API_ORIGIN>/api/auth/signin-oidc`, `<ERP_AZURE_LOCAL_API_ORIGIN>/api/auth/signout-callback-oidc` |
+| local-dev sign-in | `<ERP_AZURE_LOCAL_WEB_ORIGIN>/api/auth/signin-oidc`, `<ERP_AZURE_LOCAL_WEB_ORIGIN>/api/auth/signout-callback-oidc`; the API builds every redirect URI from `Erp:Platform:Identity:WebOrigin`, so no redirect URI names the API's own origin and Entra sends no code to a port the web app does not serve |
 | production sign-in | `<ERP_AZURE_PRODUCTION_WEB_ORIGIN>/api/auth/signin-oidc`, `<ERP_AZURE_PRODUCTION_WEB_ORIGIN>/api/auth/signout-callback-oidc`; while the parameter is empty no redirect URI is requested and the script warns that production sign-in stays impossible until the parameter is set and `entra.sh` is run again. A re-run with an empty parameter never removes redirect URIs that are already registered: it stops and lists them, and only `bash scripts/azure/entra.sh --clear-production-redirect-uris` removes them deliberately |
 | runtime | none |
 
