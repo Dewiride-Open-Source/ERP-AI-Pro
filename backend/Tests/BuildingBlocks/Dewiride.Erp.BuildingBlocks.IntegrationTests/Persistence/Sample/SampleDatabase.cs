@@ -1,5 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
+using Dewiride.Erp.BuildingBlocks.Auditing.Persistence;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Persistence;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Storage;
@@ -43,6 +44,7 @@ public sealed class SampleDatabase : IAsyncLifetime
         services.AddModuleDbContext<SampleDbContext>(SampleDbContext.SchemaName);
         services.AddModuleDbContext<IdempotencyDbContext>(IdempotencyDbContext.SchemaName);
         services.AddScoped<IIdempotencyStore, SqlIdempotencyStore>();
+        services.AddModuleDbContext<AuditingDbContext>(AuditingDbContext.SchemaName);
         services.AddHandlersFromAssembly(typeof(SampleDatabase).Assembly);
         _provider = services.BuildServiceProvider();
 
