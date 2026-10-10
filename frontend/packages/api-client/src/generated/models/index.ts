@@ -321,6 +321,7 @@ export function deserializeIntoDirectoryPersonResponse(directoryPersonResponse: 
         "entraObjectId": n => { directoryPersonResponse.entraObjectId = n.getGuidValue(); },
         "mail": n => { directoryPersonResponse.mail = n.getStringValue(); },
         "personId": n => { directoryPersonResponse.personId = n.getGuidValue(); },
+        "signInName": n => { directoryPersonResponse.signInName = n.getStringValue(); },
         "userPrincipalName": n => { directoryPersonResponse.userPrincipalName = n.getStringValue(); },
     }
 }
@@ -598,6 +599,10 @@ export interface DirectoryPersonResponse extends AdditionalDataHolder, Parsable 
      * The personId property
      */
     personId?: Guid | null;
+    /**
+     * The signInName property
+     */
+    signInName?: string | null;
     /**
      * The userPrincipalName property
      */
@@ -914,6 +919,7 @@ export function serializeDirectoryPersonResponse(writer: SerializationWriter, di
     writer.writeGuidValue("entraObjectId", directoryPersonResponse.entraObjectId);
     writer.writeStringValue("mail", directoryPersonResponse.mail);
     writer.writeGuidValue("personId", directoryPersonResponse.personId);
+    writer.writeStringValue("signInName", directoryPersonResponse.signInName);
     writer.writeStringValue("userPrincipalName", directoryPersonResponse.userPrincipalName);
     writer.writeAdditionalData(directoryPersonResponse.additionalData);
 }

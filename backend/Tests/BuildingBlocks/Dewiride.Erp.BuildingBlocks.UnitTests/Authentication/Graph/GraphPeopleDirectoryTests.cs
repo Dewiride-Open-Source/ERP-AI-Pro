@@ -39,7 +39,7 @@ public sealed class GraphPeopleDirectoryTests
 
         Assert.True(result.IsSuccess);
         Assert.False(result.Value.HasMore);
-        Assert.Equal(new DirectoryPerson(ObjectId, "Meera Nair", "meera.nair@dewiride.com", "meera@dewiride.com"), Assert.Single(result.Value.People));
+        Assert.Equal(new DirectoryPerson(ObjectId, "Meera Nair", "meera.nair@dewiride.com", "meera.nair@dewiride.com", "meera@dewiride.com"), Assert.Single(result.Value.People));
         var request = Assert.Single(graph.Requests);
         Assert.Equal(new Uri(MicrosoftGraph.BaseAddress, "users").AbsolutePath, request.Address.AbsolutePath);
         var query = QueryHelpers.ParseQuery(request.Address.Query);
@@ -82,7 +82,33 @@ public sealed class GraphPeopleDirectoryTests
 
         var result = await Directory(graph).SearchAsync(SearchText, TestContext.Current.CancellationToken);
 
-        Assert.Equal(new DirectoryPerson(ObjectId, "meera.nair@dewiride.com", "meera.nair@dewiride.com", null), Assert.Single(result.Value.People));
+        Assert.Equal(new DirectoryPerson(ObjectId, "meera.nair@dewiride.com", "meera.nair@dewiride.com", "meera.nair@dewiride.com", null), Assert.Single(result.Value.People));
+    }
+
+    [Fact]
+    public async Task SearchAsync_GuestOfAnotherOrganisation_NamesTheGuestByTheMailItSignsInWith()
+    {
+        var graph = new StubGraph(_ => Json(
+            HttpStatusCode.OK,
+            $$"""{"value":[{"id":"{{ObjectId:D}}","displayName":"John Doe","mail":"John@Contoso.com","userPrincipalName":"John_Contoso.com#EXT#@dewiride.onmicrosoft.com"}]}"""));
+
+        var result = await Directory(graph).SearchAsync(SearchText, TestContext.Current.CancellationToken);
+
+        var guest = Assert.Single(result.Value.People);
+        Assert.Equal("John@Contoso.com", guest.SignInName);
+        Assert.Equal("John_Contoso.com#EXT#@dewiride.onmicrosoft.com", guest.UserPrincipalName);
+    }
+
+    [Fact]
+    public async Task SearchAsync_GuestWithoutAMail_NamesTheGuestByItsUserPrincipalName()
+    {
+        var graph = new StubGraph(_ => Json(
+            HttpStatusCode.OK,
+            $$"""{"value":[{"id":"{{ObjectId:D}}","displayName":"John Doe","userPrincipalName":"john_contoso.com#EXT#@dewiride.onmicrosoft.com"}]}"""));
+
+        var result = await Directory(graph).SearchAsync(SearchText, TestContext.Current.CancellationToken);
+
+        Assert.Equal("john_contoso.com#EXT#@dewiride.onmicrosoft.com", Assert.Single(result.Value.People).SignInName);
     }
 
     [Theory]
@@ -138,7 +164,7 @@ public sealed class GraphPeopleDirectoryTests
 
         var result = await Directory(graph).FindAsync(ObjectId, TestContext.Current.CancellationToken);
 
-        Assert.Equal(new DirectoryPerson(ObjectId, "Meera Nair", "meera.nair@dewiride.com", "meera@dewiride.com"), result.Value);
+        Assert.Equal(new DirectoryPerson(ObjectId, "Meera Nair", "meera.nair@dewiride.com", "meera.nair@dewiride.com", "meera@dewiride.com"), result.Value);
         var request = Assert.Single(graph.Requests);
         Assert.Equal(new Uri(MicrosoftGraph.BaseAddress, $"users/{ObjectId:D}").AbsolutePath, request.Address.AbsolutePath);
         Assert.Equal("id,displayName,mail,userPrincipalName", QueryHelpers.ParseQuery(request.Address.Query)["$select"].ToString());

@@ -65,6 +65,36 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
     }
 
     [Fact]
+    public async Task SearchDirectory_GuestRegisteredByTheMailTheySignInWith_NamesTheirRecord()
+    {
+        var word = InvitationApi.UniqueWord();
+        var guest = Guest(word);
+        InvitationApi.DirectoryOf(fixture.Factory).Add(guest);
+        using var client = await InvitationApi.SignedInAdministratorAsync(fixture.Factory);
+        var registered = await PeopleApi.RegisterAsync(client, PeopleApi.Person(guest.Mail!));
+
+        var search = await InvitationApi.SearchAsync(client, word);
+
+        var found = Assert.Single(search.People);
+        Assert.Equal(guest.Mail, found.SignInName);
+        Assert.Equal(guest.UserPrincipalName, found.UserPrincipalName);
+        Assert.Equal(registered.Id, found.PersonId);
+    }
+
+    [Fact]
+    public async Task Invite_GuestOfAnotherOrganisation_RecordsTheMailTheySignInWithAsTheWorkEmail()
+    {
+        var guest = Guest(InvitationApi.UniqueWord());
+        InvitationApi.DirectoryOf(fixture.Factory).Add(guest);
+        using var client = await InvitationApi.SignedInAdministratorAsync(fixture.Factory);
+
+        var invited = await InvitationApi.InviteAsync(client, guest.ObjectId);
+
+        Assert.Equal(guest.ObjectId, invited.EntraObjectId);
+        Assert.Equal(guest.Mail!.ToLowerInvariant(), invited.WorkEmail);
+    }
+
+    [Fact]
     public async Task SearchDirectory_MorePeopleMatchThanOneAnswerHolds_AnswersTheFirst25AndSaysMoreMatched()
     {
         var word = InvitationApi.UniqueWord();
@@ -297,6 +327,9 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
         Assert.Equal("idempotency.key-missing", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
         Assert.DoesNotContain(directory.Requests, request => request.Address.AbsolutePath.EndsWith(person.ObjectId.ToString("D"), StringComparison.Ordinal));
     }
+
+    private static TestDirectoryPerson Guest(string word) =>
+        new(Guid.CreateVersion7(), $"John {word}", $"{word}_contoso.test#EXT#@dewiride.onmicrosoft.com", $"John.{word}@Contoso.test");
 
     private async Task<UserId> AddRecordAsync(User user)
     {

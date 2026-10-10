@@ -18,8 +18,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
 
 // The directory is read on behalf of the signed-in administrator, so only a request can read it: these endpoints read it and
 // hand the people it returned to the handlers, which never read it themselves, so the hosts that compose the module without
-// a signed-in person need none of the sign-in services. An invitation takes the name and sign-in name from the directory,
-// never from the caller.
+// a signed-in person need none of the sign-in services. An invitation takes the display name and the sign-in name from the
+// directory, never from the caller.
 internal static class InvitationEndpoints
 {
     public static void Map(RouteGroupBuilder people)
@@ -61,6 +61,7 @@ internal static class InvitationEndpoints
             [.. people.Select(person => new DirectoryPersonResponse(
                 person.ObjectId,
                 person.DisplayName,
+                person.SignInName,
                 person.UserPrincipalName,
                 person.Mail,
                 records.Value.TryGetValue(person.ObjectId, out var personId) ? personId : null))],

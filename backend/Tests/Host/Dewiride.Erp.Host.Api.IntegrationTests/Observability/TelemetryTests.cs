@@ -134,11 +134,13 @@ public sealed class TelemetryTests
     {
         var spans = new ExportedItemCollection<Activity>();
         var logs = new ExportedItemCollection<LogRecord>();
+        await using var listener = await DirectoryListener.StartAsync();
         await using var factory = new ErpApiFactory().WithTestEndpoints(TestSignIn.Map);
         using var traced = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
         {
             services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans));
             services.ConfigureOpenTelemetryLoggerProvider(logging => logging.AddInMemoryExporter(logs));
+            services.AddHttpClient(MicrosoftGraph.HttpClientName).ConfigurePrimaryHttpMessageHandler(listener.CreateHandler);
         }));
         var objectId = Guid.CreateVersion7();
         var administrator = new TestUser(objectId, "Vikram Iyer", $"vikram.iyer.{objectId:N}@dewiride.test", [AppRoles.User, AppRoles.Administrator]);
@@ -146,6 +148,7 @@ public sealed class TelemetryTests
         var word = $"w{Guid.CreateVersion7().ToString("N")[^10..]}";
         var directory = traced.Services.GetRequiredService<TestDirectory>();
         directory.Add(new TestDirectoryPerson(Guid.CreateVersion7(), $"Meera {word}", $"meera.{word}@dewiride.test", null));
+        listener.Serve(directory);
         using var client = TestSignIn.CreateClient(traced);
         using var signIn = await TestSignIn.SignInAsync(client, administrator);
 
@@ -154,8 +157,10 @@ public sealed class TelemetryTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains(word, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
         var traceId = TraceIdOf(response);
-        var server = WaitFor(spans, span => span.Kind == ActivityKind.Server && span.TraceId.ToHexString() == traceId);
+        var server = WaitFor(spans, span => span.Kind == ActivityKind.Server && span.TraceId.ToHexString() == traceId && Equals(span.GetTagItem("url.path"), DirectoryPath));
         Assert.NotNull(server.GetTagItem("url.query"));
+        var graph = WaitFor(spans, span => span.Kind == ActivityKind.Client && span.TraceId == server.TraceId && Equals(span.GetTagItem("server.address"), MicrosoftGraph.BaseAddress.Host));
+        Assert.EndsWith("/v1.0/users?*", graph.GetTagItem("url.full") as string, StringComparison.Ordinal);
         var tokens = directory.Requests.Select(request => request.AccessToken).OfType<string>().ToList();
         Assert.NotEmpty(tokens);
         Assert.DoesNotContain(spans, span => Carries(span, word) || tokens.Exists(token => Carries(span, token)));

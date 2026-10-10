@@ -1,16 +1,20 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Dewiride.Erp.BuildingBlocks.Authentication;
+using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 
-// The Entra app registrations get their redirect URIs, front-channel logout URL and optional claims, and the store its
-// identity settings, from the graph.sh script; a path, claim or key that differs from the API's would make Entra refuse the
-// sign-in, call a route the API does not serve, leave out the hint the sign-out sends, or leave the API without its settings.
+// The Entra app registrations get their redirect URIs, front-channel logout URL, optional claims and Microsoft Graph
+// permissions, and the store its identity settings, from the graph.sh script; a path, claim, permission or key that differs
+// from the API's would make Entra refuse the sign-in or the directory's token, call a route the API does not serve, leave
+// out the hint the sign-out sends, or leave the API without its settings.
 public sealed partial class RedirectPathsTests
 {
+    private const string GraphResource = "https://graph.microsoft.com/";
+
     private static readonly string GraphScript = File.ReadAllText(RepositoryPaths.Combine("scripts", "azure", "lib", "graph.sh"));
 
     [Fact]
@@ -22,6 +26,17 @@ public sealed partial class RedirectPathsTests
         var registered = match.Groups["paths"].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
         Assert.Equal([AuthPaths.SignInCallback, AuthPaths.SignedOutCallback], registered);
+    }
+
+    [Fact]
+    public void RegisteredGraphPermissions_IncludeTheDelegatedPermissionTheDirectoryAsksFor()
+    {
+        var match = GraphScopeValues().Match(GraphScript);
+        Assert.True(match.Success, "scripts/azure/lib/graph.sh declares no readonly GRAPH_SCOPE_VALUES array.");
+
+        var registered = match.Groups["scopes"].Value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.Contains(registered, scope => string.Equals($"{GraphResource}{scope}", MicrosoftGraph.ReadBasicProfilesScope, StringComparison.Ordinal));
     }
 
     [Fact]
@@ -66,4 +81,7 @@ public sealed partial class RedirectPathsTests
 
     [GeneratedRegex(@"^readonly REDIRECT_PATHS=\((?<paths>[^)]*)\)\r?$", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
     private static partial Regex RedirectPaths();
+
+    [GeneratedRegex(@"^readonly GRAPH_SCOPE_VALUES=\((?<scopes>[^)]*)\)\r?$", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
+    private static partial Regex GraphScopeValues();
 }

@@ -33,6 +33,8 @@ internal sealed partial class GraphPeopleDirectory(
 
     private const string SelectedProperties = "id,displayName,mail,userPrincipalName";
 
+    private const string GuestMarker = "#EXT#@";
+
     private static readonly string[] SearchedProperties = ["displayName", "mail", "userPrincipalName"];
 
     private static readonly string[] Scopes = [MicrosoftGraph.ReadBasicProfilesScope];
@@ -105,8 +107,10 @@ internal sealed partial class GraphPeopleDirectory(
         return $"users?$search={Uri.EscapeDataString(search)}&$select={SelectedProperties}&$orderby=displayName&$top={DirectorySearch.MaxPeople}&$count=true";
     }
 
-    // Every user of the directory has an object id and a sign-in name; one Graph returned without either could not be
-    // recorded, so it is left out rather than offered.
+    // Every user of the directory has an object id and a user principal name; one Graph returned without either could not be
+    // recorded, so it is left out rather than offered. A guest of another organisation is held under a user principal name
+    // that quotes, before #EXT#, the address it was invited with (Microsoft Entra External ID, "Properties of a B2B guest
+    // user"); Graph reports that address as its mail, and the guest signs in with it, so it is the guest's sign-in name.
     private static DirectoryPerson? ToPerson(GraphUser? user)
     {
         if (user is not { UserPrincipalName: { Length: > 0 } userPrincipalName } || !Guid.TryParse(user.Id, out var objectId))
@@ -116,8 +120,9 @@ internal sealed partial class GraphPeopleDirectory(
 
         var displayName = string.IsNullOrWhiteSpace(user.DisplayName) ? userPrincipalName : user.DisplayName.Trim();
         var mail = string.IsNullOrWhiteSpace(user.Mail) ? null : user.Mail.Trim();
+        var signInName = mail is not null && userPrincipalName.Contains(GuestMarker, StringComparison.OrdinalIgnoreCase) ? mail : userPrincipalName;
 
-        return new DirectoryPerson(objectId, displayName, userPrincipalName, mail);
+        return new DirectoryPerson(objectId, displayName, signInName, userPrincipalName, mail);
     }
 
     private static async Task<string?> GraphErrorCodeAsync(HttpResponseMessage response, CancellationToken cancellationToken)

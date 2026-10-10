@@ -19,7 +19,7 @@ internal sealed class InvitePersonHandler(UsersDbContext context) : ICommandHand
         var invited = User.Invite(
             command.Person.ObjectId,
             command.Person.DisplayName,
-            command.Person.UserPrincipalName,
+            command.Person.SignInName,
             command.EmployeeCode,
             command.PhoneNumber,
             command.Designation,

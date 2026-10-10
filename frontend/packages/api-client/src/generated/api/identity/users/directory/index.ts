@@ -36,7 +36,7 @@ export interface DirectoryRequestBuilder extends BaseRequestBuilder<DirectoryReq
  */
 export interface DirectoryRequestBuilderGetQueryParameters {
     /**
-     * Text to look for at the start of a word of a person's display name, or at the start of their email address or sign-in name: 2 to 100 characters besides spaces at either end, without & or control characters.
+     * Text to look for at the start of a word of a person's display name, or at the start of their email address or user principal name: at most 100 characters, at least 2 of them besides spaces at either end, without & or control characters.
      */
     search?: string;
 }

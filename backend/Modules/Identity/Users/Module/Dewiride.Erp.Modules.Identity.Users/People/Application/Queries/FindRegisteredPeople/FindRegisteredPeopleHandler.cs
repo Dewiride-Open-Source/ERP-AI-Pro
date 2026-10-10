@@ -21,7 +21,7 @@ internal sealed class FindRegisteredPeopleHandler(UsersDbContext context) : IQue
         }
 
         List<Guid?> objectIds = [.. query.People.Select(person => (Guid?)person.ObjectId)];
-        List<string> workEmails = [.. query.People.Select(person => User.NormaliseWorkEmail(person.UserPrincipalName))];
+        List<string> workEmails = [.. query.People.Select(person => User.NormaliseWorkEmail(person.SignInName))];
         var records = await context.Users
             .AsNoTracking()
             .Where(u => objectIds.Contains(u.EntraObjectId) || (u.EntraObjectId == null && workEmails.Contains(u.WorkEmail)))
@@ -31,7 +31,7 @@ internal sealed class FindRegisteredPeopleHandler(UsersDbContext context) : IQue
 
         foreach (var person in query.People)
         {
-            var workEmail = User.NormaliseWorkEmail(person.UserPrincipalName);
+            var workEmail = User.NormaliseWorkEmail(person.SignInName);
             var record = records.Find(r => r.EntraObjectId == person.ObjectId) ?? records.Find(r => r.EntraObjectId is null && r.WorkEmail == workEmail);
             if (record is not null)
             {
