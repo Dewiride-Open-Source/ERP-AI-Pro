@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Slot } from "radix-ui";
 
-import { useIsMobile } from "@dewiride/erp-ui/hooks/use-mobile";
+import { matchesMobileLayout, useIsMobile } from "@dewiride/erp-ui/hooks/use-mobile";
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { Input } from "@dewiride/erp-ui/components/ui/input";
 import { Separator } from "@dewiride/erp-ui/components/ui/separator";
@@ -33,7 +33,6 @@ type SidebarContextProps = {
   setOpen: (open: boolean) => void;
   openMobile: boolean;
   setOpenMobile: (open: boolean) => void;
-  isMobile: boolean;
   toggleSidebar: () => void;
 };
 
@@ -90,8 +89,8 @@ function SidebarProvider({
 
   // Helper to toggle the sidebar.
   const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-  }, [isMobile, setOpen, setOpenMobile]);
+    return matchesMobileLayout() ? setOpenMobile((open) => !open) : setOpen((open) => !open);
+  }, [setOpen, setOpenMobile]);
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
@@ -115,12 +114,11 @@ function SidebarProvider({
       state,
       open,
       setOpen,
-      isMobile,
       openMobile,
       setOpenMobile,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [state, open, setOpen, openMobile, setOpenMobile, toggleSidebar],
   );
 
   return (
@@ -159,7 +157,8 @@ function Sidebar({
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const isMobile = useIsMobile();
+  const { state, openMobile, setOpenMobile } = useSidebar();
   const focusBeforeDrawer = React.useRef<Element | null>(null);
   const followedLink = React.useRef(false);
   const focusTakenAway = React.useRef(false);
@@ -539,7 +538,8 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot.Root : "button";
-  const { isMobile, state } = useSidebar();
+  const isMobile = useIsMobile();
+  const { state } = useSidebar();
 
   const button = (
     <Comp
