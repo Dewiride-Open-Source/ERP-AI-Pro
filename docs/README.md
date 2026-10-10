@@ -5,6 +5,7 @@
 | [Roadmap](roadmap/ROADMAP.md) | generated view of `roadmap/roadmap.json`, the single source of truth for what is planned, in progress and done |
 | [Architecture](architecture/overview.md) | [overview](architecture/overview.md), [module anatomy](architecture/module-anatomy.md), [dependency rules](architecture/dependency-rules.md), [naming and namespaces](architecture/naming-and-namespaces.md), [adding a module](architecture/adding-a-module.md), [persistence](architecture/persistence.md), [application pipeline](architecture/application-pipeline.md), [HTTP conventions](architecture/http-conventions.md), [request pipeline](architecture/request-pipeline.md), [attachments](architecture/attachments.md), [design system](architecture/design-system.md), [AI capabilities](architecture/ai-capabilities.md) |
 | [Guides](guides/local-development.md) | [local development](guides/local-development.md), [testing](guides/testing.md), [adding a setting, flag or secret](guides/adding-a-setting.md), [comment policy](guides/comment-policy.md), [observability](guides/observability.md), [migrations and seeding](guides/migrations.md) |
+| [Security](security/auth-threat-model.md) | [authentication threat model](security/auth-threat-model.md): cross-site request forgery, session fixation, open redirects, token leakage, token replay, the front-channel sign-out, the sign-in limit, the security event trail and the residual risks |
 | [Operations](operations/github-repository-settings.md) | [GitHub repository settings](operations/github-repository-settings.md), [Azure bootstrap](operations/azure-bootstrap.md), [secrets runbook](operations/runbooks/secrets.md), [migrations runbook](operations/runbooks/migrations.md); the other deployment runbooks arrive with the first-deployment phase |
 | [Contributor licence agreements](cla/sign-cla.md) | how outside contributors sign, and the [individual](cla/individual-cla-1.0.md) and [corporate](cla/corporate-cla-1.0.md) agreements |
 | [Configuration register](configuration.md) | every configuration key, feature flag and secret name |
@@ -52,5 +53,6 @@
 | [0035](adr/0035-signed-in-browser-tests-through-an-end-to-end-api-host.md) | Signed-in browser tests through an end-to-end API host |
 | [0036](adr/0036-web-sign-in-the-session-in-the-browser-and-single-sign-out.md) | Web sign-in, the session in the browser and single sign-out |
 | [0037](adr/0037-the-authenticated-application-shell.md) | The authenticated application shell |
+| [0038](adr/0038-sign-in-limit-security-events-and-the-audit-schema.md) | The sign-in limit, security events and the audit schema |
 
 New decisions use [0000-template.md](adr/0000-template.md).

@@ -9,11 +9,12 @@ Every command runs from the repository root and wraps the pinned `dotnet ef` loc
 | Key | Context | Project | Schema |
 |---|---|---|---|
 | `attachments` | `AttachmentsDbContext` | `BuildingBlocks/Attachments/Dewiride.Erp.BuildingBlocks.Attachments` | `files` (`Attachments`, `StoredContents`, `UploadReservations`, `DownloadLinks`, `DownloadRedemptions`) |
+| `auditing` | `AuditingDbContext` | `BuildingBlocks/Auditing/Dewiride.Erp.BuildingBlocks.Auditing` | `audit` (`SecurityEvents`) |
 | `caching` | `CachingDbContext` | `BuildingBlocks/Caching/Dewiride.Erp.BuildingBlocks.Caching` | `platform_caching` (`DistributedCacheEntries`) |
 | `idempotency` | `IdempotencyDbContext` | `BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency` | `platform_idempotency` |
 | `system-info` | `SystemInfoDbContext` | `Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo` | `platform_system_info` |
 
-The migrator applies them in catalogue order, `platform_caching`, `platform_idempotency`, `files`, `platform_system_info`, which is the order `AddErpPlatform` registers them in (building blocks first, then `Modules.All`). A key comes from the class name and a schema from the context, so the `attachments` key names the `files` schema.
+The migrator applies them in catalogue order, `platform_caching`, `platform_idempotency`, `audit`, `files`, `platform_system_info`, which is the order `AddErpPlatform` registers them in (building blocks first, then `Modules.All`). A key comes from the class name and a schema from the context, so the `attachments` key names the `files` schema.
 
 | Task | Command |
 |---|---|

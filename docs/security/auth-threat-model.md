@@ -1,0 +1,99 @@
+# Authentication threat model
+
+How the sign-in, the session and the API's bearer tokens resist the attacks that matter for a single-tenant ERP signed in through Microsoft Entra ID, what is left, and which tests prove each answer. The decisions behind it are ADR-0004 and ADR-0031 to ADR-0036 and [ADR-0038](../adr/0038-sign-in-limit-security-events-and-the-audit-schema.md); the request pipeline order is in [request pipeline](../architecture/request-pipeline.md) and the wire rules in [HTTP conventions](../architecture/http-conventions.md). Permissions inside the ERP arrive with `user-management-roles-and-permissions` and the protection of PAN, Aadhaar, bank and salary fields with its own sub-phase; neither is covered here.
+
+## What is protected
+
+| Asset | Where it lives | Protection |
+|---|---|---|
+| The session | the cookie `__Host-erp-session`, a ticket protected by the Data Protection key ring (`DataProtectionKeyRing.ApplicationName` `Dewiride.Erp`; in production the key ring folder on the volume `erp-ai-pro-data-protection-keys`, wrapped by the Key Vault key `Erp:Platform:DataProtection:KeyIdentifier`, ADR-0032) | HttpOnly, Secure, SameSite=Lax, path `/`, no Domain, ends with the browser session (`IsPersistent` false), slides within `SessionIdleTimeout` (30 minutes) and is refused after `SessionLifetime` (12 hours) |
+| Entra's tokens (access, refresh, id) | MSAL's token cache, the table `platform_caching.DistributedCacheEntries`, each value protected by `ProtectedTokenCacheStore` | never sent to the browser, the web container or a log; `SaveTokens` is false |
+| The API's credential at Entra | the certificate `Erp:Platform:Identity:ClientCertificate`, a Key Vault reference | no client secret exists; the code is redeemed with a certificate-signed client assertion |
+| The antiforgery pair | `__Host-erp-antiforgery` (HttpOnly) and `__Host-erp-xsrf` (readable by the page) | Secure, SameSite=Strict, path `/`, end with the browser session |
+| The security event trail | `audit.SecurityEvents` | written by inserts only, deleted only by the retention sweep (section "The security event trail") |
+
+Trust boundaries: the browser and the edge proxy (TLS, HSTS); the edge proxy, the web container and the API on the compose network, whose peers alone may send `X-Forwarded-For` (`Erp:Platform:Host:KnownNetworks`); the API and `login.microsoftonline.com` (code redemption, discovery, keys); the API and SQL Server; the API and Key Vault.
+
+## Cross-site request forgery
+
+- An attacker's page makes the browser send a request that changes data with the person's session.
+- The session cookie is SameSite=Lax, so no cross-site POST, PUT, PATCH or DELETE carries it. Every such request the session cookie signs in must also carry the request token in `X-XSRF-TOKEN`, which only a page of this origin can read from `__Host-erp-xsrf`; the Strict cookie token travels with no cross-site request at all. `AntiforgeryValidationMiddleware` refuses a missing or wrong token with 400 `antiforgery.token-missing` or `antiforgery.token-invalid` before the feature gate, idempotency and the module (ADR-0033). No product endpoint disables the check (`ModuleCatalogTests.Endpoints_NeverDisableTheAntiforgeryCheck`).
+- `GET` never changes data. `GET /api/auth/antiforgery` issues the pair again only for a request whose `Sec-Fetch-Site` is absent or `same-origin`, because issuing it for another site's navigation would replace the cookie token and refuse every page of this site.
+- The sign-out: `POST /api/auth/logout` with a session needs the form field `__RequestVerificationToken`; without a session, a request from another site (`Sec-Fetch-Site` neither absent nor `same-origin`) answers 401, and a same-origin one only reaches Entra's end-session endpoint, changing no cookie (ADR-0036).
+- Login CSRF, signing the person in as someone else: the callback needs the protected `state` the handler issued and the correlation cookie it wrote in the same browser, and the id token must carry the nonce of the nonce cookie; a code and state taken from the attacker's own sign-in fail in another browser with a correlation failure (`SignInCallbackTests.Post_CallbackWithAValidStateButNoCorrelationCookie_LandsOnTheSignInFailedPage`). The registrations require an app role assignment (`appRoleAssignmentRequired`), so an attacker would first have to be an assigned user of the tenant.
+- No CORS: the browser calls `/api/*` on the web origin, so the API answers no cross-origin request with credentials.
+
+## Session fixation
+
+- An attacker plants a session cookie of their own in the person's browser and waits for the person to use it, or plants the sign-in's cookies to steer the callback.
+- The `__Host-` prefix makes the browser refuse a session or antiforgery cookie that lacks Secure or path `/` or names a Domain, so neither a sibling subdomain nor a page served over plain HTTP can set one. The API issues a new ticket at every sign-in, from `SignInEvents.TicketReceived`, never from a value in the request.
+- The correlation and nonce cookies carry the `__Secure-` prefix (`MicrosoftIdentityOptionsSetup.CorrelationCookiePrefix`, `NonceCookiePrefix`): HttpOnly, Secure, SameSite=None (Entra posts the callback from its own site), path `/api/auth/signin-oidc`, expiring after the 15-minute remote authentication timeout (`web-security.spec.ts`). A page served over plain HTTP cannot set them. The `__Host-` prefix would need path `/`, which the handler does not use for them, so a host under the same registrable domain served over https could still set one with a Domain attribute (residual risk 4).
+- The session check refuses a cookie signed in at or before the person's last sign-out (`SessionRevocations`), one whose Entra session record is missing or names another account (`EntraSessions`), and one whose account is no longer in the token cache, so a cookie copied before a sign-out does not come back to life.
+
+## Open redirects
+
+- An attacker sends the person a sign-in link that returns them to another site.
+- `GET /api/auth/login?returnUrl=` accepts only a local path: it starts with `/` but not `//` or `/\`, contains visible ASCII only (`!` to `~`), is not the virtual form `~/` and is at most 2048 characters (`LoginRequest.IsLocalPath`, `RedirectHttpResult.IsLocalUrl`); anything else answers 400 `request.invalid` with `errors.returnUrl` and writes no cookie (`LoginEndpointTests`). The return path travels inside the protected `state` and is read back from it after the callback, so it cannot be changed on the way.
+- The web app applies the same rule: `localReturnPath` (`frontend/apps/web/src/shared/auth/sign-in-addresses.ts`) drops a value that fails, never repairs it, and counts a repeated parameter as absent; `proxy.ts` sends a visitor without a session to `/login?returnUrl=<path and query>` built from the request's own path (`signInRedirectFor`), and a `/login` address carrying a foreign `returnUrl` loses that parameter (`loginAddressWithoutForeignReturn`); the sign-in page sends a signed-in visitor straight to the validated path (ADR-0036).
+- `redirect_uri` and `post_logout_redirect_uri` are `Erp:Platform:Identity:WebOrigin` plus the callback path, never built from the request host (`RedirectPathsTests`), and Entra accepts only the registered redirect URIs: the web origin's `/api/auth/signin-oidc` and `/api/auth/signout-callback-oidc`. The local-dev registration lists no API-origin redirect URI since 2026-10-10 (`scripts/azure/lib/graph.sh`, `signin_redirect_uris`; `verify.sh --entra`), so Entra sends no code to a port the web app does not serve.
+- Every failure and sign-out lands on a fixed page: `/login?error=sign-in-failed`, `/login?reason=signed-out`, `/login?reason=session-ended`.
+
+## Token leakage
+
+- The browser never holds a token: the API is the confidential client of the backend-for-frontend (ADR-0004, ADR-0031), the session cookie is opaque, and Entra's tokens stay in the protected token cache.
+- The code reaches the API in the body of Entra's form post (`response_mode=form_post`), never in an address, so no browser history, `Referer` or proxy log holds it; PKCE (S256) and the certificate client assertion mean a stolen code cannot be redeemed elsewhere.
+- Logs carry no token, error description, query or posted form: a failed callback logs its category and OAuth error code only, `Microsoft.Identity.Web` logs at `Warning` and the OpenID Connect handler at `Critical`, `IdentityModelEventSource.ShowPII` is never set, the request lines of `Microsoft.AspNetCore.Hosting.Diagnostics` stay at `Warning` and trace query values are redacted ([observability](../guides/observability.md)). Security events hold no token, name or email.
+- Responses: the API answers `Cache-Control: no-store` (except reference data marked otherwise) and `Referrer-Policy: strict-origin-when-cross-origin`, and so do the pages.
+
+## Token replay and id-token misuse
+
+- An attacker replays a token they obtained, or presents the sign-in's id token, whose audience is the same registration, as a bearer token.
+- A bearer route accepts only a v2.0 access token of the tenant: authority and exact issuer `<TenantId>/v2.0`, audience exactly the client id, RS256, its lifetime with the default clock skew, `ver` 2.0, `tid` the tenant, a GUID `oid`, and a holder: a person's token carries `scp` with `idtyp` absent or `user`, an application's carries no `scp` and either `idtyp` `app` or a `sub` equal to its `oid` (`BearerTokenEvents`, `BearerTokenClaims.HolderOf`, ADR-0034). The id token carries no `scp`, so it is refused as `not-an-access-token` (`BearerTokenSignInTests`, "an id token of the sign-in"). A person's token is granted by the route's scopes, an application's by its application roles, never by the person's own roles.
+- A copied access token is not bound to its sender (no proof of possession), so it works until it expires; Entra issues access tokens for a random 60 to 90 minutes by default (Microsoft identity platform, "Access tokens", section "Token lifetime"). No product route takes bearer tokens until `integrations-public-api-and-webhooks`, and the platform flag `Erp.Platform.Identity.BearerTokens` is off under both labels (residual risk 5).
+- A copied session cookie works until its idle timeout, its lifetime or the person's sign-out; HttpOnly, Secure and SameSite=Lax close the usual ways of taking it.
+- An authorization code is single-use at Entra and bound to the PKCE verifier kept in the protected state.
+
+## The front-channel sign-out
+
+- `GET /api/auth/signout-oidc?iss=&sid=` is anonymous by necessity: Entra loads it in a hidden cross-site frame that carries no session cookie (ADR-0036).
+- The Entra session id `sid` is no secret: every app of the tenant signed in within that Entra session receives it. A request naming one can therefore end at most the ERP sessions signed in from that Entra session, in that browser, never another session of the person and never a sign-in (owner decision of 2026-10-08). A request whose `iss` is not the tenant's issuer, in either of its two forms, changes nothing and is recorded as `FrontChannelSignOutRefused`; every well-formed request answers the same 200 without a body, so the answer never says whether a session ended (`FrontChannelSignOutTests`).
+- The path falls under the sign-in limit, so a caller cannot try `sid` values faster than `SignInPermitLimit` per address.
+
+## Brute force and flooding
+
+- The sign-in paths (`AuthPaths.SignInPaths`: the login, both OpenID Connect callbacks, the front-channel sign-out and the logout, in any case and with any trailing slashes) are limited per client address by `SignInRateLimitingMiddleware`, before authentication, because the handler answers the callbacks inside it: `Erp:Platform:RateLimiting:SignInPermitLimit` (60) per `SignInWindow` (1 minute), then 429 `rate-limit.exceeded` with `Retry-After` (`SignInRateLimitingTests`). Every other request meets the global limiter: an anonymous caller per address, a signed-in one per actor (ADR-0019).
+- `GET /api/auth/login` challenges only a page the browser opens itself (`Sec-Fetch-Mode: navigate`, `Sec-Fetch-Dest: document`), because every challenge writes two cookies and images or frames that another site loads again and again could otherwise fill the person's cookies until this site refused them.
+- IdentityModel writes a `Warning` or `Error` record for every token it refuses; `BoundedIdentityModelLogger` lets at most ten of them through per minute and counts the rest, so a client sending refused tokens cannot fill the log. The refusals themselves are security events.
+
+## The security event trail
+
+- `audit.SecurityEvents` (`BuildingBlocks.Auditing`, ADR-0038) records:
+
+  | Kind | Written by | Detail | Actor |
+  |---|---|---|---|
+  | `SignedIn` | `SignInEvents.TicketReceived`, before the session is returned; a sign-in whose record cannot be written starts no session | — | the person's object id |
+  | `SignInFailed` | `SignInEvents.RemoteFailure`, and `TicketReceived` when the session cannot start | `<category>:<OAuth error code>`, such as `identity-provider:access_denied`, `code-redemption:invalid_grant`, `callback:none`, `session:none` | the person's object id when the ticket names one |
+  | `SignedOut` | `POST /api/auth/logout` with a session | — | the person's object id |
+  | `FrontChannelSignedOut` | `FrontChannelSignOut`, when a recorded Entra session ends | — | the object id of the account the Entra session record names |
+  | `FrontChannelSignOutRefused` | `FrontChannelSignOut`, for another issuer | `other-issuer` | — |
+  | `BearerTokenRefused` | `BearerTokenEvents` (`AuthenticationFailed`, `TokenValidated`, `Forbidden`), only while the bearer flag is on | `expired`, `not-yet-valid`, `invalid-audience`, `invalid-issuer`, `unknown-signing-key`, `invalid-signature`, `invalid-algorithm`, `malformed`, `invalid`, `validation-error`, `not-an-access-token`, `insufficient-scope` | the token's `oid` once its signature was valid |
+
+- Every row carries the time (UTC), the client address that forwarded headers resolved (an IPv4-mapped address as IPv4), the client application a bearer token names (`azp`, else `appid`; unverified for a token that failed validation) and the request's correlation id, the `X-Correlation-ID` its answer carries. No row holds a name, an email, a user agent or a token: an investigation needs no more, and the Digital Personal Data Protection Act, 2023 asks for no more than the purpose needs (owner decision of 2026-10-10).
+- A record that cannot be written is logged by `SignInAudit` at `Error` with its exception and the request goes on, except a sign-in, whose session is then not started; a request its caller abandoned while its bearer token was read is no refusal and is not recorded.
+- Rows are kept for `Erp:Platform:Auditing:SecurityEventRetention`, one year (owner decision of 2026-10-10), and `SecurityEventRetentionSweeper` deletes older ones once as the host starts and then every `SweepInterval` (one day). Direction (iv) of the CERT-In Directions under section 70B(6) of the Information Technology Act, 2000, of 28 April 2022, requires every service provider and body corporate to keep the logs of all its ICT systems securely for a rolling 180 days within Indian jurisdiction and to provide them to CERT-In with an incident report or on its order; one year exceeds that. The Digital Personal Data Protection Rules, 2025 may set a period for logs of their own; their text was not confirmed when the retention was decided, so check it before relying on the figure.
+
+## Headers and the content security policy
+
+- Pages (`proxy.ts`): a nonce-based CSP with `strict-dynamic`, `object-src 'none'`, `frame-ancestors 'none'`, `upgrade-insecure-requests` and `form-action 'self' https://login.microsoftonline.com/common/oauth2/v2.0/logout`, plus `X-Content-Type-Options: nosniff`, the referrer policy and the permissions policy. Chrome checks the sign-out form's redirect to the tenant's end-session endpoint against `form-action`, and a redirected request is matched on its origin only (CSP Level 3, section 7.6), so the path of that source lets no form of a page post to another Microsoft address while the sign-out's redirect still passes (ADR-0036).
+- API: `default-src 'none'; frame-ancestors 'none'`, `nosniff`, `Cross-Origin-Resource-Policy` and `Cross-Origin-Opener-Policy` `same-origin`, `X-Permitted-Cross-Domain-Policies: none`, `Cache-Control: no-store`, no `Server` header; the edge proxy owns HSTS.
+- `frontend/e2e/tests/smoke/web-security.spec.ts` checks the headers of a page and of an API answer through the web origin, and the prefix, Secure, HttpOnly, SameSite, path and lifetime of every cookie the sign-in start, the session and antiforgery write.
+
+## Residual risks
+
+1. **Refused bearer tokens are not rate limited before they cost work.** Authentication runs before the global limiter so that a signed-in caller is limited as its actor, so a client sending refused tokens costs a signature check and an insert into `audit.SecurityEvents` each. No route takes bearer tokens yet and the flag is off; `integrations-public-api-and-webhooks` bounds it before the first one does.
+2. **The trail is append-only by convention.** The API's database login can update and delete its own rows; a compromised API could rewrite them. `user-management-audit-trail-building-block` decides whether to deny those rights in the database.
+3. **The 180 days within India hold only if the data stays in India.** The production database and its backups, and every other ICT log, must stay in India (`first-deployment-production-database-provisioning`, `first-deployment-go-live-checklist-and-production-smoke`).
+4. **The sign-in cookies can be planted from the same registrable domain.** A host under the ERP's registrable domain served over https could set a correlation and a nonce cookie and so complete a login CSRF with the attacker's own sign-in; the attacker must also be an assigned user of the tenant. The ERP's host must share its registrable domain with no host the company does not control (`first-deployment-go-live-checklist-and-production-smoke`).
+5. **Bearer tokens are not bound to their sender.** A copied access token works until it expires (60 to 90 minutes).
+6. **People behind one public address share the sign-in allowance.** An office whose people reach the ERP through one address shares 60 sign-in requests a minute, about 30 sign-ins; a larger office raises `SignInPermitLimit` in App Configuration.
+7. **The local-dev registration has no front-channel sign-out**, because Entra refuses an http front-channel logout URL; signing out of another Microsoft app leaves local sessions to their own sign-out or expiry.
