@@ -148,6 +148,10 @@ export const test = base.extend<Fixtures>({
         }
       } finally {
         await heldMotion.evaluate((style) => {
+          // The page the capture changed is styled again before motion resumes, so putting it back starts no transition:
+          // the header's buttons, hidden for an element capture, would otherwise stay hidden, and out of the Tab order, until
+          // the first frame of their fade-in.
+          document.documentElement.getBoundingClientRect();
           if (style instanceof Element) style.remove();
         });
       }
