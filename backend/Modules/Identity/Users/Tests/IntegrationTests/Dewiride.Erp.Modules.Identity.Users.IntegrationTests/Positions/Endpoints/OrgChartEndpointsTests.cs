@@ -10,7 +10,8 @@ using Dewiride.Erp.Testing.Authorization;
 
 namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Positions.Endpoints;
 
-// Every test reads only the people under a manager it created, because the chart lists every active person of the database.
+// Every test reads the chart through a filter on a manager or department it created, or on one no record has, because the
+// chart lists every active person of the test database who has joined by its date.
 public sealed class OrgChartEndpointsTests(ErpApiFactory factory) : IClassFixture<ErpApiFactory>
 {
     private static DateOnly Today => OrganisationApi.Today;
@@ -92,17 +93,18 @@ public sealed class OrgChartEndpointsTests(ErpApiFactory factory) : IClassFixtur
     [Fact]
     public async Task Get_PersonWhoJoinsLater_IsLeftOutUntilTheirJoiningDate()
     {
+        var today = Today;
         using var administrator = Administrator();
         var manager = await RegisterAsync(administrator, "Lead");
-        var joiner = await PeopleApi.RegisterAsync(administrator, new { displayName = $"Joiner {Guid.CreateVersion7():N}", workEmail = PeopleApi.UniqueWorkEmail(), dateOfJoining = Today.AddDays(30) });
-        await OrganisationApi.RecordPositionAsync(administrator, joiner.Id, Today, managerId: manager.Id);
+        var joiner = await PeopleApi.RegisterAsync(administrator, new { displayName = $"Joiner {Guid.CreateVersion7():N}", workEmail = PeopleApi.UniqueWorkEmail(), dateOfJoining = today.AddDays(30) });
+        await OrganisationApi.RecordPositionAsync(administrator, joiner.Id, today, managerId: manager.Id);
         using var employee = factory.CreateClient().AsUser(TestUsers.Accountant);
 
-        var today = await OrganisationApi.ReadPageAsync<OrgChartPersonResponse>(employee, OrganisationApi.OrgChart(Team(manager.Id)));
-        var dayBefore = await OrganisationApi.ReadPageAsync<OrgChartPersonResponse>(administrator, OrganisationApi.OrgChart($"{Team(manager.Id)}&on={Today.AddDays(29):yyyy-MM-dd}"));
-        var joiningDay = await OrganisationApi.ReadPageAsync<OrgChartPersonResponse>(administrator, OrganisationApi.OrgChart($"{Team(manager.Id)}&on={Today.AddDays(30):yyyy-MM-dd}"));
+        var todaysChart = await OrganisationApi.ReadPageAsync<OrgChartPersonResponse>(employee, OrganisationApi.OrgChart(Team(manager.Id)));
+        var dayBefore = await OrganisationApi.ReadPageAsync<OrgChartPersonResponse>(administrator, OrganisationApi.OrgChart($"{Team(manager.Id)}&on={today.AddDays(29):yyyy-MM-dd}"));
+        var joiningDay = await OrganisationApi.ReadPageAsync<OrgChartPersonResponse>(administrator, OrganisationApi.OrgChart($"{Team(manager.Id)}&on={today.AddDays(30):yyyy-MM-dd}"));
 
-        Assert.Empty(today.Items);
+        Assert.Empty(todaysChart.Items);
         Assert.Empty(dayBefore.Items);
         Assert.Equal(joiner.Id, Assert.Single(joiningDay.Items).Id);
     }

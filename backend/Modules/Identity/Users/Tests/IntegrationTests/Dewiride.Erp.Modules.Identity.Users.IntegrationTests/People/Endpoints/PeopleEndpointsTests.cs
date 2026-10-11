@@ -408,6 +408,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
 
         var problem = await PeopleApi.ReadValidationProblemAsync(response);
         Assert.Equal("user.version-invalid", PeopleApi.CodeOf(problem));
+        Assert.Equal("version", Assert.Single(problem.Errors.Keys));
         Assert.Equal(PersonStatus.Active, (await GetAsync(client, registered.Id)).Status);
     }
 

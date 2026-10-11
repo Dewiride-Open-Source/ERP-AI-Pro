@@ -31,6 +31,7 @@ public sealed class DesignationConversionTests
         var blank = await InsertPersonAsync(context, " ", null, isDeleted: false);
         var none = await InsertPersonAsync(context, null, null, isDeleted: false);
         var deleted = await InsertPersonAsync(context, "Analyst", new DateOnly(2025, 1, 1), isDeleted: true);
+        var deletedEngineer = await InsertPersonAsync(context, "Engineer", new DateOnly(2025, 6, 1), isDeleted: true);
 
         await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -43,7 +44,7 @@ public sealed class DesignationConversionTests
         Assert.NotNull(onlyTheDeletedHeld.DeletedAt);
         var named = designations.ToDictionary(d => d.Name, d => (Guid?)d.Id.Value);
         var positions = await context.Positions.AsNoTracking().ToListAsync(TestContext.Current.CancellationToken);
-        Assert.Equal(4, positions.Count);
+        Assert.Equal(5, positions.Count);
         Assert.All(positions, position =>
         {
             Assert.Null(position.DepartmentId);
@@ -54,6 +55,7 @@ public sealed class DesignationConversionTests
         Assert.Equal((new DateOnly(2026, 5, 11), named["Accountant"]), held[variant]);
         Assert.Equal((IndianStandardTime.Today(TimeProvider.System), named["Engineer"]), held[joiningLater]);
         Assert.Equal((new DateOnly(2025, 1, 1), named["Analyst"]), held[deleted]);
+        Assert.Equal((new DateOnly(2025, 6, 1), named["Engineer"]), held[deletedEngineer]);
         Assert.DoesNotContain(blank, held.Keys);
         Assert.DoesNotContain(none, held.Keys);
         Assert.False(await HasDesignationColumnAsync(context));
