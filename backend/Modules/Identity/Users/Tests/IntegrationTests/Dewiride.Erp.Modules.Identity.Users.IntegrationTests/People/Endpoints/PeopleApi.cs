@@ -3,7 +3,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Responses;
+using Dewiride.Erp.Modules.Identity.Users.Persistence;
+using Dewiride.Erp.Testing;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 
@@ -41,6 +44,15 @@ internal static class PeopleApi
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
         return await ReadPersonAsync(response);
+    }
+
+    public static async Task StoreRolesAsync(ErpApiFactory factory, Guid id, string roles)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        await scope.ServiceProvider.GetRequiredService<UsersDbContext>().Database.ExecuteSqlAsync(
+            $"UPDATE [identity_users].[Users] SET [Roles] = {roles} WHERE [Id] = {id}",
+            TestContext.Current.CancellationToken);
     }
 
     public static async Task<PersonResponse> ReadPersonAsync(HttpResponseMessage response)

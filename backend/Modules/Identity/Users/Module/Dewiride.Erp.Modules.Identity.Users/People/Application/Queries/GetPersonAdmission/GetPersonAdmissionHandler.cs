@@ -9,7 +9,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Queries.GetPersonAdmission;
 
 // One row answers both whether the person is admitted and which roles their record holds, so the permissions of every
-// request cost no read of their own.
+// request cost no read of their own. A role the ERP does not assign, which only an app role gives, never counts, even when a
+// row written outside the API names it.
 internal sealed class GetPersonAdmissionHandler(UsersDbContext context) : IQueryHandler<GetPersonAdmissionQuery, PersonAdmission?>
 {
     public async Task<Result<PersonAdmission?>> HandleAsync(GetPersonAdmissionQuery query, CancellationToken cancellationToken)
@@ -23,7 +24,7 @@ internal sealed class GetPersonAdmissionHandler(UsersDbContext context) : IQuery
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        PersonAdmission? admission = admitted is null ? null : new PersonAdmission(admitted.Roles.ToFrozenSet());
+        PersonAdmission? admission = admitted is null ? null : new PersonAdmission(admitted.Roles.Where(User.IsAssignable).ToFrozenSet());
 
         return admission;
     }

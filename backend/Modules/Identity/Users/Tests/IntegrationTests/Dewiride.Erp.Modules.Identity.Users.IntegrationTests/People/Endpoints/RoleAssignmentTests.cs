@@ -84,6 +84,47 @@ public sealed class RoleAssignmentTests(ErpApiFactory factory) : IClassFixture<E
     }
 
     [Fact]
+    public async Task PutRoles_WithoutRoles_AnswersAValidationProblemForTheRoles()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
+        var registered = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+        using var request = new HttpRequestMessage(HttpMethod.Put, PeopleApi.Path($"/{registered.Id}/roles"))
+        {
+            Content = JsonContent.Create(new { version = registered.Version }, options: PeopleApi.Json),
+        };
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        var problem = await PeopleApi.ReadValidationProblemAsync(response);
+        Assert.Contains("roles", problem.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task PutRoles_VersionTheApiNeverIssued_Answers400VersionInvalid()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
+        var registered = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+
+        using var response = await PutRolesAsync(client, registered.Id, ["finance"], "not a version");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("user.version-invalid", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
+    }
+
+    [Fact]
+    public async Task Get_RecordWhoseStoredRolesNameARoleTheErpDoesNotAssign_AnswersOnlyTheAssignableOnes()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
+        var registered = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+        await PeopleApi.StoreRolesAsync(factory, registered.Id, "[\"Administrator\",\"Finance\"]");
+
+        using var response = await client.GetAsync(PeopleApi.Path($"/{registered.Id}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal([PersonRole.Finance], (await PeopleApi.ReadPersonAsync(response)).Roles);
+    }
+
+    [Fact]
     public async Task PutRoles_UnknownPerson_Answers404UserNotFound()
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
@@ -124,10 +165,5 @@ public sealed class RoleAssignmentTests(ErpApiFactory factory) : IClassFixture<E
         using var request = new HttpRequestMessage(HttpMethod.Put, PeopleApi.Path($"/{id}/roles")) { Content = JsonContent.Create(new { roles, version }, options: PeopleApi.Json) };
 
         return await client.SendAsync(request, TestContext.Current.CancellationToken);
-    }
-
-    private sealed class AllButAssigningRoles : ICallerPermissions
-    {
-        public bool Holds(string permission) => !string.Equals(permission, UsersPermissions.AssignRoles, StringComparison.Ordinal);
     }
 }

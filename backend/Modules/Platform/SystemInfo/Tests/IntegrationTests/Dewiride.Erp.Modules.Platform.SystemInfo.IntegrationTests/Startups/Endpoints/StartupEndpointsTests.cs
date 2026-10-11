@@ -2,6 +2,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
+using Dewiride.Erp.Modules.Platform.SystemInfo.Contracts;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Persistence;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Application.Queries.ListRecentStartups;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Domain;
@@ -9,6 +10,7 @@ using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Endpoints.Responses;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Hosting;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.Startups.Endpoints;
@@ -40,6 +42,12 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
         Assert.Equal(application.StartedAt.ToUniversalTime(), own.StartedAt);
         Assert.True(own.RecordedAt >= own.StartedAt);
         Assert.DoesNotContain(Environment.MachineName, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Route_RecentStarts_RequiresItsOwnPermission()
+    {
+        Assert.Equal(SystemInfoPermissions.ReadStartups, RoutePermissions.Of(factory.Services, "GET", "/api/platform/system-info/startups"));
     }
 
     [Fact]

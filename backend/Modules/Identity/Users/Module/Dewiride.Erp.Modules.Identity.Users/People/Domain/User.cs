@@ -99,6 +99,8 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         return signedIn.IsFailure ? signedIn.Error! : user;
     }
 
+    public static bool IsAssignable(ErpRole role) => role is ErpRole.Finance or ErpRole.Hr or ErpRole.Manager;
+
     public static string NormaliseWorkEmail(string workEmail)
     {
         ArgumentNullException.ThrowIfNull(workEmail);
@@ -158,7 +160,7 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         ArgumentNullException.ThrowIfNull(roles);
 
         var assigned = roles.Distinct().Order().ToList();
-        if (assigned.Any(role => role is not (ErpRole.Finance or ErpRole.Hr or ErpRole.Manager)))
+        if (!assigned.TrueForAll(IsAssignable))
         {
             return UserErrors.RoleNotAssignable;
         }

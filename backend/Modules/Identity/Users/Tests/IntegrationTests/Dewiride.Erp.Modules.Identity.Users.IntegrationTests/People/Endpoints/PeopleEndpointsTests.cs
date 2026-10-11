@@ -6,6 +6,7 @@ using Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Responses;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
@@ -148,6 +149,21 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("request.forbidden", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
+    }
+
+    [Theory]
+    [InlineData("GET", "/api/identity/users", UsersPermissions.Read)]
+    [InlineData("GET", "/api/identity/users/{id:guid}", UsersPermissions.Read)]
+    [InlineData("POST", "/api/identity/users", UsersPermissions.Register)]
+    [InlineData("GET", "/api/identity/users/directory", UsersPermissions.Register)]
+    [InlineData("POST", "/api/identity/users/invitations", UsersPermissions.Register)]
+    [InlineData("PUT", "/api/identity/users/{id:guid}", UsersPermissions.Update)]
+    [InlineData("PUT", "/api/identity/users/{id:guid}/status", UsersPermissions.ChangeStatus)]
+    [InlineData("PUT", "/api/identity/users/{id:guid}/roles", UsersPermissions.AssignRoles)]
+    [InlineData("DELETE", "/api/identity/users/{id:guid}", UsersPermissions.Delete)]
+    public void Route_OfEachUseCase_RequiresItsOwnPermission(string method, string route, string permission)
+    {
+        Assert.Equal(permission, RoutePermissions.Of(factory.Services, method, route));
     }
 
     [Fact]

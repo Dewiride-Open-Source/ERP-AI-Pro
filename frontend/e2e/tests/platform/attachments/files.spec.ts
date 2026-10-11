@@ -254,6 +254,63 @@ test.describe("attachments page", () => {
     }
   });
 
+  test("refuses its delete Server Function to a person without the permission and keeps the file", async ({
+    page,
+    context,
+    api,
+  }) => {
+    const attachments = new AttachmentsPage(page);
+    const prefix = `e2e-refused-delete-${randomUUID().slice(-12)}`;
+    const deleted = png({ name: `${prefix}-deleted.png` });
+    const kept = png({ name: `${prefix}-kept.png` });
+    const ids = new Map<string, string>();
+    for (const upload of [deleted, kept]) {
+      ids.set(
+        upload.name,
+        await createdAttachmentId(await api.post(attachmentsApi, { multipart: { file: upload } })),
+      );
+    }
+    const deletedId = ids.get(deleted.name) ?? "";
+    const keptId = ids.get(kept.name) ?? "";
+
+    try {
+      // An employee's page offers no Delete action, so the call is the one an administrator's page sends, captured and
+      // sent again with the employee's session for the other file.
+      await attachments.goto(`?name=${prefix}`);
+      await attachments.list.waitUntilInteractive();
+      const sent = page.waitForRequest(
+        (request) => request.method() === "POST" && request.headers()["next-action"] !== undefined,
+      );
+      await attachments.row(deleted.name).getByTestId("attachment-delete").click();
+      await attachments.confirmDelete.click();
+      const call = await sent;
+      await expect(attachments.row(deleted.name)).toHaveCount(0);
+      const headers = call.headers();
+      const body = (call.postData() ?? "").replace(deletedId, keptId);
+      expect(body, "the call names the other file").toContain(keptId);
+
+      await page.goto("about:blank");
+      await signIn(context.request, "accountant");
+      const replayed = await context.request.post(call.url(), {
+        headers: Object.fromEntries(
+          ["next-action", "next-router-state-tree", "accept", "content-type", "origin"].flatMap((name) =>
+            headers[name] === undefined ? [] : [[name, headers[name]]],
+          ),
+        ),
+        data: body,
+      });
+
+      expect(replayed.status()).toBe(200);
+      expect(await replayed.text()).toContain("You do not have permission to do this.");
+      await signIn(context.request, "administrator");
+      expect((await api.get(`${attachmentsApi}/${keptId}`)).status(), "the file is still stored").toBe(200);
+    } finally {
+      await page.goto("about:blank");
+      await signIn(context.request, "administrator");
+      await deleteLeftoverAttachments(api, [...ids.values()]);
+    }
+  });
+
   forEachTheme("uploads a file dropped on the drop zone", async ({ page, capture }) => {
     const attachments = new AttachmentsPage(page);
     const file = png();

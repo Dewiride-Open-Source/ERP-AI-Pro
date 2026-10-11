@@ -1,11 +1,13 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Graph;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
@@ -204,6 +206,22 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         Assert.Equal([PersonRole.Hr, PersonRole.Manager], (await PeopleApi.ReadPersonAsync(response)).Roles);
+    }
+
+    [Fact]
+    public async Task Invite_WithRolesByACallerWhoMayNotAssignThem_Answers403WithoutAskingTheDirectory()
+    {
+        await using var refusing = fixture.Factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services => services.AddScoped<ICallerPermissions, AllButAssigningRoles>()));
+        var objectId = Guid.CreateVersion7();
+        using var client = refusing.CreateClient().AsUser(TestUsers.Administrator);
+
+        using var response = await InvitationApi.PostAsync(client, new { entraObjectId = objectId, roles = ManagerAndHr });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("request.forbidden", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
+        Assert.DoesNotContain(refusing.Services.GetRequiredService<TestDirectory>().Requests, request => request.Address.AbsolutePath.EndsWith(objectId.ToString("D"), StringComparison.Ordinal));
+        await using var scope = refusing.Services.CreateAsyncScope();
+        Assert.False(await scope.ServiceProvider.GetRequiredService<UsersDbContext>().Users.AnyAsync(u => u.EntraObjectId == objectId, TestContext.Current.CancellationToken));
     }
 
     [Fact]

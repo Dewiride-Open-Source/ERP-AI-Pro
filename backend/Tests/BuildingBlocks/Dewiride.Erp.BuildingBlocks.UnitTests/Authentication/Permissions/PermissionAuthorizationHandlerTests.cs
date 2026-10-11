@@ -69,6 +69,16 @@ public sealed class PermissionAuthorizationHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_RecordNamingTheRolesOnlyAppRolesGive_GrantsNeither()
+    {
+        var request = Request(Person());
+        request.Features.Set(new PersonRolesFeature(ObjectId, new[] { ErpRole.Administrator, ErpRole.Employee }.ToFrozenSet()));
+
+        Assert.False(await IsGrantedAsync(request, VoidInvoices));
+        Assert.False(await IsGrantedAsync(request, ReadInvoices));
+    }
+
+    [Fact]
     public async Task HandleAsync_CallerNobodySignedIn_HoldsNothingAndIsMarkedRefused()
     {
         var request = Request(new ClaimsPrincipal(new ClaimsIdentity([new Claim("oid", ObjectId.ToString()), new Claim("roles", AppRoles.Administrator)])));

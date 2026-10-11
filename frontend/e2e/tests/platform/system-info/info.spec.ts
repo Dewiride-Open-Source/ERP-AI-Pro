@@ -82,7 +82,7 @@ test.describe("system information page for an employee", () => {
 
     const noAccess = page.getByRole("heading", { name: "You do not have access to this page", level: 1 });
     await expect(noAccess).toBeVisible();
-    await expect(page).toHaveTitle(/System information · ERP-AI-Pro/);
+    await expect(page).toHaveTitle(/No access · ERP-AI-Pro/);
     await expect(page.getByTestId("system-info-card")).toHaveCount(0);
     await expect(page.getByTestId("recent-startups-card")).toHaveCount(0);
     await expect(page.getByRole("main")).toMatchAriaSnapshot(`

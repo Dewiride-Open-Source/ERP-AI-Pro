@@ -1,9 +1,11 @@
 using System.Net;
 using System.Reflection;
 using System.Text.Json;
+using Dewiride.Erp.Modules.Platform.SystemInfo.Contracts;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Info.Endpoints.Responses;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Authorization;
 
 namespace Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.Info.Endpoints;
 
@@ -42,6 +44,12 @@ public sealed class SystemInfoEndpointsTests : IClassFixture<ErpApiFactory>
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("request.forbidden", (await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public void Route_SystemInformation_RequiresItsOwnPermission()
+    {
+        Assert.Equal(SystemInfoPermissions.ReadInfo, RoutePermissions.Of(_factory.Services, "GET", "/api/platform/system-info"));
     }
 
     private static string HostVersion() =>

@@ -25,10 +25,11 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
 
     private static readonly string[] SignedInRoutes =
     [
-        "/api/auth/me",
-        "/api/auth/session",
-        "/api/auth/antiforgery",
-        "/api/platform/features",
+        "GET /api/auth/me",
+        "GET /api/auth/session",
+        "POST /api/auth/session",
+        "GET /api/auth/antiforgery",
+        "GET /api/platform/features",
     ];
 
     private static readonly string[] GeneratedBaseTypes = ["Microsoft.EntityFrameworkCore.Migrations.Migration", "Microsoft.EntityFrameworkCore.Infrastructure.ModelSnapshot"];
@@ -214,7 +215,7 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
     private List<string> SignedInRoutesWithoutAPermission() =>
         RouteEndpoints()
             .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is null && endpoint.Metadata.GetMetadata<PermissionMetadata>() is null)
-            .Select(RouteOf)
+            .SelectMany(endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? ["*"]).Select(method => $"{method} {RouteOf(endpoint)}"))
             .Distinct(StringComparer.Ordinal)
             .ToList();
 

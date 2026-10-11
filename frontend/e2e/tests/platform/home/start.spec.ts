@@ -25,7 +25,7 @@ test.describe("start page", () => {
             - link "Open System"
           - listitem:
             - heading "Attachments" [level=3]
-            - text: /Upload, download and delete/
+            - text: /Upload and download the files/
             - link "Open Attachments"
     `);
     await capture("start");
@@ -63,7 +63,7 @@ test.describe("start page for an employee", () => {
         - list:
           - listitem:
             - heading "Attachments" [level=3]
-            - text: /Upload, download and delete/
+            - text: /Upload and download the files/
             - link "Open Attachments"
     `);
     await capture("start-employee");

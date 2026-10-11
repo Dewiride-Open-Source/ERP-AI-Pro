@@ -173,6 +173,19 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     }
 
     [Fact]
+    public async Task AdmissionOfAsync_RecordWhoseStoredRolesNameRolesTheErpDoesNotAssign_ReturnsOnlyTheAssignableOnes()
+    {
+        var objectId = Guid.CreateVersion7();
+        var id = await RegisterAsync(User.FirstSignIn(objectId, "Meera Nair", PeopleApi.UniqueWorkEmail(), DateTimeOffset.UnixEpoch).Value);
+        await PeopleApi.StoreRolesAsync(factory, id.Value, "[\"Administrator\",\"Employee\",\"Hr\"]");
+
+        var admission = await AdmissionOfAsync(objectId);
+
+        Assert.NotNull(admission);
+        Assert.Equal([ErpRole.Hr], admission.AssignedRoles);
+    }
+
+    [Fact]
     public async Task AdmissionOfAsync_DeactivatedRecord_ReturnsNull()
     {
         var objectId = Guid.CreateVersion7();

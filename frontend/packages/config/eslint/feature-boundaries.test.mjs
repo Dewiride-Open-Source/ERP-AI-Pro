@@ -55,6 +55,10 @@ const serverFunction = [
   "no-restricted-syntax",
   /A Server Function starts with `const person = await requireSignedInPerson\(\);` followed by `if \(!holdsPermission\(person, <permission>\)\) return <refusal>;`/,
 ];
+const inlineServerFunction = [
+  "no-restricted-syntax",
+  /never a function with a "use server" directive of its own/,
+];
 const harnessServerFunction = [
   "no-restricted-syntax",
   /A design-harness Server Function starts with `await requireSignedInPerson\(\)`/,
@@ -652,6 +656,46 @@ const cases = [
       "  const person: SignedInPerson = await requireSignedInPerson();",
       "  if (!holdsPermission(person, readPermission)) return { error: refused };",
       "  return { url: `${id}${person.roles.length}` };",
+      "}",
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_FunctionsWithAUseServerDirectiveOfTheirOwn_AreReported",
+    file: componentFile,
+    code: [
+      "export function removeAndRestore(): readonly (() => Promise<void>)[] {",
+      "  async function remove(): Promise<void> {",
+      '    "use server";',
+      "    await Promise.resolve();",
+      "  }",
+      "  const restore = async (): Promise<void> => {",
+      '    "use server";',
+      "    await Promise.resolve();",
+      "  };",
+      "  return [remove, restore];",
+      "}",
+    ].join("\n"),
+    expected: [inlineServerFunction, inlineServerFunction],
+  },
+  {
+    title: "nextConfig_FunctionWithAUseServerDirectiveOfItsOwnInTheDesignHarness_IsReported",
+    file: primitivesFile,
+    code: [
+      "export async function dismiss(): Promise<void> {",
+      '  "use server";',
+      "  await Promise.resolve();",
+      "}",
+    ].join("\n"),
+    expected: [inlineServerFunction],
+  },
+  {
+    title: "nextConfig_UseServerAsAStringThatIsNoDirective_IsAllowed",
+    file: componentFile,
+    code: [
+      "export async function directiveText(): Promise<string> {",
+      "  await Promise.resolve();",
+      '  return "use server";',
       "}",
     ].join("\n"),
     expected: [],

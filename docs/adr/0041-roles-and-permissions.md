@@ -61,7 +61,7 @@ Date: 2026-10-11
   Redeeming a download link needs `read` as well as being the link's actor, so a person whose permission was taken cannot redeem a link they made earlier.
 - **A caller's roles.** `CallerRoles.Of` is in `BuildingBlocks.Authentication/Permissions`.
   - **App roles.** For a signed-in person, it maps the `roles` claims: `Erp.Admin` to Administrator and `Erp.User` to Employee.
-  - **Assigned roles.** It adds the roles assigned to the person's record. The admission read supplies them: `IPersonAdmission.AdmissionOfAsync(objectId)` answers `PersonAdmission(AssignedRoles)`, or null when the record does not admit the person (`GetPersonAdmissionQuery`, the one indexed read ADR-0039 already makes).
+  - **Assigned roles.** It adds the roles assigned to the person's record, and only Finance, Hr and Manager among them: a row written outside the API that names Administrator or Employee grants neither (`User.IsAssignable` in the admission read, and `CallerRoles.Of` again). The admission read supplies them: `IPersonAdmission.AdmissionOfAsync(objectId)` answers `PersonAdmission(AssignedRoles)`, or null when the record does not admit the person (`GetPersonAdmissionQuery`, the one indexed read ADR-0039 already makes).
   - **Where they are kept.**
     - The session check (`SessionCookieEvents.ValidatePrincipal`) keeps them in the request feature `PersonRolesFeature`, only once every check has accepted the cookie.
     - So does the bearer handler (`BearerTokenEvents.TokenValidated`), once it accepts a person's token.
@@ -82,7 +82,7 @@ Date: 2026-10-11
     - **Bearer token that the route's access refuses as well:** `insufficient_scope`, as before.
   - **Pipeline order.** Authorization runs before antiforgery and the feature gate (ADR-0018). A caller without the permission is answered 403 before a missing antiforgery token (400) or a disabled module (404 `feature.disabled`) is reported.
 - **Routes for any signed-in caller.** These need no permission: `GET /api/auth/me`, `GET` and `POST /api/auth/session`, `GET /api/auth/antiforgery` and `GET /api/platform/features`. The architecture tests (`ModuleCatalogTests`) fail on four things:
-  - a route that is neither anonymous, on that list (`SignedInRoutes`), nor permission-bound;
+  - a route that is neither anonymous, on that list (`SignedInRoutes`, each entry a method and a route), nor permission-bound;
   - a stale entry on the list;
   - a permission route that also allows anonymous callers, which would skip authorization altogether;
   - a required permission the catalogue lacks.
@@ -99,9 +99,9 @@ Date: 2026-10-11
 - **What the web app shows.**
   - **The person's permissions.** `readSession` carries them (`SignedInPerson.permissions`). `holdsPermission(person, permission)` and `mayShow(session, permission)` (`shared/auth/permissions.ts`) decide what renders.
   - **Navigation.** Every `nav.ts` names the `permission` its entry needs: `platform.attachments.files.read` for Attachments and `platform.system-info.info.read` for System. `visibleEntries` (`shared/layout/navigation/visible-entries.ts`) keeps an entry whose flag is on and whose permission the person holds. `AppShell` uses it for the sidebar, the command palette and the breadcrumbs, and `StartPage` for its cards.
-  - **Pages.** A page wraps what it shows in `RequirePermission` (`shared/auth/require-permission.tsx`). For a person without the permission it renders `NoAccessMessage`: "You do not have access to this page", "Ask an administrator for access." and a link home. The page decides rather than its layout, because a layout cannot keep the page below it from rendering or from fetching.
+  - **Pages.** A page wraps what it shows in `RequirePermission` (`shared/auth/require-permission.tsx`). For a person without the permission it renders `NoAccessMessage`: "You do not have access to this page", "Ask an administrator for access." and a link home. The page's title is then "No access" (`pageMetadata`), because the router announces the title after a client navigation. The page decides rather than its layout, because a layout cannot keep the page below it from rendering or from fetching.
   - **Controls.** The attachments page shows the upload card only to holders of `upload`, and the Delete action only to holders of `delete`.
-  - **Server Functions.** Every product Server Function starts with `const person = await requireSignedInPerson();` and then `if (!holdsPermission(person, <permission>)) return <refusal>;`, which `pnpm lint` enforces (rule X4). The refusal reads "You do not have permission to do this." (`formMessages.forbidden`). The design harness's Server Functions, which change demo data only, keep `await requireSignedInPerson()` alone.
+  - **Server Functions.** Every product Server Function starts with `const person = await requireSignedInPerson();` and then `if (!holdsPermission(person, <permission>)) return <refusal>;`, which `pnpm lint` enforces (rule X4); a function with a `"use server"` directive of its own is refused, because the rule could not check how it starts. The refusal reads "You do not have permission to do this." (`formMessages.forbidden`). The design harness's Server Functions, which change demo data only, keep `await requireSignedInPerson()` alone.
   - **An unreadable session.** When the session cannot be read (`unavailable`), the web app shows every entry and control whose flag is on, as it does for flags it cannot read. Each call the person then makes is still refused by the API.
 
 ## Consequences
@@ -111,7 +111,7 @@ Date: 2026-10-11
   - An app role assigned or removed in Entra counts at their next sign-in, because the session keeps the ID token's `roles`. Until then an open session keeps the app roles of its sign-in, Administrator included, as it did before this item. Deactivating the record refuses those sessions only while it stays deactivated (residual risk 10 of `docs/security/auth-threat-model.md`).
 - **No extra read per request.** The admission read ADR-0039 added now carries the assigned roles.
 - **Refusals.** An application token reaches no permission route until application roles map to permissions. A person without the permission is answered 403 on a disabled module's route instead of 404.
-- **Pages a person may not open** answer 200 with the no-access message. Next.js's `forbidden()` is experimental, and ADR-0024 refuses experimental special files.
+- **Pages a person may not open** answer 200 with the no-access message and the title "No access". Next.js's `forbidden()` is experimental, and ADR-0024 refuses experimental special files.
 - **Stale navigation.** The shell's navigation reflects the person's permissions as of the last time the server rendered it: a full load, or a refresh after a change. A page itself shows the no-access message from the next navigation.
 - **Personas.** The end-to-end personas stay `accountant` (Employee) and `administrator`. No persona without permissions joins them, because the registration requires an app role, so nobody without one signs in. The accountant takes the refusal paths.
 - **Earlier decisions this changes:**

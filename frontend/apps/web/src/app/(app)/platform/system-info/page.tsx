@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 
 import { SystemInfoOverview, systemInfoNavigation } from "@/features/platform/system-info";
-import { RequirePermission } from "@/shared/auth/require-permission";
+import { pageMetadata, RequirePermission } from "@/shared/auth/require-permission";
 
-export const metadata: Metadata = { title: "System information" };
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("System information", systemInfoNavigation.permission);
+}
 
 export default function SystemInfoPage() {
   return (

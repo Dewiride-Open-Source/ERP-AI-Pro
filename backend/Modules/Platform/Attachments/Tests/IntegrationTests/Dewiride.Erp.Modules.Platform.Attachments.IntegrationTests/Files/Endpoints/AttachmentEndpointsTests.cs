@@ -1,14 +1,29 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
+using Dewiride.Erp.Modules.Platform.Attachments.Contracts.Files;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints.Responses;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Authorization;
 
 namespace Dewiride.Erp.Modules.Platform.Attachments.IntegrationTests.Files.Endpoints;
 
 public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixture<ErpApiFactory>
 {
+    [Theory]
+    [InlineData("GET", "/api/platform/attachments", AttachmentsPermissions.Read)]
+    [InlineData("GET", "/api/platform/attachments/policy", AttachmentsPermissions.Read)]
+    [InlineData("POST", "/api/platform/attachments", AttachmentsPermissions.Upload)]
+    [InlineData("GET", "/api/platform/attachments/{id:guid}", AttachmentsPermissions.Read)]
+    [InlineData("DELETE", "/api/platform/attachments/{id:guid}", AttachmentsPermissions.Delete)]
+    [InlineData("POST", "/api/platform/attachments/{id:guid}/download-links", AttachmentsPermissions.Read)]
+    [InlineData("GET", "/api/platform/attachments/{id:guid}/content", AttachmentsPermissions.Read)]
+    public void Route_OfEachUseCase_RequiresItsOwnPermission(string method, string route, string permission)
+    {
+        Assert.Equal(permission, RoutePermissions.Of(factory.Services, method, route));
+    }
+
     [Fact]
     public async Task Get_UploadedAttachment_ReturnsItsDetails()
     {

@@ -83,7 +83,7 @@ test.describe("page search", () => {
         "See which version of the ERP is running, since when, and its recent starts.",
       );
       await expect(shell.paletteOption("Attachments")).toHaveAccessibleDescription(
-        "Upload, download and delete the files kept with the ERP.",
+        "Upload and download the files kept with the ERP.",
       );
       await expect(shell.palette).toHaveAccessibleDescription(keyboardHint);
       if ((page.viewportSize()?.width ?? 0) >= hintMinWidth) await expect(hint).toBeVisible();

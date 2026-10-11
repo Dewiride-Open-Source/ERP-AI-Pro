@@ -239,6 +239,12 @@ const harnessServerFunctions = [
   ...serverFunctionFileShapes,
 ].map((selector) => ({ selector, message: harnessServerFunctionMessage }));
 
+const inlineServerFunction = {
+  selector: ':function > BlockStatement > ExpressionStatement[directive="use server"]',
+  message:
+    'A Server Function is an exported function of a file that opens with "use server", where rule X4 checks how it starts, never a function with a "use server" directive of its own (ADR-0036, ADR-0041, rule X4).',
+};
+
 function restrictedImports(patterns, { apiClient = true } = {}) {
   return ["error", apiClient ? { paths: [apiClientValues], patterns } : { patterns }];
 }
@@ -252,6 +258,7 @@ function restrictedSyntax(
     ...typeRoleRestrictions,
     ...objectHrefs,
     ...serverFunctionRules,
+    inlineServerFunction,
     ...(moduleEffectsAllowed ? [] : moduleEffects),
     ...restrictions,
   ];

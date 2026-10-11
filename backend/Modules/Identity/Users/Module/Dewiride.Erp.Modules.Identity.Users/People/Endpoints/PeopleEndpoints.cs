@@ -24,9 +24,9 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
 
-// Every route requires a permission of its own, which only Administrator holds today (UsersModule). Naming roles for a record
-// that is being created also needs the permission to assign roles, so holding the permission to register people is not
-// enough to hand out roles. A change answers the record as it was saved, read again, so its version is the one to edit next.
+// Naming roles for a record that is being created also needs the permission to assign roles, so holding the permission to
+// register people is not enough to hand out roles. A change answers the record as it was saved, read again, so its version
+// is the one to edit next.
 internal static class PeopleEndpoints
 {
     public const string GetRouteName = "Identity.Users.Get";

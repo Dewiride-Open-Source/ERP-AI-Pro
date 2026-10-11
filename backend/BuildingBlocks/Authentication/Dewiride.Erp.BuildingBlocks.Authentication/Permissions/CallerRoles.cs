@@ -10,8 +10,9 @@ using Microsoft.Identity.Web;
 namespace Dewiride.Erp.BuildingBlocks.Authentication.Permissions;
 
 // A person holds the roles of their app roles, which their session's ID token or their own access token carries in roles,
-// and the roles assigned to their record, which the accepted session or token put on the request. An application's roles
-// are its own application roles, never a person's, so an application holds no built-in role.
+// and the roles assigned to their record, which the accepted session or token put on the request. Administrator and Employee
+// come from app roles alone, so a record that names either grants neither. An application's roles are its own application
+// roles, never a person's, so an application holds no built-in role.
 internal static class CallerRoles
 {
     public static IReadOnlySet<ErpRole> Of(HttpContext context)
@@ -39,7 +40,7 @@ internal static class CallerRoles
 
         if (context.Features.Get<PersonRolesFeature>() is { } assigned && SignInAudit.ObjectIdOf(caller) == assigned.ObjectId)
         {
-            roles.UnionWith(assigned.AssignedRoles);
+            roles.UnionWith(assigned.AssignedRoles.Where(role => role is not (ErpRole.Administrator or ErpRole.Employee)));
         }
 
         return roles;
