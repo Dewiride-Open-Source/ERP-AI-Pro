@@ -13,7 +13,7 @@ Every command runs from the repository root and wraps the pinned `dotnet ef` loc
 | `caching` | `CachingDbContext` | `BuildingBlocks/Caching/Dewiride.Erp.BuildingBlocks.Caching` | `platform_caching` (`DistributedCacheEntries`) |
 | `idempotency` | `IdempotencyDbContext` | `BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency` | `platform_idempotency` |
 | `system-info` | `SystemInfoDbContext` | `Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo` | `platform_system_info` |
-| `users` | `UsersDbContext` | `Modules/Identity/Users/Module/Dewiride.Erp.Modules.Identity.Users` | `identity_users` (`Users`) |
+| `users` | `UsersDbContext` | `Modules/Identity/Users/Module/Dewiride.Erp.Modules.Identity.Users` | `identity_users` (`Users`, `Departments`, `Designations`, `Positions`) |
 
 The migrator applies them in catalogue order, `platform_caching`, `platform_idempotency`, `audit`, `files`, `platform_system_info`, `identity_users`, which is the order `AddErpPlatform` registers them in (building blocks first, then `Modules.All`). A key comes from the class name and a schema from the context, so the `attachments` key names the `files` schema.
 
@@ -32,7 +32,7 @@ The migrator applies them in catalogue order, `platform_caching`, `platform_idem
 1. Change the entities or their configurations.
 2. `node scripts/ef/ef.ts add <Name> --context <key>`; name it for the change (`AddInvoiceDueDate`).
 3. Read the generated migration and its SQL (`script --idempotent`). It must run unchanged on SQL Server 2025 and Azure SQL: no `USE`, no cross-database names, no SQL Agent, no server-level permissions.
-4. A change that renames or drops a column transforms the data in the same migration; there are no compatibility columns.
+4. A change that renames or drops a column transforms the data in the same migration; there are no compatibility columns. A data step runs as `migrationBuilder.Sql(@"EXEC(N'...')")`: the idempotent script wraps each migration in an `IF NOT EXISTS ... BEGIN ... END` batch, SQL Server compiles a whole batch at once and defers names only for missing tables, so a statement reading a column an earlier run dropped would not compile unless it runs as a batch of its own. `AddDepartmentsDesignationsAndPositions` of the users module is the example, and `DesignationConversionTests` its test (`docs/architecture/persistence.md`, section "Test databases").
 5. `node scripts/ef/ef.ts update --context <key>` and `node scripts/ef/ef.ts pending --all` locally; the integration tests migrate a fresh database with every migration.
 
 ## Applying migrations
