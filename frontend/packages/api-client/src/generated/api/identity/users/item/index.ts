@@ -4,6 +4,8 @@
 // @ts-ignore
 import { createHttpValidationProblemDetailsFromDiscriminatorValue, createPersonResponseFromDiscriminatorValue, createProblemDetailsFromDiscriminatorValue, serializePersonResponse, serializeUpdatePersonRequest, type HttpValidationProblemDetails, type PersonResponse, type ProblemDetails, type UpdatePersonRequest } from '../../../../models/index.js';
 // @ts-ignore
+import { PositionsRequestBuilderNavigationMetadata, PositionsRequestBuilderRequestsMetadata, type PositionsRequestBuilder } from './positions/index.js';
+// @ts-ignore
 import { RolesRequestBuilderRequestsMetadata, type RolesRequestBuilder } from './roles/index.js';
 // @ts-ignore
 import { StatusRequestBuilderRequestsMetadata, type StatusRequestBuilder } from './status/index.js';
@@ -14,6 +16,10 @@ import { type BaseRequestBuilder, type KeysToExcludeForNavigationMetadata, type 
  * Builds and executes requests for operations under /api/identity/users/{id}
  */
 export interface UsersItemRequestBuilder extends BaseRequestBuilder<UsersItemRequestBuilder> {
+    /**
+     * The positions property
+     */
+    get positions(): PositionsRequestBuilder;
     /**
      * The roles property
      */
@@ -29,6 +35,7 @@ export interface UsersItemRequestBuilder extends BaseRequestBuilder<UsersItemReq
      * @throws {ProblemDetails} error when the service returns a 401 status code
      * @throws {ProblemDetails} error when the service returns a 403 status code
      * @throws {ProblemDetails} error when the service returns a 404 status code
+     * @throws {ProblemDetails} error when the service returns a 409 status code
      * @throws {ProblemDetails} error when the service returns a 422 status code
      * @throws {ProblemDetails} error when the service returns a 429 status code
      * @throws {ProblemDetails} error when the service returns a 500 status code
@@ -49,7 +56,7 @@ export interface UsersItemRequestBuilder extends BaseRequestBuilder<UsersItemReq
      */
      get(requestConfiguration?: RequestConfiguration<object> | undefined) : Promise<PersonResponse | undefined>;
     /**
-     * Changes the employee code, phone number, designation and date of joining of a person.
+     * Changes the employee code, phone number and date of joining of a person.
      * @param body The request body
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {Promise<PersonResponse>}
@@ -76,7 +83,7 @@ export interface UsersItemRequestBuilder extends BaseRequestBuilder<UsersItemReq
      */
      toGetRequestInformation(requestConfiguration?: RequestConfiguration<object> | undefined) : RequestInformation;
     /**
-     * Changes the employee code, phone number, designation and date of joining of a person.
+     * Changes the employee code, phone number and date of joining of a person.
      * @param body The request body
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {RequestInformation}
@@ -91,6 +98,10 @@ export const UsersItemRequestBuilderUriTemplate = "{+baseurl}/api/identity/users
  * Metadata for all the navigation properties in the request builder.
  */
 export const UsersItemRequestBuilderNavigationMetadata: Record<Exclude<keyof UsersItemRequestBuilder, KeysToExcludeForNavigationMetadata>, NavigationMetadata> = {
+    positions: {
+        requestsMetadata: PositionsRequestBuilderRequestsMetadata,
+        navigationMetadata: PositionsRequestBuilderNavigationMetadata,
+    },
     roles: {
         requestsMetadata: RolesRequestBuilderRequestsMetadata,
     },
@@ -110,6 +121,7 @@ export const UsersItemRequestBuilderRequestsMetadata: RequestsMetadata = {
             401: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             403: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             404: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
+            409: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             422: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             429: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,
             500: createProblemDetailsFromDiscriminatorValue as ParsableFactory<Parsable>,

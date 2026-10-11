@@ -89,11 +89,63 @@ export function createChangePersonStatusRequestFromDiscriminatorValue(parseNode:
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {CreateDepartmentRequest}
+ */
+// @ts-ignore
+export function createCreateDepartmentRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoCreateDepartmentRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {CreateDesignationRequest}
+ */
+// @ts-ignore
+export function createCreateDesignationRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoCreateDesignationRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {CurrentUserResponse}
  */
 // @ts-ignore
 export function createCurrentUserResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoCurrentUserResponse;
+}
+export interface CreateDepartmentRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Name of the department, unique among the departments under the same parent.
+     */
+    name?: string | null;
+    /**
+     * Department it sits under; absent places it at the top of the tree.
+     */
+    parentId?: Guid | null;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {DepartmentResponse}
+ */
+// @ts-ignore
+export function createDepartmentResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoDepartmentResponse;
+}
+export interface CreateDesignationRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Name of the designation, unique among the designations.
+     */
+    name?: string | null;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {DesignationResponse}
+ */
+// @ts-ignore
+export function createDesignationResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoDesignationResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -170,11 +222,47 @@ export function createInvitePersonRequestFromDiscriminatorValue(parseNode: Parse
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {OrgChartPersonResponse}
+ */
+// @ts-ignore
+export function createOrgChartPersonResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoOrgChartPersonResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {PagedResponseOfAttachmentResponse}
  */
 // @ts-ignore
 export function createPagedResponseOfAttachmentResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoPagedResponseOfAttachmentResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfDepartmentResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfDepartmentResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfDepartmentResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfDesignationResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfDesignationResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfDesignationResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfOrgChartPersonResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfOrgChartPersonResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfOrgChartPersonResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -188,11 +276,29 @@ export function createPagedResponseOfPersonResponseFromDiscriminatorValue(parseN
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfPositionResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfPositionResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfPositionResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {PersonResponse}
  */
 // @ts-ignore
 export function createPersonResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoPersonResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PositionResponse}
+ */
+// @ts-ignore
+export function createPositionResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPositionResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -211,6 +317,15 @@ export function createProblemDetailsFromDiscriminatorValue(parseNode: ParseNode 
 // @ts-ignore
 export function createRecentStartupsResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoRecentStartupsResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {RecordPositionRequest}
+ */
+// @ts-ignore
+export function createRecordPositionRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoRecordPositionRequest;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -251,6 +366,24 @@ export function createSystemInfoResponseFromDiscriminatorValue(parseNode: ParseN
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {UpdateDepartmentRequest}
+ */
+// @ts-ignore
+export function createUpdateDepartmentRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoUpdateDepartmentRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {UpdateDesignationRequest}
+ */
+// @ts-ignore
+export function createUpdateDesignationRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoUpdateDesignationRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {UpdatePersonRequest}
  */
 // @ts-ignore
@@ -287,6 +420,24 @@ export interface CurrentUserResponse extends AdditionalDataHolder, Parsable {
      * The userName property
      */
     userName?: string | null;
+}
+export interface DepartmentResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+    /**
+     * The parentId property
+     */
+    parentId?: Guid | null;
+    /**
+     * The version property
+     */
+    version?: string | null;
 }
 /**
  * The deserialization information for the current model
@@ -332,6 +483,29 @@ export function deserializeIntoChangePersonStatusRequest(changePersonStatusReque
 }
 /**
  * The deserialization information for the current model
+ * @param CreateDepartmentRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoCreateDepartmentRequest(createDepartmentRequest: Partial<CreateDepartmentRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "name": n => { createDepartmentRequest.name = n.getStringValue(); },
+        "parentId": n => { createDepartmentRequest.parentId = n.getGuidValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param CreateDesignationRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoCreateDesignationRequest(createDesignationRequest: Partial<CreateDesignationRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "name": n => { createDesignationRequest.name = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param CurrentUserResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -343,6 +517,33 @@ export function deserializeIntoCurrentUserResponse(currentUserResponse: Partial<
         "permissions": n => { currentUserResponse.permissions = n.getCollectionOfEnumValues<Permission>(PermissionObject); },
         "roles": n => { currentUserResponse.roles = n.getCollectionOfPrimitiveValues<string>("string"); },
         "userName": n => { currentUserResponse.userName = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param DepartmentResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoDepartmentResponse(departmentResponse: Partial<DepartmentResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "id": n => { departmentResponse.id = n.getGuidValue(); },
+        "name": n => { departmentResponse.name = n.getStringValue(); },
+        "parentId": n => { departmentResponse.parentId = n.getGuidValue(); },
+        "version": n => { departmentResponse.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param DesignationResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoDesignationResponse(designationResponse: Partial<DesignationResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "id": n => { designationResponse.id = n.getGuidValue(); },
+        "name": n => { designationResponse.name = n.getStringValue(); },
+        "version": n => { designationResponse.version = n.getStringValue(); },
     }
 }
 /**
@@ -445,11 +646,28 @@ export function deserializeIntoHttpValidationProblemDetails_errors(httpValidatio
 export function deserializeIntoInvitePersonRequest(invitePersonRequest: Partial<InvitePersonRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "dateOfJoining": n => { invitePersonRequest.dateOfJoining = n.getDateOnlyValue(); },
-        "designation": n => { invitePersonRequest.designation = n.getStringValue(); },
         "employeeCode": n => { invitePersonRequest.employeeCode = n.getStringValue(); },
         "entraObjectId": n => { invitePersonRequest.entraObjectId = n.getGuidValue(); },
         "phoneNumber": n => { invitePersonRequest.phoneNumber = n.getStringValue(); },
         "roles": n => { invitePersonRequest.roles = n.getCollectionOfEnumValues<PersonRole>(PersonRoleObject); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param OrgChartPersonResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoOrgChartPersonResponse(orgChartPersonResponse: Partial<OrgChartPersonResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "departmentId": n => { orgChartPersonResponse.departmentId = n.getGuidValue(); },
+        "departmentName": n => { orgChartPersonResponse.departmentName = n.getStringValue(); },
+        "designationId": n => { orgChartPersonResponse.designationId = n.getGuidValue(); },
+        "designationName": n => { orgChartPersonResponse.designationName = n.getStringValue(); },
+        "displayName": n => { orgChartPersonResponse.displayName = n.getStringValue(); },
+        "id": n => { orgChartPersonResponse.id = n.getGuidValue(); },
+        "managerDisplayName": n => { orgChartPersonResponse.managerDisplayName = n.getStringValue(); },
+        "managerId": n => { orgChartPersonResponse.managerId = n.getGuidValue(); },
     }
 }
 /**
@@ -469,6 +687,51 @@ export function deserializeIntoPagedResponseOfAttachmentResponse(pagedResponseOf
 }
 /**
  * The deserialization information for the current model
+ * @param PagedResponseOfDepartmentResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfDepartmentResponse(pagedResponseOfDepartmentResponse: Partial<PagedResponseOfDepartmentResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfDepartmentResponse.items = n.getCollectionOfObjectValues<DepartmentResponse>(createDepartmentResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfDepartmentResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfDepartmentResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfDepartmentResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfDepartmentResponse.totalPages = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param PagedResponseOfDesignationResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfDesignationResponse(pagedResponseOfDesignationResponse: Partial<PagedResponseOfDesignationResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfDesignationResponse.items = n.getCollectionOfObjectValues<DesignationResponse>(createDesignationResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfDesignationResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfDesignationResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfDesignationResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfDesignationResponse.totalPages = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param PagedResponseOfOrgChartPersonResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfOrgChartPersonResponse(pagedResponseOfOrgChartPersonResponse: Partial<PagedResponseOfOrgChartPersonResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfOrgChartPersonResponse.items = n.getCollectionOfObjectValues<OrgChartPersonResponse>(createOrgChartPersonResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfOrgChartPersonResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfOrgChartPersonResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfOrgChartPersonResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfOrgChartPersonResponse.totalPages = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param PagedResponseOfPersonResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -484,6 +747,21 @@ export function deserializeIntoPagedResponseOfPersonResponse(pagedResponseOfPers
 }
 /**
  * The deserialization information for the current model
+ * @param PagedResponseOfPositionResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfPositionResponse(pagedResponseOfPositionResponse: Partial<PagedResponseOfPositionResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfPositionResponse.items = n.getCollectionOfObjectValues<PositionResponse>(createPositionResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfPositionResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfPositionResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfPositionResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfPositionResponse.totalPages = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param PersonResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -492,17 +770,40 @@ export function deserializeIntoPersonResponse(personResponse: Partial<PersonResp
     return {
         "createdAt": n => { personResponse.createdAt = n.getDateValue(); },
         "dateOfJoining": n => { personResponse.dateOfJoining = n.getDateOnlyValue(); },
-        "designation": n => { personResponse.designation = n.getStringValue(); },
+        "departmentId": n => { personResponse.departmentId = n.getGuidValue(); },
+        "departmentName": n => { personResponse.departmentName = n.getStringValue(); },
+        "designationId": n => { personResponse.designationId = n.getGuidValue(); },
+        "designationName": n => { personResponse.designationName = n.getStringValue(); },
         "displayName": n => { personResponse.displayName = n.getStringValue(); },
         "employeeCode": n => { personResponse.employeeCode = n.getStringValue(); },
         "entraObjectId": n => { personResponse.entraObjectId = n.getGuidValue(); },
         "id": n => { personResponse.id = n.getGuidValue(); },
         "lastSignedInAt": n => { personResponse.lastSignedInAt = n.getDateValue(); },
+        "managerDisplayName": n => { personResponse.managerDisplayName = n.getStringValue(); },
+        "managerId": n => { personResponse.managerId = n.getGuidValue(); },
         "phoneNumber": n => { personResponse.phoneNumber = n.getStringValue(); },
         "roles": n => { personResponse.roles = n.getCollectionOfEnumValues<PersonRole>(PersonRoleObject); },
         "status": n => { personResponse.status = n.getEnumValue<PersonStatus>(PersonStatusObject); },
         "version": n => { personResponse.version = n.getStringValue(); },
         "workEmail": n => { personResponse.workEmail = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param PositionResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPositionResponse(positionResponse: Partial<PositionResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "departmentId": n => { positionResponse.departmentId = n.getGuidValue(); },
+        "departmentName": n => { positionResponse.departmentName = n.getStringValue(); },
+        "designationId": n => { positionResponse.designationId = n.getGuidValue(); },
+        "designationName": n => { positionResponse.designationName = n.getStringValue(); },
+        "effectiveFrom": n => { positionResponse.effectiveFrom = n.getDateOnlyValue(); },
+        "id": n => { positionResponse.id = n.getGuidValue(); },
+        "managerDisplayName": n => { positionResponse.managerDisplayName = n.getStringValue(); },
+        "managerId": n => { positionResponse.managerId = n.getGuidValue(); },
     }
 }
 /**
@@ -535,6 +836,20 @@ export function deserializeIntoRecentStartupsResponse(recentStartupsResponse: Pa
 }
 /**
  * The deserialization information for the current model
+ * @param RecordPositionRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoRecordPositionRequest(recordPositionRequest: Partial<RecordPositionRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "departmentId": n => { recordPositionRequest.departmentId = n.getGuidValue(); },
+        "designationId": n => { recordPositionRequest.designationId = n.getGuidValue(); },
+        "effectiveFrom": n => { recordPositionRequest.effectiveFrom = n.getDateOnlyValue(); },
+        "managerId": n => { recordPositionRequest.managerId = n.getGuidValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param RegisterPersonRequest The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -542,7 +857,6 @@ export function deserializeIntoRecentStartupsResponse(recentStartupsResponse: Pa
 export function deserializeIntoRegisterPersonRequest(registerPersonRequest: Partial<RegisterPersonRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "dateOfJoining": n => { registerPersonRequest.dateOfJoining = n.getDateOnlyValue(); },
-        "designation": n => { registerPersonRequest.designation = n.getStringValue(); },
         "displayName": n => { registerPersonRequest.displayName = n.getStringValue(); },
         "employeeCode": n => { registerPersonRequest.employeeCode = n.getStringValue(); },
         "phoneNumber": n => { registerPersonRequest.phoneNumber = n.getStringValue(); },
@@ -596,6 +910,31 @@ export function deserializeIntoSystemInfoResponse(systemInfoResponse: Partial<Sy
 }
 /**
  * The deserialization information for the current model
+ * @param UpdateDepartmentRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoUpdateDepartmentRequest(updateDepartmentRequest: Partial<UpdateDepartmentRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "name": n => { updateDepartmentRequest.name = n.getStringValue(); },
+        "parentId": n => { updateDepartmentRequest.parentId = n.getGuidValue(); },
+        "version": n => { updateDepartmentRequest.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param UpdateDesignationRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoUpdateDesignationRequest(updateDesignationRequest: Partial<UpdateDesignationRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "name": n => { updateDesignationRequest.name = n.getStringValue(); },
+        "version": n => { updateDesignationRequest.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param UpdatePersonRequest The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -603,7 +942,6 @@ export function deserializeIntoSystemInfoResponse(systemInfoResponse: Partial<Sy
 export function deserializeIntoUpdatePersonRequest(updatePersonRequest: Partial<UpdatePersonRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "dateOfJoining": n => { updatePersonRequest.dateOfJoining = n.getDateOnlyValue(); },
-        "designation": n => { updatePersonRequest.designation = n.getStringValue(); },
         "employeeCode": n => { updatePersonRequest.employeeCode = n.getStringValue(); },
         "phoneNumber": n => { updatePersonRequest.phoneNumber = n.getStringValue(); },
         "version": n => { updatePersonRequest.version = n.getStringValue(); },
@@ -620,6 +958,20 @@ export function deserializeIntoUploadPolicyResponse(uploadPolicyResponse: Partia
         "allowedContentTypes": n => { uploadPolicyResponse.allowedContentTypes = n.getCollectionOfPrimitiveValues<string>("string"); },
         "maxSizeBytes": n => { uploadPolicyResponse.maxSizeBytes = n.getNumberValue(); },
     }
+}
+export interface DesignationResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+    /**
+     * The version property
+     */
+    version?: string | null;
 }
 export interface DirectoryPersonResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -725,10 +1077,6 @@ export interface InvitePersonRequest extends AdditionalDataHolder, Parsable {
      */
     dateOfJoining?: DateOnly | null;
     /**
-     * Designation, as free text.
-     */
-    designation?: string | null;
-    /**
      * Employee code: letters, digits, hyphens, slashes and underscores, starting with a letter or a digit, unique among the people of the ERP.
      */
     employeeCode?: string | null;
@@ -745,11 +1093,111 @@ export interface InvitePersonRequest extends AdditionalDataHolder, Parsable {
      */
     roles?: PersonRole[] | null;
 }
+export interface OrgChartPersonResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The departmentId property
+     */
+    departmentId?: Guid | null;
+    /**
+     * The departmentName property
+     */
+    departmentName?: string | null;
+    /**
+     * The designationId property
+     */
+    designationId?: Guid | null;
+    /**
+     * The designationName property
+     */
+    designationName?: string | null;
+    /**
+     * The displayName property
+     */
+    displayName?: string | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The managerDisplayName property
+     */
+    managerDisplayName?: string | null;
+    /**
+     * The managerId property
+     */
+    managerId?: Guid | null;
+}
 export interface PagedResponseOfAttachmentResponse extends AdditionalDataHolder, Parsable {
     /**
      * The items property
      */
     items?: AttachmentResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
+}
+export interface PagedResponseOfDepartmentResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: DepartmentResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
+}
+export interface PagedResponseOfDesignationResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: DesignationResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
+}
+export interface PagedResponseOfOrgChartPersonResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: OrgChartPersonResponse[] | null;
     /**
      * The page property
      */
@@ -789,6 +1237,28 @@ export interface PagedResponseOfPersonResponse extends AdditionalDataHolder, Par
      */
     totalPages?: number | null;
 }
+export interface PagedResponseOfPositionResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: PositionResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
+}
 export type Permission = (typeof PermissionObject)[keyof typeof PermissionObject];
 export interface PersonResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -800,9 +1270,21 @@ export interface PersonResponse extends AdditionalDataHolder, Parsable {
      */
     dateOfJoining?: DateOnly | null;
     /**
-     * The designation property
+     * The departmentId property
      */
-    designation?: string | null;
+    departmentId?: Guid | null;
+    /**
+     * The departmentName property
+     */
+    departmentName?: string | null;
+    /**
+     * The designationId property
+     */
+    designationId?: Guid | null;
+    /**
+     * The designationName property
+     */
+    designationName?: string | null;
     /**
      * The displayName property
      */
@@ -823,6 +1305,14 @@ export interface PersonResponse extends AdditionalDataHolder, Parsable {
      * The lastSignedInAt property
      */
     lastSignedInAt?: Date | null;
+    /**
+     * The managerDisplayName property
+     */
+    managerDisplayName?: string | null;
+    /**
+     * The managerId property
+     */
+    managerId?: Guid | null;
     /**
      * The phoneNumber property
      */
@@ -846,6 +1336,40 @@ export interface PersonResponse extends AdditionalDataHolder, Parsable {
 }
 export type PersonRole = (typeof PersonRoleObject)[keyof typeof PersonRoleObject];
 export type PersonStatus = (typeof PersonStatusObject)[keyof typeof PersonStatusObject];
+export interface PositionResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The departmentId property
+     */
+    departmentId?: Guid | null;
+    /**
+     * The departmentName property
+     */
+    departmentName?: string | null;
+    /**
+     * The designationId property
+     */
+    designationId?: Guid | null;
+    /**
+     * The designationName property
+     */
+    designationName?: string | null;
+    /**
+     * The effectiveFrom property
+     */
+    effectiveFrom?: DateOnly | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The managerDisplayName property
+     */
+    managerDisplayName?: string | null;
+    /**
+     * The managerId property
+     */
+    managerId?: Guid | null;
+}
 export interface ProblemDetails extends AdditionalDataHolder, ApiError, Parsable {
     /**
      * Stable machine-readable error code; the type member is this code under /problems/.
@@ -882,15 +1406,29 @@ export interface RecentStartupsResponse extends AdditionalDataHolder, Parsable {
      */
     startups?: StartupResponse[] | null;
 }
+export interface RecordPositionRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Department the person is in from that date; absent puts them in none.
+     */
+    departmentId?: Guid | null;
+    /**
+     * Designation the person holds from that date; absent gives them none.
+     */
+    designationId?: Guid | null;
+    /**
+     * Date the position starts, in the past or the future; it holds until the date the person's next position starts.
+     */
+    effectiveFrom?: DateOnly | null;
+    /**
+     * Person they report to from that date, never themself; absent gives them no manager.
+     */
+    managerId?: Guid | null;
+}
 export interface RegisterPersonRequest extends AdditionalDataHolder, Parsable {
     /**
      * Date the person joined the company.
      */
     dateOfJoining?: DateOnly | null;
-    /**
-     * Designation, as free text.
-     */
-    designation?: string | null;
     /**
      * Name the ERP shows for the person until their first sign-in brings the one Entra keeps.
      */
@@ -960,6 +1498,31 @@ export function serializeChangePersonStatusRequest(writer: SerializationWriter, 
 }
 /**
  * Serializes information the current object
+ * @param CreateDepartmentRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeCreateDepartmentRequest(writer: SerializationWriter, createDepartmentRequest: Partial<CreateDepartmentRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!createDepartmentRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("name", createDepartmentRequest.name);
+    writer.writeGuidValue("parentId", createDepartmentRequest.parentId);
+    writer.writeAdditionalData(createDepartmentRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param CreateDesignationRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeCreateDesignationRequest(writer: SerializationWriter, createDesignationRequest: Partial<CreateDesignationRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!createDesignationRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("name", createDesignationRequest.name);
+    writer.writeAdditionalData(createDesignationRequest.additionalData);
+}
+/**
+ * Serializes information the current object
  * @param CurrentUserResponse The instance to serialize from.
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param writer Serialization writer to use to serialize this model
@@ -974,6 +1537,35 @@ export function serializeCurrentUserResponse(writer: SerializationWriter, curren
     writer.writeCollectionOfPrimitiveValues<string>("roles", currentUserResponse.roles);
     writer.writeStringValue("userName", currentUserResponse.userName);
     writer.writeAdditionalData(currentUserResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param DepartmentResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeDepartmentResponse(writer: SerializationWriter, departmentResponse: Partial<DepartmentResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!departmentResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("id", departmentResponse.id);
+    writer.writeStringValue("name", departmentResponse.name);
+    writer.writeGuidValue("parentId", departmentResponse.parentId);
+    writer.writeStringValue("version", departmentResponse.version);
+    writer.writeAdditionalData(departmentResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param DesignationResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeDesignationResponse(writer: SerializationWriter, designationResponse: Partial<DesignationResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!designationResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("id", designationResponse.id);
+    writer.writeStringValue("name", designationResponse.name);
+    writer.writeStringValue("version", designationResponse.version);
+    writer.writeAdditionalData(designationResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -1083,13 +1675,31 @@ export function serializeHttpValidationProblemDetails_errors(writer: Serializati
 export function serializeInvitePersonRequest(writer: SerializationWriter, invitePersonRequest: Partial<InvitePersonRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
     if (!invitePersonRequest || isSerializingDerivedType) { return; }
     writer.writeDateOnlyValue("dateOfJoining", invitePersonRequest.dateOfJoining);
-    writer.writeStringValue("designation", invitePersonRequest.designation);
     writer.writeStringValue("employeeCode", invitePersonRequest.employeeCode);
     writer.writeGuidValue("entraObjectId", invitePersonRequest.entraObjectId);
     writer.writeStringValue("phoneNumber", invitePersonRequest.phoneNumber);
     if(invitePersonRequest.roles)
     writer.writeCollectionOfEnumValues<PersonRole>("roles", invitePersonRequest.roles);
     writer.writeAdditionalData(invitePersonRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param OrgChartPersonResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeOrgChartPersonResponse(writer: SerializationWriter, orgChartPersonResponse: Partial<OrgChartPersonResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!orgChartPersonResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("departmentId", orgChartPersonResponse.departmentId);
+    writer.writeStringValue("departmentName", orgChartPersonResponse.departmentName);
+    writer.writeGuidValue("designationId", orgChartPersonResponse.designationId);
+    writer.writeStringValue("designationName", orgChartPersonResponse.designationName);
+    writer.writeStringValue("displayName", orgChartPersonResponse.displayName);
+    writer.writeGuidValue("id", orgChartPersonResponse.id);
+    writer.writeStringValue("managerDisplayName", orgChartPersonResponse.managerDisplayName);
+    writer.writeGuidValue("managerId", orgChartPersonResponse.managerId);
+    writer.writeAdditionalData(orgChartPersonResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -1110,6 +1720,54 @@ export function serializePagedResponseOfAttachmentResponse(writer: Serialization
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfDepartmentResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfDepartmentResponse(writer: SerializationWriter, pagedResponseOfDepartmentResponse: Partial<PagedResponseOfDepartmentResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfDepartmentResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<DepartmentResponse>("items", pagedResponseOfDepartmentResponse.items, serializeDepartmentResponse);
+    writer.writeNumberValue("page", pagedResponseOfDepartmentResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfDepartmentResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfDepartmentResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfDepartmentResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfDepartmentResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfDesignationResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfDesignationResponse(writer: SerializationWriter, pagedResponseOfDesignationResponse: Partial<PagedResponseOfDesignationResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfDesignationResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<DesignationResponse>("items", pagedResponseOfDesignationResponse.items, serializeDesignationResponse);
+    writer.writeNumberValue("page", pagedResponseOfDesignationResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfDesignationResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfDesignationResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfDesignationResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfDesignationResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfOrgChartPersonResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfOrgChartPersonResponse(writer: SerializationWriter, pagedResponseOfOrgChartPersonResponse: Partial<PagedResponseOfOrgChartPersonResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfOrgChartPersonResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<OrgChartPersonResponse>("items", pagedResponseOfOrgChartPersonResponse.items, serializeOrgChartPersonResponse);
+    writer.writeNumberValue("page", pagedResponseOfOrgChartPersonResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfOrgChartPersonResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfOrgChartPersonResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfOrgChartPersonResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfOrgChartPersonResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param PagedResponseOfPersonResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -1126,6 +1784,22 @@ export function serializePagedResponseOfPersonResponse(writer: SerializationWrit
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfPositionResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfPositionResponse(writer: SerializationWriter, pagedResponseOfPositionResponse: Partial<PagedResponseOfPositionResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfPositionResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<PositionResponse>("items", pagedResponseOfPositionResponse.items, serializePositionResponse);
+    writer.writeNumberValue("page", pagedResponseOfPositionResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfPositionResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfPositionResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfPositionResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfPositionResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param PersonResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -1134,12 +1808,17 @@ export function serializePersonResponse(writer: SerializationWriter, personRespo
     if (!personResponse || isSerializingDerivedType) { return; }
     writer.writeDateValue("createdAt", personResponse.createdAt);
     writer.writeDateOnlyValue("dateOfJoining", personResponse.dateOfJoining);
-    writer.writeStringValue("designation", personResponse.designation);
+    writer.writeGuidValue("departmentId", personResponse.departmentId);
+    writer.writeStringValue("departmentName", personResponse.departmentName);
+    writer.writeGuidValue("designationId", personResponse.designationId);
+    writer.writeStringValue("designationName", personResponse.designationName);
     writer.writeStringValue("displayName", personResponse.displayName);
     writer.writeStringValue("employeeCode", personResponse.employeeCode);
     writer.writeGuidValue("entraObjectId", personResponse.entraObjectId);
     writer.writeGuidValue("id", personResponse.id);
     writer.writeDateValue("lastSignedInAt", personResponse.lastSignedInAt);
+    writer.writeStringValue("managerDisplayName", personResponse.managerDisplayName);
+    writer.writeGuidValue("managerId", personResponse.managerId);
     writer.writeStringValue("phoneNumber", personResponse.phoneNumber);
     if(personResponse.roles)
     writer.writeCollectionOfEnumValues<PersonRole>("roles", personResponse.roles);
@@ -1147,6 +1826,25 @@ export function serializePersonResponse(writer: SerializationWriter, personRespo
     writer.writeStringValue("version", personResponse.version);
     writer.writeStringValue("workEmail", personResponse.workEmail);
     writer.writeAdditionalData(personResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PositionResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePositionResponse(writer: SerializationWriter, positionResponse: Partial<PositionResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!positionResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("departmentId", positionResponse.departmentId);
+    writer.writeStringValue("departmentName", positionResponse.departmentName);
+    writer.writeGuidValue("designationId", positionResponse.designationId);
+    writer.writeStringValue("designationName", positionResponse.designationName);
+    writer.writeDateOnlyValue("effectiveFrom", positionResponse.effectiveFrom);
+    writer.writeGuidValue("id", positionResponse.id);
+    writer.writeStringValue("managerDisplayName", positionResponse.managerDisplayName);
+    writer.writeGuidValue("managerId", positionResponse.managerId);
+    writer.writeAdditionalData(positionResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -1181,6 +1879,21 @@ export function serializeRecentStartupsResponse(writer: SerializationWriter, rec
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param RecordPositionRequest The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeRecordPositionRequest(writer: SerializationWriter, recordPositionRequest: Partial<RecordPositionRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!recordPositionRequest || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("departmentId", recordPositionRequest.departmentId);
+    writer.writeGuidValue("designationId", recordPositionRequest.designationId);
+    writer.writeDateOnlyValue("effectiveFrom", recordPositionRequest.effectiveFrom);
+    writer.writeGuidValue("managerId", recordPositionRequest.managerId);
+    writer.writeAdditionalData(recordPositionRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param RegisterPersonRequest The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -1188,7 +1901,6 @@ export function serializeRecentStartupsResponse(writer: SerializationWriter, rec
 export function serializeRegisterPersonRequest(writer: SerializationWriter, registerPersonRequest: Partial<RegisterPersonRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
     if (!registerPersonRequest || isSerializingDerivedType) { return; }
     writer.writeDateOnlyValue("dateOfJoining", registerPersonRequest.dateOfJoining);
-    writer.writeStringValue("designation", registerPersonRequest.designation);
     writer.writeStringValue("displayName", registerPersonRequest.displayName);
     writer.writeStringValue("employeeCode", registerPersonRequest.employeeCode);
     writer.writeStringValue("phoneNumber", registerPersonRequest.phoneNumber);
@@ -1247,6 +1959,33 @@ export function serializeSystemInfoResponse(writer: SerializationWriter, systemI
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param UpdateDepartmentRequest The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeUpdateDepartmentRequest(writer: SerializationWriter, updateDepartmentRequest: Partial<UpdateDepartmentRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!updateDepartmentRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("name", updateDepartmentRequest.name);
+    writer.writeGuidValue("parentId", updateDepartmentRequest.parentId);
+    writer.writeStringValue("version", updateDepartmentRequest.version);
+    writer.writeAdditionalData(updateDepartmentRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param UpdateDesignationRequest The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeUpdateDesignationRequest(writer: SerializationWriter, updateDesignationRequest: Partial<UpdateDesignationRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!updateDesignationRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("name", updateDesignationRequest.name);
+    writer.writeStringValue("version", updateDesignationRequest.version);
+    writer.writeAdditionalData(updateDesignationRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param UpdatePersonRequest The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -1254,7 +1993,6 @@ export function serializeSystemInfoResponse(writer: SerializationWriter, systemI
 export function serializeUpdatePersonRequest(writer: SerializationWriter, updatePersonRequest: Partial<UpdatePersonRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
     if (!updatePersonRequest || isSerializingDerivedType) { return; }
     writer.writeDateOnlyValue("dateOfJoining", updatePersonRequest.dateOfJoining);
-    writer.writeStringValue("designation", updatePersonRequest.designation);
     writer.writeStringValue("employeeCode", updatePersonRequest.employeeCode);
     writer.writeStringValue("phoneNumber", updatePersonRequest.phoneNumber);
     writer.writeStringValue("version", updatePersonRequest.version);
@@ -1335,15 +2073,35 @@ export interface SystemInfoResponse extends AdditionalDataHolder, Parsable {
      */
     version?: string | null;
 }
+export interface UpdateDepartmentRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Name of the department, unique among the departments under the same parent.
+     */
+    name?: string | null;
+    /**
+     * Department it sits under from now on, never itself or one within it; absent moves it to the top of the tree.
+     */
+    parentId?: Guid | null;
+    /**
+     * Version of the department the change was made from, as the API last returned it.
+     */
+    version?: string | null;
+}
+export interface UpdateDesignationRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Name of the designation, unique among the designations; every position that names it shows the new name.
+     */
+    name?: string | null;
+    /**
+     * Version of the designation the change was made from, as the API last returned it.
+     */
+    version?: string | null;
+}
 export interface UpdatePersonRequest extends AdditionalDataHolder, Parsable {
     /**
      * Date the person joined the company; absent clears it.
      */
     dateOfJoining?: DateOnly | null;
-    /**
-     * Designation, as free text; empty clears it.
-     */
-    designation?: string | null;
     /**
      * Employee code: letters, digits, hyphens, slashes and underscores, starting with a letter or a digit, unique among the people of the ERP; empty clears it.
      */
@@ -1372,12 +2130,24 @@ export const AttachmentScanStatusObject = {
     Clean: "clean",
 } as const;
 export const PermissionObject = {
+    IdentityUsersDepartmentsCreate: "identity.users.departments.create",
+    IdentityUsersDepartmentsDelete: "identity.users.departments.delete",
+    IdentityUsersDepartmentsRead: "identity.users.departments.read",
+    IdentityUsersDepartmentsUpdate: "identity.users.departments.update",
+    IdentityUsersDesignationsCreate: "identity.users.designations.create",
+    IdentityUsersDesignationsDelete: "identity.users.designations.delete",
+    IdentityUsersDesignationsRead: "identity.users.designations.read",
+    IdentityUsersDesignationsUpdate: "identity.users.designations.update",
+    IdentityUsersOrgChartRead: "identity.users.org-chart.read",
     IdentityUsersPeopleAssignRoles: "identity.users.people.assign-roles",
     IdentityUsersPeopleChangeStatus: "identity.users.people.change-status",
     IdentityUsersPeopleDelete: "identity.users.people.delete",
     IdentityUsersPeopleRead: "identity.users.people.read",
     IdentityUsersPeopleRegister: "identity.users.people.register",
     IdentityUsersPeopleUpdate: "identity.users.people.update",
+    IdentityUsersPositionsRead: "identity.users.positions.read",
+    IdentityUsersPositionsRecord: "identity.users.positions.record",
+    IdentityUsersPositionsWithdraw: "identity.users.positions.withdraw",
     PlatformAttachmentsFilesDelete: "platform.attachments.files.delete",
     PlatformAttachmentsFilesRead: "platform.attachments.files.read",
     PlatformAttachmentsFilesUpload: "platform.attachments.files.upload",

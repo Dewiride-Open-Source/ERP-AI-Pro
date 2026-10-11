@@ -4,11 +4,17 @@
 // @ts-ignore
 import { createHttpValidationProblemDetailsFromDiscriminatorValue, createPagedResponseOfPersonResponseFromDiscriminatorValue, createPersonResponseFromDiscriminatorValue, createProblemDetailsFromDiscriminatorValue, serializePersonResponse, serializeRegisterPersonRequest, type HttpValidationProblemDetails, type PagedResponseOfPersonResponse, type PersonResponse, type ProblemDetails, type RegisterPersonRequest } from '../../../models/index.js';
 // @ts-ignore
+import { DepartmentsRequestBuilderNavigationMetadata, DepartmentsRequestBuilderRequestsMetadata, type DepartmentsRequestBuilder } from './departments/index.js';
+// @ts-ignore
+import { DesignationsRequestBuilderNavigationMetadata, DesignationsRequestBuilderRequestsMetadata, type DesignationsRequestBuilder } from './designations/index.js';
+// @ts-ignore
 import { DirectoryRequestBuilderRequestsMetadata, type DirectoryRequestBuilder } from './directory/index.js';
 // @ts-ignore
 import { InvitationsRequestBuilderRequestsMetadata, type InvitationsRequestBuilder } from './invitations/index.js';
 // @ts-ignore
 import { type UsersItemRequestBuilder, UsersItemRequestBuilderNavigationMetadata, UsersItemRequestBuilderRequestsMetadata } from './item/index.js';
+// @ts-ignore
+import { OrgChartRequestBuilderRequestsMetadata, type OrgChartRequestBuilder } from './orgChart/index.js';
 // @ts-ignore
 import { type BaseRequestBuilder, type Guid, type KeysToExcludeForNavigationMetadata, type NavigationMetadata, type Parsable, type ParsableFactory, type RequestConfiguration, type RequestInformation, type RequestsMetadata } from '@microsoft/kiota-abstractions';
 
@@ -17,6 +23,14 @@ import { type BaseRequestBuilder, type Guid, type KeysToExcludeForNavigationMeta
  */
 export interface UsersRequestBuilder extends BaseRequestBuilder<UsersRequestBuilder> {
     /**
+     * The departments property
+     */
+    get departments(): DepartmentsRequestBuilder;
+    /**
+     * The designations property
+     */
+    get designations(): DesignationsRequestBuilder;
+    /**
      * The directory property
      */
     get directory(): DirectoryRequestBuilder;
@@ -24,6 +38,10 @@ export interface UsersRequestBuilder extends BaseRequestBuilder<UsersRequestBuil
      * The invitations property
      */
     get invitations(): InvitationsRequestBuilder;
+    /**
+     * The orgChart property
+     */
+    get orgChart(): OrgChartRequestBuilder;
     /**
      * Gets an item from the ErpApi.api.identity.users.item collection
      * @param id Unique identifier of the item
@@ -107,11 +125,22 @@ export const UsersRequestBuilderNavigationMetadata: Record<Exclude<keyof UsersRe
         navigationMetadata: UsersItemRequestBuilderNavigationMetadata,
         pathParametersMappings: ["id"],
     },
+    departments: {
+        requestsMetadata: DepartmentsRequestBuilderRequestsMetadata,
+        navigationMetadata: DepartmentsRequestBuilderNavigationMetadata,
+    },
+    designations: {
+        requestsMetadata: DesignationsRequestBuilderRequestsMetadata,
+        navigationMetadata: DesignationsRequestBuilderNavigationMetadata,
+    },
     directory: {
         requestsMetadata: DirectoryRequestBuilderRequestsMetadata,
     },
     invitations: {
         requestsMetadata: InvitationsRequestBuilderRequestsMetadata,
+    },
+    orgChart: {
+        requestsMetadata: OrgChartRequestBuilderRequestsMetadata,
     },
 };
 /**
