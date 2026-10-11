@@ -319,7 +319,10 @@ test.describe("login page", () => {
   });
 
   test.describe("signed in", () => {
-    test("the browser reads the signed-in person from the API", async ({ page, person }) => {
+    test("the browser reads the signed-in person and their permissions from the API", async ({
+      page,
+      person,
+    }) => {
       await page.goto("/");
 
       const me = await page.evaluate(async () => {
@@ -327,7 +330,13 @@ test.describe("login page", () => {
         return { status: response.status, body: (await response.json()) as unknown };
       });
 
-      expect(me).toEqual({ status: 200, body: person });
+      expect(me).toEqual({
+        status: 200,
+        body: {
+          ...person,
+          permissions: ["platform.attachments.files.read", "platform.attachments.files.upload"],
+        },
+      });
       expect(person?.roles).toEqual(["Erp.User"]);
     });
 
