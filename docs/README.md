@@ -56,5 +56,6 @@
 | [0038](adr/0038-sign-in-limit-security-events-and-the-audit-schema.md) | The sign-in limit, security events and the audit schema |
 | [0039](adr/0039-people-and-their-admission.md) | People and their admission |
 | [0040](adr/0040-directory-invitations.md) | Directory invitations |
+| [0041](adr/0041-roles-and-permissions.md) | Roles and permissions |
 
 New decisions use [0000-template.md](adr/0000-template.md).
