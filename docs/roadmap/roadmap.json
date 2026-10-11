@@ -1021,12 +1021,18 @@
           "id": "user-management-departments-designations-and-reporting-lines",
           "title": "Departments, designations and reporting lines",
           "scope": "Model a department tree, designations, manager assignment with effective dates, position history and an org-chart query exposed through admin endpoints under /api/identity/organisation, consumed by approvals and timesheets later and extended (not replaced) by `hr-core`.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-10-10",
-          "acceptance": [],
+          "acceptance": [
+            "Departments form a tree and designations a list under /api/identity/users: everyone signed in lists them, only administrators create, rename, move or delete them, a department is never moved under itself or one of its descendants, and neither is deleted while a position effective today or later names it (a department also while it has sub-departments).",
+            "Administrators record each person's position (department, designation and manager) from an effective date in the past or the future and withdraw it again; at any date a person has one department and one manager, never manages themself, and a change that would close a reporting cycle at any date it covers is refused.",
+            "GET /api/identity/users/org-chart answers every active person with their department, designation and manager as of today to anyone signed in, and as of another date only to administrators, who alone read a person's position history.",
+            "The migration that drops the free-text Users.Designation column turns its texts into designation entries and gives each person who had one a position with it; the people responses carry the current department, designation and manager, and the people list sorts and filters by them."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-11",
           "notes": "From `user-management-users-module-and-just-in-time` (ADR-0039): User.Designation in identity_users.Users is free text of at most 100 characters (owner decision of 2026-10-10); this item turns it into a reference to its designations with a forward migration that maps the existing texts and drops the text column in the same migration, and updates PUT /api/identity/users/{id} and the web forms with it."
         },
         {
