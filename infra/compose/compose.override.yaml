@@ -52,7 +52,7 @@ services:
     restart: unless-stopped
 
   aspire-dashboard:
-    image: mcr.microsoft.com/dotnet/aspire-dashboard:13@sha256:0ef531119b8073aed12b0db2b4e4ab02866c6c69b7a52264269abd00cfb48a34
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13@sha256:613f297a274958abd85e7b71664f51fb42b0ddeb697ebd4c159677774433345b
     profiles: [observability]
     environment:
       ASPIRE_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"

@@ -18,15 +18,15 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.0" />
-    <PackageVersion Include="Microsoft.Data.SqlClient.Extensions.Azure" Version="7.1.0" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageVersion Include="Microsoft.Data.SqlClient.Extensions.Azure" Version="7.1.1" />
   </ItemGroup>
 
   <ItemGroup Label="Azure">
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.6.4" />
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Keys" Version="4.10.1" />
-    <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.2" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.30.1" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.AzureAppConfiguration" Version="8.6.0" />
     <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="10.0.12" />
   </ItemGroup>
@@ -36,11 +36,11 @@
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.12" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageVersion Include="Microsoft.FeatureManagement" Version="4.8.0" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.10" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.14" />
   </ItemGroup>
 
   <ItemGroup Label="Identity">
-    <PackageVersion Include="Microsoft.Identity.Web" Version="4.15.0" />
+    <PackageVersion Include="Microsoft.Identity.Web" Version="4.16.0" />
     <PackageVersion Include="Microsoft.Identity.Client" Version="4.90.1" />
     <PackageVersion Include="Microsoft.Identity.Client.Broker" Version="4.90.1" />
     <PackageVersion Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.90.1" />
