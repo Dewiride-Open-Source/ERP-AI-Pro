@@ -26,6 +26,7 @@ allow-licenses:
   - Zlib
 allow-dependencies-licenses:
   - pkg:npm/geist
+  - pkg:nuget/Apache.Arrow
   - pkg:nuget/Microsoft.Data.SqlClient.SNI.runtime
   - pkg:nuget/Microsoft.Identity.Client.NativeInterop
   - pkg:nuget/Microsoft.Testing.Extensions.CodeCoverage
