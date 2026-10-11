@@ -1,4 +1,4 @@
-import { expect, type JSHandle, type Locator, type Page } from "@playwright/test";
+import { expect, type JSHandle, type Locator, type Page, type Response } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
 import type { FileUpload } from "../../../fixtures/files";
@@ -76,6 +76,15 @@ export class AttachmentsPage {
   async upload(file: FileUpload): Promise<void> {
     await this.untilDropZoneTakesFiles();
     await this.fileInput.setInputFiles(file);
+  }
+
+  waitForRefresh(): Promise<Response> {
+    return this.page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === attachmentsPath &&
+        response.request().headers()["rsc"] === "1" &&
+        response.request().headers()["next-router-prefetch"] === undefined,
+    );
   }
 
   async chooseAndUpload(file: FileUpload): Promise<void> {

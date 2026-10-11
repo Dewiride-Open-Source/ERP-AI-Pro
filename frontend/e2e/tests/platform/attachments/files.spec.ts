@@ -722,15 +722,18 @@ test.describe("attachments page for an employee", () => {
     await expect(attachments.uploadCard).toBeVisible();
 
     const uploaded = page.waitForResponse(isUpload);
+    const refreshed = attachments.waitForRefresh();
     await attachments.upload(file);
     const id = await createdAttachmentId(await uploaded);
 
     try {
       await expect(attachments.uploadAnnouncement).toHaveText(`${file.name} was uploaded.`);
+      expect((await refreshed).ok()).toBe(true);
       const row = attachments.row(file.name);
       await expect(row).toBeVisible();
       await expect(row.getByTestId("attachment-download")).toBeVisible();
       await expect(row.getByTestId("attachment-delete")).toHaveCount(0);
+      await expect(page).toHaveTitle(/Attachments · ERP-AI-Pro/);
       await capture("attachments-employee");
 
       const download = await attachments.download(row);
