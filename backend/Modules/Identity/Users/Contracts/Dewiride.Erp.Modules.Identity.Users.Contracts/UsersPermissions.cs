@@ -1,4 +1,4 @@
-namespace Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+namespace Dewiride.Erp.Modules.Identity.Users.Contracts;
 
 public static class UsersPermissions
 {

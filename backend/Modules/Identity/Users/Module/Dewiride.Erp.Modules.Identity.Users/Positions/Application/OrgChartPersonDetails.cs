@@ -1,4 +1,4 @@
-using Dewiride.Erp.Modules.Identity.Users.People.Application;
+using Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Positions.Application;
 

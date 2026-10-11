@@ -6,7 +6,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.People.Application;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.AssignPersonRoles;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.ChangePersonStatus;

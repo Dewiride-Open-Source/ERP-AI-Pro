@@ -1,5 +1,5 @@
 using System.Net;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints.Responses;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Shared;
@@ -252,6 +252,80 @@ public sealed class DepartmentEndpointsTests(ErpApiFactory factory) : IClassFixt
         using var response = await client.DeleteAsync(OrganisationApi.Departments($"/{department.Id}"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("?sort=budget:desc")]
+    [InlineData("?filter=budget%3Aeq%3A1")]
+    public async Task List_FieldItDoesNotSortOrFilterBy_Returns400(string query)
+    {
+        using var client = Administrator();
+
+        using var response = await client.GetAsync(OrganisationApi.Departments(query), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_UnknownId_Returns404NotFound()
+    {
+        using var client = Administrator();
+        var department = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Finance"));
+
+        using var response = await client.PutAsJsonAsync(OrganisationApi.Departments($"/{Guid.CreateVersion7()}"), new { name = OrganisationApi.UniqueName("Sales"), version = department.Version }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("department.not-found", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Update_VersionTheApiNeverIssued_Returns400KeyedByVersion()
+    {
+        using var client = Administrator();
+        var department = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Finance"));
+
+        using var response = await client.PutAsJsonAsync(OrganisationApi.Departments($"/{department.Id}"), new { name = department.Name, version = "not a version" }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        var problem = await PeopleApi.ReadValidationProblemAsync(response);
+        Assert.Equal("department.version-invalid", PeopleApi.CodeOf(problem));
+        Assert.Equal("version", Assert.Single(problem.Errors.Keys));
+    }
+
+    [Fact]
+    public async Task Update_ParentNoDepartmentHas_Returns404ParentNotFound()
+    {
+        using var client = Administrator();
+        var department = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Finance"));
+
+        using var response = await client.PutAsJsonAsync(OrganisationApi.Departments($"/{department.Id}"), new { name = department.Name, parentId = Guid.CreateVersion7(), version = department.Version }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("department.parent-not-found", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Update_NameASiblingHasInAnotherCase_Returns409NameTaken()
+    {
+        using var client = Administrator();
+        var parent = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Finance"));
+        var taken = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Payables"), parent.Id);
+        var other = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Receivables"), parent.Id);
+
+        using var response = await client.PutAsJsonAsync(OrganisationApi.Departments($"/{other.Id}"), new { name = taken.Name.ToLowerInvariant(), parentId = parent.Id, version = other.Version }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("department.name-taken", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Delete_UnknownId_Returns404NotFound()
+    {
+        using var client = Administrator();
+
+        using var response = await client.DeleteAsync(OrganisationApi.Departments($"/{Guid.CreateVersion7()}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("department.not-found", await OrganisationApi.CodeOfAsync(response));
     }
 
     private HttpClient Administrator() => factory.CreateClient().AsUser(TestUsers.Administrator);

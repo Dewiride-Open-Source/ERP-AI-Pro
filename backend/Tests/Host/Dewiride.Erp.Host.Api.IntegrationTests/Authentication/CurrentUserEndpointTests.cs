@@ -4,7 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Modules;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Platform.Attachments.Contracts.Files;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;

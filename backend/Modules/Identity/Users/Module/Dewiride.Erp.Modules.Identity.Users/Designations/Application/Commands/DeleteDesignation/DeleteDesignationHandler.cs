@@ -3,7 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Kernel.Time;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
-using Dewiride.Erp.Modules.Identity.Users.Positions.Application;
+using Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Designations.Application.Commands.DeleteDesignation;

@@ -5,7 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Application;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Application.Commands.CreateDepartment;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Application.Commands.DeleteDepartment;
@@ -24,14 +24,14 @@ namespace Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints;
 // A change answers the department as it was saved, read again, so its version is the one to change next.
 internal static class DepartmentEndpoints
 {
-    public const string GetRouteName = "Identity.Users.Departments.Get";
+    public const string GetRouteName = "Identity.Users.GetDepartment";
 
     public static void Map(RouteGroupBuilder group)
     {
         var departments = group.MapGroup("/departments");
 
         departments.MapGet("/", ListAsync)
-            .WithName("Identity.Users.Departments.List")
+            .WithName("Identity.Users.ListDepartments")
             .WithSummary("Lists the departments, by name unless the caller sorts them; each names the department it sits under.")
             .RequirePermission(UsersPermissions.ReadDepartments);
 
@@ -41,21 +41,21 @@ internal static class DepartmentEndpoints
             .RequirePermission(UsersPermissions.ReadDepartments);
 
         departments.MapPost("/", CreateAsync)
-            .WithName("Identity.Users.Departments.Create")
+            .WithName("Identity.Users.CreateDepartment")
             .WithSummary("Creates a department at the top of the tree or under another.")
             .RequirePermission(UsersPermissions.CreateDepartments)
             .RequireIdempotencyKey()
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         departments.MapPut("/{id:guid}", UpdateAsync)
-            .WithName("Identity.Users.Departments.Update")
+            .WithName("Identity.Users.UpdateDepartment")
             .WithSummary("Renames a department, or moves it under another department or to the top of the tree.")
             .RequirePermission(UsersPermissions.UpdateDepartments)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         departments.MapDelete("/{id:guid}", DeleteAsync)
-            .WithName("Identity.Users.Departments.Delete")
+            .WithName("Identity.Users.DeleteDepartment")
             .WithSummary("Deletes a department that has no departments within it and that no position names today or from a later date.")
             .RequirePermission(UsersPermissions.DeleteDepartments)
             .ProducesProblem(StatusCodes.Status409Conflict);

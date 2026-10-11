@@ -1,7 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Positions.Application;
 
@@ -14,7 +13,7 @@ internal static class PositionsWithNames
         ArgumentNullException.ThrowIfNull(context);
 
         return
-            from position in context.Positions.IgnoreQueryFilters([SoftDeleteFilter.Name])
+            from position in context.Positions.IncludeDeleted()
             where position.UserId == person
             from department in context.Departments.Where(d => d.Id == position.DepartmentId).DefaultIfEmpty()
             from designation in context.Designations.Where(d => d.Id == position.DesignationId).DefaultIfEmpty()

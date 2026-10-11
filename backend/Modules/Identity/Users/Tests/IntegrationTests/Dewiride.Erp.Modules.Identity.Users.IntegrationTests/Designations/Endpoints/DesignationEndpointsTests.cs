@@ -1,5 +1,5 @@
 using System.Net;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints.Responses;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Shared;
@@ -153,6 +153,74 @@ public sealed class DesignationEndpointsTests(ErpApiFactory factory) : IClassFix
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("designation.not-found", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Get_CreatedDesignation_ReturnsItAtItsLocation()
+    {
+        using var client = Administrator();
+        using var created = await OrganisationApi.PostAsync(client, OrganisationApi.Designations(), new { name = OrganisationApi.UniqueName("Controller") });
+        var designation = await OrganisationApi.ReadAsync<DesignationResponse>(created);
+
+        using var response = await client.GetAsync(created.Headers.Location, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equivalent(designation, await OrganisationApi.ReadAsync<DesignationResponse>(response), strict: true);
+    }
+
+    [Theory]
+    [InlineData("?sort=grade:asc")]
+    [InlineData("?filter=grade%3Aeq%3A1")]
+    public async Task List_FieldItDoesNotSortOrFilterBy_Returns400(string query)
+    {
+        using var client = Administrator();
+
+        using var response = await client.GetAsync(OrganisationApi.Designations(query), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_UnknownId_Returns404NotFound()
+    {
+        using var client = Administrator();
+        var designation = await OrganisationApi.CreateDesignationAsync(client, OrganisationApi.UniqueName("Accountant"));
+
+        using var response = await client.PutAsJsonAsync(OrganisationApi.Designations($"/{Guid.CreateVersion7()}"), new { name = OrganisationApi.UniqueName("Analyst"), version = designation.Version }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("designation.not-found", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Update_NameAnotherDesignationHas_Returns409NameTaken()
+    {
+        using var client = Administrator();
+        var taken = await OrganisationApi.CreateDesignationAsync(client, OrganisationApi.UniqueName("Accountant"));
+        var other = await OrganisationApi.CreateDesignationAsync(client, OrganisationApi.UniqueName("Analyst"));
+
+        using var response = await client.PutAsJsonAsync(OrganisationApi.Designations($"/{other.Id}"), new { name = taken.Name.ToUpperInvariant(), version = other.Version }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("designation.name-taken", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Update_StaleVersion_Returns409AndKeepsTheNewerName()
+    {
+        using var client = Administrator();
+        var designation = await OrganisationApi.CreateDesignationAsync(client, OrganisationApi.UniqueName("Accountant"));
+        var newer = OrganisationApi.UniqueName("Senior Accountant");
+        using (var first = await client.PutAsJsonAsync(OrganisationApi.Designations($"/{designation.Id}"), new { name = newer, version = designation.Version }, PeopleApi.Json, TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        }
+
+        using var response = await client.PutAsJsonAsync(OrganisationApi.Designations($"/{designation.Id}"), new { name = OrganisationApi.UniqueName("Stale"), version = designation.Version }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        using var read = await client.GetAsync(OrganisationApi.Designations($"/{designation.Id}"), TestContext.Current.CancellationToken);
+        Assert.Equal(newer, (await OrganisationApi.ReadAsync<DesignationResponse>(read)).Name);
     }
 
     private HttpClient Administrator() => factory.CreateClient().AsUser(TestUsers.Administrator);

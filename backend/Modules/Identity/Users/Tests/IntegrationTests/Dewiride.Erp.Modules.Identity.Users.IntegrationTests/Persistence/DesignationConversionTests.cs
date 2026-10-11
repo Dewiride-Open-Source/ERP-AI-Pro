@@ -36,11 +36,11 @@ public sealed class DesignationConversionTests
 
         var designations = await context.Designations.IgnoreQueryFilters().AsNoTracking().ToListAsync(TestContext.Current.CancellationToken);
         Assert.Equal(["Accountant", "Analyst", "Engineer"], designations.Select(d => d.Name).Order(StringComparer.Ordinal));
-        Assert.All(designations, designation =>
-        {
-            Assert.Equal(ActorIds.System, designation.CreatedBy);
-            Assert.False(designation.IsDeleted);
-        });
+        Assert.All(designations, designation => Assert.Equal(ActorIds.System, designation.CreatedBy));
+        Assert.Equal(["Analyst"], designations.Where(d => d.IsDeleted).Select(d => d.Name));
+        var onlyTheDeletedHeld = designations.Single(d => d.Name == "Analyst");
+        Assert.Equal(ActorIds.System, onlyTheDeletedHeld.DeletedBy);
+        Assert.NotNull(onlyTheDeletedHeld.DeletedAt);
         var named = designations.ToDictionary(d => d.Name, d => (Guid?)d.Id.Value);
         var positions = await context.Positions.AsNoTracking().ToListAsync(TestContext.Current.CancellationToken);
         Assert.Equal(4, positions.Count);
@@ -69,13 +69,20 @@ public sealed class DesignationConversionTests
         var migrator = context.GetService<IMigrator>();
         await migrator.MigrateAsync(BeforeConversion, TestContext.Current.CancellationToken);
         var accountant = await InsertPersonAsync(context, "Accountant", new DateOnly(2026, 4, 1), isDeleted: false);
+        var movingOn = await InsertPersonAsync(context, "Accountant", new DateOnly(2026, 4, 1), isDeleted: false);
+        var moved = await InsertPersonAsync(context, "Accountant", new DateOnly(2026, 4, 1), isDeleted: false);
         var none = await InsertPersonAsync(context, null, null, isDeleted: false);
         await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var today = IndianStandardTime.Today(TimeProvider.System);
+        await InsertEmptyPositionAsync(context, movingOn, today.AddDays(30));
+        await InsertEmptyPositionAsync(context, moved, today.AddDays(-1));
 
         await migrator.MigrateAsync(BeforeConversion, TestContext.Current.CancellationToken);
 
         Assert.True(await HasDesignationColumnAsync(context));
         Assert.Equal("Accountant", await DesignationTextAsync(context, accountant));
+        Assert.Equal("Accountant", await DesignationTextAsync(context, movingOn));
+        Assert.Null(await DesignationTextAsync(context, moved));
         Assert.Null(await DesignationTextAsync(context, none));
     }
 
@@ -89,6 +96,15 @@ public sealed class DesignationConversionTests
             TestContext.Current.CancellationToken);
 
         return id;
+    }
+
+    private static async Task InsertEmptyPositionAsync(UsersDbContext context, Guid person, DateOnly effectiveFrom)
+    {
+        var id = Guid.CreateVersion7();
+        var createdBy = ActorIds.System;
+        await context.Database.ExecuteSqlAsync(
+            $"INSERT INTO [identity_users].[Positions] ([Id], [UserId], [EffectiveFrom], [CreatedAt], [CreatedBy]) VALUES ({id}, {person}, {effectiveFrom}, {CreatedAt}, {createdBy})",
+            TestContext.Current.CancellationToken);
     }
 
     private static async Task<bool> HasDesignationColumnAsync(UsersDbContext context) =>

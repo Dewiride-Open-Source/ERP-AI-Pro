@@ -11,7 +11,7 @@ import { type BaseRequestBuilder, type DateOnly, type Parsable, type ParsableFac
  */
 export interface OrgChartRequestBuilder extends BaseRequestBuilder<OrgChartRequestBuilder> {
     /**
-     * Lists the active people with the department, designation and manager of the position each holds on a date, today unless the caller names another.
+     * Lists the active people who have joined by a date, with the department, designation and manager of the position each holds on it, today unless the caller names another.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {Promise<PagedResponseOfOrgChartPersonResponse>}
      * @throws {HttpValidationProblemDetails} error when the service returns a 400 status code
@@ -24,14 +24,14 @@ export interface OrgChartRequestBuilder extends BaseRequestBuilder<OrgChartReque
      */
      get(requestConfiguration?: RequestConfiguration<OrgChartRequestBuilderGetQueryParameters> | undefined) : Promise<PagedResponseOfOrgChartPersonResponse | undefined>;
     /**
-     * Lists the active people with the department, designation and manager of the position each holds on a date, today unless the caller names another.
+     * Lists the active people who have joined by a date, with the department, designation and manager of the position each holds on it, today unless the caller names another.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {RequestInformation}
      */
      toGetRequestInformation(requestConfiguration?: RequestConfiguration<OrgChartRequestBuilderGetQueryParameters> | undefined) : RequestInformation;
 }
 /**
- * Lists the active people with the department, designation and manager of the position each holds on a date, today unless the caller names another.
+ * Lists the active people who have joined by a date, with the department, designation and manager of the position each holds on it, today unless the caller names another.
  */
 export interface OrgChartRequestBuilderGetQueryParameters {
     /**

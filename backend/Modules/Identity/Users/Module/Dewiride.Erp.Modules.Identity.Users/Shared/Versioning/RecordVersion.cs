@@ -1,4 +1,4 @@
-namespace Dewiride.Erp.Modules.Identity.Users.Shared;
+namespace Dewiride.Erp.Modules.Identity.Users.Shared.Versioning;
 
 // The version is the record's SQL Server rowversion, eight bytes, carried as Base64 so that an edit names the state it was
 // made from.

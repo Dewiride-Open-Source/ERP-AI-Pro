@@ -63,11 +63,12 @@ public sealed class ReportingLinesTests
     }
 
     [Fact]
-    public void ClosesCycle_ChainThatReachesThePersonOnlyAfterTheChangeEnds_IsFalse()
+    public void ClosesCycle_CycleThatOnlyThePersonsNextPositionCloses_IsLeftToThatPosition()
     {
-        var lines = new ReportingLines([new(_asha, April, _dev), new(_asha, July, null), new(_dev, October, _asha)]);
+        var lines = new ReportingLines([new(_asha, April, _dev), new(_asha, July, _meera), new(_meera, January, _asha)]);
 
         Assert.False(lines.ClosesCycle(_asha, April, July));
+        Assert.True(lines.ClosesCycle(_asha, April, null));
     }
 
     [Fact]

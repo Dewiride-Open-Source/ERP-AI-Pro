@@ -3,7 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
 using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.BuildingBlocks.Persistence;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Integration;

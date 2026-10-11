@@ -4,15 +4,16 @@ using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Sorting;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Persistence.Queries;
-using Dewiride.Erp.Modules.Identity.Users.People.Application;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
+using Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Positions.Application.Queries.GetOrgChart;
 
-// The chart holds the people whose record is active now, with the position each holds on the date. A person's status is not
-// dated, so the chart of a past date leaves out someone deactivated since, and their reports name a manager outside the chart.
+// The chart holds the people whose record is active now and who have joined by the date, with the position each holds on it,
+// so a planned hire appears from their date of joining. A person's status is not dated, so the chart of a past date leaves out
+// someone deactivated since, and their reports name a manager outside the chart.
 internal sealed class GetOrgChartHandler(UsersDbContext context) : IQueryHandler<GetOrgChartQuery, PagedResult<OrgChartPersonDetails>>
 {
     private static readonly SortableFields<PersonRow> Sortable = new SortableFields<PersonRow>()
@@ -42,7 +43,7 @@ internal sealed class GetOrgChartHandler(UsersDbContext context) : IQueryHandler
         }
 
         var page = await PeopleWithPositions.On(context, query.On)
-            .Where(r => r.User.Status == UserStatus.Active)
+            .Where(r => r.User.Status == UserStatus.Active && (r.User.DateOfJoining == null || r.User.DateOfJoining <= query.On))
             .AsNoTracking()
             .ApplyFilter(filter.Value)
             .ApplySort(sort.Value, r => r.User.Id)

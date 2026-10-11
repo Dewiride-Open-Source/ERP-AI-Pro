@@ -1,5 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 
 namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 

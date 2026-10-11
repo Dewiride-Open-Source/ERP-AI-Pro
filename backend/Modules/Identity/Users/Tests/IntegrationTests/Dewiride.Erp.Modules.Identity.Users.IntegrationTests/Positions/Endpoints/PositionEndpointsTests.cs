@@ -1,5 +1,5 @@
 using System.Net;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Shared;
 using Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Responses;
@@ -12,7 +12,7 @@ namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Positions.Endpoin
 
 public sealed class PositionEndpointsTests(ErpApiFactory factory) : IClassFixture<ErpApiFactory>
 {
-    private static readonly DateOnly Today = OrganisationApi.Today;
+    private static DateOnly Today => OrganisationApi.Today;
 
     [Theory]
     [InlineData("GET", "/api/identity/users/{id:guid}/positions", UsersPermissions.ReadPositions)]
@@ -323,6 +323,167 @@ public sealed class PositionEndpointsTests(ErpApiFactory factory) : IClassFixtur
         using var response = await client.DeleteAsync(OrganisationApi.Positions(person.Id, $"/{position.Id}"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Get_RecordedPosition_ReturnsItAtItsLocation()
+    {
+        using var client = Administrator();
+        var person = await RegisterAsync(client);
+        using var recorded = await OrganisationApi.RecordAsync(client, person.Id, Today.AddDays(-3));
+        var position = await OrganisationApi.ReadAsync<PositionResponse>(recorded);
+
+        using var response = await client.GetAsync(recorded.Headers.Location, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(position, await OrganisationApi.ReadAsync<PositionResponse>(response));
+    }
+
+    [Fact]
+    public async Task List_PositionsOfAPersonNoRecordHas_Returns404UserNotFound()
+    {
+        using var client = Administrator();
+
+        using var response = await client.GetAsync(OrganisationApi.Positions(Guid.CreateVersion7()), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("user.not-found", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Get_PositionOfAPersonNoRecordHas_Returns404UserNotFound()
+    {
+        using var client = Administrator();
+
+        using var response = await client.GetAsync(OrganisationApi.Positions(Guid.CreateVersion7(), $"/{Guid.CreateVersion7()}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("user.not-found", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Theory]
+    [InlineData("?sort=salary:desc")]
+    [InlineData("?filter=salary%3Aeq%3A1")]
+    public async Task List_FieldItDoesNotSortOrFilterBy_Returns400(string query)
+    {
+        using var client = Administrator();
+        var person = await RegisterAsync(client);
+
+        using var response = await client.GetAsync(OrganisationApi.Positions(person.Id, query), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Record_DepartmentDeletedBefore_Returns404DepartmentNotFound()
+    {
+        using var client = Administrator();
+        var department = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Finance"));
+        using (var deleted = await client.DeleteAsync(OrganisationApi.Departments($"/{department.Id}"), TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+        }
+
+        var person = await RegisterAsync(client);
+
+        using var response = await OrganisationApi.RecordAsync(client, person.Id, Today.AddDays(-60), departmentId: department.Id);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("position.department-not-found", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Theory]
+    [InlineData(0, HttpStatusCode.Created)]
+    [InlineData(1, HttpStatusCode.UnprocessableEntity)]
+    public async Task Record_DeactivatedManagerForAPositionWhoseNextStartsInDays_RefusesItOnlyWhenItHoldsToday(int nextStartsInDays, HttpStatusCode expected)
+    {
+        using var client = Administrator();
+        var manager = await DeactivateAsync(client, await RegisterAsync(client));
+        var person = await RegisterAsync(client);
+        await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(nextStartsInDays));
+
+        using var response = await OrganisationApi.RecordAsync(client, person.Id, Today.AddDays(-60), managerId: manager.Id);
+
+        Assert.Equal(expected, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Withdraw_PositionWhoseEarlierOneNamesADesignationDeletedSince_Returns422PreviousNoLongerValid()
+    {
+        using var client = Administrator();
+        var designation = await OrganisationApi.CreateDesignationAsync(client, OrganisationApi.UniqueName("Trainee"));
+        var person = await RegisterAsync(client);
+        await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(-60), designationId: designation.Id);
+        var latest = await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(-10));
+        using (var deleted = await client.DeleteAsync(OrganisationApi.Designations($"/{designation.Id}"), TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+        }
+
+        using var response = await client.DeleteAsync(OrganisationApi.Positions(person.Id, $"/{latest.Id}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("position.previous-no-longer-valid", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Withdraw_PositionWhoseEarlierOneNamesAManagerDeactivatedSince_Returns422PreviousNoLongerValid()
+    {
+        using var client = Administrator();
+        var manager = await RegisterAsync(client);
+        var person = await RegisterAsync(client);
+        await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(-60), managerId: manager.Id);
+        var latest = await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(-10));
+        await DeactivateAsync(client, await GetPersonAsync(client, manager.Id));
+
+        using var response = await client.DeleteAsync(OrganisationApi.Positions(person.Id, $"/{latest.Id}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("position.previous-no-longer-valid", await OrganisationApi.CodeOfAsync(response));
+    }
+
+    [Fact]
+    public async Task Withdraw_PositionWhoseEarlierOneThenStillEndsBeforeToday_Returns204ThoughItNamesADeletedDepartment()
+    {
+        using var client = Administrator();
+        var department = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Finance"));
+        var person = await RegisterAsync(client);
+        await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(-60), departmentId: department.Id);
+        var middle = await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(-30));
+        await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(-10));
+        using (var deleted = await client.DeleteAsync(OrganisationApi.Departments($"/{department.Id}"), TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
+        }
+
+        using var response = await client.DeleteAsync(OrganisationApi.Positions(person.Id, $"/{middle.Id}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Withdraw_ThePersonsOnlyPosition_Returns204AndLeavesThemWithoutOne()
+    {
+        using var client = Administrator();
+        var department = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Finance"));
+        var person = await RegisterAsync(client);
+        var only = await OrganisationApi.RecordPositionAsync(client, person.Id, Today.AddDays(-10), departmentId: department.Id);
+
+        using var response = await client.DeleteAsync(OrganisationApi.Positions(person.Id, $"/{only.Id}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Null((await GetPersonAsync(client, person.Id)).DepartmentId);
+    }
+
+    [Fact]
+    public async Task Withdraw_ForAPersonNoRecordHas_Returns404UserNotFound()
+    {
+        using var client = Administrator();
+
+        using var response = await client.DeleteAsync(OrganisationApi.Positions(Guid.CreateVersion7(), $"/{Guid.CreateVersion7()}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("user.not-found", await OrganisationApi.CodeOfAsync(response));
     }
 
     private static Task<PersonResponse> RegisterAsync(HttpClient client) =>

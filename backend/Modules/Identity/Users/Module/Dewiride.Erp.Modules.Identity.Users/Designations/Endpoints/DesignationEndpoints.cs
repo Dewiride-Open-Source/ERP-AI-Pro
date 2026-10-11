@@ -5,7 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Application;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Application.Commands.CreateDesignation;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Application.Commands.DeleteDesignation;
@@ -24,14 +24,14 @@ namespace Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints;
 // A change answers the designation as it was saved, read again, so its version is the one to change next.
 internal static class DesignationEndpoints
 {
-    public const string GetRouteName = "Identity.Users.Designations.Get";
+    public const string GetRouteName = "Identity.Users.GetDesignation";
 
     public static void Map(RouteGroupBuilder group)
     {
         var designations = group.MapGroup("/designations");
 
         designations.MapGet("/", ListAsync)
-            .WithName("Identity.Users.Designations.List")
+            .WithName("Identity.Users.ListDesignations")
             .WithSummary("Lists the designations, by name unless the caller sorts them.")
             .RequirePermission(UsersPermissions.ReadDesignations);
 
@@ -41,20 +41,20 @@ internal static class DesignationEndpoints
             .RequirePermission(UsersPermissions.ReadDesignations);
 
         designations.MapPost("/", CreateAsync)
-            .WithName("Identity.Users.Designations.Create")
+            .WithName("Identity.Users.CreateDesignation")
             .WithSummary("Adds a designation to the list positions choose from.")
             .RequirePermission(UsersPermissions.CreateDesignations)
             .RequireIdempotencyKey()
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         designations.MapPut("/{id:guid}", UpdateAsync)
-            .WithName("Identity.Users.Designations.Update")
+            .WithName("Identity.Users.UpdateDesignation")
             .WithSummary("Renames a designation.")
             .RequirePermission(UsersPermissions.UpdateDesignations)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         designations.MapDelete("/{id:guid}", DeleteAsync)
-            .WithName("Identity.Users.Designations.Delete")
+            .WithName("Identity.Users.DeleteDesignation")
             .WithSummary("Deletes a designation that no position names today or from a later date.")
             .RequirePermission(UsersPermissions.DeleteDesignations)
             .ProducesProblem(StatusCodes.Status409Conflict);

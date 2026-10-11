@@ -2594,8 +2594,8 @@
         "tags": [
           "Identity.Users"
         ],
-        "summary": "Lists the active people with the department, designation and manager of the position each holds on a date, today unless the caller names another.",
-        "operationId": "Identity.Users.OrgChart",
+        "summary": "Lists the active people who have joined by a date, with the department, designation and manager of the position each holds on it, today unless the caller names another.",
+        "operationId": "Identity.Users.GetOrgChart",
         "parameters": [
           {
             "name": "on",
@@ -2736,7 +2736,7 @@
           "Identity.Users"
         ],
         "summary": "Lists the departments, by name unless the caller sorts them; each names the department it sits under.",
-        "operationId": "Identity.Users.Departments.List",
+        "operationId": "Identity.Users.ListDepartments",
         "parameters": [
           {
             "name": "page",
@@ -2866,7 +2866,7 @@
           "Identity.Users"
         ],
         "summary": "Creates a department at the top of the tree or under another.",
-        "operationId": "Identity.Users.Departments.Create",
+        "operationId": "Identity.Users.CreateDepartment",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3005,7 +3005,7 @@
           "Identity.Users"
         ],
         "summary": "Describes one department.",
-        "operationId": "Identity.Users.Departments.Get",
+        "operationId": "Identity.Users.GetDepartment",
         "parameters": [
           {
             "name": "id",
@@ -3110,7 +3110,7 @@
           "Identity.Users"
         ],
         "summary": "Renames a department, or moves it under another department or to the top of the tree.",
-        "operationId": "Identity.Users.Departments.Update",
+        "operationId": "Identity.Users.UpdateDepartment",
         "parameters": [
           {
             "name": "id",
@@ -3246,7 +3246,7 @@
           "Identity.Users"
         ],
         "summary": "Deletes a department that has no departments within it and that no position names today or from a later date.",
-        "operationId": "Identity.Users.Departments.Delete",
+        "operationId": "Identity.Users.DeleteDepartment",
         "parameters": [
           {
             "name": "id",
@@ -3357,7 +3357,7 @@
           "Identity.Users"
         ],
         "summary": "Lists the designations, by name unless the caller sorts them.",
-        "operationId": "Identity.Users.Designations.List",
+        "operationId": "Identity.Users.ListDesignations",
         "parameters": [
           {
             "name": "page",
@@ -3487,7 +3487,7 @@
           "Identity.Users"
         ],
         "summary": "Adds a designation to the list positions choose from.",
-        "operationId": "Identity.Users.Designations.Create",
+        "operationId": "Identity.Users.CreateDesignation",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3626,7 +3626,7 @@
           "Identity.Users"
         ],
         "summary": "Describes one designation.",
-        "operationId": "Identity.Users.Designations.Get",
+        "operationId": "Identity.Users.GetDesignation",
         "parameters": [
           {
             "name": "id",
@@ -3731,7 +3731,7 @@
           "Identity.Users"
         ],
         "summary": "Renames a designation.",
-        "operationId": "Identity.Users.Designations.Update",
+        "operationId": "Identity.Users.UpdateDesignation",
         "parameters": [
           {
             "name": "id",
@@ -3857,7 +3857,7 @@
           "Identity.Users"
         ],
         "summary": "Deletes a designation that no position names today or from a later date.",
-        "operationId": "Identity.Users.Designations.Delete",
+        "operationId": "Identity.Users.DeleteDesignation",
         "parameters": [
           {
             "name": "id",
@@ -3968,7 +3968,7 @@
           "Identity.Users"
         ],
         "summary": "Lists a person's positions, the latest first unless the caller sorts them.",
-        "operationId": "Identity.Users.Positions.List",
+        "operationId": "Identity.Users.ListPositions",
         "parameters": [
           {
             "name": "id",
@@ -4107,7 +4107,7 @@
           "Identity.Users"
         ],
         "summary": "Records a person's position from a date, in the past or the future, until their next position starts.",
-        "operationId": "Identity.Users.Positions.Record",
+        "operationId": "Identity.Users.RecordPosition",
         "parameters": [
           {
             "name": "id",
@@ -4255,7 +4255,7 @@
           "Identity.Users"
         ],
         "summary": "Describes one of a person's positions.",
-        "operationId": "Identity.Users.Positions.Get",
+        "operationId": "Identity.Users.GetPosition",
         "parameters": [
           {
             "name": "id",
@@ -4369,7 +4369,7 @@
           "Identity.Users"
         ],
         "summary": "Withdraws one of a person's positions; the one before it then holds until the next starts.",
-        "operationId": "Identity.Users.Positions.Withdraw",
+        "operationId": "Identity.Users.WithdrawPosition",
         "parameters": [
           {
             "name": "id",

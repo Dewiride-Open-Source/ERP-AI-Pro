@@ -1,7 +1,7 @@
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Domain;
 
-namespace Dewiride.Erp.Modules.Identity.Users.Positions.Application;
+namespace Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 
 // A position counts while it can still hold for someone: it is its person's position today or one they start later, and the
 // person's record is not deleted. A position that a later one replaced on or before today is history, and the last position

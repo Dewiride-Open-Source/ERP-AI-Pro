@@ -2,7 +2,7 @@ using Dewiride.Erp.Modules.Identity.Users.Departments.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Domain;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 
-namespace Dewiride.Erp.Modules.Identity.Users.People.Application;
+namespace Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 
 // Built with an object initializer: EF Core filters and sorts a projection only through the members it assigned, never through
 // constructor parameters.

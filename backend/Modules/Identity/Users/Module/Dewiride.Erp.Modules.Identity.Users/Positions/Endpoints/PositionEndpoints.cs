@@ -5,7 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Application;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Application.Commands.RecordPosition;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Application.Commands.WithdrawPosition;
@@ -22,14 +22,14 @@ namespace Dewiride.Erp.Modules.Identity.Users.Positions.Endpoints;
 
 internal static class PositionEndpoints
 {
-    public const string GetRouteName = "Identity.Users.Positions.Get";
+    public const string GetRouteName = "Identity.Users.GetPosition";
 
     public static void Map(RouteGroupBuilder group)
     {
         var positions = group.MapGroup("/{id:guid}/positions");
 
         positions.MapGet("/", ListAsync)
-            .WithName("Identity.Users.Positions.List")
+            .WithName("Identity.Users.ListPositions")
             .WithSummary("Lists a person's positions, the latest first unless the caller sorts them.")
             .RequirePermission(UsersPermissions.ReadPositions);
 
@@ -39,7 +39,7 @@ internal static class PositionEndpoints
             .RequirePermission(UsersPermissions.ReadPositions);
 
         positions.MapPost("/", RecordAsync)
-            .WithName("Identity.Users.Positions.Record")
+            .WithName("Identity.Users.RecordPosition")
             .WithSummary("Records a person's position from a date, in the past or the future, until their next position starts.")
             .RequirePermission(UsersPermissions.RecordPositions)
             .RequireIdempotencyKey()
@@ -47,7 +47,7 @@ internal static class PositionEndpoints
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         positions.MapDelete("/{positionId:guid}", WithdrawAsync)
-            .WithName("Identity.Users.Positions.Withdraw")
+            .WithName("Identity.Users.WithdrawPosition")
             .WithSummary("Withdraws one of a person's positions; the one before it then holds until the next starts.")
             .RequirePermission(UsersPermissions.WithdrawPositions)
             .ProducesProblem(StatusCodes.Status409Conflict)

@@ -5,7 +5,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Kernel.Time;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Application;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Application.Queries.GetOrgChart;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Endpoints.Requests;
@@ -26,8 +26,8 @@ internal static class OrgChartEndpoints
     public static void Map(RouteGroupBuilder group)
     {
         group.MapGet("/org-chart", GetAsync)
-            .WithName("Identity.Users.OrgChart")
-            .WithSummary("Lists the active people with the department, designation and manager of the position each holds on a date, today unless the caller names another.")
+            .WithName("Identity.Users.GetOrgChart")
+            .WithSummary("Lists the active people who have joined by a date, with the department, designation and manager of the position each holds on it, today unless the caller names another.")
             .RequirePermission(UsersPermissions.ReadOrgChart);
     }
 
@@ -43,7 +43,7 @@ internal static class OrgChartEndpoints
             details.ManagerDisplayName);
 
     private static async Task<Results<Ok<PagedResponse<OrgChartPersonResponse>>, ProblemHttpResult>> GetAsync(
-        [AsParameters] OrgChartRequest request,
+        [AsParameters] GetOrgChartRequest request,
         [AsParameters] PagingParameters paging,
         IQueryHandler<GetOrgChartQuery, PagedResult<OrgChartPersonDetails>> handler,
         ICallerPermissions permissions,

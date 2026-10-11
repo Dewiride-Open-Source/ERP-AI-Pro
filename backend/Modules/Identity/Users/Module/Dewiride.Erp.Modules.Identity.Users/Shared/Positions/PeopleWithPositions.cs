@@ -1,7 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 
-namespace Dewiride.Erp.Modules.Identity.Users.People.Application;
+namespace Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 
 // Every person whose record is not deleted, with the position they hold on the date: their latest position that starts on or
 // before it. Soft-deleted departments, designations and managers keep their names here, because a position from before their

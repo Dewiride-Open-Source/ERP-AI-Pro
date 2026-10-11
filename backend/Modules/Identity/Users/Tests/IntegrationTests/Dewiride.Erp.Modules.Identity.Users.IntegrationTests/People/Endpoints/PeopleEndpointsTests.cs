@@ -1,5 +1,6 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Shared;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
@@ -243,12 +244,14 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
         Assert.Equal(active.Id, Assert.Single(page.Items).Id);
     }
 
-    [Fact]
-    public async Task List_UnknownSortField_Returns400()
+    [Theory]
+    [InlineData("?sort=salary:desc")]
+    [InlineData("?filter=salary%3Aeq%3A1")]
+    public async Task List_FieldItDoesNotSortOrFilterBy_Returns400(string query)
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
-        using var response = await client.GetAsync(PeopleApi.Path("?sort=salary:desc"), TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(PeopleApi.Path(query), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -318,6 +321,20 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
     }
 
     [Fact]
+    public async Task Update_PhoneNumberThatIsNoNumber_Returns400KeyedByPhoneNumberAndKeepsTheRecord()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
+        var registered = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+
+        using var response = await client.PutAsJsonAsync(PeopleApi.Path($"/{registered.Id}"), new { phoneNumber = "12345", version = registered.Version }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        var problem = await PeopleApi.ReadValidationProblemAsync(response);
+        Assert.Equal("user.phone-number-invalid", PeopleApi.CodeOf(problem));
+        Assert.Equal("phoneNumber", Assert.Single(problem.Errors.Keys));
+        Assert.Equal(registered.PhoneNumber, (await GetAsync(client, registered.Id)).PhoneNumber);
+    }
+
+    [Fact]
     public async Task Update_EmployeeCodeOfAnotherRecord_Returns409()
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
@@ -379,6 +396,30 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
         var problem = await PeopleApi.ReadValidationProblemAsync(response);
         Assert.Contains("status", problem.Errors.Keys);
         Assert.Equal(PersonStatus.Deactivated, (await GetAsync(client, registered.Id)).Status);
+    }
+
+    [Fact]
+    public async Task ChangeStatus_VersionThatTheApiNeverIssued_Returns400KeyedByVersion()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
+        var registered = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+
+        using var response = await client.PutAsJsonAsync(PeopleApi.Path($"/{registered.Id}/status"), new { status = "deactivated", version = "not a version" }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        var problem = await PeopleApi.ReadValidationProblemAsync(response);
+        Assert.Equal("user.version-invalid", PeopleApi.CodeOf(problem));
+        Assert.Equal(PersonStatus.Active, (await GetAsync(client, registered.Id)).Status);
+    }
+
+    [Fact]
+    public async Task ChangeStatus_UnknownId_Returns404()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
+
+        using var response = await client.PutAsJsonAsync(PeopleApi.Path($"/{Guid.CreateVersion7()}/status"), new { status = "deactivated", version = "AAAAAAAAB9E=" }, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("user.not-found", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
     }
 
     [Fact]
@@ -503,6 +544,27 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
         var page = await ListAsync(client, $"filter={Uri.EscapeDataString($"managerId:eq:{manager.Id}")}");
 
         Assert.Equal(report.Id, Assert.Single(page.Items).Id);
+    }
+
+    [Fact]
+    public async Task List_FilteredByDesignationSortedByDepartment_ReturnsThePeopleWithItToday()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
+        var designation = await OrganisationApi.CreateDesignationAsync(client, OrganisationApi.UniqueName("Auditor"));
+        var audit = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Audit"));
+        var tax = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Tax"));
+        var inTax = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+        var inAudit = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+        var promoted = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+        await OrganisationApi.RecordPositionAsync(client, inTax.Id, OrganisationApi.Today.AddDays(-20), tax.Id, designation.Id);
+        await OrganisationApi.RecordPositionAsync(client, inAudit.Id, OrganisationApi.Today.AddDays(-20), audit.Id, designation.Id);
+        await OrganisationApi.RecordPositionAsync(client, promoted.Id, OrganisationApi.Today.AddDays(-20), audit.Id, designation.Id);
+        await OrganisationApi.RecordPositionAsync(client, promoted.Id, OrganisationApi.Today.AddDays(-1), audit.Id);
+
+        var page = await ListAsync(client, $"sort=department:asc&filter={Uri.EscapeDataString($"designationId:eq:{designation.Id}")}");
+
+        Assert.Equal([inAudit.Id, inTax.Id], page.Items.Select(p => p.Id));
+        Assert.Equal([audit.Name, tax.Name], page.Items.Select(p => p.DepartmentName));
     }
 
     [Fact]

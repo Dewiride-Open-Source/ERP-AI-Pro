@@ -6,6 +6,7 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Kernel.Time;
 using Dewiride.Erp.BuildingBlocks.Persistence.Queries;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
+using Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Queries.ListPeople;

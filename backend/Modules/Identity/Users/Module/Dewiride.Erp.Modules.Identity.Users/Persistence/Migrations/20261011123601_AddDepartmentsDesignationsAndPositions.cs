@@ -152,8 +152,11 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                 unique: true);
 
             migrationBuilder.Sql(
-                @"EXEC(N'INSERT INTO [identity_users].[Designations] ([Id], [Name], [CreatedAt], [CreatedBy], [IsDeleted])
-SELECT NEWID(), MIN(LTRIM(RTRIM([u].[Designation])) COLLATE Latin1_General_BIN2), SYSUTCDATETIME(), ''00000000-0000-0000-0000-000000000001'', CAST(0 AS bit)
+                @"EXEC(N'INSERT INTO [identity_users].[Designations] ([Id], [Name], [CreatedAt], [CreatedBy], [IsDeleted], [DeletedAt], [DeletedBy])
+SELECT NEWID(), MIN(LTRIM(RTRIM([u].[Designation])) COLLATE Latin1_General_BIN2), SYSUTCDATETIME(), ''00000000-0000-0000-0000-000000000001'',
+CASE WHEN MIN(CAST([u].[IsDeleted] AS int)) = 1 THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END,
+CASE WHEN MIN(CAST([u].[IsDeleted] AS int)) = 1 THEN SYSUTCDATETIME() END,
+CASE WHEN MIN(CAST([u].[IsDeleted] AS int)) = 1 THEN CAST(''00000000-0000-0000-0000-000000000001'' AS uniqueidentifier) END
 FROM [identity_users].[Users] AS [u]
 WHERE LTRIM(RTRIM([u].[Designation])) <> N''''
 GROUP BY LTRIM(RTRIM([u].[Designation]))')");
@@ -163,7 +166,7 @@ GROUP BY LTRIM(RTRIM([u].[Designation]))')");
 SELECT NEWID(), [u].[Id], CASE WHEN [s].[Start] > [s].[Today] THEN [s].[Today] ELSE [s].[Start] END, [d].[Id], SYSUTCDATETIME(), ''00000000-0000-0000-0000-000000000001''
 FROM [identity_users].[Users] AS [u]
 CROSS APPLY (SELECT COALESCE([u].[DateOfJoining], CAST(SWITCHOFFSET([u].[CreatedAt], ''+05:30'') AS date)) AS [Start], CAST(SWITCHOFFSET(SYSDATETIMEOFFSET(), ''+05:30'') AS date) AS [Today]) AS [s]
-INNER JOIN [identity_users].[Designations] AS [d] ON [d].[Name] = LTRIM(RTRIM([u].[Designation])) AND [d].[IsDeleted] = 0
+INNER JOIN [identity_users].[Designations] AS [d] ON [d].[Name] = LTRIM(RTRIM([u].[Designation]))
 WHERE LTRIM(RTRIM([u].[Designation])) <> N''''')");
 
             migrationBuilder.DropColumn(
@@ -186,7 +189,7 @@ WHERE LTRIM(RTRIM([u].[Designation])) <> N''''')");
             migrationBuilder.Sql(
                 @"EXEC(N'UPDATE [u] SET [Designation] = (
 SELECT TOP (1) [d].[Name] FROM [identity_users].[Positions] AS [p]
-INNER JOIN [identity_users].[Designations] AS [d] ON [d].[Id] = [p].[DesignationId]
+LEFT JOIN [identity_users].[Designations] AS [d] ON [d].[Id] = [p].[DesignationId]
 WHERE [p].[UserId] = [u].[Id] AND [p].[EffectiveFrom] <= CAST(SWITCHOFFSET(SYSDATETIMEOFFSET(), ''+05:30'') AS date)
 ORDER BY [p].[EffectiveFrom] DESC)
 FROM [identity_users].[Users] AS [u]')");
