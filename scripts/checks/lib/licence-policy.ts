@@ -45,6 +45,13 @@ export const reviewedPackages: readonly ReviewedPackage[] = [
   },
   {
     ecosystem: "nuget",
+    name: "Apache.Arrow",
+    evidence: { kind: "file", sha256: "f49cc7be44c8d4b6efffed6ac00026f2ff2146310f040350b50be30ed3f9c570" },
+    reason:
+      "Apache License 2.0 (Apache-2.0) of the Apache Software Foundation, brought in by Azure.Storage.Blobs to read blob listings in the Arrow format, which nothing here requests; LICENSE.txt read: the licence text verbatim, followed by the notice of the FlatBuffers code it includes, also Apache-2.0",
+  },
+  {
+    ecosystem: "nuget",
     name: "Microsoft.Data.SqlClient.SNI.runtime",
     evidence: { kind: "file", sha256: "9335e8bad875dd7be4eebd55d2335eb6433d1cea61aadb3817af7807bef8932a" },
     reason: "Microsoft Software License Terms for the SqlClient SNI native library, distributable as object code inside an application; LICENSE.txt read",
