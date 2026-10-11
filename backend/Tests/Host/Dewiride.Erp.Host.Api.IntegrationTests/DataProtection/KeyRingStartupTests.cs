@@ -31,7 +31,7 @@ public sealed class KeyRingStartupTests
             services.AddSingleton<IKeyEncryptionKeyResolver>(new RefusingKeyEncryptionKeyResolver(deployment.KeyResolver!));
         }));
 
-        var failure = Assert.Throws<RequestFailedException>(() => factory.Services);
+        var failure = Assert.IsType<RequestFailedException>(factory.StartFailure());
 
         Assert.Equal(RefusingKeyEncryptionKeyResolver.Status, failure.Status);
         Assert.Equal(2, deployment.KeyResolver!.Resolutions);
@@ -49,7 +49,7 @@ public sealed class KeyRingStartupTests
         await using var root = new ErpApiFactory().WithDeployment(deployment);
         await using var factory = WithResolver(root, new TestKeyEncryptionKeyResolver(deployment.KeyIdentifier!.AbsoluteUri));
 
-        var failure = Assert.Throws<InvalidOperationException>(() => factory.Services);
+        var failure = Assert.IsType<InvalidOperationException>(factory.StartFailure());
 
         Assert.Contains("keys/read", failure.Message, StringComparison.Ordinal);
         Assert.Empty(deployment.KeyFiles());
@@ -65,7 +65,7 @@ public sealed class KeyRingStartupTests
         await using var factory = root.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.Configure<KeyManagementOptions>(options => options.XmlRepository = new FileSystemXmlRepository(blocked, NullLoggerFactory.Instance))));
 
-        var failure = Assert.Throws<IOException>(() => factory.Services);
+        var failure = Assert.IsType<IOException>(factory.StartFailure());
 
         Assert.Equal(KeyDirectoryProbe.UnwritableDirectoryMessage(blocked.FullName), failure.Message);
         Assert.Equal(0, deployment.KeyResolver!.Resolutions);
@@ -83,7 +83,7 @@ public sealed class KeyRingStartupTests
         await using var root = new ErpApiFactory().WithDeployment(deployment);
         await using var factory = WithResolver(root, TestKeyEncryptionKeyResolver.ForVersionOf(deployment.KeyIdentifier!));
 
-        Assert.ThrowsAny<CryptographicException>(() => factory.Services);
+        Assert.IsAssignableFrom<CryptographicException>(factory.StartFailure());
         Assert.Single(deployment.KeyFiles());
     }
 
@@ -125,7 +125,7 @@ public sealed class KeyRingStartupTests
         PlantedKeys.WrappedByAnotherKey(deployment, expiration.AddDays(-90), expiration);
         await using var factory = OnTheClock(new ErpApiFactory().WithDeployment(deployment), clock);
 
-        Assert.ThrowsAny<CryptographicException>(() => factory.Services);
+        Assert.IsAssignableFrom<CryptographicException>(factory.StartFailure());
         Assert.Single(deployment.KeyFiles());
     }
 
@@ -141,7 +141,7 @@ public sealed class KeyRingStartupTests
         await using var root = new ErpApiFactory().WithDeployment(deployment);
         await using var factory = root.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddSingleton<ILoggerProvider>(new FakeLoggerProvider(logs))));
 
-        var failure = Assert.Throws<InvalidOperationException>(() => factory.Services);
+        var failure = Assert.IsType<InvalidOperationException>(factory.StartFailure());
 
         Assert.Equal(KeyRingStartupCheck.UnwrappedKeyMessage($"key-{planted.KeyId:D}.xml"), failure.Message);
         Assert.Single(deployment.KeyFiles());
@@ -169,7 +169,7 @@ public sealed class KeyRingStartupTests
         key.Save(file.FullName);
         await using var factory = new ErpApiFactory().WithDeployment(deployment);
 
-        var failure = Assert.Throws<InvalidOperationException>(() => factory.Services);
+        var failure = Assert.IsType<InvalidOperationException>(factory.StartFailure());
 
         Assert.Equal(KeyRingStartupCheck.UnwrappedKeyMessage(file.Name), failure.Message);
     }

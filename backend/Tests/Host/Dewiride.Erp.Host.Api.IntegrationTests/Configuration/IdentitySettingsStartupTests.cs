@@ -21,7 +21,7 @@ public sealed class IdentitySettingsStartupTests
     {
         using var factory = new ErpApiFactory().WithConfiguration(key, value);
 
-        var failure = Assert.Throws<OptionsValidationException>(() => factory.Services);
+        var failure = Assert.IsType<OptionsValidationException>(factory.StartFailure());
 
         Assert.Equal(typeof(EntraSignInOptions), failure.OptionsType);
         Assert.Contains($"{key} {rule}", failure.Message, StringComparison.Ordinal);
@@ -32,7 +32,7 @@ public sealed class IdentitySettingsStartupTests
     {
         using var factory = ErpApiFactory.ForEnvironment(Environments.Production).WithConfiguration(ErpApiFactory.IdentityWebOriginKey, "http://localhost:3000");
 
-        var failure = Assert.Throws<OptionsValidationException>(() => factory.Services);
+        var failure = Assert.IsType<OptionsValidationException>(factory.StartFailure());
 
         Assert.Contains($"{ErpApiFactory.IdentityWebOriginKey} must be an https origin", failure.Message, StringComparison.Ordinal);
     }
@@ -46,7 +46,7 @@ public sealed class IdentitySettingsStartupTests
     {
         using var factory = new ErpApiFactory().WithConfiguration(key, value);
 
-        var failure = Assert.Throws<OptionsValidationException>(() => factory.Services);
+        var failure = Assert.IsType<OptionsValidationException>(factory.StartFailure());
 
         Assert.Equal(typeof(EntraSignInOptions), failure.OptionsType);
         Assert.Contains($"The field {member} must be between", failure.Message, StringComparison.Ordinal);
