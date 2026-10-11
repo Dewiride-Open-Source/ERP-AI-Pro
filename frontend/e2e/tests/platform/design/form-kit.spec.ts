@@ -534,7 +534,7 @@ test.describe("form kit", () => {
   test.describe("when the server does not have the page's Server Function", () => {
     test.use({
       expectedConsoleError:
-        /^Failed to load resource: the server responded with a status of 404 \(Not Found\)$/,
+        /^Failed to load resource: the server responded with a status of 409 \(Conflict\)$/,
     });
 
     forEachTheme(
@@ -555,7 +555,7 @@ test.describe("form kit", () => {
         const refused = page.waitForResponse((response) => isSaveRequest(response.request()));
         await formKit.save.click();
         const response = await refused;
-        expect(response.status(), "status of the refused call").toBe(404);
+        expect(response.status(), "status of the refused call").toBe(409);
         expect(await response.headerValue("x-nextjs-action-not-found"), "refusal marker").toBe("1");
         await expect(formKit.summary).toHaveText(pageOutOfDateMessage);
         await expect(formKit.summary).toBeFocused();
