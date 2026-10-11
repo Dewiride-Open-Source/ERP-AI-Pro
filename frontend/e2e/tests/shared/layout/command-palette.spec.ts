@@ -37,6 +37,8 @@ async function bottomOnceOpened(dialog: Locator): Promise<number> {
 }
 
 test.describe("page search", () => {
+  test.use({ persona: "administrator" });
+
   forEachTheme(
     "the Search button opens it with every page, and typing narrows the list or says that nothing matches",
     async ({ page, capture }) => {
@@ -81,7 +83,7 @@ test.describe("page search", () => {
         "See which version of the ERP is running, since when, and its recent starts.",
       );
       await expect(shell.paletteOption("Attachments")).toHaveAccessibleDescription(
-        "Upload, download and delete the files kept with the ERP.",
+        "Upload and download the files kept with the ERP.",
       );
       await expect(shell.palette).toHaveAccessibleDescription(keyboardHint);
       if ((page.viewportSize()?.width ?? 0) >= hintMinWidth) await expect(hint).toBeVisible();

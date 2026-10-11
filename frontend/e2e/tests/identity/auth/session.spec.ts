@@ -138,8 +138,8 @@ test.describe("session", () => {
     const renewed = sessionRenewed(page);
     await start.goto();
     await renewed;
-    const openSystem = start.openLink("System");
-    await openSystem.focus();
+    const openAttachments = start.openLink("Attachments");
+    await openAttachments.focus();
 
     await page.clock.pauseAt(onTheClock(28, 1));
     await expect(dialogs.idleWarning).toBeVisible();
@@ -149,7 +149,7 @@ test.describe("session", () => {
     await expect(dialogs.idleWarning).toBeHidden();
     await page.clock.resume();
     await expect.poll(() => renewals.length).toBe(2);
-    await expect(openSystem).toBeFocused();
+    await expect(openAttachments).toBeFocused();
   });
 
   forEachTheme(

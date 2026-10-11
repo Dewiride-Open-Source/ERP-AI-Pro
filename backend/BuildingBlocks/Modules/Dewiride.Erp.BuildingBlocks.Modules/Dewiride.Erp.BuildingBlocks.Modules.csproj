@@ -12,4 +12,8 @@
     <PackageReference Include="Microsoft.FeatureManagement" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../../Kernel/Dewiride.Erp.BuildingBlocks.Kernel/Dewiride.Erp.BuildingBlocks.Kernel.csproj" />
+  </ItemGroup>
+
 </Project>

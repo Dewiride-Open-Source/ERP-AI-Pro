@@ -7,9 +7,11 @@ using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 using Dewiride.Erp.BuildingBlocks.Authentication.Logging;
 using Dewiride.Erp.BuildingBlocks.Authentication.OpenIdConnect;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.Permissions;
 using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Authentication.TokenCache;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Modules.Features;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -83,6 +85,9 @@ public static class AuthenticationRegistration
         builder.Services.TryAddSingleton<BearerTokenEvents>();
         builder.Services.AddSingleton<IConfigureOptions<JwtBearerOptions>, BearerTokenOptionsSetup>();
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, BearerTokenAccessHandler>());
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, PermissionAuthorizationHandler>());
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.TryAddScoped<ICallerPermissions, CallerPermissions>();
 
         builder.Services.TryAddSingleton<BoundedIdentityModelLogger>();
         builder.Services.TryAddSingleton<AnonymousSecurityEventBudget>();

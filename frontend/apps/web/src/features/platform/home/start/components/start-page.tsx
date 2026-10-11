@@ -9,15 +9,15 @@ import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 
 import { requireSession } from "@/shared/auth/session";
-import { isFeatureEnabled } from "@/shared/feature-flags/feature-flags";
 import { getFeatureFlags } from "@/shared/feature-flags/queries";
 import type { NavigationEntry } from "@/shared/layout/navigation-entry";
+import { visibleEntries } from "@/shared/layout/navigation/visible-entries";
 
 const areasHeadingId = "start-areas-heading";
 
 export async function StartPage({ navigation }: { navigation: readonly NavigationEntry[] }) {
   const [session, flags] = await Promise.all([requireSession(), getFeatureFlags()]);
-  const entries = navigation.filter((entry) => isFeatureEnabled(flags, entry.featureFlag));
+  const entries = visibleEntries(navigation, flags, session);
 
   return (
     <div className="grid gap-section">

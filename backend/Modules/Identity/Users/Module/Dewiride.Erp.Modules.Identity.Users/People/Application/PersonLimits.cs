@@ -15,4 +15,6 @@ internal static class PersonLimits
     public const int DesignationMaxLength = User.DesignationMaxLength;
 
     public const int VersionMaxLength = 64;
+
+    public const int RolesMaxCount = 3;
 }

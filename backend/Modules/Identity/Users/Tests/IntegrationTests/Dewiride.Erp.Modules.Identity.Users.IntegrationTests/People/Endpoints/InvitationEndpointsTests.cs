@@ -1,17 +1,21 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Graph;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 
 public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fixture) : IClassFixture<InvitationEndpointsTests.Fixture>
 {
+    private static readonly string[] ManagerAndHr = ["manager", "hr"];
+
     [Fact]
     public async Task SearchDirectory_AsSignedInAdministrator_AnswersTheMatchingPeopleByDisplayNameReadOnTheirBehalf()
     {
@@ -53,9 +57,9 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
             directory.Add(person);
         }
 
-        var invitedRecord = await AddRecordAsync(User.Invite(invited.ObjectId, invited.DisplayName, invited.UserPrincipalName, null, null, null, null).Value);
-        var registeredRecord = await AddRecordAsync(User.Register(registered.DisplayName, registered.UserPrincipalName.ToUpperInvariant(), null, null, null, null).Value);
-        await AddRecordAsync(User.Invite(Guid.CreateVersion7(), "Dev Earlier", reassigned.UserPrincipalName, null, null, null, null).Value);
+        var invitedRecord = await AddRecordAsync(User.Invite(invited.ObjectId, invited.DisplayName, invited.UserPrincipalName, null, null, null, null, []).Value);
+        var registeredRecord = await AddRecordAsync(User.Register(registered.DisplayName, registered.UserPrincipalName.ToUpperInvariant(), null, null, null, null, []).Value);
+        await AddRecordAsync(User.Invite(Guid.CreateVersion7(), "Dev Earlier", reassigned.UserPrincipalName, null, null, null, null, []).Value);
         using var client = await InvitationApi.SignedInAdministratorAsync(fixture.Factory);
 
         var search = await InvitationApi.SearchAsync(client, word);
@@ -192,6 +196,34 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
     }
 
     [Fact]
+    public async Task Invite_WithRoles_CreatesTheRecordWithThem()
+    {
+        var person = InvitationApi.DirectoryPerson($"Meera {InvitationApi.UniqueWord()}");
+        InvitationApi.DirectoryOf(fixture.Factory).Add(person);
+        using var client = await InvitationApi.SignedInAdministratorAsync(fixture.Factory);
+
+        using var response = await InvitationApi.PostAsync(client, new { entraObjectId = person.ObjectId, roles = ManagerAndHr });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal([PersonRole.Hr, PersonRole.Manager], (await PeopleApi.ReadPersonAsync(response)).Roles);
+    }
+
+    [Fact]
+    public async Task Invite_WithRolesByACallerWhoMayNotAssignThem_Answers403AndStoresNoRecord()
+    {
+        await using var refusing = fixture.Factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services => services.AddScoped<ICallerPermissions, AllButAssigningRoles>()));
+        var objectId = Guid.CreateVersion7();
+        using var client = refusing.CreateClient().AsUser(TestUsers.Administrator);
+
+        using var response = await InvitationApi.PostAsync(client, new { entraObjectId = objectId, roles = ManagerAndHr });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("request.forbidden", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
+        await using var scope = refusing.Services.CreateAsyncScope();
+        Assert.False(await scope.ServiceProvider.GetRequiredService<UsersDbContext>().Users.AnyAsync(u => u.EntraObjectId == objectId, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task Invite_ThenTheFirstSignInOfThePerson_SignsThemInToTheInvitedRecord()
     {
         var objectId = Guid.CreateVersion7();
@@ -276,7 +308,7 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
     {
         var person = InvitationApi.DirectoryPerson("Meera Nair");
         InvitationApi.DirectoryOf(fixture.Factory).Add(person);
-        await AddRecordAsync(User.Invite(Guid.CreateVersion7(), "Meera Earlier", person.UserPrincipalName, null, null, null, null).Value);
+        await AddRecordAsync(User.Invite(Guid.CreateVersion7(), "Meera Earlier", person.UserPrincipalName, null, null, null, null, []).Value);
         using var client = await InvitationApi.SignedInAdministratorAsync(fixture.Factory);
 
         using var response = await InvitationApi.PostAsync(client, InvitationApi.Invitation(person.ObjectId));

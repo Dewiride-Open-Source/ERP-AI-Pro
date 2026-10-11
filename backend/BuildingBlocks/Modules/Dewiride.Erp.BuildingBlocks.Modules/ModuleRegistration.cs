@@ -15,6 +15,7 @@ public static class ModuleRegistration
 
         var catalog = new ModuleCatalog(modules);
         builder.Services.AddSingleton(catalog);
+        builder.Services.AddSingleton(new PermissionCatalog(catalog));
         builder.Services.AddErpFeatureManagement();
 
         foreach (var module in catalog.Modules)

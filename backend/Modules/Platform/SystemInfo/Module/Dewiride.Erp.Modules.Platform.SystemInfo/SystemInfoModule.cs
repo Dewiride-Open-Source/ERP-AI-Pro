@@ -1,6 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.Modules.Platform.SystemInfo.Contracts;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Contracts.Info;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Info.Endpoints;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Persistence;
@@ -23,7 +24,11 @@ public sealed class SystemInfoModule : IModule
         Schema: SystemInfoDbContext.SchemaName,
         RoutePrefix: "/platform/system-info",
         FeatureFlag: FeatureFlag,
-        Permissions: [],
+        Permissions:
+        [
+            new(SystemInfoPermissions.ReadInfo, []),
+            new(SystemInfoPermissions.ReadStartups, []),
+        ],
         Capabilities: []);
 
     public void AddServices(IHostApplicationBuilder builder)

@@ -15,7 +15,7 @@ public sealed class ListRecentStartupsValidationTests(ErpApiFactory factory) : I
     [InlineData(101)]
     public async Task Get_TakeOutsideTheAllowedRange_AnswersValidationProblemDetails(int take)
     {
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri($"{Route}?take={take}", UriKind.Relative), TestContext.Current.CancellationToken);
 
@@ -38,7 +38,7 @@ public sealed class ListRecentStartupsValidationTests(ErpApiFactory factory) : I
     [InlineData("1.5")]
     public async Task Get_TakeThatIsNotAnInteger_AnswersMalformedRequestProblem(string take)
     {
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri($"{Route}?take={take}", UriKind.Relative), TestContext.Current.CancellationToken);
 
@@ -49,7 +49,7 @@ public sealed class ListRecentStartupsValidationTests(ErpApiFactory factory) : I
     public async Task Get_TakeThatIsNotAnIntegerInProduction_AnswersTheSameMalformedRequestProblem()
     {
         using var production = ErpApiFactory.ForEnvironment(Environments.Production);
-        using var client = production.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = production.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri($"{Route}?take=many", UriKind.Relative), TestContext.Current.CancellationToken);
 
@@ -62,7 +62,7 @@ public sealed class ListRecentStartupsValidationTests(ErpApiFactory factory) : I
     [InlineData("?take=100")]
     public async Task Get_TakeInsideTheAllowedRange_AnswersTheStartups(string query)
     {
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri(Route + query, UriKind.Relative), TestContext.Current.CancellationToken);
 

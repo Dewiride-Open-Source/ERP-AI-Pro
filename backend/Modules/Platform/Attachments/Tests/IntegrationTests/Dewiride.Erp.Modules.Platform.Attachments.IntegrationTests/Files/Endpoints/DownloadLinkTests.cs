@@ -260,7 +260,8 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
         using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"deleted {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "deleted.txt");
         var link = await AttachmentsApi.CreateDownloadLinkAsync(client, attachment.Id);
-        using var deleted = await client.DeleteAsync(AttachmentsApi.Path($"/{attachment.Id}"), TestContext.Current.CancellationToken);
+        using var administrator = factory.CreateClient().AsUser(TestUsers.Administrator);
+        using var deleted = await administrator.DeleteAsync(AttachmentsApi.Path($"/{attachment.Id}"), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
 
         using var response = await client.GetAsync(new Uri(link.Url, UriKind.Relative), TestContext.Current.CancellationToken);
@@ -273,7 +274,8 @@ public sealed class DownloadLinkTests(ErpApiFactory factory) : IClassFixture<Erp
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         var attachment = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"gone {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "gone.txt");
-        using var deleted = await client.DeleteAsync(AttachmentsApi.Path($"/{attachment.Id}"), TestContext.Current.CancellationToken);
+        using var administrator = factory.CreateClient().AsUser(TestUsers.Administrator);
+        using var deleted = await administrator.DeleteAsync(AttachmentsApi.Path($"/{attachment.Id}"), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
 
         using var response = await client.PostAsync(AttachmentsApi.Path($"/{attachment.Id}/download-links"), content: null, TestContext.Current.CancellationToken);

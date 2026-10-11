@@ -12,9 +12,10 @@ namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Responses;
 /// <param name="Designation">Designation, as free text.</param>
 /// <param name="DateOfJoining">Date the person joined the company.</param>
 /// <param name="Status">Whether the person may sign in.</param>
+/// <param name="Roles">Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra.</param>
 /// <param name="LastSignedInAt">UTC time of the person's last sign-in.</param>
 /// <param name="CreatedAt">UTC time the record was created.</param>
-/// <param name="Version">Version of the record, which an edit or a status change names to be refused when the record changed since.</param>
+/// <param name="Version">Version of the record, which an edit, a status change or a role assignment names to be refused when the record changed since.</param>
 internal sealed record PersonResponse(
     Guid Id,
     Guid? EntraObjectId,
@@ -25,6 +26,7 @@ internal sealed record PersonResponse(
     string? Designation,
     DateOnly? DateOfJoining,
     PersonStatus Status,
+    IReadOnlyList<PersonRole> Roles,
     DateTimeOffset? LastSignedInAt,
     DateTimeOffset CreatedAt,
     string Version);

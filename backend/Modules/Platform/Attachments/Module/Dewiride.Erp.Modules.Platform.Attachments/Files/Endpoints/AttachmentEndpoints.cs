@@ -3,8 +3,10 @@ using Dewiride.Erp.BuildingBlocks.Application.Queries;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.BuildingBlocks.Attachments.Service;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.Modules.Platform.Attachments.Contracts.Files;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Commands.DeleteAttachment;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Queries.GetAttachment;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Queries.GetUploadPolicy;
@@ -25,19 +27,23 @@ internal static class AttachmentEndpoints
     {
         group.MapGet("/", ListAsync)
             .WithName("Platform.Attachments.List")
-            .WithSummary("Lists stored attachments, newest first unless the caller sorts them.");
+            .WithSummary("Lists stored attachments, newest first unless the caller sorts them.")
+            .RequirePermission(AttachmentsPermissions.Read);
 
         group.MapGet("/policy", GetPolicyAsync)
             .WithName("Platform.Attachments.GetUploadPolicy")
-            .WithSummary("Describes the largest file and the media types an upload may have.");
+            .WithSummary("Describes the largest file and the media types an upload may have.")
+            .RequirePermission(AttachmentsPermissions.Read);
 
         group.MapGet("/{id:guid}", GetAsync)
             .WithName(GetRouteName)
-            .WithSummary("Describes one stored attachment.");
+            .WithSummary("Describes one stored attachment.")
+            .RequirePermission(AttachmentsPermissions.Read);
 
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("Platform.Attachments.Delete")
-            .WithSummary("Deletes an attachment; its download links stop working.");
+            .WithSummary("Deletes an attachment; its download links stop working.")
+            .RequirePermission(AttachmentsPermissions.Delete);
     }
 
     public static AttachmentResponse ToResponse(AttachmentDetails details) =>

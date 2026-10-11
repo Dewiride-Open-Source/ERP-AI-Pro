@@ -222,7 +222,7 @@
         "tags": [
           "Auth"
         ],
-        "summary": "Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles.",
+        "summary": "Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles, and the permissions their roles give them.",
         "operationId": "Auth.Me",
         "responses": {
           "429": {
@@ -501,6 +501,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -597,6 +607,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RecentStartupsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -722,6 +742,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -823,6 +853,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AttachmentResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -943,6 +983,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1040,6 +1090,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1128,6 +1188,16 @@
           },
           "204": {
             "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1226,6 +1296,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1318,6 +1398,16 @@
           },
           "504": {
             "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1448,22 +1538,22 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResponseOfPersonResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1564,22 +1654,22 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Created",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PersonResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1692,22 +1782,22 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PersonResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1807,22 +1897,22 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PersonResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -1923,6 +2013,9 @@
               }
             }
           },
+          "204": {
+            "description": "No Content"
+          },
           "403": {
             "description": "Forbidden",
             "content": {
@@ -1932,9 +2025,6 @@
                 }
               }
             }
-          },
-          "204": {
-            "description": "No Content"
           },
           "422": {
             "description": "Unprocessable Entity",
@@ -2044,8 +2134,136 @@
               }
             }
           },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/identity/users/{id}/roles": {
+      "put": {
+        "tags": [
+          "Identity.Users"
+        ],
+        "summary": "Replaces the roles a person holds in the ERP, Finance, HR and Manager; their next request holds the new ones.",
+        "operationId": "Identity.Users.AssignRoles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignPersonRolesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2064,8 +2282,8 @@
               }
             }
           },
-          "409": {
-            "description": "Conflict",
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2074,8 +2292,8 @@
               }
             }
           },
-          "422": {
-            "description": "Unprocessable Entity",
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2174,22 +2392,22 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DirectorySearchResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -2302,22 +2520,22 @@
               }
             }
           },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "201": {
             "description": "Created",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PersonResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -2400,6 +2618,35 @@
   },
   "components": {
     "schemas": {
+      "AssignPersonRolesRequest": {
+        "required": [
+          "roles",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "roles": {
+            "maxItems": 3,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PersonRole"
+            },
+            "description": "Roles the person holds in the ERP from now on, in place of those they held; their app roles in Microsoft Entra give them Administrator and Employee besides."
+          },
+          "version": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Version of the record the change was made from, as the API last returned it."
+          }
+        }
+      },
       "AttachmentResponse": {
         "required": [
           "id",
@@ -2476,7 +2723,8 @@
           "id",
           "name",
           "userName",
-          "roles"
+          "roles",
+          "permissions"
         ],
         "type": "object",
         "properties": {
@@ -2494,6 +2742,12 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Permission"
             }
           }
         }
@@ -2660,7 +2914,8 @@
           "employeeCode",
           "phoneNumber",
           "designation",
-          "dateOfJoining"
+          "dateOfJoining",
+          "roles"
         ],
         "type": "object",
         "properties": {
@@ -2706,6 +2961,17 @@
             ],
             "description": "Date the person joined the company.",
             "format": "date"
+          },
+          "roles": {
+            "maxItems": 3,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PersonRole"
+            },
+            "description": "Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra; naming any needs the permission identity.users.people.assign-roles."
           }
         }
       },
@@ -2777,6 +3043,21 @@
           }
         }
       },
+      "Permission": {
+        "enum": [
+          "identity.users.people.assign-roles",
+          "identity.users.people.change-status",
+          "identity.users.people.delete",
+          "identity.users.people.read",
+          "identity.users.people.register",
+          "identity.users.people.update",
+          "platform.attachments.files.delete",
+          "platform.attachments.files.read",
+          "platform.attachments.files.upload",
+          "platform.system-info.info.read",
+          "platform.system-info.startups.read"
+        ]
+      },
       "PersonResponse": {
         "required": [
           "id",
@@ -2788,6 +3069,7 @@
           "designation",
           "dateOfJoining",
           "status",
+          "roles",
           "lastSignedInAt",
           "createdAt",
           "version"
@@ -2839,6 +3121,12 @@
           "status": {
             "$ref": "#/components/schemas/PersonStatus"
           },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonRole"
+            }
+          },
           "lastSignedInAt": {
             "type": [
               "null",
@@ -2854,6 +3142,13 @@
             "type": "string"
           }
         }
+      },
+      "PersonRole": {
+        "enum": [
+          "finance",
+          "hr",
+          "manager"
+        ]
       },
       "PersonStatus": {
         "enum": [
@@ -2927,7 +3222,8 @@
           "employeeCode",
           "phoneNumber",
           "designation",
-          "dateOfJoining"
+          "dateOfJoining",
+          "roles"
         ],
         "type": "object",
         "properties": {
@@ -2983,6 +3279,17 @@
             ],
             "description": "Date the person joined the company.",
             "format": "date"
+          },
+          "roles": {
+            "maxItems": 3,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PersonRole"
+            },
+            "description": "Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra; naming any needs the permission identity.users.people.assign-roles."
           }
         }
       },

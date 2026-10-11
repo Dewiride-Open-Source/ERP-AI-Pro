@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.Testing;
 using Microsoft.AspNetCore.Antiforgery;
@@ -21,6 +22,15 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
     ];
 
     private static readonly string[] DevelopmentOnlyRoutePrefixes = ["/scalar"];
+
+    private static readonly string[] SignedInRoutes =
+    [
+        "GET /api/auth/me",
+        "GET /api/auth/session",
+        "POST /api/auth/session",
+        "GET /api/auth/antiforgery",
+        "GET /api/platform/features",
+    ];
 
     private static readonly string[] GeneratedBaseTypes = ["Microsoft.EntityFrameworkCore.Migrations.Migration", "Microsoft.EntityFrameworkCore.Infrastructure.ModelSnapshot"];
 
@@ -80,8 +90,8 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
 
             Assert.Equal($"/{Kebab(descriptor.Domain)}/{Kebab(descriptor.Name)}", descriptor.RoutePrefix);
             Assert.Equal($"Erp.Modules.{descriptor.Domain}.{descriptor.Name}", descriptor.FeatureFlag);
-            Assert.All(descriptor.Permissions, p => Assert.Matches("^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){3}$", p));
-            Assert.All(descriptor.Permissions, p => Assert.StartsWith(descriptor.PermissionPrefix, p, StringComparison.Ordinal));
+            Assert.All(descriptor.Permissions, p => Assert.Matches("^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){3}$", p.Name));
+            Assert.All(descriptor.Permissions, p => Assert.StartsWith(descriptor.PermissionPrefix, p.Name, StringComparison.Ordinal));
             Assert.All(descriptor.Capabilities, c => Assert.Matches("^[A-Z][A-Za-z0-9]*$", c.Name));
             Assert.Equal(descriptor.Capabilities.Count, descriptor.Capabilities.Select(c => c.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count());
         }
@@ -152,10 +162,65 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         Assert.Empty(stale);
     }
 
+    [Fact]
+    public void SignedInEndpointsWithoutAPermission_AreOnTheSignedInList()
+    {
+        var offenders = SignedInRoutesWithoutAPermission().Where(route => !SignedInRoutes.Contains(route, StringComparer.Ordinal)).ToList();
+
+        Assert.Empty(offenders);
+    }
+
+    [Fact]
+    public void SignedInRouteList_NamesOnlyRoutesThatAreMappedWithoutAPermission()
+    {
+        var signedIn = SignedInRoutesWithoutAPermission();
+
+        var stale = SignedInRoutes.Where(route => !signedIn.Contains(route, StringComparer.Ordinal)).ToList();
+
+        Assert.Empty(stale);
+    }
+
+    [Fact]
+    public void PermissionEndpoints_NeverAllowAnonymousCallers()
+    {
+        var anonymous = RouteEndpoints()
+            .Where(endpoint => endpoint.Metadata.GetMetadata<PermissionMetadata>() is not null && endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null)
+            .Select(RouteOf)
+            .ToList();
+
+        Assert.Empty(anonymous);
+    }
+
+    [Fact]
+    public void PermissionEndpoints_RequireOnlyPermissionsAModuleDeclares()
+    {
+        var catalog = _factory.Services.GetRequiredService<PermissionCatalog>();
+
+        var undeclared = RouteEndpoints()
+            .Select(endpoint => endpoint.Metadata.GetMetadata<PermissionMetadata>()?.Permission)
+            .OfType<string>()
+            .Where(permission => !catalog.Contains(permission))
+            .ToList();
+
+        Assert.Empty(undeclared);
+    }
+
     private List<string> AnonymousRoutes() =>
-        _factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
+        RouteEndpoints()
             .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null)
-            .Select(endpoint => endpoint.RoutePattern.RawText!.Length > 1 ? endpoint.RoutePattern.RawText!.TrimEnd('/') : endpoint.RoutePattern.RawText!)
+            .Select(RouteOf)
             .Distinct(StringComparer.Ordinal)
             .ToList();
+
+    private List<string> SignedInRoutesWithoutAPermission() =>
+        RouteEndpoints()
+            .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is null && endpoint.Metadata.GetMetadata<PermissionMetadata>() is null)
+            .SelectMany(endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? ["*"]).Select(method => $"{method} {RouteOf(endpoint)}"))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+    private List<RouteEndpoint> RouteEndpoints() => [.. _factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()];
+
+    private static string RouteOf(RouteEndpoint endpoint) =>
+        endpoint.RoutePattern.RawText!.Length > 1 ? endpoint.RoutePattern.RawText!.TrimEnd('/') : endpoint.RoutePattern.RawText!;
 }

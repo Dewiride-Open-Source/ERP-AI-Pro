@@ -5,4 +5,5 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Responses;
 /// <param name="Name">Display name of the person.</param>
 /// <param name="UserName">Name the person signs in with, usually their email address.</param>
 /// <param name="Roles">App roles the person holds on the app registration, such as Erp.User and Erp.Admin.</param>
-internal sealed record CurrentUserResponse(Guid Id, string Name, string UserName, IReadOnlyList<string> Roles);
+/// <param name="Permissions">Permissions the person holds in this request, from their app roles and the roles assigned to them in the ERP, in ordinal order.</param>
+internal sealed record CurrentUserResponse(Guid Id, string Name, string UserName, IReadOnlyList<string> Roles, IReadOnlyList<string> Permissions);

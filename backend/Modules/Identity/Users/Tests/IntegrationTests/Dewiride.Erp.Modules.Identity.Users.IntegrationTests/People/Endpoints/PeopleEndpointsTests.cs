@@ -6,6 +6,7 @@ using Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Responses;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
@@ -131,10 +132,11 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
     [InlineData("GET", "/{id}")]
     [InlineData("PUT", "/{id}")]
     [InlineData("PUT", "/{id}/status")]
+    [InlineData("PUT", "/{id}/roles")]
     [InlineData("DELETE", "/{id}")]
     [InlineData("GET", "/directory?search=meera")]
     [InlineData("POST", "/invitations")]
-    public async Task EveryRoute_AsPersonWithoutTheAdministratorRole_Returns403RequestForbidden(string method, string suffix)
+    public async Task EveryRoute_AsPersonWithoutItsPermission_Returns403RequestForbidden(string method, string suffix)
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         using var request = new HttpRequestMessage(new HttpMethod(method), PeopleApi.Path(suffix.Replace("{id}", Guid.CreateVersion7().ToString(), StringComparison.Ordinal)));
@@ -147,6 +149,21 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("request.forbidden", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
+    }
+
+    [Theory]
+    [InlineData("GET", "/api/identity/users", UsersPermissions.Read)]
+    [InlineData("GET", "/api/identity/users/{id:guid}", UsersPermissions.Read)]
+    [InlineData("POST", "/api/identity/users", UsersPermissions.Register)]
+    [InlineData("GET", "/api/identity/users/directory", UsersPermissions.Register)]
+    [InlineData("POST", "/api/identity/users/invitations", UsersPermissions.Register)]
+    [InlineData("PUT", "/api/identity/users/{id:guid}", UsersPermissions.Update)]
+    [InlineData("PUT", "/api/identity/users/{id:guid}/status", UsersPermissions.ChangeStatus)]
+    [InlineData("PUT", "/api/identity/users/{id:guid}/roles", UsersPermissions.AssignRoles)]
+    [InlineData("DELETE", "/api/identity/users/{id:guid}", UsersPermissions.Delete)]
+    public void Route_OfEachUseCase_RequiresItsOwnPermission(string method, string route, string permission)
+    {
+        Assert.Equal(permission, RoutePermissions.Of(factory.Services, method, route));
     }
 
     [Fact]
@@ -179,7 +196,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
         using var response = await client.GetAsync(PeopleApi.Path($"/{registered.Id}"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(registered, await PeopleApi.ReadPersonAsync(response));
+        Assert.Equivalent(registered, await PeopleApi.ReadPersonAsync(response), strict: true);
     }
 
     [Fact]
@@ -191,7 +208,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
 
         var page = await ListAsync(client, $"filter={Uri.EscapeDataString($"workEmail:eq:{registered.WorkEmail}")}");
 
-        Assert.Equal(registered, Assert.Single(page.Items));
+        Assert.Equivalent(registered, Assert.Single(page.Items), strict: true);
         Assert.Equal(1, page.TotalCount);
         Assert.Equal(1, page.Page);
     }
@@ -463,7 +480,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
             var context = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
             if (!await context.Users.AnyAsync(u => u.EntraObjectId == user.ObjectId, TestContext.Current.CancellationToken))
             {
-                context.Users.Add(User.Invite(user.ObjectId, user.Name, user.UserName, null, null, null, null).Value);
+                context.Users.Add(User.Invite(user.ObjectId, user.Name, user.UserName, null, null, null, null, []).Value);
                 await context.SaveChangesAsync(TestContext.Current.CancellationToken);
             }
         }

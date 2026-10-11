@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 
 namespace Dewiride.Erp.Modules.Identity.Users.UnitTests.People.Domain;
@@ -11,7 +12,7 @@ public sealed class UserTests
     [Fact]
     public void Register_ValidDetails_CreatesAnActiveRecordWithTrimmedAndNormalisedValues()
     {
-        var result = User.Register("  Meera Nair ", " Meera.Nair@Dewiride.com ", " DW-0042 ", "98765 43210", " Accountant ", new DateOnly(2026, 4, 1));
+        var result = User.Register("  Meera Nair ", " Meera.Nair@Dewiride.com ", " DW-0042 ", "98765 43210", " Accountant ", new DateOnly(2026, 4, 1), []);
 
         Assert.True(result.IsSuccess);
         var user = result.Value;
@@ -31,7 +32,7 @@ public sealed class UserTests
     [Fact]
     public void Invite_EntraObjectId_LinksTheRecordToIt()
     {
-        var result = User.Invite(ObjectId, "Meera Nair", "meera.nair@dewiride.com", null, null, null, null);
+        var result = User.Invite(ObjectId, "Meera Nair", "meera.nair@dewiride.com", null, null, null, null, []);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(ObjectId, result.Value.EntraObjectId);
@@ -49,7 +50,7 @@ public sealed class UserTests
     [InlineData("Meera Nair", "", "user.work-email-invalid", "WorkEmail")]
     public void Register_InvalidNameOrEmail_FailsWithTheCodeOfThatMember(string displayName, string workEmail, string expectedCode, string expectedMember)
     {
-        var result = User.Register(displayName, workEmail, null, null, null, null);
+        var result = User.Register(displayName, workEmail, null, null, null, null, []);
 
         Assert.True(result.IsFailure);
         Assert.Equal(expectedCode, result.Error!.Code);
@@ -59,7 +60,7 @@ public sealed class UserTests
     [Fact]
     public void Register_DisplayNameLongerThanTheLimit_FailsWithDisplayNameTooLong()
     {
-        var result = User.Register(new string('a', User.DisplayNameMaxLength + 1), "meera.nair@dewiride.com", null, null, null, null);
+        var result = User.Register(new string('a', User.DisplayNameMaxLength + 1), "meera.nair@dewiride.com", null, null, null, null, []);
 
         Assert.True(result.IsFailure);
         Assert.Equal("user.display-name-too-long", result.Error!.Code);
@@ -68,7 +69,7 @@ public sealed class UserTests
     [Fact]
     public void Register_WorkEmailLongerThanTheLimit_FailsWithWorkEmailInvalid()
     {
-        var result = User.Register("Meera Nair", new string('a', User.WorkEmailMaxLength - "@dewiride.com".Length + 1) + "@dewiride.com", null, null, null, null);
+        var result = User.Register("Meera Nair", new string('a', User.WorkEmailMaxLength - "@dewiride.com".Length + 1) + "@dewiride.com", null, null, null, null, []);
 
         Assert.True(result.IsFailure);
         Assert.Equal("user.work-email-invalid", result.Error!.Code);
@@ -83,7 +84,7 @@ public sealed class UserTests
     [InlineData("+1 415 555 0132", "+14155550132")]
     public void Describe_PhoneNumber_StoresItInInternationalForm(string phoneNumber, string expected)
     {
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null).Value;
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, []).Value;
 
         var result = user.Describe(null, phoneNumber, null, null);
 
@@ -103,7 +104,7 @@ public sealed class UserTests
     [InlineData("phone 9876543210")]
     public void Describe_PhoneNumberThatIsNoNumber_FailsWithPhoneNumberInvalid(string phoneNumber)
     {
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, "9876543210", null, null).Value;
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, "9876543210", null, null, []).Value;
 
         var result = user.Describe(null, phoneNumber, null, null);
 
@@ -120,7 +121,7 @@ public sealed class UserTests
     [InlineData("ÉMP-1")]
     public void Describe_EmployeeCodeOutsideItsCharacters_FailsWithEmployeeCodeInvalid(string employeeCode)
     {
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null).Value;
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, []).Value;
 
         var result = user.Describe(employeeCode, null, null, null);
 
@@ -131,7 +132,7 @@ public sealed class UserTests
     [Fact]
     public void Describe_EmployeeCodeLongerThanTheLimit_FailsWithEmployeeCodeInvalid()
     {
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null).Value;
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, []).Value;
 
         var result = user.Describe(new string('A', User.EmployeeCodeMaxLength + 1), null, null, null);
 
@@ -145,7 +146,7 @@ public sealed class UserTests
     [InlineData("7")]
     public void Describe_EmployeeCodeOfItsCharacters_KeepsIt(string employeeCode)
     {
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null).Value;
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, []).Value;
 
         var result = user.Describe(employeeCode, null, null, null);
 
@@ -156,7 +157,7 @@ public sealed class UserTests
     [Fact]
     public void Describe_DesignationLongerThanTheLimit_FailsWithDesignationTooLong()
     {
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null).Value;
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, []).Value;
 
         var result = user.Describe(null, null, new string('a', User.DesignationMaxLength + 1), null);
 
@@ -167,7 +168,7 @@ public sealed class UserTests
     [Fact]
     public void Describe_BlankValues_ClearEveryDetail()
     {
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", "DW-0042", "9876543210", "Accountant", new DateOnly(2026, 4, 1)).Value;
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", "DW-0042", "9876543210", "Accountant", new DateOnly(2026, 4, 1), []).Value;
 
         var result = user.Describe(" ", "", null, null);
 
@@ -203,7 +204,7 @@ public sealed class UserTests
     [Fact]
     public void SignIn_RegisteredRecord_LinksTheAccountAndBringsTheNameAndEmail()
     {
-        var user = User.Register("Meera", "meera@dewiride.com", "DW-0042", null, null, null).Value;
+        var user = User.Register("Meera", "meera@dewiride.com", "DW-0042", null, null, null, []).Value;
 
         var result = user.SignIn(ObjectId, "Meera Nair", "meera.nair@dewiride.com", SignedInAt);
 
@@ -253,6 +254,57 @@ public sealed class UserTests
         user.Reactivate();
         Assert.Equal(UserStatus.Active, user.Status);
         Assert.True(user.IsActive);
+    }
+
+    [Fact]
+    public void Register_WithRoles_KeepsEachOnceInOrder()
+    {
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Manager, ErpRole.Hr, ErpRole.Manager]).Value;
+
+        Assert.Equal([ErpRole.Hr, ErpRole.Manager], user.Roles);
+    }
+
+    [Fact]
+    public void AssignRoles_FinanceHrAndManager_ReplacesTheRolesTheRecordHeld()
+    {
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Hr]).Value;
+
+        var result = user.AssignRoles([ErpRole.Finance, ErpRole.Manager]);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal([ErpRole.Finance, ErpRole.Manager], user.Roles);
+    }
+
+    [Fact]
+    public void AssignRoles_NoRole_LeavesTheRecordWithoutRoles()
+    {
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Finance]).Value;
+
+        Assert.True(user.AssignRoles([]).IsSuccess);
+        Assert.Empty(user.Roles);
+    }
+
+    [Theory]
+    [InlineData(ErpRole.Administrator)]
+    [InlineData(ErpRole.Employee)]
+    public void AssignRoles_ARoleTheEntraAppRolesGive_FailsWithRoleNotAssignableAndKeepsTheRoles(ErpRole role)
+    {
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Hr]).Value;
+
+        var result = user.AssignRoles([ErpRole.Finance, role]);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("user.role-not-assignable", result.Error!.Code);
+        Assert.Equal([ErpRole.Hr], user.Roles);
+    }
+
+    [Fact]
+    public void Invite_WithARoleTheEntraAppRolesGive_FailsWithRoleNotAssignable()
+    {
+        var result = User.Invite(ObjectId, "Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Administrator]);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("user.role-not-assignable", result.Error!.Code);
     }
 
     [Fact]

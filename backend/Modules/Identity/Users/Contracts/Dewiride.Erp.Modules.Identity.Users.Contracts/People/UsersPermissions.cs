@@ -12,5 +12,5 @@ public static class UsersPermissions
 
     public const string Delete = "identity.users.people.delete";
 
-    public static IReadOnlyList<string> All { get; } = [Read, Register, Update, ChangeStatus, Delete];
+    public const string AssignRoles = "identity.users.people.assign-roles";
 }

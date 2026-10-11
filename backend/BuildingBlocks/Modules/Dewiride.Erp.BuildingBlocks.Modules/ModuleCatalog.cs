@@ -18,7 +18,7 @@ public sealed class ModuleCatalog
 
         foreach (var descriptor in modules.Select(m => m.Descriptor))
         {
-            var foreign = descriptor.Permissions.FirstOrDefault(p => !p.StartsWith(descriptor.PermissionPrefix, StringComparison.Ordinal));
+            var foreign = descriptor.Permissions.Select(p => p.Name).FirstOrDefault(p => !p.StartsWith(descriptor.PermissionPrefix, StringComparison.Ordinal));
             if (foreign is not null)
             {
                 throw new InvalidOperationException($"Module '{descriptor.Id}' declares the permission '{foreign}', which must start with '{descriptor.PermissionPrefix}'.");

@@ -1,6 +1,8 @@
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
+using Dewiride.Erp.Modules.Platform.SystemInfo.Contracts;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Persistence;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Application.Queries.ListRecentStartups;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Domain;
@@ -8,6 +10,7 @@ using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Endpoints.Responses;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Hosting;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Platform.SystemInfo.IntegrationTests.Startups.Endpoints;
@@ -19,7 +22,7 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
     [Fact]
     public async Task Get_Startups_ListsTheRunningApisOwnStartWithoutTheMachineName()
     {
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
         var recorded = await factory.Services.GetRequiredService<StartupRecorder>().Recorded.WaitAsync(TestContext.Current.CancellationToken);
         Assert.True(recorded.IsSuccess, recorded.Error?.Message);
         var application = factory.Services.GetRequiredService<ApplicationInfo>();
@@ -41,10 +44,28 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
         Assert.DoesNotContain(Environment.MachineName, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("GET", "/api/platform/system-info/startups", SystemInfoPermissions.ReadStartups)]
+    public void Route_OfEachUseCase_RequiresItsOwnPermission(string method, string route, string permission)
+    {
+        Assert.Equal(permission, RoutePermissions.Of(factory.Services, method, route));
+    }
+
+    [Fact]
+    public async Task Get_StartupsAsAnEmployee_Answers403RequestForbidden()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+
+        using var response = await client.GetAsync(StartupsPath, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("request.forbidden", (await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("code").GetString());
+    }
+
     [Fact]
     public async Task Get_Startups_WithMoreThanTwentyRows_ReturnsTheTwentyNewestFirst()
     {
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
         await factory.Services.GetRequiredService<StartupRecorder>().Recorded.WaitAsync(TestContext.Current.CancellationToken);
         var oldest = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var seededNewestFirst = new List<Guid>();

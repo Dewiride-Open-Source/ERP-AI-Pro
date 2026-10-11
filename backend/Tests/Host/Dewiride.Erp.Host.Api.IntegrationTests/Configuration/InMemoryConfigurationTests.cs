@@ -17,7 +17,7 @@ public sealed class InMemoryConfigurationTests
     public async Task Get_SystemInfo_WithInMemoryApplicationName_ReportsTheOverride()
     {
         using var factory = new ErpApiFactory().WithConfiguration(ApplicationNameKey, "ERP-AI-Pro (in-memory)");
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri("/api/platform/system-info", UriKind.Relative), TestContext.Current.CancellationToken);
 

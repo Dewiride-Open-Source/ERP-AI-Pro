@@ -191,6 +191,18 @@ public sealed class AntiforgeryValidationTests(AntiforgeryValidationTests.Fixtur
     }
 
     [Fact]
+    public async Task Delete_SignedInWithoutTheRoutesPermissionOrTheRequestToken_AnswersForbiddenBeforeTheCheck()
+    {
+        using var client = TestSignIn.CreateClientWithoutRequestToken(fixture.Factory);
+        using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Accountant);
+
+        using var response = await SendAsync(client, HttpMethod.Delete, $"{AttachmentsPath}/{Guid.CreateVersion7():D}");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(ProblemTypes.RequestForbidden, await CodeOfAsync(response));
+    }
+
+    [Fact]
     public async Task Post_IdempotentEndpointRefusedForItsToken_ClaimsNoKey()
     {
         using var client = TestSignIn.CreateClientWithoutRequestToken(fixture.Factory);

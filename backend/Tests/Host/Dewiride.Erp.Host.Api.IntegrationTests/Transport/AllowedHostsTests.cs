@@ -16,7 +16,7 @@ public sealed class AllowedHostsTests : IClassFixture<AllowedHostsTests.Fixture>
 
     public AllowedHostsTests(Fixture fixture)
     {
-        _client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
+        _client = fixture.Factory.CreateClient().AsUser(TestUsers.Administrator);
     }
 
     [Theory]
@@ -70,7 +70,7 @@ public sealed class AllowedHostsTests : IClassFixture<AllowedHostsTests.Fixture>
     public async Task Get_AnyHostWithTheDefaultWildcard_IsServed()
     {
         await using var factory = new ErpApiFactory();
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/platform/system-info");
         request.Headers.Host = "anything.example";
 

@@ -4,6 +4,16 @@
 // @ts-ignore
 import { type AdditionalDataHolder, type ApiError, type DateOnly, type Guid, type Parsable, type ParseNode, type SerializationWriter } from '@microsoft/kiota-abstractions';
 
+export interface AssignPersonRolesRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Roles the person holds in the ERP from now on, in place of those they held; their app roles in Microsoft Entra give them Administrator and Employee besides.
+     */
+    roles?: PersonRole[] | null;
+    /**
+     * Version of the record the change was made from, as the API last returned it.
+     */
+    version?: string | null;
+}
 export interface AttachmentResponse extends AdditionalDataHolder, Parsable {
     /**
      * The contentType property
@@ -48,6 +58,15 @@ export interface ChangePersonStatusRequest extends AdditionalDataHolder, Parsabl
      * Version of the record the change was made from, as the API last returned it.
      */
     version?: string | null;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {AssignPersonRolesRequest}
+ */
+// @ts-ignore
+export function createAssignPersonRolesRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoAssignPersonRolesRequest;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -257,6 +276,10 @@ export interface CurrentUserResponse extends AdditionalDataHolder, Parsable {
      */
     name?: string | null;
     /**
+     * The permissions property
+     */
+    permissions?: Permission[] | null;
+    /**
      * The roles property
      */
     roles?: string[] | null;
@@ -264,6 +287,18 @@ export interface CurrentUserResponse extends AdditionalDataHolder, Parsable {
      * The userName property
      */
     userName?: string | null;
+}
+/**
+ * The deserialization information for the current model
+ * @param AssignPersonRolesRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoAssignPersonRolesRequest(assignPersonRolesRequest: Partial<AssignPersonRolesRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "roles": n => { assignPersonRolesRequest.roles = n.getCollectionOfEnumValues<PersonRole>(PersonRoleObject); },
+        "version": n => { assignPersonRolesRequest.version = n.getStringValue(); },
+    }
 }
 /**
  * The deserialization information for the current model
@@ -305,6 +340,7 @@ export function deserializeIntoCurrentUserResponse(currentUserResponse: Partial<
     return {
         "id": n => { currentUserResponse.id = n.getGuidValue(); },
         "name": n => { currentUserResponse.name = n.getStringValue(); },
+        "permissions": n => { currentUserResponse.permissions = n.getCollectionOfEnumValues<Permission>(PermissionObject); },
         "roles": n => { currentUserResponse.roles = n.getCollectionOfPrimitiveValues<string>("string"); },
         "userName": n => { currentUserResponse.userName = n.getStringValue(); },
     }
@@ -413,6 +449,7 @@ export function deserializeIntoInvitePersonRequest(invitePersonRequest: Partial<
         "employeeCode": n => { invitePersonRequest.employeeCode = n.getStringValue(); },
         "entraObjectId": n => { invitePersonRequest.entraObjectId = n.getGuidValue(); },
         "phoneNumber": n => { invitePersonRequest.phoneNumber = n.getStringValue(); },
+        "roles": n => { invitePersonRequest.roles = n.getCollectionOfEnumValues<PersonRole>(PersonRoleObject); },
     }
 }
 /**
@@ -462,6 +499,7 @@ export function deserializeIntoPersonResponse(personResponse: Partial<PersonResp
         "id": n => { personResponse.id = n.getGuidValue(); },
         "lastSignedInAt": n => { personResponse.lastSignedInAt = n.getDateValue(); },
         "phoneNumber": n => { personResponse.phoneNumber = n.getStringValue(); },
+        "roles": n => { personResponse.roles = n.getCollectionOfEnumValues<PersonRole>(PersonRoleObject); },
         "status": n => { personResponse.status = n.getEnumValue<PersonStatus>(PersonStatusObject); },
         "version": n => { personResponse.version = n.getStringValue(); },
         "workEmail": n => { personResponse.workEmail = n.getStringValue(); },
@@ -508,6 +546,7 @@ export function deserializeIntoRegisterPersonRequest(registerPersonRequest: Part
         "displayName": n => { registerPersonRequest.displayName = n.getStringValue(); },
         "employeeCode": n => { registerPersonRequest.employeeCode = n.getStringValue(); },
         "phoneNumber": n => { registerPersonRequest.phoneNumber = n.getStringValue(); },
+        "roles": n => { registerPersonRequest.roles = n.getCollectionOfEnumValues<PersonRole>(PersonRoleObject); },
         "workEmail": n => { registerPersonRequest.workEmail = n.getStringValue(); },
     }
 }
@@ -701,6 +740,10 @@ export interface InvitePersonRequest extends AdditionalDataHolder, Parsable {
      * Phone number: an international number starting with + and its country code, or a 10-digit Indian mobile number.
      */
     phoneNumber?: string | null;
+    /**
+     * Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra; naming any needs the permission identity.users.people.assign-roles.
+     */
+    roles?: PersonRole[] | null;
 }
 export interface PagedResponseOfAttachmentResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -746,6 +789,7 @@ export interface PagedResponseOfPersonResponse extends AdditionalDataHolder, Par
      */
     totalPages?: number | null;
 }
+export type Permission = (typeof PermissionObject)[keyof typeof PermissionObject];
 export interface PersonResponse extends AdditionalDataHolder, Parsable {
     /**
      * The createdAt property
@@ -784,6 +828,10 @@ export interface PersonResponse extends AdditionalDataHolder, Parsable {
      */
     phoneNumber?: string | null;
     /**
+     * The roles property
+     */
+    roles?: PersonRole[] | null;
+    /**
      * The status property
      */
     status?: PersonStatus | null;
@@ -796,6 +844,7 @@ export interface PersonResponse extends AdditionalDataHolder, Parsable {
      */
     workEmail?: string | null;
 }
+export type PersonRole = (typeof PersonRoleObject)[keyof typeof PersonRoleObject];
 export type PersonStatus = (typeof PersonStatusObject)[keyof typeof PersonStatusObject];
 export interface ProblemDetails extends AdditionalDataHolder, ApiError, Parsable {
     /**
@@ -855,9 +904,27 @@ export interface RegisterPersonRequest extends AdditionalDataHolder, Parsable {
      */
     phoneNumber?: string | null;
     /**
+     * Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra; naming any needs the permission identity.users.people.assign-roles.
+     */
+    roles?: PersonRole[] | null;
+    /**
      * Work email of the person, which their first sign-in matches to link the record to their Entra account.
      */
     workEmail?: string | null;
+}
+/**
+ * Serializes information the current object
+ * @param AssignPersonRolesRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeAssignPersonRolesRequest(writer: SerializationWriter, assignPersonRolesRequest: Partial<AssignPersonRolesRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!assignPersonRolesRequest || isSerializingDerivedType) { return; }
+    if(assignPersonRolesRequest.roles)
+    writer.writeCollectionOfEnumValues<PersonRole>("roles", assignPersonRolesRequest.roles);
+    writer.writeStringValue("version", assignPersonRolesRequest.version);
+    writer.writeAdditionalData(assignPersonRolesRequest.additionalData);
 }
 /**
  * Serializes information the current object
@@ -902,6 +969,8 @@ export function serializeCurrentUserResponse(writer: SerializationWriter, curren
     if (!currentUserResponse || isSerializingDerivedType) { return; }
     writer.writeGuidValue("id", currentUserResponse.id);
     writer.writeStringValue("name", currentUserResponse.name);
+    if(currentUserResponse.permissions)
+    writer.writeCollectionOfEnumValues<Permission>("permissions", currentUserResponse.permissions);
     writer.writeCollectionOfPrimitiveValues<string>("roles", currentUserResponse.roles);
     writer.writeStringValue("userName", currentUserResponse.userName);
     writer.writeAdditionalData(currentUserResponse.additionalData);
@@ -1018,6 +1087,8 @@ export function serializeInvitePersonRequest(writer: SerializationWriter, invite
     writer.writeStringValue("employeeCode", invitePersonRequest.employeeCode);
     writer.writeGuidValue("entraObjectId", invitePersonRequest.entraObjectId);
     writer.writeStringValue("phoneNumber", invitePersonRequest.phoneNumber);
+    if(invitePersonRequest.roles)
+    writer.writeCollectionOfEnumValues<PersonRole>("roles", invitePersonRequest.roles);
     writer.writeAdditionalData(invitePersonRequest.additionalData);
 }
 /**
@@ -1070,6 +1141,8 @@ export function serializePersonResponse(writer: SerializationWriter, personRespo
     writer.writeGuidValue("id", personResponse.id);
     writer.writeDateValue("lastSignedInAt", personResponse.lastSignedInAt);
     writer.writeStringValue("phoneNumber", personResponse.phoneNumber);
+    if(personResponse.roles)
+    writer.writeCollectionOfEnumValues<PersonRole>("roles", personResponse.roles);
     writer.writeEnumValue<PersonStatus>("status", personResponse.status);
     writer.writeStringValue("version", personResponse.version);
     writer.writeStringValue("workEmail", personResponse.workEmail);
@@ -1119,6 +1192,8 @@ export function serializeRegisterPersonRequest(writer: SerializationWriter, regi
     writer.writeStringValue("displayName", registerPersonRequest.displayName);
     writer.writeStringValue("employeeCode", registerPersonRequest.employeeCode);
     writer.writeStringValue("phoneNumber", registerPersonRequest.phoneNumber);
+    if(registerPersonRequest.roles)
+    writer.writeCollectionOfEnumValues<PersonRole>("roles", registerPersonRequest.roles);
     writer.writeStringValue("workEmail", registerPersonRequest.workEmail);
     writer.writeAdditionalData(registerPersonRequest.additionalData);
 }
@@ -1295,6 +1370,24 @@ export interface UploadPolicyResponse extends AdditionalDataHolder, Parsable {
 export const AttachmentScanStatusObject = {
     NotScanned: "notScanned",
     Clean: "clean",
+} as const;
+export const PermissionObject = {
+    IdentityUsersPeopleAssignRoles: "identity.users.people.assign-roles",
+    IdentityUsersPeopleChangeStatus: "identity.users.people.change-status",
+    IdentityUsersPeopleDelete: "identity.users.people.delete",
+    IdentityUsersPeopleRead: "identity.users.people.read",
+    IdentityUsersPeopleRegister: "identity.users.people.register",
+    IdentityUsersPeopleUpdate: "identity.users.people.update",
+    PlatformAttachmentsFilesDelete: "platform.attachments.files.delete",
+    PlatformAttachmentsFilesRead: "platform.attachments.files.read",
+    PlatformAttachmentsFilesUpload: "platform.attachments.files.upload",
+    PlatformSystemInfoInfoRead: "platform.system-info.info.read",
+    PlatformSystemInfoStartupsRead: "platform.system-info.startups.read",
+} as const;
+export const PersonRoleObject = {
+    Finance: "finance",
+    Hr: "hr",
+    Manager: "manager",
 } as const;
 export const PersonStatusObject = {
     Active: "active",

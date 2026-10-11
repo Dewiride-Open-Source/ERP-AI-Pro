@@ -4,6 +4,8 @@ import { formKitPath } from "../../../pages/platform/design/form-kit.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 test.describe("navigation crawl", () => {
+  test.use({ persona: "administrator" });
+
   forEachTheme(
     "follows every entry of the primary navigation to its page without a console error",
     async ({ page, capture, consoleErrors }) => {

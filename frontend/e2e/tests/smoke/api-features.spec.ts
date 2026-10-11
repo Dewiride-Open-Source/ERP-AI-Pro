@@ -38,7 +38,7 @@ test.describe("feature flags", () => {
     const anonymous = await request.get(`${gatedApiBaseURL}/api/platform/system-info`);
     expect(anonymous.status()).toBe(401);
 
-    const signedIn = await request.post(`${gatedBaseURL}${signInPath}/accountant`);
+    const signedIn = await request.post(`${gatedBaseURL}${signInPath}/administrator`);
     expect(signedIn.status(), "the test sign-in on the gated stack").toBe(200);
 
     const features = await request.get(`${gatedBaseURL}/api/platform/features`);
@@ -62,5 +62,25 @@ test.describe("feature flags", () => {
       code: "feature.disabled",
       instance: "/api/platform/attachments",
     });
+  });
+
+  test("the gated stack refuses a route of a disabled module before telling a person without its permission that it is off", async ({
+    request,
+  }) => {
+    test.skip(!gatedBaseURL, "E2E_GATED_BASE_URL is not set and Playwright did not start the gated pair");
+
+    const signedIn = await request.post(`${gatedBaseURL}${signInPath}/accountant`);
+    expect(signedIn.status(), "the test sign-in on the gated stack").toBe(200);
+
+    const refused = await request.get(`${gatedBaseURL}/api/platform/system-info`);
+    expect(refused.status()).toBe(403);
+    expect(await refused.json()).toMatchObject({
+      code: "request.forbidden",
+      instance: "/api/platform/system-info",
+    });
+
+    const gated = await request.get(`${gatedBaseURL}/api/platform/attachments`);
+    expect(gated.status()).toBe(404);
+    expect(await gated.json()).toMatchObject({ code: "feature.disabled" });
   });
 });

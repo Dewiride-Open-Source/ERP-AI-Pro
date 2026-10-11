@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 
-import { AttachmentsOverview } from "@/features/platform/attachments";
+import { AttachmentsOverview, attachmentsNavigation } from "@/features/platform/attachments";
+import { pageMetadata, RequirePermission } from "@/shared/auth/require-permission";
 
-export const metadata: Metadata = { title: "Attachments" };
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("Attachments", attachmentsNavigation.permission);
+}
 
 export default async function AttachmentsPage({
   searchParams,
 }: Readonly<PageProps<"/platform/attachments">>) {
-  return <AttachmentsOverview searchParameters={await searchParams} />;
+  return (
+    <RequirePermission permission={attachmentsNavigation.permission}>
+      <AttachmentsOverview searchParameters={await searchParams} />
+    </RequirePermission>
+  );
 }

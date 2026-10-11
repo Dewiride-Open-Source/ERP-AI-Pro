@@ -116,6 +116,8 @@ async function expectSidebarState(
 }
 
 test.describe("app shell navigation", () => {
+  test.use({ persona: "administrator" });
+
   test.describe("on a wide screen", () => {
     test.skip(
       ({ viewport }) => showsNavigationDrawer(viewport),

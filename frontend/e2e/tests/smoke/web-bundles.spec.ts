@@ -94,7 +94,7 @@ async function scriptsOf(request: APIRequestContext, path: string): Promise<stri
 test.describe("web bundles", () => {
   for (const { path, ownMarkers, foreignMarkers } of routes) {
     test(`${path} ships its own client components and no other module's`, async ({ request }) => {
-      await signIn(request, "accountant");
+      await signIn(request, "administrator");
       const scripts = await scriptsOf(request, path);
 
       for (const marker of ownMarkers) expect(scripts, `${path} carries ${marker}`).toContain(`"${marker}"`);

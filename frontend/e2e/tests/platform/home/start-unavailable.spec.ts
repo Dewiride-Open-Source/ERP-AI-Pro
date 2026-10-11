@@ -51,7 +51,7 @@ test.describe("start page without the API", () => {
               - link "Open System"
             - listitem:
               - heading "Attachments" [level=3]
-              - text: /Upload, download and delete/
+              - text: /Upload and download the files/
               - link "Open Attachments"
       `);
 

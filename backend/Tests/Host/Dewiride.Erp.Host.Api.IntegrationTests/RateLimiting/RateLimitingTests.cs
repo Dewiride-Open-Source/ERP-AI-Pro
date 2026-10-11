@@ -20,6 +20,8 @@ public sealed class RateLimitingTests
 
     private static readonly Uri SystemInfoPath = new("/api/platform/system-info", UriKind.Relative);
 
+    private static readonly Uri UploadPolicyPath = new("/api/platform/attachments/policy", UriKind.Relative);
+
     private static readonly Uri AnonymousPath = new("/__test/anonymous", UriKind.Relative);
 
     [Fact]
@@ -88,12 +90,12 @@ public sealed class RateLimitingTests
         using var accountant = factory.CreateClient().AsUser(TestUsers.Accountant);
         using var administrator = factory.CreateClient().AsUser(TestUsers.Administrator);
         using var anonymous = factory.CreateClient();
-        await AssertServedAsync(accountant, SystemInfoPath, times: 2);
+        await AssertServedAsync(accountant, UploadPolicyPath, times: 2);
 
-        using var overTheLimit = await accountant.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);
+        using var overTheLimit = await accountant.GetAsync(UploadPolicyPath, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.TooManyRequests, overTheLimit.StatusCode);
-        await AssertServedAsync(administrator, SystemInfoPath, times: 2);
+        await AssertServedAsync(administrator, UploadPolicyPath, times: 2);
         await AssertServedAsync(anonymous, AnonymousPath, times: 2);
     }
 
@@ -101,7 +103,7 @@ public sealed class RateLimitingTests
     public async Task Get_DisabledModuleBeyondTheLimit_IsLimitedBeforeTheFeatureGateAnswers()
     {
         await using var factory = new ErpApiFactory().WithConfiguration(ActorLimitKey, "1").WithFeature(SystemInfoFlag, enabled: false);
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var first = await client.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);
         using var second = await client.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);

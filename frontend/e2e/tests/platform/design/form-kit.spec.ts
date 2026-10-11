@@ -124,6 +124,8 @@ async function expectValidSupplierKept(formKit: FormKitPage): Promise<void> {
 }
 
 test.describe("form kit", () => {
+  test.use({ persona: "administrator" });
+
   test.beforeEach(({ browserName }) => {
     test.slow(
       browserName === "webkit",

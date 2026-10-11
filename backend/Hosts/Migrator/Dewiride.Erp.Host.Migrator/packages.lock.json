@@ -324,6 +324,7 @@
       "dewiride.erp.buildingblocks.modules": {
         "type": "Project",
         "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )",
           "Microsoft.FeatureManagement": "[4.8.0, )"
         }
       },

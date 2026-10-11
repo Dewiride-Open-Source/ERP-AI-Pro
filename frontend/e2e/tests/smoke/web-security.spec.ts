@@ -137,7 +137,7 @@ test.describe("web origin security", () => {
   });
 
   test("API responses served through the web origin keep the API hardening headers", async ({ request }) => {
-    await signIn(request, "accountant");
+    await signIn(request, "administrator");
     const info = await request.get("/api/platform/system-info");
     expect(info.status()).toBe(200);
     expect(info.headers()["content-security-policy"]).toBe("default-src 'none'; frame-ancestors 'none'");

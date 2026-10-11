@@ -6,7 +6,7 @@ public sealed record ModuleDescriptor(
     string? Schema,
     string RoutePrefix,
     string FeatureFlag,
-    IReadOnlyCollection<string> Permissions,
+    IReadOnlyCollection<PermissionDeclaration> Permissions,
     IReadOnlyCollection<ModuleCapability> Capabilities)
 {
     public string Id => $"{Domain}.{Name}";

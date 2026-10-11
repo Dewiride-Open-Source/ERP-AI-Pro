@@ -29,14 +29,14 @@ This repository is the Community edition, licensed LGPL-3.0-only. The Enterprise
 | Database | SQL Server (owner's instance) / Azure SQL | one database, schema per module, migrations per module, applied by the migrator container in production |
 | Attachments | Azure Blob Storage (Azurite in tests, CI and the local containers) | `BuildingBlocks.Attachments` behind `IAttachmentService`: files encrypted by the API with an AES-256-GCM envelope, each file's data key wrapped by a key-encryption key kept as a Key Vault secret, before they reach one Entra-only storage account per environment, metadata in the `files` schema, routes in the `Platform/Attachments` module ([attachments](attachments.md), ADR-0022) |
 | Configuration | Azure App Configuration + Key Vault | one store, environment labels, secrets as Key Vault references |
-| Identity | Microsoft Entra ID | BFF cookie session issued by the API to a person whose record the module `Identity/Users` admits ([ADR-0039](../adr/0039-people-and-their-admission.md)); permissions stored by the identity modules from `user-management-roles-and-permissions` |
+| Identity | Microsoft Entra ID | BFF cookie session issued by the API to a person whose record the module `Identity/Users` admits ([ADR-0039](../adr/0039-people-and-their-admission.md)); every route that is not anonymous requires a permission, except the few any signed-in person may use, held through the person's app roles and the roles assigned to their record ([ADR-0041](../adr/0041-roles-and-permissions.md)) |
 | Observability | OpenTelemetry | OTLP exporter when configured; Aspire dashboard locally |
 | AI | Microsoft.Extensions.AI | the Community AI foundation: one `IChatClient` pipeline, the prompt library and tool registry, evaluation and safety; AI features are Enterprise modules, every capability behind a feature flag ([AI capabilities](ai-capabilities.md)) |
 
 ## Request flow
 
 1. The browser calls the web origin. Static assets and pages are served by Next.js; `/api/*` is routed to the API (the `proxy.ts` runtime rewrite, or the edge proxy in production).
-2. The API validates the authentication cookie, the antiforgery token on state changes, and the caller's permissions, then dispatches to the module endpoint group.
+2. The API validates the authentication cookie, the caller's permission and, on state changes, the antiforgery token, then dispatches to the module endpoint group.
 3. Module endpoints bind the request, call a command or query handler, and map the `Result` to a typed HTTP result. Handlers use the module's DbContext; cross-module data comes from contracts.
 4. Domain events raised inside a transaction become integration events in the outbox, delivered in-process to consuming modules.
 5. Files stream through the API in both directions; the browser never talks to storage. An upload is checked (name, type, content and size), hashed, encrypted and staged in Blob Storage, committed unless identical stored content can be verified to open, and recorded; a download is a short-lived link bound to the person who asked for it, then a decrypted stream whose redemption is recorded ([attachments](attachments.md)).

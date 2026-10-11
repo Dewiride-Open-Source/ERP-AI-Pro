@@ -1,11 +1,14 @@
-using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.BuildingBlocks.Application.Queries;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.People.Application;
+using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.AssignPersonRoles;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.ChangePersonStatus;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.DeletePerson;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.RegisterPerson;
@@ -21,49 +24,60 @@ using Microsoft.AspNetCore.Routing;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
 
-// Until the ERP has roles and permissions of its own, the administrator app role of the sign-in registration is what lets a
-// person manage people. A change answers the record as it was saved, read again, so its version is the one to edit next.
+// Naming roles for a record that is being created also needs the permission to assign roles, so holding the permission to
+// register people is not enough to hand out roles. A change answers the record as it was saved, read again, so its version
+// is the one to edit next.
 internal static class PeopleEndpoints
 {
     public const string GetRouteName = "Identity.Users.Get";
 
+    public static readonly Error AssigningRolesForbidden = Error.Forbidden("request.forbidden", $"Naming roles for a person needs the permission {UsersPermissions.AssignRoles}.");
+
     public static void Map(RouteGroupBuilder group)
     {
-        var people = group.MapGroup(string.Empty)
-            .RequireAuthorization(policy => policy.RequireRole(AppRoles.Administrator))
-            .ProducesProblem(StatusCodes.Status403Forbidden);
-
-        people.MapGet("/", ListAsync)
+        group.MapGet("/", ListAsync)
             .WithName("Identity.Users.List")
-            .WithSummary("Lists the people of the ERP, by display name unless the caller sorts them.");
+            .WithSummary("Lists the people of the ERP, by display name unless the caller sorts them.")
+            .RequirePermission(UsersPermissions.Read);
 
-        people.MapGet("/{id:guid}", GetAsync)
+        group.MapGet("/{id:guid}", GetAsync)
             .WithName(GetRouteName)
-            .WithSummary("Describes one person.");
+            .WithSummary("Describes one person.")
+            .RequirePermission(UsersPermissions.Read);
 
-        people.MapPost("/", RegisterAsync)
+        group.MapPost("/", RegisterAsync)
             .WithName("Identity.Users.Register")
             .WithSummary("Registers a person by work email before their first sign-in, which links the record to their Entra account.")
+            .RequirePermission(UsersPermissions.Register)
             .RequireIdempotencyKey()
             .ProducesProblem(StatusCodes.Status409Conflict);
 
-        people.MapPut("/{id:guid}", UpdateAsync)
+        group.MapPut("/{id:guid}", UpdateAsync)
             .WithName("Identity.Users.Update")
             .WithSummary("Changes the employee code, phone number, designation and date of joining of a person.")
+            .RequirePermission(UsersPermissions.Update)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
-        people.MapPut("/{id:guid}/status", ChangeStatusAsync)
+        group.MapPut("/{id:guid}/status", ChangeStatusAsync)
             .WithName("Identity.Users.ChangeStatus")
             .WithSummary("Deactivates or reactivates a person; a deactivated person cannot sign in, and their sessions end at their next request.")
+            .RequirePermission(UsersPermissions.ChangeStatus)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
-        people.MapDelete("/{id:guid}", DeleteAsync)
+        group.MapPut("/{id:guid}/roles", AssignRolesAsync)
+            .WithName("Identity.Users.AssignRoles")
+            .WithSummary("Replaces the roles a person holds in the ERP, Finance, HR and Manager; their next request holds the new ones.")
+            .RequirePermission(UsersPermissions.AssignRoles)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
+        group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("Identity.Users.Delete")
             .WithSummary("Deletes a person's record; their sessions end at their next request.")
+            .RequirePermission(UsersPermissions.Delete)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
-        InvitationEndpoints.Map(people);
+        InvitationEndpoints.Map(group);
     }
 
     public static async Task<Results<Created<PersonResponse>, ProblemHttpResult>> CreatedAsync(
@@ -96,6 +110,7 @@ internal static class PeopleEndpoints
             details.Designation,
             details.DateOfJoining,
             details.Status,
+            details.Roles,
             details.LastSignedInAt,
             details.CreatedAt,
             details.Version);
@@ -126,10 +141,17 @@ internal static class PeopleEndpoints
         RegisterPersonRequest request,
         ICommandHandler<RegisterPersonCommand, Guid> handler,
         IQueryHandler<GetPersonQuery, PersonDetails> people,
+        ICallerPermissions permissions,
         LinkGenerator links,
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
+        var roles = request.Roles ?? [];
+        if (roles.Count > 0 && !permissions.Holds(UsersPermissions.AssignRoles))
+        {
+            return AssigningRolesForbidden.ToProblem();
+        }
+
         var registered = await handler.HandleAsync(
             new RegisterPersonCommand(
                 request.DisplayName!,
@@ -137,7 +159,8 @@ internal static class PeopleEndpoints
                 request.EmployeeCode,
                 request.PhoneNumber,
                 request.Designation,
-                request.DateOfJoining),
+                request.DateOfJoining,
+                roles),
             cancellationToken);
 
         return registered.IsFailure
@@ -169,6 +192,18 @@ internal static class PeopleEndpoints
         var changed = await handler.HandleAsync(new ChangePersonStatusCommand(id, request.Status, request.Version!), cancellationToken);
 
         return changed.IsFailure ? changed.Error!.ToProblem() : await ReadAsync(people, changed.Value, cancellationToken);
+    }
+
+    private static async Task<Results<Ok<PersonResponse>, ProblemHttpResult>> AssignRolesAsync(
+        Guid id,
+        AssignPersonRolesRequest request,
+        ICommandHandler<AssignPersonRolesCommand, Guid> handler,
+        IQueryHandler<GetPersonQuery, PersonDetails> people,
+        CancellationToken cancellationToken)
+    {
+        var assigned = await handler.HandleAsync(new AssignPersonRolesCommand(id, request.Roles!, request.Version!), cancellationToken);
+
+        return assigned.IsFailure ? assigned.Error!.ToProblem() : await ReadAsync(people, assigned.Value, cancellationToken);
     }
 
     private static async Task<Results<NoContent, ProblemHttpResult>> DeleteAsync(

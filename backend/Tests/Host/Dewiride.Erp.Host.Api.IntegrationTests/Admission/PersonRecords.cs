@@ -11,8 +11,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Admission;
 
-// Every test host of the process writes to the one test database, so a test that deactivates or deletes a record does so
-// to a person of its own, never to a persona other tests sign in; an administrator changes the record through the API.
+// Every test host of the process writes to the one test database, so a test that changes the roles or the status of a
+// record, or deletes it, does so to a person of its own, never to a persona other tests sign in; an administrator changes
+// the record through the API.
 internal static class PersonRecords
 {
     private const string PeoplePath = "/api/identity/users";
@@ -66,9 +67,11 @@ internal static class PersonRecords
         return body.RootElement.GetProperty("id").GetGuid();
     }
 
-    public static Task DeactivateAsync(WebApplicationFactory<Program> factory, TestUser person) => ChangeStatusAsync(factory, person, "deactivated");
+    public static Task DeactivateAsync(WebApplicationFactory<Program> factory, TestUser person) => PutAsync(factory, person, "status", version => new { status = "deactivated", version });
 
-    public static Task ReactivateAsync(WebApplicationFactory<Program> factory, TestUser person) => ChangeStatusAsync(factory, person, "active");
+    public static Task ReactivateAsync(WebApplicationFactory<Program> factory, TestUser person) => PutAsync(factory, person, "status", version => new { status = "active", version });
+
+    public static Task AssignRolesAsync(WebApplicationFactory<Program> factory, TestUser person, params string[] roles) => PutAsync(factory, person, "roles", version => new { roles, version });
 
     public static async Task DeleteAsync(WebApplicationFactory<Program> factory, TestUser person)
     {
@@ -81,15 +84,15 @@ internal static class PersonRecords
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
 
-    private static async Task ChangeStatusAsync(WebApplicationFactory<Program> factory, TestUser person, string status)
+    private static async Task PutAsync(WebApplicationFactory<Program> factory, TestUser person, string resource, Func<string, object> body)
     {
         var user = await OfAsync(factory, person);
         Assert.NotNull(user);
         using var administrator = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await administrator.PutAsJsonAsync(
-            new Uri($"{PeoplePath}/{user.Id.Value}/status", UriKind.Relative),
-            new { status, version = Convert.ToBase64String(user.RowVersion) },
+            new Uri($"{PeoplePath}/{user.Id.Value}/{resource}", UriKind.Relative),
+            body(Convert.ToBase64String(user.RowVersion)),
             Json,
             TestContext.Current.CancellationToken);
 

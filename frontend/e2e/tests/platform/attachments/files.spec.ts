@@ -90,6 +90,8 @@ async function deleteLeftoverAttachments(api: SignedInApi, ids: readonly string[
 }
 
 test.describe("attachments page", () => {
+  test.use({ persona: "administrator" });
+
   test.describe("before the page is interactive", () => {
     test("keeps the drop zone disabled so no chosen file is ignored", async ({ page }) => {
       const attachments = new AttachmentsPage(page);
@@ -248,6 +250,64 @@ test.describe("attachments page", () => {
       await expect(attachments.row(gone.name)).toHaveCount(0);
       await expect(attachments.list.noMatches).toBeVisible();
     } finally {
+      await deleteLeftoverAttachments(api, [...ids.values()]);
+    }
+  });
+
+  test("refuses its delete Server Function to a person without the permission and keeps the file", async ({
+    page,
+    context,
+    api,
+  }) => {
+    const attachments = new AttachmentsPage(page);
+    const prefix = `e2e-refused-delete-${randomUUID().slice(-12)}`;
+    const deleted = png({ name: `${prefix}-deleted.png` });
+    const kept = png({ name: `${prefix}-kept.png` });
+    const ids = new Map<string, string>();
+    for (const upload of [deleted, kept]) {
+      ids.set(
+        upload.name,
+        await createdAttachmentId(await api.post(attachmentsApi, { multipart: { file: upload } })),
+      );
+    }
+    const deletedId = ids.get(deleted.name) ?? "";
+    const keptId = ids.get(kept.name) ?? "";
+
+    try {
+      // An employee's page offers no Delete action, so the call is the one an administrator's page sends, captured and
+      // sent again with the employee's session for the other file.
+      await attachments.goto(`?name=${prefix}`);
+      await attachments.list.waitUntilInteractive();
+      const sent = page.waitForRequest(
+        (request) => request.method() === "POST" && request.headers()["next-action"] !== undefined,
+      );
+      await attachments.row(deleted.name).getByTestId("attachment-delete").click();
+      await attachments.confirmDelete.click();
+      const call = await sent;
+      await expect(attachments.row(deleted.name)).toHaveCount(0);
+      await expect(new AppShell(page).toast(`Deleted ${deleted.name}.`)).toBeVisible();
+      const headers = call.headers();
+      const body = (call.postData() ?? "").replace(deletedId, keptId);
+      expect(body, "the call names the other file").toContain(keptId);
+
+      await page.goto("about:blank");
+      await signIn(context.request, "accountant");
+      const replayed = await context.request.post(call.url(), {
+        headers: Object.fromEntries(
+          ["next-action", "next-router-state-tree", "accept", "content-type", "origin"].flatMap((name) =>
+            headers[name] === undefined ? [] : [[name, headers[name]]],
+          ),
+        ),
+        data: body,
+      });
+
+      expect(replayed.status()).toBe(200);
+      expect(await replayed.text()).toContain("You do not have permission to do this.");
+      await signIn(context.request, "administrator");
+      expect((await api.get(`${attachmentsApi}/${keptId}`)).status(), "the file is still stored").toBe(200);
+    } finally {
+      await page.goto("about:blank");
+      await signIn(context.request, "administrator");
       await deleteLeftoverAttachments(api, [...ids.values()]);
     }
   });
@@ -481,14 +541,14 @@ test.describe("attachments page", () => {
         );
         await expect(new LoginPage(page).notice).toHaveText(sessionEndedNotice);
 
-        await signIn(context.request, "accountant");
+        await signIn(context.request, "administrator");
         await attachments.goto(query);
         await expect(attachments.row(file.name)).toBeVisible();
       } finally {
         // The open page renews its session once it has loaded, and a sign-in through the same browser context while that
         // renewal is under way leaves the page sending one person's request token with the next person's cookie.
         await page.goto("about:blank");
-        await signIn(context.request, "accountant");
+        await signIn(context.request, "administrator");
         await deleteLeftoverAttachments(api, [id]);
       }
     });
@@ -653,3 +713,45 @@ function indiaDate(daysFromToday: number): string {
     .format(day)
     .replaceAll("/", "-");
 }
+
+test.describe("attachments page for an employee", () => {
+  forEachTheme("uploads and downloads a file but offers no way to delete it", async ({ page, capture }) => {
+    const attachments = new AttachmentsPage(page);
+    const file = png();
+    await attachments.goto();
+    await expect(attachments.uploadCard).toBeVisible();
+
+    const uploaded = page.waitForResponse(isUpload);
+    const refreshed = attachments.waitForRefresh();
+    await attachments.upload(file);
+    const id = await createdAttachmentId(await uploaded);
+
+    try {
+      await expect(attachments.uploadAnnouncement).toHaveText(`${file.name} was uploaded.`);
+      expect((await refreshed).ok()).toBe(true);
+      const row = attachments.row(file.name);
+      await expect(row).toBeVisible();
+      await expect(row.getByTestId("attachment-download")).toBeVisible();
+      await expect(row.getByTestId("attachment-delete")).toHaveCount(0);
+      await expect(page).toHaveTitle(/Attachments · ERP-AI-Pro/);
+      await capture("attachments-employee");
+
+      const download = await attachments.download(row);
+      expect(download.name).toBe(file.name);
+      expect(Buffer.compare(download.content, file.buffer)).toBe(0);
+      await expect(row.getByTestId("attachment-action-error")).toHaveCount(0);
+
+      const refused = await signedInApi(page.context()).delete(`${attachmentsApi}/${id}`);
+      expect(refused.status()).toBe(403);
+      expect(await refused.json()).toMatchObject({ code: "request.forbidden" });
+      await attachments.goto();
+      await expect(attachments.row(file.name)).toBeVisible();
+    } finally {
+      // The open page renews its session once it has loaded, and a sign-in through the same browser context while that
+      // renewal is under way leaves the page sending one person's request token with the next person's cookie.
+      await page.goto("about:blank");
+      await signIn(page.context().request, "administrator");
+      await deleteLeftoverAttachments(signedInApi(page.context()), [id]);
+    }
+  });
+});

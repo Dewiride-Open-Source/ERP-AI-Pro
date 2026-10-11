@@ -24,7 +24,10 @@ const missing = "—";
 
 const noValues: readonly string[] = [];
 
-function attachmentColumns(focusAfterDeleteId: string): readonly DataTableColumn<AttachmentResponse>[] {
+function attachmentColumns(
+  focusAfterDeleteId: string,
+  canDelete: boolean,
+): readonly DataTableColumn<AttachmentResponse>[] {
   return [
     {
       id: "fileName",
@@ -84,6 +87,7 @@ function attachmentColumns(focusAfterDeleteId: string): readonly DataTableColumn
             id={attachment.id}
             fileName={attachment.fileName ?? "this attachment"}
             focusAfterDeleteId={focusAfterDeleteId}
+            canDelete={canDelete}
           />
         ) : null,
     },
@@ -95,15 +99,19 @@ export function AttachmentsList({
   page,
   attachments,
   allowedContentTypes,
+  canUpload,
+  canDelete,
   labelledBy,
 }: {
   query: ListQuery;
   page: DataTablePage;
   attachments: readonly AttachmentResponse[];
   allowedContentTypes: readonly string[];
+  canUpload: boolean;
+  canDelete: boolean;
   labelledBy: string;
 }) {
-  const columns = useMemo(() => attachmentColumns(labelledBy), [labelledBy]);
+  const columns = useMemo(() => attachmentColumns(labelledBy, canDelete), [labelledBy, canDelete]);
   const type = query.filters.type;
   const chosenTypes = Array.isArray(type) ? type : noValues;
   const typeOptions = useMemo(
@@ -134,7 +142,9 @@ export function AttachmentsList({
         <Empty className="border" data-testid="attachments-empty">
           <EmptyHeader>
             <EmptyTitle>No attachments yet.</EmptyTitle>
-            <EmptyDescription>Upload a file to see it here.</EmptyDescription>
+            <EmptyDescription>
+              {canUpload ? "Upload a file to see it here." : "Files uploaded to the ERP appear here."}
+            </EmptyDescription>
           </EmptyHeader>
         </Empty>
       }
