@@ -334,7 +334,13 @@ test.describe("login page", () => {
         status: 200,
         body: {
           ...person,
-          permissions: ["platform.attachments.files.read", "platform.attachments.files.upload"],
+          permissions: [
+            "identity.users.departments.read",
+            "identity.users.designations.read",
+            "identity.users.org-chart.read",
+            "platform.attachments.files.read",
+            "platform.attachments.files.upload",
+          ],
         },
       });
       expect(person?.roles).toEqual(["Erp.User"]);

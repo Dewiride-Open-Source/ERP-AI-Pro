@@ -24,6 +24,24 @@ public sealed class ModelRulesTests
     }
 
     [Fact]
+    public void IncludeDeleted_QueryRootedAtATypeThatIsNotSoftDeletable_LiftsTheFilterOfEveryTypeItReads()
+    {
+        using var context = new HierarchyContext();
+
+        var names =
+            from assignment in context.Assignments
+            from client in context.Clients.Where(c => c.Id == assignment.ClientId)
+            select client.Name;
+        var namesOfDeletedClientsToo =
+            from assignment in context.Assignments.IncludeDeleted()
+            from client in context.Clients.Where(c => c.Id == assignment.ClientId)
+            select client.Name;
+
+        Assert.Contains("[IsDeleted] = CAST(0 AS bit)", names.ToQueryString(), StringComparison.Ordinal);
+        Assert.DoesNotContain("[IsDeleted] = CAST(0 AS bit)", namesOfDeletedClientsToo.ToQueryString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ApplyRowVersion_HierarchyWithVersionedRoot_MapsTheInheritedPropertyAsTheConcurrencyToken()
     {
         using var context = new HierarchyContext();
@@ -92,6 +110,8 @@ public sealed class ModelRulesTests
         public DbSet<Client> Clients => Set<Client>();
 
         public DbSet<Vendor> Vendors => Set<Vendor>();
+
+        public DbSet<Assignment> Assignments => Set<Assignment>();
     }
 
     private sealed class DerivedVersionContext() : ModuleDbContext(Options<DerivedVersionContext>(), "test_rules")
@@ -140,6 +160,13 @@ public sealed class ModelRulesTests
     private sealed class Vendor : Party
     {
         public string Code { get; set; } = string.Empty;
+    }
+
+    private sealed class Assignment
+    {
+        public Guid Id { get; set; }
+
+        public Guid ClientId { get; set; }
     }
 
     private class Note

@@ -22,12 +22,13 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 | Namespace segment | May reference | Never references |
 |---|---|---|
 | `<Feature>.Domain` | `BuildingBlocks.Kernel`, `SharedKernel` | EF Core, ASP.NET Core, DI, other modules |
-| `<Feature>.Application` | Domain, the module DbContext, `BuildingBlocks.Application`, `Contracts` of other modules | ASP.NET Core types |
+| `<Feature>.Application` | Domain, the module DbContext, the module's `Shared`, `BuildingBlocks.Application`, `Contracts` of other modules | ASP.NET Core types |
 | `<Feature>.Endpoints` | Application, `BuildingBlocks.Endpoints` | EF Core, another feature's Application |
 | `<Feature>.Persistence` | Domain, EF Core | ASP.NET Core |
 | `<Feature>.Hosting` | Application, Domain, `BuildingBlocks.*`, `Microsoft.Extensions.*` (hosting, DI, logging, feature management) | ASP.NET Core, EF Core, Endpoints |
 | `<Feature>.Ai` (Enterprise modules) | own Application/Domain, `BuildingBlocks.Ai` | provider SDKs |
 | `Integration` | own Application, other modules' `Contracts` events | other modules' implementations |
+| `Shared` (module level, `Shared/<Concern>`: what two features' Application share, such as `Identity/Users` `Shared/Positions`) | the module's Domain and DbContext, `BuildingBlocks.*` | ASP.NET Core, Endpoints |
 
 ## Layer rules (`LayerTests`)
 

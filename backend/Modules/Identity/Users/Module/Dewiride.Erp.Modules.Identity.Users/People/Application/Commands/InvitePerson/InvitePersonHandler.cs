@@ -22,7 +22,6 @@ internal sealed class InvitePersonHandler(UsersDbContext context) : ICommandHand
             command.Person.SignInName,
             command.EmployeeCode,
             command.PhoneNumber,
-            command.Designation,
             command.DateOfJoining,
             PersonRoles.ToErpRoles(command.Roles));
         if (invited.IsFailure)

@@ -4,7 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Application.Queries;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.People.Application;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.InvitePerson;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Queries.FindRegisteredPeople;
@@ -95,7 +95,7 @@ internal static class InvitationEndpoints
         }
 
         var invited = await handler.HandleAsync(
-            new InvitePersonCommand(found.Value, request.EmployeeCode, request.PhoneNumber, request.Designation, request.DateOfJoining, roles),
+            new InvitePersonCommand(found.Value, request.EmployeeCode, request.PhoneNumber, request.DateOfJoining, roles),
             cancellationToken);
 
         return invited.IsFailure

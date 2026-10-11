@@ -54,7 +54,7 @@ internal static class InvitationApi
     }
 
     public static object Invitation(Guid? entraObjectId, string? employeeCode = null) =>
-        new { entraObjectId, employeeCode, phoneNumber = "98765 43210", designation = "Accountant", dateOfJoining = "2026-04-01" };
+        new { entraObjectId, employeeCode, phoneNumber = "98765 43210", dateOfJoining = "2026-04-01" };
 
     public static async Task<HttpResponseMessage> PostAsync(HttpClient client, object body, string? idempotencyKey = null)
     {

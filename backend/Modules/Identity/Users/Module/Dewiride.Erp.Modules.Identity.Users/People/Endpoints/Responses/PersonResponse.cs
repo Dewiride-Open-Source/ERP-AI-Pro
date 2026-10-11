@@ -9,8 +9,13 @@ namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Responses;
 /// <param name="WorkEmail">Work email of the person, in lower case, which each sign-in brings from Entra.</param>
 /// <param name="EmployeeCode">Employee code, unique among the people of the ERP.</param>
 /// <param name="PhoneNumber">Phone number in international form, + and its country code first.</param>
-/// <param name="Designation">Designation, as free text.</param>
 /// <param name="DateOfJoining">Date the person joined the company.</param>
+/// <param name="DepartmentId">Department of the position the person holds today.</param>
+/// <param name="DepartmentName">Name of that department.</param>
+/// <param name="DesignationId">Designation of the position the person holds today.</param>
+/// <param name="DesignationName">Name of that designation.</param>
+/// <param name="ManagerId">Record of the person they report to today.</param>
+/// <param name="ManagerDisplayName">Display name of that manager.</param>
 /// <param name="Status">Whether the person may sign in.</param>
 /// <param name="Roles">Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra.</param>
 /// <param name="LastSignedInAt">UTC time of the person's last sign-in.</param>
@@ -23,8 +28,13 @@ internal sealed record PersonResponse(
     string WorkEmail,
     string? EmployeeCode,
     string? PhoneNumber,
-    string? Designation,
     DateOnly? DateOfJoining,
+    Guid? DepartmentId,
+    string? DepartmentName,
+    Guid? DesignationId,
+    string? DesignationName,
+    Guid? ManagerId,
+    string? ManagerDisplayName,
     PersonStatus Status,
     IReadOnlyList<PersonRole> Roles,
     DateTimeOffset? LastSignedInAt,

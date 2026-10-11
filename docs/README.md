@@ -57,5 +57,6 @@
 | [0039](adr/0039-people-and-their-admission.md) | People and their admission |
 | [0040](adr/0040-directory-invitations.md) | Directory invitations |
 | [0041](adr/0041-roles-and-permissions.md) | Roles and permissions |
+| [0042](adr/0042-departments-designations-and-positions.md) | Departments, designations and positions |
 
 New decisions use [0000-template.md](adr/0000-template.md).

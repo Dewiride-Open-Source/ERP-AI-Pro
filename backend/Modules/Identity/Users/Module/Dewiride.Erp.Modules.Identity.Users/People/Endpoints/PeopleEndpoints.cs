@@ -6,7 +6,7 @@ using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.People.Application;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.AssignPersonRoles;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.ChangePersonStatus;
@@ -54,7 +54,7 @@ internal static class PeopleEndpoints
 
         group.MapPut("/{id:guid}", UpdateAsync)
             .WithName("Identity.Users.Update")
-            .WithSummary("Changes the employee code, phone number, designation and date of joining of a person.")
+            .WithSummary("Changes the employee code, phone number and date of joining of a person.")
             .RequirePermission(UsersPermissions.Update)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
@@ -75,6 +75,7 @@ internal static class PeopleEndpoints
             .WithName("Identity.Users.Delete")
             .WithSummary("Deletes a person's record; their sessions end at their next request.")
             .RequirePermission(UsersPermissions.Delete)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         InvitationEndpoints.Map(group);
@@ -107,8 +108,13 @@ internal static class PeopleEndpoints
             details.WorkEmail,
             details.EmployeeCode,
             details.PhoneNumber,
-            details.Designation,
             details.DateOfJoining,
+            details.DepartmentId,
+            details.DepartmentName,
+            details.DesignationId,
+            details.DesignationName,
+            details.ManagerId,
+            details.ManagerDisplayName,
             details.Status,
             details.Roles,
             details.LastSignedInAt,
@@ -158,7 +164,6 @@ internal static class PeopleEndpoints
                 request.WorkEmail!,
                 request.EmployeeCode,
                 request.PhoneNumber,
-                request.Designation,
                 request.DateOfJoining,
                 roles),
             cancellationToken);
@@ -176,7 +181,7 @@ internal static class PeopleEndpoints
         CancellationToken cancellationToken)
     {
         var updated = await handler.HandleAsync(
-            new UpdatePersonCommand(id, request.EmployeeCode, request.PhoneNumber, request.Designation, request.DateOfJoining, request.Version!),
+            new UpdatePersonCommand(id, request.EmployeeCode, request.PhoneNumber, request.DateOfJoining, request.Version!),
             cancellationToken);
 
         return updated.IsFailure ? updated.Error!.ToProblem() : await ReadAsync(people, updated.Value, cancellationToken);
