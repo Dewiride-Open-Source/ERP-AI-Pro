@@ -12,7 +12,7 @@ public sealed class DataProtectionSettingsStartupTests
     {
         using var factory = ErpApiFactory.ForEnvironment(Environments.Production).WithConfiguration(ErpApiFactory.DataProtectionKeyIdentifierKey, string.Empty);
 
-        var failure = Assert.Throws<OptionsValidationException>(() => factory.Services);
+        var failure = Assert.IsType<OptionsValidationException>(factory.StartFailure());
 
         Assert.Equal(typeof(KeyRingOptions), failure.OptionsType);
         Assert.Contains($"{ErpApiFactory.DataProtectionKeyIdentifierKey} is required", failure.Message, StringComparison.Ordinal);
@@ -40,7 +40,7 @@ public sealed class DataProtectionSettingsStartupTests
         using var deployment = TestDeployment.WithPersistedKeyRing();
         using var factory = new ErpApiFactory().WithDeployment(deployment).WithConfiguration(ErpApiFactory.DataProtectionKeyIdentifierKey, keyIdentifier);
 
-        var failure = Assert.Throws<OptionsValidationException>(() => factory.Services);
+        var failure = Assert.IsType<OptionsValidationException>(factory.StartFailure());
 
         Assert.Equal(typeof(KeyRingOptions), failure.OptionsType);
         Assert.Contains($"{ErpApiFactory.DataProtectionKeyIdentifierKey} {rule}", failure.Message, StringComparison.Ordinal);

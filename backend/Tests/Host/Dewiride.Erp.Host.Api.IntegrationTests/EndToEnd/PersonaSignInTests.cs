@@ -142,7 +142,7 @@ public sealed class PersonaSignInTests(PersonaSignInTests.Fixture fixture) : ICl
     {
         await using var factory = new ErpApiFactory().WithTestEndpoints(PersonaSignIn.Map);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => factory.CreateClient());
+        var exception = Assert.IsType<InvalidOperationException>(factory.StartFailure());
 
         Assert.Contains(EndToEndHost.EnvironmentName, exception.Message, StringComparison.Ordinal);
     }
