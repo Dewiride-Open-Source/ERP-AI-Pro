@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Modules;
+using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Platform.Attachments.Contracts.Files;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
@@ -42,7 +43,7 @@ public sealed class CurrentUserEndpointTests(CurrentUserEndpointTests.Fixture fi
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal(TestUsers.Accountant.ObjectId, body.RootElement.GetProperty("id").GetGuid());
         Assert.Equal([AppRoles.User], body.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()));
-        Assert.Equal([AttachmentsPermissions.Read, AttachmentsPermissions.Upload], body.RootElement.GetProperty("permissions").EnumerateArray().Select(permission => permission.GetString()));
+        Assert.Equal([UsersPermissions.ReadDepartments, UsersPermissions.ReadDesignations, UsersPermissions.ReadOrgChart, AttachmentsPermissions.Read, AttachmentsPermissions.Upload], body.RootElement.GetProperty("permissions").EnumerateArray().Select(permission => permission.GetString()));
     }
 
     [Fact]

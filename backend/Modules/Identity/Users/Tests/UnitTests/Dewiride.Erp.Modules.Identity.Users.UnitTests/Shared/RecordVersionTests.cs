@@ -1,15 +1,15 @@
-using Dewiride.Erp.Modules.Identity.Users.People.Application;
+using Dewiride.Erp.Modules.Identity.Users.Shared;
 
-namespace Dewiride.Erp.Modules.Identity.Users.UnitTests.People.Application;
+namespace Dewiride.Erp.Modules.Identity.Users.UnitTests.Shared;
 
-public sealed class PersonVersionTests
+public sealed class RecordVersionTests
 {
     [Fact]
     public void TryDecode_EncodedRowVersion_ReturnsTheSameBytes()
     {
         byte[] rowVersion = [0, 0, 0, 0, 0, 0, 7, 209];
 
-        Assert.True(PersonVersion.TryDecode(PersonVersion.Encode(rowVersion), out var decoded));
+        Assert.True(RecordVersion.TryDecode(RecordVersion.Encode(rowVersion), out var decoded));
         Assert.Equal(rowVersion, decoded);
     }
 
@@ -22,6 +22,6 @@ public sealed class PersonVersionTests
     [InlineData("AAAAAAAAAAAH0Q==")]
     public void TryDecode_ValueThatIsNoRowVersion_ReturnsFalse(string? version)
     {
-        Assert.False(PersonVersion.TryDecode(version, out _));
+        Assert.False(RecordVersion.TryDecode(version, out _));
     }
 }

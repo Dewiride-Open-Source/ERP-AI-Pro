@@ -57,9 +57,9 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
             directory.Add(person);
         }
 
-        var invitedRecord = await AddRecordAsync(User.Invite(invited.ObjectId, invited.DisplayName, invited.UserPrincipalName, null, null, null, null, []).Value);
-        var registeredRecord = await AddRecordAsync(User.Register(registered.DisplayName, registered.UserPrincipalName.ToUpperInvariant(), null, null, null, null, []).Value);
-        await AddRecordAsync(User.Invite(Guid.CreateVersion7(), "Dev Earlier", reassigned.UserPrincipalName, null, null, null, null, []).Value);
+        var invitedRecord = await AddRecordAsync(User.Invite(invited.ObjectId, invited.DisplayName, invited.UserPrincipalName, null, null, null, []).Value);
+        var registeredRecord = await AddRecordAsync(User.Register(registered.DisplayName, registered.UserPrincipalName.ToUpperInvariant(), null, null, null, []).Value);
+        await AddRecordAsync(User.Invite(Guid.CreateVersion7(), "Dev Earlier", reassigned.UserPrincipalName, null, null, null, []).Value);
         using var client = await InvitationApi.SignedInAdministratorAsync(fixture.Factory);
 
         var search = await InvitationApi.SearchAsync(client, word);
@@ -189,7 +189,7 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
         Assert.Equal(person.UserPrincipalName.ToLowerInvariant(), invited.WorkEmail);
         Assert.Equal(employeeCode, invited.EmployeeCode);
         Assert.Equal("+919876543210", invited.PhoneNumber);
-        Assert.Equal("Accountant", invited.Designation);
+        Assert.Null(invited.DesignationId);
         Assert.Equal(new DateOnly(2026, 4, 1), invited.DateOfJoining);
         Assert.Equal(PersonStatus.Active, invited.Status);
         Assert.Null(invited.LastSignedInAt);
@@ -308,7 +308,7 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
     {
         var person = InvitationApi.DirectoryPerson("Meera Nair");
         InvitationApi.DirectoryOf(fixture.Factory).Add(person);
-        await AddRecordAsync(User.Invite(Guid.CreateVersion7(), "Meera Earlier", person.UserPrincipalName, null, null, null, null, []).Value);
+        await AddRecordAsync(User.Invite(Guid.CreateVersion7(), "Meera Earlier", person.UserPrincipalName, null, null, null, []).Value);
         using var client = await InvitationApi.SignedInAdministratorAsync(fixture.Factory);
 
         using var response = await InvitationApi.PostAsync(client, InvitationApi.Invitation(person.ObjectId));

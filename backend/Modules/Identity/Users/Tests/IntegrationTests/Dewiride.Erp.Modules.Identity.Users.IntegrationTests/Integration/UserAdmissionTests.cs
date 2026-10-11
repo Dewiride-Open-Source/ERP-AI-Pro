@@ -47,7 +47,7 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     public async Task AdmitAsync_RecordRegisteredWithTheWorkEmail_LinksItInsteadOfCreatingAnother()
     {
         var workEmail = PeopleApi.UniqueWorkEmail();
-        var registered = await RegisterAsync(User.Register("Meera", workEmail, "DW-0042", null, null, null, []).Value);
+        var registered = await RegisterAsync(User.Register("Meera", workEmail, "DW-0042", null, null, []).Value);
         var objectId = Guid.CreateVersion7();
 
         Assert.True(await AdmitAsync(new SignedInPerson(objectId, "Meera Nair", workEmail.ToUpperInvariant())));
@@ -63,7 +63,7 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     public async Task AdmitAsync_RecordInvitedWithTheObjectId_LinksItWhateverItsEmail()
     {
         var objectId = Guid.CreateVersion7();
-        var registered = await RegisterAsync(User.Invite(objectId, "Meera", PeopleApi.UniqueWorkEmail(), null, null, null, null, []).Value);
+        var registered = await RegisterAsync(User.Invite(objectId, "Meera", PeopleApi.UniqueWorkEmail(), null, null, null, []).Value);
         var workEmail = PeopleApi.UniqueWorkEmail();
 
         Assert.True(await AdmitAsync(new SignedInPerson(objectId, "Meera Nair", workEmail)));
@@ -152,7 +152,7 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     public async Task AdmissionOfAsync_ActiveRecord_ReturnsTheRolesAssignedToIt()
     {
         var objectId = Guid.CreateVersion7();
-        await RegisterAsync(User.Invite(objectId, "Meera Nair", PeopleApi.UniqueWorkEmail(), null, null, null, null, [ErpRole.Manager, ErpRole.Finance]).Value);
+        await RegisterAsync(User.Invite(objectId, "Meera Nair", PeopleApi.UniqueWorkEmail(), null, null, null, [ErpRole.Manager, ErpRole.Finance]).Value);
 
         var admission = await AdmissionOfAsync(objectId);
 
