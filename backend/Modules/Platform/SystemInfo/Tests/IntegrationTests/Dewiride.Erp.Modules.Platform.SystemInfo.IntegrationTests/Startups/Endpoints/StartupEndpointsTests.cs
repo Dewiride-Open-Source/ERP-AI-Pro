@@ -1,5 +1,6 @@
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Configuration.Hosting;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Persistence;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Application.Queries.ListRecentStartups;
@@ -39,6 +40,17 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
         Assert.Equal(application.StartedAt.ToUniversalTime(), own.StartedAt);
         Assert.True(own.RecordedAt >= own.StartedAt);
         Assert.DoesNotContain(Environment.MachineName, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Get_StartupsAsAnEmployee_Answers403RequestForbidden()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+
+        using var response = await client.GetAsync(StartupsPath, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("request.forbidden", (await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("code").GetString());
     }
 
     [Fact]
