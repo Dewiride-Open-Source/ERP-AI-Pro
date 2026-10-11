@@ -3,6 +3,8 @@ using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
+using Dewiride.Erp.BuildingBlocks.Modules;
+using Dewiride.Erp.Modules.Platform.Attachments.Contracts.Files;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 
@@ -11,7 +13,7 @@ namespace Dewiride.Erp.Host.Api.IntegrationTests.Authentication;
 public sealed class CurrentUserEndpointTests(CurrentUserEndpointTests.Fixture fixture) : IClassFixture<CurrentUserEndpointTests.Fixture>
 {
     [Fact]
-    public async Task Get_SignedInWithTheSessionCookie_ReturnsTheObjectIdNameUserNameAndRolesOfThePerson()
+    public async Task Get_SignedInWithTheSessionCookie_ReturnsTheObjectIdNameUserNameRolesAndPermissionsOfThePerson()
     {
         using var client = TestSignIn.CreateClient(fixture.Factory);
         using var signIn = await TestSignIn.SignInAsync(client, TestUsers.Administrator);
@@ -21,15 +23,16 @@ public sealed class CurrentUserEndpointTests(CurrentUserEndpointTests.Fixture fi
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
-        Assert.Equal(["id", "name", "userName", "roles"], body.RootElement.EnumerateObject().Select(property => property.Name));
+        Assert.Equal(["id", "name", "userName", "roles", "permissions"], body.RootElement.EnumerateObject().Select(property => property.Name));
         Assert.Equal(TestUsers.Administrator.ObjectId, body.RootElement.GetProperty("id").GetGuid());
         Assert.Equal(TestUsers.Administrator.Name, body.RootElement.GetProperty("name").GetString());
         Assert.Equal(TestUsers.Administrator.UserName, body.RootElement.GetProperty("userName").GetString());
         Assert.Equal(TestUsers.Administrator.Roles, body.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()));
+        Assert.Equal(fixture.Factory.Services.GetRequiredService<PermissionCatalog>().Names, body.RootElement.GetProperty("permissions").EnumerateArray().Select(permission => permission.GetString()));
     }
 
     [Fact]
-    public async Task Get_SignedInThroughTheTestHeader_ReturnsThatPerson()
+    public async Task Get_SignedInThroughTheTestHeader_ReturnsThatPersonWithTheEmployeePermissions()
     {
         using var client = fixture.Factory.CreateClient().AsUser(TestUsers.Accountant);
 
@@ -39,6 +42,7 @@ public sealed class CurrentUserEndpointTests(CurrentUserEndpointTests.Fixture fi
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal(TestUsers.Accountant.ObjectId, body.RootElement.GetProperty("id").GetGuid());
         Assert.Equal([AppRoles.User], body.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()));
+        Assert.Equal([AttachmentsPermissions.Read, AttachmentsPermissions.Upload], body.RootElement.GetProperty("permissions").EnumerateArray().Select(permission => permission.GetString()));
     }
 
     [Fact]

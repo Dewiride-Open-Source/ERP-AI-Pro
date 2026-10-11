@@ -26,7 +26,7 @@ public sealed class TransportSecurityTests
         using var request = new HttpRequestMessage(HttpMethod.Get, path);
         if (signedIn)
         {
-            request.AsUser(TestUsers.Accountant);
+            request.AsUser(TestUsers.Administrator);
         }
 
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
@@ -49,7 +49,7 @@ public sealed class TransportSecurityTests
     public async Task Get_OverPlainHttpWithAnHttpsPortKnown_IsServedWithoutARedirectAnHstsPolicyOrAServerHeader(string environment)
     {
         await using var factory = ErpApiFactory.ForEnvironment(environment).WithConfiguration("https_port", "443").WithKestrel();
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri("/api/platform/system-info", UriKind.Relative), TestContext.Current.CancellationToken);
 
@@ -69,7 +69,7 @@ public sealed class TransportSecurityTests
             .WithTestEndpoints(routes => routes.MapGet(SchemePath, (HttpContext context) => context.Request.IsHttps))
             .WithKestrel();
         using var client = factory.CreateClient();
-        using var request = new HttpRequestMessage(HttpMethod.Get, SchemePath).AsUser(TestUsers.Accountant);
+        using var request = new HttpRequestMessage(HttpMethod.Get, SchemePath).AsUser(TestUsers.Administrator);
         request.Headers.Host = "erp.example.com";
         request.Headers.TryAddWithoutValidation("X-Forwarded-For", "203.0.113.7");
         request.Headers.TryAddWithoutValidation("X-Forwarded-Proto", "https");

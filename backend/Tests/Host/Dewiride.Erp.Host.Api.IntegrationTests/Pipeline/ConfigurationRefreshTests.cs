@@ -17,7 +17,7 @@ public sealed class ConfigurationRefreshTests
         using var deployment = TestDeployment.WithPersistedKeyRing();
         await using var root = new ErpApiFactory().WithDeployment(deployment);
         using var factory = ReadingTheStore(root, refresher);
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var first = await client.GetAsync(new Uri("/api/platform/system-info", UriKind.Relative), TestContext.Current.CancellationToken);
         using var second = await client.GetAsync(new Uri("/api/platform/system-info", UriKind.Relative), TestContext.Current.CancellationToken);
@@ -34,7 +34,7 @@ public sealed class ConfigurationRefreshTests
         using var deployment = TestDeployment.WithPersistedKeyRing();
         await using var root = new ErpApiFactory().WithDeployment(deployment);
         using var factory = ReadingTheStore(root, refresher);
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri(ErpApiFactory.ThrowingPath, UriKind.Relative), TestContext.Current.CancellationToken);
 
@@ -48,7 +48,7 @@ public sealed class ConfigurationRefreshTests
         var refresher = new CountingRefresher();
         using var factory = new ErpApiFactory().WithWebHostBuilder(builder =>
             builder.ConfigureServices(services => services.AddSingleton<IConfigurationRefresherProvider>(new CountingRefresherProvider(refresher))));
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri("/api/platform/system-info", UriKind.Relative), TestContext.Current.CancellationToken);
 

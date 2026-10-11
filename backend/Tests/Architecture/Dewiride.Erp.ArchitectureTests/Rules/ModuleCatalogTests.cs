@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.Testing;
 using Microsoft.AspNetCore.Antiforgery;
@@ -21,6 +22,14 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
     ];
 
     private static readonly string[] DevelopmentOnlyRoutePrefixes = ["/scalar"];
+
+    private static readonly string[] SignedInRoutes =
+    [
+        "/api/auth/me",
+        "/api/auth/session",
+        "/api/auth/antiforgery",
+        "/api/platform/features",
+    ];
 
     private static readonly string[] GeneratedBaseTypes = ["Microsoft.EntityFrameworkCore.Migrations.Migration", "Microsoft.EntityFrameworkCore.Infrastructure.ModelSnapshot"];
 
@@ -152,10 +161,65 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         Assert.Empty(stale);
     }
 
+    [Fact]
+    public void SignedInEndpointsWithoutAPermission_AreOnTheSignedInList()
+    {
+        var offenders = SignedInRoutesWithoutAPermission().Where(route => !SignedInRoutes.Contains(route, StringComparer.Ordinal)).ToList();
+
+        Assert.Empty(offenders);
+    }
+
+    [Fact]
+    public void SignedInRouteList_NamesOnlyRoutesThatAreMappedWithoutAPermission()
+    {
+        var signedIn = SignedInRoutesWithoutAPermission();
+
+        var stale = SignedInRoutes.Where(route => !signedIn.Contains(route, StringComparer.Ordinal)).ToList();
+
+        Assert.Empty(stale);
+    }
+
+    [Fact]
+    public void PermissionEndpoints_NeverAllowAnonymousCallers()
+    {
+        var anonymous = RouteEndpoints()
+            .Where(endpoint => endpoint.Metadata.GetMetadata<PermissionMetadata>() is not null && endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null)
+            .Select(RouteOf)
+            .ToList();
+
+        Assert.Empty(anonymous);
+    }
+
+    [Fact]
+    public void PermissionEndpoints_RequireOnlyPermissionsAModuleDeclares()
+    {
+        var catalog = _factory.Services.GetRequiredService<PermissionCatalog>();
+
+        var undeclared = RouteEndpoints()
+            .Select(endpoint => endpoint.Metadata.GetMetadata<PermissionMetadata>()?.Permission)
+            .OfType<string>()
+            .Where(permission => !catalog.Contains(permission))
+            .ToList();
+
+        Assert.Empty(undeclared);
+    }
+
     private List<string> AnonymousRoutes() =>
-        _factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
+        RouteEndpoints()
             .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null)
-            .Select(endpoint => endpoint.RoutePattern.RawText!.Length > 1 ? endpoint.RoutePattern.RawText!.TrimEnd('/') : endpoint.RoutePattern.RawText!)
+            .Select(RouteOf)
             .Distinct(StringComparer.Ordinal)
             .ToList();
+
+    private List<string> SignedInRoutesWithoutAPermission() =>
+        RouteEndpoints()
+            .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is null && endpoint.Metadata.GetMetadata<PermissionMetadata>() is null)
+            .Select(RouteOf)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+    private List<RouteEndpoint> RouteEndpoints() => [.. _factory.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()];
+
+    private static string RouteOf(RouteEndpoint endpoint) =>
+        endpoint.RoutePattern.RawText!.Length > 1 ? endpoint.RoutePattern.RawText!.TrimEnd('/') : endpoint.RoutePattern.RawText!;
 }

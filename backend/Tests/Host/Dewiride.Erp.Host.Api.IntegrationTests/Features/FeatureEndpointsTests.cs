@@ -21,7 +21,7 @@ public sealed class FeatureEndpointsTests
     public async Task Get_Features_Default_ListsEveryModuleFlagEnabledAndThePlatformFlagAtItsDefault()
     {
         using var factory = new ErpApiFactory();
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(FeaturesPath, TestContext.Current.CancellationToken);
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -38,7 +38,7 @@ public sealed class FeatureEndpointsTests
     public async Task Get_Features_WithTheModuleDisabled_ReportsItDisabledAndStaysReachable()
     {
         using var factory = new ErpApiFactory().WithFeature(SystemInfoFlag, enabled: false);
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(FeaturesPath, TestContext.Current.CancellationToken);
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -53,7 +53,7 @@ public sealed class FeatureEndpointsTests
     public async Task Get_ModuleRoute_WithTheModuleDisabled_ReturnsNotFoundProblemDetails()
     {
         using var factory = new ErpApiFactory().WithFeature(SystemInfoFlag, enabled: false);
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
@@ -71,7 +71,7 @@ public sealed class FeatureEndpointsTests
     public async Task Get_ModuleRoute_WithTheModuleDisabledForAClientThatAcceptsNoJson_ReturnsNotFoundAsPlainText(string accept)
     {
         using var factory = new ErpApiFactory().WithFeature(SystemInfoFlag, enabled: false);
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
         using var request = new HttpRequestMessage(HttpMethod.Get, SystemInfoPath);
         request.Headers.Accept.ParseAdd(accept);
 
@@ -85,7 +85,7 @@ public sealed class FeatureEndpointsTests
     public async Task Get_ModuleRoute_WithTheModuleReenabledLater_Serves()
     {
         using var factory = new ErpApiFactory().WithFeature(SystemInfoFlag, enabled: false).WithFeature(SystemInfoFlag, enabled: true);
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(SystemInfoPath, TestContext.Current.CancellationToken);
 

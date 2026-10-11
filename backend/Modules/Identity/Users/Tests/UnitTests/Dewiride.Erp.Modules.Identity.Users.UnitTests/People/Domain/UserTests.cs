@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 
 namespace Dewiride.Erp.Modules.Identity.Users.UnitTests.People.Domain;
@@ -253,6 +254,57 @@ public sealed class UserTests
         user.Reactivate();
         Assert.Equal(UserStatus.Active, user.Status);
         Assert.True(user.IsActive);
+    }
+
+    [Fact]
+    public void Register_WithRoles_KeepsEachOnceInOrder()
+    {
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Manager, ErpRole.Hr, ErpRole.Manager]).Value;
+
+        Assert.Equal([ErpRole.Hr, ErpRole.Manager], user.Roles);
+    }
+
+    [Fact]
+    public void AssignRoles_FinanceHrAndManager_ReplacesTheRolesTheRecordHeld()
+    {
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Hr]).Value;
+
+        var result = user.AssignRoles([ErpRole.Finance, ErpRole.Manager]);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal([ErpRole.Finance, ErpRole.Manager], user.Roles);
+    }
+
+    [Fact]
+    public void AssignRoles_NoRole_LeavesTheRecordWithoutRoles()
+    {
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Finance]).Value;
+
+        Assert.True(user.AssignRoles([]).IsSuccess);
+        Assert.Empty(user.Roles);
+    }
+
+    [Theory]
+    [InlineData(ErpRole.Administrator)]
+    [InlineData(ErpRole.Employee)]
+    public void AssignRoles_ARoleTheEntraAppRolesGive_FailsWithRoleNotAssignableAndKeepsTheRoles(ErpRole role)
+    {
+        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Hr]).Value;
+
+        var result = user.AssignRoles([ErpRole.Finance, role]);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("user.role-not-assignable", result.Error!.Code);
+        Assert.Equal([ErpRole.Hr], user.Roles);
+    }
+
+    [Fact]
+    public void Invite_WithARoleTheEntraAppRolesGive_FailsWithRoleNotAssignable()
+    {
+        var result = User.Invite(ObjectId, "Meera Nair", "meera.nair@dewiride.com", null, null, null, null, [ErpRole.Administrator]);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("user.role-not-assignable", result.Error!.Code);
     }
 
     [Fact]

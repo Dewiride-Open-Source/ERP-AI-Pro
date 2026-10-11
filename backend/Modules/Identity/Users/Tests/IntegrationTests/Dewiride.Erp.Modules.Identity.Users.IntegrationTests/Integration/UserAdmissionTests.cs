@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
@@ -148,29 +149,44 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     }
 
     [Fact]
-    public async Task IsAdmittedAsync_ActiveRecord_ReturnsTrue()
+    public async Task AdmissionOfAsync_ActiveRecord_ReturnsTheRolesAssignedToIt()
+    {
+        var objectId = Guid.CreateVersion7();
+        await RegisterAsync(User.Invite(objectId, "Meera Nair", PeopleApi.UniqueWorkEmail(), null, null, null, null, [ErpRole.Manager, ErpRole.Finance]).Value);
+
+        var admission = await AdmissionOfAsync(objectId);
+
+        Assert.NotNull(admission);
+        Assert.Equal([ErpRole.Finance, ErpRole.Manager], admission.AssignedRoles.Order());
+    }
+
+    [Fact]
+    public async Task AdmissionOfAsync_ActiveRecordWithoutAssignedRoles_ReturnsNoRoles()
     {
         var objectId = Guid.CreateVersion7();
         await RegisterAsync(User.FirstSignIn(objectId, "Meera Nair", PeopleApi.UniqueWorkEmail(), DateTimeOffset.UnixEpoch).Value);
 
-        Assert.True(await IsAdmittedAsync(objectId));
+        var admission = await AdmissionOfAsync(objectId);
+
+        Assert.NotNull(admission);
+        Assert.Empty(admission.AssignedRoles);
     }
 
     [Fact]
-    public async Task IsAdmittedAsync_DeactivatedRecord_ReturnsFalse()
+    public async Task AdmissionOfAsync_DeactivatedRecord_ReturnsNull()
     {
         var objectId = Guid.CreateVersion7();
         var user = User.FirstSignIn(objectId, "Meera Nair", PeopleApi.UniqueWorkEmail(), DateTimeOffset.UnixEpoch).Value;
         user.Deactivate();
         await RegisterAsync(user);
 
-        Assert.False(await IsAdmittedAsync(objectId));
+        Assert.Null(await AdmissionOfAsync(objectId));
     }
 
     [Fact]
-    public async Task IsAdmittedAsync_NoRecord_ReturnsFalse()
+    public async Task AdmissionOfAsync_NoRecord_ReturnsNull()
     {
-        Assert.False(await IsAdmittedAsync(Guid.CreateVersion7()));
+        Assert.Null(await AdmissionOfAsync(Guid.CreateVersion7()));
     }
 
     private async Task<bool> AdmitAsync(SignedInPerson person)
@@ -180,11 +196,11 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
         return await scope.ServiceProvider.GetRequiredService<IPersonAdmission>().AdmitAsync(person, TestContext.Current.CancellationToken);
     }
 
-    private async Task<bool> IsAdmittedAsync(Guid objectId)
+    private async Task<PersonAdmission?> AdmissionOfAsync(Guid objectId)
     {
         await using var scope = factory.Services.CreateAsyncScope();
 
-        return await scope.ServiceProvider.GetRequiredService<IPersonAdmission>().AdmissionOfAsync(objectId, TestContext.Current.CancellationToken) is not null;
+        return await scope.ServiceProvider.GetRequiredService<IPersonAdmission>().AdmissionOfAsync(objectId, TestContext.Current.CancellationToken);
     }
 
     private async Task<UserId> RegisterAsync(User user)

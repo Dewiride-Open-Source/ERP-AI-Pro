@@ -131,10 +131,11 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
     [InlineData("GET", "/{id}")]
     [InlineData("PUT", "/{id}")]
     [InlineData("PUT", "/{id}/status")]
+    [InlineData("PUT", "/{id}/roles")]
     [InlineData("DELETE", "/{id}")]
     [InlineData("GET", "/directory?search=meera")]
     [InlineData("POST", "/invitations")]
-    public async Task EveryRoute_AsPersonWithoutTheAdministratorRole_Returns403RequestForbidden(string method, string suffix)
+    public async Task EveryRoute_AsPersonWithoutItsPermission_Returns403RequestForbidden(string method, string suffix)
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
         using var request = new HttpRequestMessage(new HttpMethod(method), PeopleApi.Path(suffix.Replace("{id}", Guid.CreateVersion7().ToString(), StringComparison.Ordinal)));

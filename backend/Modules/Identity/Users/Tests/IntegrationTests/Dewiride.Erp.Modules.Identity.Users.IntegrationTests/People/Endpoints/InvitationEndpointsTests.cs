@@ -12,6 +12,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 
 public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fixture) : IClassFixture<InvitationEndpointsTests.Fixture>
 {
+    private static readonly string[] ManagerAndHr = ["manager", "hr"];
+
     [Fact]
     public async Task SearchDirectory_AsSignedInAdministrator_AnswersTheMatchingPeopleByDisplayNameReadOnTheirBehalf()
     {
@@ -189,6 +191,19 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
         Assert.Equal(new DateOnly(2026, 4, 1), invited.DateOfJoining);
         Assert.Equal(PersonStatus.Active, invited.Status);
         Assert.Null(invited.LastSignedInAt);
+    }
+
+    [Fact]
+    public async Task Invite_WithRoles_CreatesTheRecordWithThem()
+    {
+        var person = InvitationApi.DirectoryPerson($"Meera {InvitationApi.UniqueWord()}");
+        InvitationApi.DirectoryOf(fixture.Factory).Add(person);
+        using var client = await InvitationApi.SignedInAdministratorAsync(fixture.Factory);
+
+        using var response = await InvitationApi.PostAsync(client, new { entraObjectId = person.ObjectId, roles = ManagerAndHr });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal([PersonRole.Hr, PersonRole.Manager], (await PeopleApi.ReadPersonAsync(response)).Roles);
     }
 
     [Fact]

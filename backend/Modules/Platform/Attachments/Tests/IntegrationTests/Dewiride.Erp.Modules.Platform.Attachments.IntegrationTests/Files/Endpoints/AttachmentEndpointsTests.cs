@@ -34,7 +34,7 @@ public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixt
     [Fact]
     public async Task Delete_UploadedAttachment_AnswersNoContentAndRemovesItFromGetAndList()
     {
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
         var token = AttachmentsApi.UniqueToken();
         var uploaded = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"to be deleted {token}"), SampleFiles.TextType, $"{token}-deleted.txt");
 
@@ -55,7 +55,7 @@ public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixt
     [Fact]
     public async Task Delete_AttachmentDeletedBefore_AnswersNotFound()
     {
-        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
         var uploaded = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"deleted twice {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "twice.txt");
         using var first = await client.DeleteAsync(AttachmentsApi.Path($"/{uploaded.Id}"), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
@@ -66,9 +66,22 @@ public sealed class AttachmentEndpointsTests(ErpApiFactory factory) : IClassFixt
     }
 
     [Fact]
-    public async Task Delete_UnknownId_AnswersNotFound()
+    public async Task Delete_AsAnEmployee_AnswersForbiddenAndKeepsTheAttachment()
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        var uploaded = await AttachmentsApi.UploadAsync(client, SampleFiles.Text($"kept {AttachmentsApi.UniqueToken()}"), SampleFiles.TextType, "kept.txt");
+
+        using var response = await client.DeleteAsync(AttachmentsApi.Path($"/{uploaded.Id}"), TestContext.Current.CancellationToken);
+
+        await AttachmentsApi.AssertProblemAsync(response, HttpStatusCode.Forbidden, "request.forbidden");
+        using var get = await client.GetAsync(AttachmentsApi.Path($"/{uploaded.Id}"), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, get.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delete_UnknownId_AnswersNotFound()
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.DeleteAsync(AttachmentsApi.Path($"/{Guid.CreateVersion7()}"), TestContext.Current.CancellationToken);
 

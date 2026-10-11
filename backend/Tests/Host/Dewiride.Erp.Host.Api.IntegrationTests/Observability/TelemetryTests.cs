@@ -41,7 +41,7 @@ public sealed class TelemetryTests
         await using var factory = new ErpApiFactory();
         using var traced = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans))));
-        using var client = traced.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = traced.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await client.GetAsync(new Uri(StartupsPath, UriKind.Relative), TestContext.Current.CancellationToken);
 
@@ -63,7 +63,7 @@ public sealed class TelemetryTests
             services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans));
             services.ConfigureOpenTelemetryLoggerProvider(logging => logging.AddInMemoryExporter(logs));
         }));
-        using var client = traced.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = traced.CreateClient().AsUser(TestUsers.Administrator);
         using var request = new HttpRequestMessage(HttpMethod.Get, StartupsPath);
         request.Headers.Add(CorrelationId.HeaderName, correlationId);
 
@@ -82,7 +82,7 @@ public sealed class TelemetryTests
         await using var factory = new ErpApiFactory();
         using var traced = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans))));
-        using var client = traced.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = traced.CreateClient().AsUser(TestUsers.Administrator);
 
         using var response = await UploadAsync(client, UniqueText());
 
@@ -105,7 +105,7 @@ public sealed class TelemetryTests
             services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddInMemoryExporter(spans));
             services.ConfigureOpenTelemetryLoggerProvider(logging => logging.AddInMemoryExporter(logs));
         }));
-        using var client = traced.CreateClient().AsUser(TestUsers.Accountant);
+        using var client = traced.CreateClient().AsUser(TestUsers.Administrator);
         var text = UniqueText();
         using var upload = await UploadAsync(client, text);
         Assert.Equal(HttpStatusCode.Created, upload.StatusCode);

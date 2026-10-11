@@ -12,7 +12,7 @@ public sealed class SystemInfoEndpointsTests : IClassFixture<ErpApiFactory>
 
     public SystemInfoEndpointsTests(ErpApiFactory factory)
     {
-        _client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        _client = factory.CreateClient().AsUser(TestUsers.Administrator);
     }
 
     [Fact]
