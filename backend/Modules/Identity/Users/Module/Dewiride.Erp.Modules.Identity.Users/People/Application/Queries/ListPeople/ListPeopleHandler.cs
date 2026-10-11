@@ -3,32 +3,37 @@ using Dewiride.Erp.BuildingBlocks.Application.Queries.Filtering;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Sorting;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+using Dewiride.Erp.BuildingBlocks.Kernel.Time;
 using Dewiride.Erp.BuildingBlocks.Persistence.Queries;
-using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Queries.ListPeople;
 
-internal sealed class ListPeopleHandler(UsersDbContext context) : IQueryHandler<ListPeopleQuery, PagedResult<PersonDetails>>
+// The department, designation and manager a person is sorted and filtered by are those of the position they hold today.
+internal sealed class ListPeopleHandler(UsersDbContext context, TimeProvider timeProvider) : IQueryHandler<ListPeopleQuery, PagedResult<PersonDetails>>
 {
-    private static readonly SortableFields<User> Sortable = new SortableFields<User>()
-        .Add("displayName", u => u.DisplayName)
-        .Add("workEmail", u => u.WorkEmail)
-        .Add("employeeCode", u => u.EmployeeCode)
-        .Add("designation", u => u.Designation)
-        .Add("dateOfJoining", u => u.DateOfJoining)
-        .Add("status", u => u.Status)
-        .Add("lastSignedInAt", u => u.LastSignedInAt)
-        .Add("createdAt", u => u.CreatedAt);
+    private static readonly SortableFields<PersonRow> Sortable = new SortableFields<PersonRow>()
+        .Add("displayName", r => r.User.DisplayName)
+        .Add("workEmail", r => r.User.WorkEmail)
+        .Add("employeeCode", r => r.User.EmployeeCode)
+        .Add("department", r => r.DepartmentName)
+        .Add("designation", r => r.DesignationName)
+        .Add("manager", r => r.ManagerDisplayName)
+        .Add("dateOfJoining", r => r.User.DateOfJoining)
+        .Add("status", r => r.User.Status)
+        .Add("lastSignedInAt", r => r.User.LastSignedInAt)
+        .Add("createdAt", r => r.User.CreatedAt);
 
-    private static readonly FilterableFields<User> Filterable = new FilterableFields<User>()
-        .Add("displayName", u => u.DisplayName)
-        .Add("workEmail", u => u.WorkEmail)
-        .Add("employeeCode", u => u.EmployeeCode)
-        .Add("designation", u => u.Designation)
-        .Add("dateOfJoining", u => u.DateOfJoining)
-        .Add("status", u => u.Status);
+    private static readonly FilterableFields<PersonRow> Filterable = new FilterableFields<PersonRow>()
+        .Add("displayName", r => r.User.DisplayName)
+        .Add("workEmail", r => r.User.WorkEmail)
+        .Add("employeeCode", r => r.User.EmployeeCode)
+        .Add("departmentId", r => r.DepartmentId)
+        .Add("designationId", r => r.DesignationId)
+        .Add("managerId", r => r.ManagerId)
+        .Add("dateOfJoining", r => r.User.DateOfJoining)
+        .Add("status", r => r.User.Status);
 
     private static readonly SortRequest ByName = new([new SortTerm("displayName", SortDirection.Ascending)]);
 
@@ -48,10 +53,10 @@ internal sealed class ListPeopleHandler(UsersDbContext context) : IQueryHandler<
             return filter.Error!;
         }
 
-        var page = await context.Users
+        var page = await PeopleWithPositions.On(context, IndianStandardTime.Today(timeProvider))
             .AsNoTracking()
             .ApplyFilter(filter.Value)
-            .ApplySort(sort.Value, u => u.Id)
+            .ApplySort(sort.Value, r => r.User.Id)
             .ToPagedResultAsync(query.Request.Page, cancellationToken)
             .ConfigureAwait(false);
 

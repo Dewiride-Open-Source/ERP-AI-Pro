@@ -16,8 +16,6 @@ internal static class UserErrors
 
     public static readonly Error PhoneNumberInvalid = Field("user.phone-number-invalid", nameof(User.PhoneNumber), "The phone number must be an international number starting with + and its country code, or a 10-digit Indian mobile number.");
 
-    public static readonly Error DesignationTooLong = Field("user.designation-too-long", nameof(User.Designation), $"A designation has at most {User.DesignationMaxLength} characters.");
-
     public static readonly Error VersionInvalid = Field("user.version-invalid", VersionMember, "The version is not one the API issued for a person.");
 
     public static readonly Error RoleNotAssignable = Field("user.role-not-assignable", nameof(User.Roles), "Only the Finance, HR and Manager roles are assigned in the ERP; Administrator and Employee come from the app roles of the person's Entra account.");
@@ -35,6 +33,8 @@ internal static class UserErrors
     public static readonly Error OwnStatus = Error.Failure("user.own-status", "An administrator cannot change the status of their own record.");
 
     public static readonly Error OwnDeletion = Error.Failure("user.own-deletion", "An administrator cannot delete their own record.");
+
+    public static readonly Error ManagesPeople = Error.Conflict("user.manages-people", "People report to the person today or from a later date; record another manager for them first.");
 
     private static Error Field(string code, string member, string message) =>
         Error.Validation(code, message, new Dictionary<string, string[]>(StringComparer.Ordinal) { [member] = [message] });

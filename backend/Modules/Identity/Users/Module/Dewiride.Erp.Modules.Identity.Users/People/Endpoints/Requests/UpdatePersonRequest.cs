@@ -11,9 +11,6 @@ public sealed record UpdatePersonRequest(
     [property: Description("Phone number: an international number starting with + and its country code, or a 10-digit Indian mobile number; empty clears it.")]
     [property: StringLength(PersonLimits.PhoneNumberInputMaxLength)]
     string? PhoneNumber,
-    [property: Description("Designation, as free text; empty clears it.")]
-    [property: StringLength(PersonLimits.DesignationMaxLength)]
-    string? Designation,
     [property: Description("Date the person joined the company; absent clears it.")]
     DateOnly? DateOfJoining,
     [property: Description("Version of the record the edit was made from, as the API last returned it.")]

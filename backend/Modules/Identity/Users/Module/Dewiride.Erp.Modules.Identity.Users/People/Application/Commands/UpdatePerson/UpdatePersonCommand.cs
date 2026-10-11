@@ -6,6 +6,5 @@ internal sealed record UpdatePersonCommand(
     Guid Id,
     string? EmployeeCode,
     string? PhoneNumber,
-    string? Designation,
     DateOnly? DateOfJoining,
     string Version) : ICommand<Guid>;

@@ -1,4 +1,5 @@
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
+using Dewiride.Erp.Modules.Identity.Users.Shared;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application;
 
@@ -12,9 +13,7 @@ internal static class PersonLimits
 
     public const int PhoneNumberInputMaxLength = 32;
 
-    public const int DesignationMaxLength = User.DesignationMaxLength;
-
-    public const int VersionMaxLength = 64;
+    public const int VersionMaxLength = RecordVersion.InputMaxLength;
 
     public const int RolesMaxCount = 3;
 }

@@ -95,7 +95,7 @@ internal static class InvitationEndpoints
         }
 
         var invited = await handler.HandleAsync(
-            new InvitePersonCommand(found.Value, request.EmployeeCode, request.PhoneNumber, request.Designation, request.DateOfJoining, roles),
+            new InvitePersonCommand(found.Value, request.EmployeeCode, request.PhoneNumber, request.DateOfJoining, roles),
             cancellationToken);
 
         return invited.IsFailure

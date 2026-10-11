@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
+using Dewiride.Erp.Modules.Identity.Users.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.ChangePersonStatus;
@@ -16,7 +17,7 @@ internal sealed class ChangePersonStatusHandler(UsersDbContext context, IActorCo
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (!PersonVersion.TryDecode(command.Version, out var version))
+        if (!RecordVersion.TryDecode(command.Version, out var version))
         {
             return UserErrors.VersionInvalid;
         }

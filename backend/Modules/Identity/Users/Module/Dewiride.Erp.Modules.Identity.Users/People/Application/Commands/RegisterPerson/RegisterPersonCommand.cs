@@ -8,6 +8,5 @@ internal sealed record RegisterPersonCommand(
     string WorkEmail,
     string? EmployeeCode,
     string? PhoneNumber,
-    string? Designation,
     DateOnly? DateOfJoining,
     IReadOnlyCollection<PersonRole> Roles) : ICommand<Guid>;

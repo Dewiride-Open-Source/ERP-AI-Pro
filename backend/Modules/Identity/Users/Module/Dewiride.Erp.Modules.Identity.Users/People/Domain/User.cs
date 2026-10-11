@@ -6,7 +6,8 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 namespace Dewiride.Erp.Modules.Identity.Users.People.Domain;
 
 // Entra keeps a person's name and work email, so every sign-in brings them up to date; the employee code, phone number,
-// designation, date of joining and the roles assigned in the ERP are kept here by administrators. A person holds
+// date of joining and the roles assigned in the ERP are kept here by administrators, and the person's department,
+// designation and manager by their dated positions. A person holds
 // Administrator and Employee through the app roles of their Entra account, so only Finance, HR and Manager are assigned
 // here. A record an administrator registers by work email is linked to the person's Entra account at their first sign-in;
 // one invited from the company directory is linked from the start.
@@ -20,8 +21,6 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
 
     // ITU-T Recommendation E.164 allows at most 15 digits after the plus sign.
     public const int PhoneNumberMaxLength = 16;
-
-    public const int DesignationMaxLength = 100;
 
     private const string IndianCountryCode = "91";
 
@@ -41,8 +40,6 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
     public string? EmployeeCode { get; private set; }
 
     public string? PhoneNumber { get; private set; }
-
-    public string? Designation { get; private set; }
 
     public DateOnly? DateOfJoining { get; private set; }
 
@@ -75,10 +72,9 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         string workEmail,
         string? employeeCode,
         string? phoneNumber,
-        string? designation,
         DateOnly? dateOfJoining,
         IReadOnlyCollection<ErpRole> roles) =>
-        Create(null, displayName, workEmail, employeeCode, phoneNumber, designation, dateOfJoining, roles);
+        Create(null, displayName, workEmail, employeeCode, phoneNumber, dateOfJoining, roles);
 
     public static Result<User> Invite(
         Guid entraObjectId,
@@ -86,10 +82,9 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         string workEmail,
         string? employeeCode,
         string? phoneNumber,
-        string? designation,
         DateOnly? dateOfJoining,
         IReadOnlyCollection<ErpRole> roles) =>
-        Create(entraObjectId, displayName, workEmail, employeeCode, phoneNumber, designation, dateOfJoining, roles);
+        Create(entraObjectId, displayName, workEmail, employeeCode, phoneNumber, dateOfJoining, roles);
 
     public static Result<User> FirstSignIn(Guid entraObjectId, string displayName, string workEmail, DateTimeOffset signedInAt)
     {
@@ -127,7 +122,7 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         return Result.Success();
     }
 
-    public Result Describe(string? employeeCode, string? phoneNumber, string? designation, DateOnly? dateOfJoining)
+    public Result Describe(string? employeeCode, string? phoneNumber, DateOnly? dateOfJoining)
     {
         var code = Blank(employeeCode);
         if (code is not null && !IsEmployeeCode(code))
@@ -141,15 +136,8 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
             return UserErrors.PhoneNumberInvalid;
         }
 
-        var title = Blank(designation);
-        if (title is { Length: > DesignationMaxLength })
-        {
-            return UserErrors.DesignationTooLong;
-        }
-
         EmployeeCode = code;
         PhoneNumber = phone;
-        Designation = title;
         DateOfJoining = dateOfJoining;
 
         return Result.Success();
@@ -180,7 +168,6 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         string workEmail,
         string? employeeCode,
         string? phoneNumber,
-        string? designation,
         DateOnly? dateOfJoining,
         IReadOnlyCollection<ErpRole> roles)
     {
@@ -191,7 +178,7 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
             return named.Error!;
         }
 
-        var described = user.Describe(employeeCode, phoneNumber, designation, dateOfJoining);
+        var described = user.Describe(employeeCode, phoneNumber, dateOfJoining);
         if (described.IsFailure)
         {
             return described.Error!;

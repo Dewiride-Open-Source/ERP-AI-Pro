@@ -2,6 +2,7 @@ using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
+using Dewiride.Erp.Modules.Identity.Users.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.AssignPersonRoles;
@@ -14,7 +15,7 @@ internal sealed class AssignPersonRolesHandler(UsersDbContext context) : IComman
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (!PersonVersion.TryDecode(command.Version, out var version))
+        if (!RecordVersion.TryDecode(command.Version, out var version))
         {
             return UserErrors.VersionInvalid;
         }

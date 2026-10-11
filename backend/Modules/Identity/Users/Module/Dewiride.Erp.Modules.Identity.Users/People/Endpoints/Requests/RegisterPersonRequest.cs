@@ -21,9 +21,6 @@ public sealed record RegisterPersonRequest(
     [property: Description("Phone number: an international number starting with + and its country code, or a 10-digit Indian mobile number.")]
     [property: StringLength(PersonLimits.PhoneNumberInputMaxLength)]
     string? PhoneNumber,
-    [property: Description("Designation, as free text.")]
-    [property: StringLength(PersonLimits.DesignationMaxLength)]
-    string? Designation,
     [property: Description("Date the person joined the company.")]
     DateOnly? DateOfJoining,
     [property: Description("Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra; naming any needs the permission identity.users.people.assign-roles.")]

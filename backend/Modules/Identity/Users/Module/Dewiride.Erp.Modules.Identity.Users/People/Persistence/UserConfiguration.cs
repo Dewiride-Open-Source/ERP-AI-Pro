@@ -17,7 +17,6 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.WorkEmail).HasMaxLength(User.WorkEmailMaxLength);
         builder.Property(u => u.EmployeeCode).HasMaxLength(User.EmployeeCodeMaxLength);
         builder.Property(u => u.PhoneNumber).HasMaxLength(User.PhoneNumberMaxLength).IsUnicode(false);
-        builder.Property(u => u.Designation).HasMaxLength(User.DesignationMaxLength);
         builder.Property(u => u.Status).HasConversion<byte>();
         builder.PrimitiveCollection(u => u.Roles).ElementType().HasConversion<string>();
         builder.HasIndex(u => u.EntraObjectId).IsUnique().HasFilter("[EntraObjectId] IS NOT NULL AND [IsDeleted] = 0");

@@ -17,7 +17,6 @@ internal sealed class RegisterPersonHandler(UsersDbContext context) : ICommandHa
             command.WorkEmail,
             command.EmployeeCode,
             command.PhoneNumber,
-            command.Designation,
             command.DateOfJoining,
             PersonRoles.ToErpRoles(command.Roles));
         if (registered.IsFailure)

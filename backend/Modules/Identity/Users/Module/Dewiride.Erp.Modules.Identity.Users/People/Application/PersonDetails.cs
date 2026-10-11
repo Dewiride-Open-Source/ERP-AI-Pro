@@ -1,5 +1,6 @@
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
+using Dewiride.Erp.Modules.Identity.Users.Shared;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application;
 
@@ -10,17 +11,24 @@ internal sealed record PersonDetails(
     string WorkEmail,
     string? EmployeeCode,
     string? PhoneNumber,
-    string? Designation,
     DateOnly? DateOfJoining,
+    Guid? DepartmentId,
+    string? DepartmentName,
+    Guid? DesignationId,
+    string? DesignationName,
+    Guid? ManagerId,
+    string? ManagerDisplayName,
     PersonStatus Status,
     IReadOnlyList<PersonRole> Roles,
     DateTimeOffset? LastSignedInAt,
     DateTimeOffset CreatedAt,
     string Version)
 {
-    public static PersonDetails From(User user)
+    public static PersonDetails From(PersonRow row)
     {
-        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(row);
+
+        var user = row.User;
 
         return new(
             user.Id.Value,
@@ -29,12 +37,17 @@ internal sealed record PersonDetails(
             user.WorkEmail,
             user.EmployeeCode,
             user.PhoneNumber,
-            user.Designation,
             user.DateOfJoining,
+            row.DepartmentId?.Value,
+            row.DepartmentName,
+            row.DesignationId?.Value,
+            row.DesignationName,
+            row.ManagerId?.Value,
+            row.ManagerDisplayName,
             user.IsActive ? PersonStatus.Active : PersonStatus.Deactivated,
             [.. user.Roles.Where(User.IsAssignable).Select(PersonRoles.ToPersonRole)],
             user.LastSignedInAt,
             user.CreatedAt,
-            PersonVersion.Encode(user.RowVersion));
+            RecordVersion.Encode(user.RowVersion));
     }
 }

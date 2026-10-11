@@ -1,11 +1,15 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
+using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
+using Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints;
+using Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Integration;
 using Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
+using Dewiride.Erp.Modules.Identity.Users.Positions.Endpoints;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,6 +34,18 @@ public sealed class UsersModule : IModule
             new(UsersPermissions.ChangeStatus, []),
             new(UsersPermissions.Delete, []),
             new(UsersPermissions.AssignRoles, []),
+            new(UsersPermissions.ReadDepartments, [ErpRole.Employee]),
+            new(UsersPermissions.CreateDepartments, []),
+            new(UsersPermissions.UpdateDepartments, []),
+            new(UsersPermissions.DeleteDepartments, []),
+            new(UsersPermissions.ReadDesignations, [ErpRole.Employee]),
+            new(UsersPermissions.CreateDesignations, []),
+            new(UsersPermissions.UpdateDesignations, []),
+            new(UsersPermissions.DeleteDesignations, []),
+            new(UsersPermissions.ReadPositions, []),
+            new(UsersPermissions.RecordPositions, []),
+            new(UsersPermissions.WithdrawPositions, []),
+            new(UsersPermissions.ReadOrgChart, [ErpRole.Employee]),
         ],
         Capabilities: []);
 
@@ -48,5 +64,9 @@ public sealed class UsersModule : IModule
         ArgumentNullException.ThrowIfNull(group);
 
         PeopleEndpoints.Map(group);
+        DepartmentEndpoints.Map(group);
+        DesignationEndpoints.Map(group);
+        PositionEndpoints.Map(group);
+        OrgChartEndpoints.Map(group);
     }
 }

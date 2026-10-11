@@ -2,6 +2,7 @@ using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
+using Dewiride.Erp.Modules.Identity.Users.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.UpdatePerson;
@@ -14,7 +15,7 @@ internal sealed class UpdatePersonHandler(UsersDbContext context) : ICommandHand
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        if (!PersonVersion.TryDecode(command.Version, out var version))
+        if (!RecordVersion.TryDecode(command.Version, out var version))
         {
             return UserErrors.VersionInvalid;
         }
@@ -27,7 +28,7 @@ internal sealed class UpdatePersonHandler(UsersDbContext context) : ICommandHand
         }
 
         context.Entry(user).Property(u => u.RowVersion).OriginalValue = version;
-        var described = user.Describe(command.EmployeeCode, command.PhoneNumber, command.Designation, command.DateOfJoining);
+        var described = user.Describe(command.EmployeeCode, command.PhoneNumber, command.DateOfJoining);
         if (described.IsFailure)
         {
             return described.Error!;
