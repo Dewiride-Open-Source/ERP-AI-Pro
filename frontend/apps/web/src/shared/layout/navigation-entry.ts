@@ -1,3 +1,4 @@
+import type { Permission } from "@dewiride/erp-api-client";
 import type { LucideIcon } from "lucide-react";
 import type { Route } from "next";
 
@@ -12,6 +13,7 @@ export type NavigationEntry = {
   description: string;
   basePath: Route;
   featureFlag: string;
+  permission: Permission;
   area: NavigationArea;
   icon: LucideIcon;
 };

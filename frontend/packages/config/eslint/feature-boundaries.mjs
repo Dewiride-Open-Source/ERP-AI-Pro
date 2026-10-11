@@ -180,9 +180,20 @@ const moduleEffects = [
 ];
 
 const serverFunctionMessage =
-  "A Server Function starts with `await requireSignedInPerson()`: it changes something only for a person the API has just confirmed (ADR-0036, rule X4).";
+  "A Server Function starts with `const person = await requireSignedInPerson();` followed by `if (!holdsPermission(person, <permission>)) return <refusal>;`: it changes something only for a person the API has just confirmed who holds the permission (ADR-0036, ADR-0041, rule X4).";
+
+const harnessServerFunctionMessage =
+  "A design-harness Server Function starts with `await requireSignedInPerson()`: it changes only demo data, so a person the API has just confirmed may use it (ADR-0036, rule X4).";
 
 const serverFunctionExport = 'Program > ExpressionStatement[directive="use server"] ~ ';
+
+const serverFunctionBody = `${serverFunctionExport}ExportNamedDeclaration > FunctionDeclaration > BlockStatement`;
+
+const serverFunctionFileShapes = [
+  `${serverFunctionExport}ExportNamedDeclaration:not([exportKind="type"]):not([declaration.type="FunctionDeclaration"])`,
+  `${serverFunctionExport}ExportDefaultDeclaration`,
+  `${serverFunctionExport}ExportAllDeclaration:not([exportKind="type"])`,
+];
 
 function awaitsSignedInPerson(path) {
   return [
@@ -194,26 +205,53 @@ function awaitsSignedInPerson(path) {
   ].join("");
 }
 
-const sessionCheck = `:matches(ExpressionStatement${awaitsSignedInPerson("expression")}, VariableDeclaration[declarations.length=1]${awaitsSignedInPerson("declarations.0.init")})`;
+const signedInPerson = "person";
+
+const personCheck = [
+  'VariableDeclaration[kind="const"][declarations.length=1]',
+  `[declarations.0.id.type="Identifier"][declarations.0.id.name="${signedInPerson}"]`,
+  awaitsSignedInPerson("declarations.0.init"),
+].join("");
+
+const permissionCheck = [
+  "IfStatement:not([alternate])",
+  '[test.type="UnaryExpression"][test.operator="!"]',
+  '[test.argument.type="CallExpression"][test.argument.callee.type="Identifier"]',
+  '[test.argument.callee.name="holdsPermission"][test.argument.arguments.length=2]',
+  `[test.argument.arguments.0.type="Identifier"][test.argument.arguments.0.name="${signedInPerson}"]`,
+  '[test.argument.arguments.1.type!="SpreadElement"]',
+  '[consequent.type="ReturnStatement"][consequent.argument]',
+].join("");
 
 const serverFunctions = [
-  `${serverFunctionExport}ExportNamedDeclaration > FunctionDeclaration > BlockStatement > :first-child:not(${sessionCheck})`,
-  `${serverFunctionExport}ExportNamedDeclaration > FunctionDeclaration > BlockStatement[body.length=0]`,
-  `${serverFunctionExport}ExportNamedDeclaration:not([exportKind="type"]):not([declaration.type="FunctionDeclaration"])`,
-  `${serverFunctionExport}ExportDefaultDeclaration`,
-  `${serverFunctionExport}ExportAllDeclaration:not([exportKind="type"])`,
+  `${serverFunctionBody} > :first-child:not(${personCheck})`,
+  `${serverFunctionBody}[body.length=0]`,
+  `${serverFunctionBody}[body.length=1] > ${personCheck}`,
+  `${serverFunctionBody} > ${personCheck}:first-child + :not(${permissionCheck})`,
+  ...serverFunctionFileShapes,
 ].map((selector) => ({ selector, message: serverFunctionMessage }));
+
+const harnessSessionCheck = `:matches(ExpressionStatement${awaitsSignedInPerson("expression")}, VariableDeclaration[declarations.length=1]${awaitsSignedInPerson("declarations.0.init")})`;
+
+const harnessServerFunctions = [
+  `${serverFunctionBody} > :first-child:not(${harnessSessionCheck})`,
+  `${serverFunctionBody}[body.length=0]`,
+  ...serverFunctionFileShapes,
+].map((selector) => ({ selector, message: harnessServerFunctionMessage }));
 
 function restrictedImports(patterns, { apiClient = true } = {}) {
   return ["error", apiClient ? { paths: [apiClientValues], patterns } : { patterns }];
 }
 
-function restrictedSyntax(restrictions, { moduleEffectsAllowed = false } = {}) {
+function restrictedSyntax(
+  { restrictions, serverFunctionRules = serverFunctions },
+  { moduleEffectsAllowed = false } = {},
+) {
   return [
     "error",
     ...typeRoleRestrictions,
     ...objectHrefs,
-    ...serverFunctions,
+    ...serverFunctionRules,
     ...(moduleEffectsAllowed ? [] : moduleEffects),
     ...restrictions,
   ];
@@ -223,6 +261,11 @@ const syntaxScopes = {
   source: {
     files: [`src/**/*.${sourceExtensions}`],
     restrictions: apiClientDynamicImports,
+  },
+  "design-harness": {
+    files: [`src/features/platform/design/**/*.${sourceExtensions}`],
+    restrictions: apiClientDynamicImports,
+    serverFunctionRules: harnessServerFunctions,
   },
   "shared-api": {
     files: [`src/shared/api/**/*.${sourceExtensions}`],
@@ -251,7 +294,7 @@ export function featureBoundaryConfigs() {
       files: syntaxScopes.source.files,
       rules: {
         "no-restricted-imports": restrictedImports(sourceImports),
-        "no-restricted-syntax": restrictedSyntax(syntaxScopes.source.restrictions),
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes.source),
         "no-restricted-globals": ["error", ...httpGlobalRestrictions],
         "no-restricted-properties": ["error", ...httpPropertyRestrictions],
       },
@@ -264,6 +307,13 @@ export function featureBoundaryConfigs() {
       },
     })),
     {
+      name: "erp/feature-boundaries/design-harness",
+      files: syntaxScopes["design-harness"].files,
+      rules: {
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes["design-harness"]),
+      },
+    },
+    {
       name: "erp/feature-boundaries/shared",
       files: [`src/shared/**/*.${sourceExtensions}`],
       rules: {
@@ -275,7 +325,7 @@ export function featureBoundaryConfigs() {
       files: syntaxScopes["shared-api"].files,
       rules: {
         "no-restricted-imports": restrictedImports(sharedImports, { apiClient: false }),
-        "no-restricted-syntax": restrictedSyntax(syntaxScopes["shared-api"].restrictions),
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes["shared-api"]),
         "no-restricted-globals": "off",
         "no-restricted-properties": "off",
       },
@@ -288,7 +338,7 @@ export function featureBoundaryConfigs() {
           [relativeFromApp, routeAllowList(routeImportSpecifiers, routeImportsMessage)],
           { apiClient: false },
         ),
-        "no-restricted-syntax": restrictedSyntax(syntaxScopes.app.restrictions),
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes.app),
       },
     },
     {
@@ -299,14 +349,16 @@ export function featureBoundaryConfigs() {
           [relativeFromApp, routeAllowList(documentImportSpecifiers, documentImportsMessage)],
           { apiClient: false },
         ),
-        "no-restricted-syntax": restrictedSyntax(syntaxScopes["app-document"].restrictions),
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes["app-document"]),
       },
     },
-    ...Object.entries(syntaxScopes).map(([scope, { files, restrictions }]) => ({
+    ...Object.entries(syntaxScopes).map(([scope, syntax]) => ({
       name: `erp/feature-boundaries/${scope}-module-effects`,
-      files: files.flatMap((scopeFiles) => moduleEffectFiles.map((effectFiles) => [scopeFiles, effectFiles])),
+      files: syntax.files.flatMap((scopeFiles) =>
+        moduleEffectFiles.map((effectFiles) => [scopeFiles, effectFiles]),
+      ),
       rules: {
-        "no-restricted-syntax": restrictedSyntax(restrictions, { moduleEffectsAllowed: true }),
+        "no-restricted-syntax": restrictedSyntax(syntax, { moduleEffectsAllowed: true }),
       },
     })),
   ];

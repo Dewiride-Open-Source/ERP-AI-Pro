@@ -3,6 +3,8 @@ import { attachmentsPath } from "../../../pages/platform/attachments/files.page"
 import { StartPage } from "../../../pages/platform/home/start.page";
 
 test.describe("start page", () => {
+  test.use({ persona: "administrator" });
+
   forEachTheme("greets the person and opens every area from its card", async ({ page, capture }) => {
     const start = new StartPage(page);
     await start.goto();
@@ -41,5 +43,32 @@ test.describe("start page", () => {
     await start.goto();
 
     await expect(start.heading).toHaveText(`Welcome, ${person?.name ?? ""}`);
+  });
+});
+
+test.describe("start page for an employee", () => {
+  forEachTheme("shows only the areas the person may open", async ({ page, capture }) => {
+    const start = new StartPage(page);
+    await start.goto();
+
+    await expect(start.areas).toHaveCount(1);
+    await expect(start.noAreas).toHaveCount(0);
+    await expect(start.openLink("System")).toHaveCount(0);
+    await expect(page.getByRole("main")).toMatchAriaSnapshot(`
+      - paragraph: Home
+      - heading /^Welcome, / [level=1]
+      - paragraph: Choose where to start.
+      - region "Areas you can open":
+        - heading "Areas you can open" [level=2]
+        - list:
+          - listitem:
+            - heading "Attachments" [level=3]
+            - text: /Upload, download and delete/
+            - link "Open Attachments"
+    `);
+    await capture("start-employee");
+
+    await start.openLink("Attachments").click();
+    await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
   });
 });

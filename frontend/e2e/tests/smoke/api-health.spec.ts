@@ -17,7 +17,7 @@ test.describe("api smoke", () => {
     expect(unknown.headers()["content-type"]).toContain("application/problem+json");
     expect(await unknown.json()).toMatchObject({ code: "request.unauthenticated" });
 
-    await signIn(request, "accountant");
+    await signIn(request, "administrator");
     const info = await request.get("/api/platform/system-info");
     expect(info.status()).toBe(200);
     expect(await info.json()).toMatchObject({

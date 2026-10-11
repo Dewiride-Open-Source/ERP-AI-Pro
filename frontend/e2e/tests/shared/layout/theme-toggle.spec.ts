@@ -3,6 +3,8 @@ import { SystemInfoPage } from "../../../pages/platform/system-info/info.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 test.describe("theme toggle", () => {
+  test.use({ persona: "administrator" });
+
   test("switches between light, dark and system", async ({ page, capture }) => {
     const shell = new AppShell(page);
     await new SystemInfoPage(page).goto();

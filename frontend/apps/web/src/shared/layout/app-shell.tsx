@@ -7,9 +7,9 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { requireSession } from "@/shared/auth/session";
 import { WordmarkMark } from "@/shared/brand/wordmark";
 import { publicEnv } from "@/shared/config/public-env";
-import { isFeatureEnabled } from "@/shared/feature-flags/feature-flags";
 import { getFeatureFlags } from "@/shared/feature-flags/queries";
 
 import { mainContentId } from "./main-content";
@@ -19,6 +19,7 @@ import { AppSidebar } from "./navigation/app-sidebar";
 import { MenuButton } from "./navigation/menu-button";
 import { homePath, homeTitle, type TrailSource } from "./navigation/navigation-trail";
 import { sidebarStartsOpen, sidebarStateCookieName } from "./navigation/sidebar-state";
+import { visibleEntries } from "./navigation/visible-entries";
 import { PageSearch, type PageSearchItem } from "./search/page-search";
 
 export async function AppShell({
@@ -30,8 +31,8 @@ export async function AppShell({
   account: ReactNode;
   children: ReactNode;
 }) {
-  const [flags, cookieStore] = await Promise.all([getFeatureFlags(), cookies()]);
-  const entries = navigation.filter((entry) => isFeatureEnabled(flags, entry.featureFlag));
+  const [flags, session, cookieStore] = await Promise.all([getFeatureFlags(), requireSession(), cookies()]);
+  const entries = visibleEntries(navigation, flags, session);
   const trailSources: TrailSource[] = entries.map((entry) => ({
     basePath: entry.basePath,
     title: entry.title,

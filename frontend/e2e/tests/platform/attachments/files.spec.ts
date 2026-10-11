@@ -90,6 +90,8 @@ async function deleteLeftoverAttachments(api: SignedInApi, ids: readonly string[
 }
 
 test.describe("attachments page", () => {
+  test.use({ persona: "administrator" });
+
   test.describe("before the page is interactive", () => {
     test("keeps the drop zone disabled so no chosen file is ignored", async ({ page }) => {
       const attachments = new AttachmentsPage(page);
@@ -481,14 +483,14 @@ test.describe("attachments page", () => {
         );
         await expect(new LoginPage(page).notice).toHaveText(sessionEndedNotice);
 
-        await signIn(context.request, "accountant");
+        await signIn(context.request, "administrator");
         await attachments.goto(query);
         await expect(attachments.row(file.name)).toBeVisible();
       } finally {
         // The open page renews its session once it has loaded, and a sign-in through the same browser context while that
         // renewal is under way leaves the page sending one person's request token with the next person's cookie.
         await page.goto("about:blank");
-        await signIn(context.request, "accountant");
+        await signIn(context.request, "administrator");
         await deleteLeftoverAttachments(api, [id]);
       }
     });
@@ -653,3 +655,42 @@ function indiaDate(daysFromToday: number): string {
     .format(day)
     .replaceAll("/", "-");
 }
+
+test.describe("attachments page for an employee", () => {
+  forEachTheme("uploads and downloads a file but offers no way to delete it", async ({ page, capture }) => {
+    const attachments = new AttachmentsPage(page);
+    const file = png();
+    await attachments.goto();
+    await expect(attachments.uploadCard).toBeVisible();
+
+    const uploaded = page.waitForResponse(isUpload);
+    await attachments.upload(file);
+    const id = await createdAttachmentId(await uploaded);
+
+    try {
+      await expect(attachments.uploadAnnouncement).toHaveText(`${file.name} was uploaded.`);
+      const row = attachments.row(file.name);
+      await expect(row).toBeVisible();
+      await expect(row.getByTestId("attachment-download")).toBeVisible();
+      await expect(row.getByTestId("attachment-delete")).toHaveCount(0);
+      await capture("attachments-employee");
+
+      const download = await attachments.download(row);
+      expect(download.name).toBe(file.name);
+      expect(Buffer.compare(download.content, file.buffer)).toBe(0);
+      await expect(row.getByTestId("attachment-action-error")).toHaveCount(0);
+
+      const refused = await signedInApi(page.context()).delete(`${attachmentsApi}/${id}`);
+      expect(refused.status()).toBe(403);
+      expect(await refused.json()).toMatchObject({ code: "request.forbidden" });
+      await attachments.goto();
+      await expect(attachments.row(file.name)).toBeVisible();
+    } finally {
+      // The open page renews its session once it has loaded, and a sign-in through the same browser context while that
+      // renewal is under way leaves the page sending one person's request token with the next person's cookie.
+      await page.goto("about:blank");
+      await signIn(page.context().request, "administrator");
+      await deleteLeftoverAttachments(signedInApi(page.context()), [id]);
+    }
+  });
+});

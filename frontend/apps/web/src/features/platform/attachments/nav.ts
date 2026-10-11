@@ -8,6 +8,7 @@ export const attachmentsNavigation = {
   description: "Upload, download and delete the files kept with the ERP.",
   basePath: "/platform/attachments",
   featureFlag: "Erp.Modules.Platform.Attachments",
+  permission: "platform.attachments.files.read",
   area: platformArea,
   icon: PaperclipIcon,
 } as const;

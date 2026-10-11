@@ -37,6 +37,8 @@ async function bottomOnceOpened(dialog: Locator): Promise<number> {
 }
 
 test.describe("page search", () => {
+  test.use({ persona: "administrator" });
+
   forEachTheme(
     "the Search button opens it with every page, and typing narrows the list or says that nothing matches",
     async ({ page, capture }) => {

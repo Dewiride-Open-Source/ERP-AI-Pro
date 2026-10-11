@@ -6,7 +6,9 @@ import { z } from "zod";
 
 import { callApi, sendApi } from "@/shared/api/client";
 import { ApiError, apiErrorMessage } from "@/shared/api/problem-details";
+import { holdsPermission } from "@/shared/auth/permissions";
 import { requireSignedInPerson } from "@/shared/auth/session";
+import { formMessages } from "@/shared/forms/errors/form-messages";
 import type { RowRemovalOutcome } from "@/shared/lists/optimistic-rows";
 
 const attachmentId = z.uuid();
@@ -16,7 +18,8 @@ const attachmentNotFound = "attachment.not-found";
 export type DownloadLinkResult = { readonly url: string } | { readonly error: string };
 
 export async function createDownloadLink(id: string): Promise<DownloadLinkResult> {
-  await requireSignedInPerson();
+  const person = await requireSignedInPerson();
+  if (!holdsPermission(person, "platform.attachments.files.read")) return { error: formMessages.forbidden };
   const parsed = attachmentId.safeParse(id);
   if (!parsed.success) return { error: "That attachment does not exist." };
 
@@ -32,7 +35,9 @@ export async function createDownloadLink(id: string): Promise<DownloadLinkResult
 }
 
 export async function deleteAttachment(id: string): Promise<RowRemovalOutcome> {
-  await requireSignedInPerson();
+  const person = await requireSignedInPerson();
+  if (!holdsPermission(person, "platform.attachments.files.delete"))
+    return { removed: false, message: formMessages.forbidden };
   const parsed = attachmentId.safeParse(id);
   if (!parsed.success) return { removed: false, message: "That attachment does not exist." };
 

@@ -17,10 +17,12 @@ export function AttachmentActions({
   id,
   fileName,
   focusAfterDeleteId,
+  canDelete,
 }: {
   id: string;
   fileName: string;
   focusAfterDeleteId: string;
+  canDelete: boolean;
 }) {
   const removeRow = useRemoveRow();
   const [downloading, startDownload] = useTransition();
@@ -66,32 +68,34 @@ export function AttachmentActions({
           <DownloadIcon aria-hidden />
           <span className="max-sm:sr-only">Download</span>
         </Button>
-        <ConfirmDialog
-          trigger={
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={downloading}
-              aria-label={`Delete ${fileName}`}
-              data-testid="attachment-delete"
-            >
-              <Trash2Icon aria-hidden />
-              <span className="max-sm:sr-only">Delete</span>
-            </Button>
-          }
-          title="Delete this attachment?"
-          description={
-            <>
-              <span className="font-medium text-foreground">{fileName}</span> is removed from the list and its
-              download links stop working.
-            </>
-          }
-          cancelLabel="Keep it"
-          confirmLabel="Delete"
-          tone="destructive"
-          onConfirm={remove}
-          focusAfterConfirm={() => document.getElementById(focusAfterDeleteId)}
-        />
+        {canDelete ? (
+          <ConfirmDialog
+            trigger={
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={downloading}
+                aria-label={`Delete ${fileName}`}
+                data-testid="attachment-delete"
+              >
+                <Trash2Icon aria-hidden />
+                <span className="max-sm:sr-only">Delete</span>
+              </Button>
+            }
+            title="Delete this attachment?"
+            description={
+              <>
+                <span className="font-medium text-foreground">{fileName}</span> is removed from the list and
+                its download links stop working.
+              </>
+            }
+            cancelLabel="Keep it"
+            confirmLabel="Delete"
+            tone="destructive"
+            onConfirm={remove}
+            focusAfterConfirm={() => document.getElementById(focusAfterDeleteId)}
+          />
+        ) : null}
       </div>
       {error ? (
         <p role="alert" className="text-xs text-destructive" data-testid="attachment-action-error">

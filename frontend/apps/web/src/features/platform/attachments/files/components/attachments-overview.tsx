@@ -9,6 +9,8 @@ import { FilesIcon, UploadIcon } from "lucide-react";
 import { redirect, unstable_rethrow } from "next/navigation";
 
 import { ApiError } from "@/shared/api/problem-details";
+import { mayShow } from "@/shared/auth/permissions";
+import { requireSession } from "@/shared/auth/session";
 import { listApiParameters } from "@/shared/lists/list-api";
 import { listHref, readListQuery, withPage, type SearchParameters } from "@/shared/lists/list-query";
 
@@ -25,6 +27,10 @@ export async function AttachmentsOverview({ searchParameters }: { searchParamete
   const { basePath } = attachmentsNavigation;
   const { query, canonical } = readListQuery(searchParameters, attachmentsList);
   if (!canonical) redirect(listHref(basePath, query, attachmentsList));
+
+  const session = await requireSession();
+  const canUpload = mayShow(session, "platform.attachments.files.upload");
+  const canDelete = mayShow(session, "platform.attachments.files.delete");
 
   const [policy, attachments] = await Promise.allSettled([
     getUploadPolicy(),
@@ -47,27 +53,29 @@ export async function AttachmentsOverview({ searchParameters }: { searchParamete
         <h1 className="text-title">Attachments</h1>
       </header>
 
-      <Card data-testid="attachments-upload-card">
-        <CardHeader>
-          <CardTitle>
-            <h2 className="flex items-center gap-2">
-              <UploadIcon className="size-4 text-muted-foreground" aria-hidden />
-              Upload
-            </h2>
-          </CardTitle>
-          <CardDescription>Files are encrypted before they are stored.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {policy.status === "fulfilled" ? (
-            <UploadPanel
-              maxSizeBytes={policy.value.maxSizeBytes ?? 0}
-              allowedContentTypes={policy.value.allowedContentTypes ?? []}
-            />
-          ) : (
-            <Unavailable reason={describeFailure(policy.reason)} />
-          )}
-        </CardContent>
-      </Card>
+      {canUpload ? (
+        <Card data-testid="attachments-upload-card">
+          <CardHeader>
+            <CardTitle>
+              <h2 className="flex items-center gap-2">
+                <UploadIcon className="size-4 text-muted-foreground" aria-hidden />
+                Upload
+              </h2>
+            </CardTitle>
+            <CardDescription>Files are encrypted before they are stored.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {policy.status === "fulfilled" ? (
+              <UploadPanel
+                maxSizeBytes={policy.value.maxSizeBytes ?? 0}
+                allowedContentTypes={policy.value.allowedContentTypes ?? []}
+              />
+            ) : (
+              <Unavailable reason={describeFailure(policy.reason)} />
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card data-testid="attachments-list-card">
         <CardHeader>
@@ -93,6 +101,8 @@ export async function AttachmentsOverview({ searchParameters }: { searchParamete
               allowedContentTypes={
                 policy.status === "fulfilled" ? (policy.value.allowedContentTypes ?? []) : []
               }
+              canUpload={canUpload}
+              canDelete={canDelete}
               labelledBy={listHeadingId}
             />
           ) : (

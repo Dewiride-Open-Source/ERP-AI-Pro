@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Permission } from "@dewiride/erp-api-client";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
@@ -14,6 +15,7 @@ export type SignedInPerson = {
   readonly name: string;
   readonly userName: string;
   readonly roles: readonly string[];
+  readonly permissions: readonly Permission[];
 };
 
 export type Session =
@@ -28,7 +30,13 @@ export const readSession = cache(async (): Promise<Session> => {
     const me = await callApiAllowingSignedOut((client) => client.api.auth.me.get());
     return {
       status: "signed-in",
-      person: { id: me.id ?? "", name: me.name ?? "", userName: me.userName ?? "", roles: me.roles ?? [] },
+      person: {
+        id: me.id ?? "",
+        name: me.name ?? "",
+        userName: me.userName ?? "",
+        roles: me.roles ?? [],
+        permissions: me.permissions ?? [],
+      },
     };
   } catch (error) {
     return error instanceof ApiError && error.status === 401
