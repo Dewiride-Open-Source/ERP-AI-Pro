@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.Permissions;
 using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
@@ -18,8 +19,10 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 // application, which leaves out the id tokens the sign-in receives for the same audience, and a person's token is refused
 // while the person's record does not admit them (IPersonAdmission), as their session would be. A refused token is answered
 // invalid_token without the reason (RFC 6750, section 3.1), and every refusal carries a problem like the session cookie's
-// and is recorded as a security event with its reason and the client application the token names. The handler also reports
-// a request its caller abandoned while the token was read, which refused no token, so that one is not recorded.
+// and is recorded as a security event with its reason and the client application the token names. A token the route's
+// scopes admit, whose holder lacks the route's permission, is not answered insufficient_scope, since no scope would cure
+// it. An admitted person's token carries the roles assigned to their record into its request. The handler also reports a
+// request its caller abandoned while the token was read, which refused no token, so that one is not recorded.
 internal sealed class BearerTokenEvents(IOptions<EntraSignInOptions> signIn, IProblemDetailsService problemDetails) : JwtBearerEvents
 {
     public const string NoTokenChallenge = JwtBearerDefaults.AuthenticationScheme;
@@ -37,6 +40,8 @@ internal sealed class BearerTokenEvents(IOptions<EntraSignInOptions> signIn, IPr
     public const string NotAdmittedRefusal = "not-admitted";
 
     public const string InsufficientScopeRefusal = "insufficient-scope";
+
+    public const string MissingPermissionRefusal = "missing-permission";
 
     public override async Task MessageReceived(MessageReceivedContext context)
     {
@@ -81,9 +86,12 @@ internal sealed class BearerTokenEvents(IOptions<EntraSignInOptions> signIn, IPr
             return;
         }
 
-        if (BearerTokenClaims.HolderOf(token) is BearerTokenHolder.Person
-            && SignInAudit.ObjectIdOf(token) is { } person
-            && !await context.HttpContext.RequestServices.GetRequiredService<IPersonAdmission>().IsAdmittedAsync(person, context.HttpContext.RequestAborted).ConfigureAwait(false))
+        if (BearerTokenClaims.HolderOf(token) is not BearerTokenHolder.Person || SignInAudit.ObjectIdOf(token) is not { } person)
+        {
+            return;
+        }
+
+        if (await context.HttpContext.RequestServices.GetRequiredService<IPersonAdmission>().AdmissionOfAsync(person, context.HttpContext.RequestAborted).ConfigureAwait(false) is not { } admitted)
         {
             context.Fail(NotAdmittedMessage);
             await SignInAudit.TryRecordAsync(
@@ -92,7 +100,11 @@ internal sealed class BearerTokenEvents(IOptions<EntraSignInOptions> signIn, IPr
                 NotAdmittedRefusal,
                 person,
                 BearerTokenRefusals.ClientApplicationOf(token)).ConfigureAwait(false);
+
+            return;
         }
+
+        CallerRoles.KeepAssignedRoles(context.HttpContext, token, admitted);
     }
 
     public override async Task Challenge(JwtBearerChallengeContext context)
@@ -112,17 +124,21 @@ internal sealed class BearerTokenEvents(IOptions<EntraSignInOptions> signIn, IPr
     {
         ArgumentNullException.ThrowIfNull(context);
 
-        context.Response.Headers.Append(HeaderNames.WWWAuthenticate, InsufficientScopeChallenge);
         var holder = context.HttpContext.User;
+        var missingPermission = PermissionRefusals.IsMarked(context.HttpContext) && IsGrantedByTheRoute(context.HttpContext, holder);
+        context.Response.Headers.Append(HeaderNames.WWWAuthenticate, missingPermission ? NoTokenChallenge : InsufficientScopeChallenge);
         await SignInAudit.TryRecordAsync(
             context.HttpContext,
             SecurityEventKind.BearerTokenRefused,
-            InsufficientScopeRefusal,
+            missingPermission ? MissingPermissionRefusal : InsufficientScopeRefusal,
             SignInAudit.ObjectIdOf(holder),
             BearerTokenRefusals.ClientApplicationOf(holder)).ConfigureAwait(false);
 
         await AuthenticationProblems.WriteForbiddenAsync(context.HttpContext, problemDetails).ConfigureAwait(false);
     }
+
+    private static bool IsGrantedByTheRoute(HttpContext context, ClaimsPrincipal holder) =>
+        context.GetEndpoint()?.Metadata.GetMetadata<BearerTokenRouteMetadata>() is { } route && BearerTokenAccessHandler.IsGranted(holder, route.Access);
 
     private static Task<bool> IsEnabledAsync(HttpContext context) =>
         context.RequestServices.GetRequiredService<IVariantFeatureManagerSnapshot>().IsEnabledAsync(BearerTokenFeature.Name, context.RequestAborted).AsTask();

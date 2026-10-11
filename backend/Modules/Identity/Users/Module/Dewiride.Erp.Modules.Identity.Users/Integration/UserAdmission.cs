@@ -3,7 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.BuildingBlocks.Application.Queries;
 using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.AdmitPerson;
-using Dewiride.Erp.Modules.Identity.Users.People.Application.Queries.IsPersonAdmitted;
+using Dewiride.Erp.Modules.Identity.Users.People.Application.Queries.GetPersonAdmission;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Integration;
@@ -13,7 +13,7 @@ namespace Dewiride.Erp.Modules.Identity.Users.Integration;
 // reads the record the other sign-in saved. Sign-ins that keep winning have brought the record up to date themselves, so
 // after the last attempt the admission only reads whether the record admits the person. Any other failure to read or write
 // the record is thrown and fails the sign-in or the request instead of admitting the person.
-internal sealed class UserAdmission(IServiceScopeFactory scopes, IQueryHandler<IsPersonAdmittedQuery, bool> isAdmitted) : IPersonAdmission
+internal sealed class UserAdmission(IServiceScopeFactory scopes, IQueryHandler<GetPersonAdmissionQuery, PersonAdmission?> admissions) : IPersonAdmission
 {
     private const int Attempts = 5;
 
@@ -39,14 +39,14 @@ internal sealed class UserAdmission(IServiceScopeFactory scopes, IQueryHandler<I
 
             if (attempt == Attempts)
             {
-                return await IsAdmittedAsync(person.ObjectId, cancellationToken).ConfigureAwait(false);
+                return await AdmissionOfAsync(person.ObjectId, cancellationToken).ConfigureAwait(false) is not null;
             }
         }
     }
 
-    public async Task<bool> IsAdmittedAsync(Guid objectId, CancellationToken cancellationToken)
+    public async Task<PersonAdmission?> AdmissionOfAsync(Guid objectId, CancellationToken cancellationToken)
     {
-        var result = await isAdmitted.HandleAsync(new IsPersonAdmittedQuery(objectId), cancellationToken).ConfigureAwait(false);
+        var result = await admissions.HandleAsync(new GetPersonAdmissionQuery(objectId), cancellationToken).ConfigureAwait(false);
 
         return result.IsSuccess
             ? result.Value

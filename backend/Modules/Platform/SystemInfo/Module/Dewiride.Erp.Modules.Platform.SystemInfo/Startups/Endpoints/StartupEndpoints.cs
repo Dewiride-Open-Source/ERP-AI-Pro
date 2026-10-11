@@ -1,5 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Application.Queries;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.Modules.Platform.SystemInfo.Contracts;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Application.Queries.ListRecentStartups;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Endpoints.Requests;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Endpoints.Responses;
@@ -16,7 +18,8 @@ internal static class StartupEndpoints
     {
         group.MapGet("/startups", ListAsync)
             .WithName("Platform.SystemInfo.ListStartups")
-            .WithSummary("Lists the most recent starts of the API, newest first.");
+            .WithSummary("Lists the most recent starts of the API, newest first.")
+            .RequirePermission(SystemInfoPermissions.ReadStartups);
     }
 
     private static async Task<Results<Ok<RecentStartupsResponse>, ProblemHttpResult>> ListAsync(

@@ -1,6 +1,7 @@
 using System.Threading.RateLimiting;
 using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
 using Dewiride.Erp.BuildingBlocks.Attachments;
+using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.Modules.Platform.Attachments.Contracts.Files;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Endpoints;
@@ -23,7 +24,12 @@ public sealed class AttachmentsModule : IModule
         Schema: null,
         RoutePrefix: "/platform/attachments",
         FeatureFlag: FeatureFlag,
-        Permissions: AttachmentsPermissions.All,
+        Permissions:
+        [
+            new(AttachmentsPermissions.Upload, [ErpRole.Employee]),
+            new(AttachmentsPermissions.Read, [ErpRole.Employee]),
+            new(AttachmentsPermissions.Delete, []),
+        ],
         Capabilities: []);
 
     public void AddServices(IHostApplicationBuilder builder)

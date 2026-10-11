@@ -10,6 +10,7 @@ public static class AuthenticationOpenApiExtensions
 
         return options
             .AddOperationTransformer<SecurityRequirementsOperationTransformer>()
-            .AddDocumentTransformer<SecuritySchemesDocumentTransformer>();
+            .AddDocumentTransformer<SecuritySchemesDocumentTransformer>()
+            .AddDocumentTransformer<PermissionSchemaDocumentTransformer>();
     }
 }

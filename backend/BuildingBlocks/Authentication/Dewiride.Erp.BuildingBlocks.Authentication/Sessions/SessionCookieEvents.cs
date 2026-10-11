@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.Permissions;
 using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -25,15 +26,16 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 // records, while the Entra session it was signed in from is recorded for the person (EntraSessions), while the person's
 // record still admits them, so a deactivated or deleted person's sessions end at their next request, and while the person's
 // account is in the token cache, the one entry per person in SQL Server that signing out removes; the token cache is read
-// last, so a refused copy of a cookie never slides the person's token cache entry. Signing out ends every session of that
-// person, on every device and browser and on every instance of the API, at once, and a copy of one of those cookies stays
-// refused after the person signs in again; Entra's front-channel sign-out ends only the sessions signed in from the Entra
-// session it names; a restart of the API ends none. Entra always sends an Entra session id, and a principal without one
-// cannot be named by that sign-out, so only the other checks apply to it. A token cache entry or record, the person's
-// included, that cannot be read fails the request instead, and leaves the cookie as it is, so a passing database failure
-// signs nobody out. Every sign-in
-// records the Entra session it came from, and a record that cannot be written fails the sign-in before the cookie is
-// issued, so a store failure never leaves a session the front-channel sign-out cannot end. Every sign-in issues the
+// last, so a refused copy of a cookie never slides the person's token cache entry. Only a session accepted by every check
+// carries the roles assigned to the record into its request, so a change of them counts from the person's next request.
+// Signing out ends every session of that person, on every device and browser and on every instance of the API, at once,
+// and a copy of one of those cookies stays refused after the person signs in again; Entra's front-channel sign-out ends
+// only the sessions signed in from the Entra session it names; a restart of the API ends none. Entra always sends an Entra
+// session id, and a principal without one cannot be named by that sign-out, so only the other checks apply to it. A token
+// cache entry or record, the person's included, that cannot be read fails the request instead, and leaves the cookie as it
+// is, so a passing database failure signs nobody out. Every sign-in records the Entra session it came from, and a record
+// that cannot be written fails the sign-in before the cookie is issued, so a store failure never leaves a session the
+// front-channel sign-out cannot end. Every sign-in issues the
 // person's antiforgery tokens, and every sign-out, a refused cookie's included, clears them, so a browser holds tokens only
 // for the person signed in on it.
 internal sealed class SessionCookieEvents(
@@ -113,9 +115,10 @@ internal sealed class SessionCookieEvents(
             && context.Principal?.GetMsalAccountId() is { } accountId
             && !await revocations.IsRevokedAsync(accountId, signedInAt, context.HttpContext.RequestAborted).ConfigureAwait(false)
             && await IsInItsEntraSessionAsync(context.Principal, accountId, context.HttpContext.RequestAborted).ConfigureAwait(false)
-            && await IsAdmittedAsync(context.Principal, context.HttpContext.RequestAborted).ConfigureAwait(false)
+            && await AdmissionOfAsync(context.Principal, context.HttpContext.RequestAborted).ConfigureAwait(false) is { } admitted
             && await IsAccountCachedAsync(accountId).ConfigureAwait(false))
         {
+            CallerRoles.KeepAssignedRoles(context.HttpContext, context.Principal, admitted);
             return;
         }
 
@@ -168,8 +171,8 @@ internal sealed class SessionCookieEvents(
         return new SignedInPerson(objectId, principal.FindFirstValue(ClaimConstants.Name) ?? userName, userName);
     }
 
-    private Task<bool> IsAdmittedAsync(ClaimsPrincipal principal, CancellationToken cancellationToken) =>
-        SignInAudit.ObjectIdOf(principal) is { } objectId ? admission.IsAdmittedAsync(objectId, cancellationToken) : Task.FromResult(false);
+    private Task<PersonAdmission?> AdmissionOfAsync(ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+        SignInAudit.ObjectIdOf(principal) is { } objectId ? admission.AdmissionOfAsync(objectId, cancellationToken) : Task.FromResult<PersonAdmission?>(null);
 
     private async Task<bool> IsAccountCachedAsync(string accountId)
     {

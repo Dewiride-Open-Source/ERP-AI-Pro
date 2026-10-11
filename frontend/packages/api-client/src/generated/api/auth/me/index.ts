@@ -11,7 +11,7 @@ import { type BaseRequestBuilder, type Parsable, type ParsableFactory, type Requ
  */
 export interface MeRequestBuilder extends BaseRequestBuilder<MeRequestBuilder> {
     /**
-     * Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles.
+     * Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles, and the permissions their roles give them.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {Promise<CurrentUserResponse>}
      * @throws {ProblemDetails} error when the service returns a 401 status code
@@ -21,7 +21,7 @@ export interface MeRequestBuilder extends BaseRequestBuilder<MeRequestBuilder> {
      */
      get(requestConfiguration?: RequestConfiguration<object> | undefined) : Promise<CurrentUserResponse | undefined>;
     /**
-     * Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles.
+     * Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles, and the permissions their roles give them.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {RequestInformation}
      */

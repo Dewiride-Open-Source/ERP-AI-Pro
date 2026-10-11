@@ -1,13 +1,15 @@
 using System.Net.Mail;
+using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Domain;
 
 // Entra keeps a person's name and work email, so every sign-in brings them up to date; the employee code, phone number,
-// designation and date of joining are kept here by administrators. A record an administrator registers by work email is
-// linked to the person's Entra account at their first sign-in; one invited from the company directory is linked from the
-// start.
+// designation, date of joining and the roles assigned in the ERP are kept here by administrators. A person holds
+// Administrator and Employee through the app roles of their Entra account, so only Finance, HR and Manager are assigned
+// here. A record an administrator registers by work email is linked to the person's Entra account at their first sign-in;
+// one invited from the company directory is linked from the start.
 internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, IVersioned
 {
     public const int DisplayNameMaxLength = 256;
@@ -22,6 +24,8 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
     public const int DesignationMaxLength = 100;
 
     private const string IndianCountryCode = "91";
+
+    private List<ErpRole> _roles = [];
 
     private User(UserId id)
         : base(id)
@@ -43,6 +47,8 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
     public DateOnly? DateOfJoining { get; private set; }
 
     public UserStatus Status { get; private set; }
+
+    public IReadOnlyList<ErpRole> Roles => _roles;
 
     public DateTimeOffset? LastSignedInAt { get; private set; }
 
@@ -70,8 +76,9 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         string? employeeCode,
         string? phoneNumber,
         string? designation,
-        DateOnly? dateOfJoining) =>
-        Create(null, displayName, workEmail, employeeCode, phoneNumber, designation, dateOfJoining);
+        DateOnly? dateOfJoining,
+        IReadOnlyCollection<ErpRole> roles) =>
+        Create(null, displayName, workEmail, employeeCode, phoneNumber, designation, dateOfJoining, roles);
 
     public static Result<User> Invite(
         Guid entraObjectId,
@@ -80,8 +87,9 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         string? employeeCode,
         string? phoneNumber,
         string? designation,
-        DateOnly? dateOfJoining) =>
-        Create(entraObjectId, displayName, workEmail, employeeCode, phoneNumber, designation, dateOfJoining);
+        DateOnly? dateOfJoining,
+        IReadOnlyCollection<ErpRole> roles) =>
+        Create(entraObjectId, displayName, workEmail, employeeCode, phoneNumber, designation, dateOfJoining, roles);
 
     public static Result<User> FirstSignIn(Guid entraObjectId, string displayName, string workEmail, DateTimeOffset signedInAt)
     {
@@ -145,6 +153,21 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         return Result.Success();
     }
 
+    public Result AssignRoles(IEnumerable<ErpRole> roles)
+    {
+        ArgumentNullException.ThrowIfNull(roles);
+
+        var assigned = roles.Distinct().Order().ToList();
+        if (assigned.Any(role => role is not (ErpRole.Finance or ErpRole.Hr or ErpRole.Manager)))
+        {
+            return UserErrors.RoleNotAssignable;
+        }
+
+        _roles = assigned;
+
+        return Result.Success();
+    }
+
     public void Deactivate() => Status = UserStatus.Deactivated;
 
     public void Reactivate() => Status = UserStatus.Active;
@@ -156,7 +179,8 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         string? employeeCode,
         string? phoneNumber,
         string? designation,
-        DateOnly? dateOfJoining)
+        DateOnly? dateOfJoining,
+        IReadOnlyCollection<ErpRole> roles)
     {
         var user = new User(UserId.Create()) { EntraObjectId = entraObjectId, Status = UserStatus.Active };
         var named = user.Name(displayName, workEmail);
@@ -166,8 +190,14 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         }
 
         var described = user.Describe(employeeCode, phoneNumber, designation, dateOfJoining);
+        if (described.IsFailure)
+        {
+            return described.Error!;
+        }
 
-        return described.IsFailure ? described.Error! : user;
+        var assigned = user.AssignRoles(roles);
+
+        return assigned.IsFailure ? assigned.Error! : user;
     }
 
     private static string? Blank(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

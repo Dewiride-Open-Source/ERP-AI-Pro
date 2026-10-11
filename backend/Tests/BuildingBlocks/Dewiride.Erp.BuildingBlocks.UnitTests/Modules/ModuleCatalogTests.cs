@@ -68,7 +68,7 @@ public sealed class ModuleCatalogTests
     [Fact]
     public void Constructor_PermissionOutsideTheModulePrefix_ThrowsNamingTheModule()
     {
-        IModule[] modules = [new StubModule("Finance", "Sales") { Permissions = ["finance.sales.invoices.issue", "finance.expenses.bills.approve"] }];
+        IModule[] modules = [new StubModule("Finance", "Sales") { Permissions = [new("finance.sales.invoices.issue", []), new("finance.expenses.bills.approve", [])] }];
 
         var exception = Assert.Throws<InvalidOperationException>(() => new ModuleCatalog(modules));
 
@@ -80,7 +80,7 @@ public sealed class ModuleCatalogTests
     [Fact]
     public void Constructor_PermissionsWithTheModulePrefix_AreAccepted()
     {
-        IModule[] modules = [new StubModule("Finance", "Sales") { Permissions = ["finance.sales.invoices.issue", "finance.sales.invoices.read"] }];
+        IModule[] modules = [new StubModule("Finance", "Sales") { Permissions = [new("finance.sales.invoices.issue", []), new("finance.sales.invoices.read", [])] }];
 
         var catalog = new ModuleCatalog(modules);
 

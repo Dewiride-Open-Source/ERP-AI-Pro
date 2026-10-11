@@ -4,6 +4,8 @@
 // @ts-ignore
 import { createHttpValidationProblemDetailsFromDiscriminatorValue, createPersonResponseFromDiscriminatorValue, createProblemDetailsFromDiscriminatorValue, serializePersonResponse, serializeUpdatePersonRequest, type HttpValidationProblemDetails, type PersonResponse, type ProblemDetails, type UpdatePersonRequest } from '../../../../models/index.js';
 // @ts-ignore
+import { RolesRequestBuilderRequestsMetadata, type RolesRequestBuilder } from './roles/index.js';
+// @ts-ignore
 import { StatusRequestBuilderRequestsMetadata, type StatusRequestBuilder } from './status/index.js';
 // @ts-ignore
 import { type BaseRequestBuilder, type KeysToExcludeForNavigationMetadata, type NavigationMetadata, type Parsable, type ParsableFactory, type RequestConfiguration, type RequestInformation, type RequestsMetadata } from '@microsoft/kiota-abstractions';
@@ -12,6 +14,10 @@ import { type BaseRequestBuilder, type KeysToExcludeForNavigationMetadata, type 
  * Builds and executes requests for operations under /api/identity/users/{id}
  */
 export interface UsersItemRequestBuilder extends BaseRequestBuilder<UsersItemRequestBuilder> {
+    /**
+     * The roles property
+     */
+    get roles(): RolesRequestBuilder;
     /**
      * The status property
      */
@@ -85,6 +91,9 @@ export const UsersItemRequestBuilderUriTemplate = "{+baseurl}/api/identity/users
  * Metadata for all the navigation properties in the request builder.
  */
 export const UsersItemRequestBuilderNavigationMetadata: Record<Exclude<keyof UsersItemRequestBuilder, KeysToExcludeForNavigationMetadata>, NavigationMetadata> = {
+    roles: {
+        requestsMetadata: RolesRequestBuilderRequestsMetadata,
+    },
     status: {
         requestsMetadata: StatusRequestBuilderRequestsMetadata,
     },

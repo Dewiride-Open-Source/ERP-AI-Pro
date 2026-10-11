@@ -1,5 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Application.Queries;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.Modules.Platform.SystemInfo.Contracts;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Info.Application.Queries.GetSystemInfo;
 using Dewiride.Erp.Modules.Platform.SystemInfo.Info.Endpoints.Responses;
 using Microsoft.AspNetCore.Builder;
@@ -15,7 +17,8 @@ internal static class SystemInfoEndpoints
     {
         group.MapGet(string.Empty, GetAsync)
             .WithName("Platform.SystemInfo.Get")
-            .WithSummary("Returns the application name, version and uptime of the API.");
+            .WithSummary("Returns the application name, version and uptime of the API.")
+            .RequirePermission(SystemInfoPermissions.ReadInfo);
     }
 
     private static async Task<Results<Ok<SystemInfoResponse>, ProblemHttpResult>> GetAsync(

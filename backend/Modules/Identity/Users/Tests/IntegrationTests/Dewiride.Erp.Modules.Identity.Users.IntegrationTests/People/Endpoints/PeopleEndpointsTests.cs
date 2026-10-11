@@ -179,7 +179,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
         using var response = await client.GetAsync(PeopleApi.Path($"/{registered.Id}"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(registered, await PeopleApi.ReadPersonAsync(response));
+        Assert.Equivalent(registered, await PeopleApi.ReadPersonAsync(response), strict: true);
     }
 
     [Fact]
@@ -191,7 +191,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
 
         var page = await ListAsync(client, $"filter={Uri.EscapeDataString($"workEmail:eq:{registered.WorkEmail}")}");
 
-        Assert.Equal(registered, Assert.Single(page.Items));
+        Assert.Equivalent(registered, Assert.Single(page.Items), strict: true);
         Assert.Equal(1, page.TotalCount);
         Assert.Equal(1, page.Page);
     }
@@ -463,7 +463,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
             var context = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
             if (!await context.Users.AnyAsync(u => u.EntraObjectId == user.ObjectId, TestContext.Current.CancellationToken))
             {
-                context.Users.Add(User.Invite(user.ObjectId, user.Name, user.UserName, null, null, null, null).Value);
+                context.Users.Add(User.Invite(user.ObjectId, user.Name, user.UserName, null, null, null, null, []).Value);
                 await context.SaveChangesAsync(TestContext.Current.CancellationToken);
             }
         }

@@ -20,6 +20,8 @@ internal static class UserErrors
 
     public static readonly Error VersionInvalid = Field("user.version-invalid", VersionMember, "The version is not one the API issued for a person.");
 
+    public static readonly Error RoleNotAssignable = Field("user.role-not-assignable", nameof(User.Roles), "Only the Finance, HR and Manager roles are assigned in the ERP; Administrator and Employee come from the app roles of the person's Entra account.");
+
     public static readonly Error NotFound = Error.NotFound("user.not-found", "No person has this id.");
 
     public static readonly Error EntraObjectIdTaken = Error.Conflict("user.entra-object-id-taken", "Another person's record already has this Entra object id.");

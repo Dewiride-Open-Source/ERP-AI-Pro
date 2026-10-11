@@ -12,7 +12,7 @@ internal sealed class StubModule(string domain, string name, params ModuleCapabi
 
     public string FeatureFlag { get; init; } = $"Erp.Modules.{domain}.{name}";
 
-    public IReadOnlyCollection<string> Permissions { get; init; } = [];
+    public IReadOnlyCollection<PermissionDeclaration> Permissions { get; init; } = [];
 
     public ModuleDescriptor Descriptor => new(domain, name, Schema, RoutePrefix, FeatureFlag, Permissions, capabilities);
 

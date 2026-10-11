@@ -4,11 +4,13 @@ using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Requests;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints.Responses;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
+using Dewiride.Erp.BuildingBlocks.Authentication.Permissions;
 using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+using Dewiride.Erp.BuildingBlocks.Modules;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -98,7 +100,7 @@ internal static class AuthEndpoints
 
         group.MapGet("/me", GetCurrentUser)
             .WithName(MeRouteName)
-            .WithSummary("Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles.")
+            .WithSummary("Returns the signed-in person: their Microsoft Entra ID object id, display name, sign-in name and app roles, and the permissions their roles give them.")
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/session", ReadSessionAsync)
@@ -196,12 +198,17 @@ internal static class AuthEndpoints
         return TypedResults.NoContent();
     }
 
-    private static Ok<CurrentUserResponse> GetCurrentUser(ClaimsPrincipal user) =>
-        TypedResults.Ok(new CurrentUserResponse(
+    private static Ok<CurrentUserResponse> GetCurrentUser(HttpContext httpContext, PermissionCatalog permissions)
+    {
+        var user = httpContext.User;
+
+        return TypedResults.Ok(new CurrentUserResponse(
             Guid.TryParse(RequiredClaim(user, ClaimConstants.Oid), out var objectId) ? objectId : throw MissingClaim(ClaimConstants.Oid),
             RequiredClaim(user, ClaimConstants.Name),
             RequiredClaim(user, ClaimConstants.PreferredUserName),
-            [.. user.FindAll(ClaimConstants.Roles).Select(role => role.Value)]));
+            [.. user.FindAll(ClaimConstants.Roles).Select(role => role.Value)],
+            [.. permissions.PermissionsOf(CallerRoles.Of(httpContext)).Order(StringComparer.Ordinal)]));
+    }
 
     private static async Task<Ok<SessionResponse>> ReadSessionAsync(HttpContext httpContext, IOptions<EntraSignInOptions> signIn)
     {

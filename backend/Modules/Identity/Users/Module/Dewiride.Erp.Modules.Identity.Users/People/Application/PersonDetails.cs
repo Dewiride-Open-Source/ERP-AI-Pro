@@ -13,6 +13,7 @@ internal sealed record PersonDetails(
     string? Designation,
     DateOnly? DateOfJoining,
     PersonStatus Status,
+    IReadOnlyList<PersonRole> Roles,
     DateTimeOffset? LastSignedInAt,
     DateTimeOffset CreatedAt,
     string Version)
@@ -31,6 +32,7 @@ internal sealed record PersonDetails(
             user.Designation,
             user.DateOfJoining,
             user.IsActive ? PersonStatus.Active : PersonStatus.Deactivated,
+            [.. user.Roles.Select(PersonRoles.ToPersonRole)],
             user.LastSignedInAt,
             user.CreatedAt,
             PersonVersion.Encode(user.RowVersion));

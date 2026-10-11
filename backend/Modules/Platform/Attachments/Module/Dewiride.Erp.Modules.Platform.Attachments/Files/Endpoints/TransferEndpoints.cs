@@ -2,7 +2,9 @@ using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
 using Dewiride.Erp.BuildingBlocks.Attachments.Service;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.Modules.Platform.Attachments.Contracts.Files;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Commands.CreateDownloadLink;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Commands.RedeemDownloadLink;
 using Dewiride.Erp.Modules.Platform.Attachments.Files.Application.Commands.UploadAttachment;
@@ -34,6 +36,7 @@ internal static class TransferEndpoints
         var upload = group.MapPost("/", UploadAsync)
             .WithName("Platform.Attachments.Upload")
             .WithSummary("Stores one file sent as a multipart/form-data part with a file name.")
+            .RequirePermission(AttachmentsPermissions.Upload)
             .WithRequestTimeout(TimeoutPolicy)
             .RequireRateLimiting(UploadConcurrencyPolicy)
             .ProducesProblem(StatusCodes.Status413PayloadTooLarge)
@@ -69,11 +72,13 @@ internal static class TransferEndpoints
 
         group.MapPost("/{id:guid}/download-links", CreateDownloadLinkAsync)
             .WithName("Platform.Attachments.CreateDownloadLink")
-            .WithSummary("Creates a short-lived link that downloads the attachment for the person asking.");
+            .WithSummary("Creates a short-lived link that downloads the attachment for the person asking.")
+            .RequirePermission(AttachmentsPermissions.Read);
 
         group.MapGet("/{id:guid}/content", RedeemDownloadLinkAsync)
             .WithName(DownloadRouteName)
             .WithSummary("Streams the original file for a valid, unexpired link of the person asking.")
+            .RequirePermission(AttachmentsPermissions.Read)
             .Produces<Stream>(StatusCodes.Status200OK, "application/octet-stream")
             .WithRequestTimeout(TimeoutPolicy);
     }

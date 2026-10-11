@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.People.Application;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Requests;
@@ -24,4 +25,7 @@ public sealed record RegisterPersonRequest(
     [property: StringLength(PersonLimits.DesignationMaxLength)]
     string? Designation,
     [property: Description("Date the person joined the company.")]
-    DateOnly? DateOfJoining);
+    DateOnly? DateOfJoining,
+    [property: Description("Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra; naming any needs the permission identity.users.people.assign-roles.")]
+    [property: MaxLength(PersonLimits.RolesMaxCount)]
+    IReadOnlyList<PersonRole>? Roles);

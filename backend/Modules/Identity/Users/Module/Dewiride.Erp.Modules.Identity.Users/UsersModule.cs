@@ -22,7 +22,15 @@ public sealed class UsersModule : IModule
         Schema: UsersDbContext.SchemaName,
         RoutePrefix: "/identity/users",
         FeatureFlag: FeatureFlag,
-        Permissions: UsersPermissions.All,
+        Permissions:
+        [
+            new(UsersPermissions.Read, []),
+            new(UsersPermissions.Register, []),
+            new(UsersPermissions.Update, []),
+            new(UsersPermissions.ChangeStatus, []),
+            new(UsersPermissions.Delete, []),
+            new(UsersPermissions.AssignRoles, []),
+        ],
         Capabilities: []);
 
     public void AddServices(IHostApplicationBuilder builder)

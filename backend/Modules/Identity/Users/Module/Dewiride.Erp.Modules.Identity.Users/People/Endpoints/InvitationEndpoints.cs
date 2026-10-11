@@ -1,8 +1,10 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.BuildingBlocks.Application.Queries;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
+using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.People.Application;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.InvitePerson;
 using Dewiride.Erp.Modules.Identity.Users.People.Application.Queries.FindRegisteredPeople;
@@ -27,11 +29,13 @@ internal static class InvitationEndpoints
         people.MapGet("/directory", SearchDirectoryAsync)
             .WithName("Identity.Users.SearchDirectory")
             .WithSummary("Searches the company directory in Microsoft Entra on the administrator's behalf and names the people the ERP already holds.")
+            .RequirePermission(UsersPermissions.Register)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
         people.MapPost("/invitations", InviteAsync)
             .WithName("Identity.Users.Invite")
             .WithSummary("Registers a person of the company directory by their Entra object id, with the name and sign-in name the directory holds, so their first sign-in finds the record.")
+            .RequirePermission(UsersPermissions.Register)
             .RequireIdempotencyKey()
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)
@@ -73,10 +77,17 @@ internal static class InvitationEndpoints
         IPeopleDirectory directory,
         ICommandHandler<InvitePersonCommand, Guid> handler,
         IQueryHandler<GetPersonQuery, PersonDetails> people,
+        ICallerPermissions permissions,
         LinkGenerator links,
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
+        var roles = request.Roles ?? [];
+        if (roles.Count > 0 && !permissions.Holds(UsersPermissions.AssignRoles))
+        {
+            return PeopleEndpoints.AssigningRolesForbidden.ToProblem();
+        }
+
         var found = await directory.FindAsync(request.EntraObjectId!.Value, cancellationToken);
         if (found.IsFailure)
         {
@@ -84,7 +95,7 @@ internal static class InvitationEndpoints
         }
 
         var invited = await handler.HandleAsync(
-            new InvitePersonCommand(found.Value, request.EmployeeCode, request.PhoneNumber, request.Designation, request.DateOfJoining),
+            new InvitePersonCommand(found.Value, request.EmployeeCode, request.PhoneNumber, request.Designation, request.DateOfJoining, roles),
             cancellationToken);
 
         return invited.IsFailure
