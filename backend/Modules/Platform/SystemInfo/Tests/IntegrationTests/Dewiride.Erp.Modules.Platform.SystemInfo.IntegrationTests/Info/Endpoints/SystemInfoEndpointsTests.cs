@@ -46,10 +46,11 @@ public sealed class SystemInfoEndpointsTests : IClassFixture<ErpApiFactory>
         Assert.Equal("request.forbidden", (await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("code").GetString());
     }
 
-    [Fact]
-    public void Route_SystemInformation_RequiresItsOwnPermission()
+    [Theory]
+    [InlineData("GET", "/api/platform/system-info", SystemInfoPermissions.ReadInfo)]
+    public void Route_OfEachUseCase_RequiresItsOwnPermission(string method, string route, string permission)
     {
-        Assert.Equal(SystemInfoPermissions.ReadInfo, RoutePermissions.Of(_factory.Services, "GET", "/api/platform/system-info"));
+        Assert.Equal(permission, RoutePermissions.Of(_factory.Services, method, route));
     }
 
     private static string HostVersion() =>

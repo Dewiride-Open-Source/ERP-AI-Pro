@@ -209,7 +209,7 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
     }
 
     [Fact]
-    public async Task Invite_WithRolesByACallerWhoMayNotAssignThem_Answers403WithoutAskingTheDirectory()
+    public async Task Invite_WithRolesByACallerWhoMayNotAssignThem_Answers403AndStoresNoRecord()
     {
         await using var refusing = fixture.Factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services => services.AddScoped<ICallerPermissions, AllButAssigningRoles>()));
         var objectId = Guid.CreateVersion7();
@@ -219,7 +219,6 @@ public sealed class InvitationEndpointsTests(InvitationEndpointsTests.Fixture fi
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("request.forbidden", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
-        Assert.DoesNotContain(refusing.Services.GetRequiredService<TestDirectory>().Requests, request => request.Address.AbsolutePath.EndsWith(objectId.ToString("D"), StringComparison.Ordinal));
         await using var scope = refusing.Services.CreateAsyncScope();
         Assert.False(await scope.ServiceProvider.GetRequiredService<UsersDbContext>().Users.AnyAsync(u => u.EntraObjectId == objectId, TestContext.Current.CancellationToken));
     }

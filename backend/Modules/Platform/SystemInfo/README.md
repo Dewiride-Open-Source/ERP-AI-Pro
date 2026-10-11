@@ -1,6 +1,6 @@
 # Platform / SystemInfo
 
-Reference module that proves the module anatomy end to end: one query, one persisted aggregate, two endpoints, its contracts, unit and integration tests.
+Reference module that proves the module anatomy end to end: two queries, one command, one persisted aggregate, two endpoints, its contracts, unit and integration tests.
 
 | Aspect | Value |
 |---|---|

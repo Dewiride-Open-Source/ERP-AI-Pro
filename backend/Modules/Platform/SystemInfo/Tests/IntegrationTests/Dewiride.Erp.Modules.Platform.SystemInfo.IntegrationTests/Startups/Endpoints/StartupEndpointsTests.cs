@@ -44,10 +44,11 @@ public sealed class StartupEndpointsTests(ErpApiFactory factory) : IClassFixture
         Assert.DoesNotContain(Environment.MachineName, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
     }
 
-    [Fact]
-    public void Route_RecentStarts_RequiresItsOwnPermission()
+    [Theory]
+    [InlineData("GET", "/api/platform/system-info/startups", SystemInfoPermissions.ReadStartups)]
+    public void Route_OfEachUseCase_RequiresItsOwnPermission(string method, string route, string permission)
     {
-        Assert.Equal(SystemInfoPermissions.ReadStartups, RoutePermissions.Of(factory.Services, "GET", "/api/platform/system-info/startups"));
+        Assert.Equal(permission, RoutePermissions.Of(factory.Services, method, route));
     }
 
     [Fact]

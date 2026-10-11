@@ -285,6 +285,7 @@ test.describe("attachments page", () => {
       await attachments.confirmDelete.click();
       const call = await sent;
       await expect(attachments.row(deleted.name)).toHaveCount(0);
+      await expect(new AppShell(page).toast(`Deleted ${deleted.name}.`)).toBeVisible();
       const headers = call.headers();
       const body = (call.postData() ?? "").replace(deletedId, keptId);
       expect(body, "the call names the other file").toContain(keptId);
