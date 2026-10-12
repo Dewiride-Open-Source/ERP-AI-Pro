@@ -42,7 +42,7 @@ catalog:
   "@opentelemetry/api-logs": 0.222.0
   "@opentelemetry/sdk-logs": 0.222.0
   "@opentelemetry/instrumentation": 0.222.0
-  "@playwright/test": 1.63.0
+  "@playwright/test": 1.64.0
   zod: 4.6.5
   react-hook-form: 7.89.0
   react-day-picker: 10.0.2
