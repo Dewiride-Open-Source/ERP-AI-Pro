@@ -195,8 +195,8 @@ catalogs:
       specifier: 4.3.3
       version: 4.3.3
     '@tanstack/react-table':
-      specifier: 9.2.6
-      version: 9.2.6
+      specifier: 9.2.8
+      version: 9.2.8
     '@types/node':
       specifier: 24.19.1
       version: 24.19.1
@@ -228,8 +228,8 @@ catalogs:
       specifier: 1.7.2
       version: 1.7.2
     lucide-react:
-      specifier: 1.52.0
-      version: 1.52.0
+      specifier: 1.53.0
+      version: 1.53.0
     motion:
       specifier: 13.5.1
       version: 13.5.1
@@ -330,7 +330,7 @@ importers:
         version: 1.7.2(next@16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.19.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))
       lucide-react:
         specifier: 'catalog:'
-        version: 1.52.0(@types/react@19.3.0)(react@19.3.0)
+        version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
       next:
         specifier: 'catalog:'
         version: 16.4.0(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@24.19.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -455,7 +455,7 @@ importers:
     dependencies:
       '@tanstack/react-table':
         specifier: 'catalog:'
-        version: 9.2.6(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        version: 9.2.8(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -464,7 +464,7 @@ importers:
         version: 0.4.0
       lucide-react:
         specifier: 'catalog:'
-        version: 1.52.0(@types/react@19.3.0)(react@19.3.0)
+        version: 1.53.0(@types/react@19.3.0)(react@19.3.0)
       motion:
         specifier: 'catalog:'
         version: 13.5.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -1913,8 +1913,8 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@tanstack/react-table@9.2.6':
-    resolution: {integrity: sha512-Wmt3sbzwz+5CtB0pqIxGw2FrNW9mF4AhJ9KnS1/VGZ8cDAEg51S4ixru2dnF0xQnY407kdYNLer3ms+n8zCN6w==}
+  '@tanstack/react-table@9.2.8':
+    resolution: {integrity: sha512-cJxgratJm3uMm2sXnmY3PCTvcvIEFleCJ2uSOM2nxCmIY8RWA1KjXt5fsWGlYisL7DODr2w9YpLRQ3i/7MdIsQ==}
     engines: {node: '>=20'}
     peerDependencies:
       react: '>=18'
@@ -1922,8 +1922,8 @@ packages:
   '@tanstack/store@0.11.2':
     resolution: {integrity: sha512-sJ4mjol8uQsHV0gOJzzjwXfh2Fwm+Sz0+8deqiTm4jGbMdjzNSW+xZCFm0kUa870uhd8yi+DpKnZb5Kc4apa0Q==}
 
-  '@tanstack/table-core@9.2.6':
-    resolution: {integrity: sha512-t5LaLx8gDCgzjvwtZo5xtLklJP11D9zaKOW8q6jOCyuQYhkqpTK1heqMfgTQwDlhl0dU8f1X66Xurbj3jpCUSw==}
+  '@tanstack/table-core@9.2.8':
+    resolution: {integrity: sha512-M4D6fY5jnc7z7TaoD3Pjvz5R+8MbhzCGYdkcFf2T1AgjigwLinvFWZh6mtqfN016A7yGIroOL0GiTlVGsTh6Vg==}
     engines: {node: '>=20'}
 
   '@ts-morph/common@0.27.0':
@@ -3403,8 +3403,8 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  lucide-react@1.52.0:
-    resolution: {integrity: sha512-TUgPtl5ZI9WgxOcbu4ckaC5B3l1qxPQrCMgb6OfUB9owx/OvSJfcf93SMgUWAxRw5/1XDfh9uI5F5iNGXCcGDQ==}
+  lucide-react@1.53.0:
+    resolution: {integrity: sha512-OxJ7elNku+iqVzOolk5caxq2LM8Mck6lhA6uZx3g2PlZ53+FvBnT6PlJxGCukCa6oF5wQwgSatn9cH1b4olWmQ==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -5886,17 +5886,17 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
       use-sync-external-store: 1.7.0(react@19.3.0)
 
-  '@tanstack/react-table@9.2.6(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@tanstack/react-table@9.2.8(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
       '@tanstack/react-store': 0.11.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@tanstack/table-core': 9.2.6
+      '@tanstack/table-core': 9.2.8
       react: 19.3.0
     transitivePeerDependencies:
       - react-dom
 
   '@tanstack/store@0.11.2': {}
 
-  '@tanstack/table-core@9.2.6':
+  '@tanstack/table-core@9.2.8':
     dependencies:
       '@tanstack/store': 0.11.2
 
@@ -7467,7 +7467,7 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  lucide-react@1.52.0(@types/react@19.3.0)(react@19.3.0):
+  lucide-react@1.53.0(@types/react@19.3.0)(react@19.3.0):
     dependencies:
       react: 19.3.0
     optionalDependencies:
