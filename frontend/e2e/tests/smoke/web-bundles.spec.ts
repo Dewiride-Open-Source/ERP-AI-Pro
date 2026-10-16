@@ -16,6 +16,7 @@ const routes = [
       "system-info-refresh",
       "No bills match these filters.",
       "animated-list-item",
+      "audit-export",
     ],
   },
   {
@@ -27,6 +28,7 @@ const routes = [
       "upload-progress",
       "system-info-refresh",
       "animated-list-item",
+      "audit-export",
     ],
   },
   {
@@ -38,6 +40,7 @@ const routes = [
       "upload-progress",
       "system-info-refresh",
       "No bills match these filters.",
+      "audit-export",
     ],
   },
   {
@@ -49,6 +52,7 @@ const routes = [
       "system-info-refresh",
       "No bills match these filters.",
       "animated-list-item",
+      "audit-export",
     ],
   },
   {
@@ -59,12 +63,27 @@ const routes = [
       "Delete this attachment?",
       "supplier-example-form",
       "animated-list-item",
+      "audit-export",
     ],
   },
   {
     path: "/platform/attachments",
     ownMarkers: ["upload-progress", "No files match these filters."],
     foreignMarkers: [
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
+      "No bills match these filters.",
+      "animated-list-item",
+      "audit-export",
+    ],
+  },
+  {
+    path: "/platform/audit",
+    ownMarkers: ["audit-export"],
+    foreignMarkers: [
+      "upload-progress",
+      "Delete this attachment?",
       "system-info-refresh",
       "supplier-example-form",
       "motion-demo-preference",

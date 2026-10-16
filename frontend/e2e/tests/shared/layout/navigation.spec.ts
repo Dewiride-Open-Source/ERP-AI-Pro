@@ -33,6 +33,9 @@ const sidebarSnapshot = `
       - listitem:
         - link "Attachments":
           - /url: /platform/attachments
+      - listitem:
+        - link "Audit trail":
+          - /url: /platform/audit
 `;
 
 const drawerSnapshot = `
@@ -57,6 +60,9 @@ const drawerSnapshot = `
         - listitem:
           - link "Attachments":
             - /url: /platform/attachments
+        - listitem:
+          - link "Audit trail":
+            - /url: /platform/audit
 `;
 
 const wideBannerOnTheStartPage = `
@@ -134,7 +140,7 @@ test.describe("app shell navigation", () => {
         await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
         await expect(shell.sidebar).toMatchAriaSnapshot(sidebarSnapshot);
         await expect(shell.navigationLink("Attachments")).toHaveAttribute("aria-current", "page");
-        for (const other of ["Home", "System"]) {
+        for (const other of ["Home", "System", "Audit trail"]) {
           await expect(shell.navigationLink(other)).not.toHaveAttribute("aria-current");
         }
         await capture("sidebar-expanded", shell.sidebarPanel);

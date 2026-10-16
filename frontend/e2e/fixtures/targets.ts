@@ -10,4 +10,5 @@ export const gatedBaseURL =
 export const gatedFeatureFlags = [
   "Erp.Modules.Platform.SystemInfo",
   "Erp.Modules.Platform.Attachments",
+  "Erp.Modules.Platform.Audit",
 ] as const;

@@ -1,5 +1,6 @@
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { attachmentsPath } from "../../../pages/platform/attachments/files.page";
+import { auditTrailPath } from "../../../pages/platform/audit/changes.page";
 import { StartPage } from "../../../pages/platform/home/start.page";
 
 test.describe("start page", () => {
@@ -10,7 +11,7 @@ test.describe("start page", () => {
     await start.goto();
 
     await expect(page).toHaveTitle(/Home · ERP-AI-Pro/);
-    await expect(start.areas).toHaveCount(2);
+    await expect(start.areas).toHaveCount(3);
     await expect(start.noAreas).toHaveCount(0);
     await expect(page.getByRole("main")).toMatchAriaSnapshot(`
       - paragraph: Home
@@ -27,11 +28,19 @@ test.describe("start page", () => {
             - heading "Attachments" [level=3]
             - text: /Upload and download the files/
             - link "Open Attachments"
+          - listitem:
+            - heading "Audit trail" [level=3]
+            - text: /who changed what in the ERP/
+            - link "Open Audit trail"
     `);
     await capture("start");
 
     await start.openLink("Attachments").click();
     await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
+    await page.goBack();
+    await expect(start.heading).toBeVisible();
+    await start.openLink("Audit trail").click();
+    await expect(page).toHaveURL((url) => url.pathname === auditTrailPath);
     await page.goBack();
     await expect(start.heading).toBeVisible();
     await start.openLink("System").click();

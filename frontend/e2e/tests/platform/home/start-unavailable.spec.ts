@@ -26,7 +26,7 @@ test.describe("start page without the API", () => {
       await start.goto();
 
       await expect(start.heading).toHaveText("Welcome");
-      await expect(start.areas).toHaveCount(2);
+      await expect(start.areas).toHaveCount(3);
       await expect(start.noAreas).toHaveCount(0);
       await expect(
         start.shell.userMenuButton,
@@ -53,6 +53,10 @@ test.describe("start page without the API", () => {
               - heading "Attachments" [level=3]
               - text: /Upload and download the files/
               - link "Open Attachments"
+            - listitem:
+              - heading "Audit trail" [level=3]
+              - text: /who changed what in the ERP/
+              - link "Open Audit trail"
       `);
 
       await capture("start-unavailable");
