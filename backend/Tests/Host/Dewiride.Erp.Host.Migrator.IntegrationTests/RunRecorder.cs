@@ -1,6 +1,6 @@
-namespace Dewiride.Erp.Host.Migrator.IntegrationTests.Seeding;
+namespace Dewiride.Erp.Host.Migrator.IntegrationTests;
 
-public sealed class SeedRecorder
+public sealed class RunRecorder
 {
     private readonly List<string> _runs = [];
 

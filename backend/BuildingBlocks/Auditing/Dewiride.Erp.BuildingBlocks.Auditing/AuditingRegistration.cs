@@ -1,6 +1,9 @@
+using Dewiride.Erp.BuildingBlocks.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Auditing.Persistence;
+using Dewiride.Erp.BuildingBlocks.Auditing.Retention;
 using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.BuildingBlocks.Persistence.Retention;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +22,8 @@ public static class AuditingRegistration
             .ValidateOnStart();
         builder.AddModuleDbContext<AuditingDbContext>(AuditingDbContext.SchemaName);
         builder.Services.TryAddScoped<ISecurityEventRecorder, SqlSecurityEventRecorder>();
-        builder.Services.AddHostedService<SecurityEventRetentionSweeper>();
+        builder.Services.TryAddScoped<IChangeHistory, ChangeHistory>();
+        builder.Services.AddRetentionSweep<AuditRetentionSweep>();
 
         return builder;
     }

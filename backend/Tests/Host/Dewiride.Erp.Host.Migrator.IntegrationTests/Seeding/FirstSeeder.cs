@@ -3,7 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Persistence.Seeding;
 
 namespace Dewiride.Erp.Host.Migrator.IntegrationTests.Seeding;
 
-public sealed class FirstSeeder(SeedRecorder recorder, DatabaseMigrator migrator) : ISeeder
+public sealed class FirstSeeder(RunRecorder recorder, DatabaseMigrator migrator) : ISeeder
 {
     public async Task SeedAsync(CancellationToken cancellationToken)
     {

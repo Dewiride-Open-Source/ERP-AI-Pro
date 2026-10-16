@@ -8,6 +8,7 @@ using Dewiride.Erp.BuildingBlocks.Attachments.Storage.Blob;
 using Dewiride.Erp.BuildingBlocks.Attachments.Telemetry;
 using Dewiride.Erp.BuildingBlocks.Observability.Health;
 using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -39,6 +40,7 @@ public static class AttachmentsRegistration
         builder.Services.TryAddSingleton<AttachmentsMetrics>();
         builder.Services.TryAddScoped<AttachmentUploader>();
         builder.Services.TryAddScoped<IAttachmentService, AttachmentService>();
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IRecordNames, AttachmentRecordNames>());
         builder.Services.AddHostedService<AttachmentStorageInitializer>();
         builder.Services.AddHostedService<AttachmentsSweeper>();
         builder.Services.AddHealthChecks()

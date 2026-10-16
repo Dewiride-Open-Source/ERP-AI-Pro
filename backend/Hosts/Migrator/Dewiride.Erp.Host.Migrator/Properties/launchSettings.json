@@ -10,6 +10,15 @@
         "AZURE_TOKEN_CREDENTIALS": "AzureCliCredential"
       }
     },
+    "retain": {
+      "commandName": "Project",
+      "commandLineArgs": "retain",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "ERP_ENVIRONMENT": "local-dev",
+        "AZURE_TOKEN_CREDENTIALS": "AzureCliCredential"
+      }
+    },
     "status": {
       "commandName": "Project",
       "commandLineArgs": "status",
