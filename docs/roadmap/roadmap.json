@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-10-11",
+  "updatedOn": "2026-10-16",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -1040,12 +1040,19 @@
           "id": "user-management-audit-trail-building-block",
           "title": "Audit trail building block",
           "scope": "Add backend/BuildingBlocks/Auditing with an EF Core SaveChanges interceptor recording append-only entries (actor, timestamp, before/after JSON diff, IP, correlation id) into an `audit` schema for user, role and department changes, a filterable exportable audit endpoint, an audit timeline component, and an architecture test requiring aggregates to implement IAuditable.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-10-10",
-          "acceptance": [],
+          "acceptance": [
+            "Creating, changing, soft-deleting, restoring or deleting a person (their details, status or roles), a department, a designation, a position or an attachment writes in the same transaction one row of `audit.ChangeRecords` with the actor, a time equal to the audit stamp, the operation, the record and its subject under a stable change key, the client address, the correlation id and the before and after values with their kinds; a save that fails or rolls back writes none, a retried save writes one set, and a sign-in that changes only the sign-in time writes none, proven against SQL Server.",
+            "A database user in the role `erp_audit_append_only` can insert into the `audit` tables and is refused every update, delete and truncate of them; the API deletes nothing in the schema, and the migrator (`migrate` and the new `retain`) deletes security events past `Erp:Platform:Auditing:SecurityEventRetention` and change records older than `Erp:Platform:Auditing:ChangeRecordRetentionYears` financial years, with financial-year boundary dates tested.",
+            "`GET /api/platform/audit/changes` lists change records newest first, paged and filtered by change key, record, subject, actor, operation, time and correlation id, with the current names of actors, subjects and referenced records; `GET /api/platform/audit/changes/export` streams the filtered records as UTF-8 CSV with formula cells neutralised, refuses more than 100,000 lines with 422 `audit.export-too-large` and records each export as a security event; both routes require their permission, which only Administrator holds.",
+            "Architecture tests fail when an entity type of a module context implements neither `IAuditable` nor `IAppendOnly`, an aggregate root is neither, a recorded type lacks a well-formed unique change key, a Guid key known before the save, or has cascade deletes, owned navigations or complex collections, product code calls `Update` or `Attach`, a module runs raw SQL, or a type outside the persistence and auditing building blocks references `ChangeRecord`.",
+            "The Audit trail page shows administrators the history as a timeline grouped by day in IST with filters, pages and a CSV download, and shows employees no access; Playwright covers it on every project in light and dark, and the timeline specimen is on the kitchen sink."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-10-16",
           "notes": "From `authentication-login-hardening` (ADR-0038): backend/BuildingBlocks/Auditing and the schema audit already exist, with AuditingDbContext, AuditingOptions and the table SecurityEvents (inserts through ISecurityEventRecorder only, deletions only by SecurityEventRetentionSweeper past Erp:Platform:Auditing:SecurityEventRetention); add the change records to that building block and schema instead of creating them, and decide whether to enforce append-only in the database (DENY UPDATE and DELETE on the audit tables for the login of the api, with the retention sweep running under another principal), because today a compromised API could rewrite its own records. From user-management-departments-designations-and-reporting-lines (ADR-0042): Departments, Designations and Positions in identity_users join the user changes to audit. A position is never edited, only recorded and withdrawn, and a department move or a designation rename holds for every date, so the audit trail is the only history of those changes."
         },
         {
