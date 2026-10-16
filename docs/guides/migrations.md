@@ -51,8 +51,8 @@ The migrator program (`Hosts/Migrator/Dewiride.Erp.Host.Migrator`) applies every
 
 | Command | Runs | Exit code |
 |---|---|---|
-| `migrate` | the migrations, the seeders, then the retention sweeps | 0 when every schema is migrated and every seeder ran; 1 on a failure or cancellation; 2 when the configuration cannot be loaded or is invalid (for example no connection string, an unconvertible value, an unresolvable Key Vault reference) |
-| `retain` | the retention sweeps alone: no migration, no seeder, so it can run every day without moving the schema ahead of the running API | 0, 1 and 2 as for `migrate` |
+| `migrate` | the migrations, the seeders, then the retention sweeps | 0 when every schema is migrated and every seeder ran, even when a retention sweep failed (logged at `Error`); 1 on a failure or cancellation; 2 when the configuration cannot be loaded or is invalid (for example no connection string, an unconvertible value, an unresolvable Key Vault reference) |
+| `retain` | the retention sweeps alone: no migration, no seeder, so it can run every day without moving the schema ahead of the running API | 0 when every sweep completed; 1 when one failed (after the others ran) or on cancellation; 2 as for `migrate` |
 | `status` | nothing; lists the pending migrations of each schema | 0 when nothing is pending; 3 when a schema has pending migrations |
 | anything else | nothing | 64 with the usage line |
 
@@ -67,7 +67,7 @@ A retention sweep (`IRetentionSweep`, `BuildingBlocks.Persistence/Retention`, re
 | `audit.SecurityEvents` | rows older than the retention | `Erp:Platform:Auditing:SecurityEventRetention`, one year |
 | `audit.ChangeRecords` | rows made before 1 April (IST) of the financial year that many years before the current one; with 8, the financial year 2035-36 deletes those of 2026-27 and earlier | `Erp:Platform:Auditing:ChangeRecordRetentionYears`, 8 from the store; absent, none is deleted |
 
-Each table is deleted in statements of at most 10,000 rows until none remain. Rows past their retention therefore leave when the migrator runs, at each deployment and on each `retain` ([runbook](../operations/runbooks/migrations.md), section "Retention between deployments"). A migrator without the store (the local container stack) reads no `ChangeRecordRetentionYears` and keeps every change record.
+Each table is deleted in `DELETE TOP` statements of 1,000 rows (`AuditRetentionSweep.BatchSize`) until one deletes fewer, because one statement holding 5,000 locks on an index escalates to a table lock that would hold back the API's inserts. Rows past their retention therefore leave when the migrator runs, at each deployment and on each `retain` ([runbook](../operations/runbooks/migrations.md), section "Retention between deployments"). A migrator without the store (the local container stack) reads no `ChangeRecordRetentionYears` and keeps every change record.
 
 ## The migrator's rights
 

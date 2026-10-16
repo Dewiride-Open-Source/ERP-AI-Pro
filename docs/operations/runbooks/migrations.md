@@ -32,7 +32,7 @@ The migrator's output names every schema it brought up to date, every seeder it 
 docker compose -f compose.yaml -f compose.production.yaml run --rm migrator retain
 ```
 
-It exits 0 when the sweeps ran, 1 on a failure or cancellation and 2 when its configuration is invalid, like `migrate`. `first-deployment-host-bootstrap-runbook-and-scripts` schedules it once a day; until then, run it by hand after a long gap between deployments. A sweep that fails is logged at `Error` and the others still run; the next run deletes what the failed one left.
+It exits 0 when every sweep completed, 1 when a sweep failed (after running the others) or on cancellation, and 2 when its configuration is invalid, so a daily run notices a failed sweep; `migrate` only logs it. `first-deployment-host-bootstrap-runbook-and-scripts` schedules it once a day; until then, run it by hand after a long gap between deployments. A sweep that fails is logged at `Error` and the others still run; the next run deletes what the failed one left.
 
 ## When the migrator fails
 
@@ -43,6 +43,7 @@ It exits 0 when the sweeps ran, 1 on a failure or cancellation and 2 when its co
 | 1, "cancelled" | the container was stopped mid-run; the migration in progress rolled back | repeat step 3 |
 | 1 with a login or permission error | the migrator user lost its schema rights, or lacks `CREATE ROLE` or `CONTROL` on the schema `audit` (the migration `AddChangeRecords` creates the role `erp_audit_append_only` and denies it on that schema) | restore the rights (first-deployment database runbook), then repeat step 3 |
 | 0 with an `Error` log of a retention sweep | a deletion past retention failed; the migrations and seeders are done | continue the deployment; fix the cause named in the log, and the next `migrate` or `retain` deletes what is due |
+| 1 from `retain`, with an `Error` log of a retention sweep | a deletion past retention failed; the other sweeps ran | fix the cause named in the log; the next `retain` deletes what is due |
 
 A second migrator that starts while one is running waits for EF Core's database lock and then finds nothing left to apply.
 
