@@ -1,6 +1,8 @@
+using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+
 namespace Dewiride.Erp.BuildingBlocks.Auditing.Security;
 
-internal sealed class SecurityEvent
+internal sealed class SecurityEvent : IAppendOnly
 {
     public const int DetailMaxLength = 128;
 

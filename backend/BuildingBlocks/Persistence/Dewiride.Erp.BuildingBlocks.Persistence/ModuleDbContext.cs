@@ -1,5 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -44,6 +45,7 @@ public abstract class ModuleDbContext : DbContext
 
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
+        modelBuilder.MapChangeRecords(ownsTable: string.Equals(Schema, ChangeRecordMapping.Schema, StringComparison.Ordinal));
         modelBuilder.ApplySoftDelete().ApplyRowVersion();
     }
 }

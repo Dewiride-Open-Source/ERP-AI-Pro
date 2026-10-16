@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -5,9 +6,12 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
 
 public sealed class SampleAggregateConfiguration : IEntityTypeConfiguration<SampleAggregate>
 {
+    public const string ChangeKey = "test.sample.samples";
+
     public void Configure(EntityTypeBuilder<SampleAggregate> builder)
     {
         builder.ToTable("Samples");
+        builder.RecordChangesAs(ChangeKey);
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Name).HasMaxLength(SampleAggregate.NameMaxLength);
         builder.HasMany(s => s.Lines).WithOne().HasForeignKey(l => l.SampleId);

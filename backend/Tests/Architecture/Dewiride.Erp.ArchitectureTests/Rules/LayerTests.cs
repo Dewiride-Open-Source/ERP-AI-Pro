@@ -1,5 +1,7 @@
 using ArchUnitNET.Domain;
+using ArchUnitNET.Domain.Dependencies;
 using ArchUnitNET.Fluent;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace Dewiride.Erp.ArchitectureTests.Rules;
@@ -39,6 +41,18 @@ public sealed class LayerTests
     private static readonly IObjectProvider<IType> BlobStorageTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.BuildingBlocks\.Attachments\.Storage\.Blob(\..*)?$").As("blob storage types");
 
     private static readonly IObjectProvider<IType> AzureStorageTypes = Types(true).That().ResideInNamespaceMatching(AzureStorageNamespace).As("Azure Storage types");
+
+    private static readonly IObjectProvider<IType> ChangeRecordType = Types(true).That().HaveFullName(typeof(ChangeRecord).FullName!).As("the change records");
+
+    private static readonly IObjectProvider<IType> PersistenceAndAuditingTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.BuildingBlocks\.(Persistence|Auditing)(\..*)?$").As("persistence and auditing types");
+
+    private static readonly string[] ContextTypes = ["Microsoft.EntityFrameworkCore.DbContext", "Microsoft.EntityFrameworkCore.DbSet`1"];
+
+    private static readonly string[] ChangeTrackerBypasses = ["Update", "UpdateRange", "Attach", "AttachRange"];
+
+    private static readonly string[] RawSqlTypes = ["Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions", "Microsoft.EntityFrameworkCore.RelationalQueryableExtensions"];
+
+    private static readonly string[] RawSqlMethods = ["ExecuteSql", "SqlQuery", "FromSql"];
 
     [Fact]
     public void Domain_DependsOnlyOnKernelSharedKernelAndSystem()
@@ -132,6 +146,45 @@ public sealed class LayerTests
         AssertRule(Classes().That().ImplementInterface(typeof(BuildingBlocks.Application.Commands.ICommandHandler<,>))
             .Or().ImplementInterface(typeof(BuildingBlocks.Application.Queries.IQueryHandler<,>))
             .Should().BeSealed().WithoutRequiringPositiveResults());
+    }
+
+    [Fact]
+    public void ChangeRecords_AreReferencedOnlyByThePersistenceAndAuditingBuildingBlocks()
+    {
+        Assert.NotEmpty(Types().That().DependOnAny(ChangeRecordType).GetObjects(Architecture));
+        AssertRule(Types().That().AreNot(PersistenceAndAuditingTypes).Should().NotDependOnAny(ChangeRecordType));
+    }
+
+    [Fact]
+    public void ProductCode_NeverAttachesOrUpdatesEntitiesItDidNotRead()
+    {
+        var calls = EntityFrameworkCalls(ContextTypes).ToList();
+
+        Assert.Contains(calls, call => call.Method is "Add" or "Remove");
+        Assert.Empty(calls.Where(call => ChangeTrackerBypasses.Contains(call.Method)).Select(call => $"{call.Caller} calls {call.Target}"));
+    }
+
+    [Fact]
+    public void Modules_NeverSendSqlOfTheirOwn()
+    {
+        var calls = EntityFrameworkCalls(RawSqlTypes).Where(call => RawSqlMethods.Any(prefix => call.Method.StartsWith(prefix, StringComparison.Ordinal))).ToList();
+
+        Assert.Contains(calls, call => call.Caller.StartsWith(ErpAssemblies.BuildingBlocksPrefix, StringComparison.Ordinal));
+        Assert.Empty(calls.Where(call => call.Caller.StartsWith(ErpAssemblies.ModulesPrefix, StringComparison.Ordinal)).Select(call => $"{call.Caller} calls {call.Target}"));
+    }
+
+    private static IEnumerable<(string Caller, string Method, string Target)> EntityFrameworkCalls(IReadOnlyCollection<string> declaringTypes) =>
+        Architecture.Types
+            .SelectMany(type => type.Dependencies.OfType<MethodCallDependency>().Select(call => (Caller: type.FullName, call.TargetMember)))
+            .Where(call => declaringTypes.Contains(call.TargetMember.DeclaringType.FullName))
+            .Select(call => (call.Caller, Method: MethodName(call.TargetMember.Name), Target: call.TargetMember.FullName))
+            .Distinct();
+
+    private static string MethodName(string member)
+    {
+        var end = member.IndexOfAny(['(', '<', '`']);
+
+        return end < 0 ? member : member[..end];
     }
 
     private static void AssertRule(IArchRule rule)

@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Notes;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,4 +9,6 @@ public sealed class SampleDbContext(DbContextOptions<SampleDbContext> options) :
     public const string SchemaName = "test_sample";
 
     public DbSet<SampleAggregate> Samples => Set<SampleAggregate>();
+
+    public DbSet<SampleNote> Notes => Set<SampleNote>();
 }

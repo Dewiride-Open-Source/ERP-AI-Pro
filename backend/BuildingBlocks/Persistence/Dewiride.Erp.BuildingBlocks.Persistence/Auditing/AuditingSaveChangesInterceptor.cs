@@ -1,12 +1,17 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Origins;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes.Capture;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
 
-public sealed class AuditingSaveChangesInterceptor(IActorContext actor, TimeProvider timeProvider) : SaveChangesInterceptor
+// One reading of the clock serves the stamps and the change records of a save, so a record's time is exactly its row's stamp.
+// A save refused for concurrency never reports SaveChangesFailed, so its records are forgotten when the refusal is raised.
+public sealed class AuditingSaveChangesInterceptor(IActorContext actor, IRequestOrigin origin, TimeProvider timeProvider) : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(DbContextEventData eventData, InterceptionResult<int> result) =>
         throw new NotSupportedException("SaveChanges is not supported; call SaveChangesAsync so every database write stays asynchronous.");
@@ -17,7 +22,51 @@ public sealed class AuditingSaveChangesInterceptor(IActorContext actor, TimeProv
 
         if (eventData.Context is { } context)
         {
-            Stamp(context.ChangeTracker, timeProvider.GetUtcNow(), actor.ActorId);
+            var now = timeProvider.GetUtcNow();
+            var actorId = actor.ActorId;
+            ChangeCapture.Forget(context);
+            ChangeCapture.RefuseRewrites(context.ChangeTracker);
+            Stamp(context.ChangeTracker, now, actorId);
+            ChangeCapture.Record(context, new ChangeStamp(now, actorId, origin.ClientAddress, origin.CorrelationId));
+        }
+
+        return ValueTask.FromResult(result);
+    }
+
+    public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(eventData);
+
+        ChangeCapture.Forget(eventData.Context);
+
+        return ValueTask.FromResult(result);
+    }
+
+    public override Task SaveChangesFailedAsync(DbContextErrorEventData eventData, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(eventData);
+
+        ChangeCapture.Forget(eventData.Context);
+
+        return Task.CompletedTask;
+    }
+
+    public override Task SaveChangesCanceledAsync(DbContextEventData eventData, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(eventData);
+
+        ChangeCapture.Forget(eventData.Context);
+
+        return Task.CompletedTask;
+    }
+
+    public override ValueTask<InterceptionResult> ThrowingConcurrencyExceptionAsync(ConcurrencyExceptionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(eventData);
+
+        if (!result.IsSuppressed)
+        {
+            ChangeCapture.Forget(eventData.Context);
         }
 
         return ValueTask.FromResult(result);

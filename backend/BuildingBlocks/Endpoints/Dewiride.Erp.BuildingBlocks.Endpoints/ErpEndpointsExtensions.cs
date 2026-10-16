@@ -1,9 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Origins;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Actors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Origins;
 using Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Security;
 using Microsoft.AspNetCore.Builder;
@@ -46,6 +48,7 @@ public static class ErpEndpointsExtensions
         builder.Services.AddOptions<AllowedHostsOptions>();
         builder.Services.AddHttpContextAccessor();
         builder.Services.Replace(ServiceDescriptor.Scoped<IActorContext, HttpActorContext>());
+        builder.Services.Replace(ServiceDescriptor.Scoped<IRequestOrigin, HttpRequestOrigin>());
 
         return builder;
     }

@@ -9,4 +9,5 @@ public enum SecurityEventKind : byte
     FrontChannelSignOutRefused = 5,
     BearerTokenRefused = 6,
     SignInRefused = 7,
+    ChangeHistoryExported = 8,
 }
