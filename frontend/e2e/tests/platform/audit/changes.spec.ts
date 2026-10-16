@@ -1,3 +1,4 @@
+import type { Locator, Page, Route } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
 import { withholdClientBundles } from "../../../fixtures/client-bundles";
@@ -75,6 +76,14 @@ async function seedDepartments(api: SignedInApi): Promise<readonly Department[]>
   return departments;
 }
 
+async function changeTimes(api: SignedInApi, actorId: string): Promise<readonly Date[]> {
+  const query = new URLSearchParams({ filter: `actorId:eq:${actorId}`, pageSize: "100" });
+  const response = await api.get(`${changesApi}?${query}`);
+  expect(response.status(), "the person's changes").toBe(200);
+  const { items } = (await response.json()) as { items?: readonly { occurredAt?: string }[] };
+  return (items ?? []).map((item) => new Date(item.occurredAt ?? ""));
+}
+
 function indiaDay(instant: Date): string {
   return new Intl.DateTimeFormat("en-IN", {
     timeZone: "Asia/Kolkata",
@@ -85,18 +94,59 @@ function indiaDay(instant: Date): string {
   }).format(instant);
 }
 
-function isoIndiaDate(daysFromToday: number): string {
+function isoIndiaDate(instant: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date(Date.now() + daysFromToday * 86_400_000));
+  }).format(instant);
 }
 
-function typedIndiaDate(daysFromToday: number): string {
-  const [year, month, day] = isoIndiaDate(daysFromToday).split("-");
+function dayBefore(isoDate: string): string {
+  const day = new Date(`${isoDate}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - 1);
+  return day.toISOString().slice(0, 10);
+}
+
+function typedDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-");
   return `${day}-${month}-${year}`;
+}
+
+async function holdListNavigation(page: Page): Promise<() => void> {
+  let release: () => void = () => undefined;
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(
+    (url) => url.pathname === auditTrailPath,
+    async (route: Route) => {
+      if (route.request().headers()["rsc"] !== "1") {
+        await route.fallback();
+        return;
+      }
+      await released;
+      await route.fallback();
+    },
+  );
+  return release;
+}
+
+async function paste(field: Locator, text: string): Promise<void> {
+  await field.evaluate((element, pasted) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData("text/plain", pasted);
+    // Firefox takes no clipboard from a paste event's init, so the clipboard is the event's own property, where a page's
+    // handler reads it in every engine.
+    const event = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "clipboardData", { value: clipboardData });
+    element.dispatchEvent(event);
+  }, text);
+}
+
+async function fitsItsWidth(target: Locator): Promise<boolean> {
+  return target.evaluate((element) => element.scrollWidth <= element.clientWidth);
 }
 
 test.describe("audit trail", () => {
@@ -162,7 +212,14 @@ test.describe("audit trail", () => {
         const personId = person?.id ?? "";
         const name = person?.name ?? "";
         const ownChanges = `?actor=${personId}`;
-        const today = indiaDay(new Date());
+        const changedAt = await changeTimes(api, personId);
+        expect(changedAt, "the person's changes").toHaveLength(21);
+        const changedOn = isoIndiaDate(changedAt[0]!);
+        test.skip(
+          changedAt.some((instant) => isoIndiaDate(instant) !== changedOn),
+          "The person's changes straddle midnight in India, so they fall on two days.",
+        );
+        const changedOnHeading = indiaDay(changedAt[0]!);
 
         await auditTrail.goto(ownChanges);
         await auditTrail.waitUntilInteractive();
@@ -183,8 +240,8 @@ test.describe("audit trail", () => {
         ]);
         await expect(auditTrail.days.first()).toMatchAriaSnapshot(`
           - listitem:
-            - heading "${today}" [level=3]
-            - list "${today}":
+            - heading "${changedOnHeading}" [level=3]
+            - list "${changedOnHeading}":
               - listitem:
                 - time: /^\\d{1,2}:\\d{2} [ap]m IST$/
                 - paragraph: ${name} deleted the department ${last.name}.
@@ -221,6 +278,7 @@ test.describe("audit trail", () => {
         await expect(page).toHaveURL((url) => url.search === ownChanges);
         await expect(list.pageLabel).toHaveText("Page 1 of 2");
 
+        await expect(auditTrail.card.getByRole("combobox", { name: "Changes per page" })).toBeVisible();
         await list.choosePageSize(50);
         await expect(page).toHaveURL((url) => url.searchParams.get("size") === "50");
         await expect(list.status).toHaveText("Showing all 21 changes.");
@@ -245,6 +303,9 @@ test.describe("audit trail", () => {
             .reverse()
             .map((department) => `${name} deleted the department ${department.name}.`),
         );
+        // The router renders the head of a view it navigates to as a deferred value, after the view itself, so a capture
+        // that follows a navigation waits for the title too, or the scan can meet a document without one.
+        await expect(page).toHaveTitle(/Audit trail · ERP-AI-Pro/);
         await capture("audit-trail-filtered");
 
         for (const filter of ["Record type", "Action"]) {
@@ -256,21 +317,22 @@ test.describe("audit trail", () => {
         await expect(page).toHaveURL((url) => url.search === ownChanges);
         await expect(list.status).toHaveText(`Showing 1–${pageSize} of 21 changes.`);
 
-        await list.rangeStart("Changed between").fill(typedIndiaDate(0));
-        await list.rangeEnd("Changed between").fill(typedIndiaDate(0));
+        await list.rangeStart("Changed between").fill(typedDate(changedOn));
+        await list.rangeEnd("Changed between").fill(typedDate(changedOn));
         await list.applyFilters.click();
         await expect(page).toHaveURL(
           (url) =>
-            url.searchParams.get("changedFrom") === isoIndiaDate(0) &&
-            url.searchParams.get("changedTo") === isoIndiaDate(0),
+            url.searchParams.get("changedFrom") === changedOn &&
+            url.searchParams.get("changedTo") === changedOn,
         );
         await expect(list.status).toHaveText(`Showing 1–${pageSize} of 21 changes.`);
-        await list.rangeStart("Changed between").fill(typedIndiaDate(-1));
-        await list.rangeEnd("Changed between").fill(typedIndiaDate(-1));
+        await list.rangeStart("Changed between").fill(typedDate(dayBefore(changedOn)));
+        await list.rangeEnd("Changed between").fill(typedDate(dayBefore(changedOn)));
         await list.applyFilters.click();
         await expect(list.noMatches).toContainText("No changes match these filters.");
         await expect(auditTrail.timeline).toHaveCount(0);
         await expect(list.status).toHaveText("No changes to show.");
+        await expect(page).toHaveTitle(/Audit trail · ERP-AI-Pro/);
         await capture("audit-trail-no-matches");
         await list.noMatches.getByRole("link", { name: "Clear filters" }).click();
         await expect(page).toHaveURL((url) => url.pathname === auditTrailPath && url.search === "");
@@ -292,9 +354,16 @@ test.describe("audit trail", () => {
         await auditTrail.waitUntilInteractive();
 
         const history = auditTrail.change(`${name} deleted the department ${first.name}.`);
+        const releaseHistory = await holdListNavigation(page);
         await history.getByRole("link", { name: `Show the history of ${first.name}` }).click();
+        await expect(auditTrail.changesHeading).toBeFocused();
+        await expect(list.status).toHaveText("Loading…");
+        await expect(auditTrail.feedItems).toHaveAttribute("aria-busy", "true");
+        releaseHistory();
         await expect(page).toHaveURL((url) => url.search === `?record=${first.id}`);
         await expect(list.status).toHaveText("Showing all 2 changes.");
+        await expect(auditTrail.feedItems).not.toHaveAttribute("aria-busy");
+        await expect(auditTrail.changesHeading).toBeFocused();
         expect(await auditTrail.summaries()).toEqual([
           `${name} deleted the department ${first.name}.`,
           `${name} created the department ${first.name}.`,
@@ -307,6 +376,7 @@ test.describe("audit trail", () => {
           .click();
         await expect(page).toHaveURL((url) => url.search === ownChanges);
         await expect(list.status).toHaveText(`Showing 1–${pageSize} of 21 changes.`);
+        await expect(auditTrail.changesHeading).toBeFocused();
 
         const record = list.textFilter("Subject id");
         await record.fill("not-an-id");
@@ -320,6 +390,19 @@ test.describe("audit trail", () => {
         await expect(list.filters.getByText(idProblem)).toBeVisible();
         await record.fill("");
         await expect(list.filters.getByText(idProblem)).toHaveCount(0);
+        await record.fill("not-an-id");
+        await expect(list.filters.getByText(idProblem)).toBeVisible();
+        await record.selectText();
+        await paste(record, ` ${first.id}\n`);
+        await expect(record).toHaveValue(first.id);
+        await expect(list.filters.getByText(idProblem)).toHaveCount(0);
+        await list.applyFilters.click();
+        await expect(page).toHaveURL((url) => url.search === `${ownChanges}&record=${first.id}`);
+        await expect(list.status).toHaveText("Showing all 2 changes.");
+        await record.fill("");
+        await list.applyFilters.click();
+        await expect(page).toHaveURL((url) => url.search === ownChanges);
+        await expect(list.status).toHaveText(`Showing 1–${pageSize} of 21 changes.`);
 
         await expect(auditTrail.exportButton).toBeEnabled();
         await expect(auditTrail.exportRefusal).toHaveCount(0);
@@ -349,7 +432,7 @@ test.describe("audit trail", () => {
       test.describe("when the API refuses the download", () => {
         test.use({ expectedConsoleError: /the server responded with a status of 422/ });
 
-        test("explains the refusal beside the button and keeps the page", async ({
+        test("explains the refusal beside the button on every try and keeps the page", async ({
           page,
           person,
           capture,
@@ -358,8 +441,10 @@ test.describe("audit trail", () => {
           const reason =
             "These changes hold more than 1,00,000 values, too many for one download. Narrow the filters, for example to fewer days.";
           const ownChanges = `?actor=${person?.id ?? ""}`;
-          await page.route(`**${exportApi}?*`, (route) =>
-            route.fulfill({
+          let answered: Promise<void> = Promise.resolve();
+          await page.route(`**${exportApi}?*`, async (route) => {
+            await answered;
+            await route.fulfill({
               status: 422,
               contentType: "application/problem+json",
               json: {
@@ -370,8 +455,8 @@ test.describe("audit trail", () => {
                   "The export would hold more than 100,000 lines; narrow the filter, for example to fewer days.",
                 code: "audit.export-too-large",
               },
-            }),
-          );
+            });
+          });
           await auditTrail.goto(ownChanges);
           await auditTrail.waitUntilInteractive();
           await expect(auditTrail.list.status).toHaveText("Showing 1 change.");
@@ -385,7 +470,53 @@ test.describe("audit trail", () => {
           await expect(auditTrail.exportButton).toBeEnabled();
           await expect(page).toHaveURL((url) => url.search === ownChanges);
           await capture("audit-trail-download-refused");
+
+          let answer: () => void = () => undefined;
+          answered = new Promise<void>((resolve) => {
+            answer = resolve;
+          });
+          const refusedAgain = page.waitForResponse(
+            (response) => new URL(response.url()).pathname === exportApi,
+          );
+          await auditTrail.exportButton.click();
+          await expect(auditTrail.exportError).toHaveCount(0);
+          await expect(auditTrail.exportButton).toHaveAttribute("aria-busy", "true");
+          answer();
+
+          expect((await refusedAgain).status()).toBe(422);
+          await expect(auditTrail.exportError).toHaveText(reason);
+          await expect(auditTrail.exportError).toHaveRole("alert");
+          await expect(auditTrail.exportButton).not.toHaveAttribute("aria-busy");
         });
+      });
+
+      test("wraps a long name without a break inside the card at any width", async ({
+        page,
+        api,
+        person,
+        capture,
+      }) => {
+        const auditTrail = new AuditTrailPage(page);
+        const name = person?.name ?? "";
+        const longName = `e2e_audit_${randomUUID().replaceAll("-", "").repeat(3)}`.slice(0, 100);
+        const department = await createDepartment(api, longName);
+        await deleteDepartment(api, department);
+
+        await auditTrail.goto(`?actor=${person?.id ?? ""}`);
+        await auditTrail.waitUntilInteractive();
+        await expect(auditTrail.list.status).toHaveText("Showing all 3 changes.");
+        const created = auditTrail.change(`${name} created the department ${longName}.`);
+        await created.getByText("Created with 1 value", { exact: true }).click();
+        await expect(created.getByRole("definition")).toHaveText(longName);
+        await expect(
+          auditTrail
+            .change(`${name} deleted the department ${longName}.`)
+            .getByRole("link", { name: `Show the history of ${longName}` }),
+        ).toBeVisible();
+
+        expect(await fitsItsWidth(auditTrail.card), "the changes card fits its width").toBe(true);
+        expect(await fitsItsWidth(page.locator("html")), "the page fits its width").toBe(true);
+        await capture("audit-trail-long-name", auditTrail.card);
       });
     });
   }

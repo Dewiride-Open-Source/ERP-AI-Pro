@@ -447,6 +447,7 @@ export function DataTable<TRow extends RowData>({
 
       <DataTablePagination
         label={label}
+        sizeLabel="Rows per page"
         page={paging.page}
         pageSizes={paging.pageSizes}
         status={status}

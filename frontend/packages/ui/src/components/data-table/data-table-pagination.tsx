@@ -83,6 +83,7 @@ export function DataTableStatus({
 
 export function DataTablePagination({
   label,
+  sizeLabel,
   page,
   pageSizes,
   status,
@@ -92,6 +93,7 @@ export function DataTablePagination({
   linkComponent: Link,
 }: {
   label: string;
+  sizeLabel: string;
   page: DataTablePage;
   pageSizes: readonly number[];
   status: ReactNode;
@@ -112,7 +114,7 @@ export function DataTablePagination({
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex items-center gap-2">
             <span id={sizeLabelId} className="text-muted-foreground">
-              Rows per page
+              {sizeLabel}
             </span>
             <Select
               value={String(page.pageSize)}

@@ -1,11 +1,13 @@
 "use client";
 
 import { SearchIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, type ClipboardEvent } from "react";
 
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@dewiride/erp-ui/components/ui/input-group";
 import { cn } from "@dewiride/erp-ui/lib/utils";
+
+import { trimmedPaste } from "./filter-values";
 
 export interface DataTableTextFilterPattern {
   readonly source: string;
@@ -36,6 +38,24 @@ export function DataTableTextFilter({
   const check = (input: HTMLInputElement) =>
     setProblem(pattern !== undefined && input.validity.patternMismatch ? pattern.message : undefined);
 
+  // The list reads a filter without the space around it, so a value pasted with the space or line break it was copied with
+  // enters without it, and the browser's length limit and pattern check judge the value the list will read.
+  const paste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const end = input.value.length;
+    const pasted = trimmedPaste(
+      input.value,
+      { start: input.selectionStart ?? end, end: input.selectionEnd ?? end },
+      event.clipboardData.getData("text/plain"),
+      maxLength,
+    );
+    if (pasted === undefined) return;
+    event.preventDefault();
+    input.value = pasted.value;
+    input.setSelectionRange(pasted.caret, pasted.caret);
+    if (revealed) check(input);
+  };
+
   return (
     <FormField
       label={label}
@@ -64,6 +84,7 @@ export function DataTableTextFilter({
                   }
             }
             onChange={revealed ? (event) => check(event.currentTarget) : undefined}
+            onPaste={paste}
             autoComplete="off"
             spellCheck={false}
           />

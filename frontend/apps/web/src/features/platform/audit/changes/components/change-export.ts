@@ -21,7 +21,7 @@ export function exportPath(filter: string | undefined): `/${string}` {
 
 export function exportRefusal(totalCount: number): string | undefined {
   return totalCount > maxExportLines
-    ? `More than ${indianCount.format(maxExportLines)} changes match these filters, too many for one download. Narrow the filters, for example to fewer days.`
+    ? `More than ${indianCount.format(maxExportLines)} changes are listed, too many for one download. Filter the list, for example to fewer days, to download it.`
     : undefined;
 }
 

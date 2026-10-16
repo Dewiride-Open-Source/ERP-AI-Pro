@@ -15,9 +15,21 @@ export interface DateRangeProblems {
   readonly to: string | undefined;
 }
 
+export interface TextSelection {
+  readonly start: number;
+  readonly end: number;
+}
+
+export interface PastedText {
+  readonly value: string;
+  readonly caret: number;
+}
+
 const notADate = "Enter a real date as day-month-year, for example 31-03-2026.";
 
 const endBeforeStart = "The end date is before the start date.";
+
+const endsInsideACharacter = /[\uD800-\uDBFF]$/;
 
 export function toggleOption(
   selected: readonly string[],
@@ -49,4 +61,19 @@ export function dateRangeProblems(value: DateRangeFilterValue): DateRangeProblem
 
 export function submittedDate(text: string): string {
   return isIsoDate(text) ? text : "";
+}
+
+export function trimmedPaste(
+  value: string,
+  selection: TextSelection,
+  pasted: string,
+  maxLength: number,
+): PastedText | undefined {
+  const trimmed = pasted.trim();
+  if (trimmed === pasted) return undefined;
+  const before = value.slice(0, selection.start);
+  const after = value.slice(selection.end);
+  const fitted = trimmed.slice(0, Math.max(0, maxLength - before.length - after.length));
+  const inserted = endsInsideACharacter.test(fitted) ? fitted.slice(0, -1) : fitted;
+  return { value: `${before}${inserted}${after}`, caret: before.length + inserted.length };
 }

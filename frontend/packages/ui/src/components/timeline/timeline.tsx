@@ -83,5 +83,11 @@ export function TimelineTime({ className, ...props }: TimelineTimeProps) {
 }
 
 export function TimelineContent({ className, ...props }: ComponentProps<"div">) {
-  return <div {...props} data-slot="timeline-content" className={cn("grid min-w-0 gap-2", className)} />;
+  return (
+    <div
+      {...props}
+      data-slot="timeline-content"
+      className={cn("grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2", className)}
+    />
+  );
 }

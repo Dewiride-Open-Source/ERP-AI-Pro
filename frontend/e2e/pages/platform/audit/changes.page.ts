@@ -20,6 +20,7 @@ export class AuditTrailPage {
   readonly changesHeading: Locator;
   readonly card: Locator;
   readonly feed: Locator;
+  readonly feedItems: Locator;
   readonly list: DataTableRegion;
   readonly timeline: Locator;
   readonly days: Locator;
@@ -35,6 +36,7 @@ export class AuditTrailPage {
     this.changesHeading = page.getByRole("heading", { name: "Changes", level: 2 });
     this.card = page.getByTestId("audit-changes-card");
     this.feed = this.card.locator("[data-slot='list-feed']");
+    this.feedItems = this.card.getByTestId("list-feed-items");
     this.list = new DataTableRegion(page, this.card);
     this.timeline = this.card.getByRole("list", { name: "Changes", exact: true });
     this.days = this.timeline.locator("[data-slot='timeline-group']");

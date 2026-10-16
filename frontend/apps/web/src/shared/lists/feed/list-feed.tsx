@@ -36,6 +36,10 @@ export interface ListFeedProps {
   readonly children: ReactNode;
 }
 
+function perPageLabel(noun: DataTableNoun): string {
+  return `${noun.other.charAt(0).toUpperCase()}${noun.other.slice(1)} per page`;
+}
+
 function ListFeedContent({
   basePath,
   definition,
@@ -89,6 +93,7 @@ function ListFeedContent({
 
       <DataTablePagination
         label={label}
+        sizeLabel={perPageLabel(noun)}
         page={page}
         pageSizes={definition.pageSizes}
         status={<DataTableStatus page={page} noun={noun} pending={pending} />}

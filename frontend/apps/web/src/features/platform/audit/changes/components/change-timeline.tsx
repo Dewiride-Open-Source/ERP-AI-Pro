@@ -7,10 +7,10 @@ import {
   TimelineTime,
 } from "@dewiride/erp-ui/components/timeline/timeline";
 import { ChevronRightIcon } from "lucide-react";
-import Link from "next/link";
 import { Fragment } from "react";
 
 import { formatTimeIst } from "@/shared/format/dates";
+import { ListLink } from "@/shared/lists/list-navigation";
 import { filterSignature, listHref, withFilters, type ListQuery } from "@/shared/lists/list-query";
 
 import { auditNavigation } from "../../nav";
@@ -27,7 +27,7 @@ import {
   type ShownValues,
 } from "./change-text";
 
-const linkClass = "rounded-sm text-primary underline-offset-4 focus-ring hover:underline";
+const linkClass = "rounded-sm wrap-anywhere text-primary underline-offset-4 focus-ring hover:underline";
 
 export function ChangeTimeline({
   changes,
@@ -50,6 +50,7 @@ export function ChangeTimeline({
               change={change}
               query={query}
               current={current}
+              headingId={labelledBy}
             />
           ))}
         </TimelineGroup>
@@ -59,15 +60,17 @@ export function ChangeTimeline({
 }
 
 // A link that would show the list as it is already filtered is left out, so each change offers only views that differ from
-// the one on screen.
+// the one on screen, and a followed link is missing from the view it opens: focus moves to the timeline's heading instead.
 function ChangeItem({
   change,
   query,
   current,
+  headingId,
 }: {
   change: ChangeRecordResponse;
   query: ListQuery;
   current: string;
+  headingId: string;
 }) {
   const { basePath } = auditNavigation;
   const sentence = changeSentence(change);
@@ -82,12 +85,12 @@ function ChangeItem({
         <TimelineTime dateTime={occurredAt.toISOString()}>{formatTimeIst(occurredAt)}</TimelineTime>
       )}
       <TimelineContent>
-        <p data-testid="audit-change-summary">
+        <p data-testid="audit-change-summary" className="wrap-anywhere">
           <span className="font-medium">{sentence.actor}</span> {sentence.action}
           {sentence.subject === undefined ? null : (
             <>
               {" "}
-              <span className="font-medium break-words">{sentence.subject}</span>
+              <span className="font-medium">{sentence.subject}</span>
             </>
           )}
           .
@@ -95,18 +98,30 @@ function ChangeItem({
         <ChangeValues values={values} />
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           {recordHref === undefined || filtersOf(recordHref) === current ? null : (
-            <Link href={listHref(basePath, recordHref, changesList)} prefetch={false} className={linkClass}>
-              {recordHistoryLinkText(change.subjectName)}
-            </Link>
+            <ChangeLink
+              href={listHref(basePath, recordHref, changesList)}
+              text={recordHistoryLinkText(change.subjectName)}
+              headingId={headingId}
+            />
           )}
           {actorHref === undefined || filtersOf(actorHref) === current ? null : (
-            <Link href={listHref(basePath, actorHref, changesList)} prefetch={false} className={linkClass}>
-              {actorChangesLinkText(change.actorKind, change.actorName)}
-            </Link>
+            <ChangeLink
+              href={listHref(basePath, actorHref, changesList)}
+              text={actorChangesLinkText(change.actorKind, change.actorName)}
+              headingId={headingId}
+            />
           )}
         </div>
       </TimelineContent>
     </TimelineItem>
+  );
+}
+
+function ChangeLink({ href, text, headingId }: { href: string; text: string; headingId: string }) {
+  return (
+    <ListLink href={href} disabled={false} aria-label={text} className={linkClass} focusOnFollow={headingId}>
+      {text}
+    </ListLink>
   );
 }
 

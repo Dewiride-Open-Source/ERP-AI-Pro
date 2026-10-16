@@ -34,7 +34,9 @@ export function useListNavigation(): ListNavigation {
 }
 
 // A page link keeps its element and focus when it becomes unavailable on the first or last page, so it stays a link
-// with aria-disabled instead of turning into a disabled button; the DataTable hands back an href built by listLink.
+// with aria-disabled instead of turning into a disabled button; the DataTable hands back an href built by listLink. A link
+// that the view it opens leaves out hands focus to the element focusOnFollow names before it navigates, or focus would fall
+// to the page's body; it names the element by id because a Server Component can pass no function.
 export function ListLink({
   href,
   disabled,
@@ -42,7 +44,8 @@ export function ListLink({
   className,
   "aria-label": label,
   onFollow,
-}: DataTableLinkProps & { onFollow?: (() => void) | undefined }) {
+  focusOnFollow,
+}: DataTableLinkProps & { onFollow?: (() => void) | undefined; focusOnFollow?: string | undefined }) {
   const { navigate } = useListNavigation();
   const route = href as Route;
 
@@ -58,6 +61,7 @@ export function ListLink({
         event.preventDefault();
         if (disabled) return;
         onFollow?.();
+        if (focusOnFollow !== undefined) document.getElementById(focusOnFollow)?.focus();
         navigate(route);
       }}
     >

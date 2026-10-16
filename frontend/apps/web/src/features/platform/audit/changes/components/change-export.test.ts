@@ -30,7 +30,7 @@ test("exportRefusal_UpToTheCap_OffersTheDownload", () => {
 test("exportRefusal_MoreChangesThanTheCap_SaysWhyTheDownloadIsNotOffered", () => {
   assert.equal(
     exportRefusal(maxExportLines + 1),
-    "More than 1,00,000 changes match these filters, too many for one download. Narrow the filters, for example to fewer days.",
+    "More than 1,00,000 changes are listed, too many for one download. Filter the list, for example to fewer days, to download it.",
   );
 });
 

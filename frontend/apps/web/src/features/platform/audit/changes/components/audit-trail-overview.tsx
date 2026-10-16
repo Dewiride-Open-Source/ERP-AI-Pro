@@ -54,7 +54,7 @@ export async function AuditTrailOverview({ searchParameters }: { searchParameter
       <Card data-testid="audit-changes-card">
         <CardHeader>
           <CardTitle>
-            <h2 id={changesHeadingId} className="flex items-center gap-2">
+            <h2 id={changesHeadingId} tabIndex={-1} className="flex items-center gap-2 outline-none">
               <HistoryIcon className="size-4 text-muted-foreground" aria-hidden />
               Changes
             </h2>

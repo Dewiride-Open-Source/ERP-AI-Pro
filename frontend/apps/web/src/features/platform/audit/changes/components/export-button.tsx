@@ -27,8 +27,10 @@ export function ExportButton({ filter, totalCount }: { filter: string | undefine
 
   const download = () => {
     if (pending) return;
+    // The last failure leaves the page at once rather than with the transition, so a retry that fails the same way inserts
+    // its alert afresh and is announced again.
+    setFailure(undefined);
     startDownload(async () => {
-      setFailure(undefined);
       try {
         await downloadFromApi(exportPath(filter), exportMediaType);
       } catch (error) {
