@@ -28,10 +28,20 @@ const bills: ListDefinition = {
     { kind: "options", param: "status", field: "status", values: ["draft", "approved", "paid"] },
     { kind: "options", param: "state", field: "stateCode" },
     { kind: "dateRange", param: "due", field: "dueDate", instant: false },
+    {
+      kind: "text",
+      param: "bill",
+      field: "billId",
+      operator: "eq",
+      maxLength: 36,
+      pattern: "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+    },
   ],
   columns: ["number", "supplier", "amount", "dueDate"],
   hideableColumns: ["supplier", "amount", "dueDate"],
 };
+
+const billId = "0192f0c4-7a3e-7c11-9d2b-5e8f41a6c0d7";
 
 const firstPage: ListQuery = {
   page: 1,
@@ -82,6 +92,7 @@ const notCanonical: readonly (readonly [string, SearchParameters, Partial<ListQu
   ["PaddedText", { supplier: " Kaveri " }, { filters: { supplier: "Kaveri" } }],
   ["TextLongerThanTheLimit", { supplier: "x".repeat(21) }, {}],
   ["RepeatedTextParameter", { supplier: ["a", "b"] }, {}],
+  ["TextThatDoesNotMatchItsPattern", { bill: "not-a-bill-id" }, {}],
   ["OptionOutsideTheAllowedValues", { status: ["paid", "cancelled"] }, { filters: { status: ["paid"] } }],
   ["RepeatedOption", { state: ["KA", "KA"] }, { filters: { state: ["KA"] } }],
   ["DateThatIsNotACalendarDate", { dueFrom: "31-04-2026" }, {}],
@@ -112,6 +123,18 @@ for (const [condition, parameters, expected] of notCanonical) {
     assert.deepEqual(result.query, { ...firstPage, ...expected });
   });
 }
+
+test("readListQuery_TextMatchingItsPattern_IsKept", () => {
+  const result = read({ bill: billId });
+  assert.deepEqual(result.query.filters, { bill: billId });
+  assert.equal(result.canonical, true);
+});
+
+test("readListQuery_PaddedTextMatchingItsPattern_IsKeptTrimmed", () => {
+  const result = read({ bill: ` ${billId} ` });
+  assert.deepEqual(result.query.filters, { bill: billId });
+  assert.equal(result.canonical, false);
+});
 
 test("readListQuery_AsManyOptionsAsTheApiAccepts_AreKept", () => {
   const states = Array.from({ length: 100 }, (_, index) => `S${String(index).padStart(3, "0")}`);
@@ -183,6 +206,13 @@ test("filtersFromForm_SubmittedFields_AreReadLikeTheAddress", () => {
     status: ["draft", "paid"],
     due: { from: "2026-04-01", to: "" },
   });
+});
+
+test("filtersFromForm_TextThatDoesNotMatchItsPattern_IsLeftOut", () => {
+  const form = new FormData();
+  form.append("supplier", "Kaveri");
+  form.append("bill", "0192F0C4");
+  assert.deepEqual(filtersFromForm(form, bills), { supplier: "Kaveri" });
 });
 
 test("filterSignature_PagingSortingAndHiddenColumns_AreIgnored", () => {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { defineList, filterParameters, type ListDefinition } from "./list-definition.ts";
+import { defineList, filterParameters, wholeValuePattern, type ListDefinition } from "./list-definition.ts";
 
 const bills: ListDefinition = {
   pageSizes: [10, 20, 50],
@@ -19,6 +19,32 @@ const bills: ListDefinition = {
 
 test("defineList_ValidDefinition_IsReturnedUnchanged", () => {
   assert.equal(defineList(bills), bills);
+});
+
+test("defineList_TextFilterWithAPattern_IsReturnedUnchanged", () => {
+  const withPattern: ListDefinition = {
+    ...bills,
+    filters: [
+      { kind: "text", param: "bill", field: "billId", operator: "eq", maxLength: 6, pattern: "[0-9]{6}" },
+    ],
+  };
+  assert.equal(defineList(withPattern), withPattern);
+});
+
+test("wholeValuePattern_Pattern_MatchesOnlyTheWholeValue", () => {
+  const digits = wholeValuePattern("[0-9]{3}");
+  assert.equal(digits.test("123"), true);
+  assert.equal(digits.test("1234"), false);
+  assert.equal(digits.test("a123"), false);
+  assert.equal(digits.test(""), false);
+});
+
+test("wholeValuePattern_Alternatives_AreAnchoredTogether", () => {
+  const either = wholeValuePattern("ab|cd");
+  assert.equal(either.test("ab"), true);
+  assert.equal(either.test("cd"), true);
+  assert.equal(either.test("abx"), false);
+  assert.equal(either.test("xcd"), false);
 });
 
 test("filterParameters_DateRange_UsesFromAndToParameters", () => {
@@ -70,6 +96,15 @@ const invalid: readonly (readonly [string, Partial<ListDefinition>, RegExp])[] =
     /more than 10 terms/,
   ],
   ["HideableColumnThatDoesNotExist", { hideableColumns: ["notes"] }, /hideableColumns/],
+  [
+    "TextFilterPatternThatIsNotARegularExpression",
+    {
+      filters: [
+        { kind: "text", param: "bill", field: "billId", operator: "eq", maxLength: 6, pattern: "[0-9" },
+      ],
+    },
+    /pattern is not a regular expression/,
+  ],
 ];
 
 for (const [condition, change, message] of invalid) {

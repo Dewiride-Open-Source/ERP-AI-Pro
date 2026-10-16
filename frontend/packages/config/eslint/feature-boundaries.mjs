@@ -105,7 +105,7 @@ const apiClientDynamicImports = [
 ].map((selector) => ({ selector, message: apiClientMessage }));
 
 const httpMessage =
-  "Only shared/api sends HTTP requests: call the API through callApi or sendApi (shared/api/client.ts), uploadFile (shared/api/upload.ts), or readSessionTimes or renewSessionTimes (shared/api/session/session-watch.ts).";
+  "Only shared/api sends HTTP requests: call the API through callApi or sendApi (shared/api/client.ts), uploadFile (shared/api/upload.ts), downloadFromApi (shared/api/download/download.ts), or readSessionTimes or renewSessionTimes (shared/api/session/session-watch.ts).";
 
 const httpGlobals = ["fetch", "XMLHttpRequest", "EventSource"];
 

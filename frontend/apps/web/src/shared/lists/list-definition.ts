@@ -11,6 +11,7 @@ export interface TextFilterDefinition {
   readonly field: string;
   readonly operator: "contains" | "eq";
   readonly maxLength: number;
+  readonly pattern?: string | undefined;
 }
 
 export interface OptionsFilterDefinition {
@@ -62,6 +63,23 @@ export function filterParameters(filter: ListFilterDefinition): readonly string[
   return filter.kind === "dateRange" ? [`${filter.param}From`, `${filter.param}To`] : [filter.param];
 }
 
+// A browser matches a pattern attribute against the whole value, compiled with the v flag where it knows that flag and the
+// u flag where it does not, so the list reads a value exactly as its field checked it.
+const patternFlags = "unicodeSets" in RegExp.prototype ? "v" : "u";
+
+export function wholeValuePattern(pattern: string): RegExp {
+  return new RegExp(`^(?:${pattern})$`, patternFlags);
+}
+
+function isPattern(pattern: string): boolean {
+  try {
+    wholeValuePattern(pattern);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function filterTermCount(filter: ListFilterDefinition): number {
   return filter.kind === "dateRange" ? 2 : 1;
 }
@@ -95,6 +113,13 @@ function definitionProblem(definition: ListDefinition): string | undefined {
     )
   ) {
     return "a text filter needs a positive whole maxLength";
+  }
+  if (
+    filters.some(
+      (filter) => filter.kind === "text" && filter.pattern !== undefined && !isPattern(filter.pattern),
+    )
+  ) {
+    return "a text filter's pattern is not a regular expression";
   }
   if (filters.reduce((terms, filter) => terms + filterTermCount(filter), 0) > apiMaxFilterTerms) {
     return `the filters can send more than ${apiMaxFilterTerms} terms, the API's limit`;
