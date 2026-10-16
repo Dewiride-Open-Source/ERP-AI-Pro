@@ -49,7 +49,7 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 | `ProductAssemblies_NeverReferenceTheTestingLibrary` | no ERP assembly references a `Dewiride.Erp.Testing*` assembly, so the test scheme `TestAuthHandler`, the test token endpoint `TestTokenEndpoint` and the test personas can never reach a product assembly |
 | `ChangeRecords_AreReferencedOnlyByThePersistenceAndAuditingBuildingBlocks` | no type outside `Dewiride.Erp.BuildingBlocks.Persistence` and `Dewiride.Erp.BuildingBlocks.Auditing` depends on `ChangeRecord`, so a module never reads or writes `audit` through its own context ([ADR-0043](../adr/0043-change-records-and-the-append-only-audit-schema.md)) |
 | `ProductCode_NeverAttachesOrUpdatesEntitiesItDidNotRead` | no product assembly calls `Update`, `UpdateRange`, `Attach` or `AttachRange` of `DbContext` or `DbSet`, because an attached entity's original values are its current ones and its change would go unrecorded; the test first finds the `Add` and `Remove` calls the assemblies make, so it cannot pass vacuously ([ADR-0043](../adr/0043-change-records-and-the-append-only-audit-schema.md)) |
-| `Modules_NeverTrackEntitiesTheyDidNotRead` | no module assembly sets the `State` of an `EntityEntry` or `EntityEntry<TEntity>` or calls `ChangeTracker.TrackGraph`, for the same reason; the test first finds the building blocks' own `State` setter calls (they detach entries) |
+| `Modules_NeverTrackEntitiesTheyDidNotRead` | no module assembly sets the `State` of an `EntityEntry` or `EntityEntry<TEntity>` or calls `ChangeTracker.TrackGraph`, for the same reason; the test first finds the building blocks' own `State` setter calls (they detach entries and turn the deletion of a soft-deletable record into a modification) |
 | `Modules_NeverSendSqlOfTheirOwn` | no module assembly calls `ExecuteSql*`, `SqlQuery*`, `FromSql*` or `GetDbConnection`, because SQL a module sends itself writes no change record; a building block may (`TransactionLocks` does), which the test finds first |
 | `Modules_NeverUseTheDatabaseDriver` | no module type depends on a type of `Microsoft.Data.SqlClient` or `System.Data.Common`, so a module cannot open a connection or send a command beside EF Core; the test first finds the building blocks' use of both |
 | `Handlers_AreSealed` | every command and query handler class is sealed |
@@ -69,13 +69,13 @@ The object providers for framework namespaces (`Microsoft.AspNetCore`, `Microsof
 - No assembly references a banned package.
 - Namespace equals folder for every `.cs` file under `BuildingBlocks/`, `Hosts/`, `Modules/` and `Tests/` (`Migrations/` folders exempt; also a compiler error through IDE0130), and no folder holds more than 12 source files.
 
-`PersistenceTests`, `ChangeRecordTests` and `AggregateTests` assert, against the contexts registered in the `DbContextCatalog` of a test database host (see `persistence.md`):
+`PersistenceTests` and `ChangeRecordTests` assert, against the contexts registered in the `DbContextCatalog` of a test database host, and `AggregateTests` over every class of the product assemblies, whether a context maps it or not (see `persistence.md`):
 
 - Every DbContext in a module assembly derives from `ModuleDbContext` and lives in the namespace `<Module>.Persistence`.
 - Every catalogue context maps only entity types from its own assembly, besides `ChangeRecord` (`PersistenceTests`), which every one maps, excluded from migrations unless its schema is `audit` (`ChangeRecordTests`).
 - A module context's schema equals its descriptor's `Schema`. Schemas owned by building blocks (`platform_caching`, `platform_idempotency`, `audit`, `files`) are named by concern and sit outside the `<domain>_<module>` descriptor rule; the module that exposes a building block's routes declares `Schema: null` (`Platform/Attachments`, `Platform/Audit`).
 - Every strongly-typed id property in every catalogue model uses `StronglyTypedIdConverter`.
-- Every entity type a module context maps implements `IAuditable` or `IAppendOnly` (`ChangeRecordTests`), and every aggregate root implements `IAuditable` unless it is `IAppendOnly` (`AggregateTests`).
+- Every entity type a module context maps implements `IAuditable` or `IAppendOnly` (`ChangeRecordTests`), and every aggregate root of a product assembly implements `IAuditable` unless it is `IAppendOnly` (`AggregateTests`).
 - Every recorded type declares a well-formed change key that no other type declares, under its module's prefix in a module context, has a single `Guid` key set before the save, is changed by no delete of a principal (every foreign key `Restrict`, `NoAction` or `ClientNoAction`), has no owned navigation and no complex collection, and files its changes under a required foreign key to a recorded type or under itself; every registered `IRecordNames` names recorded keys only, each once (`ChangeRecordTests`; [persistence](persistence.md), section "Change records").
 
 ## Editions

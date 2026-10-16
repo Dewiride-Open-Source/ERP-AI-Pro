@@ -31,6 +31,8 @@ const endBeforeStart = "The end date is before the start date.";
 
 const endsInsideACharacter = /[\uD800-\uDBFF]$/;
 
+const lineBreaks = /\r\n|[\r\n]/g;
+
 export function toggleOption(
   selected: readonly string[],
   value: string,
@@ -71,9 +73,10 @@ export function trimmedPaste(
 ): PastedText | undefined {
   const trimmed = pasted.trim();
   if (trimmed === pasted) return undefined;
+  const text = trimmed.replace(lineBreaks, " ");
   const before = value.slice(0, selection.start);
   const after = value.slice(selection.end);
-  const fitted = trimmed.slice(0, Math.max(0, maxLength - before.length - after.length));
+  const fitted = text.slice(0, Math.max(0, maxLength - before.length - after.length));
   const inserted = endsInsideACharacter.test(fitted) ? fitted.slice(0, -1) : fitted;
   return { value: `${before}${inserted}${after}`, caret: before.length + inserted.length };
 }

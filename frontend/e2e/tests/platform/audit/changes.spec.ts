@@ -439,7 +439,7 @@ test.describe("audit trail", () => {
         }) => {
           const auditTrail = new AuditTrailPage(page);
           const reason =
-            "These changes hold more than 1,00,000 values, too many for one download. Narrow the filters, for example to fewer days.";
+            "These changes would fill more than 1,00,000 lines of the file, too many for one download. Filter the list, for example to fewer days, to download it.";
           const ownChanges = `?actor=${person?.id ?? ""}`;
           let answered: Promise<void> = Promise.resolve();
           await page.route(`**${exportApi}?*`, async (route) => {

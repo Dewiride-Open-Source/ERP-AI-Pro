@@ -3,9 +3,10 @@ using Microsoft.Extensions.Primitives;
 
 namespace Dewiride.Erp.BuildingBlocks.Endpoints.Security;
 
-// A browser marks every request with the fetch metadata headers, and only a browser can be made to send a request by another
-// site. A client that is no browser, such as the web app's server, sends none of them, so an absent header passes and a present
-// one must hold exactly the one value a page of this site sends.
+// A browser marks its requests with the fetch metadata headers, and only a browser can be made to send a request by another
+// site. A client that is no browser sends no Sec-Fetch-Site, so an absent header passes and a present one must hold exactly the
+// one value a page of this site sends. Node's fetch, through which the web app's server calls, sends Sec-Fetch-Mode: cors, so
+// IsOpenedAsAPage holds for a navigation the browser opens itself and never for a call of the web server.
 public static class FetchMetadata
 {
     public const string SiteHeader = "Sec-Fetch-Site";

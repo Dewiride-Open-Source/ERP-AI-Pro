@@ -32,7 +32,7 @@ internal static class ChangeEndpoints
 
     public const int MaxConcurrentExports = 2;
 
-    public const string NotThisSiteMessage = "The change history is exported only to a page of this site, never to a page, an image or a frame another site opens.";
+    public const string NotThisSiteMessage = "The change history is exported only from the audit trail page of this site.";
 
     public static readonly TimeSpan ExportTimeout = TimeSpan.FromMinutes(5);
 

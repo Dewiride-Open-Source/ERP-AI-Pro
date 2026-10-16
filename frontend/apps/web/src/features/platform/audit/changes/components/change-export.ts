@@ -30,7 +30,7 @@ export function exportRefusal(totalCount: number): string | undefined {
 export function exportFailureMessage(error: unknown): string {
   if (!(error instanceof ApiError)) return "The download did not finish. Try again.";
   if (error.problem.code === exportTooLarge) {
-    return `These changes hold more than ${indianCount.format(maxExportLines)} values, too many for one download. Narrow the filters, for example to fewer days.`;
+    return `These changes would fill more than ${indianCount.format(maxExportLines)} lines of the file, too many for one download. Filter the list, for example to fewer days, to download it.`;
   }
   if (error.problem.code === rateLimitExceeded) {
     return "Other downloads of the history are being prepared. Try again in a minute.";

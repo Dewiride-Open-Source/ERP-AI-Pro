@@ -75,6 +75,18 @@ test("trimmedPaste_IdCopiedWithSpaceAroundIt_EntersWithoutTheSpace", () => {
   assert.deepEqual(trimmedPaste("", { start: 0, end: 0 }, " a b ", 36), { value: "a b", caret: 3 });
 });
 
+test("trimmedPaste_LinesCopiedWithSpaceAroundThem_EnterAsOneLineWithASpaceForEachBreak", () => {
+  assert.deepEqual(trimmedPaste("abcdef", { start: 3, end: 3 }, " x\ny ", 36), {
+    value: "abcx ydef",
+    caret: 6,
+  });
+  assert.deepEqual(trimmedPaste("", { start: 0, end: 0 }, "Payroll\r\nOperations\n", 36), {
+    value: "Payroll Operations",
+    caret: 18,
+  });
+  assert.deepEqual(trimmedPaste("", { start: 0, end: 0 }, " a\nbcde ", 5), { value: "a bcd", caret: 5 });
+});
+
 test("trimmedPaste_OverASelection_ReplacesItAndPutsTheCaretAfterThePastedText", () => {
   assert.deepEqual(trimmedPaste("not-an-id", { start: 0, end: 9 }, ` ${id}`, 36), { value: id, caret: 36 });
   assert.deepEqual(trimmedPaste("abcdef", { start: 2, end: 4 }, " xy ", 36), { value: "abxyef", caret: 4 });
