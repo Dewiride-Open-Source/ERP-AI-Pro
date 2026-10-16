@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-10-16",
+  "updatedOn": "2026-10-17",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -1040,7 +1040,7 @@
           "id": "user-management-audit-trail-building-block",
           "title": "Audit trail building block",
           "scope": "Add backend/BuildingBlocks/Auditing with an EF Core SaveChanges interceptor recording append-only entries (actor, timestamp, before/after JSON diff, IP, correlation id) into an `audit` schema for user, role and department changes, a filterable exportable audit endpoint, an audit timeline component, and an architecture test requiring aggregates to implement IAuditable.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-10-10",
           "acceptance": [
@@ -1053,7 +1053,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-10-16",
-          "notes": "From `authentication-login-hardening` (ADR-0038): backend/BuildingBlocks/Auditing and the schema audit already exist, with AuditingDbContext, AuditingOptions and the table SecurityEvents (inserts through ISecurityEventRecorder only, deletions only by SecurityEventRetentionSweeper past Erp:Platform:Auditing:SecurityEventRetention); add the change records to that building block and schema instead of creating them, and decide whether to enforce append-only in the database (DENY UPDATE and DELETE on the audit tables for the login of the api, with the retention sweep running under another principal), because today a compromised API could rewrite its own records. From user-management-departments-designations-and-reporting-lines (ADR-0042): Departments, Designations and Positions in identity_users join the user changes to audit. A position is never edited, only recorded and withdrawn, and a department move or a designation rename holds for every date, so the audit trail is the only history of those changes."
+          "completedOn": "2026-10-17",
+          "notes": "Change records exist (ADR-0043): every Added, Modified or Deleted entry of a recorded type (each IAuditable type a context maps that is not owned: people with their status and roles, departments, designations, positions filed under their person, attachments) adds one row of audit.ChangeRecords in the same SaveChangesAsync, so it commits and rolls back with the change, holding the operation (Created, Updated only on a real change, Deleted, Restored), the stable change keys and ids of the record and its subject, the actor, the client address, the correlation id and the typed before and after values. The schema audit is add-only for the API: the role erp_audit_append_only, of which the API's database user is a member, is denied UPDATE, DELETE and ALTER on it, and retention runs only in the migrator, after the seeders of migrate and in the new command retain: security events past Erp:Platform:Auditing:SecurityEventRetention and change records older than Erp:Platform:Auditing:ChangeRecordRetentionYears, eight financial years by the owner's decision of 2026-10-16. The module Platform/Audit serves GET /api/platform/audit/changes and its CSV export (at most 100,000 lines, each export the security event ChangeHistoryExported, same-origin requests only), both Administrator's alone, and the page /platform/audit shows the history as a timeline by IST day with filters, pages and the download. Architecture tests hold every module entity to IAuditable or IAppendOnly and every recorded type to the capture's rules, and refuse the change-tracker and raw SQL bypasses in modules."
         },
         {
           "id": "user-management-web-users-roles-and-permissions",
