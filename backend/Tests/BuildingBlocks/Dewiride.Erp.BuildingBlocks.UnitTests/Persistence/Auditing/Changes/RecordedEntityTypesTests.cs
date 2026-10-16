@@ -78,9 +78,16 @@ public sealed class RecordedEntityTypesTests
     }
 
     [Fact]
-    public void ProblemsOf_KeyTheStoreGenerates_AsksForAGuidSetInCode()
+    public void ProblemsOf_KeyOfAProviderTypeOtherThanGuid_AsksForAGuidKey()
     {
-        Assert.Contains(ProblemsOf<Numbered>(), problem => problem.Contains("single key of a Guid provider type that is set in code", StringComparison.Ordinal));
+        Assert.Contains("single key of a Guid provider type that is set in code", Assert.Single(ProblemsOf<Numbered>()), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ProblemsOf_GuidKeyTheModelOrTheStoreGenerates_AsksForOneSetInCode()
+    {
+        Assert.Contains("single key of a Guid provider type that is set in code", Assert.Single(ProblemsOf<Generated>()), StringComparison.Ordinal);
+        Assert.Contains("single key of a Guid provider type that is set in code", Assert.Single(ProblemsOf<Defaulted>()), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -100,10 +107,23 @@ public sealed class RecordedEntityTypesTests
     }
 
     [Fact]
+    public void ProblemsOf_CollectionOfComplexValues_SaysTheCaptureCannotRecordIt()
+    {
+        Assert.Contains($"{nameof(Lined)}.{nameof(Lined.Lines)} is a collection of complex values", Assert.Single(ProblemsOf<Lined>()), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ProblemsOf_CascadeFromAPrincipal_AsksToRestrictIt()
     {
         Assert.Contains(ProblemsOf<Child>(), problem => problem.Contains("Cascade delete", StringComparison.Ordinal));
         Assert.Empty(ProblemsOf<Parent>());
+    }
+
+    [Fact]
+    public void ProblemsOf_ForeignKeyAPrincipalsDeletionSetsToNull_AsksToRestrictIt()
+    {
+        Assert.Contains("is changed by a SetNull delete of", Assert.Single(ProblemsOf<Nulled>()), StringComparison.Ordinal);
+        Assert.Contains("is changed by a ClientSetNull delete of", Assert.Single(ProblemsOf<ClientNulled>()), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -148,7 +168,19 @@ public sealed class RecordedEntityTypesTests
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Unkeyed>().Property(u => u.Id).ValueGeneratedNever();
-            modelBuilder.Entity<Numbered>().RecordChangesAs("test.rules.numbered");
+            modelBuilder.Entity<Numbered>().RecordChangesAs("test.rules.numbered").Property(n => n.Id).ValueGeneratedNever();
+            modelBuilder.Entity<Generated>().RecordChangesAs("test.rules.generated");
+            modelBuilder.Entity<Defaulted>(defaulted =>
+            {
+                defaulted.RecordChangesAs("test.rules.defaulted");
+                defaulted.Property(d => d.Id).HasDefaultValueSql("NEWSEQUENTIALID()");
+            });
+            modelBuilder.Entity<Lined>(lined =>
+            {
+                lined.RecordChangesAs("test.rules.lined");
+                lined.Property(l => l.Id).ValueGeneratedNever();
+                lined.ComplexCollection(l => l.Lines, lines => lines.ToJson());
+            });
             modelBuilder.Entity<Owner>(owner =>
             {
                 owner.Property(o => o.Id).ValueGeneratedNever();
@@ -170,6 +202,18 @@ public sealed class RecordedEntityTypesTests
                 child.RecordChangesAs("test.rules.children");
                 child.Property(c => c.Id).ValueGeneratedNever();
                 child.HasOne<Parent>().WithMany().HasForeignKey(c => c.ParentId).OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<Nulled>(nulled =>
+            {
+                nulled.RecordChangesAs("test.rules.nulled");
+                nulled.Property(n => n.Id).ValueGeneratedNever();
+                nulled.HasOne<Parent>().WithMany().HasForeignKey(n => n.ParentId).OnDelete(DeleteBehavior.SetNull);
+            });
+            modelBuilder.Entity<ClientNulled>(nulled =>
+            {
+                nulled.RecordChangesAs("test.rules.client-nulled");
+                nulled.Property(n => n.Id).ValueGeneratedNever();
+                nulled.HasOne<Parent>().WithMany().HasForeignKey(n => n.ParentId).OnDelete(DeleteBehavior.ClientSetNull);
             });
             modelBuilder.Entity<Filed>(filed =>
             {
@@ -218,6 +262,28 @@ public sealed class RecordedEntityTypesTests
         public int Id { get; set; }
     }
 
+    private sealed class Generated : Audited
+    {
+        public Guid Id { get; set; }
+    }
+
+    private sealed class Defaulted : Audited
+    {
+        public Guid Id { get; set; }
+    }
+
+    private sealed class Lined : Audited
+    {
+        public Guid Id { get; set; }
+
+        public List<LineItem> Lines { get; set; } = [];
+    }
+
+    private sealed class LineItem
+    {
+        public string Text { get; set; } = string.Empty;
+    }
+
     private sealed class Owner
     {
         public Guid Id { get; set; }
@@ -252,6 +318,20 @@ public sealed class RecordedEntityTypesTests
         public Guid Id { get; set; }
 
         public Guid ParentId { get; set; }
+    }
+
+    private sealed class Nulled : Audited
+    {
+        public Guid Id { get; set; }
+
+        public Guid? ParentId { get; set; }
+    }
+
+    private sealed class ClientNulled : Audited
+    {
+        public Guid Id { get; set; }
+
+        public Guid? ParentId { get; set; }
     }
 
     private sealed class Filed : Audited

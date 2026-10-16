@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.Testing;
@@ -63,31 +64,50 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
     [Fact]
     public void ChangeKeys_NameOneRecordedTypeEach()
     {
-        var shared = RecordedTypes()
-            .GroupBy(pair => RecordedEntityTypes.KeyOf(pair.EntityType)!, StringComparer.Ordinal)
-            .Where(group => group.Select(pair => pair.EntityType.GetRootType().ClrType).Distinct().Count() > 1)
-            .Select(group => $"{group.Key} names {string.Join(" and ", group.Select(pair => pair.EntityType.DisplayName()))}")
-            .ToList();
+        var recorded = RecordedTypes();
 
-        Assert.Empty(shared);
+        Assert.NotEmpty(recorded);
+        Assert.Empty(SharedKeys(recorded.Select(pair => pair.EntityType)));
+    }
+
+    [Fact]
+    public void SharedKeys_TwoRecordedTypesSharingAKey_AreReportedAndATypeDerivedFromARecordedTypeIsNot()
+    {
+        using var probe = new ProbeContext();
+
+        var shared = Assert.Single(SharedKeys(RecordedTypesOf(probe)));
+
+        Assert.StartsWith($"{ProbeContext.SharedKey} names ", shared, StringComparison.Ordinal);
+        Assert.Contains(nameof(ProbeLedger), shared, StringComparison.Ordinal);
+        Assert.Contains(nameof(ProbeJournal), shared, StringComparison.Ordinal);
     }
 
     [Fact]
     public void ModuleChangeKeys_BeginWithTheirModulesPermissionPrefix()
     {
         var recorded = RecordedTypes();
+        var moduleTypes = new List<IEntityType>();
         var violations = new List<string>();
 
         foreach (var module in HostModules.All)
         {
-            violations.AddRange(recorded
-                .Where(pair => pair.Registration.ContextType.Assembly == module.GetType().Assembly)
-                .Select(pair => (pair.EntityType, Key: RecordedEntityTypes.KeyOf(pair.EntityType)!))
-                .Where(pair => !pair.Key.StartsWith(module.Descriptor.PermissionPrefix, StringComparison.Ordinal))
-                .Select(pair => $"{pair.EntityType.DisplayName()} records its changes as {pair.Key}, outside {module.Descriptor.PermissionPrefix}"));
+            var own = recorded.Where(pair => pair.Registration.ContextType.Assembly == module.GetType().Assembly).Select(pair => pair.EntityType).ToList();
+            moduleTypes.AddRange(own);
+            violations.AddRange(KeysOutside(own, module.Descriptor.PermissionPrefix));
         }
 
+        Assert.NotEmpty(moduleTypes);
         Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void KeysOutside_KeyOutsideTheModulesPermissionPrefix_IsReported()
+    {
+        using var probe = new ProbeContext();
+
+        var outside = Assert.Single(KeysOutside(RecordedTypesOf(probe), ProbeContext.PermissionPrefix));
+
+        Assert.Equal($"{nameof(ProbeStray)} records its changes as {ProbeContext.StrayKey}, outside {ProbeContext.PermissionPrefix}", outside);
     }
 
     [Fact]
@@ -95,13 +115,51 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
     {
         var keys = RecordedTypes().Select(pair => RecordedEntityTypes.KeyOf(pair.EntityType)!).ToHashSet(StringComparer.Ordinal);
         using var scope = factory.Services.CreateScope();
-        var named = scope.ServiceProvider.GetServices<IRecordNames>()
-            .SelectMany(names => names.EntityTypes.Select(key => (Names: names.GetType().Name, Key: key)))
-            .ToList();
+        var names = scope.ServiceProvider.GetServices<IRecordNames>().ToList();
 
-        Assert.Empty(named.Where(pair => !keys.Contains(pair.Key)).Select(pair => $"{pair.Names} names {pair.Key}, which no recorded type declares"));
-        Assert.Empty(named.GroupBy(pair => pair.Key, StringComparer.Ordinal).Where(group => group.Count() > 1).Select(group => $"{group.Key} is named by {string.Join(" and ", group.Select(pair => pair.Names))}"));
+        Assert.NotEmpty(names.SelectMany(registration => registration.EntityTypes));
+        Assert.Empty(NamingProblems(keys, names));
     }
+
+    [Fact]
+    public void NamingProblems_KeyNoTypeRecordsAndKeyNamedTwice_AreReported()
+    {
+        var problems = NamingProblems(
+            new HashSet<string>([ProbeContext.SharedKey], StringComparer.Ordinal),
+            [new ProbeNames(ProbeContext.SharedKey, ProbeContext.StrayKey), new ProbeNames(ProbeContext.SharedKey)]);
+
+        Assert.Equal(
+            [
+                $"{nameof(ProbeNames)} names {ProbeContext.StrayKey}, which no recorded type declares",
+                $"{ProbeContext.SharedKey} is named by {nameof(ProbeNames)} and {nameof(ProbeNames)}",
+            ],
+            problems);
+    }
+
+    private static List<string> SharedKeys(IEnumerable<IEntityType> recordedTypes) =>
+        [.. recordedTypes
+            .GroupBy(entityType => RecordedEntityTypes.KeyOf(entityType)!, StringComparer.Ordinal)
+            .Where(group => group.Select(entityType => entityType.GetRootType().ClrType).Distinct().Count() > 1)
+            .Select(group => $"{group.Key} names {string.Join(" and ", group.Select(entityType => entityType.DisplayName()))}")];
+
+    private static List<string> KeysOutside(IEnumerable<IEntityType> recordedTypes, string permissionPrefix) =>
+        [.. recordedTypes
+            .Select(entityType => (EntityType: entityType, Key: RecordedEntityTypes.KeyOf(entityType)!))
+            .Where(pair => !pair.Key.StartsWith(permissionPrefix, StringComparison.Ordinal))
+            .Select(pair => $"{pair.EntityType.DisplayName()} records its changes as {pair.Key}, outside {permissionPrefix}")];
+
+    private static List<string> NamingProblems(HashSet<string> recordedKeys, IEnumerable<IRecordNames> names)
+    {
+        var named = names.SelectMany(registration => registration.EntityTypes.Select(key => (Names: registration.GetType().Name, Key: key))).ToList();
+
+        return
+        [
+            .. named.Where(pair => !recordedKeys.Contains(pair.Key)).Select(pair => $"{pair.Names} names {pair.Key}, which no recorded type declares"),
+            .. named.GroupBy(pair => pair.Key, StringComparer.Ordinal).Where(group => group.Count() > 1).Select(group => $"{group.Key} is named by {string.Join(" and ", group.Select(pair => pair.Names))}"),
+        ];
+    }
+
+    private static IEnumerable<IEntityType> RecordedTypesOf(DbContext context) => context.Model.GetEntityTypes().Where(RecordedEntityTypes.IsRecorded);
 
     private List<(DbContextRegistration Registration, IEntityType EntityType)> RecordedTypes() =>
         [.. CatalogueModels()
@@ -119,5 +177,55 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
         }
 
         return models;
+    }
+
+    private sealed class ProbeContext() : ModuleDbContext(new DbContextOptionsBuilder<ProbeContext>().UseSqlServer().Options, "probe_ledgers")
+    {
+        public const string PermissionPrefix = "probe.ledgers.";
+
+        public const string SharedKey = "probe.ledgers.entries";
+
+        public const string StrayKey = "probe.other.strays";
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ProbeLedger>().RecordChangesAs(SharedKey).Property(l => l.Id).ValueGeneratedNever();
+            modelBuilder.Entity<ProbeJournal>().RecordChangesAs(SharedKey).Property(j => j.Id).ValueGeneratedNever();
+            modelBuilder.Entity<ProbeAccount>().RecordChangesAs("probe.ledgers.accounts").Property(a => a.Id).ValueGeneratedNever();
+            modelBuilder.Entity<ProbeSavingsAccount>();
+            modelBuilder.Entity<ProbeStray>().RecordChangesAs(StrayKey).Property(s => s.Id).ValueGeneratedNever();
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+
+    private abstract class ProbeAudited : IAuditable
+    {
+        public Guid Id { get; set; }
+
+        public DateTimeOffset CreatedAt { get; set; }
+
+        public Guid CreatedBy { get; set; }
+
+        public DateTimeOffset? ModifiedAt { get; set; }
+
+        public Guid? ModifiedBy { get; set; }
+    }
+
+    private sealed class ProbeLedger : ProbeAudited;
+
+    private sealed class ProbeJournal : ProbeAudited;
+
+    private class ProbeAccount : ProbeAudited;
+
+    private sealed class ProbeSavingsAccount : ProbeAccount;
+
+    private sealed class ProbeStray : ProbeAudited;
+
+    private sealed class ProbeNames(params string[] entityTypes) : IRecordNames
+    {
+        public IReadOnlySet<string> EntityTypes { get; } = entityTypes.ToHashSet(StringComparer.Ordinal);
+
+        public Task<IReadOnlyDictionary<Guid, string>> NamesAsync(string entityType, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
     }
 }

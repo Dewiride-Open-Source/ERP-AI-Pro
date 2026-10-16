@@ -4,8 +4,11 @@ using Dewiride.Erp.BuildingBlocks.Application.Queries.Filtering;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
 using Dewiride.Erp.BuildingBlocks.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Security;
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Modules.Platform.Audit.Changes.Application.Commands.ExportChanges;
 using Dewiride.Erp.Modules.Platform.Audit.Changes.Application.Queries.ListChanges;
 using Dewiride.Erp.Modules.Platform.Audit.Changes.Endpoints.Export;
@@ -28,6 +31,8 @@ internal static class ChangeEndpoints
     public const string ExportConcurrencyPolicy = "platform.audit.exports";
 
     public const int MaxConcurrentExports = 2;
+
+    public const string NotThisSiteMessage = "The change history is exported only to a page of this site, never to a page, an image or a frame another site opens.";
 
     public static readonly TimeSpan ExportTimeout = TimeSpan.FromMinutes(5);
 
@@ -85,14 +90,22 @@ internal static class ChangeEndpoints
         return result.IsSuccess ? TypedResults.Ok(result.Value.ToResponse(ToResponse)) : result.Error!.ToProblem();
     }
 
-    // The file is written once the answer has started, so every refusal comes before it: a filter outside the list's grammar or
-    // fields, an export too large and an export whose record cannot be written. A failure while the file is written can only end
-    // the connection.
+    // The file is written once the answer has started, so every refusal comes before it: a request another site made the browser
+    // send, a filter outside the list's grammar or fields, an export too large and an export whose record cannot be written. A
+    // navigation another site starts carries the SameSite=Lax session cookie, and an export it ran would be recorded as the
+    // administrator's own, so only a page of this site and a client that is no browser are served. A failure while the file is
+    // written can only end the connection.
     private static async Task<Results<PushStreamHttpResult, ProblemHttpResult>> ExportAsync(
         [AsParameters] ExportChangesRequest request,
+        HttpContext httpContext,
         ICommandHandler<ExportChangesCommand, ChangeExport> handler,
         CancellationToken cancellationToken)
     {
+        if (!FetchMetadata.IsFromThisOrigin(httpContext.Request.Headers))
+        {
+            return Error.Validation(ProblemTypes.RequestInvalid, NotThisSiteMessage).ToProblem();
+        }
+
         var filter = FilterRequest.Parse(request.Filter);
         if (filter.IsFailure)
         {

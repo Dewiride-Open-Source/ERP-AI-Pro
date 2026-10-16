@@ -4,10 +4,13 @@ using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Fakes;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Notes;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.UnitOfWork;
+using Dewiride.Erp.BuildingBlocks.IntegrationTests.Sql;
 using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Changes;
@@ -15,6 +18,10 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Changes;
 public sealed class ChangeRecordAtomicityTests(SampleDatabase database) : IClassFixture<SampleDatabase>
 {
     private const string ChangeRecordsTable = "[audit].[ChangeRecords]";
+
+    private const string SamplesTable = "[test_sample].[Samples]";
+
+    private const int PermissionDenied = 229;
 
     [Fact]
     public async Task SaveChangesAsync_RefusedForConcurrency_WritesNoRecordAndTheSaveAfterAReloadWritesOne()
@@ -138,6 +145,29 @@ public sealed class ChangeRecordAtomicityTests(SampleDatabase database) : IClass
 
         Assert.Equal(1, failure.Failures);
         Assert.Equal([ChangeOperation.Created], (await database.ChangeRecordsOfAsync(id.Value)).Select(record => record.Operation));
+    }
+
+    [Fact]
+    public async Task SaveChangesAsync_RecordTheDatabaseRefusesToInsert_SavesNeitherTheChangeNorItsRecord()
+    {
+        await using var writer = await DatabaseUser.CreateAsync(database.ConnectionString, ["db_datareader", "db_datawriter"], ["INSERT ON SCHEMA::[audit]"]);
+        var log = new CommandLog();
+        var id = SampleId.Create();
+
+        await using (var context = database.CreateContext(log))
+        {
+            context.Database.SetDbConnection(writer.Connection, contextOwnsConnection: false);
+            context.Samples.Add(new SampleAggregate(id, "Refused with its record", new Money(1m, Currency.Inr), new SampleAddress("1", "Pune"), database.Clock.GetUtcNow()));
+
+            var refusal = await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(TestContext.Current.CancellationToken));
+
+            Assert.Equal(PermissionDenied, Assert.IsType<SqlException>(refusal.InnerException).Number);
+        }
+
+        Assert.Contains(log.Commands, command => command.Contains(SamplesTable, StringComparison.Ordinal));
+        await using var scope = database.CreateScope();
+        Assert.False(await scope.ServiceProvider.GetRequiredService<SampleDbContext>().Samples.IncludeDeleted().AnyAsync(sample => sample.Id == id, TestContext.Current.CancellationToken));
+        Assert.Empty(await database.ChangeRecordsOfAsync(id.Value));
     }
 
     private async Task<SampleId> AddSampleAsync(string name)

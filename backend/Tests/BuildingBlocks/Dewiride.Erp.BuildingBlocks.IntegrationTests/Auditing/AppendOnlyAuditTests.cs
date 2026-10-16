@@ -1,11 +1,10 @@
-using System.Security.Cryptography;
 using Dewiride.Erp.BuildingBlocks.Auditing.Persistence;
 using Dewiride.Erp.BuildingBlocks.Auditing.Security;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Notes;
+using Dewiride.Erp.BuildingBlocks.IntegrationTests.Sql;
 using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
 
@@ -34,7 +33,7 @@ public sealed class AppendOnlyAuditTests(SampleDatabase database) : IClassFixtur
         Assert.Equal(PermissionDenied, await member.RefusalOfAsync($"UPDATE [audit].[{table}] SET [{column}] = [{column}] WHERE [Id] = @id", id));
         Assert.Equal(PermissionDenied, await member.RefusalOfAsync($"DELETE FROM [audit].[{table}] WHERE [Id] = @id", id));
         Assert.Equal(NotFoundOrNoPermission, await member.RefusalOfAsync($"TRUNCATE TABLE [audit].[{table}]", id));
-        Assert.Equal(new Rights(Insert: true, Update: false, Delete: false, Alter: false), await member.RightsOnAsync($"audit.{table}"));
+        Assert.Equal(new TableRights(Insert: true, Update: false, Delete: false, Alter: false), await member.RightsOnAsync($"audit.{table}"));
     }
 
     [Fact]
@@ -44,7 +43,7 @@ public sealed class AppendOnlyAuditTests(SampleDatabase database) : IClassFixtur
 
         Assert.Equal(NotFoundOrNoPermission, await member.RefusalOfAsync("TRUNCATE TABLE [audit].[ChangeRecords]", Guid.Empty));
         Assert.NotNull(await member.RefusalOfAsync("ALTER TABLE [audit].[ChangeRecords] ADD [Probe] int NULL", Guid.Empty));
-        Assert.Equal(new Rights(Insert: true, Update: false, Delete: false, Alter: false), await member.RightsOnAsync("audit.ChangeRecords"));
+        Assert.Equal(new TableRights(Insert: true, Update: false, Delete: false, Alter: false), await member.RightsOnAsync("audit.ChangeRecords"));
         Assert.True((await member.RightsOnAsync("test_sample.Samples")).Alter);
     }
 
@@ -77,95 +76,4 @@ public sealed class AppendOnlyAuditTests(SampleDatabase database) : IClassFixtur
     private static string InsertInto(string table) => table == "ChangeRecords"
         ? "INSERT INTO [audit].[ChangeRecords] ([Id], [OccurredAt], [Operation], [EntityType], [EntityId], [SubjectType], [SubjectId], [ActorId], [ValueCount]) VALUES (@id, SYSUTCDATETIME(), 1, 'test.sample.samples', @id, 'test.sample.samples', @id, @id, 0)"
         : "INSERT INTO [audit].[SecurityEvents] ([Id], [OccurredAt], [Kind]) VALUES (@id, SYSUTCDATETIME(), 1)";
-
-    private sealed record Rights(bool Insert, bool Update, bool Delete, bool Alter);
-
-    private sealed class DatabaseUser : IAsyncDisposable
-    {
-        private readonly string _connectionString;
-
-        private readonly string _name;
-
-        private DatabaseUser(string connectionString, string name, SqlConnection connection)
-        {
-            _connectionString = connectionString;
-            _name = name;
-            Connection = connection;
-        }
-
-        public SqlConnection Connection { get; }
-
-        public static async Task<DatabaseUser> CreateAsync(string connectionString, IReadOnlyCollection<string> roles)
-        {
-            var name = $"erp_append_only_probe_{Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(4))}";
-            await using (var administrator = new SqlConnection(connectionString))
-            {
-                await administrator.OpenAsync(TestContext.Current.CancellationToken);
-                await ExecuteAsync(administrator, $"CREATE USER [{name}] WITHOUT LOGIN;{string.Concat(roles.Select(role => $"ALTER ROLE [{role}] ADD MEMBER [{name}];"))}");
-            }
-
-            var connection = new SqlConnection(new SqlConnectionStringBuilder(connectionString) { Pooling = false }.ConnectionString);
-            await connection.OpenAsync(TestContext.Current.CancellationToken);
-            await ExecuteAsync(connection, $"EXECUTE AS USER = N'{name}';");
-
-            return new DatabaseUser(connectionString, name, connection);
-        }
-
-        public async Task<int?> RefusalOfAsync(string statement, Guid id)
-        {
-            await using var transaction = (SqlTransaction)await Connection.BeginTransactionAsync(TestContext.Current.CancellationToken);
-            try
-            {
-                await using var command = new SqlCommand(statement, Connection, transaction);
-                command.Parameters.AddWithValue("@id", id);
-                await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
-
-                return null;
-            }
-            catch (SqlException refusal)
-            {
-                return refusal.Number;
-            }
-            finally
-            {
-                if (transaction.Connection is not null)
-                {
-                    await transaction.RollbackAsync(TestContext.Current.CancellationToken);
-                }
-            }
-        }
-
-        public async Task<Rights> RightsOnAsync(string table)
-        {
-            await using var command = new SqlCommand(
-                "SELECT HAS_PERMS_BY_NAME(@table, N'OBJECT', N'INSERT'), HAS_PERMS_BY_NAME(@table, N'OBJECT', N'UPDATE'), HAS_PERMS_BY_NAME(@table, N'OBJECT', N'DELETE'), HAS_PERMS_BY_NAME(@table, N'OBJECT', N'ALTER')",
-                Connection);
-            command.Parameters.AddWithValue("@table", table);
-            await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
-            await reader.ReadAsync(TestContext.Current.CancellationToken);
-
-            return new Rights(reader.GetInt32(0) == 1, reader.GetInt32(1) == 1, reader.GetInt32(2) == 1, reader.GetInt32(3) == 1);
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            try
-            {
-                await ExecuteAsync(Connection, "REVERT;");
-            }
-            finally
-            {
-                await Connection.DisposeAsync();
-                await using var administrator = new SqlConnection(_connectionString);
-                await administrator.OpenAsync(TestContext.Current.CancellationToken);
-                await ExecuteAsync(administrator, $"DROP USER IF EXISTS [{_name}];");
-            }
-        }
-
-        private static async Task ExecuteAsync(SqlConnection connection, string statement)
-        {
-            await using var command = new SqlCommand(statement, connection);
-            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
-        }
-    }
 }

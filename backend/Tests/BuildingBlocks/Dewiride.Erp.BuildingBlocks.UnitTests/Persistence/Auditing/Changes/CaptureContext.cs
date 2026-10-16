@@ -17,6 +17,8 @@ internal sealed class CaptureContext(params IInterceptor[] interceptors) : Modul
 
     public const string PartKey = "test.capture.parts";
 
+    public const string ToolKey = "test.capture.tools";
+
     internal enum Colour : byte
     {
         Red = 1,
@@ -42,6 +44,12 @@ internal sealed class CaptureContext(params IInterceptor[] interceptors) : Modul
             part.FileChangesUnder(p => p.WidgetId);
             part.HasOne<Widget>().WithMany().HasForeignKey(p => p.WidgetId).OnDelete(DeleteBehavior.Restrict);
         });
+        modelBuilder.Entity<Tool>(tool =>
+        {
+            tool.RecordChangesAs(ToolKey);
+            tool.Property(t => t.Code).HasComputedColumnSql("UPPER([Name])");
+        });
+        modelBuilder.Entity<PowerTool>();
         modelBuilder.Entity<LogEntry>();
         modelBuilder.Entity<Plain>();
         base.OnModelCreating(modelBuilder);
@@ -69,6 +77,13 @@ internal sealed class CaptureContext(params IInterceptor[] interceptors) : Modul
         public static PartId Create() => new(Guid.CreateVersion7());
 
         public static PartId From(Guid value) => new(value);
+    }
+
+    internal readonly record struct ToolId(Guid Value) : IStronglyTypedId<ToolId>
+    {
+        public static ToolId Create() => new(Guid.CreateVersion7());
+
+        public static ToolId From(Guid value) => new(value);
     }
 
     internal readonly record struct Size(decimal Width, decimal Height);
@@ -156,6 +171,28 @@ internal sealed class CaptureContext(params IInterceptor[] interceptors) : Modul
         public DateTimeOffset? ModifiedAt { get; set; }
 
         public Guid? ModifiedBy { get; set; }
+    }
+
+    internal class Tool : IAuditable
+    {
+        public ToolId Id { get; set; } = ToolId.Create();
+
+        public string Name { get; set; } = string.Empty;
+
+        public string? Code { get; set; }
+
+        public DateTimeOffset CreatedAt { get; set; }
+
+        public Guid CreatedBy { get; set; }
+
+        public DateTimeOffset? ModifiedAt { get; set; }
+
+        public Guid? ModifiedBy { get; set; }
+    }
+
+    internal sealed class PowerTool : Tool
+    {
+        public int Watts { get; set; }
     }
 
     internal sealed class LogEntry : IAppendOnly

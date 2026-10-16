@@ -2,6 +2,8 @@ using ArchUnitNET.Domain;
 using ArchUnitNET.Domain.Dependencies;
 using ArchUnitNET.Fluent;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 namespace Dewiride.Erp.ArchitectureTests.Rules;
@@ -9,6 +11,10 @@ namespace Dewiride.Erp.ArchitectureTests.Rules;
 public sealed class LayerTests
 {
     private const string AzureStorageNamespace = @"^Azure\.Storage(\..*)?$";
+
+    private const string BuildingBlocksNamespace = @"^Dewiride\.Erp\.BuildingBlocks(\..*)?$";
+
+    private const string StateSetter = "set_" + nameof(EntityEntry.State);
 
     private const string AuthenticationAssembly = "Dewiride.Erp.BuildingBlocks.Authentication";
 
@@ -46,13 +52,23 @@ public sealed class LayerTests
 
     private static readonly IObjectProvider<IType> PersistenceAndAuditingTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.BuildingBlocks\.(Persistence|Auditing)(\..*)?$").As("persistence and auditing types");
 
+    private static readonly IObjectProvider<IType> ModuleTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules(\..*)?$").As("module types");
+
+    private static readonly IObjectProvider<IType> SqlClientTypes = Types(true).That().ResideInNamespaceMatching(@"^Microsoft\.Data\.SqlClient(\..*)?$").As("SQL Server driver types");
+
+    private static readonly IObjectProvider<IType> AdoNetTypes = Types(true).That().ResideInNamespaceMatching(@"^System\.Data\.Common$").As("ADO.NET provider types");
+
     private static readonly string[] ContextTypes = ["Microsoft.EntityFrameworkCore.DbContext", "Microsoft.EntityFrameworkCore.DbSet`1"];
 
     private static readonly string[] ChangeTrackerBypasses = ["Update", "UpdateRange", "Attach", "AttachRange"];
 
+    private static readonly string[] TrackingTypes = [typeof(EntityEntry).FullName!, typeof(EntityEntry<>).FullName!, typeof(ChangeTracker).FullName!];
+
+    private static readonly string[] TrackingBypasses = [StateSetter, nameof(ChangeTracker.TrackGraph)];
+
     private static readonly string[] RawSqlTypes = ["Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions", "Microsoft.EntityFrameworkCore.RelationalQueryableExtensions"];
 
-    private static readonly string[] RawSqlMethods = ["ExecuteSql", "SqlQuery", "FromSql"];
+    private static readonly string[] RawSqlMethods = ["ExecuteSql", "SqlQuery", "FromSql", nameof(RelationalDatabaseFacadeExtensions.GetDbConnection)];
 
     [Fact]
     public void Domain_DependsOnlyOnKernelSharedKernelAndSystem()
@@ -173,11 +189,31 @@ public sealed class LayerTests
         Assert.Empty(calls.Where(call => call.Caller.StartsWith(ErpAssemblies.ModulesPrefix, StringComparison.Ordinal)).Select(call => $"{call.Caller} calls {call.Target}"));
     }
 
-    private static IEnumerable<(string Caller, string Method, string Target)> EntityFrameworkCalls(IReadOnlyCollection<string> declaringTypes) =>
+    [Fact]
+    public void Modules_NeverTrackEntitiesTheyDidNotRead()
+    {
+        var calls = EntityFrameworkCalls(TrackingTypes).ToList();
+
+        Assert.All(TrackingTypes, declaringType => Assert.Contains(calls, call => call.DeclaringType == declaringType));
+        Assert.Contains(calls, call => call.Method == StateSetter && call.Caller.StartsWith(ErpAssemblies.BuildingBlocksPrefix, StringComparison.Ordinal));
+        Assert.Empty(calls
+            .Where(call => call.Caller.StartsWith(ErpAssemblies.ModulesPrefix, StringComparison.Ordinal) && TrackingBypasses.Contains(call.Method))
+            .Select(call => $"{call.Caller} calls {call.Target}"));
+    }
+
+    [Fact]
+    public void Modules_NeverUseTheDatabaseDriver()
+    {
+        Assert.NotEmpty(Types().That().ResideInNamespaceMatching(BuildingBlocksNamespace).And().DependOnAny(SqlClientTypes).GetObjects(Architecture));
+        Assert.NotEmpty(Types().That().ResideInNamespaceMatching(BuildingBlocksNamespace).And().DependOnAny(AdoNetTypes).GetObjects(Architecture));
+        AssertRule(Types().That().Are(ModuleTypes).Should().NotDependOnAny(SqlClientTypes).AndShould().NotDependOnAny(AdoNetTypes));
+    }
+
+    private static IEnumerable<(string Caller, string DeclaringType, string Method, string Target)> EntityFrameworkCalls(IReadOnlyCollection<string> declaringTypes) =>
         Architecture.Types
             .SelectMany(type => type.Dependencies.OfType<MethodCallDependency>().Select(call => (Caller: type.FullName, call.TargetMember)))
             .Where(call => declaringTypes.Contains(call.TargetMember.DeclaringType.FullName))
-            .Select(call => (call.Caller, Method: MethodName(call.TargetMember.Name), Target: call.TargetMember.FullName))
+            .Select(call => (call.Caller, DeclaringType: call.TargetMember.DeclaringType.FullName, Method: MethodName(call.TargetMember.Name), Target: call.TargetMember.FullName))
             .Distinct();
 
     private static string MethodName(string member)

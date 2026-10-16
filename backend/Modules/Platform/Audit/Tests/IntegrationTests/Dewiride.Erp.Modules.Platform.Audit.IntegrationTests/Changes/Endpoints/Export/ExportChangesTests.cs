@@ -13,6 +13,8 @@ namespace Dewiride.Erp.Modules.Platform.Audit.IntegrationTests.Changes.Endpoints
 
 public sealed class ExportChangesTests(ErpApiFactory factory) : IClassFixture<ErpApiFactory>
 {
+    private const string FetchSiteHeader = "Sec-Fetch-Site";
+
     private static readonly string[] Header =
     [
         "Time (IST)",
@@ -135,6 +137,39 @@ public sealed class ExportChangesTests(ErpApiFactory factory) : IClassFixture<Er
         Assert.Empty(await AuditTables.SecurityEventsOfAsync(response));
     }
 
+    [Theory]
+    [InlineData("cross-site")]
+    [InlineData("same-site")]
+    [InlineData("none")]
+    public async Task Get_ExportSentByTheBrowserForAnotherSiteOrTheAddressBar_AnswersInvalidWithoutTheFileAndRecordsNothing(string fetchSite)
+    {
+        using var client = Administrator();
+        using var request = ExportRequest(fetchSite);
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        var problem = await ChangesApi.AssertProblemAsync(response, HttpStatusCode.BadRequest, "request.invalid");
+        Assert.Equal(ChangeEndpoints.NotThisSiteMessage, problem.Detail);
+        Assert.Null(response.Content.Headers.ContentDisposition);
+        Assert.Empty(await AuditTables.SecurityEventsOfAsync(response));
+    }
+
+    [Theory]
+    [InlineData("same-origin")]
+    [InlineData(null)]
+    public async Task Get_ExportSentByAScriptOfThisSiteOrByNoBrowser_StreamsTheFileAndRecordsTheExport(string? fetchSite)
+    {
+        using var client = Administrator();
+        using var request = ExportRequest(fetchSite);
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal([(SecurityEventKind.ChangeHistoryExported, "records:0", TestUsers.Administrator.ObjectId)], await AuditTables.SecurityEventsOfAsync(response));
+    }
+
     [Fact]
     public void ExportEndpoint_Metadata_RunsUnderItsOwnTimeoutAndTheExportConcurrencyPolicy()
     {
@@ -152,6 +187,17 @@ public sealed class ExportChangesTests(ErpApiFactory factory) : IClassFixture<Er
         Assert.Null(list.Metadata.GetMetadata<RequestTimeoutPolicy>());
         Assert.Null(list.Metadata.GetMetadata<RequestTimeoutAttribute>());
         Assert.Null(list.Metadata.GetMetadata<EnableRateLimitingAttribute>());
+    }
+
+    private static HttpRequestMessage ExportRequest(string? fetchSite)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, ChangesApi.ExportPath($"subjectId:eq:{Guid.CreateVersion7()}"));
+        if (fetchSite is not null)
+        {
+            request.Headers.Add(FetchSiteHeader, fetchSite);
+        }
+
+        return request;
     }
 
     private HttpClient Administrator() => factory.CreateClient().AsUser(TestUsers.Administrator);

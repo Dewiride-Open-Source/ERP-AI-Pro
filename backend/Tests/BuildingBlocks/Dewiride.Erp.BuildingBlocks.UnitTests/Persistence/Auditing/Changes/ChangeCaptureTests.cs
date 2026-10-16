@@ -86,6 +86,24 @@ public sealed class ChangeCaptureTests
     }
 
     [Fact]
+    public async Task SaveChangesAsync_AddedDerivedEntityWithAComputedColumn_RecordsNeitherItsDiscriminatorNorTheComputedValue()
+    {
+        var capture = new CapturingSaveChangesInterceptor();
+        using var context = Context(capture);
+        var tool = new PowerTool { Name = "Drill", Code = "Set in code", Watts = 800 };
+        context.Add(tool);
+
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var record = Assert.Single(capture.Records);
+        Assert.Equal(ChangeOperation.Created, record.Operation);
+        Assert.Equal(ToolKey, record.EntityType);
+        Assert.Equal(tool.Id.Value, record.EntityId);
+        Assert.Equal(["name", "watts"], Values(record).Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(2, record.ValueCount);
+    }
+
+    [Fact]
     public async Task SaveChangesAsync_AnySave_StampsTheRecordWithTheTimeActorAndOriginOfItsRow()
     {
         var capture = new CapturingSaveChangesInterceptor();
