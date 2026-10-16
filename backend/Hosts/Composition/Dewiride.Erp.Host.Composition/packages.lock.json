@@ -383,6 +383,22 @@
           "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
         }
       },
+      "dewiride.erp.modules.platform.audit": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Auditing": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Audit.Contracts": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.audit.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
+        }
+      },
       "dewiride.erp.modules.platform.systeminfo": {
         "type": "Project",
         "dependencies": {
