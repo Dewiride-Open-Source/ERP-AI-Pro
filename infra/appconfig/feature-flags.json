@@ -15,6 +15,13 @@
       }
     },
     {
+      "id": "Erp.Modules.Platform.Audit",
+      "enabled": {
+        "local-dev": true,
+        "production": true
+      }
+    },
+    {
       "id": "Erp.Modules.Identity.Users",
       "enabled": {
         "local-dev": true,
