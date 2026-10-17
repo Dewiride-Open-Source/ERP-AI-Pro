@@ -357,7 +357,7 @@ The form composites are presentational ([ADR-0025](../adr/0025-forms-typed-submi
 
 ## Data table
 
-The data table composite ([ADR-0026](../adr/0026-server-driven-lists-and-the-data-table.md)) renders one page of a list that the server has already sorted, filtered and paged. It is controlled: it knows nothing of addresses, and the web app's `shared/lists` binds it to the page address (`ListTable`, [module anatomy](module-anatomy.md#frontend)). It is the only code that imports `@tanstack/react-table` (9.2.6), so `apps/web` works with the kit's own types.
+The data table composite ([ADR-0026](../adr/0026-server-driven-lists-and-the-data-table.md)) renders one page of a list that the server has already sorted, filtered and paged. It is controlled: it knows nothing of addresses, and the web app's `shared/lists` binds it to the page address (`ListTable`, [module anatomy](module-anatomy.md#frontend)). It is the only code that imports `@tanstack/react-table` (9.3.1), so `apps/web` works with the kit's own types.
 
 | Import (`@dewiride/erp-ui/components/…`) | Export | Contract |
 |---|---|---|

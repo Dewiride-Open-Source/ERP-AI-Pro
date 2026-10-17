@@ -10,11 +10,13 @@ namespace Dewiride.Erp.Testing.Authentication;
 
 // MSAL sends every request of a test host through this client instead of one that reaches Entra. The token endpoint
 // redeems a code from CodeFor as Entra redeems the code of a person who signed in, with the tokens and client info that
-// put the person's account in the token cache, for a persona of TestUsers or a person a test host admitted, and refuses
-// every other code as Entra refuses an expired one. It redeems a refresh token it issued for the scopes MSAL asks, as
-// Entra does when the API calls Microsoft Graph for the person, unless a test made the person's consent missing; instance
-// discovery answers with the aliases of the public cloud. Anything else fails the request that sent it. ClientInfoFor is
-// the client info Entra also posts to the callback with the code, from which Microsoft.Identity.Web adds uid and utid.
+// put the person's account in the token cache, for a persona of TestUsers or a person a test host admitted, redeems a code
+// from CodeWithoutClientInfoFor with the same tokens and no client info, and refuses every other code as Entra refuses an
+// expired one. It redeems a refresh token it issued for the scopes MSAL asks, as Entra does when the API calls Microsoft
+// Graph for the person, unless a test made the person's consent missing; instance discovery answers with the aliases of
+// the public cloud. Anything else fails the request that sent it. ClientInfoFor is that client info, from whose account
+// Microsoft.Identity.Web adds uid and utid; the sign-in asks Entra for no client info on the callback, and
+// Microsoft.Identity.Web ignores one posted there.
 public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 {
     public const string RefusedCodeError = "invalid_grant";
@@ -26,6 +28,10 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
     private const string SignInScope = "openid profile offline_access User.Read";
 
     private const string CodePrefix = "test-sign-in.";
+
+    private const string CodeWithoutClientInfoPrefix = "test-sign-in-without-client-info.";
+
+    private const string ClientInfoField = "client_info";
 
     private const string RefreshTokenPrefix = "test-refresh-token.";
 
@@ -61,6 +67,13 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         ArgumentNullException.ThrowIfNull(user);
 
         return CodePrefix + user.ObjectId.ToString("D");
+    }
+
+    public static string CodeWithoutClientInfoFor(TestUser user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+
+        return CodeWithoutClientInfoPrefix + user.ObjectId.ToString("D");
     }
 
     public static string ClientInfoFor(TestUser user)
@@ -126,10 +139,23 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         throw new InvalidOperationException($"MSAL sent {request.Method} {address.GetLeftPart(UriPartial.Path)}, which the test token endpoint does not serve; no test host may reach Entra.");
     }
 
-    private HttpResponseMessage Redeem(string? code) =>
-        UserFor(code) is { } user
-            ? Json(HttpStatusCode.OK, Tokens(user, SignInScope))
-            : Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeDescription, 70008));
+    private HttpResponseMessage Redeem(string? code)
+    {
+        if (UserFor(code, CodePrefix) is { } user)
+        {
+            return Json(HttpStatusCode.OK, Tokens(user, SignInScope));
+        }
+
+        if (UserFor(code, CodeWithoutClientInfoPrefix) is { } userWithoutClientInfo)
+        {
+            var tokens = Tokens(userWithoutClientInfo, SignInScope);
+            tokens.Remove(ClientInfoField);
+
+            return Json(HttpStatusCode.OK, tokens);
+        }
+
+        return Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeDescription, 70008));
+    }
 
     private HttpResponseMessage Refresh(string? refreshToken, string? scope)
     {
@@ -143,8 +169,8 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             : Json(HttpStatusCode.OK, Tokens(user, scope));
     }
 
-    private TestUser? UserFor(string? code) =>
-        code is not null && code.StartsWith(CodePrefix, StringComparison.Ordinal) && Guid.TryParseExact(code[CodePrefix.Length..], "D", out var objectId)
+    private TestUser? UserFor(string? code, string prefix) =>
+        code is not null && code.StartsWith(prefix, StringComparison.Ordinal) && Guid.TryParseExact(code[prefix.Length..], "D", out var objectId)
             ? Find(objectId)
             : null;
 
@@ -210,7 +236,7 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             ["access_token"] = tokens[0],
             ["refresh_token"] = tokens[1],
             ["id_token"] = tokens[2],
-            ["client_info"] = ClientInfoFor(user),
+            [ClientInfoField] = ClientInfoFor(user),
         };
     }
 

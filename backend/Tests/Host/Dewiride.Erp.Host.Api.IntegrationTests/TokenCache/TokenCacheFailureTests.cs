@@ -308,7 +308,6 @@ public sealed class TokenCacheFailureTests
         {
             ["state"] = state!,
             ["code"] = TestTokenEndpoint.CodeFor(user),
-            ["client_info"] = TestTokenEndpoint.ClientInfoFor(user),
         });
 
         outage.Begin(failing, keyPrefix);

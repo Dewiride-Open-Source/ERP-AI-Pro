@@ -46,16 +46,12 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     }
 
     [Fact]
-    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_IssuesASessionTheAccountCheckAccepts()
+    public async Task Post_CallbackWithTheCodeOfThePerson_IssuesASessionTheAccountCheckAccepts()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         var state = Single(await ChallengeAsync(client), "state");
 
-        using var response = await PostCallbackAsync(
-            client,
-            ("state", state),
-            ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)),
-            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Accountant)));
+        using var response = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)));
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal(ReturnPath, response.Headers.Location?.OriginalString);
@@ -67,16 +63,12 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     }
 
     [Fact]
-    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_RecordsTheSignInOfThePerson()
+    public async Task Post_CallbackWithTheCodeOfThePerson_RecordsTheSignInOfThePerson()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         var state = Single(await ChallengeAsync(client), "state");
 
-        using var response = await PostCallbackAsync(
-            client,
-            ("state", state),
-            ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)),
-            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Accountant)));
+        using var response = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)));
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         var entry = Assert.Single(await SecurityEventRecords.OfAsync(_fixture.Factory.Services, response));
@@ -90,11 +82,7 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         var state = Single(await ChallengeAsync(client), "state");
 
-        using var response = await PostCallbackAsync(
-            client,
-            ("state", state),
-            ("code", TestTokenEndpoint.CodeFor(person)),
-            ("client_info", TestTokenEndpoint.ClientInfoFor(person)));
+        using var response = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(person)));
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal(ReturnPath, response.Headers.Location?.OriginalString);
@@ -114,11 +102,7 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         var state = Single(await ChallengeAsync(client), "state");
 
-        using var response = await PostCallbackAsync(
-            client,
-            ("state", state),
-            ("code", TestTokenEndpoint.CodeFor(person)),
-            ("client_info", TestTokenEndpoint.ClientInfoFor(person)));
+        using var response = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(person)));
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal(AuthPaths.AccountDeactivatedPage, response.Headers.Location?.OriginalString);
@@ -134,16 +118,12 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     }
 
     [Fact]
-    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_IssuesAntiforgeryTokensThatCarryThePersonsChanges()
+    public async Task Post_CallbackWithTheCodeOfThePerson_IssuesAntiforgeryTokensThatCarryThePersonsChanges()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         var state = Single(await ChallengeAsync(client), "state");
 
-        using var callback = await PostCallbackAsync(
-            client,
-            ("state", state),
-            ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)),
-            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Accountant)));
+        using var callback = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)));
         using var change = await client.PostAsync(new Uri(ChangesPath, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Found, callback.StatusCode);
@@ -154,15 +134,11 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     }
 
     [Fact]
-    public async Task Post_CallbackWithTheCodeAndClientInfoOfThePerson_RecordsTheEntraSessionThatTheFrontChannelSignOutEnds()
+    public async Task Post_CallbackWithTheCodeOfThePerson_RecordsTheEntraSessionThatTheFrontChannelSignOutEnds()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         var state = Single(await ChallengeAsync(client), "state");
-        using var callback = await PostCallbackAsync(
-            client,
-            ("state", state),
-            ("code", TestTokenEndpoint.CodeFor(TestUsers.Administrator)),
-            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Administrator)));
+        using var callback = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(TestUsers.Administrator)));
         using var browser = TestSignIn.CreateClient(_fixture.Factory);
         using (var signedIn = await GetAccountWithOnlyTheSessionCookieAsync(browser, SessionCookieValueOf(callback)))
         {
@@ -185,11 +161,7 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         var state = Single(await ChallengeAsync(client), "state");
-        using var callback = await PostCallbackAsync(
-            client,
-            ("state", state),
-            ("code", TestTokenEndpoint.CodeFor(TestUsers.Administrator)),
-            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Administrator)));
+        using var callback = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(TestUsers.Administrator)));
 
         using var logout = await client.PostAsync(new Uri(AuthPaths.Logout, UriKind.Relative), content: null, TestContext.Current.CancellationToken);
 
@@ -200,12 +172,38 @@ public sealed class SignInCallbackTests : IClassFixture<SignInCallbackTests.Fixt
     }
 
     [Fact]
-    public async Task Post_CallbackWithoutClientInfo_IssuesASessionTheNextRequestRefusesAndClears()
+    public async Task Post_CallbackWithTheClientInfoOfAnotherPerson_IssuesASessionOfTheAccountTheCodeRedeems()
     {
         using var client = TestSignIn.CreateClient(_fixture.Factory);
         var state = Single(await ChallengeAsync(client), "state");
 
-        using var response = await PostCallbackAsync(client, ("state", state), ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)));
+        using var response = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Administrator)));
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        using var browser = TestSignIn.CreateClient(_fixture.Factory);
+        using var signedIn = await GetAccountWithOnlyTheSessionCookieAsync(browser, SessionCookieValueOf(response));
+        Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        Assert.Equal(TestUsers.Accountant.AccountId, await signedIn.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Post_CallbackWhoseCodeRedeemsNoClientInfo_IssuesASessionTheNextRequestRefusesAndClears()
+    {
+        using var earlier = TestSignIn.CreateClient(_fixture.Factory);
+        var earlierState = Single(await ChallengeAsync(earlier), "state");
+        using var earlierSignIn = await PostCallbackAsync(earlier, ("state", earlierState), ("code", TestTokenEndpoint.CodeFor(TestUsers.Accountant)));
+        using var client = TestSignIn.CreateClient(_fixture.Factory);
+        var state = Single(await ChallengeAsync(client), "state");
+
+        using var response = await PostCallbackAsync(
+            client,
+            ("state", state),
+            ("code", TestTokenEndpoint.CodeWithoutClientInfoFor(TestUsers.Accountant)),
+            ("client_info", TestTokenEndpoint.ClientInfoFor(TestUsers.Accountant)));
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         Assert.Equal(ReturnPath, response.Headers.Location?.OriginalString);

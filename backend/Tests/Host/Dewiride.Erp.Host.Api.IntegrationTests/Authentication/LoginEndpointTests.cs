@@ -39,6 +39,7 @@ public sealed class LoginEndpointTests(ErpApiFactory factory) : IClassFixture<Er
         Assert.False(string.IsNullOrEmpty(Single(query, "nonce")));
         Assert.Equal(["offline_access", "openid", "profile"], Single(query, "scope").Split(' ').Order(StringComparer.Ordinal));
         Assert.Equal(ReturnPath, ReturnPathOf(Single(query, "state")));
+        Assert.False(query.ContainsKey("client_info"));
     }
 
     [Fact]
