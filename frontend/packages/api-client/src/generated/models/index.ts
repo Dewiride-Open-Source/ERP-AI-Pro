@@ -403,6 +403,24 @@ export function createPagedResponseOfPositionResponseFromDiscriminatorValue(pars
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PermissionCatalogResponse}
+ */
+// @ts-ignore
+export function createPermissionCatalogResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPermissionCatalogResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PermissionResponse}
+ */
+// @ts-ignore
+export function createPermissionResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPermissionResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {PersonResponse}
  */
 // @ts-ignore
@@ -936,6 +954,31 @@ export function deserializeIntoPagedResponseOfPositionResponse(pagedResponseOfPo
 }
 /**
  * The deserialization information for the current model
+ * @param PermissionCatalogResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPermissionCatalogResponse(permissionCatalogResponse: Partial<PermissionCatalogResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "permissions": n => { permissionCatalogResponse.permissions = n.getCollectionOfObjectValues<PermissionResponse>(createPermissionResponseFromDiscriminatorValue); },
+        "roles": n => { permissionCatalogResponse.roles = n.getCollectionOfEnumValues<ErpRole>(ErpRoleObject); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param PermissionResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPermissionResponse(permissionResponse: Partial<PermissionResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "description": n => { permissionResponse.description = n.getStringValue(); },
+        "heldBy": n => { permissionResponse.heldBy = n.getCollectionOfEnumValues<ErpRole>(ErpRoleObject); },
+        "name": n => { permissionResponse.name = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param PersonResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -1193,6 +1236,7 @@ export interface DownloadLinkResponse extends AdditionalDataHolder, Parsable {
      */
     url?: string | null;
 }
+export type ErpRole = (typeof ErpRoleObject)[keyof typeof ErpRoleObject];
 export interface FeaturesResponse extends AdditionalDataHolder, Parsable {
     /**
      * The features property
@@ -1456,6 +1500,30 @@ export interface PagedResponseOfPositionResponse extends AdditionalDataHolder, P
     totalPages?: number | null;
 }
 export type Permission = (typeof PermissionObject)[keyof typeof PermissionObject];
+export interface PermissionCatalogResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The permissions property
+     */
+    permissions?: PermissionResponse[] | null;
+    /**
+     * The roles property
+     */
+    roles?: ErpRole[] | null;
+}
+export interface PermissionResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The description property
+     */
+    description?: string | null;
+    /**
+     * The heldBy property
+     */
+    heldBy?: ErpRole[] | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+}
 export interface PersonResponse extends AdditionalDataHolder, Parsable {
     /**
      * The createdAt property
@@ -2055,6 +2123,35 @@ export function serializePagedResponseOfPositionResponse(writer: SerializationWr
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PermissionCatalogResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePermissionCatalogResponse(writer: SerializationWriter, permissionCatalogResponse: Partial<PermissionCatalogResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!permissionCatalogResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<PermissionResponse>("permissions", permissionCatalogResponse.permissions, serializePermissionResponse);
+    if(permissionCatalogResponse.roles)
+    writer.writeCollectionOfEnumValues<ErpRole>("roles", permissionCatalogResponse.roles);
+    writer.writeAdditionalData(permissionCatalogResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PermissionResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePermissionResponse(writer: SerializationWriter, permissionResponse: Partial<PermissionResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!permissionResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("description", permissionResponse.description);
+    if(permissionResponse.heldBy)
+    writer.writeCollectionOfEnumValues<ErpRole>("heldBy", permissionResponse.heldBy);
+    writer.writeStringValue("name", permissionResponse.name);
+    writer.writeAdditionalData(permissionResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param PersonResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -2406,6 +2503,13 @@ export const ChangeValueKindObject = {
     Reference: "reference",
     Id: "id",
     Binary: "binary",
+} as const;
+export const ErpRoleObject = {
+    Employee: "employee",
+    Finance: "finance",
+    Hr: "hr",
+    Manager: "manager",
+    Administrator: "administrator",
 } as const;
 export const PermissionObject = {
     IdentityUsersDepartmentsCreate: "identity.users.departments.create",

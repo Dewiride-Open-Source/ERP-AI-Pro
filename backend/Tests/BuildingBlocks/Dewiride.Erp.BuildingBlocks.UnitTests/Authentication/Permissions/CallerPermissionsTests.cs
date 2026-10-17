@@ -23,8 +23,8 @@ public sealed class CallerPermissionsTests
         {
             Permissions =
             [
-                new(ReadInvoices, [ErpRole.Employee]),
-                new(IssueInvoices, [ErpRole.Finance]),
+                new(ReadInvoices, [ErpRole.Employee], "See the sales invoices."),
+                new(IssueInvoices, [ErpRole.Finance], "Issue a sales invoice."),
             ],
         },
     ]));

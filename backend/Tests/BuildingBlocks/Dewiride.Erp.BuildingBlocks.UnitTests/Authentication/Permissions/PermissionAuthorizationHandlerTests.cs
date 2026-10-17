@@ -27,9 +27,9 @@ public sealed class PermissionAuthorizationHandlerTests
         {
             Permissions =
             [
-                new(ReadInvoices, [ErpRole.Employee]),
-                new(IssueInvoices, [ErpRole.Finance]),
-                new(VoidInvoices, []),
+                new(ReadInvoices, [ErpRole.Employee], "See the sales invoices."),
+                new(IssueInvoices, [ErpRole.Finance], "Issue a sales invoice."),
+                new(VoidInvoices, [], "Void an issued sales invoice."),
             ],
         },
     ]));

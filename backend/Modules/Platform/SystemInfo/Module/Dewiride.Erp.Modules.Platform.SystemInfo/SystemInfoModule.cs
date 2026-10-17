@@ -26,8 +26,8 @@ public sealed class SystemInfoModule : IModule
         FeatureFlag: FeatureFlag,
         Permissions:
         [
-            new(SystemInfoPermissions.ReadInfo, []),
-            new(SystemInfoPermissions.ReadStartups, []),
+            new(SystemInfoPermissions.ReadInfo, [], "See which version of the ERP is running and how long it has been up."),
+            new(SystemInfoPermissions.ReadStartups, [], "See when the ERP last started and which version each start ran."),
         ],
         Capabilities: []);
 
