@@ -25,7 +25,7 @@ export function PeopleOverviewSkeleton() {
       <Card>
         <CardHeader className="gap-2">
           <Skeleton className="h-5 w-28" />
-          <Skeleton className="h-4 w-96 max-w-full" />
+          <Skeleton className="h-4 w-full max-w-96" />
         </CardHeader>
         <CardContent>
           <DataTableSkeleton columns={6} />

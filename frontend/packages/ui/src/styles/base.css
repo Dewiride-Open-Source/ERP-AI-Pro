@@ -20,3 +20,13 @@
 html [data-sonner-toaster] {
   font-family: var(--font-sans);
 }
+
+html body[data-scroll-locked] {
+  --scroll-lock-gap: var(--page-scrollbar-width, var(--removed-body-scroll-bar-size, 0px));
+  margin-right: var(--scroll-lock-gap) !important;
+}
+
+html body[data-scroll-locked] [data-sonner-toaster] {
+  margin-right: var(--scroll-lock-gap);
+  max-width: calc(100% - var(--scroll-lock-gap));
+}
