@@ -16,6 +16,8 @@ import { type UsersItemRequestBuilder, UsersItemRequestBuilderNavigationMetadata
 // @ts-ignore
 import { OrgChartRequestBuilderRequestsMetadata, type OrgChartRequestBuilder } from './orgChart/index.js';
 // @ts-ignore
+import { PermissionsRequestBuilderRequestsMetadata, type PermissionsRequestBuilder } from './permissions/index.js';
+// @ts-ignore
 import { type BaseRequestBuilder, type Guid, type KeysToExcludeForNavigationMetadata, type NavigationMetadata, type Parsable, type ParsableFactory, type RequestConfiguration, type RequestInformation, type RequestsMetadata } from '@microsoft/kiota-abstractions';
 
 /**
@@ -42,6 +44,10 @@ export interface UsersRequestBuilder extends BaseRequestBuilder<UsersRequestBuil
      * The orgChart property
      */
     get orgChart(): OrgChartRequestBuilder;
+    /**
+     * The permissions property
+     */
+    get permissions(): PermissionsRequestBuilder;
     /**
      * Gets an item from the ErpApi.api.identity.users.item collection
      * @param id Unique identifier of the item
@@ -141,6 +147,9 @@ export const UsersRequestBuilderNavigationMetadata: Record<Exclude<keyof UsersRe
     },
     orgChart: {
         requestsMetadata: OrgChartRequestBuilderRequestsMetadata,
+    },
+    permissions: {
+        requestsMetadata: PermissionsRequestBuilderRequestsMetadata,
     },
 };
 /**

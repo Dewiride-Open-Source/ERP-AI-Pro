@@ -16,7 +16,7 @@ public sealed partial class PermissionCatalog
     {
         ArgumentNullException.ThrowIfNull(modules);
 
-        var holders = new Dictionary<string, FrozenSet<ErpRole>>(StringComparer.Ordinal);
+        var declarations = new Dictionary<string, PermissionDeclaration>(StringComparer.Ordinal);
         foreach (var descriptor in modules.Modules.Select(m => m.Descriptor))
         {
             foreach (var permission in descriptor.Permissions)
@@ -31,19 +31,27 @@ public sealed partial class PermissionCatalog
                     throw new InvalidOperationException($"Module '{descriptor.Id}' names {ErpRole.Administrator} for the permission '{permission.Name}', which holds every permission.");
                 }
 
-                if (!holders.TryAdd(permission.Name, permission.HeldBy.ToFrozenSet()))
+                if (string.IsNullOrWhiteSpace(permission.Description))
+                {
+                    throw new InvalidOperationException($"Module '{descriptor.Id}' declares the permission '{permission.Name}' without a description of what a holder may do.");
+                }
+
+                if (!declarations.TryAdd(permission.Name, permission))
                 {
                     throw new InvalidOperationException($"The permission '{permission.Name}' is declared more than once.");
                 }
             }
         }
 
-        _holders = holders.ToFrozenDictionary(StringComparer.Ordinal);
+        _holders = declarations.ToFrozenDictionary(declaration => declaration.Key, declaration => declaration.Value.HeldBy.ToFrozenSet(), StringComparer.Ordinal);
         _all = _holders.Keys.ToFrozenSet(StringComparer.Ordinal);
-        Names = [.. _holders.Keys.Order(StringComparer.Ordinal)];
+        Permissions = [.. declarations.Values.OrderBy(declaration => declaration.Name, StringComparer.Ordinal).Select(EntryOf)];
+        Names = [.. Permissions.Select(permission => permission.Name)];
     }
 
     public IReadOnlyList<string> Names { get; }
+
+    public IReadOnlyList<PermissionCatalogEntry> Permissions { get; }
 
     public bool Contains(string permission) => _holders.ContainsKey(permission);
 
@@ -57,6 +65,12 @@ public sealed partial class PermissionCatalog
             ? _all
             : _holders.Where(permission => permission.Value.Overlaps(held)).Select(permission => permission.Key).ToFrozenSet(StringComparer.Ordinal);
     }
+
+    private static PermissionCatalogEntry EntryOf(PermissionDeclaration declaration) =>
+        new(
+            declaration.Name,
+            declaration.Description,
+            [.. Enum.GetValues<ErpRole>().Where(role => role == ErpRole.Administrator || declaration.HeldBy.Contains(role))]);
 
     [GeneratedRegex("^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*){3}$")]
     private static partial Regex PermissionName();

@@ -1,4 +1,5 @@
 import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { peoplePath } from "../../../pages/identity/users/people.page";
 import { attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { auditTrailPath } from "../../../pages/platform/audit/changes.page";
 import { StartPage } from "../../../pages/platform/home/start.page";
@@ -11,7 +12,7 @@ test.describe("start page", () => {
     await start.goto();
 
     await expect(page).toHaveTitle(/Home · ERP-AI-Pro/);
-    await expect(start.areas).toHaveCount(3);
+    await expect(start.areas).toHaveCount(4);
     await expect(start.noAreas).toHaveCount(0);
     await expect(page.getByRole("main")).toMatchAriaSnapshot(`
       - paragraph: Home
@@ -32,6 +33,10 @@ test.describe("start page", () => {
             - heading "Audit trail" [level=3]
             - text: /who changed what in the ERP/
             - link "Open Audit trail"
+          - listitem:
+            - heading "People" [level=3]
+            - text: /Register people, assign their roles/
+            - link "Open People"
     `);
     await capture("start");
 
@@ -41,6 +46,10 @@ test.describe("start page", () => {
     await expect(start.heading).toBeVisible();
     await start.openLink("Audit trail").click();
     await expect(page).toHaveURL((url) => url.pathname === auditTrailPath);
+    await page.goBack();
+    await expect(start.heading).toBeVisible();
+    await start.openLink("People").click();
+    await expect(page).toHaveURL((url) => url.pathname === peoplePath);
     await page.goBack();
     await expect(start.heading).toBeVisible();
     await start.openLink("System").click();

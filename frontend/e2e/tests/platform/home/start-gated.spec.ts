@@ -2,12 +2,13 @@ import { gatedBaseURL } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { StartPage } from "../../../pages/platform/home/start.page";
 
+// An administrator holds every permission, so only the disabled modules can keep their areas off the start page.
 test.describe("start page with every module disabled", () => {
   test.skip(
     !gatedBaseURL,
     "E2E_GATED_BASE_URL is not set and Playwright did not start the gated web instance",
   );
-  test.use({ baseURL: gatedBaseURL ?? "" });
+  test.use({ baseURL: gatedBaseURL ?? "", persona: "administrator" });
 
   forEachTheme("says that nothing is open yet instead of showing cards", async ({ page, capture }) => {
     const start = new StartPage(page);

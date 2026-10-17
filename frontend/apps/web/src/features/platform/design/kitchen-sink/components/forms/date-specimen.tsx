@@ -2,6 +2,18 @@
 
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { DateInput } from "@dewiride/erp-ui/components/pickers/date-input";
+import { DateRangeInput, type CalendarDateRange } from "@dewiride/erp-ui/components/pickers/date-range-input";
+import { Button } from "@dewiride/erp-ui/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@dewiride/erp-ui/components/ui/dialog";
 import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
 import { useState } from "react";
 
@@ -17,6 +29,11 @@ export function DateSpecimen() {
   const [invoiceDate, setInvoiceDate] = useState("2026-03-31");
   const [dueDate, setDueDate] = useState("");
   const [deliveryDate, setDeliveryDate] = useState("31-02-2026");
+  const [paymentDate, setPaymentDate] = useState("2026-03-31");
+  const [billingPeriod, setBillingPeriod] = useState<CalendarDateRange>({
+    from: "2026-04-01",
+    to: "2026-04-30",
+  });
 
   return (
     <Specimen
@@ -61,6 +78,38 @@ export function DateSpecimen() {
           {(frame) => <DateInput {...frame} value="2026-04-01" onValueChange={() => undefined} disabled />}
         </FormField>
       </FieldGroup>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button type="button" variant="outline" className="w-fit">
+            Choose dates in a dialog
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Dates in a dialog</DialogTitle>
+            <DialogDescription>
+              Inside a dialog too, each calendar opens with its day focused.
+            </DialogDescription>
+          </DialogHeader>
+          <FieldGroup>
+            <FormField id="ks-forms-dialog-payment-date" label="Payment date">
+              {(frame) => <DateInput {...frame} value={paymentDate} onValueChange={setPaymentDate} />}
+            </FormField>
+            <FormField id="ks-forms-dialog-billing-period" label="Billing period">
+              {(frame) => (
+                <DateRangeInput {...frame} value={billingPeriod} onValueChange={setBillingPeriod} />
+              )}
+            </FormField>
+          </FieldGroup>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Done
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Specimen>
   );
 }

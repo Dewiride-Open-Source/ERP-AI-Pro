@@ -2978,6 +2978,102 @@
         ]
       }
     },
+    "/api/identity/users/permissions": {
+      "get": {
+        "tags": [
+          "Identity.Users"
+        ],
+        "summary": "Lists every permission of the ERP in ordinal order, with what it lets a holder do and the built-in roles that hold it.",
+        "operationId": "Identity.Users.ListPermissions",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermissionCatalogResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
     "/api/identity/users/departments": {
       "get": {
         "tags": [
@@ -5240,6 +5336,15 @@
           }
         }
       },
+      "ErpRole": {
+        "enum": [
+          "employee",
+          "finance",
+          "hr",
+          "manager",
+          "administrator"
+        ]
+      },
       "FeaturesResponse": {
         "required": [
           "features"
@@ -5707,6 +5812,49 @@
           "platform.system-info.info.read",
           "platform.system-info.startups.read"
         ]
+      },
+      "PermissionCatalogResponse": {
+        "required": [
+          "roles",
+          "permissions"
+        ],
+        "type": "object",
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErpRole"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermissionResponse"
+            }
+          }
+        }
+      },
+      "PermissionResponse": {
+        "required": [
+          "name",
+          "description",
+          "heldBy"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "heldBy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErpRole"
+            }
+          }
+        }
       },
       "PersonResponse": {
         "required": [

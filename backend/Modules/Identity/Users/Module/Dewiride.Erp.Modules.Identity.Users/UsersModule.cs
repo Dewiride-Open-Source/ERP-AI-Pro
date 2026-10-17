@@ -9,6 +9,7 @@ using Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Integration;
 using Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
+using Dewiride.Erp.Modules.Identity.Users.Permissions.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Endpoints;
 using Microsoft.AspNetCore.Routing;
@@ -30,24 +31,24 @@ public sealed class UsersModule : IModule
         FeatureFlag: FeatureFlag,
         Permissions:
         [
-            new(UsersPermissions.Read, []),
-            new(UsersPermissions.Register, []),
-            new(UsersPermissions.Update, []),
-            new(UsersPermissions.ChangeStatus, []),
-            new(UsersPermissions.Delete, []),
-            new(UsersPermissions.AssignRoles, []),
-            new(UsersPermissions.ReadDepartments, [ErpRole.Employee]),
-            new(UsersPermissions.CreateDepartments, []),
-            new(UsersPermissions.UpdateDepartments, []),
-            new(UsersPermissions.DeleteDepartments, []),
-            new(UsersPermissions.ReadDesignations, [ErpRole.Employee]),
-            new(UsersPermissions.CreateDesignations, []),
-            new(UsersPermissions.UpdateDesignations, []),
-            new(UsersPermissions.DeleteDesignations, []),
-            new(UsersPermissions.ReadPositions, []),
-            new(UsersPermissions.RecordPositions, []),
-            new(UsersPermissions.WithdrawPositions, []),
-            new(UsersPermissions.ReadOrgChart, [ErpRole.Employee]),
+            new(UsersPermissions.Read, [], "See the people registered in the ERP, the details of each one and what each role may do."),
+            new(UsersPermissions.Register, [], "Register a person before their first sign-in, by work email or from the company directory."),
+            new(UsersPermissions.Update, [], "Change a person's employee code, phone number and date of joining."),
+            new(UsersPermissions.ChangeStatus, [], "Deactivate a person, which signs them out and stops them signing in, or reactivate them."),
+            new(UsersPermissions.Delete, [], "Delete a person's record, which ends their open sessions."),
+            new(UsersPermissions.AssignRoles, [], "Give people the Finance, HR and Manager roles or take them away, also when registering or inviting them."),
+            new(UsersPermissions.ReadDepartments, [ErpRole.Employee], "See the departments and which department each one sits under."),
+            new(UsersPermissions.CreateDepartments, [], "Add a department, at the top or under another department."),
+            new(UsersPermissions.UpdateDepartments, [], "Rename a department or move it under another department."),
+            new(UsersPermissions.DeleteDepartments, [], "Delete a department that holds no other department and that nobody is or will be in."),
+            new(UsersPermissions.ReadDesignations, [ErpRole.Employee], "See the designations people can hold."),
+            new(UsersPermissions.CreateDesignations, [], "Add a designation."),
+            new(UsersPermissions.UpdateDesignations, [], "Rename a designation."),
+            new(UsersPermissions.DeleteDesignations, [], "Delete a designation that nobody holds or will hold."),
+            new(UsersPermissions.ReadPositions, [], "See each person's past and planned moves, and the organisation chart of any date."),
+            new(UsersPermissions.RecordPositions, [], "Record a person's move to a department, designation or manager from a date."),
+            new(UsersPermissions.WithdrawPositions, [], "Withdraw a move recorded for a person."),
+            new(UsersPermissions.ReadOrgChart, [ErpRole.Employee], "See today's organisation chart: who is in each department and who reports to whom."),
         ],
         Capabilities: []);
 
@@ -72,5 +73,6 @@ public sealed class UsersModule : IModule
         DesignationEndpoints.Map(group);
         PositionEndpoints.Map(group);
         OrgChartEndpoints.Map(group);
+        PermissionEndpoints.Map(group);
     }
 }

@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
 import { expect, forEachTheme, holdShortcut, tabOntoLink, test } from "../../../fixtures/test";
+import { PeoplePage, peoplePath } from "../../../pages/identity/users/people.page";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { formKitPath } from "../../../pages/platform/design/form-kit.page";
 import { homePath, StartPage } from "../../../pages/platform/home/start.page";
@@ -36,6 +37,11 @@ const sidebarSnapshot = `
       - listitem:
         - link "Audit trail":
           - /url: /platform/audit
+    - text: Organisation
+    - list "Organisation":
+      - listitem:
+        - link "People":
+          - /url: /identity/users
 `;
 
 const drawerSnapshot = `
@@ -63,6 +69,11 @@ const drawerSnapshot = `
         - listitem:
           - link "Audit trail":
             - /url: /platform/audit
+      - text: Organisation
+      - list "Organisation":
+        - listitem:
+          - link "People":
+            - /url: /identity/users
 `;
 
 const wideBannerOnTheStartPage = `
@@ -140,7 +151,7 @@ test.describe("app shell navigation", () => {
         await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
         await expect(shell.sidebar).toMatchAriaSnapshot(sidebarSnapshot);
         await expect(shell.navigationLink("Attachments")).toHaveAttribute("aria-current", "page");
-        for (const other of ["Home", "System", "Audit trail"]) {
+        for (const other of ["Home", "System", "Audit trail", "People"]) {
           await expect(shell.navigationLink(other)).not.toHaveAttribute("aria-current");
         }
         await capture("sidebar-expanded", shell.sidebarPanel);
@@ -305,6 +316,35 @@ test.describe("app shell navigation", () => {
           "page",
         );
         await expect(home).not.toHaveAttribute("aria-current");
+
+        await new PeoplePage(page).goto();
+        await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
+          - navigation "Breadcrumb":
+            - list:
+              - listitem:
+                - link "Home":
+                  - /url: /
+              - listitem: Organisation
+              - listitem:
+                - link "People" [disabled]
+        `);
+        await expect(shell.navigationLink("People")).toHaveAttribute("aria-current", "page");
+
+        // The roles and permissions page has no entry of its own, so it sits under People, whose entry stays marked.
+        await page.goto(`${peoplePath}/permissions`);
+        await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
+        await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
+          - navigation "Breadcrumb":
+            - list:
+              - listitem:
+                - link "Home":
+                  - /url: /
+              - listitem: Organisation
+              - listitem:
+                - link "People":
+                  - /url: /identity/users
+        `);
+        await expect(shell.navigationLink("People")).toHaveAttribute("aria-current", "true");
 
         await page.goto(formKitPath);
         await expect(page.getByRole("heading", { name: "Form kit", level: 1 })).toBeVisible();

@@ -75,8 +75,11 @@ test.describe("page search", () => {
               - option "System"
               - option "Attachments"
               - option "Audit trail"
+            - group "Organisation":
+              - text: Organisation
+              - option "People"
       `);
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(4);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(5);
       await expectActive(shell, "Home");
       await expect(shell.paletteStatus).toHaveText("");
       await expect(shell.paletteOption("Home")).not.toHaveAttribute("aria-describedby");
@@ -88,6 +91,9 @@ test.describe("page search", () => {
       );
       await expect(shell.paletteOption("Audit trail")).toHaveAccessibleDescription(
         "See who changed what in the ERP, and when.",
+      );
+      await expect(shell.paletteOption("People")).toHaveAccessibleDescription(
+        "Register people, assign their roles and record their moves.",
       );
       await expect(shell.palette).toHaveAccessibleDescription(keyboardHint);
       if ((page.viewportSize()?.width ?? 0) >= hintMinWidth) await expect(hint).toBeVisible();
@@ -114,6 +120,14 @@ test.describe("page search", () => {
       await expect(shell.paletteStatus).toHaveText("1 page");
       await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
       await expectActive(shell, "System");
+      await shell.paletteSearch.fill("organisation");
+      await expect(shell.paletteStatus).toHaveText("1 page");
+      await expect(shell.paletteResults).toMatchAriaSnapshot(`
+        - listbox "Pages":
+          - group "Organisation":
+            - text: Organisation
+            - option "People" [selected]
+      `);
 
       await shell.paletteSearch.fill("zzz");
       await expect(shell.paletteResults).toHaveCount(0);
@@ -128,7 +142,7 @@ test.describe("page search", () => {
       await expect(page).toHaveURL((url) => url.pathname === homePath);
 
       await shell.paletteSearch.fill("");
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(4);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(5);
       await expect(shell.paletteStatus).toHaveText("");
       await expect(shell.paletteSearch).toHaveAttribute("aria-expanded", "true");
       await expectActive(shell, "Home");
@@ -155,7 +169,9 @@ test.describe("page search", () => {
       ["ArrowDown", "System"],
       ["ArrowDown", "Attachments"],
       ["ArrowDown", "Audit trail"],
+      ["ArrowDown", "People"],
       ["ArrowDown", "Home"],
+      ["ArrowUp", "People"],
       ["ArrowUp", "Audit trail"],
       ["ArrowUp", "Attachments"],
       ["ArrowUp", "System"],
@@ -272,8 +288,9 @@ test.describe("page search", () => {
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("ArrowDown");
-    await expectActive(shell, "Audit trail");
-    await expect(shell.paletteOption("Audit trail")).toBeInViewport({ ratio: 0.99 });
+    await page.keyboard.press("ArrowDown");
+    await expectActive(shell, "People");
+    await expect(shell.paletteOption("People")).toBeInViewport({ ratio: 0.99 });
   });
 
   test.describe("with a keyboard", () => {

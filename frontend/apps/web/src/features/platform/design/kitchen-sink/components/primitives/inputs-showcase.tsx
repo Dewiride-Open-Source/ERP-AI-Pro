@@ -1,3 +1,5 @@
+"use client";
+
 import { Checkbox } from "@dewiride/erp-ui/components/ui/checkbox";
 import {
   Field,
@@ -33,6 +35,7 @@ import { Spinner } from "@dewiride/erp-ui/components/ui/spinner";
 import { Switch } from "@dewiride/erp-ui/components/ui/switch";
 import { Textarea } from "@dewiride/erp-ui/components/ui/textarea";
 import { SearchIcon } from "lucide-react";
+import { useState } from "react";
 
 import { Specimen, SpecimenGrid } from "../specimen";
 
@@ -45,7 +48,19 @@ const states = [
   { value: "TN", label: "Tamil Nadu" },
 ] as const;
 
+const quarterLabels: Readonly<Record<string, string>> = {
+  q1: "Q1 (April–June)",
+  q2: "Q2 (July–September)",
+  q3: "Q3 (October–December)",
+  q4: "Q4 (January–March)",
+  "previous-q4": "Q4 (January–March)",
+};
+
+const currencyLabel = "INR (₹)";
+
 export function InputsShowcase() {
+  const [quarter, setQuarter] = useState("q2");
+
   return (
     <SpecimenGrid>
       <Specimen title="Label and input" description="Default, disabled, invalid and read-only.">
@@ -199,24 +214,24 @@ export function InputsShowcase() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="ks-select-default">Financial quarter</FieldLabel>
-            <Select defaultValue="q2">
+            <Select value={quarter} onValueChange={setQuarter}>
               <SelectTrigger id="ks-select-default">
-                <SelectValue placeholder="Choose a quarter" />
+                <SelectValue placeholder="Choose a quarter">{quarterLabels[quarter]}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>2026–27</SelectLabel>
-                  <SelectItem value="q1">Q1 (April–June)</SelectItem>
-                  <SelectItem value="q2">Q2 (July–September)</SelectItem>
-                  <SelectItem value="q3">Q3 (October–December)</SelectItem>
+                  <SelectItem value="q1">{quarterLabels.q1}</SelectItem>
+                  <SelectItem value="q2">{quarterLabels.q2}</SelectItem>
+                  <SelectItem value="q3">{quarterLabels.q3}</SelectItem>
                   <SelectItem value="q4" disabled>
-                    Q4 (January–March)
+                    {quarterLabels.q4}
                   </SelectItem>
                 </SelectGroup>
                 <SelectSeparator />
                 <SelectGroup>
                   <SelectLabel>2025–26</SelectLabel>
-                  <SelectItem value="previous-q4">Q4 (January–March)</SelectItem>
+                  <SelectItem value="previous-q4">{quarterLabels["previous-q4"]}</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -225,10 +240,10 @@ export function InputsShowcase() {
             <FieldLabel htmlFor="ks-select-disabled">Currency</FieldLabel>
             <Select defaultValue="INR" disabled>
               <SelectTrigger id="ks-select-disabled">
-                <SelectValue />
+                <SelectValue>{currencyLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="INR">INR (₹)</SelectItem>
+                <SelectItem value="INR">{currencyLabel}</SelectItem>
               </SelectContent>
             </Select>
           </Field>
