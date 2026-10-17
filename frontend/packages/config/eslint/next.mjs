@@ -1,3 +1,4 @@
+import { fixupConfigRules } from "@eslint/compat";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -7,8 +8,7 @@ import { featureBoundaryConfigs } from "./feature-boundaries.mjs";
 import { typeRoleRestrictions } from "./type-roles.mjs";
 
 export const nextConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
+  ...fixupConfigRules([...nextVitals, ...nextTs]),
   prettier,
   {
     rules: {

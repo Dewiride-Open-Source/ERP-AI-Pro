@@ -74,6 +74,7 @@ if (!values["skip-frontend"]) {
   steps.push(
     { name: "frontend install (frozen)", cwd: frontend, command: "pnpm", args: ["install", "--frozen-lockfile"] },
     { name: "npm licences", cwd: repoRoot, command: "node", args: ["scripts/checks/licences.ts", "npm"] },
+    { name: "npm advisories", cwd: repoRoot, command: "node", args: ["scripts/checks/advisories.ts"] },
     { name: "api client drift", cwd: repoRoot, command: "node", args: ["scripts/api-client/drift.ts"] },
     { name: "frontend lint", cwd: frontend, command: "pnpm", args: ["lint"] },
     { name: "frontend typecheck", cwd: frontend, command: "pnpm", args: ["typecheck"] },

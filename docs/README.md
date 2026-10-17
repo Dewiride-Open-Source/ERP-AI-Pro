@@ -59,5 +59,6 @@
 | [0041](adr/0041-roles-and-permissions.md) | Roles and permissions |
 | [0042](adr/0042-departments-designations-and-positions.md) | Departments, designations and positions |
 | [0043](adr/0043-change-records-and-the-append-only-audit-schema.md) | Change records and the append-only audit schema |
+| [0044](adr/0044-npm-advisory-gate-and-eslint-10.md) | The npm advisory gate and ESLint 10 through @eslint/compat |
 
 New decisions use [0000-template.md](adr/0000-template.md).
