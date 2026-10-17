@@ -5,9 +5,23 @@ import { KitchenSinkPage } from "../../../pages/platform/design/kitchen-sink.pag
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 // A scrollbar is a whole number of device pixels, so at a display scale of 110 % its width in CSS pixels has a fraction,
-// which a scroll lock's whole-pixel margin misses; Playwright hides scrollbars unless it is told not to.
+// which a scroll lock's whole-pixel margin misses; Playwright hides scrollbars unless it is told not to. Every test
+// launches its project's browser before the skip below is decided, and WebKit refuses to start with Chromium switches.
 test.use({
-  launchOptions: { args: ["--force-device-scale-factor=1.1"], ignoreDefaultArgs: ["--hide-scrollbars"] },
+  launchOptions: [
+    async ({ launchOptions, browserName }, use) => {
+      await use(
+        browserName === "chromium"
+          ? {
+              ...launchOptions,
+              args: [...(launchOptions.args ?? []), "--force-device-scale-factor=1.1"],
+              ignoreDefaultArgs: ["--hide-scrollbars"],
+            }
+          : launchOptions,
+      );
+    },
+    { scope: "worker" },
+  ],
 });
 
 test.skip(
