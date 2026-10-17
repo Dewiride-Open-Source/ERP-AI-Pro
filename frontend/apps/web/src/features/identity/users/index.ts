@@ -1,0 +1,1 @@
+export { peopleNavigation } from "./nav";
