@@ -1,3 +1,4 @@
+import { fixupConfigRules } from "@eslint/compat";
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
@@ -8,8 +9,7 @@ import { typeRoleRestrictions } from "./type-roles.mjs";
 const webAppMessage = "A shared package never imports from apps/web: move the shared code into the package.";
 
 export const reactLibraryConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
+  ...fixupConfigRules([...nextVitals, ...nextTs]),
   prettier,
   {
     rules: {

@@ -1,0 +1,22 @@
+name: advisories
+
+on:
+  schedule:
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  npm-advisories:
+    name: npm advisories
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up frontend
+        uses: ./.github/actions/setup-frontend
+      - name: npm advisories
+        run: node scripts/checks/advisories.ts

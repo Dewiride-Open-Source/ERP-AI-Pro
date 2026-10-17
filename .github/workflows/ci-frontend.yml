@@ -25,6 +25,8 @@ jobs:
         uses: ./.github/actions/setup-frontend
       - name: npm licences
         run: node scripts/checks/licences.ts npm
+      - name: npm advisories
+        run: node scripts/checks/advisories.ts
       - name: Set up backend for the client generator
         uses: ./.github/actions/setup-backend
       - name: API client tests
