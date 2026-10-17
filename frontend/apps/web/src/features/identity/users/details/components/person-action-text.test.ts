@@ -38,8 +38,8 @@ test("statusChange_DeactivatedPerson_OffersToReactivateThem", () => {
   });
 });
 
-test("deletion_Person_NamesThemInEveryText", () => {
-  assert.deepEqual(deletion("Meera Nair"), {
+test("deletion_ActivePerson_AdvisesDeactivatingToKeepThemOut", () => {
+  assert.deepEqual(deletion("Meera Nair", "active"), {
     title: "Delete Meera Nair?",
     description:
       "Meera Nair is removed from People, and any session they have open ends at their next step. If they can still sign in through Microsoft Entra, their next sign-in creates a new record, so deactivate them instead to keep them out. Their changes stay in the audit trail.",
@@ -48,6 +48,22 @@ test("deletion_Person_NamesThemInEveryText", () => {
     done: "Deleted Meera Nair.",
     gone: "Meera Nair is no longer registered.",
   });
+});
+
+test("deletion_DeactivatedPerson_SaysDeletingLetsTheirNextSignInCreateAnActiveRecord", () => {
+  assert.deepEqual(deletion("Meera Nair", "deactivated"), {
+    title: "Delete Meera Nair?",
+    description:
+      "Meera Nair is removed from People. Being deactivated is what keeps them out, and deleting the record ends that: if they can still sign in through Microsoft Entra, their next sign-in creates a new, active record. To keep them out, keep the record. Their changes stay in the audit trail.",
+    confirm: "Delete",
+    cancel: "Keep the record",
+    done: "Deleted Meera Nair.",
+    gone: "Meera Nair is no longer registered.",
+  });
+});
+
+test("deletion_UnknownStatus_UsesTheWordingOfAnActivePerson", () => {
+  assert.deepEqual(deletion("Meera Nair", undefined), deletion("Meera Nair", "active"));
 });
 
 test("isOwnRecord_SameGuidInAnyCase_IsTheSignedInPersonsRecord", () => {

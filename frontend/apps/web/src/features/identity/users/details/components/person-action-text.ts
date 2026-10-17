@@ -80,10 +80,13 @@ export function statusChange(status: PersonStatus, name: string): StatusChange {
   };
 }
 
-export function deletion(name: string): Deletion {
+export function deletion(name: string, status: PersonStatus | undefined): Deletion {
   return {
     title: `Delete ${name}?`,
-    description: `${name} is removed from People, and any session they have open ends at their next step. If they can still sign in through Microsoft Entra, their next sign-in creates a new record, so deactivate them instead to keep them out. Their changes stay in the audit trail.`,
+    description:
+      status === "deactivated"
+        ? `${name} is removed from People. Being deactivated is what keeps them out, and deleting the record ends that: if they can still sign in through Microsoft Entra, their next sign-in creates a new, active record. To keep them out, keep the record. Their changes stay in the audit trail.`
+        : `${name} is removed from People, and any session they have open ends at their next step. If they can still sign in through Microsoft Entra, their next sign-in creates a new record, so deactivate them instead to keep them out. Their changes stay in the audit trail.`,
     confirm: "Delete",
     cancel: "Keep the record",
     done: `Deleted ${name}.`,

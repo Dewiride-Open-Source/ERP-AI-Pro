@@ -1,5 +1,6 @@
 "use client";
 
+import type { PersonStatus } from "@dewiride/erp-api-client";
 import { ConfirmDialog } from "@dewiride/erp-ui/components/feedback/confirm-dialog";
 import { Trash2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -14,11 +15,19 @@ import { deletion, type PersonActionRefusal } from "./person-action-text";
 
 // A deleted record has no page any more, so the person goes back to People, and the deleted record's address leaves the
 // history rather than answering "not found" on Back.
-export function DeleteAction({ personId, personName }: { personId: string; personName: string }) {
+export function DeleteAction({
+  personId,
+  personName,
+  status,
+}: {
+  personId: string;
+  personName: string;
+  status: PersonStatus | undefined;
+}) {
   const router = useRouter();
   const [pending, startDeletion] = useTransition();
   const [refusal, setRefusal] = useState<PersonActionRefusal>();
-  const texts = deletion(personName);
+  const texts = deletion(personName, status);
 
   const confirm = () => {
     setRefusal(undefined);

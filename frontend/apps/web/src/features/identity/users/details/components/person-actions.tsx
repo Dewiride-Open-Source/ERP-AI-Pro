@@ -52,7 +52,9 @@ export function PersonActions({
       {!ownRecord && rights.changeStatus && status !== undefined && version !== undefined ? (
         <StatusAction personId={personId} personName={personName} status={status} version={version} />
       ) : null}
-      {!ownRecord && rights.delete ? <DeleteAction personId={personId} personName={personName} /> : null}
+      {!ownRecord && rights.delete ? (
+        <DeleteAction personId={personId} personName={personName} status={status} />
+      ) : null}
     </div>
   );
 }

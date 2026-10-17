@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 
+import type { Locator, Page } from "@playwright/test";
+
 import { withholdClientBundles } from "../../../fixtures/client-bundles";
 import {
   createDepartmentRecord,
@@ -83,6 +85,25 @@ function dayBefore(isoDate: string): string {
   const day = new Date(`${isoDate}T00:00:00Z`);
   day.setUTCDate(day.getUTCDate() - 1);
   return day.toISOString().slice(0, 10);
+}
+
+// A dialog that starts to close turns its data-state to "closed" at once but stays on the page through its exit animation,
+// so every attempt is judged by that state, never by visibility.
+async function triesToCloseWhileSaving(
+  page: Page,
+  dialog: Locator,
+  closers: readonly Locator[],
+): Promise<void> {
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveAttribute("data-state", "open");
+  await page.mouse.click(4, 4);
+  await expect(dialog).toHaveAttribute("data-state", "open");
+  for (const closer of closers) {
+    await expect(closer).toHaveAttribute("aria-disabled", "true");
+    await closer.focus();
+    await page.keyboard.press("Enter");
+    await expect(dialog).toHaveAttribute("data-state", "open");
+  }
 }
 
 test.describe("person page", () => {
@@ -258,13 +279,10 @@ test.describe("person page", () => {
           const release = await holdServerFunctionCalls(page, personPath(person.id));
           await personPage.saveRoles.click();
           await expect(personPage.saveRoles).toHaveAttribute("aria-busy", "true");
-          await page.keyboard.press("Escape");
-          await expect(personPage.rolesDialog).toBeVisible();
-          await expect(personPage.rolesCancel).toHaveAttribute("aria-disabled", "true");
-          await expect(personPage.rolesClose).toHaveAttribute("aria-disabled", "true");
-          await personPage.rolesClose.focus();
-          await page.keyboard.press("Enter");
-          await expect(personPage.rolesDialog).toBeVisible();
+          await triesToCloseWhileSaving(page, personPage.rolesDialog, [
+            personPage.rolesClose,
+            personPage.rolesCancel,
+          ]);
           release();
 
           await expect(personPage.rolesDialog).toHaveCount(0);
@@ -399,13 +417,10 @@ test.describe("person page", () => {
           const release = await holdServerFunctionCalls(page, personPath(person.id));
           await personPage.saveMove.click();
           await expect(personPage.saveMove).toHaveAttribute("aria-busy", "true");
-          await page.keyboard.press("Escape");
-          await expect(personPage.moveDialog).toBeVisible();
-          await expect(personPage.moveCancel).toHaveAttribute("aria-disabled", "true");
-          await expect(personPage.moveClose).toHaveAttribute("aria-disabled", "true");
-          await personPage.moveCancel.focus();
-          await page.keyboard.press("Enter");
-          await expect(personPage.moveDialog).toBeVisible();
+          await triesToCloseWhileSaving(page, personPage.moveDialog, [
+            personPage.moveClose,
+            personPage.moveCancel,
+          ]);
           release();
 
           await expect(personPage.moveDialog).toHaveCount(0);
@@ -561,6 +576,22 @@ test.describe("person page", () => {
           await expect(personPage.statusAction).toHaveText("Reactivate");
           expect((await personRecord(api, person.id)).status).toBe("deactivated");
           await capture("person-deactivated", personPage.header);
+
+          await personPage.deleteAction.click();
+          const deleteQuestion = personPage.confirmation(`Delete ${person.displayName}?`);
+          const deactivatedDeletion = `${person.displayName} is removed from People. Being deactivated is what keeps them out, and deleting the record ends that: if they can still sign in through Microsoft Entra, their next sign-in creates a new, active record. To keep them out, keep the record. Their changes stay in the audit trail.`;
+          await expect(deleteQuestion).toMatchAriaSnapshot(`
+            - alertdialog "Delete ${person.displayName}?":
+              - heading "Delete ${person.displayName}?" [level=2]
+              - paragraph: ${JSON.stringify(deactivatedDeletion)}
+              - button "Keep the record"
+              - button "Delete"
+          `);
+          await capture("person-deactivated-deletion", deleteQuestion);
+          await deleteQuestion.getByRole("button", { name: "Keep the record" }).click();
+          await expect(deleteQuestion).toHaveCount(0);
+          await expect(personPage.deleteAction).toBeFocused();
+          expect((await personRecord(api, person.id)).status).toBe("deactivated");
 
           await personPage.statusAction.click();
           const reactivation = personPage.confirmation(`Reactivate ${person.displayName}?`);

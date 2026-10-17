@@ -114,9 +114,9 @@ test.describe("registering a person", () => {
           await capture("registration-filled", registration.form);
           await registration.save.click();
 
+          await expect(shell.toast(`Registered ${name}.`)).toBeVisible();
           await expect(page).toHaveURL((url) => personIdInPath.test(url.pathname));
           registeredId = personIdInPath.exec(new URL(page.url()).pathname)?.[1];
-          await expect(shell.toast(`Registered ${name}.`)).toBeVisible();
           await expect(personPage.heading).toHaveText(name);
           await expect(page).toHaveTitle(`${name} · ERP-AI-Pro`);
           await expect(personPage.header).toContainText(`${prefix}-meera@example.com`);
