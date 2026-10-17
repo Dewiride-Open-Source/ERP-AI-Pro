@@ -2,7 +2,7 @@
   "descriptionHash": "41EB75FECC4B76A1B44D6FBBAA4D10ED0CE7C910B36A9E0EF010494B3C81E6C22A2B9C5E88D9FA003B3ED486D9308C7F68D34A9ABEA62295EA01761D2E6B0360",
   "descriptionLocation": "../../../../../docs/openapi/erp.json",
   "lockFileVersion": "1.0.0",
-  "kiotaVersion": "1.35.0",
+  "kiotaVersion": "1.36.1",
   "clientClassName": "ErpApiClient",
   "typeAccessModifier": "Public",
   "clientNamespaceName": "ErpApi",
