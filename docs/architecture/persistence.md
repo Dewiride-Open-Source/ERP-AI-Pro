@@ -161,7 +161,7 @@ Two kinds of test start from an `EmptyTestDatabase` instead (same naming, server
 
 ## CI
 
-The composite action `.github/actions/start-sql-server` runs `docker run` of `mcr.microsoft.com/mssql/server:2025-CU9-ubuntu-24.04@sha256:2b5b581621126574f3d1f75e78d3eebe8d05aedb59ad0cfdf9aa42cb0634d726` with an `sa` password generated at run time and masked in the log, and outputs `server-connection-string` and `container-connection-string` (`Server=host.docker.internal,1433;Database=ErpAiPro;...`). ADR-0013 records why a composite `docker run` action is used rather than a `services:` container.
+The composite action `.github/actions/start-sql-server` runs `docker run` of `mcr.microsoft.com/mssql/server:2025-CU9-GDR1-ubuntu-24.04@sha256:742481d1b1186cccc81220a1eaacef244ca8d0f7d19c8e5c70df8ae541ffbab2` with an `sa` password generated at run time and masked in the log, and outputs `server-connection-string` and `container-connection-string` (`Server=host.docker.internal,1433;Database=ErpAiPro;...`). ADR-0013 records why a composite `docker run` action is used rather than a `services:` container.
 
 | Workflow | Use of the outputs |
 |---|---|

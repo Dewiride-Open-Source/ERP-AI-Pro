@@ -62,6 +62,10 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
     private const string FeatureFlagsSection = "feature_management:feature_flags:";
 
+    // IdentityModel logs through the process-wide logger of the test host that started last, so once that host stops, the
+    // Windows Event Log provider it disposed would throw into the token validation of every other host.
+    private const string EventLogLevelKey = "Logging:EventLog:LogLevel:Default";
+
     // One key per test process: every factory shares the process's test database and blob container, so content one host
     // stored must stay readable, and deduplicable, for every other.
     private static readonly string TestEncryptionKey = $"test:{Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))}";
@@ -239,6 +243,7 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("OTEL_EXPORTER_OTLP_ENDPOINT", string.Empty);
         builder.UseSetting("APPCONFIG_ENDPOINT", string.Empty);
         builder.UseSetting(ConfigurationSourceSetting, InMemorySource);
+        builder.UseSetting(EventLogLevelKey, nameof(Microsoft.Extensions.Logging.LogLevel.None));
         builder.ConfigureServices(services =>
         {
             services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, null);

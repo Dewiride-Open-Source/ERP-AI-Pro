@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /source
 
@@ -24,7 +24,7 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
 
 RUN mkdir /data-protection-keys
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:00e0ad6a7ef8c0c1391b87f05c7ac757a15740455688f2bfcd146a3f4b987efd AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:3ed6558056b54d5c9dfefb7ff473728e022ff2bf1d976cbf8ee07b05ec594374 AS runtime
 WORKDIR /app
 ENV ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_EnableDiagnostics=0 \
