@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Attachments.Domain;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,6 +10,7 @@ internal sealed class AttachmentConfiguration : IEntityTypeConfiguration<Attachm
     public void Configure(EntityTypeBuilder<Attachment> builder)
     {
         builder.ToTable("Attachments");
+        builder.RecordChangesAs("platform.attachments.files");
         builder.HasKey(a => a.Id);
         builder.Property(a => a.FileName).HasMaxLength(Attachment.FileNameMaxLength);
         builder.Property(a => a.ContentType).HasMaxLength(Attachment.ContentTypeMaxLength).IsUnicode(false);

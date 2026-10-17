@@ -32,9 +32,12 @@ docker volume create erp-ai-pro-data-protection-keys
 docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml pull api web
 docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml run --rm migrator
 docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --remove-orphans --wait
+
+# production, once a day between deployments: delete what is past its retention without applying any migration
+docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml run --rm migrator retain
 ```
 
-The migrator runs on its own first because `up` replaces a changed `api` container before it waits for the migrator; running it separately keeps the previous API serving when a migration fails ([ADR-0021](../docs/adr/0021-migrator-program-and-seeding.md)). The key ring volume is declared `external`, so `up` refuses to start until it exists and `docker compose down -v` can never delete it; the api image creates its mount point owned by `app` with mode 0700, which an empty volume takes on at its first mount, and losing the volume signs everyone out ([secrets runbook](../docs/operations/runbooks/secrets.md), section 5e). The edge reverse proxy and TLS arrive with the first-deployment phase.
+The migrator runs on its own first because `up` replaces a changed `api` container before it waits for the migrator; running it separately keeps the previous API serving when a migration fails ([ADR-0021](../docs/adr/0021-migrator-program-and-seeding.md)). Its `migrate` also deletes the security events and change records past their retention, and `retain` does only that, so the daily run moves no schema ahead of the running API ([ADR-0043](../docs/adr/0043-change-records-and-the-append-only-audit-schema.md)). The key ring volume is declared `external`, so `up` refuses to start until it exists and `docker compose down -v` can never delete it; the api image creates its mount point owned by `app` with mode 0700, which an empty volume takes on at its first mount, and losing the volume signs everyone out ([secrets runbook](../docs/operations/runbooks/secrets.md), section 5e). The edge reverse proxy and TLS arrive with the first-deployment phase.
 
 ### Local secret files
 
@@ -42,6 +45,6 @@ Git-ignored files under `compose/secrets/`, mounted as compose secrets and read 
 
 | File | Service | Holds |
 |---|---|---|
-| `Erp__Platform__Database__ConnectionString` | `api` | connection string of the data-only SQL login (`db_datareader`, `db_datawriter`) |
-| `Erp__Platform__Database__MigratorConnectionString` | `migrator` | connection string of the SQL login that may also change the schema (`db_ddladmin`) |
+| `Erp__Platform__Database__ConnectionString` | `api` | connection string of the data-only SQL login (`erp_local`: `db_datareader`, `db_datawriter` and the role `erp_audit_append_only`, so it may only insert into the schema `audit`) |
+| `Erp__Platform__Database__MigratorConnectionString` | `migrator` | connection string of the SQL login that may also change the schema (`erp_local_migrator`: `db_ddladmin`, `db_datareader`, `db_datawriter`, the database permission `CREATE ROLE` and `CONTROL` on the schema `audit`, never `db_owner`), which also deletes what is past its retention |
 | `Erp__Platform__Attachments__EncryptionKey` | `api` | the attachments encryption key, `<key id>:<32 random bytes in base64>`, generated on the machine and never displayed |

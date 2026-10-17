@@ -1,29 +1,36 @@
 using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
+using Dewiride.Erp.BuildingBlocks.Persistence.Retention;
 using Dewiride.Erp.BuildingBlocks.Persistence.Seeding;
 using Dewiride.Erp.Host.Composition;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.Host.Migrator;
 
-// The host is built but never started: starting it would run the modules' hosted services, which belong to the API.
+// The host is built but never started: starting it would run the modules' hosted services, which belong to the API. The
+// retention sweeps run here alone, under the migrator's principal, because the API's database user may not delete what they
+// delete. migrate only logs a sweep that failed, because a deletion that can wait never stops a deployment; retain does nothing
+// else, so it fails with the sweep and whatever schedules it sees the failure.
 internal static partial class MigratorApplication
 {
     public const string MigrateCommand = "migrate";
 
+    public const string RetainCommand = "retain";
+
     public const string StatusCommand = "status";
 
-    public const string Usage = "Usage: Dewiride.Erp.Host.Migrator migrate|status [--Key=Value configuration arguments]";
+    public const string Usage = "Usage: Dewiride.Erp.Host.Migrator migrate|retain|status [--Key=Value configuration arguments]";
 
     public static async Task<int> RunAsync(IReadOnlyList<string> args, Action<HostApplicationBuilder>? configure, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(args);
 
         var command = args.Count > 0 ? args[0] : null;
-        if (command is not (MigrateCommand or StatusCommand))
+        if (command is not (MigrateCommand or RetainCommand or StatusCommand))
         {
             await Console.Error.WriteLineAsync(Usage).ConfigureAwait(false);
             return MigratorExitCodes.Usage;
@@ -49,9 +56,12 @@ internal static partial class MigratorApplication
 
         try
         {
-            return command == MigrateCommand
-                ? await MigrateAsync(host.Services, logger, cancellationToken).ConfigureAwait(false)
-                : await ReportStatusAsync(host.Services, logger, cancellationToken).ConfigureAwait(false);
+            return command switch
+            {
+                MigrateCommand => await MigrateAsync(host.Services, logger, cancellationToken).ConfigureAwait(false),
+                RetainCommand => await RetainAsync(host.Services, logger, cancellationToken).ConfigureAwait(false),
+                _ => await ReportStatusAsync(host.Services, logger, cancellationToken).ConfigureAwait(false),
+            };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -70,6 +80,7 @@ internal static partial class MigratorApplication
         var builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = [.. args.Skip(1)], ContentRootPath = AppContext.BaseDirectory });
         configure?.Invoke(builder);
         builder.AddErpPlatform(typeof(MigratorApplication).Assembly);
+        builder.Services.TryAddSingleton<RetentionRunner>();
         builder.Services.AddOptions<MigratorDatabaseOptions>().BindConfiguration(MigratorDatabaseOptions.SectionName);
         builder.Services.AddSingleton<IPostConfigureOptions<DatabaseOptions>, MigratorConnectionStringSetup>();
 
@@ -81,9 +92,18 @@ internal static partial class MigratorApplication
         await services.GetRequiredService<DatabaseMigrator>().MigrateAllAsync(cancellationToken).ConfigureAwait(false);
         var seeding = services.GetRequiredService<SeedRunner>();
         await seeding.RunAsync(cancellationToken).ConfigureAwait(false);
-        LogMigrated(logger, seeding.Seeders.Count);
+        var retention = await services.GetRequiredService<RetentionRunner>().RunAsync(cancellationToken).ConfigureAwait(false);
+        LogMigrated(logger, seeding.Seeders.Count, retention.Completed, retention.Failed);
 
         return MigratorExitCodes.Succeeded;
+    }
+
+    private static async Task<int> RetainAsync(IServiceProvider services, ILogger logger, CancellationToken cancellationToken)
+    {
+        var retention = await services.GetRequiredService<RetentionRunner>().RunAsync(cancellationToken).ConfigureAwait(false);
+        LogRetained(logger, retention.Completed, retention.Failed);
+
+        return retention.Failed == 0 ? MigratorExitCodes.Succeeded : MigratorExitCodes.Failed;
     }
 
     private static async Task<int> ReportStatusAsync(IServiceProvider services, ILogger logger, CancellationToken cancellationToken)
@@ -97,8 +117,11 @@ internal static partial class MigratorApplication
         return pending.Any(schema => schema.Migrations.Count > 0) ? MigratorExitCodes.MigrationsPending : MigratorExitCodes.Succeeded;
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Every schema is migrated and {SeederCount} seeder(s) ran.")]
-    private static partial void LogMigrated(ILogger logger, int seederCount);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Every schema is migrated and {SeederCount} seeder(s) ran; {CompletedCount} retention sweep(s) completed and {FailedCount} failed.")]
+    private static partial void LogMigrated(ILogger logger, int seederCount, int completedCount, int failedCount);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{CompletedCount} retention sweep(s) completed and {FailedCount} failed.")]
+    private static partial void LogRetained(ILogger logger, int completedCount, int failedCount);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Schema {Schema} has {PendingCount} pending migration(s): {Migrations}")]
     private static partial void LogSchemaStatus(ILogger logger, string schema, int pendingCount, IReadOnlyList<string> migrations);

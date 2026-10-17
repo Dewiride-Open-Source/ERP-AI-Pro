@@ -1,6 +1,8 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Origins;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Time.Testing;
@@ -9,6 +11,8 @@ namespace Dewiride.Erp.BuildingBlocks.UnitTests.Persistence.Auditing;
 
 public sealed class AuditingSaveChangesInterceptorTests
 {
+    private const string DocumentKey = "test.audit.documents";
+
     private static readonly DateTimeOffset Now = new(2026, 9, 22, 10, 0, 0, TimeSpan.Zero);
 
     private static readonly DateTimeOffset Earlier = new(2026, 1, 15, 8, 30, 0, TimeSpan.Zero);
@@ -357,7 +361,53 @@ public sealed class AuditingSaveChangesInterceptorTests
         await Assert.ThrowsAsync<ArgumentNullException>(async () => await interceptor.SavingChangesAsync(null!, default, TestContext.Current.CancellationToken));
     }
 
-    private static AuditingSaveChangesInterceptor Interceptor() => new(new FixedActorContext(Actor), new FakeTimeProvider(Now));
+    [Fact]
+    public async Task SaveChangesAsync_ChangeOfARecordedType_SavesItsRecordAndForgetsItOnceTheSaveEnds()
+    {
+        var capture = new CapturingSaveChangesInterceptor();
+        using var context = new AuditContext(Interceptor(), capture);
+        var document = new Document();
+        context.Add(document);
+
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var record = Assert.Single(capture.Records);
+        Assert.Equal(ChangeOperation.Created, record.Operation);
+        Assert.Equal(DocumentKey, record.EntityType);
+        Assert.Equal(document.Id, record.EntityId);
+        Assert.Equal(Now, record.OccurredAt);
+        Assert.Equal(Actor, record.ActorId);
+        Assert.Empty(context.ChangeTracker.Entries<ChangeRecord>());
+    }
+
+    [Fact]
+    public async Task SaveChangesAsync_AfterASaveThatNeverRan_RecordsTheChangeOnce()
+    {
+        var capture = new CapturingSaveChangesInterceptor();
+        using var context = new AuditContext(Interceptor(), new FailingOnceSaveChangesInterceptor(), capture);
+        context.Add(new Document());
+        await Assert.ThrowsAsync<TimeoutException>(() => context.SaveChangesAsync(TestContext.Current.CancellationToken));
+        Assert.Single(context.ChangeTracker.Entries<ChangeRecord>());
+
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        Assert.Single(capture.Records);
+    }
+
+    [Fact]
+    public async Task SaveChangesAsync_ChangeOfATypeThatIsNotRecorded_SavesNoRecord()
+    {
+        var capture = new CapturingSaveChangesInterceptor();
+        using var context = new AuditContext(Interceptor(), capture);
+        context.Add(new Plain { Id = Guid.CreateVersion7(), Name = "plain" });
+        context.Add(new Tag { Id = Guid.CreateVersion7() });
+
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        Assert.Empty(capture.Records);
+    }
+
+    private static AuditingSaveChangesInterceptor Interceptor() => new(new FixedActorContext(Actor), new SystemRequestOrigin(), new FakeTimeProvider(Now));
 
     private static Document PersistedDeleted(AuditContext context)
     {
@@ -388,14 +438,39 @@ public sealed class AuditingSaveChangesInterceptorTests
             ValueTask.FromResult(InterceptionResult<int>.SuppressWithResult(0));
     }
 
+    private sealed class FailingOnceSaveChangesInterceptor : SaveChangesInterceptor
+    {
+        private bool _failed;
+
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (!_failed)
+            {
+                _failed = true;
+                throw new TimeoutException("The save never reached the database.");
+            }
+
+            return ValueTask.FromResult(result);
+        }
+    }
+
     private sealed class AuditContext(params IInterceptor[] interceptors) : DbContext(Options(interceptors))
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Document>();
+            modelBuilder.Entity<Document>(document =>
+            {
+                document.RecordChangesAs(DocumentKey);
+                document.Property(d => d.Id).ValueGeneratedNever();
+            });
             modelBuilder.Entity<Tag>();
-            modelBuilder.Entity<Note>();
+            modelBuilder.Entity<Note>(note =>
+            {
+                note.RecordChangesAs("test.audit.notes");
+                note.Property(n => n.Id).ValueGeneratedNever();
+            });
             modelBuilder.Entity<Plain>();
+            modelBuilder.MapChangeRecords(ownsTable: false);
         }
 
         private static DbContextOptions<AuditContext> Options(IInterceptor[] interceptors) =>

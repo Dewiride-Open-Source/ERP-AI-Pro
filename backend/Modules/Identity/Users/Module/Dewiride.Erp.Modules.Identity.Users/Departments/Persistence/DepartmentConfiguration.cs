@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -12,6 +13,7 @@ internal sealed class DepartmentConfiguration : IEntityTypeConfiguration<Departm
     public void Configure(EntityTypeBuilder<Department> builder)
     {
         builder.ToTable("Departments");
+        builder.RecordChangesAs("identity.users.departments");
         builder.HasKey(d => d.Id);
         builder.Property(d => d.Name).HasMaxLength(Department.NameMaxLength);
         builder.HasOne<Department>().WithMany().HasForeignKey(d => d.ParentId).OnDelete(DeleteBehavior.Restrict);

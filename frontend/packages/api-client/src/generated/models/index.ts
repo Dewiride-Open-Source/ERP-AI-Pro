@@ -49,6 +49,38 @@ export interface AttachmentResponse extends AdditionalDataHolder, Parsable {
     sizeBytes?: number | null;
 }
 export type AttachmentScanStatus = (typeof AttachmentScanStatusObject)[keyof typeof AttachmentScanStatusObject];
+export type ChangeActorKind = (typeof ChangeActorKindObject)[keyof typeof ChangeActorKindObject];
+export interface ChangedValueResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The after property
+     */
+    after?: string | null;
+    /**
+     * The afterName property
+     */
+    afterName?: string | null;
+    /**
+     * The before property
+     */
+    before?: string | null;
+    /**
+     * The beforeName property
+     */
+    beforeName?: string | null;
+    /**
+     * The kind property
+     */
+    kind?: ChangeValueKind | null;
+    /**
+     * The property property
+     */
+    property?: string | null;
+    /**
+     * The reference property
+     */
+    reference?: string | null;
+}
+export type ChangeOperation = (typeof ChangeOperationObject)[keyof typeof ChangeOperationObject];
 export interface ChangePersonStatusRequest extends AdditionalDataHolder, Parsable {
     /**
      * Status the record takes: a deactivated person cannot sign in, and their open sessions end at their next request.
@@ -59,6 +91,65 @@ export interface ChangePersonStatusRequest extends AdditionalDataHolder, Parsabl
      */
     version?: string | null;
 }
+export interface ChangeRecordResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The actorId property
+     */
+    actorId?: Guid | null;
+    /**
+     * The actorKind property
+     */
+    actorKind?: ChangeActorKind | null;
+    /**
+     * The actorName property
+     */
+    actorName?: string | null;
+    /**
+     * The changes property
+     */
+    changes?: ChangedValueResponse[] | null;
+    /**
+     * The clientAddress property
+     */
+    clientAddress?: string | null;
+    /**
+     * The correlationId property
+     */
+    correlationId?: string | null;
+    /**
+     * The entityId property
+     */
+    entityId?: Guid | null;
+    /**
+     * The entityType property
+     */
+    entityType?: string | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The occurredAt property
+     */
+    occurredAt?: Date | null;
+    /**
+     * The operation property
+     */
+    operation?: ChangeOperation | null;
+    /**
+     * The subjectId property
+     */
+    subjectId?: Guid | null;
+    /**
+     * The subjectName property
+     */
+    subjectName?: string | null;
+    /**
+     * The subjectType property
+     */
+    subjectType?: string | null;
+}
+export type ChangeValueKind = (typeof ChangeValueKindObject)[keyof typeof ChangeValueKindObject];
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
@@ -80,11 +171,29 @@ export function createAttachmentResponseFromDiscriminatorValue(parseNode: ParseN
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ChangedValueResponse}
+ */
+// @ts-ignore
+export function createChangedValueResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoChangedValueResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {ChangePersonStatusRequest}
  */
 // @ts-ignore
 export function createChangePersonStatusRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoChangePersonStatusRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ChangeRecordResponse}
+ */
+// @ts-ignore
+export function createChangeRecordResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoChangeRecordResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -236,6 +345,15 @@ export function createOrgChartPersonResponseFromDiscriminatorValue(parseNode: Pa
 // @ts-ignore
 export function createPagedResponseOfAttachmentResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoPagedResponseOfAttachmentResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfChangeRecordResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfChangeRecordResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfChangeRecordResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -471,6 +589,23 @@ export function deserializeIntoAttachmentResponse(attachmentResponse: Partial<At
 }
 /**
  * The deserialization information for the current model
+ * @param ChangedValueResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoChangedValueResponse(changedValueResponse: Partial<ChangedValueResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "after": n => { changedValueResponse.after = n.getStringValue(); },
+        "afterName": n => { changedValueResponse.afterName = n.getStringValue(); },
+        "before": n => { changedValueResponse.before = n.getStringValue(); },
+        "beforeName": n => { changedValueResponse.beforeName = n.getStringValue(); },
+        "kind": n => { changedValueResponse.kind = n.getEnumValue<ChangeValueKind>(ChangeValueKindObject); },
+        "property": n => { changedValueResponse.property = n.getStringValue(); },
+        "reference": n => { changedValueResponse.reference = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param ChangePersonStatusRequest The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -479,6 +614,30 @@ export function deserializeIntoChangePersonStatusRequest(changePersonStatusReque
     return {
         "status": n => { changePersonStatusRequest.status = n.getEnumValue<PersonStatus>(PersonStatusObject); },
         "version": n => { changePersonStatusRequest.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ChangeRecordResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoChangeRecordResponse(changeRecordResponse: Partial<ChangeRecordResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "actorId": n => { changeRecordResponse.actorId = n.getGuidValue(); },
+        "actorKind": n => { changeRecordResponse.actorKind = n.getEnumValue<ChangeActorKind>(ChangeActorKindObject); },
+        "actorName": n => { changeRecordResponse.actorName = n.getStringValue(); },
+        "changes": n => { changeRecordResponse.changes = n.getCollectionOfObjectValues<ChangedValueResponse>(createChangedValueResponseFromDiscriminatorValue); },
+        "clientAddress": n => { changeRecordResponse.clientAddress = n.getStringValue(); },
+        "correlationId": n => { changeRecordResponse.correlationId = n.getStringValue(); },
+        "entityId": n => { changeRecordResponse.entityId = n.getGuidValue(); },
+        "entityType": n => { changeRecordResponse.entityType = n.getStringValue(); },
+        "id": n => { changeRecordResponse.id = n.getGuidValue(); },
+        "occurredAt": n => { changeRecordResponse.occurredAt = n.getDateValue(); },
+        "operation": n => { changeRecordResponse.operation = n.getEnumValue<ChangeOperation>(ChangeOperationObject); },
+        "subjectId": n => { changeRecordResponse.subjectId = n.getGuidValue(); },
+        "subjectName": n => { changeRecordResponse.subjectName = n.getStringValue(); },
+        "subjectType": n => { changeRecordResponse.subjectType = n.getStringValue(); },
     }
 }
 /**
@@ -683,6 +842,21 @@ export function deserializeIntoPagedResponseOfAttachmentResponse(pagedResponseOf
         "pageSize": n => { pagedResponseOfAttachmentResponse.pageSize = n.getNumberValue(); },
         "totalCount": n => { pagedResponseOfAttachmentResponse.totalCount = n.getNumberValue(); },
         "totalPages": n => { pagedResponseOfAttachmentResponse.totalPages = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param PagedResponseOfChangeRecordResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfChangeRecordResponse(pagedResponseOfChangeRecordResponse: Partial<PagedResponseOfChangeRecordResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfChangeRecordResponse.items = n.getCollectionOfObjectValues<ChangeRecordResponse>(createChangeRecordResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfChangeRecordResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfChangeRecordResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfChangeRecordResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfChangeRecordResponse.totalPages = n.getNumberValue(); },
     }
 }
 /**
@@ -1149,6 +1323,28 @@ export interface PagedResponseOfAttachmentResponse extends AdditionalDataHolder,
      */
     totalPages?: number | null;
 }
+export interface PagedResponseOfChangeRecordResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: ChangeRecordResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
+}
 export interface PagedResponseOfDepartmentResponse extends AdditionalDataHolder, Parsable {
     /**
      * The items property
@@ -1485,6 +1681,24 @@ export function serializeAttachmentResponse(writer: SerializationWriter, attachm
 }
 /**
  * Serializes information the current object
+ * @param ChangedValueResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeChangedValueResponse(writer: SerializationWriter, changedValueResponse: Partial<ChangedValueResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!changedValueResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("after", changedValueResponse.after);
+    writer.writeStringValue("afterName", changedValueResponse.afterName);
+    writer.writeStringValue("before", changedValueResponse.before);
+    writer.writeStringValue("beforeName", changedValueResponse.beforeName);
+    writer.writeEnumValue<ChangeValueKind>("kind", changedValueResponse.kind);
+    writer.writeStringValue("property", changedValueResponse.property);
+    writer.writeStringValue("reference", changedValueResponse.reference);
+    writer.writeAdditionalData(changedValueResponse.additionalData);
+}
+/**
+ * Serializes information the current object
  * @param ChangePersonStatusRequest The instance to serialize from.
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param writer Serialization writer to use to serialize this model
@@ -1495,6 +1709,31 @@ export function serializeChangePersonStatusRequest(writer: SerializationWriter, 
     writer.writeEnumValue<PersonStatus>("status", changePersonStatusRequest.status);
     writer.writeStringValue("version", changePersonStatusRequest.version);
     writer.writeAdditionalData(changePersonStatusRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ChangeRecordResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeChangeRecordResponse(writer: SerializationWriter, changeRecordResponse: Partial<ChangeRecordResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!changeRecordResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("actorId", changeRecordResponse.actorId);
+    writer.writeEnumValue<ChangeActorKind>("actorKind", changeRecordResponse.actorKind);
+    writer.writeStringValue("actorName", changeRecordResponse.actorName);
+    writer.writeCollectionOfObjectValues<ChangedValueResponse>("changes", changeRecordResponse.changes, serializeChangedValueResponse);
+    writer.writeStringValue("clientAddress", changeRecordResponse.clientAddress);
+    writer.writeStringValue("correlationId", changeRecordResponse.correlationId);
+    writer.writeGuidValue("entityId", changeRecordResponse.entityId);
+    writer.writeStringValue("entityType", changeRecordResponse.entityType);
+    writer.writeGuidValue("id", changeRecordResponse.id);
+    writer.writeDateValue("occurredAt", changeRecordResponse.occurredAt);
+    writer.writeEnumValue<ChangeOperation>("operation", changeRecordResponse.operation);
+    writer.writeGuidValue("subjectId", changeRecordResponse.subjectId);
+    writer.writeStringValue("subjectName", changeRecordResponse.subjectName);
+    writer.writeStringValue("subjectType", changeRecordResponse.subjectType);
+    writer.writeAdditionalData(changeRecordResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -1716,6 +1955,22 @@ export function serializePagedResponseOfAttachmentResponse(writer: Serialization
     writer.writeNumberValue("totalCount", pagedResponseOfAttachmentResponse.totalCount);
     writer.writeNumberValue("totalPages", pagedResponseOfAttachmentResponse.totalPages);
     writer.writeAdditionalData(pagedResponseOfAttachmentResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfChangeRecordResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfChangeRecordResponse(writer: SerializationWriter, pagedResponseOfChangeRecordResponse: Partial<PagedResponseOfChangeRecordResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfChangeRecordResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<ChangeRecordResponse>("items", pagedResponseOfChangeRecordResponse.items, serializeChangeRecordResponse);
+    writer.writeNumberValue("page", pagedResponseOfChangeRecordResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfChangeRecordResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfChangeRecordResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfChangeRecordResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfChangeRecordResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -2129,6 +2384,29 @@ export const AttachmentScanStatusObject = {
     NotScanned: "notScanned",
     Clean: "clean",
 } as const;
+export const ChangeActorKindObject = {
+    Person: "person",
+    System: "system",
+    Anonymous: "anonymous",
+} as const;
+export const ChangeOperationObject = {
+    Created: "created",
+    Updated: "updated",
+    Deleted: "deleted",
+    Restored: "restored",
+} as const;
+export const ChangeValueKindObject = {
+    Text: "text",
+    Number: "number",
+    Boolean: "boolean",
+    Date: "date",
+    Instant: "instant",
+    EnumEscaped: "enum",
+    List: "list",
+    Reference: "reference",
+    Id: "id",
+    Binary: "binary",
+} as const;
 export const PermissionObject = {
     IdentityUsersDepartmentsCreate: "identity.users.departments.create",
     IdentityUsersDepartmentsDelete: "identity.users.departments.delete",
@@ -2151,6 +2429,8 @@ export const PermissionObject = {
     PlatformAttachmentsFilesDelete: "platform.attachments.files.delete",
     PlatformAttachmentsFilesRead: "platform.attachments.files.read",
     PlatformAttachmentsFilesUpload: "platform.attachments.files.upload",
+    PlatformAuditChangesExport: "platform.audit.changes.export",
+    PlatformAuditChangesRead: "platform.audit.changes.read",
     PlatformSystemInfoInfoRead: "platform.system-info.info.read",
     PlatformSystemInfoStartupsRead: "platform.system-info.startups.read",
 } as const;

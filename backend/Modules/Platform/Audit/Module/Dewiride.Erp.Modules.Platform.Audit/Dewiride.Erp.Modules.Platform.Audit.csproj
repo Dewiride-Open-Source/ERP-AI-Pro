@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../Contracts/Dewiride.Erp.Modules.Platform.Audit.Contracts/Dewiride.Erp.Modules.Platform.Audit.Contracts.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Auditing/Dewiride.Erp.BuildingBlocks.Auditing/Dewiride.Erp.BuildingBlocks.Auditing.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
+  </ItemGroup>
+
+</Project>

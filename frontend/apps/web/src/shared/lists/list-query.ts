@@ -8,6 +8,7 @@ import {
   listParameters,
   maxOptionValueLength,
   maxOptionValues,
+  wholeValuePattern,
   type ListDefinition,
   type ListFilterDefinition,
   type ListSort,
@@ -72,7 +73,8 @@ function readText(
   filter: TextFilterDefinition,
 ): string | undefined {
   const text = single(value)?.trim() ?? "";
-  return text === "" || text.length > filter.maxLength ? undefined : text;
+  if (text === "" || text.length > filter.maxLength) return undefined;
+  return filter.pattern === undefined || wholeValuePattern(filter.pattern).test(text) ? text : undefined;
 }
 
 function readOptions(

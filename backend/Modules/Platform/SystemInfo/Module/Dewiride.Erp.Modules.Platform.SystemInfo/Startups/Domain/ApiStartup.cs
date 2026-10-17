@@ -3,7 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 
 namespace Dewiride.Erp.Modules.Platform.SystemInfo.Startups.Domain;
 
-internal sealed class ApiStartup : AggregateRoot<ApiStartupId>
+internal sealed class ApiStartup : AggregateRoot<ApiStartupId>, IAppendOnly
 {
     public const int ApplicationNameMaxLength = 100;
 

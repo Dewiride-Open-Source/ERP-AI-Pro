@@ -9,6 +9,7 @@ using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.Authentication.Sessions;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Security;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Microsoft.AspNetCore.Antiforgery;
@@ -21,7 +22,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -44,12 +44,6 @@ internal static class AuthEndpoints
     public const string RenewSessionRouteName = "Auth.RenewSession";
 
     public const string FrontChannelSignOutRouteName = "Auth.FrontChannelSignOut";
-
-    public const string FetchModeHeader = "Sec-Fetch-Mode";
-
-    public const string FetchDestinationHeader = "Sec-Fetch-Dest";
-
-    public const string FetchSiteHeader = "Sec-Fetch-Site";
 
     public const string NotAPageMessage = "The sign-in starts only from a page the browser opens itself, never from an image, a frame or a script.";
 
@@ -134,7 +128,7 @@ internal static class AuthEndpoints
         // Every challenge writes a correlation and a nonce cookie, so another site that made the browser request this path
         // from images or frames again and again could fill the person's cookies until this site refused their requests. A
         // browser marks a page it opens itself as navigate and document; a client that sends neither header is no browser.
-        if (!IsOpenedAsAPage(httpContext.Request.Headers))
+        if (!FetchMetadata.IsOpenedAsAPage(httpContext.Request.Headers))
         {
             return Error.Validation(ProblemTypes.RequestInvalid, NotAPageMessage).ToProblem();
         }
@@ -156,7 +150,7 @@ internal static class AuthEndpoints
         var user = httpContext.User;
         if (user.Identity?.IsAuthenticated != true)
         {
-            return IsAbsentOrExactly(httpContext.Request.Headers[FetchSiteHeader], "same-origin")
+            return FetchMetadata.IsFromThisOrigin(httpContext.Request.Headers)
                 ? TypedResults.SignOut(SignedOut(), [OpenIdConnectDefaults.AuthenticationScheme])
                 : TypedResults.Challenge(authenticationSchemes: [CookieAuthenticationDefaults.AuthenticationScheme]);
         }
@@ -188,7 +182,7 @@ internal static class AuthEndpoints
     // web app's scripts send same-origin and its server sends no Sec-Fetch-Site, so every other value is refused.
     private static Results<NoContent, ProblemHttpResult> IssueAntiforgeryTokens(HttpContext httpContext, AntiforgeryCookies cookies)
     {
-        if (!IsAbsentOrExactly(httpContext.Request.Headers[FetchSiteHeader], "same-origin"))
+        if (!FetchMetadata.IsFromThisOrigin(httpContext.Request.Headers))
         {
             return Error.Validation(ProblemTypes.RequestInvalid, NotThisSiteMessage).ToProblem();
         }
@@ -249,10 +243,4 @@ internal static class AuthEndpoints
 
     private static InvalidOperationException MissingClaim(string type) =>
         new($"The signed-in principal carries no valid {type} claim; every ERP sign-in is a Microsoft Entra ID account with an object id, a display name and a sign-in name.");
-
-    private static bool IsOpenedAsAPage(IHeaderDictionary headers) =>
-        IsAbsentOrExactly(headers[FetchModeHeader], "navigate") && IsAbsentOrExactly(headers[FetchDestinationHeader], "document");
-
-    private static bool IsAbsentOrExactly(StringValues values, string expected) =>
-        values.Count == 0 || (values.Count == 1 && string.Equals(values[0], expected, StringComparison.Ordinal));
 }

@@ -28,6 +28,8 @@ A step implements `IPipelineStep` and declares its `PipelineStage`. The order co
 
 A handler therefore never calls `SaveChangesAsync`: it changes tracked entities and returns a `Result`.
 
+Each save of the unit also writes the change records of the recorded entities it saves ([persistence](persistence.md), section "Change records"; [ADR-0043](../adr/0043-change-records-and-the-append-only-audit-schema.md)). They join the same `SaveChangesAsync` and so the same transaction: a unit that fails or rolls back writes none, a retry of the execution strategy replays the use case after `ChangeTracker.Clear()`, which drops the records of the failed attempt, so one set is written, and a round of domain events that throws rolls back the records of the rounds before it. A change whose record cannot be written fails the save like any other database error.
+
 ## Results and ProblemDetails
 
 `ResultExtensions` maps a `Result` to a typed HTTP result: `ToHttpResult()` (200 or 204), `ToCreatedResult(location)` (201 with a `Location` header) and `ToProblem()` for the failure. Every problem carries the `code` extension. A validation error carrying `Fields` becomes `HttpValidationProblemDetails`, so the body has an `errors` member per field:

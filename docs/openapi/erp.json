@@ -1434,6 +1434,254 @@
         ]
       }
     },
+    "/api/platform/audit/changes": {
+      "get": {
+        "tags": [
+          "Platform.Audit"
+        ],
+        "summary": "Lists the recorded changes, newest first unless the caller sorts them, with the names their actors, records and references have today.",
+        "operationId": "Platform.Audit.ListChanges",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number, from 1; the first page when absent.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Items per page, from 1 to 200; 50 when absent.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Comma-separated field:asc or field:desc terms over the fields the endpoint allows.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "Semicolon-separated field:operator:value terms over the fields the endpoint allows; values are percent-encoded and an in-list separates its values with |.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfChangeRecordResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/audit/changes/export": {
+      "get": {
+        "tags": [
+          "Platform.Audit"
+        ],
+        "summary": "Streams the recorded changes the filter selects as a CSV file, oldest first, with one line per changed value.",
+        "operationId": "Platform.Audit.ExportChanges",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "Semicolon-separated field:operator:value terms over the fields the list of changes allows; values are percent-encoded and an in-list separates its values with |. Absent, every change is exported.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
     "/api/identity/users": {
       "get": {
         "tags": [
@@ -4610,6 +4858,71 @@
           "clean"
         ]
       },
+      "ChangeActorKind": {
+        "enum": [
+          "person",
+          "system",
+          "anonymous"
+        ]
+      },
+      "ChangedValueResponse": {
+        "required": [
+          "property",
+          "kind",
+          "before",
+          "after",
+          "reference",
+          "beforeName",
+          "afterName"
+        ],
+        "type": "object",
+        "properties": {
+          "property": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ChangeValueKind"
+          },
+          "before": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "after": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "beforeName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "afterName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ChangeOperation": {
+        "enum": [
+          "created",
+          "updated",
+          "deleted",
+          "restored"
+        ]
+      },
       "ChangePersonStatusRequest": {
         "required": [
           "status",
@@ -4631,6 +4944,103 @@
             "description": "Version of the record the change was made from, as the API last returned it."
           }
         }
+      },
+      "ChangeRecordResponse": {
+        "required": [
+          "id",
+          "occurredAt",
+          "operation",
+          "entityType",
+          "entityId",
+          "subjectType",
+          "subjectId",
+          "subjectName",
+          "actorKind",
+          "actorId",
+          "actorName",
+          "clientAddress",
+          "correlationId",
+          "changes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "operation": {
+            "$ref": "#/components/schemas/ChangeOperation"
+          },
+          "entityType": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectType": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actorKind": {
+            "$ref": "#/components/schemas/ChangeActorKind"
+          },
+          "actorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "clientAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correlationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangedValueResponse"
+            }
+          }
+        }
+      },
+      "ChangeValueKind": {
+        "enum": [
+          "text",
+          "number",
+          "boolean",
+          "date",
+          "instant",
+          "enum",
+          "list",
+          "reference",
+          "id",
+          "binary"
+        ]
       },
       "CreateDepartmentRequest": {
         "required": [
@@ -5065,6 +5475,40 @@
           }
         }
       },
+      "PagedResponseOfChangeRecordResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangeRecordResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfDepartmentResponse": {
         "required": [
           "items",
@@ -5258,6 +5702,8 @@
           "platform.attachments.files.delete",
           "platform.attachments.files.read",
           "platform.attachments.files.upload",
+          "platform.audit.changes.export",
+          "platform.audit.changes.read",
           "platform.system-info.info.read",
           "platform.system-info.startups.read"
         ]
@@ -5874,6 +6320,9 @@
     },
     {
       "name": "Platform.Attachments"
+    },
+    {
+      "name": "Platform.Audit"
     },
     {
       "name": "Identity.Users"

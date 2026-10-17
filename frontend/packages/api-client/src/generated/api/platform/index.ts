@@ -4,6 +4,8 @@
 // @ts-ignore
 import { AttachmentsRequestBuilderNavigationMetadata, AttachmentsRequestBuilderRequestsMetadata, type AttachmentsRequestBuilder } from './attachments/index.js';
 // @ts-ignore
+import { AuditRequestBuilderNavigationMetadata, type AuditRequestBuilder } from './audit/index.js';
+// @ts-ignore
 import { FeaturesRequestBuilderRequestsMetadata, type FeaturesRequestBuilder } from './features/index.js';
 // @ts-ignore
 import { SystemInfoRequestBuilderNavigationMetadata, SystemInfoRequestBuilderRequestsMetadata, type SystemInfoRequestBuilder } from './systemInfo/index.js';
@@ -18,6 +20,10 @@ export interface PlatformRequestBuilder extends BaseRequestBuilder<PlatformReque
      * The attachments property
      */
     get attachments(): AttachmentsRequestBuilder;
+    /**
+     * The audit property
+     */
+    get audit(): AuditRequestBuilder;
     /**
      * The features property
      */
@@ -38,6 +44,9 @@ export const PlatformRequestBuilderNavigationMetadata: Record<Exclude<keyof Plat
     attachments: {
         requestsMetadata: AttachmentsRequestBuilderRequestsMetadata,
         navigationMetadata: AttachmentsRequestBuilderNavigationMetadata,
+    },
+    audit: {
+        navigationMetadata: AuditRequestBuilderNavigationMetadata,
     },
     features: {
         requestsMetadata: FeaturesRequestBuilderRequestsMetadata,

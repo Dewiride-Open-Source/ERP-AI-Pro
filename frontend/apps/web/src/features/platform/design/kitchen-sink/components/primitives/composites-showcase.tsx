@@ -2,6 +2,13 @@
 
 import { CommandPalette, type CommandPaletteItem } from "@dewiride/erp-ui/components/command/command-palette";
 import { ThemeToggle } from "@dewiride/erp-ui/components/theme/theme-toggle";
+import {
+  Timeline,
+  TimelineContent,
+  TimelineGroup,
+  TimelineItem,
+  TimelineTime,
+} from "@dewiride/erp-ui/components/timeline/timeline";
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { FileDropZone, type FileRejection } from "@dewiride/erp-ui/components/upload/file-drop-zone";
 import { ClockIcon, FileTextIcon, HouseIcon, ReceiptIcon, UsersIcon } from "lucide-react";
@@ -20,6 +27,62 @@ const rejectionMessages: Record<FileRejection, string> = {
   "too-large": "The file is larger than 1 MiB.",
   "unsupported-type": "Only PNG images are accepted here.",
 };
+
+interface TimelineExampleEvent {
+  readonly id: string;
+  readonly at: string;
+  readonly time: string;
+  readonly actor: string;
+  readonly action: string;
+  readonly subject: string;
+  readonly change?: { readonly field: string; readonly value: string; readonly was: string } | undefined;
+}
+
+interface TimelineExampleDay {
+  readonly date: string;
+  readonly heading: string;
+  readonly events: readonly TimelineExampleEvent[];
+}
+
+const timelineExample: readonly TimelineExampleDay[] = [
+  {
+    date: "2026-10-16",
+    heading: "Friday, 16 October 2026",
+    events: [
+      {
+        id: "designation",
+        at: "2026-10-16T09:35:00Z",
+        time: "3:05 pm IST",
+        actor: "Asha Rao",
+        action: "changed the designation of",
+        subject: "Vikram Iyer",
+        change: { field: "Designation", value: "Senior accountant", was: "Accountant" },
+      },
+      {
+        id: "department",
+        at: "2026-10-16T05:50:00Z",
+        time: "11:20 am IST",
+        actor: "Asha Rao",
+        action: "created the department",
+        subject: "Payroll operations",
+      },
+    ],
+  },
+  {
+    date: "2026-10-15",
+    heading: "Thursday, 15 October 2026",
+    events: [
+      {
+        id: "file",
+        at: "2026-10-15T13:10:00Z",
+        time: "6:40 pm IST",
+        actor: "Rohan Gupta",
+        action: "uploaded the file",
+        subject: "gst-returns-q2.pdf",
+      },
+    ],
+  },
+];
 
 export function CompositesShowcase() {
   return (
@@ -48,8 +111,45 @@ export function CompositesShowcase() {
         />
       </Specimen>
       <CommandPaletteSpecimen />
+      <TimelineSpecimen />
       <DataTableSpecimens />
     </SpecimenGrid>
+  );
+}
+
+function TimelineSpecimen() {
+  return (
+    <Specimen
+      title="Timeline"
+      description="Events newest first, grouped by day. A screen reader hears a list of days, each a list of events; the markers and the line are decoration."
+    >
+      <Timeline label="Recent changes (example)">
+        {timelineExample.map((day) => (
+          <TimelineGroup key={day.date} heading={day.heading} headingLevel={4}>
+            {day.events.map((event) => (
+              <TimelineItem key={event.id}>
+                <TimelineTime dateTime={event.at}>{event.time}</TimelineTime>
+                <TimelineContent>
+                  <p>
+                    <span className="font-medium">{event.actor}</span> {event.action}{" "}
+                    <span className="font-medium">{event.subject}</span>.
+                  </p>
+                  {event.change === undefined ? null : (
+                    <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-4 gap-y-1">
+                      <dt className="text-muted-foreground">{event.change.field}</dt>
+                      <dd className="min-w-0 break-words">
+                        {event.change.value}{" "}
+                        <span className="text-muted-foreground">(was {event.change.was})</span>
+                      </dd>
+                    </dl>
+                  )}
+                </TimelineContent>
+              </TimelineItem>
+            ))}
+          </TimelineGroup>
+        ))}
+      </Timeline>
+    </Specimen>
   );
 }
 

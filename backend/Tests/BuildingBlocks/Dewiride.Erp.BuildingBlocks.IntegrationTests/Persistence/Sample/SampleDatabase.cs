@@ -1,15 +1,20 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
+using Dewiride.Erp.BuildingBlocks.Application.Origins;
 using Dewiride.Erp.BuildingBlocks.Auditing.Persistence;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Persistence;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Storage;
+using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Fakes;
 using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
@@ -23,6 +28,8 @@ public sealed class SampleDatabase : IAsyncLifetime
     public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 9, 22, 6, 0, 0, TimeSpan.Zero));
 
     public TestActorContext Actor { get; } = new();
+
+    public TestRequestOrigin Origin { get; } = new();
 
     public async ValueTask InitializeAsync()
     {
@@ -40,6 +47,7 @@ public sealed class SampleDatabase : IAsyncLifetime
         services.AddLogging();
         services.AddSingleton<TimeProvider>(Clock);
         services.AddScoped<IActorContext>(_ => Actor);
+        services.AddScoped<IRequestOrigin>(_ => Origin);
         services.AddErpPersistenceCore();
         services.AddModuleDbContext<SampleDbContext>(SampleDbContext.SchemaName);
         services.AddModuleDbContext<IdempotencyDbContext>(IdempotencyDbContext.SchemaName);
@@ -57,6 +65,16 @@ public sealed class SampleDatabase : IAsyncLifetime
 
     public AsyncServiceScope CreateScope() => Provider.CreateAsyncScope();
 
+    public SampleDbContext CreateContext(params IInterceptor[] interceptors)
+    {
+        var options = new DbContextOptionsBuilder<SampleDbContext>();
+        ModuleDbContextRegistration.Configure(options, new DatabaseOptions { ConnectionString = ConnectionString }, SampleDbContext.SchemaName)
+            .AddInterceptors([new AuditingSaveChangesInterceptor(Actor, Origin, Clock), new BulkWriteGuardInterceptor(), .. interceptors])
+            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning));
+
+        return new SampleDbContext(options.Options);
+    }
+
     public async Task AddAsync(SampleAggregate sample)
     {
         await using var scope = CreateScope();
@@ -72,6 +90,17 @@ public sealed class SampleDatabase : IAsyncLifetime
         var query = includeDeleted ? context.Samples.IncludeDeleted() : context.Samples;
 
         return await query.AsNoTracking().SingleAsync(s => s.Id == id, TestContext.Current.CancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ChangeRecord>> ChangeRecordsOfAsync(Guid entityId)
+    {
+        await using var scope = CreateScope();
+
+        return await scope.ServiceProvider.GetRequiredService<AuditingDbContext>().ChangeRecords
+            .AsNoTracking()
+            .Where(record => record.EntityId == entityId)
+            .OrderBy(record => record.OccurredAt)
+            .ToListAsync(TestContext.Current.CancellationToken);
     }
 
     public async ValueTask DisposeAsync()

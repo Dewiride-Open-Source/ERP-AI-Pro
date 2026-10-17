@@ -1,6 +1,13 @@
 "use client";
 
 import { Button, buttonVariants } from "@dewiride/erp-ui/components/ui/button";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@dewiride/erp-ui/components/ui/empty";
 import type { Route } from "next";
 import Form from "next/form";
 import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
@@ -96,5 +103,35 @@ export function ListFilterForm({
         ) : null}
       </div>
     </Form>
+  );
+}
+
+export function ListNoMatches({
+  message,
+  href,
+  onClear,
+}: {
+  message: string;
+  href: Route;
+  onClear: () => void;
+}) {
+  return (
+    <Empty className="border" data-testid="list-no-matches">
+      <EmptyHeader>
+        <EmptyTitle>{message}</EmptyTitle>
+        <EmptyDescription>Change or clear the filters to see more.</EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <ListLink
+          href={href}
+          disabled={false}
+          aria-label="Clear filters"
+          className={buttonVariants({ variant: "outline" })}
+          onFollow={onClear}
+        >
+          Clear filters
+        </ListLink>
+      </EmptyContent>
+    </Empty>
   );
 }

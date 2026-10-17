@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Origins;
 using Dewiride.Erp.BuildingBlocks.Application.Pipeline;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
@@ -40,6 +41,7 @@ public static class PersistenceRegistration
         services.TryAddSingleton<SeedRunner>();
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddScoped<IActorContext, SystemActorContext>();
+        services.TryAddScoped<IRequestOrigin, SystemRequestOrigin>();
         services.TryAddScoped<AuditingSaveChangesInterceptor>();
         services.TryAddSingleton<BulkWriteGuardInterceptor>();
         services.AddApplicationPipeline();

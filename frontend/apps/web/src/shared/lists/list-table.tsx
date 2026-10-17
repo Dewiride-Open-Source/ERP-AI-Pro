@@ -7,20 +7,13 @@ import {
   type DataTablePage,
   type DataTableRow,
 } from "@dewiride/erp-ui/components/data-table/data-table";
-import { buttonVariants } from "@dewiride/erp-ui/components/ui/button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@dewiride/erp-ui/components/ui/empty";
 import type { Route } from "next";
 import { useSearchParams } from "next/navigation";
 import { useOptimistic, useState, useTransition, type ReactNode } from "react";
 
+import { useFilterFormState } from "./filter-state/use-filter-form-state.ts";
 import { listParameters, type ListDefinition } from "./list-definition.ts";
-import { ListFilterForm } from "./list-filter-form.tsx";
+import { ListFilterForm, ListNoMatches } from "./list-filter-form.tsx";
 import { ListLink, ListNavigationProvider, useListNavigation } from "./list-navigation.tsx";
 import { RowRemovalContext, settleRemoval, type RemoveRow } from "./list-row-removal.tsx";
 import {
@@ -62,14 +55,6 @@ interface Selection {
   readonly ids: readonly string[];
 }
 
-interface FilterFormState {
-  readonly signature: string;
-  readonly key: number;
-  readonly applied: string | undefined;
-  readonly clearing: boolean;
-  readonly focusFirstField: boolean;
-}
-
 const noIds: readonly string[] = [];
 
 function ListTableContent<TRow extends DataTableRow>({
@@ -99,26 +84,7 @@ function ListTableContent<TRow extends DataTableRow>({
   const [selected, setSelected] = useState<Selection>({ signature, ids: noIds });
   if (selected.signature !== signature) setSelected({ signature, ids: noIds });
   const selectedIds = selected.signature === signature ? selected.ids : noIds;
-  const [form, setForm] = useState<FilterFormState>({
-    signature,
-    key: 0,
-    applied: undefined,
-    clearing: false,
-    focusFirstField: false,
-  });
-
-  // The filter form keeps its controls, and the focus inside them, when the address changes because the form itself
-  // applied these filters; any other change (Clear filters, Back, a link) remounts it so its fields show the new filters.
-  if (form.signature !== signature) {
-    const fromTheForm = form.applied === signature;
-    setForm({
-      signature,
-      key: fromTheForm ? form.key : form.key + 1,
-      applied: undefined,
-      clearing: false,
-      focusFirstField: form.clearing,
-    });
-  }
+  const filterForm = useFilterFormState(signature);
 
   const [shown, hideRow] = useOptimistic<ShownRows<TRow>, string>({ page, rows }, (current, id) =>
     withoutRow(current, id, getRowId),
@@ -141,7 +107,6 @@ function ListTableContent<TRow extends DataTableRow>({
 
   const filtered = Object.keys(query.filters).length > 0;
   const link = (next: ListQuery) => listLink(basePath, next, definition);
-  const clear = () => setForm((state) => ({ ...state, clearing: true }));
 
   return (
     <RowRemovalContext value={removeRow}>
@@ -182,14 +147,14 @@ function ListTableContent<TRow extends DataTableRow>({
         filters={
           filters === undefined ? undefined : (
             <ListFilterForm
-              key={form.key}
+              key={filterForm.key}
               basePath={basePath}
               definition={definition}
               query={current}
               label={`Filter ${label.toLowerCase()}`}
-              focusFirstField={form.focusFirstField}
-              onApply={(applied) => setForm((state) => ({ ...state, applied }))}
-              onClear={clear}
+              focusFirstField={filterForm.focusFirstField}
+              onApply={filterForm.onApply}
+              onClear={filterForm.onClear}
             >
               {filters}
             </ListFilterForm>
@@ -197,23 +162,11 @@ function ListTableContent<TRow extends DataTableRow>({
         }
         empty={
           filtered ? (
-            <Empty className="border" data-testid="list-no-matches">
-              <EmptyHeader>
-                <EmptyTitle>{noMatches}</EmptyTitle>
-                <EmptyDescription>Change or clear the filters to see more.</EmptyDescription>
-              </EmptyHeader>
-              <EmptyContent>
-                <ListLink
-                  href={link(withFilters(current, {}))}
-                  disabled={false}
-                  aria-label="Clear filters"
-                  className={buttonVariants({ variant: "outline" })}
-                  onFollow={clear}
-                >
-                  Clear filters
-                </ListLink>
-              </EmptyContent>
-            </Empty>
+            <ListNoMatches
+              message={noMatches}
+              href={link(withFilters(current, {}))}
+              onClear={filterForm.onClear}
+            />
           ) : (
             empty
           )

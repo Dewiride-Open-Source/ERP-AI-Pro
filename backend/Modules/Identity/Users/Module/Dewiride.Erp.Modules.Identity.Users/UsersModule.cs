@@ -3,6 +3,7 @@ using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
 using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints;
@@ -12,6 +13,7 @@ using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Endpoints;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace Dewiride.Erp.Modules.Identity.Users;
@@ -56,6 +58,8 @@ public sealed class UsersModule : IModule
         builder.AddModuleDbContext<UsersDbContext>(UsersDbContext.SchemaName);
         builder.Services.AddHandlersFromAssembly(typeof(UsersModule).Assembly);
         builder.Services.AddScoped<IPersonAdmission, UserAdmission>();
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IRecordNames, UserRecordNames>());
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IPersonNames, UserRecordNames>());
         builder.Services.AddValidation();
     }
 

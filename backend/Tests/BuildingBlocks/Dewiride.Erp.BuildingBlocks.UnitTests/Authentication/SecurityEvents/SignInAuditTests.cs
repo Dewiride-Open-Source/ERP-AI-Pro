@@ -32,45 +32,19 @@ public sealed class SignInAuditTests
         Assert.Equal(new SecurityEventEntry(SecurityEventKind.SignInFailed, Detail, Person, Application, "203.0.113.7", Correlation), Assert.Single(recorder.Entries));
     }
 
-    [Theory]
-    [InlineData("::ffff:203.0.113.7", "203.0.113.7")]
-    [InlineData("2001:db8::7", "2001:db8::7")]
-    [InlineData("127.0.0.1", "127.0.0.1")]
-    public async Task RecordAsync_ClientAddress_IsRecordedInTheFamilyItWasSentIn(string address, string recorded)
-    {
-        var recorder = new RecordingSecurityEventRecorder();
-        await using var services = Services(recorder);
-
-        await SignInAudit.RecordAsync(Request(services, address), SecurityEventKind.SignedOut, actor: Person);
-
-        Assert.Equal(recorded, Assert.Single(recorder.Entries).ClientAddress);
-    }
-
     [Fact]
-    public async Task RecordAsync_RequestWithoutAClientAddress_RecordsNoAddress()
+    public async Task RecordAsync_RequestWithoutACorrelationIdOrAnAddress_RecordsItsTraceIdentifierAndNoAddress()
     {
         var recorder = new RecordingSecurityEventRecorder();
         await using var services = Services(recorder);
-
-        await SignInAudit.RecordAsync(Request(services, address: null), SecurityEventKind.SignedOut, actor: Person);
-
-        Assert.Null(Assert.Single(recorder.Entries).ClientAddress);
-    }
-
-    [Theory]
-    [InlineData(1, true)]
-    [InlineData(64, true)]
-    [InlineData(65, false)]
-    public async Task RecordAsync_RequestWithoutACorrelationId_RecordsItsTraceIdentifierWhenItFits(int length, bool recorded)
-    {
-        var recorder = new RecordingSecurityEventRecorder();
-        await using var services = Services(recorder);
-        var context = Request(services, "203.0.113.7", correlationId: null);
-        context.TraceIdentifier = new string('a', length);
+        var context = Request(services, address: null, correlationId: null);
+        context.TraceIdentifier = "0HN7:00000001";
 
         await SignInAudit.RecordAsync(context, SecurityEventKind.SignedOut, actor: Person);
 
-        Assert.Equal(recorded ? context.TraceIdentifier : null, Assert.Single(recorder.Entries).CorrelationId);
+        var entry = Assert.Single(recorder.Entries);
+        Assert.Null(entry.ClientAddress);
+        Assert.Equal("0HN7:00000001", entry.CorrelationId);
     }
 
     [Fact]

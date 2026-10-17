@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Dewiride.Erp.Testing;
@@ -25,7 +26,7 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
     }
 
     [Fact]
-    public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssembly()
+    public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssemblyAndTheChangeRecords()
     {
         using var scope = factory.Services.CreateScope();
         var violations = new List<string>();
@@ -34,7 +35,7 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
         {
             var context = (DbContext)scope.ServiceProvider.GetRequiredService(registration.ContextType);
             violations.AddRange(context.Model.GetEntityTypes()
-                .Where(e => e.ClrType.Assembly != registration.ContextType.Assembly)
+                .Where(e => e.ClrType.Assembly != registration.ContextType.Assembly && e.ClrType != typeof(ChangeRecord))
                 .Select(e => $"{registration.ContextType.Name} maps {e.ClrType.FullName} from {e.ClrType.Assembly.GetName().Name}"));
         }
 

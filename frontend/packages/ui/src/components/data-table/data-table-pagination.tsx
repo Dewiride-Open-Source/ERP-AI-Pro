@@ -13,7 +13,7 @@ import {
 } from "@dewiride/erp-ui/components/ui/select";
 import { cn } from "@dewiride/erp-ui/lib/utils";
 
-import { formatCount, type DataTablePage } from "./data-table-model";
+import { formatCount, resultsStatus, type DataTableNoun, type DataTablePage } from "./data-table-model";
 
 export interface DataTableLinkProps {
   href: string;
@@ -56,8 +56,34 @@ function isUnavailable(key: PageLinkKey, page: DataTablePage): boolean {
   return key === "first" || key === "previous" ? page.page <= 1 : page.page >= page.pageCount;
 }
 
+export function DataTableStatus({
+  page,
+  noun,
+  pending,
+  children,
+}: {
+  page: DataTablePage;
+  noun: DataTableNoun;
+  pending: boolean;
+  children?: ReactNode;
+}) {
+  return (
+    <p role="status" data-testid="data-table-status" className="text-muted-foreground">
+      {pending ? (
+        "Loading…"
+      ) : (
+        <>
+          {resultsStatus(page, noun)}
+          {children}
+        </>
+      )}
+    </p>
+  );
+}
+
 export function DataTablePagination({
   label,
+  sizeLabel,
   page,
   pageSizes,
   status,
@@ -67,6 +93,7 @@ export function DataTablePagination({
   linkComponent: Link,
 }: {
   label: string;
+  sizeLabel: string;
   page: DataTablePage;
   pageSizes: readonly number[];
   status: ReactNode;
@@ -87,7 +114,7 @@ export function DataTablePagination({
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex items-center gap-2">
             <span id={sizeLabelId} className="text-muted-foreground">
-              Rows per page
+              {sizeLabel}
             </span>
             <Select
               value={String(page.pageSize)}

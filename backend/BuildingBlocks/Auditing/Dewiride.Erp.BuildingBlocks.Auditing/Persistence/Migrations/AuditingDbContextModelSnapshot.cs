@@ -63,6 +63,72 @@ namespace Dewiride.Erp.BuildingBlocks.Auditing.Persistence.Migrations
 
                     b.ToTable("SecurityEvents", "audit");
                 });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes.ChangeRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("json");
+
+                    b.Property<string>("ClientAddress")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte>("Operation")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<short>("ValueCount")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorrelationId")
+                        .HasFilter("[CorrelationId] IS NOT NULL");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("ActorId", "OccurredAt");
+
+                    b.HasIndex("EntityId", "OccurredAt");
+
+                    b.HasIndex("EntityType", "OccurredAt");
+
+                    b.HasIndex("SubjectId", "OccurredAt");
+
+                    b.ToTable("ChangeRecords", "audit");
+                });
 #pragma warning restore 612, 618
         }
     }

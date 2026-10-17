@@ -33,7 +33,6 @@ import {
   idsFromSelection,
   isDataColumn,
   nextSortDirection,
-  resultsStatus,
   selectionState,
   sortingState,
   sortStatus,
@@ -44,7 +43,7 @@ import {
   type DataTableSort,
   type DataTableSortKind,
 } from "./data-table-model";
-import { DataTablePagination, type DataTableLinkComponent } from "./data-table-pagination";
+import { DataTablePagination, DataTableStatus, type DataTableLinkComponent } from "./data-table-pagination";
 import { DataTableSelectCheckbox, DataTableSelectionSummary } from "./data-table-selection";
 import { DataTableSortSelect, type DataTableSortChoice } from "./data-table-sort-select";
 
@@ -274,16 +273,9 @@ export function DataTable<TRow extends RowData>({
   });
 
   const status = (
-    <p role="status" data-testid="data-table-status" className="text-muted-foreground">
-      {pending ? (
-        "Loading…"
-      ) : (
-        <>
-          {resultsStatus(paging.page, noun)}
-          {sortText !== undefined && sortsSeveralRows ? <span className="sr-only"> {sortText}</span> : null}
-        </>
-      )}
-    </p>
+    <DataTableStatus page={paging.page} noun={noun} pending={pending}>
+      {sortText !== undefined && sortsSeveralRows ? <span className="sr-only"> {sortText}</span> : null}
+    </DataTableStatus>
   );
 
   return (
@@ -455,6 +447,7 @@ export function DataTable<TRow extends RowData>({
 
       <DataTablePagination
         label={label}
+        sizeLabel="Rows per page"
         page={paging.page}
         pageSizes={paging.pageSizes}
         status={status}

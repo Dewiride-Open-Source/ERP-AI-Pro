@@ -1973,6 +1973,43 @@ test.describe("design system kitchen sink", () => {
       await expect(choice).toHaveText("Chosen: Credit notes");
     });
 
+    forEachTheme("the timeline, read as a list of days with their entries", async ({ page }) => {
+      const kitchenSink = new KitchenSinkPage(page);
+      await kitchenSink.goto();
+      const specimen = kitchenSink.specimen("Timeline");
+
+      await expect(specimen).toMatchAriaSnapshot(`
+        - heading "Timeline" [level=3]
+        - paragraph: /^Events newest first, grouped by day\\./
+        - list "Recent changes (example)":
+          - listitem:
+            - heading "Friday, 16 October 2026" [level=4]
+            - list "Friday, 16 October 2026":
+              - listitem:
+                - time: 3:05 pm IST
+                - paragraph: Asha Rao changed the designation of Vikram Iyer.
+                - term: Designation
+                - definition: Senior accountant (was Accountant)
+              - listitem:
+                - time: 11:20 am IST
+                - paragraph: Asha Rao created the department Payroll operations.
+          - listitem:
+            - heading "Thursday, 15 October 2026" [level=4]
+            - list "Thursday, 15 October 2026":
+              - listitem:
+                - time: 6:40 pm IST
+                - paragraph: Rohan Gupta uploaded the file gst-returns-q2.pdf.
+      `);
+      expect(
+        await specimen
+          .locator("time")
+          .evaluateAll((times) => times.map((time) => time.getAttribute("datetime"))),
+      ).toEqual(["2026-10-16T09:35:00Z", "2026-10-16T05:50:00Z", "2026-10-15T13:10:00Z"]);
+      const markers = specimen.locator("[data-slot='timeline-marker']");
+      await expect(markers).toHaveCount(3);
+      for (const marker of await markers.all()) await expect(marker).toHaveAttribute("aria-hidden", "true");
+    });
+
     forEachTheme(
       "the data table with its sorting, pages, selection and columns",
       async ({ page, capture }) => {

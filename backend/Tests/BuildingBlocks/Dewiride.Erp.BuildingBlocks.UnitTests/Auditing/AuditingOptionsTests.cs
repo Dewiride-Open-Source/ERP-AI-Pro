@@ -7,7 +7,7 @@ namespace Dewiride.Erp.BuildingBlocks.UnitTests.Auditing;
 public sealed class AuditingOptionsTests
 {
     [Fact]
-    public void Validate_Defaults_AreValidAndKeepSecurityEventsForAYear()
+    public void Validate_Defaults_AreValidKeepSecurityEventsForAYearAndEveryChangeRecord()
     {
         var options = new AuditingOptions();
 
@@ -15,31 +15,40 @@ public sealed class AuditingOptionsTests
 
         Assert.Equal("Erp:Platform:Auditing", AuditingOptions.SectionName);
         Assert.Equal(TimeSpan.FromDays(365), options.SecurityEventRetention);
-        Assert.Equal(TimeSpan.FromDays(1), options.SweepInterval);
+        Assert.Null(options.ChangeRecordRetentionYears);
     }
 
     [Theory]
-    [InlineData(nameof(AuditingOptions.SecurityEventRetention), "1.00:00:00")]
-    [InlineData(nameof(AuditingOptions.SecurityEventRetention), "3650.00:00:00")]
-    [InlineData(nameof(AuditingOptions.SweepInterval), "00:01:00")]
-    [InlineData(nameof(AuditingOptions.SweepInterval), "7.00:00:00")]
-    public void Validate_ValueOnTheBound_Passes(string property, string value)
+    [InlineData("1.00:00:00")]
+    [InlineData("3650.00:00:00")]
+    public void Validate_SecurityEventRetentionOnTheBound_Passes(string value)
     {
-        Validate(WithValue(property, value));
+        Validate(new AuditingOptions { SecurityEventRetention = TimeSpan.Parse(value, CultureInfo.InvariantCulture) });
     }
 
     [Theory]
-    [InlineData(nameof(AuditingOptions.SecurityEventRetention), "23:59:59")]
-    [InlineData(nameof(AuditingOptions.SecurityEventRetention), "3650.00:00:01")]
-    [InlineData(nameof(AuditingOptions.SweepInterval), "00:00:59")]
-    [InlineData(nameof(AuditingOptions.SweepInterval), "7.00:00:01")]
-    public void Validate_ValueOutsideTheBound_Fails(string property, string value)
+    [InlineData("23:59:59")]
+    [InlineData("3650.00:00:01")]
+    public void Validate_SecurityEventRetentionOutsideTheBound_Fails(string value)
     {
-        var options = WithValue(property, value);
+        AssertFails(new AuditingOptions { SecurityEventRetention = TimeSpan.Parse(value, CultureInfo.InvariantCulture) }, nameof(AuditingOptions.SecurityEventRetention));
+    }
 
-        var failures = new List<ValidationResult>();
-        Assert.False(Validator.TryValidateObject(options, new ValidationContext(options), failures, validateAllProperties: true));
-        Assert.Contains(property, Assert.Single(failures).MemberNames);
+    [Theory]
+    [InlineData(1)]
+    [InlineData(30)]
+    public void Validate_ChangeRecordRetentionYearsOnTheBound_Passes(int years)
+    {
+        Validate(new AuditingOptions { ChangeRecordRetentionYears = years });
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(31)]
+    [InlineData(-8)]
+    public void Validate_ChangeRecordRetentionYearsOutsideTheBound_Fails(int years)
+    {
+        AssertFails(new AuditingOptions { ChangeRecordRetentionYears = years }, nameof(AuditingOptions.ChangeRecordRetentionYears));
     }
 
     private static void Validate(AuditingOptions options)
@@ -49,11 +58,11 @@ public sealed class AuditingOptionsTests
         Assert.True(Validator.TryValidateObject(options, new ValidationContext(options), failures, validateAllProperties: true), string.Join("; ", failures));
     }
 
-    private static AuditingOptions WithValue(string property, string value)
+    private static void AssertFails(AuditingOptions options, string property)
     {
-        var options = new AuditingOptions();
-        typeof(AuditingOptions).GetProperty(property)!.SetValue(options, TimeSpan.Parse(value, CultureInfo.InvariantCulture));
+        var failures = new List<ValidationResult>();
 
-        return options;
+        Assert.False(Validator.TryValidateObject(options, new ValidationContext(options), failures, validateAllProperties: true));
+        Assert.Contains(property, Assert.Single(failures).MemberNames);
     }
 }

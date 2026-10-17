@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Authentication.Endpoints;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Correlation;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Security;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -178,12 +179,12 @@ public sealed class LoginEndpointTests(ErpApiFactory factory) : IClassFixture<Er
         var request = new HttpRequestMessage(HttpMethod.Get, LoginUri(returnUrl));
         if (mode is not null)
         {
-            request.Headers.Add(AuthEndpoints.FetchModeHeader, mode);
+            request.Headers.Add(FetchMetadata.ModeHeader, mode);
         }
 
         if (destination is not null)
         {
-            request.Headers.Add(AuthEndpoints.FetchDestinationHeader, destination);
+            request.Headers.Add(FetchMetadata.DestinationHeader, destination);
         }
 
         return request;

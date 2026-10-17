@@ -2,7 +2,7 @@ using Dewiride.Erp.BuildingBlocks.Persistence.Seeding;
 
 namespace Dewiride.Erp.Host.Migrator.IntegrationTests.Seeding;
 
-public sealed class SecondSeeder(SeedRecorder recorder) : ISeeder
+public sealed class SecondSeeder(RunRecorder recorder) : ISeeder
 {
     public Task SeedAsync(CancellationToken cancellationToken)
     {

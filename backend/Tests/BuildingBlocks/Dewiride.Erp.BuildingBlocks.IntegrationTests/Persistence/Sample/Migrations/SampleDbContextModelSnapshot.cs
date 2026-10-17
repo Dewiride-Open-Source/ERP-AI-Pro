@@ -24,6 +24,49 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Notes.SampleNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("DueOn")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SampleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.PrimitiveCollection<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("json");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SampleId");
+
+                    b.ToTable("SampleNotes", "test_sample");
+
+                    b
+                        .HasAnnotation("Erp:ChangeRecords:Key", "test.sample.notes")
+                        .HasAnnotation("Erp:ChangeRecords:Subject", "SampleId");
+                });
+
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleAggregate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -98,6 +141,8 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                     b.HasKey("Id");
 
                     b.ToTable("Samples", "test_sample");
+
+                    b.HasAnnotation("Erp:ChangeRecords:Key", "test.sample.samples");
                 });
 
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleLine", b =>
@@ -118,6 +163,84 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                     b.HasIndex("SampleId");
 
                     b.ToTable("SampleLines", "test_sample");
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes.ChangeRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("json");
+
+                    b.Property<string>("ClientAddress")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte>("Operation")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<short>("ValueCount")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorrelationId")
+                        .HasFilter("[CorrelationId] IS NOT NULL");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("ActorId", "OccurredAt");
+
+                    b.HasIndex("EntityId", "OccurredAt");
+
+                    b.HasIndex("EntityType", "OccurredAt");
+
+                    b.HasIndex("SubjectId", "OccurredAt");
+
+                    b.ToTable("ChangeRecords", "audit", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Notes.SampleNote", b =>
+                {
+                    b.HasOne("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleAggregate", null)
+                        .WithMany()
+                        .HasForeignKey("SampleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleLine", b =>
