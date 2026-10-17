@@ -103,7 +103,7 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         var permissions = HostModules.All.SelectMany(module => module.Descriptor.Permissions).ToList();
 
         Assert.NotEmpty(permissions);
-        Assert.All(permissions, permission => Assert.Matches("^[A-Z][^\\r\\n]*\\.$", permission.Description));
+        Assert.All(permissions, permission => Assert.Matches(@"\A[A-Z][^.!?\r\n]*\.\z", permission.Description));
     }
 
     private static bool IsGeneratedPersistenceType(Type type)

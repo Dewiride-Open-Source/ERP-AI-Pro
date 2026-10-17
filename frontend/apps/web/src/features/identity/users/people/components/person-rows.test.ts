@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { PersonResponse } from "@dewiride/erp-api-client";
 
-import { filterOptions, personRows } from "./person-rows.ts";
+import { filterNote, filterOptions, personRows } from "./person-rows.ts";
 
 const signedInAt = new Date("2026-10-17T07:55:00Z");
 
@@ -90,18 +90,26 @@ test("personRows_APersonWithoutAnIdOrAName_IsLeftOut", () => {
   );
 });
 
+const departmentLabels = { unknown: "Unknown department", unavailable: "Department (name not available)" };
+
+const notReadable = "Departments could not be read, so the list cannot be filtered by department now.";
+
 test("filterOptions_ChoicesTheLookupLists_AreTheLookupItself", () => {
   const options = [
     { value: "d-accounts", label: "Finance › Accounts" },
     { value: "d-finance", label: "Finance" },
   ];
 
-  assert.deepEqual(filterOptions(options, ["d-finance"], "Unknown department"), options);
+  assert.deepEqual(filterOptions({ status: "read", options }, ["d-finance"], departmentLabels), options);
 });
 
 test("filterOptions_AChoiceTheLookupDoesNotList_IsAddedUnderTheUnknownLabel", () => {
   assert.deepEqual(
-    filterOptions([{ value: "d-finance", label: "Finance" }], ["d-gone", "d-finance"], "Unknown department"),
+    filterOptions(
+      { status: "read", options: [{ value: "d-finance", label: "Finance" }] },
+      ["d-gone", "d-finance"],
+      departmentLabels,
+    ),
     [
       { value: "d-finance", label: "Finance" },
       { value: "d-gone", label: "Unknown department" },
@@ -109,9 +117,26 @@ test("filterOptions_AChoiceTheLookupDoesNotList_IsAddedUnderTheUnknownLabel", ()
   );
 });
 
-test("filterOptions_NoLookup_ListsOnlyTheChoices", () => {
-  assert.deepEqual(filterOptions(undefined, [], "Unknown designation"), []);
-  assert.deepEqual(filterOptions(undefined, ["g-analyst"], "Unknown designation"), [
-    { value: "g-analyst", label: "Unknown designation" },
+test("filterOptions_LookupReadWithoutEntries_ListsOnlyTheChoicesAsUnknown", () => {
+  assert.deepEqual(filterOptions({ status: "read", options: [] }, [], departmentLabels), []);
+  assert.deepEqual(filterOptions({ status: "read", options: [] }, ["d-gone"], departmentLabels), [
+    { value: "d-gone", label: "Unknown department" },
   ]);
+});
+
+test("filterOptions_LookupThatCouldNotBeRead_KeepsTheChoicesWithoutClaimingTheyAreUnknown", () => {
+  assert.deepEqual(filterOptions({ status: "failed" }, [], departmentLabels), []);
+  assert.deepEqual(filterOptions({ status: "failed" }, ["d-finance", "d-accounts"], departmentLabels), [
+    { value: "d-finance", label: "Department (name not available)" },
+    { value: "d-accounts", label: "Department (name not available)" },
+  ]);
+});
+
+test("filterNote_LookupThatCouldNotBeReadAndNoChoice_ExplainsTheMissingFilter", () => {
+  assert.equal(filterNote({ status: "failed" }, [], notReadable), notReadable);
+});
+
+test("filterNote_ChoiceOrLookupRead_NeedsNoNote", () => {
+  assert.equal(filterNote({ status: "failed" }, ["d-finance"], notReadable), undefined);
+  assert.equal(filterNote({ status: "read", options: [] }, [], notReadable), undefined);
 });

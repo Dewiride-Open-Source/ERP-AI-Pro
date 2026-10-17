@@ -1,6 +1,7 @@
 import { expect, type APIResponse } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
+import type { SignedInPerson } from "./sign-in";
 import type { SignedInApi } from "./test";
 
 export const peopleApi = "/api/identity/users";
@@ -66,6 +67,38 @@ export async function personRecord(api: SignedInApi, id: string): Promise<Person
   const response = await api.get(`${peopleApi}/${id}`);
   expect(response.status(), `the record ${id}`).toBe(200);
   return (await response.json()) as PersonRecord;
+}
+
+// Every sign-in of a persona is a new account with the persona's work email, so the record that sign-in admitted is the one
+// with that email linked to the account's object id, among the newest records.
+export async function ownPersonRecordId(
+  api: { readonly get: (path: string) => Promise<APIResponse> },
+  signedIn: SignedInPerson | undefined,
+): Promise<string> {
+  expect(signedIn, "the signed-in persona").toBeDefined();
+  const query = new URLSearchParams({
+    filter: `workEmail:eq:${encodeURIComponent((signedIn?.userName ?? "").toLowerCase())}`,
+    sort: "createdAt:desc",
+    pageSize: "100",
+  });
+  const response = await api.get(`${peopleApi}?${query.toString()}`);
+  expect(response.status(), "the records with the persona's work email").toBe(200);
+  const { items } = (await response.json()) as {
+    items?: readonly { readonly id?: string; readonly entraObjectId?: string | null }[];
+  };
+  const own = items?.find((record) => record.entraObjectId?.toLowerCase() === signedIn?.id.toLowerCase());
+  expect(own?.id, "the record the persona's sign-in admitted").toBeDefined();
+  return own?.id ?? "";
+}
+
+export async function deactivatePersonRecord(
+  api: SignedInApi,
+  person: { readonly id: string; readonly version: string },
+): Promise<void> {
+  const response = await api.put(`${peopleApi}/${person.id}/status`, {
+    data: { status: "deactivated", version: person.version },
+  });
+  expect(response.status(), `the deactivation of ${person.id}`).toBe(200);
 }
 
 export async function createDepartmentRecord(api: SignedInApi, name: string): Promise<NamedRecord> {

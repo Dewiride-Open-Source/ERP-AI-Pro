@@ -123,7 +123,7 @@ function MoveList({
 
   return (
     <ol role="list" aria-labelledby={movesHeadingId} className="grid gap-3">
-      {periods.map(({ move, from, until, timing }) => (
+      {periods.map(({ move, from, until, timing }, index) => (
         <li key={move.id ?? from} className="grid gap-3 rounded-lg border p-4" data-testid="person-move">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="font-medium">{movePeriodTitle(from, until)}</h3>
@@ -139,6 +139,7 @@ function MoveList({
               personId={personId}
               positionId={move.id}
               from={from}
+              followsEarlierMove={index < periods.length - 1}
               focusAfterWithdrawId={movesHeadingId}
             />
           ) : null}

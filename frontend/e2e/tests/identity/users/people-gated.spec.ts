@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 
+import { peopleApi } from "../../../fixtures/person-records";
 import { gatedBaseURL } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
-import { peopleApi, peoplePath } from "../../../pages/identity/users/people.page";
+import { peoplePath } from "../../../pages/identity/users/people.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 // An administrator holds every permission of the users module, so only the disabled module can hide its pages from them.

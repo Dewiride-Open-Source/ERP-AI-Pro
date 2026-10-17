@@ -1,7 +1,7 @@
 "use server";
 
 import type { UpdatePersonRequest } from "@dewiride/erp-api-client";
-import { redirect, RedirectType, unstable_rethrow } from "next/navigation";
+import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
 import { callApi } from "@/shared/api/client";
@@ -11,7 +11,7 @@ import { requireSignedInPerson } from "@/shared/auth/session";
 import { formMessages } from "@/shared/forms/errors/form-messages";
 import { problemToFormState } from "@/shared/forms/errors/problem-to-form-state";
 import { parseSubmission } from "@/shared/forms/schemas/parse-submission";
-import { formFailed, type FormState } from "@/shared/forms/state/form-state";
+import { formFailed, formSucceeded, type FormState } from "@/shared/forms/state/form-state";
 
 import { editPersonProblemMessages, editPersonSchema } from "../forms/edit-person.schema";
 
@@ -27,7 +27,7 @@ export async function updatePerson(_previous: FormState, submission: unknown): P
     unstable_rethrow(error);
     return problemToFormState(error, { messages: editPersonProblemMessages });
   }
-  redirect(`/identity/users/${parsed.data.id}`, RedirectType.replace);
+  return formSucceeded();
 }
 
 function update(values: z.output<typeof editPersonSchema>): UpdatePersonRequest {

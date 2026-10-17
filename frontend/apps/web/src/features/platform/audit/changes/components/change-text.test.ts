@@ -41,7 +41,7 @@ test("recordTypeLabel_EveryChangeKeyTheHistoryRecords_HasAName", () => {
   assert.equal(recordTypeLabel(people), "Person");
   assert.equal(recordTypeLabel(department), "Department");
   assert.equal(recordTypeLabel("identity.users.designations"), "Designation");
-  assert.equal(recordTypeLabel("identity.users.positions"), "Position");
+  assert.equal(recordTypeLabel("identity.users.positions"), "Move");
   assert.equal(recordTypeLabel("platform.attachments.files"), "File");
 });
 
@@ -115,20 +115,20 @@ test("changeSentence_AFile_IsUploadedRatherThanCreated", () => {
 });
 
 test("changeSentence_ARecordFiledUnderAnother_NamesTheRecordItIsFiledUnder", () => {
-  const position = change({
+  const move = change({
     entityType: "identity.users.positions",
     subjectType: people,
     subjectName: "Vikram Iyer",
   });
 
-  assert.deepEqual(changeSentence(position), {
+  assert.deepEqual(changeSentence(move), {
     actor: "Asha Rao",
-    action: "created a position of",
+    action: "created a move of",
     subject: "Vikram Iyer",
   });
-  assert.deepEqual(changeSentence({ ...position, operation: "deleted", subjectName: null }), {
+  assert.deepEqual(changeSentence({ ...move, operation: "deleted", subjectName: null }), {
     actor: "Asha Rao",
-    action: "deleted a position of a person",
+    action: "deleted a move of a person",
     subject: undefined,
   });
 });

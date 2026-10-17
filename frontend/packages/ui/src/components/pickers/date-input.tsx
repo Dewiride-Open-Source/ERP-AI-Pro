@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@dewiride/erp-ui/compon
 import { isoDateToLocalDate, localDateToIsoDate } from "@dewiride/erp-ui/lib/calendar-date";
 import { calendarDefaults } from "@dewiride/erp-ui/lib/calendar-defaults";
 
+import { focusCalendarDay } from "./calendar-focus";
 import { calendarLimits } from "./calendar-limits";
 import { DateTextInput, type DateTextInputProps } from "./date-text-input";
 
@@ -58,7 +59,12 @@ export function DateInput({
               <CalendarIcon aria-hidden="true" />
             </InputGroupButton>
           </PopoverTrigger>
-          <PopoverContent align="end" aria-label="Choose date" className="w-auto overflow-hidden p-0">
+          <PopoverContent
+            align="end"
+            aria-label="Choose date"
+            className="w-auto overflow-hidden p-0"
+            onOpenAutoFocus={focusCalendarDay}
+          >
             {today === null ? null : (
               <Calendar
                 {...calendarDefaults}

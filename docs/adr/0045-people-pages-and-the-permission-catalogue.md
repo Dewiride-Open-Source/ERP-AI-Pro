@@ -29,7 +29,7 @@ Date: 2026-10-17
 
 - **Every permission says what it allows.**
   - A declaration is `PermissionDeclaration(Name, HeldBy, Description)`. The description is one plain sentence saying what a holder may do, written for the people who assign roles. The owner approves each sentence in the pull request that adds it.
-  - `PermissionCatalog` refuses a blank description when the host starts. `ModuleCatalogTests.ModuleDescriptors_DescribeEveryPermissionInOneSentence` (architecture) checks that every description starts with a capital letter, ends with a full stop and holds no line break.
+  - `PermissionCatalog` refuses a blank description when the host starts. `ModuleCatalogTests.ModuleDescriptors_DescribeEveryPermissionInOneSentence` (architecture) checks that every description is one sentence: a capital letter first, a full stop last, and no other full stop, question mark, exclamation mark or line break.
   - `PermissionCatalog.Permissions` lists a `PermissionCatalogEntry(Name, Description, HeldBy)` per permission, in ordinal order of the name. `HeldBy` follows the order of `ErpRole` and always includes Administrator, who holds every permission. The type's name ends in `Entry` because code analysis rule CA1711 keeps the suffix `Permission` for the permission types of `System.Security`.
 - **The catalogue route.** `GET /api/identity/users/permissions` (`Identity.Users.ListPermissions`) answers `PermissionCatalogResponse { roles, permissions: [{ name, description, heldBy }] }`.
   - `roles` is every built-in role in the order of `ErpRole`: `employee`, `finance`, `hr`, `manager` and `administrator`, the enum schema `ErpRole` of the OpenAPI document. A role that holds nothing today, such as Finance, still has its column.
@@ -64,7 +64,7 @@ Date: 2026-10-17
   | `platform.audit.changes.export` | Administrator | Download the audit trail as a CSV file. |
   | `platform.audit.changes.read` | Administrator | See the audit trail of who changed what in the ERP, and when. |
   | `platform.system-info.info.read` | Administrator | See which version of the ERP is running and how long it has been up. |
-  | `platform.system-info.startups.read` | Administrator | See when the ERP last started and which version each start ran. |
+  | `platform.system-info.startups.read` | Administrator | See the ERP's most recent starts and the version each one ran. |
 
 - **Navigation.**
   - `features/identity/_shared/identity-area.ts` declares the area `identity`, titled "Organisation".
@@ -85,6 +85,8 @@ Date: 2026-10-17
   - 10, 20, 50 or 100 people a page, 10 by default, because a full-page capture of 20 cards on an iPhone passes the 16,384-pixel limit.
   - Sorted by display name unless the person sorts by work email, employee code, department, designation, manager, date of joining, status or last sign-in.
   - Filtered by name, work email, employee code, status, department, designation and a date range of joining.
+  - When the departments or designations cannot be read, a note above the list says it cannot be filtered by them now, and their filter is hidden unless the address already chooses one. A chosen id then reads "Department (name not available)" or "Designation (name not available)"; "Unknown department" and "Unknown designation" name only an id that a lookup which was read does not list (`OrganisationLookup`, `filterOptions` and `filterNote` in `people/components/person-rows.ts`).
+  - The status is one `PersonStatusBadge` on the list and the person page alike, and the roles column is headed "Roles in the ERP", because an administrator's role comes from Microsoft Entra and the column would otherwise read as holding nothing.
   - Cards below the data table's `@2xl` container width.
   - The `(list)` route group keeps the list's loading skeleton off the pages below it.
   - The header links to "Register a person", for holders of `register`, and to "Roles and permissions".
@@ -92,17 +94,23 @@ Date: 2026-10-17
   - A malformed id answers the not-found page (`z.uuid`).
   - The title is the person's name from the read the page itself makes, deduplicated with React's `cache`. The detail and edit pages have no `loading.tsx`, so an unknown id answers a real 404 and the title arrives in the head.
   - Deactivate, Reactivate and Delete ask through `ConfirmDialog`. A refusal shows beside its button in `role="alert"`, because the dialog closes when it is confirmed.
+  - Delete's question says that a person who can still sign in through Microsoft Entra starts a new record at their next sign-in, so deactivating is what keeps them out. A deleted record admits no one, and the next sign-in creates a new one (`DeletePersonHandler`, ADR-0039).
   - On the administrator's own record the note replaces those buttons. The API still refuses `user.own-status` and `user.own-deletion`, and their messages stay for a page another tab left open.
   - The moves (`identity.users.positions.read`) list the person's positions. "Record a move" takes a date, a department, a designation and a manager, each but the date optional. Departments and designations come from the server as combobox options, and the manager is searched through the Server Function `searchManagers`, which leaves the person out. Each move can be withdrawn.
-  - The latest ten changes, for holders of `platform.audit.changes.read` while the audit module is on, are the `RecordHistory` server component of `@/features/platform/audit`, with a link to `/platform/audit?record=<id>`. The audit timeline's entry rendering moves to `changes/components/change-entry.tsx`, shared by both, because `ChangeTimeline` renders `ListLink`, which needs a `ListNavigationProvider`. The person page ships no code of the audit export.
+  - Neither form dialog, Record a move or Assign roles, closes while it saves. Escape, a click outside, the close button and Cancel do nothing until the answer arrives, and Cancel and the close button are `aria-disabled` meanwhile (`useSavingDialog` and `useSavingReport` in `details/hooks/use-saving-dialog.ts`; the dialogs draw their own close button, `SavingDialogCornerClose`, because the generated `DialogContent`'s takes no props). So a refusal always reaches the open form, and a save the person tried to abandon never toasts after its dialog has gone.
+  - Withdrawing asks first. The question says the move before it applies again or, for the earliest move, that the person has no department, designation or manager from that date until a later move starts. When the API refuses, focus stays on Withdraw beside the refusal; once the move is gone, focus moves to the Moves heading.
+  - With no department or designation set up, the dialog's pickers say "No departments are set up yet." and "No designations are set up yet." rather than "No department matches.".
+  - The latest ten changes, for holders of `platform.audit.changes.read` while the audit module is on, are the `RecordHistory` server component of `@/features/platform/audit`, with a link to `/platform/audit?record=<id>`. The audit timeline's entry rendering moves to `changes/components/change-entry.tsx`, shared by both, because `ChangeTimeline` renders `ListLink`, which needs a `ListNavigationProvider`. The person page ships no code of the audit export, which `web-bundles.spec.ts` checks on the administrator's own page. The audit trail calls a change of `identity.users.positions` a move, the word the pages use.
 - **Changes to a person.** Each change is a form of the forms kit or a confirmed action, through Server Functions that start with the session and permission checks (rule X4):
-  - registering (`registerPerson`, with an `Idempotency-Key`; naming roles needs `identity.users.people.assign-roles`), then the person's page;
-  - editing the employee code, phone number and date of joining, on a page of its own (`updatePerson`, with the record's version), then the person's page;
-  - assigning Finance, HR and Manager in a dialog of three checkboxes keyed by the record's version, beside a link to the roles page (`assignPersonRoles`);
+  - registering (`registerPerson`, with an `Idempotency-Key`; naming roles needs `identity.users.people.assign-roles`), then the person's page, where a toast confirms it;
+  - editing the employee code, phone number and date of joining, on a page of its own (`updatePerson`, with the record's version), then the person's page with a toast, because a saved edit and a cancelled one would otherwise land alike;
+  - assigning Finance, HR and Manager in a dialog of three checkboxes keyed by the record's version (`assignPersonRoles`); the roles card, not the dialog, links to the roles page, so following it never discards ticked boxes;
   - recording a move (`recordPersonMove`, with an `Idempotency-Key`) and withdrawing one (`withdrawPersonMove`);
   - changing the status (`changePersonStatus`) and deleting (`deletePerson`).
 
-  Every refusal the API defines is shown in plain words and changes nothing. A move maps these codes:
+  Registering and editing move on themselves: the Server Function answers `succeeded` (registration's `RegistrationAnswer` adds the new record's id and display name, both from the API's answer), and the form shows its toast and then replaces its page with the person's (`router.replace`), so Back skips the form.
+
+  Every refusal the API defines is shown in plain words and changes nothing. Registration words `concurrency.conflict` too: it is the answer when another registration saved the same work email or employee code at the same moment. A move maps these codes:
 
   | Code | Shown as |
   |---|---|
@@ -117,18 +125,19 @@ Date: 2026-10-17
 
 - **The roles page** (`features/identity/users/permissions`).
   - `PermissionsOverview` reads the catalogue once per request (`server/queries.ts`) and shows it read-only: "Roles and permissions", a link to the people list, and the card "What each role may do". When the API cannot answer, the card shows that the roles and permissions are not available.
-  - `PermissionMatrix` is the `Table` primitive. A column header names each role in the order of `roles`. Each permission is a row whose row header holds its description, with its name below in caption type. Each cell reads "Held" or "Not held".
+  - `PermissionMatrix` is the `Table` primitive. A column header names each role in the order of `roles`. Each permission is a row whose row header is its description; the permission's name stays off the page, because no one who reads it needs the code. Each cell reads "Held" or "Not held".
   - The table is named by the card's heading and becomes a focusable region when it scrolls sideways on a narrow screen.
-  - `permission-rows.ts` holds the pure shaping and the role labels: Employee, Finance, HR, Manager and Administrator.
+  - `permission-rows.ts` holds the pure shaping of the matrix. The role labels (Employee, Finance, HR, Manager and Administrator) come from `people/components/person-text.ts`, the module's one copy, which the list, the person page and the dialogs use too.
 - **Pieces shared across the item.**
   - `features/identity/users/organisation/server/queries.ts` serves the lookups the list filters and the move dialog share. `listDepartmentOptions` and `listDesignationOptions` read every page at 200 a page and sort by label. `searchActivePeople(text, { excluding })` answers at most 20 active people whose name contains the text. Each returns the shape of the combobox's options, built by `organisation-options.ts`.
   - `shared/api/dates/date-only.ts` turns the Kiota `DateOnly` into `yyyy-MM-dd` and back, because a Kiota `DateOnly` cannot cross from a Server Component to a Client Component, and a request needs one.
-  - The form kit's server-answer select and the kitchen sink's quarter and currency specimens pass their value text to `SelectValue`, as the forms of this item do.
+  - The form kit's server-answer select and the kitchen sink's quarter and currency specimens pass their value text to `SelectValue`, as the data table's selects do (`design-system.md`, Data table, Hydration).
   - The Playwright fixture `SignedInApi` gains `put`, and the gated pair turns `Erp.Modules.Identity.Users` off with the other module flags.
 - **Earlier decisions this changes.**
   - ADR-0037: a page below a navigation entry adds no breadcrumb step of its own, and the roles page is reached without an entry.
   - ADR-0041: a declaration carries a description; the catalogue answers its entries, through a route of the users module; `identity.users.people.read` also reads the catalogue.
   - ADR-0043: the audit module exports `RecordHistory`, and its timeline entry is shared with it.
+  - ADR-0025: a Server Function whose form moves on to the record it created may answer, with `succeeded`, that record's id and name as the API returned them (`RegistrationAnswer`). It still never echoes a submitted value.
 
 ## Options rejected
 

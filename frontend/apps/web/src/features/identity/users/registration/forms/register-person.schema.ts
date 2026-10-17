@@ -108,4 +108,6 @@ export const defaultRegisterPersonValues: RegisterPersonValues = {
 export const registerPersonProblemMessages: ProblemMessages = {
   "user.work-email-taken": "A person with this work email is already registered.",
   "user.employee-code-taken": employeeCodeTaken,
+  "concurrency.conflict":
+    "Someone registered a person with this work email or employee code at the same moment. Check People, then try again.",
 };

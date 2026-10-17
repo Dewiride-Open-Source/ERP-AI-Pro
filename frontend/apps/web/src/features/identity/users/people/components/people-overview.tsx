@@ -17,12 +17,13 @@ import { listApiParameters } from "@/shared/lists/list-api";
 import { listHref, readListQuery, withPage, type SearchParameters } from "@/shared/lists/list-query";
 
 import { peopleNavigation } from "../../nav";
+import type { OrganisationOption } from "../../organisation/components/organisation-options";
 import { listDepartmentOptions, listDesignationOptions } from "../../organisation/server/queries";
 import { peopleList, withWellFormedIds } from "../lists/people.list";
 import { getPeople } from "../server/queries";
 
 import { PeopleList } from "./people-list";
-import { personRows } from "./person-rows";
+import { personRows, type OrganisationLookup } from "./person-rows";
 
 const listHeadingId = "people-list-heading";
 
@@ -84,7 +85,7 @@ export async function PeopleOverview({ searchParameters }: { searchParameters: S
             </h2>
           </CardTitle>
           <CardDescription>
-            Each person&apos;s department, designation and manager are those of the position they hold today.
+            Each person&apos;s department, designation and manager come from the move that holds today.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -98,8 +99,8 @@ export async function PeopleOverview({ searchParameters }: { searchParameters: S
                 pageCount: people.value.totalPages ?? 0,
               }}
               people={personRows(people.value.items ?? [])}
-              departments={departments.status === "fulfilled" ? departments.value : undefined}
-              designations={designations.status === "fulfilled" ? designations.value : undefined}
+              departments={lookupOf(departments)}
+              designations={lookupOf(designations)}
               labelledBy={listHeadingId}
             />
           ) : (
@@ -109,6 +110,10 @@ export async function PeopleOverview({ searchParameters }: { searchParameters: S
       </Card>
     </div>
   );
+}
+
+function lookupOf(read: PromiseSettledResult<readonly OrganisationOption[]>): OrganisationLookup {
+  return read.status === "fulfilled" ? { status: "read", options: read.value } : { status: "failed" };
 }
 
 function describeFailure(reason: unknown): string {

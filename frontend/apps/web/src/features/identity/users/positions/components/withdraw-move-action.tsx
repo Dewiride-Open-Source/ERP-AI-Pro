@@ -2,7 +2,7 @@
 
 import { ConfirmDialog } from "@dewiride/erp-ui/components/feedback/confirm-dialog";
 import { Undo2Icon } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useLayoutEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
@@ -20,19 +20,31 @@ import {
   withdrawnMoveMessage,
 } from "./move-text";
 
+// Focus returns to the Withdraw button when the confirmation closes, so a refusal shows beside the button that has it; a
+// withdrawn move leaves the list with its button, so focus moves to the list's heading as the button goes.
 export function WithdrawMoveAction({
   personId,
   positionId,
   from,
+  followsEarlierMove,
   focusAfterWithdrawId,
 }: {
   personId: string;
   positionId: string;
   from: string;
+  followsEarlierMove: boolean;
   focusAfterWithdrawId: string;
 }) {
   const [pending, startWithdrawal] = useTransition();
   const [refusal, setRefusal] = useState<PersonActionRefusal>();
+  const withdrawn = useRef(false);
+
+  useLayoutEffect(
+    () => () => {
+      if (withdrawn.current) document.getElementById(focusAfterWithdrawId)?.focus();
+    },
+    [focusAfterWithdrawId],
+  );
 
   const withdraw = () => {
     setRefusal(undefined);
@@ -42,6 +54,7 @@ export function WithdrawMoveAction({
         setRefusal(outcome);
         return;
       }
+      withdrawn.current = true;
       if (outcome.message === undefined) toast.success(withdrawnMoveMessage(from));
       else toast.info(goneMoveMessage(from), { description: outcome.message });
     });
@@ -63,12 +76,11 @@ export function WithdrawMoveAction({
           </PersonActionButton>
         }
         title="Withdraw this move?"
-        description={withdrawMoveDescription(from)}
+        description={withdrawMoveDescription(from, { followsEarlierMove })}
         cancelLabel="Keep it"
         confirmLabel="Withdraw"
         tone="destructive"
         onConfirm={withdraw}
-        focusAfterConfirm={() => document.getElementById(focusAfterWithdrawId)}
       />
       {refusal ? <PersonActionRefusalMessage refusal={refusal} testId="withdraw-move-error" /> : null}
     </div>

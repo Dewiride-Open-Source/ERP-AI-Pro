@@ -36,6 +36,6 @@ test("lastSignInText_ASignIn_ShowsItsDateAndTimeInIndia", () => {
   assert.equal(lastSignInText(new Date("2026-10-17T07:55:00Z")), "17 Oct 2026, 1:25 pm");
 });
 
-test("lastSignInText_NoSignInYet_SaysNever", () => {
-  assert.equal(lastSignInText(undefined), "Never");
+test("lastSignInText_NoSignInYet_SaysNotSignedInYet", () => {
+  assert.equal(lastSignInText(undefined), "Not signed in yet");
 });

@@ -37,9 +37,9 @@ export async function PermissionsOverview() {
             <h1 className="text-title">Roles and permissions</h1>
           </div>
           <p className="max-w-prose text-body text-muted-foreground">
-            What each built-in role lets a person do. A person&apos;s access in Microsoft Entra ID makes them
-            an employee or an administrator, and an administrator gives people the Finance, HR and Manager
-            roles on their pages.
+            What each built-in role lets a person do. A person&apos;s access in Microsoft Entra makes them an
+            employee or an administrator, and an administrator gives people the Finance, HR and Manager roles
+            on their pages.
           </p>
         </div>
         <Button asChild variant="outline">

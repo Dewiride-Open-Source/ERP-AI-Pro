@@ -59,7 +59,7 @@ export function ChangeFeed({
           <EmptyHeader>
             <EmptyTitle>No changes are recorded yet.</EmptyTitle>
             <EmptyDescription>
-              Changes to people, departments, designations, positions and files appear here.
+              Changes to people, departments, designations, moves and files appear here.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

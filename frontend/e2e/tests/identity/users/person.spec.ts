@@ -4,7 +4,9 @@ import { withholdClientBundles } from "../../../fixtures/client-bundles";
 import {
   createDepartmentRecord,
   createDesignationRecord,
+  departmentsApi,
   movesOf,
+  ownPersonRecordId,
   peopleApi,
   personRecord,
   recordMoveRecord,
@@ -14,13 +16,19 @@ import {
   type NamedRecord,
   type PersonRecord,
 } from "../../../fixtures/person-records";
+import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
 import { EditPersonPage, editPersonPath } from "../../../pages/identity/users/edit-person.page";
-import { PersonPage, peoplePath, personPath, typedDate } from "../../../pages/identity/users/person.page";
-import { changesApi } from "../../../pages/platform/audit/changes.page";
+import { peoplePath } from "../../../pages/identity/users/people.page";
+import { PersonPage, personPath, typedDate } from "../../../pages/identity/users/person.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 const joinedOn = "2026-04-01";
+
+const movedOn = "2026-06-01";
+
+const changedMeanwhile =
+  "Someone else changed this record after the page was loaded. Reload the page, then try again.";
 
 type Organisation = {
   readonly prefix: string;
@@ -75,21 +83,6 @@ function dayBefore(isoDate: string): string {
   const day = new Date(`${isoDate}T00:00:00Z`);
   day.setUTCDate(day.getUTCDate() - 1);
   return day.toISOString().slice(0, 10);
-}
-
-// A persona's own record is the person the sign-in admitted, which the audit trail names as the first record the persona
-// created.
-async function ownRecordId(api: SignedInApi, personaId: string): Promise<string> {
-  const query = new URLSearchParams({
-    filter: `actorId:eq:${personaId};entityType:in:identity.users.people;operation:in:created`,
-    pageSize: "20",
-  });
-  const response = await api.get(`${changesApi}?${query}`);
-  expect(response.status(), "the persona's own changes").toBe(200);
-  const { items } = (await response.json()) as { items?: readonly { entityId?: string }[] };
-  const id = items?.at(-1)?.entityId;
-  expect(id, "the record the persona's sign-in created").toBeDefined();
-  return id ?? "";
 }
 
 test.describe("person page", () => {
@@ -149,7 +142,7 @@ test.describe("person page", () => {
           `);
           await expect(personPage.details).toMatchAriaSnapshot(`
             - heading "Details" [level=2]
-            - text: The name and work email come from Microsoft Entra each time the person signs in. The department, designation and manager are those of the move that holds today.
+            - text: The name and work email come from Microsoft Entra each time the person signs in. The department, designation and manager come from the move that holds today.
             - term: Employee code
             - definition: ${person.employeeCode ?? ""}
             - term: Phone number
@@ -192,7 +185,7 @@ test.describe("person page", () => {
                 - button "Withdraw the move from ${typedDate(joinedOn)}"
           `);
           await expect(personPage.history.getByTestId("audit-change-summary")).toHaveText([
-            `${administrator?.name ?? ""} created a position of ${person.displayName}.`,
+            `${administrator?.name ?? ""} created a move of ${person.displayName}.`,
             `${administrator?.name ?? ""} created the person ${person.displayName}.`,
           ]);
           await expect(personPage.historyLink).toHaveAttribute("href", `/platform/audit?record=${person.id}`);
@@ -215,7 +208,7 @@ test.describe("person page", () => {
         }
       });
 
-      test("assigns roles through the dialog and explains a record changed meanwhile", async ({
+      test("assigns roles through the dialog, which stays open while it saves, and explains a record changed meanwhile", async ({
         page,
         api,
         capture,
@@ -240,24 +233,43 @@ test.describe("person page", () => {
                 - checkbox "Finance"
                 - checkbox "HR"
                 - checkbox "Manager"
-              - link "See what each role may do":
-                - /url: /identity/users/permissions
               - button "Cancel"
               - button "Save roles"
               - button "Close"
           `);
           await capture("person-roles-dialog", personPage.rolesDialog);
 
-          await personPage.rolesDialog.getByRole("button", { name: "Cancel" }).click();
+          await personPage.rolesCancel.click();
+          await expect(personPage.rolesDialog).toHaveCount(0);
+          await expect(personPage.assignRoles).toBeFocused();
+          await personPage.assignRoles.click();
+          await expect(personPage.rolesDialog).toBeVisible();
+          await page.keyboard.press("Escape");
+          await expect(personPage.rolesDialog).toHaveCount(0);
+          await expect(personPage.assignRoles).toBeFocused();
+          await personPage.assignRoles.click();
+          await personPage.rolesClose.click();
           await expect(personPage.rolesDialog).toHaveCount(0);
           await expect(personPage.assignRoles).toBeFocused();
 
           await personPage.assignRoles.click();
           await personPage.roleBox("Finance").check();
           await personPage.roleBox("Manager").check();
+          const release = await holdServerFunctionCalls(page, personPath(person.id));
           await personPage.saveRoles.click();
+          await expect(personPage.saveRoles).toHaveAttribute("aria-busy", "true");
+          await page.keyboard.press("Escape");
+          await expect(personPage.rolesDialog).toBeVisible();
+          await expect(personPage.rolesCancel).toHaveAttribute("aria-disabled", "true");
+          await expect(personPage.rolesClose).toHaveAttribute("aria-disabled", "true");
+          await personPage.rolesClose.focus();
+          await page.keyboard.press("Enter");
+          await expect(personPage.rolesDialog).toBeVisible();
+          release();
+
           await expect(personPage.rolesDialog).toHaveCount(0);
           await expect(shell.toast(`Saved the roles of ${person.displayName}.`)).toBeVisible();
+          await expect(personPage.assignRoles).toBeFocused();
           await expect(personPage.roleList).toMatchAriaSnapshot(`
             - list "Roles":
               - listitem: Finance
@@ -285,7 +297,7 @@ test.describe("person page", () => {
           await capture("person-roles-conflict", personPage.rolesDialog);
           expect((await personRecord(api, person.id)).roles).toEqual(["hr"]);
 
-          await personPage.rolesDialog.getByRole("button", { name: "Cancel" }).click();
+          await personPage.rolesCancel.click();
           await page.reload();
           await expect(personPage.roleList).toMatchAriaSnapshot(`
             - list "Roles":
@@ -296,7 +308,7 @@ test.describe("person page", () => {
         }
       });
 
-      test("records a move with a manager found by name, refuses a date already taken and withdraws the move", async ({
+      test("records a move dated from the calendar with a manager found by name, refuses a date already taken and withdraws the move", async ({
         page,
         api,
         capture,
@@ -361,16 +373,46 @@ test.describe("person page", () => {
           ).toBeVisible();
           await capture("person-move-refused-in-the-browser", personPage.moveDialog);
 
-          await personPage.moveDate.fill(typedDate(later));
+          await personPage.moveDate.fill(typedDate(dayBefore(later)));
+          await personPage.moveDateTrigger.focus();
+          await page.keyboard.press("Enter");
+          await expect(personPage.moveCalendar).toBeVisible();
+          await expect(personPage.calendarDay(dayBefore(later))).toBeFocused();
+          await page.keyboard.press("ArrowRight");
+          await expect(personPage.calendarDay(later)).toBeFocused();
+          await page.keyboard.press("Enter");
+          await expect(personPage.moveCalendar).toBeHidden();
+          await expect(personPage.moveDate).toHaveValue(typedDate(later));
+          await expect(personPage.moveDateTrigger).toBeFocused();
+          await expect(personPage.moveDialog).toBeVisible();
+          await page.keyboard.press("Enter");
+          await expect(personPage.moveCalendar).toBeVisible();
+          await page.keyboard.press("Escape");
+          await expect(personPage.moveCalendar).toBeHidden();
+          await expect(personPage.moveDialog).toBeVisible();
+          await expect(personPage.moveDateTrigger).toBeFocused();
+          await expect(personPage.moveDate).toHaveValue(typedDate(later));
+
           await personPage.choose(personPage.moveDepartment, prefix, department.name);
           await personPage.choose(personPage.moveDesignation, prefix, designation.name);
           await personPage.choose(personPage.moveManager, `${prefix} Man`, manager.displayName);
+          const release = await holdServerFunctionCalls(page, personPath(person.id));
           await personPage.saveMove.click();
+          await expect(personPage.saveMove).toHaveAttribute("aria-busy", "true");
+          await page.keyboard.press("Escape");
+          await expect(personPage.moveDialog).toBeVisible();
+          await expect(personPage.moveCancel).toHaveAttribute("aria-disabled", "true");
+          await expect(personPage.moveClose).toHaveAttribute("aria-disabled", "true");
+          await personPage.moveCancel.focus();
+          await page.keyboard.press("Enter");
+          await expect(personPage.moveDialog).toBeVisible();
+          release();
 
           await expect(personPage.moveDialog).toHaveCount(0);
           await expect(
             shell.toast(`Recorded the move of ${person.displayName} from ${typedDate(later)}.`),
           ).toBeVisible();
+          await expect(personPage.recordMove).toBeFocused();
           await expect(personPage.moveItems).toHaveCount(2);
           await expect(personPage.move(`From ${typedDate(later)}`)).toMatchAriaSnapshot(`
             - listitem:
@@ -390,6 +432,16 @@ test.describe("person page", () => {
           await capture("person-move-recorded", personPage.moves);
 
           await personPage.recordMove.click();
+          await expect(personPage.moveDialog).toBeVisible();
+          await page.keyboard.press("Escape");
+          await expect(personPage.moveDialog).toHaveCount(0);
+          await expect(personPage.recordMove).toBeFocused();
+          await personPage.recordMove.click();
+          await personPage.moveClose.click();
+          await expect(personPage.moveDialog).toHaveCount(0);
+          await expect(personPage.recordMove).toBeFocused();
+
+          await personPage.recordMove.click();
           await personPage.moveDate.fill(typedDate(joinedOn));
           await personPage.saveMove.click();
           await expect(personPage.moveSummary).toContainText(
@@ -397,12 +449,21 @@ test.describe("person page", () => {
           );
           await expect(personPage.moveSummary).toBeFocused();
           await capture("person-move-refused", personPage.moveDialog);
-          await personPage.moveDialog.getByRole("button", { name: "Cancel" }).click();
+          await personPage.moveCancel.click();
           await expect(personPage.moveDialog).toHaveCount(0);
+          await expect(personPage.recordMove).toBeFocused();
 
-          const laterMove = personPage.move(`From ${typedDate(later)}`);
-          await laterMove.getByRole("button", { name: `Withdraw the move from ${typedDate(later)}` }).click();
           const withdrawal = personPage.confirmation("Withdraw this move?");
+          await personPage.withdrawButton(joinedOn).click();
+          await expect(withdrawal).toContainText(
+            `The move from ${typedDate(joinedOn)} is removed, and from that date they have no department, designation or manager until a later move starts.`,
+          );
+          await withdrawal.getByRole("button", { name: "Keep it" }).click();
+          await expect(withdrawal).toHaveCount(0);
+          await expect(personPage.withdrawButton(joinedOn)).toBeFocused();
+          await expect(personPage.moveItems).toHaveCount(2);
+
+          await personPage.withdrawButton(later).click();
           await expect(withdrawal).toContainText(
             `The move from ${typedDate(later)} is removed, and the move before it applies again until the next one starts.`,
           );
@@ -416,6 +477,57 @@ test.describe("person page", () => {
           expect((await movesOf(api, person.id)).map((move) => move.effectiveFrom)).toEqual([joinedOn]);
         } finally {
           await removeOrganisation(api, organisation);
+        }
+      });
+
+      test("explains a withdrawal the API refuses beside the move, where focus stays", async ({
+        page,
+        api,
+        capture,
+      }) => {
+        const prefix = uniquePrefix("withdraw-refused");
+        const created: { readonly people: string[]; readonly departments: string[] } = {
+          people: [],
+          departments: [],
+        };
+        try {
+          const department = await createDepartmentRecord(api, `${prefix} Closed`);
+          created.departments.push(department.id);
+          const person = await registerPersonRecord(api, {
+            displayName: `${prefix} Person`,
+            workEmail: `${prefix}-person@example.com`,
+            dateOfJoining: joinedOn,
+          });
+          created.people.push(person.id);
+          await recordMoveRecord(api, person.id, { effectiveFrom: joinedOn, departmentId: department.id });
+          await recordMoveRecord(api, person.id, { effectiveFrom: movedOn });
+          const deleted = await api.delete(`${departmentsApi}/${department.id}`);
+          expect(deleted.status(), "the deletion of a department only an ended move names").toBe(204);
+
+          const personPage = new PersonPage(page);
+          await personPage.goto(person.id);
+          await personPage.waitUntilInteractive();
+          const heldToday = personPage.move(`From ${typedDate(movedOn)}`);
+          await personPage.withdrawButton(movedOn).click();
+          await personPage
+            .confirmation("Withdraw this move?")
+            .getByRole("button", { name: "Withdraw", exact: true })
+            .click();
+
+          const refusal = heldToday.getByTestId("withdraw-move-error");
+          await expect(refusal).toHaveRole("alert");
+          await expect(refusal).toContainText(
+            "Withdrawing this move would bring back the one before it, which names a department, designation or manager deleted or deactivated since; record a new move instead.",
+          );
+          await expect(personPage.withdrawButton(movedOn)).toBeFocused();
+          await expect(personPage.moveItems).toHaveCount(2);
+          await capture("person-move-withdrawal-refused", personPage.moves);
+          expect((await movesOf(api, person.id)).map((move) => move.effectiveFrom).sort()).toEqual([
+            joinedOn,
+            movedOn,
+          ]);
+        } finally {
+          await removeRecords(api, created);
         }
       });
 
@@ -455,10 +567,54 @@ test.describe("person page", () => {
           await expect(reactivation).toContainText(
             `${person.displayName} can sign in again with their Microsoft account.`,
           );
+          await reactivation.getByRole("button", { name: "Keep them deactivated" }).click();
+          await expect(reactivation).toHaveCount(0);
+          await expect(personPage.statusAction).toBeFocused();
+          await expect(personPage.status).toHaveText("Deactivated");
+
+          await personPage.statusAction.click();
           await reactivation.getByRole("button", { name: "Reactivate", exact: true }).click();
           await expect(shell.toast(`Reactivated ${person.displayName}.`)).toBeVisible();
           await expect(personPage.status).toHaveText("Active");
           await expect(personPage.statusAction).toHaveText("Deactivate");
+          expect((await personRecord(api, person.id)).status).toBe("active");
+        } finally {
+          await removeOrganisation(api, organisation);
+        }
+      });
+
+      test("explains a status change refused because the record changed meanwhile, again when it is retried", async ({
+        page,
+        api,
+        capture,
+      }) => {
+        const organisation = await seedOrganisation(api, "stale-status");
+        const { person } = organisation;
+        try {
+          const personPage = new PersonPage(page);
+          await personPage.goto(person.id);
+          await personPage.waitUntilInteractive();
+          const loaded = await personRecord(api, person.id);
+          const changedElsewhere = await api.put(`${peopleApi}/${person.id}/roles`, {
+            data: { roles: ["hr"], version: loaded.version },
+          });
+          expect(changedElsewhere.status(), "the change made elsewhere").toBe(200);
+
+          const deactivation = personPage.confirmation(`Deactivate ${person.displayName}?`);
+          await personPage.statusAction.click();
+          await deactivation.getByRole("button", { name: "Deactivate", exact: true }).click();
+          await expect(personPage.statusError).toHaveRole("alert");
+          await expect(personPage.statusError).toContainText(changedMeanwhile);
+          await expect(personPage.statusAction).toBeFocused();
+          await capture("person-status-refused", personPage.header);
+
+          const release = await holdServerFunctionCalls(page, personPath(person.id));
+          await personPage.statusAction.click();
+          await deactivation.getByRole("button", { name: "Deactivate", exact: true }).click();
+          await expect(personPage.statusError).toHaveCount(0);
+          release();
+          await expect(personPage.statusError).toHaveRole("alert");
+          await expect(personPage.statusError).toContainText(changedMeanwhile);
           expect((await personRecord(api, person.id)).status).toBe("active");
         } finally {
           await removeOrganisation(api, organisation);
@@ -484,13 +640,18 @@ test.describe("person page", () => {
           await expect(managerDeletion).toMatchAriaSnapshot(`
             - alertdialog "Delete ${manager.displayName}?":
               - heading "Delete ${manager.displayName}?" [level=2]
-              - paragraph: ${manager.displayName} is removed from People and can no longer sign in, and any session they have open ends at their next step. Their changes stay in the audit trail.
+              - paragraph: ${manager.displayName} is removed from People, and any session they have open ends at their next step. If they can still sign in through Microsoft Entra, their next sign-in creates a new record, so deactivate them instead to keep them out. Their changes stay in the audit trail.
               - button "Keep the record"
               - button "Delete"
           `);
           await capture("person-deletion", managerDeletion);
-          await managerDeletion.getByRole("button", { name: "Delete", exact: true }).click();
+          await managerDeletion.getByRole("button", { name: "Keep the record" }).click();
+          await expect(managerDeletion).toHaveCount(0);
+          await expect(personPage.deleteAction).toBeFocused();
+          await expect(page).toHaveURL((url) => url.pathname === personPath(manager.id));
 
+          await personPage.deleteAction.click();
+          await managerDeletion.getByRole("button", { name: "Delete", exact: true }).click();
           await expect(personPage.deleteError).toContainText(
             "People report to this person today or from a later date. Record another manager for them first.",
           );
@@ -521,7 +682,7 @@ test.describe("person page", () => {
         person: administrator,
         capture,
       }) => {
-        const ownId = await ownRecordId(api, administrator?.id ?? "");
+        const ownId = await ownPersonRecordId(api, administrator);
         const personPage = new PersonPage(page);
         await personPage.goto(ownId);
         await personPage.waitUntilInteractive();
@@ -555,6 +716,7 @@ test.describe("person page", () => {
         try {
           const personPage = new PersonPage(page);
           const editPage = new EditPersonPage(page);
+          const shell = new AppShell(page);
           await personPage.goto(person.id);
           await personPage.waitUntilInteractive();
           await personPage.editLink.click();
@@ -597,7 +759,9 @@ test.describe("person page", () => {
           await editPage.dateOfJoining.fill("15-05-2026");
           await editPage.save.click();
 
+          await expect(shell.toast(`Saved the details of ${person.displayName}.`)).toBeVisible();
           await expect(page).toHaveURL((url) => url.pathname === personPath(person.id));
+          await expect(personPage.heading).toHaveText(person.displayName);
           await expect(personPage.details).toContainText(`${prefix}-N`);
           await expect(personPage.details).toContainText("+442079460958");
           await expect(personPage.details).toContainText("15-05-2026");
@@ -607,6 +771,9 @@ test.describe("person page", () => {
             "+442079460958",
             "2026-05-15",
           ]);
+          await page.goBack();
+          await expect(page).toHaveURL((url) => url.pathname === personPath(person.id));
+          await expect(personPage.heading).toHaveText(person.displayName);
 
           await editPage.goto(person.id);
           await editPage.cancel.click();

@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-export const peoplePath = "/identity/users";
+import { peoplePath } from "./people.page";
 
 export function personPath(id: string): string {
   return `${peoplePath}/${id}`;
@@ -10,6 +10,13 @@ export function typedDate(isoDate: string): string {
   const [year, month, day] = isoDate.split("-");
   return `${day}-${month}-${year}`;
 }
+
+const calendarDayName = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 export class PersonPage {
   readonly heading: Locator;
@@ -21,25 +28,30 @@ export class PersonPage {
   readonly statusError: Locator;
   readonly deleteAction: Locator;
   readonly deleteError: Locator;
-  readonly ownRecordNote: Locator;
   readonly details: Locator;
   readonly roles: Locator;
   readonly roleList: Locator;
   readonly assignRoles: Locator;
   readonly rolesDialog: Locator;
   readonly rolesSummary: Locator;
+  readonly rolesCancel: Locator;
+  readonly rolesClose: Locator;
   readonly saveRoles: Locator;
   readonly moves: Locator;
   readonly movesHeading: Locator;
   readonly moveItems: Locator;
+  readonly movesNone: Locator;
   readonly recordMove: Locator;
   readonly moveDialog: Locator;
   readonly moveSummary: Locator;
   readonly moveDate: Locator;
   readonly moveDateTrigger: Locator;
+  readonly moveCalendar: Locator;
   readonly moveDepartment: Locator;
   readonly moveDesignation: Locator;
   readonly moveManager: Locator;
+  readonly moveCancel: Locator;
+  readonly moveClose: Locator;
   readonly saveMove: Locator;
   readonly history: Locator;
   readonly historyLink: Locator;
@@ -56,17 +68,19 @@ export class PersonPage {
     this.statusError = page.getByTestId("person-status-error");
     this.deleteAction = page.getByTestId("person-delete-action");
     this.deleteError = page.getByTestId("person-delete-error");
-    this.ownRecordNote = page.getByTestId("person-own-record");
     this.details = page.getByTestId("person-details");
     this.roles = page.getByTestId("person-roles");
     this.roleList = this.roles.getByRole("list", { name: "Roles" });
     this.assignRoles = page.getByTestId("assign-roles");
     this.rolesDialog = page.getByRole("dialog", { name: "Assign roles" });
     this.rolesSummary = this.rolesDialog.locator("[data-slot='alert']");
+    this.rolesCancel = this.rolesDialog.getByRole("button", { name: "Cancel" });
+    this.rolesClose = this.rolesDialog.getByRole("button", { name: "Close" });
     this.saveRoles = this.rolesDialog.getByTestId("assign-roles-save");
     this.moves = page.getByTestId("person-moves");
     this.movesHeading = this.moves.getByRole("heading", { name: "Moves", level: 2 });
     this.moveItems = this.moves.getByTestId("person-move");
+    this.movesNone = this.moves.getByTestId("person-moves-none");
     this.recordMove = page.getByTestId("record-move");
     this.moveDialog = page.getByRole("dialog", { name: "Record a move" });
     this.moveSummary = this.moveDialog.locator("[data-slot='alert']");
@@ -75,9 +89,12 @@ export class PersonPage {
     const moveForm = page.getByTestId("record-move-form");
     this.moveDate = moveForm.locator("input[id$='-effectiveFrom']");
     this.moveDateTrigger = moveForm.locator("button[aria-label='Choose date']");
+    this.moveCalendar = page.getByRole("dialog", { name: "Choose date", exact: true });
     this.moveDepartment = this.moveDialog.getByRole("combobox", { name: "Department" });
     this.moveDesignation = this.moveDialog.getByRole("combobox", { name: "Designation" });
     this.moveManager = this.moveDialog.getByRole("combobox", { name: "Manager" });
+    this.moveCancel = this.moveDialog.getByRole("button", { name: "Cancel" });
+    this.moveClose = this.moveDialog.getByRole("button", { name: "Close" });
     this.saveMove = this.moveDialog.getByTestId("record-move-save");
     this.history = page.getByTestId("record-history");
     this.historyLink = page.getByTestId("record-history-link");
@@ -101,6 +118,19 @@ export class PersonPage {
 
   move(title: string): Locator {
     return this.moveItems.filter({ has: this.page.getByRole("heading", { name: title, exact: true }) });
+  }
+
+  withdrawButton(isoDate: string): Locator {
+    return this.moves.getByRole("button", {
+      name: `Withdraw the move from ${typedDate(isoDate)}`,
+      exact: true,
+    });
+  }
+
+  // A day's name in the calendar starts with its weekday and may end with its state, such as ", selected".
+  calendarDay(isoDate: string): Locator {
+    const day = calendarDayName.format(new Date(`${isoDate}T00:00:00Z`));
+    return this.moveCalendar.getByRole("button", { name: new RegExp(`\\b${day}\\b`) });
   }
 
   confirmation(title: string): Locator {

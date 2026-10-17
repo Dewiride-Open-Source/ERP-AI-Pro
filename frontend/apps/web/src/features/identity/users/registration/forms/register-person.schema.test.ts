@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { ApiError } from "@/shared/api/problem-details";
+import { problemToFormState } from "@/shared/forms/errors/problem-to-form-state";
+
 import {
   defaultRegisterPersonValues,
   displayNameMaxLength,
@@ -10,6 +13,7 @@ import {
   phoneNumberMalformed,
   phoneNumberMaxLength,
   recordVersionSchema,
+  registerPersonProblemMessages,
   registerPersonSchema,
   type RegisterPersonValues,
 } from "./register-person.schema.ts";
@@ -131,6 +135,32 @@ test("isPhoneNumber_NumbersTheApiRefuses_AreRefused", () => {
   ]) {
     assert.equal(isPhoneNumber(number), false, number);
   }
+});
+
+test("registerPersonProblemMessages_RefusalsOfTheApi_AreWordedForThePerson", () => {
+  assert.deepEqual(registerPersonProblemMessages, {
+    "user.work-email-taken": "A person with this work email is already registered.",
+    "user.employee-code-taken": "Another person already has this employee code.",
+    "concurrency.conflict":
+      "Someone registered a person with this work email or employee code at the same moment. Check People, then try again.",
+  });
+});
+
+test("registerPersonProblemMessages_TwoRegistrationsOfOneEmailAtOnce_ShowThePlainSentenceNotTheApisDetail", () => {
+  const raced = new ApiError({
+    status: 409,
+    code: "concurrency.conflict",
+    detail: "User, ChangeRecord duplicates a row saved since it was read; reload and try again.",
+    traceId: "0af7651916cd43dd8448eb211c80319c",
+  });
+
+  assert.deepEqual(problemToFormState(raced, { messages: registerPersonProblemMessages }), {
+    status: "failed",
+    message:
+      "Someone registered a person with this work email or employee code at the same moment. Check People, then try again.",
+    code: "concurrency.conflict",
+    reference: "0af7651916cd43dd8448eb211c80319c",
+  });
 });
 
 test("recordVersionSchema_MissingOrOverlongVersion_AsksForAReload", () => {

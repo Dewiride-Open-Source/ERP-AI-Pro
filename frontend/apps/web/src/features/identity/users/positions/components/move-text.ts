@@ -40,8 +40,21 @@ export function withdrawMoveLabel(from: string): string {
   return `Withdraw the move from ${formatDisplayDate(from)}`;
 }
 
-export function withdrawMoveDescription(from: string): string {
-  return `The move from ${formatDisplayDate(from)} is removed, and the move before it applies again until the next one starts.`;
+export function withdrawMoveDescription(
+  from: string,
+  { followsEarlierMove }: { followsEarlierMove: boolean },
+): string {
+  const removed = `The move from ${formatDisplayDate(from)} is removed`;
+  return followsEarlierMove
+    ? `${removed}, and the move before it applies again until the next one starts.`
+    : `${removed}, and from that date they have no department, designation or manager until a later move starts.`;
+}
+
+export function noChoiceMessage(choice: "department" | "designation", optionCount: number): string {
+  if (optionCount === 0) {
+    return choice === "department" ? "No departments are set up yet." : "No designations are set up yet.";
+  }
+  return choice === "department" ? "No department matches." : "No designation matches.";
 }
 
 export function withdrawnMoveMessage(from: string): string {

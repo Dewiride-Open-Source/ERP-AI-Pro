@@ -3,10 +3,8 @@
 import type { PersonRole } from "@dewiride/erp-api-client";
 import { FormAlert } from "@dewiride/erp-ui/components/forms/form-alert";
 import { SubmitButton } from "@dewiride/erp-ui/components/forms/submit-button";
-import { Button } from "@dewiride/erp-ui/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -15,15 +13,19 @@ import {
   DialogTrigger,
 } from "@dewiride/erp-ui/components/ui/dialog";
 import { UserCogIcon } from "lucide-react";
-import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Controller } from "react-hook-form";
 import { toast } from "sonner";
 
 import { fieldErrorMessages } from "@/shared/forms/client/form-feedback";
 import { useActionForm, type FormAction } from "@/shared/forms/client/use-action-form";
 
-import { PersonActionButton } from "../../details/components/person-action-controls";
+import {
+  PersonActionButton,
+  SavingDialogClose,
+  SavingDialogCornerClose,
+} from "../../details/components/person-action-controls";
+import { useSavingDialog, useSavingReport } from "../../details/hooks/use-saving-dialog";
 import { assignRolesSchema, assignRolesValues, type AssignRolesValues } from "../forms/assign-roles.schema";
 import { assignPersonRoles } from "../server/actions";
 
@@ -40,14 +42,14 @@ export function AssignRolesDialog({
   roles: readonly PersonRole[];
   version: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const { open, saving, setOpen, setSaving, onOpenChange } = useSavingDialog();
   const saved = useCallback(() => {
     setOpen(false);
     toast.success(`Saved the roles of ${personName}.`);
-  }, [personName]);
+  }, [personName, setOpen]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <PersonActionButton
           pending={false}
@@ -59,7 +61,10 @@ export function AssignRolesDialog({
           Assign roles
         </PersonActionButton>
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
+      <DialogContent
+        showCloseButton={false}
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md"
+      >
         <DialogHeader>
           <DialogTitle>Assign roles</DialogTitle>
           <DialogDescription>
@@ -71,7 +76,9 @@ export function AssignRolesDialog({
           key={version}
           defaultValues={assignRolesValues(personId, roles, version)}
           onSaved={saved}
+          onSavingChange={setSaving}
         />
+        <SavingDialogCornerClose saving={saving} />
       </DialogContent>
     </Dialog>
   );
@@ -81,9 +88,11 @@ export function AssignRolesDialog({
 function AssignRolesForm({
   defaultValues,
   onSaved,
+  onSavingChange,
 }: {
   defaultValues: AssignRolesValues;
   onSaved: () => void;
+  onSavingChange: (saving: boolean) => void;
 }) {
   const action = useCallback<FormAction<AssignRolesValues>>(
     async (previous, submission) => {
@@ -98,6 +107,7 @@ function AssignRolesForm({
     action,
     defaultValues,
   });
+  useSavingReport(pending, onSavingChange);
 
   return (
     <form noValidate method="post" onSubmit={onSubmit} className="grid gap-4" data-testid="assign-roles-form">
@@ -117,18 +127,10 @@ function AssignRolesForm({
           />
         )}
       />
-      <Link
-        href="/identity/users/permissions"
-        className="w-fit rounded-sm text-primary underline-offset-4 focus-ring hover:underline"
-      >
-        See what each role may do
-      </Link>
       <DialogFooter>
-        <DialogClose asChild>
-          <Button type="button" variant="outline">
-            Cancel
-          </Button>
-        </DialogClose>
+        <SavingDialogClose saving={pending} variant="outline">
+          Cancel
+        </SavingDialogClose>
         <SubmitButton pending={pending} ready={ready} data-testid="assign-roles-save">
           Save roles
         </SubmitButton>

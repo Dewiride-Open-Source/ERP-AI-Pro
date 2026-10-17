@@ -5,6 +5,7 @@ import {
   goneMoveMessage,
   movePeriodTitle,
   moveTimingLabel,
+  noChoiceMessage,
   recordedMoveMessage,
   withdrawMoveDescription,
   withdrawMoveLabel,
@@ -25,12 +26,32 @@ test("moveTimingLabel_EachTiming_NamesOnlyTheMovesThatAreNotHistory", () => {
 
 test("withdrawMoveText_Move_NamesItByItsDate", () => {
   assert.equal(withdrawMoveLabel("2026-07-01"), "Withdraw the move from 01-07-2026");
-  assert.equal(
-    withdrawMoveDescription("2026-07-01"),
-    "The move from 01-07-2026 is removed, and the move before it applies again until the next one starts.",
-  );
   assert.equal(withdrawnMoveMessage("2026-07-01"), "Withdrew the move from 01-07-2026.");
   assert.equal(goneMoveMessage("2026-07-01"), "The move from 01-07-2026 is no longer recorded.");
+});
+
+test("withdrawMoveDescription_MoveAfterAnEarlierOne_SaysTheEarlierOneAppliesAgain", () => {
+  assert.equal(
+    withdrawMoveDescription("2026-07-01", { followsEarlierMove: true }),
+    "The move from 01-07-2026 is removed, and the move before it applies again until the next one starts.",
+  );
+});
+
+test("withdrawMoveDescription_EarliestMove_SaysTheyHaveNothingFromItsDate", () => {
+  assert.equal(
+    withdrawMoveDescription("2026-04-01", { followsEarlierMove: false }),
+    "The move from 01-04-2026 is removed, and from that date they have no department, designation or manager until a later move starts.",
+  );
+});
+
+test("noChoiceMessage_NoOptionsAtAll_SaysNoneAreSetUpYet", () => {
+  assert.equal(noChoiceMessage("department", 0), "No departments are set up yet.");
+  assert.equal(noChoiceMessage("designation", 0), "No designations are set up yet.");
+});
+
+test("noChoiceMessage_OptionsTheSearchLeavesOut_SaysNoneMatches", () => {
+  assert.equal(noChoiceMessage("department", 3), "No department matches.");
+  assert.equal(noChoiceMessage("designation", 1), "No designation matches.");
 });
 
 test("recordedMoveMessage_PersonAndDate_SaysWhoseMoveFromWhen", () => {

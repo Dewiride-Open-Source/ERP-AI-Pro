@@ -56,6 +56,7 @@ export async function EditPerson({ userId }: { userId: string }) {
           </dl>
           <EditPersonForm
             labelledBy={formHeadingId}
+            personName={name}
             defaultValues={{
               id,
               employeeCode: person.employeeCode ?? "",

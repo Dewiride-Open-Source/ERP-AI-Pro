@@ -1,5 +1,4 @@
-import type { Permission, PersonResponse, PersonStatus } from "@dewiride/erp-api-client";
-import { Badge } from "@dewiride/erp-ui/components/ui/badge";
+import type { Permission, PersonResponse } from "@dewiride/erp-api-client";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { Suspense } from "react";
 
@@ -12,7 +11,7 @@ import { getFeatureFlags } from "@/shared/feature-flags/queries";
 import { istDateKey } from "@/shared/format/dates";
 
 import { listDepartmentOptions, listDesignationOptions } from "../../organisation/server/queries";
-import { statusLabel } from "../../people/components/person-text";
+import { PersonStatusBadge } from "../../people/components/person-status-badge";
 import { PersonRoles } from "../../roles/components/person-roles";
 import { getPerson, getPositions } from "../server/queries";
 
@@ -52,7 +51,7 @@ export async function PersonOverview({ userId }: { userId: string }) {
             {person.status ? (
               <>
                 {" "}
-                <StatusBadge status={person.status} />
+                <PersonStatusBadge status={person.status} testId="person-status" />
               </>
             ) : null}
           </p>
@@ -98,22 +97,6 @@ export async function PersonOverview({ userId }: { userId: string }) {
         </Suspense>
       ) : null}
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: PersonStatus }) {
-  return status === "active" ? (
-    <Badge
-      variant="outline"
-      className="border-transparent bg-success/10 text-success dark:bg-success/20"
-      data-testid="person-status"
-    >
-      {statusLabel(status)}
-    </Badge>
-  ) : (
-    <Badge variant="secondary" data-testid="person-status">
-      {statusLabel(status)}
-    </Badge>
   );
 }
 

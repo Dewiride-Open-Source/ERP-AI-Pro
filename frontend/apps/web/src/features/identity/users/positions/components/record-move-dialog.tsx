@@ -5,10 +5,8 @@ import { FormAlert } from "@dewiride/erp-ui/components/forms/form-alert";
 import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { SubmitButton } from "@dewiride/erp-ui/components/forms/submit-button";
 import { DateInput } from "@dewiride/erp-ui/components/pickers/date-input";
-import { Button } from "@dewiride/erp-ui/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -18,7 +16,7 @@ import {
 } from "@dewiride/erp-ui/components/ui/dialog";
 import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
 import { CalendarPlusIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Controller } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -26,12 +24,17 @@ import { leavesGroup } from "@/shared/forms/client/field-focus";
 import { fieldErrorMessages } from "@/shared/forms/client/form-feedback";
 import { useActionForm, type FormAction } from "@/shared/forms/client/use-action-form";
 
-import { PersonActionButton } from "../../details/components/person-action-controls";
+import {
+  PersonActionButton,
+  SavingDialogClose,
+  SavingDialogCornerClose,
+} from "../../details/components/person-action-controls";
+import { useSavingDialog, useSavingReport } from "../../details/hooks/use-saving-dialog";
 import { PersonPicker } from "../../organisation/components/person-picker";
 import { recordMoveSchema, recordMoveValues, type RecordMoveValues } from "../forms/record-move.schema";
 import { recordPersonMove, searchManagers } from "../server/actions";
 
-import { recordedMoveMessage } from "./move-text";
+import { noChoiceMessage, recordedMoveMessage } from "./move-text";
 
 type Choices = {
   readonly departments: readonly ComboboxOption[];
@@ -44,17 +47,17 @@ export function RecordMoveDialog({
   departments,
   designations,
 }: Choices & { personId: string; personName: string }) {
-  const [open, setOpen] = useState(false);
+  const { open, saving, setOpen, setSaving, onOpenChange } = useSavingDialog();
   const recorded = useCallback(
     (effectiveFrom: string) => {
       setOpen(false);
       toast.success(recordedMoveMessage(personName, effectiveFrom));
     },
-    [personName],
+    [personName, setOpen],
   );
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <PersonActionButton
           pending={false}
@@ -66,7 +69,10 @@ export function RecordMoveDialog({
           Record a move
         </PersonActionButton>
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
+      <DialogContent
+        showCloseButton={false}
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg"
+      >
         <DialogHeader>
           <DialogTitle>Record a move</DialogTitle>
           <DialogDescription>
@@ -79,7 +85,9 @@ export function RecordMoveDialog({
           departments={departments}
           designations={designations}
           onRecorded={recorded}
+          onSavingChange={setSaving}
         />
+        <SavingDialogCornerClose saving={saving} />
       </DialogContent>
     </Dialog>
   );
@@ -90,7 +98,12 @@ function RecordMoveForm({
   departments,
   designations,
   onRecorded,
-}: Choices & { personId: string; onRecorded: (effectiveFrom: string) => void }) {
+  onSavingChange,
+}: Choices & {
+  personId: string;
+  onRecorded: (effectiveFrom: string) => void;
+  onSavingChange: (saving: boolean) => void;
+}) {
   const action = useCallback<FormAction<RecordMoveValues>>(
     async (previous, submission) => {
       const answer = await recordPersonMove(previous, submission);
@@ -105,6 +118,7 @@ function RecordMoveForm({
     defaultValues: recordMoveValues(personId),
     idempotent: true,
   });
+  useSavingReport(pending, onSavingChange);
   const findManagers = useCallback((text: string) => searchManagers(personId, text), [personId]);
   const { control } = form;
 
@@ -163,7 +177,7 @@ function RecordMoveForm({
                   onValueChange={(value) => field.onChange(value ?? "")}
                   onBlur={field.onBlur}
                   placeholder="Search departments"
-                  emptyMessage="No department matches."
+                  emptyMessage={noChoiceMessage("department", departments.length)}
                 />
               )}
             </FormField>
@@ -189,7 +203,7 @@ function RecordMoveForm({
                   onValueChange={(value) => field.onChange(value ?? "")}
                   onBlur={field.onBlur}
                   placeholder="Search designations"
-                  emptyMessage="No designation matches."
+                  emptyMessage={noChoiceMessage("designation", designations.length)}
                 />
               )}
             </FormField>
@@ -224,11 +238,9 @@ function RecordMoveForm({
       </FieldGroup>
 
       <DialogFooter>
-        <DialogClose asChild>
-          <Button type="button" variant="outline">
-            Cancel
-          </Button>
-        </DialogClose>
+        <SavingDialogClose saving={pending} variant="outline">
+          Cancel
+        </SavingDialogClose>
         <SubmitButton pending={pending} ready={ready} data-testid="record-move-save">
           Record the move
         </SubmitButton>

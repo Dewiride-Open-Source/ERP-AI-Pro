@@ -23,6 +23,16 @@ export const unknownDepartment = "Unknown department";
 
 export const unknownDesignation = "Unknown designation";
 
+export const departmentNameUnavailable = "Department (name not available)";
+
+export const designationNameUnavailable = "Designation (name not available)";
+
+export const departmentsUnavailable =
+  "Departments could not be read, so the list cannot be filtered by department now.";
+
+export const designationsUnavailable =
+  "Designations could not be read, so the list cannot be filtered by designation now.";
+
 export function statusLabel(status: PersonStatus | undefined): string {
   return status === undefined ? notRecorded : statusLabels[status];
 }
@@ -38,5 +48,5 @@ export function rolesText(roles: readonly PersonRole[]): string {
 }
 
 export function lastSignInText(lastSignedInAt: Date | undefined): string {
-  return lastSignedInAt === undefined ? "Never" : formatDateTimeIst(lastSignedInAt);
+  return lastSignedInAt === undefined ? "Not signed in yet" : formatDateTimeIst(lastSignedInAt);
 }

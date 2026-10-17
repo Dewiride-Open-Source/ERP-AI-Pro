@@ -1,4 +1,5 @@
 import { expect, forEachTheme, tabOntoLink, test, themes, type SignedInApi } from "../../../fixtures/test";
+import { peoplePath } from "../../../pages/identity/users/people.page";
 import {
   PermissionsPage,
   permissionsApi,
@@ -7,8 +8,6 @@ import {
   type PermissionCatalog,
 } from "../../../pages/identity/users/permissions.page";
 import { AppShell, showsBreadcrumbs } from "../../../pages/shared/layout/app-shell.page";
-
-const peoplePath = "/identity/users";
 
 const builtInRoles = ["employee", "finance", "hr", "manager", "administrator"];
 
@@ -28,9 +27,9 @@ function holding(catalog: PermissionCatalog, permission: CataloguedPermission): 
   return catalog.roles.map((role) => (permission.heldBy.includes(role) ? "Held" : "Not held"));
 }
 
-// A row is named by its header, the description and then the permission's name, followed by every cell.
+// A row is named by its header, the permission's description, followed by every cell.
 function rowSnapshot(permission: CataloguedPermission, cells: readonly string[]): string[] {
-  const header = `${permission.description} ${permission.name}`;
+  const header = permission.description;
   return [
     `- row ${JSON.stringify([header, ...cells].join(" "))}:`,
     `  - rowheader ${JSON.stringify(header)}`,
@@ -72,12 +71,11 @@ test.describe("roles and permissions page", () => {
                 - columnheader "Administrator"
         `);
         await expect(permissions.rows).toHaveCount(catalog.permissions.length);
-        expect(await permissions.names(), "the permissions in ordinal order").toEqual(
-          catalog.permissions.map((permission) => permission.name),
+        expect(await permissions.descriptions(), "the permissions in ordinal order").toEqual(
+          catalog.permissions.map((permission) => permission.description),
         );
         for (const permission of catalog.permissions) {
-          const row = permissions.row(permission.name);
-          await expect(row.getByRole("rowheader"), permission.name).toContainText(permission.description);
+          const row = permissions.row(permission.description);
           await expect(row.getByRole("cell"), permission.name).toHaveText(holding(catalog, permission));
         }
         await expect(permissions.matrix).toMatchAriaSnapshot(

@@ -1,23 +1,27 @@
-import { randomUUID } from "node:crypto";
-
-import type { APIResponse, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { withholdClientBundles } from "../../../fixtures/client-bundles";
+import {
+  createDepartmentRecord,
+  createDesignationRecord,
+  deactivatePersonRecord,
+  peopleApi,
+  recordMoveRecord,
+  registerPersonRecord,
+  removeRecords,
+  uniquePrefix,
+  type NamedRecord,
+  type PersonRole,
+} from "../../../fixtures/person-records";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
-import { PeoplePage, peopleApi, peoplePath } from "../../../pages/identity/users/people.page";
-
-const departmentsApi = `${peopleApi}/departments`;
-
-const designationsApi = `${peopleApi}/designations`;
+import { PeoplePage, peoplePath } from "../../../pages/identity/users/people.page";
 
 const pageSize = 10;
-
-type Role = "finance" | "hr" | "manager";
 
 type PersonSeed = {
   readonly firstName: string;
   readonly dateOfJoining?: string;
-  readonly roles?: readonly Role[];
+  readonly roles?: readonly PersonRole[];
 };
 
 // Eleven people fill one page of ten and one more. Their names sort in this order, while their employee codes and work emails
@@ -42,8 +46,6 @@ type Created = {
   readonly designations: string[];
 };
 
-type Named = { readonly id: string; readonly name: string };
-
 type SeededPerson = {
   readonly id: string;
   readonly displayName: string;
@@ -54,79 +56,56 @@ type SeededPerson = {
 type SeededPeople = {
   readonly prefix: string;
   readonly people: readonly SeededPerson[];
-  readonly department: Named;
-  readonly designation: Named;
+  readonly department: NamedRecord;
+  readonly designation: NamedRecord;
 };
 
 function nothingCreated(): Created {
   return { people: [], departments: [], designations: [] };
 }
 
-async function createdRecord(
-  response: APIResponse,
-  what: string,
-): Promise<{ readonly id: string; readonly version: string }> {
-  expect(response.status(), `the creation of ${what}`).toBe(201);
-  const { id, version } = (await response.json()) as { id?: unknown; version?: unknown };
-  expect(typeof id, `the id of ${what}`).toBe("string");
-  return { id: id as string, version: typeof version === "string" ? version : "" };
-}
-
-async function create(api: SignedInApi, path: string, data: object, what: string) {
-  return createdRecord(await api.post(path, { headers: { "Idempotency-Key": randomUUID() }, data }), what);
-}
-
-async function deactivate(api: SignedInApi, person: { id: string; version: string }): Promise<void> {
-  const response = await api.put(`${peopleApi}/${person.id}/status`, {
-    data: { status: "deactivated", version: person.version },
-  });
-  expect(response.status(), "the deactivation of a seeded person").toBe(200);
-}
-
 // Every worker lists the same people, so a test lists only the ones it registered, under a prefix of its own, and never counts
-// anyone else's.
+// anyone else's. Each record joins the test's list as soon as it exists, so a seeding that fails half-way leaves nothing.
 async function seedPeople(api: SignedInApi, created: Created): Promise<SeededPeople> {
-  const token = randomUUID().slice(-12);
-  const prefix = `e2e-people-${token}`;
-  const departmentName = `${prefix} Sales`;
-  const designationName = `${prefix} Analyst`;
-  const departmentId = (await create(api, departmentsApi, { name: departmentName }, departmentName)).id;
-  created.departments.push(departmentId);
-  const designationId = (await create(api, designationsApi, { name: designationName }, designationName)).id;
-  created.designations.push(designationId);
+  const prefix = uniquePrefix("people");
+  const token = prefix.slice(-12);
+  const department = await createDepartmentRecord(api, `${prefix} Sales`);
+  created.departments.push(department.id);
+  const designation = await createDesignationRecord(api, `${prefix} Analyst`);
+  created.designations.push(designation.id);
 
   const people: (SeededPerson & { readonly version: string })[] = [];
   for (const [index, seed] of personSeeds.entries()) {
     const number = String(personSeeds.length - index).padStart(2, "0");
-    const person = {
+    const registered = await registerPersonRecord(api, {
       displayName: `${prefix} ${seed.firstName}`,
       workEmail: `${prefix}-p${number}@example.com`,
       employeeCode: `${token}-${number}`,
-    };
-    const registered = await create(
-      api,
-      peopleApi,
-      { ...person, dateOfJoining: seed.dateOfJoining ?? null, roles: seed.roles ?? [] },
-      person.displayName,
-    );
+      ...(seed.dateOfJoining === undefined ? {} : { dateOfJoining: seed.dateOfJoining }),
+      roles: seed.roles ?? [],
+    });
     created.people.push(registered.id);
-    people.push({ ...person, ...registered });
+    people.push({
+      id: registered.id,
+      displayName: registered.displayName,
+      workEmail: registered.workEmail,
+      employeeCode: registered.employeeCode ?? "",
+      version: registered.version,
+    });
   }
 
   const [aarav, bhavna, chirag] = people;
-  await create(
-    api,
-    `${peopleApi}/${aarav!.id}/positions`,
-    { effectiveFrom: "2026-01-05", departmentId, designationId },
-    "the position of the first person",
-  );
-  await create(
-    api,
-    `${peopleApi}/${bhavna!.id}/positions`,
-    { effectiveFrom: "2025-06-10", departmentId, managerId: aarav!.id },
-    "the position of the second person",
-  );
-  await deactivate(api, chirag!);
+  await recordMoveRecord(api, aarav!.id, {
+    effectiveFrom: "2026-01-05",
+    departmentId: department.id,
+    designationId: designation.id,
+  });
+  await recordMoveRecord(api, bhavna!.id, {
+    effectiveFrom: "2025-06-10",
+    departmentId: department.id,
+    managerId: aarav!.id,
+  });
+  await deactivatePersonRecord(api, chirag!);
 
   return {
     prefix,
@@ -136,25 +115,18 @@ async function seedPeople(api: SignedInApi, created: Created): Promise<SeededPeo
       workEmail,
       employeeCode,
     })),
-    department: { id: departmentId, name: departmentName },
-    designation: { id: designationId, name: designationName },
+    department,
+    designation,
   };
 }
 
-// The people are removed before what their positions name, and a person who manages another after the person they manage.
-async function removeSeeded(api: SignedInApi, created: Created): Promise<void> {
-  for (const id of [...created.people].reverse()) {
-    const response = await api.delete(`${peopleApi}/${id}`);
-    expect(response.status(), "the deletion of a seeded person").toBe(204);
-  }
-  for (const id of created.designations) {
-    const response = await api.delete(`${designationsApi}/${id}`);
-    expect(response.status(), "the deletion of the seeded designation").toBe(204);
-  }
-  for (const id of created.departments) {
-    const response = await api.delete(`${departmentsApi}/${id}`);
-    expect(response.status(), "the deletion of the seeded department").toBe(204);
-  }
+// The people were registered managers first, so the reversed list removes each report before their manager.
+function removeSeeded(api: SignedInApi, created: Created): Promise<void> {
+  return removeRecords(api, {
+    people: [...created.people].reverse(),
+    departments: created.departments,
+    designations: created.designations,
+  });
 }
 
 function names(people: readonly SeededPerson[]): string[] {
@@ -271,10 +243,10 @@ test.describe("people list", () => {
                 - definition: 05-01-2026
                 - term: Status
                 - definition: Active
-                - term: Roles
+                - term: Roles in the ERP
                 - definition: Finance, HR
                 - term: Last signed in
-                - definition: Never
+                - definition: Not signed in yet
             `);
             await expect(people.row(bhavna!.displayName)).toMatchAriaSnapshot(`
               - listitem:
@@ -294,10 +266,10 @@ test.describe("people list", () => {
                 - definition: 10-06-2025
                 - term: Status
                 - definition: Active
-                - term: Roles
+                - term: Roles in the ERP
                 - definition: Manager
                 - term: Last signed in
-                - definition: Never
+                - definition: Not signed in yet
             `);
             await expect(people.row(chirag!.displayName)).toMatchAriaSnapshot(`
               - listitem:
@@ -317,10 +289,10 @@ test.describe("people list", () => {
                 - definition: 15-03-2024
                 - term: Status
                 - definition: Deactivated
-                - term: Roles
+                - term: Roles in the ERP
                 - definition: None
                 - term: Last signed in
-                - definition: Never
+                - definition: Not signed in yet
             `);
           } else {
             await expect(list.cardList).toBeHidden();
@@ -343,7 +315,7 @@ test.describe("people list", () => {
                   - button "Joined"
                 - columnheader "Status":
                   - button "Status"
-                - columnheader "Roles"
+                - columnheader "Roles in the ERP"
                 - columnheader "Last signed in":
                   - button "Last signed in"
             `);
@@ -360,7 +332,7 @@ test.describe("people list", () => {
                 - cell "05-01-2026"
                 - cell "Active"
                 - cell "Finance, HR"
-                - cell "Never"
+                - cell "Not signed in yet"
             `);
             await expect(people.row(bhavna!.displayName)).toMatchAriaSnapshot(`
               - row:
@@ -375,7 +347,7 @@ test.describe("people list", () => {
                 - cell "10-06-2025"
                 - cell "Active"
                 - cell "Manager"
-                - cell "Never"
+                - cell "Not signed in yet"
             `);
             await expect(people.row(chirag!.displayName)).toMatchAriaSnapshot(`
               - row:
@@ -390,7 +362,7 @@ test.describe("people list", () => {
                 - cell "15-03-2024"
                 - cell "Deactivated"
                 - cell "None"
-                - cell "Never"
+                - cell "Not signed in yet"
             `);
           }
           await capture("people");
@@ -528,7 +500,7 @@ test.describe("people list", () => {
                 - menuitemcheckbox "Manager" [checked]
                 - menuitemcheckbox "Joined" [checked]
                 - menuitemcheckbox "Status" [checked]
-                - menuitemcheckbox "Roles" [checked]
+                - menuitemcheckbox "Roles in the ERP" [checked]
                 - menuitemcheckbox "Last signed in" [checked]
           `);
           await expect(page.locator("body"), "the page keeps its scrollbar").not.toHaveAttribute(
@@ -550,7 +522,7 @@ test.describe("people list", () => {
             "Manager",
             "Joined",
             "Status",
-            "Roles",
+            "Roles in the ERP",
           ];
           if (cards) await expect(people.row(aarav!.displayName).getByRole("term")).toHaveText(shownTerms);
           else await expect(list.table.getByRole("columnheader")).toHaveText(["Name", ...shownTerms]);

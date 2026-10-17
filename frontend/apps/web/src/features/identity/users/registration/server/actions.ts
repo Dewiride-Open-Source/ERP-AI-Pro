@@ -1,7 +1,7 @@
 "use server";
 
-import type { RegisterPersonRequest } from "@dewiride/erp-api-client";
-import { redirect, RedirectType, unstable_rethrow } from "next/navigation";
+import type { PersonResponse, RegisterPersonRequest } from "@dewiride/erp-api-client";
+import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
 import { callApi } from "@/shared/api/client";
@@ -11,15 +11,26 @@ import { requireSignedInPerson } from "@/shared/auth/session";
 import { formMessages } from "@/shared/forms/errors/form-messages";
 import { problemToFormState } from "@/shared/forms/errors/problem-to-form-state";
 import { parseSubmission } from "@/shared/forms/schemas/parse-submission";
-import { formFailed, type FormState } from "@/shared/forms/state/form-state";
+import {
+  formFailed,
+  type FailedFormState,
+  type FormState,
+  type InvalidFormState,
+  type SucceededFormState,
+} from "@/shared/forms/state/form-state";
 
 import { orderedRoles } from "../../roles/components/role-selection";
 import { registerPersonProblemMessages, registerPersonSchema } from "../forms/register-person.schema";
 
+export type RegistrationAnswer =
+  | InvalidFormState
+  | FailedFormState
+  | (SucceededFormState & { readonly personId: string; readonly personName: string });
+
 const namingRolesForbidden =
   "You may register people but not give them roles. Clear the roles, or ask an administrator who may assign them.";
 
-export async function registerPerson(_previous: FormState, submission: unknown): Promise<FormState> {
+export async function registerPerson(_previous: FormState, submission: unknown): Promise<RegistrationAnswer> {
   const person = await requireSignedInPerson();
   if (!holdsPermission(person, "identity.users.people.register")) return formFailed(formMessages.forbidden);
   const parsed = await parseSubmission(registerPersonSchema, submission, { idempotent: true });
@@ -28,20 +39,19 @@ export async function registerPerson(_previous: FormState, submission: unknown):
     return formFailed(namingRolesForbidden);
   }
 
-  let registeredId: string | undefined;
+  let registered: PersonResponse;
   try {
-    const registered = await callApi((client) =>
+    registered = await callApi((client) =>
       client.api.identity.users.post(registration(parsed.data), {
         headers: { "Idempotency-Key": parsed.idempotencyKey },
       }),
     );
-    registeredId = registered.id ?? undefined;
   } catch (error) {
     unstable_rethrow(error);
     return problemToFormState(error, { messages: registerPersonProblemMessages });
   }
-  if (registeredId === undefined) return formFailed(formMessages.serverFailed);
-  redirect(`/identity/users/${registeredId}`, RedirectType.replace);
+  if (!registered.id || !registered.displayName) return formFailed(formMessages.serverFailed);
+  return { status: "succeeded", personId: registered.id, personName: registered.displayName };
 }
 
 function registration(values: z.output<typeof registerPersonSchema>): RegisterPersonRequest {

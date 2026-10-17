@@ -17,7 +17,6 @@ export type PermissionCatalog = {
 
 export class PermissionsPage {
   readonly heading: Locator;
-  readonly matrixHeading: Locator;
   readonly card: Locator;
   readonly matrix: Locator;
   readonly scroller: Locator;
@@ -28,7 +27,6 @@ export class PermissionsPage {
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole("heading", { name: "Roles and permissions", level: 1 });
-    this.matrixHeading = page.getByRole("heading", { name: "What each role may do", level: 2 });
     this.card = page.getByTestId("permissions-card");
     this.matrix = this.card.getByTestId("permissions-matrix");
     this.scroller = this.card
@@ -45,11 +43,11 @@ export class PermissionsPage {
     await expect(this.heading).toBeVisible();
   }
 
-  row(name: string): Locator {
-    return this.rows.filter({ has: this.page.getByText(name, { exact: true }) });
+  row(description: string): Locator {
+    return this.rows.filter({ has: this.page.getByRole("rowheader", { name: description, exact: true }) });
   }
 
-  names(): Promise<string[]> {
-    return this.rows.getByRole("rowheader").locator("code").allInnerTexts();
+  descriptions(): Promise<string[]> {
+    return this.rows.getByRole("rowheader").allInnerTexts();
   }
 }

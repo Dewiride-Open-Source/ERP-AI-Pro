@@ -8,25 +8,44 @@ import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
 import { Input } from "@dewiride/erp-ui/components/ui/input";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { Controller } from "react-hook-form";
+import { toast } from "sonner";
 
 import { leavesGroup } from "@/shared/forms/client/field-focus";
 import { fieldErrorMessages } from "@/shared/forms/client/form-feedback";
-import { useActionForm } from "@/shared/forms/client/use-action-form";
+import { useActionForm, type FormAction } from "@/shared/forms/client/use-action-form";
 
 import { editPersonSchema, type EditPersonValues } from "../forms/edit-person.schema";
 import { updatePerson } from "../server/actions";
 
+// The person's page takes the form's place in the history, so Back leads to where the edit started.
 export function EditPersonForm({
   labelledBy,
+  personName,
   defaultValues,
 }: {
   labelledBy: string;
+  personName: string;
   defaultValues: EditPersonValues;
 }) {
+  const router = useRouter();
+  const personId = defaultValues.id;
+  const action = useCallback<FormAction<EditPersonValues>>(
+    async (previous, submission) => {
+      const answer = await updatePerson(previous, submission);
+      if (answer.status === "succeeded") {
+        toast.success(`Saved the details of ${personName}.`);
+        router.replace(`/identity/users/${personId}`);
+      }
+      return answer;
+    },
+    [personId, personName, router],
+  );
   const { form, pending, ready, onSubmit, alertRef, alert, fieldId } = useActionForm({
     schema: editPersonSchema,
-    action: updatePerson,
+    action,
     defaultValues,
   });
   const {
@@ -102,7 +121,7 @@ export function EditPersonForm({
           Save changes
         </SubmitButton>
         <Button asChild variant="outline">
-          <Link href={`/identity/users/${defaultValues.id}`}>Cancel</Link>
+          <Link href={`/identity/users/${personId}`}>Cancel</Link>
         </Button>
       </div>
     </form>

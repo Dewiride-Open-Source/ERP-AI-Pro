@@ -1,11 +1,20 @@
 import type { APIRequestContext } from "@playwright/test";
 
-import { signIn } from "../../fixtures/sign-in";
+import { ownPersonRecordId } from "../../fixtures/person-records";
+import { signIn, type SignedInPerson } from "../../fixtures/sign-in";
 import { expect, test } from "../../fixtures/test";
+import { personPath } from "../../pages/identity/users/person.page";
 
 const chunkPath = /\/_next\/static\/chunks\/[^"'\s<>\\]+\.js/g;
 
-const routes = [
+type WebRoute = {
+  readonly path: string;
+  readonly address?: (request: APIRequestContext, administrator: SignedInPerson) => Promise<string>;
+  readonly ownMarkers: readonly string[];
+  readonly foreignMarkers: readonly string[];
+};
+
+const routes: readonly WebRoute[] = [
   {
     path: "/design/form-kit",
     ownMarkers: ["supplier-example-form"],
@@ -113,7 +122,24 @@ const routes = [
       "audit-export",
     ],
   },
-] as const;
+  {
+    path: "/identity/users/[userId]",
+    address: async (request, administrator) => personPath(await ownPersonRecordId(request, administrator)),
+    ownMarkers: ["record-move", "assign-roles"],
+    foreignMarkers: [
+      "audit-export",
+      "No people match these filters.",
+      "upload-progress",
+      "Delete this attachment?",
+      "No files match these filters.",
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
+      "No bills match these filters.",
+      "animated-list-item",
+    ],
+  },
+];
 
 // The scripts are read from the page's own HTML, never from the responses a browser loads, because a browser also prefetches
 // the chunks of the pages its navigation links to.
@@ -133,10 +159,10 @@ async function scriptsOf(request: APIRequestContext, path: string): Promise<stri
 }
 
 test.describe("web bundles", () => {
-  for (const { path, ownMarkers, foreignMarkers } of routes) {
+  for (const { path, address, ownMarkers, foreignMarkers } of routes) {
     test(`${path} ships its own client components and no other module's`, async ({ request }) => {
-      await signIn(request, "administrator");
-      const scripts = await scriptsOf(request, path);
+      const { person } = await signIn(request, "administrator");
+      const scripts = await scriptsOf(request, address === undefined ? path : await address(request, person));
 
       for (const marker of ownMarkers) expect(scripts, `${path} carries ${marker}`).toContain(`"${marker}"`);
       for (const marker of foreignMarkers) {

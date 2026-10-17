@@ -1,10 +1,11 @@
 "use client";
 
 import { Button } from "@dewiride/erp-ui/components/ui/button";
+import { DialogClose } from "@dewiride/erp-ui/components/ui/dialog";
 import { Spinner } from "@dewiride/erp-ui/components/ui/spinner";
 import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { cn } from "@dewiride/erp-ui/lib/utils";
-import type { LucideIcon } from "lucide-react";
+import { XIcon, type LucideIcon } from "lucide-react";
 import { unstable_isUnrecognizedActionError, unstable_rethrow } from "next/navigation";
 import type { ComponentProps } from "react";
 
@@ -60,6 +61,35 @@ export function PersonActionButton({
       )}
       {children}
     </Button>
+  );
+}
+
+export function SavingDialogClose({
+  saving,
+  className,
+  children,
+  ...props
+}: Omit<ComponentProps<typeof Button>, "type" | "asChild"> & { saving: boolean }) {
+  return (
+    <DialogClose asChild>
+      <Button
+        {...props}
+        type="button"
+        aria-disabled={saving || undefined}
+        className={cn("aria-disabled:opacity-50", className)}
+      >
+        {children}
+      </Button>
+    </DialogClose>
+  );
+}
+
+export function SavingDialogCornerClose({ saving }: { saving: boolean }) {
+  return (
+    <SavingDialogClose saving={saving} variant="ghost" size="icon-sm" className="absolute top-2 right-2">
+      <XIcon aria-hidden />
+      <span className="sr-only">Close</span>
+    </SavingDialogClose>
   );
 }
 

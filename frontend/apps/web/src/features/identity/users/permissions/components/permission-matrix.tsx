@@ -27,10 +27,7 @@ export function PermissionMatrix({ matrix, labelledBy }: { matrix: Matrix; label
         {matrix.rows.map((row) => (
           <TableRow key={row.name} data-testid="permissions-row">
             <TableHead scope="row" className="h-auto min-w-60 py-3 align-top whitespace-normal">
-              <span className="block">{row.description}</span>
-              <code className="mt-1 block font-mono text-caption wrap-anywhere text-muted-foreground">
-                {row.name}
-              </code>
+              {row.description}
             </TableHead>
             {row.cells.map((cell) => (
               <TableCell key={cell.role}>

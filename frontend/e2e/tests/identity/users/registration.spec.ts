@@ -10,7 +10,9 @@ import {
   uniquePrefix,
 } from "../../../fixtures/person-records";
 import { expect, forEachTheme, test, themes } from "../../../fixtures/test";
-import { PersonPage, peoplePath } from "../../../pages/identity/users/person.page";
+import { peoplePath } from "../../../pages/identity/users/people.page";
+import { PersonPage } from "../../../pages/identity/users/person.page";
+import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 import {
   isRegistrationRequest,
   RegistrationPage,
@@ -54,6 +56,7 @@ test.describe("registering a person", () => {
         test.slow();
         const registration = new RegistrationPage(page);
         const personPage = new PersonPage(page);
+        const shell = new AppShell(page);
         const prefix = uniquePrefix("register");
         const name = `${prefix} Meera Nair`;
         let registeredId: string | undefined;
@@ -113,6 +116,7 @@ test.describe("registering a person", () => {
 
           await expect(page).toHaveURL((url) => personIdInPath.test(url.pathname));
           registeredId = personIdInPath.exec(new URL(page.url()).pathname)?.[1];
+          await expect(shell.toast(`Registered ${name}.`)).toBeVisible();
           await expect(personPage.heading).toHaveText(name);
           await expect(page).toHaveTitle(`${name} · ERP-AI-Pro`);
           await expect(personPage.header).toContainText(`${prefix}-meera@example.com`);
@@ -126,6 +130,7 @@ test.describe("registering a person", () => {
               - listitem: Finance
               - listitem: Manager
           `);
+          await expect(personPage.movesNone).toHaveText("No moves are recorded yet.");
           const registered = await personRecord(api, registeredId ?? "");
           expect(registered).toMatchObject({
             displayName: name,

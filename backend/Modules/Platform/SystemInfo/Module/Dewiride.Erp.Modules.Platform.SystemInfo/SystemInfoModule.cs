@@ -27,7 +27,7 @@ public sealed class SystemInfoModule : IModule
         Permissions:
         [
             new(SystemInfoPermissions.ReadInfo, [], "See which version of the ERP is running and how long it has been up."),
-            new(SystemInfoPermissions.ReadStartups, [], "See when the ERP last started and which version each start ran."),
+            new(SystemInfoPermissions.ReadStartups, [], "See the ERP's most recent starts and the version each one ran."),
         ],
         Capabilities: []);
 

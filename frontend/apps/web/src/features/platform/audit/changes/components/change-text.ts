@@ -21,7 +21,7 @@ const recordTypes = new Map<string, RecordType>([
   ["identity.users.people", { label: "Person", noun: "person" }],
   ["identity.users.departments", { label: "Department", noun: "department" }],
   ["identity.users.designations", { label: "Designation", noun: "designation" }],
-  ["identity.users.positions", { label: "Position", noun: "position" }],
+  ["identity.users.positions", { label: "Move", noun: "move" }],
   ["platform.attachments.files", { label: "File", noun: "file", createdVerb: "uploaded" }],
 ]);
 
@@ -106,7 +106,7 @@ export function recordHistoryLinkText(subjectName: string | null | undefined): s
   return name === undefined ? "Show the history of this record" : `Show the history of ${name}`;
 }
 
-// A record filed under another, such as a position under its person, is named through the record it is filed under.
+// A record filed under another, such as a move under its person, is named through the record it is filed under.
 export function changeSentence(change: ChangeRecordResponse): ChangeSentence {
   const operation = change.operation ?? "updated";
   const entityType = change.entityType ?? "";

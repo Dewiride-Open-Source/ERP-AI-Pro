@@ -4,7 +4,6 @@ import type { DataTableColumn, DataTablePage } from "@dewiride/erp-ui/components
 import { DataTableDateRangeFilter } from "@dewiride/erp-ui/components/data-table/filters/date-range-filter";
 import { DataTableOptionsFilter } from "@dewiride/erp-ui/components/data-table/filters/options-filter";
 import { DataTableTextFilter } from "@dewiride/erp-ui/components/data-table/filters/text-filter";
-import { Badge } from "@dewiride/erp-ui/components/ui/badge";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@dewiride/erp-ui/components/ui/empty";
 import { formatDisplayDate } from "@dewiride/erp-ui/lib/calendar-date";
 import Link from "next/link";
@@ -14,7 +13,6 @@ import { isDateRange, type ListFilterValue, type ListQuery } from "@/shared/list
 import { ListTable } from "@/shared/lists/list-table";
 
 import { peopleNavigation } from "../../nav";
-import type { OrganisationOption } from "../../organisation/components/organisation-options";
 import {
   displayNameMaxLength,
   employeeCodeMaxLength,
@@ -23,8 +21,13 @@ import {
   workEmailMaxLength,
 } from "../lists/people.list";
 
-import { filterOptions, type PersonRow } from "./person-rows";
+import { filterNote, filterOptions, type OrganisationLookup, type PersonRow } from "./person-rows";
+import { PersonStatusBadge } from "./person-status-badge";
 import {
+  departmentNameUnavailable,
+  departmentsUnavailable,
+  designationNameUnavailable,
+  designationsUnavailable,
   lastSignInText,
   notRecorded,
   rolesText,
@@ -34,6 +37,10 @@ import {
 } from "./person-text";
 
 const statusOptions = personStatuses.map((status) => ({ value: status, label: statusLabel(status) }));
+
+const departmentLabels = { unknown: unknownDepartment, unavailable: departmentNameUnavailable };
+
+const designationLabels = { unknown: unknownDesignation, unavailable: designationNameUnavailable };
 
 const noChoices: readonly string[] = [];
 
@@ -97,18 +104,12 @@ const personColumns: readonly DataTableColumn<PersonRow>[] = [
     id: "status",
     header: "Status",
     cell: (person) =>
-      person.status === undefined ? (
-        notRecorded
-      ) : (
-        <Badge variant={person.status === "active" ? "secondary" : "outline"}>
-          {statusLabel(person.status)}
-        </Badge>
-      ),
+      person.status === undefined ? notRecorded : <PersonStatusBadge status={person.status} />,
     sort: "text",
   },
   {
     id: "roles",
-    header: "Roles",
+    header: "Roles in the ERP",
     cell: (person) => rolesText(person.roles),
   },
   {
@@ -130,98 +131,115 @@ export function PeopleList({
   query: ListQuery;
   page: DataTablePage;
   people: readonly PersonRow[];
-  departments: readonly OrganisationOption[] | undefined;
-  designations: readonly OrganisationOption[] | undefined;
+  departments: OrganisationLookup;
+  designations: OrganisationLookup;
   labelledBy: string;
 }) {
   const { name, email, code, status, department, designation, joined } = query.filters;
   const chosenDepartments = choices(department);
   const chosenDesignations = choices(designation);
   const departmentOptions = useMemo(
-    () => filterOptions(departments, chosenDepartments, unknownDepartment),
+    () => filterOptions(departments, chosenDepartments, departmentLabels),
     [departments, chosenDepartments],
   );
   const designationOptions = useMemo(
-    () => filterOptions(designations, chosenDesignations, unknownDesignation),
+    () => filterOptions(designations, chosenDesignations, designationLabels),
     [designations, chosenDesignations],
   );
+  const notes = [
+    filterNote(departments, chosenDepartments, departmentsUnavailable),
+    filterNote(designations, chosenDesignations, designationsUnavailable),
+  ].filter((note) => note !== undefined);
 
   return (
-    <ListTable
-      basePath={peopleNavigation.basePath}
-      definition={peopleList}
-      query={query}
-      page={page}
-      label="People"
-      labelledBy={labelledBy}
-      noun={{ one: "person", other: "people" }}
-      columns={personColumns}
-      rows={people}
-      getRowId={(person) => person.id}
-      noMatches="No people match these filters."
-      empty={
-        <Empty className="border" data-testid="people-empty">
-          <EmptyHeader>
-            <EmptyTitle>No people yet.</EmptyTitle>
-            <EmptyDescription>
-              People appear here once they are registered or sign in for the first time.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      }
-      filters={
-        <>
-          <DataTableTextFilter
-            name="name"
-            label="Name"
-            defaultValue={text(name)}
-            placeholder="Search by name"
-            maxLength={displayNameMaxLength}
-          />
-          <DataTableTextFilter
-            name="email"
-            label="Work email"
-            defaultValue={text(email)}
-            placeholder="Search by email"
-            maxLength={workEmailMaxLength}
-          />
-          <DataTableTextFilter
-            name="code"
-            label="Employee code"
-            defaultValue={text(code)}
-            placeholder="Search by code"
-            maxLength={employeeCodeMaxLength}
-          />
-          <DataTableOptionsFilter
-            name="status"
-            label="Status"
-            options={statusOptions}
-            defaultValues={choices(status)}
-          />
-          {departmentOptions.length > 0 ? (
-            <DataTableOptionsFilter
-              name="department"
-              label="Department"
-              options={departmentOptions}
-              defaultValues={chosenDepartments}
+    <>
+      {notes.length > 0 ? (
+        <div
+          role="status"
+          data-testid="people-filters-unavailable"
+          className="mb-4 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+        >
+          {notes.map((note) => (
+            <p key={note}>{note}</p>
+          ))}
+        </div>
+      ) : null}
+      <ListTable
+        basePath={peopleNavigation.basePath}
+        definition={peopleList}
+        query={query}
+        page={page}
+        label="People"
+        labelledBy={labelledBy}
+        noun={{ one: "person", other: "people" }}
+        columns={personColumns}
+        rows={people}
+        getRowId={(person) => person.id}
+        noMatches="No people match these filters."
+        empty={
+          <Empty className="border" data-testid="people-empty">
+            <EmptyHeader>
+              <EmptyTitle>No people yet.</EmptyTitle>
+              <EmptyDescription>
+                People appear here once they are registered or sign in for the first time.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        }
+        filters={
+          <>
+            <DataTableTextFilter
+              name="name"
+              label="Name"
+              defaultValue={text(name)}
+              placeholder="Search by name"
+              maxLength={displayNameMaxLength}
             />
-          ) : null}
-          {designationOptions.length > 0 ? (
-            <DataTableOptionsFilter
-              name="designation"
-              label="Designation"
-              options={designationOptions}
-              defaultValues={chosenDesignations}
+            <DataTableTextFilter
+              name="email"
+              label="Work email"
+              defaultValue={text(email)}
+              placeholder="Search by email"
+              maxLength={workEmailMaxLength}
             />
-          ) : null}
-          <DataTableDateRangeFilter
-            name="joined"
-            label="Joined between"
-            defaultValue={joined !== undefined && isDateRange(joined) ? joined : { from: "", to: "" }}
-          />
-        </>
-      }
-    />
+            <DataTableTextFilter
+              name="code"
+              label="Employee code"
+              defaultValue={text(code)}
+              placeholder="Search by code"
+              maxLength={employeeCodeMaxLength}
+            />
+            <DataTableOptionsFilter
+              name="status"
+              label="Status"
+              options={statusOptions}
+              defaultValues={choices(status)}
+            />
+            {departmentOptions.length > 0 ? (
+              <DataTableOptionsFilter
+                name="department"
+                label="Department"
+                options={departmentOptions}
+                defaultValues={chosenDepartments}
+              />
+            ) : null}
+            {designationOptions.length > 0 ? (
+              <DataTableOptionsFilter
+                name="designation"
+                label="Designation"
+                options={designationOptions}
+                defaultValues={chosenDesignations}
+              />
+            ) : null}
+            <DataTableDateRangeFilter
+              name="joined"
+              label="Joined between"
+              defaultValue={joined !== undefined && isDateRange(joined) ? joined : { from: "", to: "" }}
+            />
+          </>
+        }
+      />
+    </>
   );
 }
 

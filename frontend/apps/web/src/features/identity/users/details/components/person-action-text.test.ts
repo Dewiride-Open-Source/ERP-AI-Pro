@@ -42,7 +42,7 @@ test("deletion_Person_NamesThemInEveryText", () => {
   assert.deepEqual(deletion("Meera Nair"), {
     title: "Delete Meera Nair?",
     description:
-      "Meera Nair is removed from People and can no longer sign in, and any session they have open ends at their next step. Their changes stay in the audit trail.",
+      "Meera Nair is removed from People, and any session they have open ends at their next step. If they can still sign in through Microsoft Entra, their next sign-in creates a new record, so deactivate them instead to keep them out. Their changes stay in the audit trail.",
     confirm: "Delete",
     cancel: "Keep the record",
     done: "Deleted Meera Nair.",

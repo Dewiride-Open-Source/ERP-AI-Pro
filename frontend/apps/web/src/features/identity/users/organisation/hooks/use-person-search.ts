@@ -1,8 +1,10 @@
 import type { ComboboxOption } from "@dewiride/erp-ui/components/combobox/combobox";
 import { unstable_isUnrecognizedActionError, unstable_rethrow } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { rejectedActionState } from "@/shared/forms/client/rejected-action";
+
+import { personSearchSequence, type PauseTimer } from "../components/person-search-sequence";
 
 export type PersonSearch = { readonly options: readonly ComboboxOption[] } | { readonly error: string };
 
@@ -15,25 +17,24 @@ export interface PersonSearchState {
   readonly start: () => void;
 }
 
-const typingPause = 250;
-
 type Found = { readonly options: readonly ComboboxOption[]; readonly failure: string | undefined };
 
-// Next.js sends a page's Server Function calls one at a time, so the search waits until typing pauses, and an answer that
-// arrives after a later search was sent is dropped, so the options always match the text in the field.
+const browserTimer: PauseTimer<ReturnType<typeof setTimeout>> = {
+  set: (run, delay) => setTimeout(run, delay),
+  clear: (handle) => clearTimeout(handle),
+};
+
 export function usePersonSearch(find: (text: string) => Promise<PersonSearch>): PersonSearchState {
   const [text, setText] = useState("");
   const [found, setFound] = useState<Found>({ options: [], failure: undefined });
   const [waiting, setWaiting] = useState(false);
   const [searching, startSearch] = useTransition();
-  const pause = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const sent = useRef(0);
+  const [sequence] = useState(() => personSearchSequence(browserTimer));
 
-  useEffect(() => () => clearTimeout(pause.current), []);
+  useEffect(() => () => sequence.stop(), [sequence]);
 
   const send = (query: string) => {
-    sent.current += 1;
-    const ticket = sent.current;
+    const ticket = sequence.ticket();
     startSearch(async () => {
       let answer: PersonSearch;
       try {
@@ -42,7 +43,7 @@ export function usePersonSearch(find: (text: string) => Promise<PersonSearch>): 
         unstable_rethrow(error);
         answer = { error: rejectedActionState(error, unstable_isUnrecognizedActionError).message };
       }
-      if (ticket !== sent.current) return;
+      if (!sequence.isLatest(ticket)) return;
       setFound(
         "options" in answer
           ? { options: answer.options, failure: undefined }
@@ -53,16 +54,15 @@ export function usePersonSearch(find: (text: string) => Promise<PersonSearch>): 
 
   const search = (next: string) => {
     setText(next);
-    clearTimeout(pause.current);
     setWaiting(true);
-    pause.current = setTimeout(() => {
+    sequence.afterPause(() => {
       setWaiting(false);
       send(next);
-    }, typingPause);
+    });
   };
 
   const start = () => {
-    if (sent.current === 0 && pause.current === undefined) send(text);
+    if (!sequence.started()) send(text);
   };
 
   return {

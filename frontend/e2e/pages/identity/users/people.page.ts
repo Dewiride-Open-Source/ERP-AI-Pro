@@ -4,28 +4,22 @@ import { DataTableRegion } from "../../shared/lists/data-table.page";
 
 export const peoplePath = "/identity/users";
 
-export const peopleApi = "/api/identity/users";
-
 export class PeoplePage {
   readonly heading: Locator;
-  readonly listHeading: Locator;
   readonly listCard: Locator;
   readonly list: DataTableRegion;
   readonly registerLink: Locator;
   readonly permissionsLink: Locator;
-  readonly empty: Locator;
   readonly unavailable: Locator;
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole("heading", { name: "People", level: 1 });
-    this.listHeading = page.getByRole("heading", { name: "All people", level: 2 });
     this.listCard = page.getByTestId("people-list-card");
     this.list = new DataTableRegion(page, this.listCard);
     this.registerLink = page.getByRole("main").getByRole("link", { name: "Register a person", exact: true });
     this.permissionsLink = page
       .getByRole("main")
       .getByRole("link", { name: "Roles and permissions", exact: true });
-    this.empty = page.getByTestId("people-empty");
     this.unavailable = page.getByTestId("people-unavailable");
   }
 

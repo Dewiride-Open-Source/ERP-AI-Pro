@@ -8,17 +8,25 @@ import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
 import { Input } from "@dewiride/erp-ui/components/ui/input";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { Controller } from "react-hook-form";
+import { toast } from "sonner";
 
 import { leavesGroup } from "@/shared/forms/client/field-focus";
 import { fieldErrorMessages } from "@/shared/forms/client/form-feedback";
-import { useActionForm } from "@/shared/forms/client/use-action-form";
+import { useActionForm, type FormAction } from "@/shared/forms/client/use-action-form";
 
 import { peopleNavigation } from "../../nav";
 import { RoleCheckboxes } from "../../roles/components/role-checkboxes";
-import { defaultRegisterPersonValues, registerPersonSchema } from "../forms/register-person.schema";
+import {
+  defaultRegisterPersonValues,
+  registerPersonSchema,
+  type RegisterPersonValues,
+} from "../forms/register-person.schema";
 import { registerPerson } from "../server/actions";
 
+// The registered person's page takes the form's place in the history, so Back leads to where the registration started.
 export function RegisterPersonForm({
   labelledBy,
   canAssignRoles,
@@ -26,9 +34,21 @@ export function RegisterPersonForm({
   labelledBy: string;
   canAssignRoles: boolean;
 }) {
+  const router = useRouter();
+  const action = useCallback<FormAction<RegisterPersonValues>>(
+    async (previous, submission) => {
+      const answer = await registerPerson(previous, submission);
+      if (answer.status === "succeeded") {
+        toast.success(`Registered ${answer.personName}.`);
+        router.replace(`/identity/users/${answer.personId}`);
+      }
+      return answer;
+    },
+    [router],
+  );
   const { form, pending, ready, onSubmit, alertRef, alert, fieldId } = useActionForm({
     schema: registerPersonSchema,
-    action: registerPerson,
+    action,
     defaultValues: defaultRegisterPersonValues,
     idempotent: true,
   });

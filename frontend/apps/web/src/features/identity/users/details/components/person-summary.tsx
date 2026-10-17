@@ -12,7 +12,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { isoDateOf } from "@/shared/api/dates/date-only";
-import { formatDateTimeIst } from "@/shared/format/dates";
+
+import { lastSignInText } from "../../people/components/person-text";
 
 const notGiven = "Not given";
 
@@ -20,7 +21,6 @@ const noneHeld = "None";
 
 export function PersonSummary({ person }: { person: PersonResponse }) {
   const joined = isoDateOf(person.dateOfJoining);
-  const signedIn = person.lastSignedInAt;
 
   return (
     <Card data-testid="person-details">
@@ -33,7 +33,7 @@ export function PersonSummary({ person }: { person: PersonResponse }) {
         </CardTitle>
         <CardDescription>
           The name and work email come from Microsoft Entra each time the person signs in. The department,
-          designation and manager are those of the move that holds today.
+          designation and manager come from the move that holds today.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -44,12 +44,7 @@ export function PersonSummary({ person }: { person: PersonResponse }) {
             label="Date of joining"
             value={joined === undefined ? notGiven : formatDisplayDate(joined)}
           />
-          <Detail
-            label="Last signed in"
-            value={
-              signedIn === null || signedIn === undefined ? "Not signed in yet" : formatDateTimeIst(signedIn)
-            }
-          />
+          <Detail label="Last signed in" value={lastSignInText(person.lastSignedInAt ?? undefined)} />
           <Detail label="Department" value={person.departmentName ?? noneHeld} />
           <Detail label="Designation" value={person.designationName ?? noneHeld} />
           <Detail label="Manager" value={<Manager person={person} />} />

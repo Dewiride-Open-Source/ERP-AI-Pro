@@ -60,7 +60,7 @@ export async function AuditTrailOverview({ searchParameters }: { searchParameter
             </h2>
           </CardTitle>
           <CardDescription>
-            Who changed people, departments, designations, positions and files, and when. Times are in India
+            Who changed people, departments, designations, moves and files, and when. Times are in India
             Standard Time.
           </CardDescription>
           {canExport && read.status === "read" ? (
