@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { permissionMatrix, roleLabels } from "./permission-rows.ts";
+import { permissionMatrix } from "./permission-rows.ts";
 
 const roles = ["employee", "finance", "hr", "manager", "administrator"] as const;
 
@@ -104,11 +104,4 @@ test("permissionMatrix_RoleListedTwice_IsOneColumn", () => {
 test("permissionMatrix_CatalogueWithoutRolesOrPermissions_IsEmpty", () => {
   assert.deepEqual(permissionMatrix({ roles: null, permissions: null }), { columns: [], rows: [] });
   assert.deepEqual(permissionMatrix({}), { columns: [], rows: [] });
-});
-
-test("roleLabels_EveryBuiltInRole_HasItsPlainName", () => {
-  assert.deepEqual(
-    roles.map((role) => roleLabels[role]),
-    ["Employee", "Finance", "HR", "Manager", "Administrator"],
-  );
 });

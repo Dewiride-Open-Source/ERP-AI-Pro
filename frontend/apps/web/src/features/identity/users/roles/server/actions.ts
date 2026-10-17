@@ -13,7 +13,7 @@ import { problemToFormState } from "@/shared/forms/errors/problem-to-form-state"
 import { parseSubmission } from "@/shared/forms/schemas/parse-submission";
 import { formFailed, formSucceeded, type FormState } from "@/shared/forms/state/form-state";
 
-import { orderedRoles } from "../components/role-labels";
+import { orderedRoles } from "../components/role-selection";
 import { assignRolesProblemMessages, assignRolesSchema } from "../forms/assign-roles.schema";
 
 export async function assignPersonRoles(_previous: FormState, submission: unknown): Promise<FormState> {

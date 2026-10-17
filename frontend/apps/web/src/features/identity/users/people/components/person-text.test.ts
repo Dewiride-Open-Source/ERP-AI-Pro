@@ -12,8 +12,14 @@ test("statusLabel_NoStatus_IsNotRecorded", () => {
   assert.equal(statusLabel(undefined), notRecorded);
 });
 
-test("roleLabel_EachRoleTheErpAssigns_HasItsPlainName", () => {
-  assert.deepEqual((["finance", "hr", "manager"] as const).map(roleLabel), ["Finance", "HR", "Manager"]);
+test("roleLabel_EachBuiltInRole_HasItsPlainName", () => {
+  assert.deepEqual((["employee", "finance", "hr", "manager", "administrator"] as const).map(roleLabel), [
+    "Employee",
+    "Finance",
+    "HR",
+    "Manager",
+    "Administrator",
+  ]);
 });
 
 test("rolesText_RolesInAnyOrder_NamesThemInTheOrderOfTheRoles", () => {

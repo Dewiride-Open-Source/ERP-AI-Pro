@@ -8,6 +8,8 @@ import { z } from "zod";
 import { callApi } from "@/shared/api/client";
 import { ApiError } from "@/shared/api/problem-details";
 
+import { everyPage } from "../../organisation/server/queries";
+
 export type PersonRead =
   | { readonly status: "read"; readonly person: PersonResponse }
   | { readonly status: "missing" }
@@ -32,16 +34,12 @@ export const getPerson = cache(async (userId: string): Promise<PersonRead> => {
   }
 });
 
-export const getPositions = cache(async (userId: string): Promise<PositionResponse[]> => {
-  const page = (number: number) =>
+export const getPositions = cache((userId: string): Promise<PositionResponse[]> =>
+  everyPage((page) =>
     callApi((client) =>
       client.api.identity.users.byId(userId).positions.get({
-        queryParameters: { page: number, pageSize: positionsPageSize, sort: "effectiveFrom:desc" },
+        queryParameters: { page, pageSize: positionsPageSize, sort: "effectiveFrom:desc" },
       }),
-    );
-  const first = await page(1);
-  const rest = await Promise.all(
-    Array.from({ length: Math.max((first.totalPages ?? 1) - 1, 0) }, (_, index) => page(index + 2)),
-  );
-  return [first, ...rest].flatMap((read) => read.items ?? []);
-});
+    ),
+  ),
+);

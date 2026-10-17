@@ -55,10 +55,6 @@ export const deletionProblemMessages: ProblemMessages = {
   "concurrency.conflict": organisationBusy,
 };
 
-export function statusLabel(status: PersonStatus): string {
-  return status === "deactivated" ? "Deactivated" : "Active";
-}
-
 export function statusChange(status: PersonStatus, name: string): StatusChange {
   if (status === "deactivated") {
     return {

@@ -12,7 +12,8 @@ import { ShieldIcon } from "lucide-react";
 import Link from "next/link";
 
 import { AssignRolesDialog } from "./assign-roles-dialog";
-import { orderedRoles, roleLabels } from "./role-labels";
+import { roleLabel } from "../../people/components/person-text";
+import { orderedRoles } from "./role-selection";
 
 const rolesHeadingId = "person-roles-heading";
 
@@ -59,7 +60,7 @@ export function PersonRoles({
           <ul role="list" aria-labelledby={rolesHeadingId} className="flex flex-wrap gap-2">
             {held.map((role) => (
               <li key={role}>
-                <Badge variant="secondary">{roleLabels[role]}</Badge>
+                <Badge variant="secondary">{roleLabel(role)}</Badge>
               </li>
             ))}
           </ul>

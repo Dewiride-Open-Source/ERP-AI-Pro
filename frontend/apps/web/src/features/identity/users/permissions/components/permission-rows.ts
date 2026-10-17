@@ -1,12 +1,6 @@
 import type { ErpRole, PermissionCatalogResponse } from "@dewiride/erp-api-client";
 
-export const roleLabels: Readonly<Record<ErpRole, string>> = {
-  employee: "Employee",
-  finance: "Finance",
-  hr: "HR",
-  manager: "Manager",
-  administrator: "Administrator",
-};
+import { roleLabel } from "../../people/components/person-text.ts";
 
 export interface RoleColumn {
   readonly role: ErpRole;
@@ -33,7 +27,7 @@ export type PermissionCatalog = Pick<PermissionCatalogResponse, "roles" | "permi
 
 // The columns are the roles the answer lists, in its order, so a role that holds nothing yet still has its column.
 export function permissionMatrix(catalog: PermissionCatalog): PermissionMatrix {
-  const columns = [...new Set(catalog.roles ?? [])].map((role) => ({ role, label: roleLabels[role] }));
+  const columns = [...new Set(catalog.roles ?? [])].map((role) => ({ role, label: roleLabel(role) }));
   const rows = (catalog.permissions ?? []).flatMap((permission) => {
     if (!permission.name || !permission.description) return [];
     const holders = new Set(permission.heldBy ?? []);

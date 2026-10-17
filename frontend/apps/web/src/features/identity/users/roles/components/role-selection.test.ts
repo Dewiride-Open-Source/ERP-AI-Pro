@@ -1,11 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { orderedRoles, roleLabels, withRole } from "./role-labels.ts";
-
-test("roleLabels_EveryAssignableRole_HasItsName", () => {
-  assert.deepEqual(roleLabels, { finance: "Finance", hr: "HR", manager: "Manager" });
-});
+import { orderedRoles, withRole } from "./role-selection.ts";
 
 test("orderedRoles_RolesInAnyOrder_ListsThemAsTheErpDoes", () => {
   assert.deepEqual(orderedRoles(["manager", "finance"]), ["finance", "manager"]);

@@ -12,10 +12,11 @@ import { getFeatureFlags } from "@/shared/feature-flags/queries";
 import { istDateKey } from "@/shared/format/dates";
 
 import { listDepartmentOptions, listDesignationOptions } from "../../organisation/server/queries";
+import { statusLabel } from "../../people/components/person-text";
 import { PersonRoles } from "../../roles/components/person-roles";
 import { getPerson, getPositions } from "../server/queries";
 
-import { isOwnRecord, statusLabel } from "./person-action-text";
+import { isOwnRecord } from "./person-action-text";
 import { PersonActions } from "./person-actions";
 import { PersonSummary } from "./person-summary";
 import { PositionHistory, type MoveChoicesRead, type MovesRead } from "./position-history";

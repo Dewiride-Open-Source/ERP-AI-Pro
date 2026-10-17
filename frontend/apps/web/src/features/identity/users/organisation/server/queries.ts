@@ -20,7 +20,7 @@ interface Page<T> {
   readonly totalPages?: number | null;
 }
 
-async function everyPage<T>(read: (page: number) => Promise<Page<T>>): Promise<T[]> {
+export async function everyPage<T>(read: (page: number) => Promise<Page<T>>): Promise<T[]> {
   const first = await read(1);
   const rest = await Promise.all(
     Array.from({ length: Math.max((first.totalPages ?? 1) - 1, 0) }, (_, index) => read(index + 2)),

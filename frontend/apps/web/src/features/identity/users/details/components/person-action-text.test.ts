@@ -8,14 +8,8 @@ import {
   pageOutOfDate,
   refusedOutcome,
   statusChange,
-  statusLabel,
   statusProblemMessages,
 } from "./person-action-text.ts";
-
-test("statusLabel_EachStatus_NamesIt", () => {
-  assert.equal(statusLabel("active"), "Active");
-  assert.equal(statusLabel("deactivated"), "Deactivated");
-});
 
 test("statusChange_ActivePerson_OffersToDeactivateThemAsADestructiveStep", () => {
   assert.deepEqual(statusChange("active", "Meera Nair"), {

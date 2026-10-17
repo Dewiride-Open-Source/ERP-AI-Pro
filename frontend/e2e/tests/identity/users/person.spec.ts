@@ -575,12 +575,13 @@ test.describe("person page", () => {
           await capture("person-edit");
 
           await editPage.phoneNumber.fill("12345");
-          await editPage.save.click();
-          await expect(editPage.phoneNumber).toBeFocused();
+          await editPage.phoneNumber.press("Tab");
           await expect(editPage.phoneNumber).toHaveAttribute("aria-invalid", "true");
           await expect(editPage.fieldOf(editPage.phoneNumber)).toContainText(
             "Enter a phone number with + and the country code, such as +44 20 7946 0958, or a 10-digit Indian mobile number.",
           );
+          await editPage.save.click();
+          await expect(editPage.phoneNumber).toBeFocused();
           await expect(page).toHaveURL((url) => url.pathname === editPersonPath(person.id));
           await capture("person-edit-refused-in-the-browser", editPage.form);
 
@@ -617,12 +618,20 @@ test.describe("person page", () => {
     });
   }
 
-  test("answers an unknown or malformed person with the not-found page", async ({ page }) => {
-    for (const path of [personPath(randomUUID()), personPath("not-a-person"), editPersonPath(randomUUID())]) {
-      const response = await page.goto(path);
-      expect(response?.status(), path).toBe(404);
-      await expect(page.getByRole("heading", { name: "This page does not exist" })).toBeVisible();
-    }
+  test.describe("for an unknown or malformed person", () => {
+    test.use({ expectedConsoleError: /the server responded with a status of 404/ });
+
+    test("answers the not-found page", async ({ page }) => {
+      for (const path of [
+        personPath(randomUUID()),
+        personPath("not-a-person"),
+        editPersonPath(randomUUID()),
+      ]) {
+        const response = await page.goto(path);
+        expect(response?.status(), path).toBe(404);
+        await expect(page.getByRole("heading", { name: "This page does not exist" })).toBeVisible();
+      }
+    });
   });
 });
 

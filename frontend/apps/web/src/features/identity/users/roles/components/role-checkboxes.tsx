@@ -8,7 +8,8 @@ import type { Ref } from "react";
 
 import { assignableRoles } from "../../registration/forms/register-person.schema";
 
-import { roleLabels, withRole } from "./role-labels";
+import { roleLabel } from "../../people/components/person-text";
+import { withRole } from "./role-selection";
 
 // The first box carries the field's own id, so a message about the roles links to and focuses the group's first choice.
 export function RoleCheckboxes({
@@ -62,7 +63,7 @@ export function RoleCheckboxes({
               onBlur={onBlur}
               aria-invalid={invalid || undefined}
             />
-            <Label htmlFor={boxId}>{roleLabels[role]}</Label>
+            <Label htmlFor={boxId}>{roleLabel(role)}</Label>
           </div>
         );
       })}

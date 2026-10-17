@@ -13,7 +13,7 @@ import { problemToFormState } from "@/shared/forms/errors/problem-to-form-state"
 import { parseSubmission } from "@/shared/forms/schemas/parse-submission";
 import { formFailed, type FormState } from "@/shared/forms/state/form-state";
 
-import { orderedRoles } from "../../roles/components/role-labels";
+import { orderedRoles } from "../../roles/components/role-selection";
 import { registerPersonProblemMessages, registerPersonSchema } from "../forms/register-person.schema";
 
 const namingRolesForbidden =

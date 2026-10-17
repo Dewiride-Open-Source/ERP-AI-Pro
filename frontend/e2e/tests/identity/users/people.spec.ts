@@ -1,9 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-import type { APIResponse, BrowserContext, Page } from "@playwright/test";
+import type { APIResponse, Page } from "@playwright/test";
 
 import { withholdClientBundles } from "../../../fixtures/client-bundles";
-import { requestToken, requestTokenHeader } from "../../../fixtures/sign-in";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
 import { PeoplePage, peopleApi, peoplePath } from "../../../pages/identity/users/people.page";
 
@@ -77,11 +76,8 @@ async function create(api: SignedInApi, path: string, data: object, what: string
   return createdRecord(await api.post(path, { headers: { "Idempotency-Key": randomUUID() }, data }), what);
 }
 
-// Every change the session sends carries the request token the sign-in issued, a change of status as well.
-async function deactivate(context: BrowserContext, person: { id: string; version: string }): Promise<void> {
-  const response = await context.request.fetch(`${peopleApi}/${person.id}/status`, {
-    method: "PUT",
-    headers: { [requestTokenHeader]: await requestToken(context) },
+async function deactivate(api: SignedInApi, person: { id: string; version: string }): Promise<void> {
+  const response = await api.put(`${peopleApi}/${person.id}/status`, {
     data: { status: "deactivated", version: person.version },
   });
   expect(response.status(), "the deactivation of a seeded person").toBe(200);
@@ -89,11 +85,7 @@ async function deactivate(context: BrowserContext, person: { id: string; version
 
 // Every worker lists the same people, so a test lists only the ones it registered, under a prefix of its own, and never counts
 // anyone else's.
-async function seedPeople(
-  api: SignedInApi,
-  context: BrowserContext,
-  created: Created,
-): Promise<SeededPeople> {
+async function seedPeople(api: SignedInApi, created: Created): Promise<SeededPeople> {
   const token = randomUUID().slice(-12);
   const prefix = `e2e-people-${token}`;
   const departmentName = `${prefix} Sales`;
@@ -134,7 +126,7 @@ async function seedPeople(
     { effectiveFrom: "2025-06-10", departmentId, managerId: aarav!.id },
     "the position of the second person",
   );
-  await deactivate(context, chirag!);
+  await deactivate(api, chirag!);
 
   return {
     prefix,
@@ -195,7 +187,6 @@ test.describe("people list", () => {
       test("lists people with every detail, finds them by name and opens a person from their name", async ({
         page,
         api,
-        context,
         capture,
       }) => {
         test.slow();
@@ -204,7 +195,7 @@ test.describe("people list", () => {
         const created = nothingCreated();
 
         try {
-          const seeded = await seedPeople(api, context, created);
+          const seeded = await seedPeople(api, created);
           const [aarav, bhavna, chirag] = seeded.people;
           await people.goto();
           await people.waitUntilInteractive();
@@ -417,7 +408,6 @@ test.describe("people list", () => {
       test("filters by email, employee code, status, department, designation and joining date", async ({
         page,
         api,
-        context,
         capture,
       }) => {
         test.slow();
@@ -426,7 +416,7 @@ test.describe("people list", () => {
         const created = nothingCreated();
 
         try {
-          const seeded = await seedPeople(api, context, created);
+          const seeded = await seedPeople(api, created);
           const [aarav, bhavna, chirag] = seeded.people;
           const { prefix, department, designation } = seeded;
           await people.goto(`?name=${prefix}`);
@@ -513,19 +503,14 @@ test.describe("people list", () => {
         }
       });
 
-      test("hides and shows columns and keeps them in the address", async ({
-        page,
-        api,
-        context,
-        capture,
-      }) => {
+      test("hides and shows columns and keeps them in the address", async ({ page, api, capture }) => {
         test.slow();
         const people = new PeoplePage(page);
         const { list } = people;
         const created = nothingCreated();
 
         try {
-          const seeded = await seedPeople(api, context, created);
+          const seeded = await seedPeople(api, created);
           const [aarav] = seeded.people;
           const filtered = `?name=${seeded.prefix}`;
           await people.goto(filtered);
@@ -588,18 +573,14 @@ test.describe("people list", () => {
     });
   }
 
-  test("sorts by each column through the API and keeps the sort in the address", async ({
-    page,
-    api,
-    context,
-  }) => {
+  test("sorts by each column through the API and keeps the sort in the address", async ({ page, api }) => {
     test.slow();
     const people = new PeoplePage(page);
     const { list } = people;
     const created = nothingCreated();
 
     try {
-      const seeded = await seedPeople(api, context, created);
+      const seeded = await seedPeople(api, created);
       const [aarav, bhavna, chirag] = seeded.people;
       const filtered = `?name=${seeded.prefix}`;
       const byCodeFromAToZ = names([...seeded.people].reverse().slice(0, pageSize));
@@ -693,7 +674,6 @@ test.describe("people list", () => {
   test("pages with links and changes the page size, keeping the view in the address", async ({
     page,
     api,
-    context,
   }) => {
     test.slow();
     const people = new PeoplePage(page);
@@ -701,7 +681,7 @@ test.describe("people list", () => {
     const created = nothingCreated();
 
     try {
-      const seeded = await seedPeople(api, context, created);
+      const seeded = await seedPeople(api, created);
       const last = seeded.people.at(-1)!;
       const filtered = `?name=${seeded.prefix}`;
       await people.goto(filtered);
@@ -742,13 +722,13 @@ test.describe("people list", () => {
   });
 
   test.describe("from an address typed by hand", () => {
-    test("brings an address it cannot show back to one it can", async ({ page, api, context }) => {
+    test("brings an address it cannot show back to one it can", async ({ page, api }) => {
       test.slow();
       const people = new PeoplePage(page);
       const created = nothingCreated();
 
       try {
-        const seeded = await seedPeople(api, context, created);
+        const seeded = await seedPeople(api, created);
         const { prefix, department } = seeded;
 
         await people.goto("?page=abc&size=7&sort=roles%3Aasc&tab=open");
