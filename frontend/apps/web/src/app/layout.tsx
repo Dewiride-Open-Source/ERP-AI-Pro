@@ -1,6 +1,5 @@
 import "@dewiride/erp-ui/globals.css";
 
-import { PageScrollbarWidth } from "@dewiride/erp-ui/components/layout/page-scrollbar-width";
 import { ThemeProvider } from "@dewiride/erp-ui/components/theme/theme-provider";
 import { Toaster } from "@dewiride/erp-ui/components/ui/sonner";
 import { TooltipProvider } from "@dewiride/erp-ui/components/ui/tooltip";
@@ -39,7 +38,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <ThemeProvider {...(nonce === undefined ? {} : { nonce })}>
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster />
-          <PageScrollbarWidth />
         </ThemeProvider>
       </body>
     </html>

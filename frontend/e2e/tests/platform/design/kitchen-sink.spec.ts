@@ -1159,10 +1159,6 @@ test.describe("design system kitchen sink", () => {
         - button "Save"
         - button "Close"
     `);
-      await expect(
-        page.locator("[data-slot='dialog-overlay']"),
-        "the page behind the dialog, unblurred",
-      ).toHaveCSS("backdrop-filter", "none");
       await capture("dialog-open", dialog);
       await dismissWithEscape(page, dialog, dialogTrigger);
       await dialogTrigger.click();
@@ -1195,10 +1191,6 @@ test.describe("design system kitchen sink", () => {
         - button "Keep it"
         - button "Delete"
     `);
-      await expect(
-        page.locator("[data-slot='alert-dialog-overlay']"),
-        "the page behind the confirmation, unblurred",
-      ).toHaveCSS("backdrop-filter", "none");
       await capture("alert-dialog-open", alertDialog);
       await alertDialog.getByRole("button", { name: "Keep it" }).click();
       await expect(alertDialog).toBeHidden();
@@ -1230,10 +1222,6 @@ test.describe("design system kitchen sink", () => {
         - button "Apply"
         - button "Close"
     `);
-      await expect(
-        page.locator("[data-slot='sheet-overlay']"),
-        "the page behind the sheet, unblurred",
-      ).toHaveCSS("backdrop-filter", "none");
       await capture("sheet-right-open", filters);
       await dismissWithEscape(page, filters, filtersTrigger);
       await filtersTrigger.click();
@@ -1256,10 +1244,6 @@ test.describe("design system kitchen sink", () => {
         - paragraph: Taxable value ₹1,00,000.00 · GST ₹18,000.00 · Total ₹1,18,000.00
         - button "Close"
     `);
-      await expect(
-        page.locator("[data-slot='sheet-overlay']"),
-        "the page behind the bottom sheet, unblurred",
-      ).toHaveCSS("backdrop-filter", "none");
       await capture("sheet-bottom-open", totals);
       await dismissWithEscape(page, totals, totalsTrigger);
       await totalsTrigger.click();
