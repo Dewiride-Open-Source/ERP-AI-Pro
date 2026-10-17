@@ -50,8 +50,8 @@ catalog:
   "@opentelemetry/sdk-logs": 0.223.0
   "@opentelemetry/instrumentation": 0.223.0
   "@playwright/test": 1.64.0
-  zod: 4.6.5
-  react-hook-form: 7.89.0
+  zod: 4.6.7
+  react-hook-form: 7.90.0
   react-day-picker: 10.0.2
   "@tanstack/react-table": 9.3.1
   motion: 13.5.1
