@@ -31,7 +31,9 @@ export class PermissionsPage {
     this.matrixHeading = page.getByRole("heading", { name: "What each role may do", level: 2 });
     this.card = page.getByTestId("permissions-card");
     this.matrix = this.card.getByTestId("permissions-matrix");
-    this.scroller = this.card.locator("[data-slot='table-container']").filter({ has: this.matrix });
+    this.scroller = this.card
+      .locator("[data-slot='table-container']")
+      .filter({ has: page.getByTestId("permissions-matrix") });
     this.rows = this.matrix.getByTestId("permissions-row");
     this.peopleLink = page.getByTestId("permissions-people-link");
     this.unavailable = page.getByTestId("permissions-unavailable");
