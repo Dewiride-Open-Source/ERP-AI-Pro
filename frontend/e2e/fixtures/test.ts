@@ -32,6 +32,7 @@ type ApiRequestOptions = NonNullable<Parameters<BrowserContext["request"]["fetch
 export type SignedInApi = {
   readonly get: (path: string, options?: ApiRequestOptions) => Promise<APIResponse>;
   readonly post: (path: string, options?: ApiRequestOptions) => Promise<APIResponse>;
+  readonly put: (path: string, options?: ApiRequestOptions) => Promise<APIResponse>;
   readonly delete: (path: string, options?: ApiRequestOptions) => Promise<APIResponse>;
 };
 
@@ -172,6 +173,7 @@ export function signedInApi(context: BrowserContext): SignedInApi {
   return {
     get: (path, options) => context.request.get(path, options),
     post: change("POST"),
+    put: change("PUT"),
     delete: change("DELETE"),
   };
 }

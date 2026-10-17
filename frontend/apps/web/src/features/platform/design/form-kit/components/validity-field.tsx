@@ -4,11 +4,11 @@ import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
 import { DateRangeInput } from "@dewiride/erp-ui/components/pickers/date-range-input";
 import { useController, type Control } from "react-hook-form";
 
+import { leavesGroup } from "@/shared/forms/client/field-focus";
 import { fieldErrorMessages } from "@/shared/forms/client/form-feedback";
 
 import type { SupplierExample, SupplierExampleValues } from "../forms/supplier-example.schema";
 
-import { leavesGroup } from "./field-focus";
 import { rangeEndState } from "./range-end-state";
 
 // react-hook-form re-validates a changed field by its own name and keeps only an error found at that name, so each end of
