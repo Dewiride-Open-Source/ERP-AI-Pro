@@ -17,6 +17,7 @@ const routes = [
       "No bills match these filters.",
       "animated-list-item",
       "audit-export",
+      "No people match these filters.",
     ],
   },
   {
@@ -29,6 +30,7 @@ const routes = [
       "system-info-refresh",
       "animated-list-item",
       "audit-export",
+      "No people match these filters.",
     ],
   },
   {
@@ -41,6 +43,7 @@ const routes = [
       "system-info-refresh",
       "No bills match these filters.",
       "audit-export",
+      "No people match these filters.",
     ],
   },
   {
@@ -53,6 +56,7 @@ const routes = [
       "No bills match these filters.",
       "animated-list-item",
       "audit-export",
+      "No people match these filters.",
     ],
   },
   {
@@ -64,6 +68,7 @@ const routes = [
       "supplier-example-form",
       "animated-list-item",
       "audit-export",
+      "No people match these filters.",
     ],
   },
   {
@@ -76,6 +81,7 @@ const routes = [
       "No bills match these filters.",
       "animated-list-item",
       "audit-export",
+      "No people match these filters.",
     ],
   },
   {
@@ -89,6 +95,22 @@ const routes = [
       "motion-demo-preference",
       "No bills match these filters.",
       "animated-list-item",
+      "No people match these filters.",
+    ],
+  },
+  {
+    path: "/identity/users",
+    ownMarkers: ["No people match these filters."],
+    foreignMarkers: [
+      "upload-progress",
+      "Delete this attachment?",
+      "No files match these filters.",
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
+      "No bills match these filters.",
+      "animated-list-item",
+      "audit-export",
     ],
   },
 ] as const;

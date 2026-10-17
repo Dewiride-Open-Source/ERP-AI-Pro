@@ -1,5 +1,16 @@
-import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 
-export default function PeopleListPage() {
-  notFound();
+import { PeopleOverview, peopleNavigation } from "@/features/identity/users";
+import { pageMetadata, RequirePermission } from "@/shared/auth/require-permission";
+
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata("People", peopleNavigation.permission);
+}
+
+export default async function PeopleListPage({ searchParams }: Readonly<PageProps<"/identity/users">>) {
+  return (
+    <RequirePermission permission={peopleNavigation.permission}>
+      <PeopleOverview searchParameters={await searchParams} />
+    </RequirePermission>
+  );
 }
