@@ -6,6 +6,8 @@ export const unsavedChoiceKey = "erp-theme-unsaved";
 
 export const unsavedChoiceLifetimeMs = 2 * 60 * 1000;
 
+export type UnsavedChoice = { readonly theme: ThemePreference; readonly over: ThemePreference };
+
 export type ThemeKeeping = {
   readonly lastSaved: ThemePreference;
   readonly previous: ThemePreference | undefined;
@@ -23,8 +25,14 @@ export function isThemePreference(value: unknown): value is ThemePreference {
   return typeof value === "string" && (themePreferences as readonly string[]).includes(value);
 }
 
-export function startKeeping(saved: ThemePreference, unsaved: ThemePreference | undefined): ThemeKeeping {
-  return { lastSaved: saved, previous: undefined, unsaved };
+// A choice noted in this browser counts only while the account still holds the theme it replaced: a page loaded while its
+// save was still on the way read that theme, while a theme saved since from another browser is the later choice.
+export function startKeeping(saved: ThemePreference, unsaved: UnsavedChoice | undefined): ThemeKeeping {
+  return {
+    lastSaved: saved,
+    previous: undefined,
+    unsaved: unsaved?.over === saved ? unsaved.theme : undefined,
+  };
 }
 
 // Until the browser shows the theme the account holds, the keeper puts that theme in place, so nothing the browser held
@@ -60,7 +68,7 @@ export function themeSaved(keeping: ThemeKeeping, theme: ThemePreference): Theme
 
 // A choice whose save never answered counts for a short while only, so a choice left unsaved long ago never overrides one
 // the person has saved since from another browser.
-export function unsavedChoiceOf(stored: string | null, now: number): ThemePreference | undefined {
+export function unsavedChoiceOf(stored: string | null, now: number): UnsavedChoice | undefined {
   if (stored === null) return undefined;
   let parsed: unknown;
   try {
@@ -70,11 +78,11 @@ export function unsavedChoiceOf(stored: string | null, now: number): ThemePrefer
   }
 
   if (typeof parsed !== "object" || parsed === null) return undefined;
-  const { theme, chosenAt } = parsed as Record<string, unknown>;
+  const { theme, over, chosenAt } = parsed as Record<string, unknown>;
   const fresh = typeof chosenAt === "number" && chosenAt <= now && now - chosenAt <= unsavedChoiceLifetimeMs;
-  return fresh && isThemePreference(theme) ? theme : undefined;
+  return fresh && isThemePreference(theme) && isThemePreference(over) ? { theme, over } : undefined;
 }
 
-export function unsavedChoiceText(theme: ThemePreference, now: number): string {
-  return JSON.stringify({ theme, chosenAt: now });
+export function unsavedChoiceText(choice: UnsavedChoice, now: number): string {
+  return JSON.stringify({ theme: choice.theme, over: choice.over, chosenAt: now });
 }

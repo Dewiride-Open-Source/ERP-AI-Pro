@@ -15,6 +15,7 @@ import {
   unsavedChoiceOf,
   unsavedChoiceText,
   type ThemeKeeping,
+  type UnsavedChoice,
 } from "./theme-preference-state";
 
 // Storage throws when the browser blocks this site's data; a choice is then saved only while its page stays open.
@@ -26,7 +27,7 @@ function inStorage<T>(access: (storage: Storage) => T, blocked: T): T {
   }
 }
 
-function takeUnsavedChoice(): SavedTheme | undefined {
+function takeUnsavedChoice(): UnsavedChoice | undefined {
   return inStorage((storage) => {
     const stored = storage.getItem(unsavedChoiceKey);
     storage.removeItem(unsavedChoiceKey);
@@ -34,21 +35,15 @@ function takeUnsavedChoice(): SavedTheme | undefined {
   }, undefined);
 }
 
-function noteUnsavedChoice(theme: SavedTheme): void {
-  inStorage((storage) => storage.setItem(unsavedChoiceKey, unsavedChoiceText(theme, Date.now())), undefined);
-}
-
-function forgetUnsavedChoice(theme: SavedTheme): void {
-  inStorage((storage) => {
-    if (unsavedChoiceOf(storage.getItem(unsavedChoiceKey), Date.now()) === theme)
-      storage.removeItem(unsavedChoiceKey);
-  }, undefined);
+function noteUnsavedChoice(choice: UnsavedChoice): void {
+  inStorage((storage) => storage.setItem(unsavedChoiceKey, unsavedChoiceText(choice, Date.now())), undefined);
 }
 
 // Mounted once by the shell: it puts the theme the person saved in place when this browser holds another, and saves every
 // theme they choose afterwards, with the top bar's toggle or on My profile, so their choice follows them to every browser. A
-// save that fails changes nothing on screen, because the theme still applies here, and the next choice saves again; a choice
-// whose save had not answered when its page was left is saved by the next page this browser loads.
+// save that fails changes nothing on screen, because the theme still applies here, and the next choice saves again. Every
+// choice is noted with the theme it replaced and kept until the next page this browser loads, which saves it again while the
+// account still holds the replaced theme, as when a reload read the account before the save arrived.
 export function ThemePreference({ saved }: { saved: SavedTheme }) {
   const { choice, choose } = useThemeChoice();
   const keeping = useRef<ThemeKeeping | undefined>(undefined);
@@ -65,13 +60,12 @@ export function ThemePreference({ saved }: { saved: SavedTheme }) {
     if (step.kind !== "save") return;
 
     const chosen = step.theme;
-    noteUnsavedChoice(chosen);
+    noteUnsavedChoice({ theme: chosen, over: next.lastSaved });
     startSaving(async () => {
       try {
         const outcome = await saveTheme(chosen);
         if (!outcome.saved) return;
         if (keeping.current !== undefined) keeping.current = themeSaved(keeping.current, chosen);
-        forgetUnsavedChoice(chosen);
       } catch (error) {
         unstable_rethrow(error);
       }

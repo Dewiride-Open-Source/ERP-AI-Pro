@@ -48,18 +48,34 @@ test("nextThemeStep_SavedThemeShown_StartsWatchingWithoutSaving", () => {
 });
 
 test("nextThemeStep_BrowserShowsAChoiceWhoseSaveNeverAnswered_SavesItInsteadOfApplyingTheSavedTheme", () => {
-  const [keeping, step] = nextThemeStep(startKeeping("light", "dark"), "dark");
+  const [keeping, step] = nextThemeStep(startKeeping("light", { theme: "dark", over: "light" }), "dark");
 
   assert.deepEqual(step, { kind: "save", theme: "dark" });
   assert.deepEqual(keeping, { lastSaved: "light", previous: "dark", unsaved: undefined });
 });
 
 test("nextThemeStep_UnsavedChoiceTheAccountHoldsAlready_SavesNothing", () => {
-  assert.deepEqual(nextThemeStep(startKeeping("dark", "dark"), "dark")[1], { kind: "none" });
+  assert.deepEqual(nextThemeStep(startKeeping("dark", { theme: "dark", over: "system" }), "dark")[1], {
+    kind: "none",
+  });
+});
+
+test("nextThemeStep_PageReloadedBeforeTheSaveWasRead_SavesTheNotedChoiceAgain", () => {
+  const [keeping, step] = nextThemeStep(startKeeping("system", { theme: "dark", over: "system" }), "dark");
+
+  assert.deepEqual(step, { kind: "save", theme: "dark" });
+  assert.deepEqual(keeping, { lastSaved: "system", previous: "dark", unsaved: undefined });
+});
+
+test("startKeeping_AccountHoldsAThemeChosenSinceInAnotherBrowser_IgnoresTheNotedChoice", () => {
+  const keeping = startKeeping("light", { theme: "dark", over: "system" });
+
+  assert.equal(keeping.unsaved, undefined);
+  assert.deepEqual(nextThemeStep(keeping, "dark")[1], { kind: "apply", theme: "light" });
 });
 
 test("nextThemeStep_BrowserShowsAnotherThemeThanTheUnsavedChoice_AppliesTheSavedTheme", () => {
-  assert.deepEqual(nextThemeStep(startKeeping("light", "dark"), "system")[1], {
+  assert.deepEqual(nextThemeStep(startKeeping("light", { theme: "dark", over: "light" }), "system")[1], {
     kind: "apply",
     theme: "light",
   });
@@ -100,14 +116,19 @@ test("themeSaved_ChoiceSavedThenAnotherThatFailed_SavesNothingWhenTheSavedOneIsC
   assert.deepEqual(nextThemeStep(unsaved, "dark")[1], { kind: "none" });
 });
 
-test("unsavedChoiceOf_ChoiceNotedWithinItsLifetime_IsThatChoice", () => {
-  assert.equal(unsavedChoiceOf(unsavedChoiceText("dark", now), now), "dark");
-  assert.equal(unsavedChoiceOf(unsavedChoiceText("light", now - unsavedChoiceLifetimeMs), now), "light");
+test("unsavedChoiceOf_ChoiceNotedWithinItsLifetime_IsThatChoiceAndTheThemeItReplaced", () => {
+  const dark = { theme: "dark", over: "system" } as const;
+  const light = { theme: "light", over: "dark" } as const;
+
+  assert.deepEqual(unsavedChoiceOf(unsavedChoiceText(dark, now), now), dark);
+  assert.deepEqual(unsavedChoiceOf(unsavedChoiceText(light, now - unsavedChoiceLifetimeMs), now), light);
 });
 
 test("unsavedChoiceOf_ChoiceNotedLongAgoOrLater_IsNone", () => {
-  assert.equal(unsavedChoiceOf(unsavedChoiceText("dark", now - unsavedChoiceLifetimeMs - 1), now), undefined);
-  assert.equal(unsavedChoiceOf(unsavedChoiceText("dark", now + 1), now), undefined);
+  const dark = { theme: "dark", over: "system" } as const;
+
+  assert.equal(unsavedChoiceOf(unsavedChoiceText(dark, now - unsavedChoiceLifetimeMs - 1), now), undefined);
+  assert.equal(unsavedChoiceOf(unsavedChoiceText(dark, now + 1), now), undefined);
 });
 
 test("unsavedChoiceOf_NothingOrSomethingElseStored_IsNone", () => {
@@ -120,6 +141,8 @@ test("unsavedChoiceOf_NothingOrSomethingElseStored_IsNone", () => {
     "[]",
     '{"theme":"sepia","chosenAt":0}',
     '{"theme":"dark"}',
+    `{"theme":"dark","chosenAt":${now}}`,
+    `{"theme":"dark","over":"sepia","chosenAt":${now}}`,
   ]) {
     assert.equal(unsavedChoiceOf(stored, now), undefined, String(stored));
   }
