@@ -61,5 +61,6 @@
 | [0043](adr/0043-change-records-and-the-append-only-audit-schema.md) | Change records and the append-only audit schema |
 | [0044](adr/0044-npm-advisory-gate-and-eslint-10.md) | The npm advisory gate and ESLint 10 through @eslint/compat |
 | [0045](adr/0045-people-pages-and-the-permission-catalogue.md) | People pages and the permission catalogue |
+| [0046](adr/0046-organisation-pages-my-profile-and-the-saved-theme.md) | Organisation pages, My profile and the saved theme |
 
 New decisions use [0000-template.md](adr/0000-template.md).
