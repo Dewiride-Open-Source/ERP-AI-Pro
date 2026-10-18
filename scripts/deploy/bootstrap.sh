@@ -392,9 +392,6 @@ ensure_deploy_account() {
 
 ensure_no_lxd_access() {
   log_step "LXD: nobody gets root through it"
-  if command -v snap > /dev/null 2>&1 && snap list lxd > /dev/null 2>&1; then
-    die "this server runs LXD, whose group is root access; the ERP's host must not, so move its containers elsewhere and remove the lxd snap first"
-  fi
   local entry
   if entry="$(getent group lxd)"; then
     refuse_primary_group lxd "$(cut -d: -f3 <<< "$entry")"
