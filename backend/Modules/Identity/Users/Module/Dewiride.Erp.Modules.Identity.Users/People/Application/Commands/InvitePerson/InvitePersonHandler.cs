@@ -17,9 +17,9 @@ internal sealed class InvitePersonHandler(UsersDbContext context) : ICommandHand
         ArgumentNullException.ThrowIfNull(command);
 
         var invited = User.Invite(
-            command.Person.ObjectId,
-            command.Person.DisplayName,
-            command.Person.SignInName,
+            command.EntraObjectId,
+            command.DisplayName,
+            command.SignInName,
             command.EmployeeCode,
             command.PhoneNumber,
             command.DateOfJoining,

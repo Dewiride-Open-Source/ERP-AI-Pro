@@ -94,8 +94,9 @@ internal static class InvitationEndpoints
             return found.Error!.ToProblem();
         }
 
+        var person = found.Value;
         var invited = await handler.HandleAsync(
-            new InvitePersonCommand(found.Value, request.EmployeeCode, request.PhoneNumber, request.DateOfJoining, roles),
+            new InvitePersonCommand(person.ObjectId, person.DisplayName, person.SignInName, request.EmployeeCode, request.PhoneNumber, request.DateOfJoining, roles),
             cancellationToken);
 
         return invited.IsFailure
