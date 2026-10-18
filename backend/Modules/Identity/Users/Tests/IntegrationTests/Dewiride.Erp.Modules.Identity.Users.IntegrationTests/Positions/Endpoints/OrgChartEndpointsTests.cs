@@ -1,4 +1,5 @@
 using System.Net;
+using Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Shared;
@@ -110,7 +111,7 @@ public sealed class OrgChartEndpointsTests(ErpApiFactory factory) : IClassFixtur
     }
 
     [Fact]
-    public async Task Get_ReportOfADeactivatedManager_KeepsNamingThemThoughTheChartLeavesThemOut()
+    public async Task Get_ReportOfAManagerTheDirectoryCheckDeactivated_KeepsNamingThemThoughTheChartLeavesThemOut()
     {
         using var client = Administrator();
         var department = await OrganisationApi.CreateDepartmentAsync(client, OrganisationApi.UniqueName("Finance"));
@@ -118,7 +119,9 @@ public sealed class OrgChartEndpointsTests(ErpApiFactory factory) : IClassFixtur
         var report = await RegisterAsync(client, "Report");
         await OrganisationApi.RecordPositionAsync(client, manager.Id, Today.AddDays(-30), departmentId: department.Id);
         await OrganisationApi.RecordPositionAsync(client, report.Id, Today.AddDays(-30), departmentId: department.Id, managerId: manager.Id);
-        await DeactivateAsync(client, manager.Id);
+        AccountCheckApi.MarkAccount(factory, await AccountCheckApi.LinkAsync(factory, manager.Id), DirectoryAccountState.Disabled);
+        await AccountCheckApi.LinkAsync(factory, report.Id);
+        await AccountCheckApi.CheckAsync(client);
 
         var chart = await OrganisationApi.ReadPageAsync<OrgChartPersonResponse>(client, OrganisationApi.OrgChart(InDepartment(department.Id)));
 

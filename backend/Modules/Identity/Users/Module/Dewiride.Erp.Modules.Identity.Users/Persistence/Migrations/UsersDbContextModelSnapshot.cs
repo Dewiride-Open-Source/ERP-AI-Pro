@@ -205,6 +205,9 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                     b.Property<DateOnly?>("DateOfJoining")
                         .HasColumnType("date");
 
+                    b.Property<byte?>("DeactivatedBecause")
+                        .HasColumnType("tinyint");
+
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 

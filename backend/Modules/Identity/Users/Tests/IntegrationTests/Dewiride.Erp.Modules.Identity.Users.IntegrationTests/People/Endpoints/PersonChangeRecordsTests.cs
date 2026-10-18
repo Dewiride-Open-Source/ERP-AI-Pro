@@ -44,6 +44,7 @@ public sealed class PersonChangeRecordsTests(PersonChangeRecordsTests.Fixture fi
         Assert.Equal(
             [
                 new RecordedValue("dateOfJoining", ChangeValueKind.Date, null, "2026-04-01", null, null, null),
+                new RecordedValue("deactivatedBecause", ChangeValueKind.Enum, null, null, null, null, null),
                 new RecordedValue("displayName", ChangeValueKind.Text, null, "Meera Nair", null, null, null),
                 new RecordedValue("employeeCode", ChangeValueKind.Text, null, employeeCode, null, null, null),
                 new RecordedValue("entraObjectId", ChangeValueKind.Id, null, null, null, null, null),
@@ -103,13 +104,24 @@ public sealed class PersonChangeRecordsTests(PersonChangeRecordsTests.Fixture fi
     }
 
     [Fact]
-    public async Task ChangeStatus_Deactivate_RecordsTheStatusBeforeAndAfter()
+    public async Task ChangeStatus_DeactivateThenReactivate_RecordsTheStatusAndTheReasonBeforeAndAfter()
     {
         using var client = Administrator();
         var registered = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+        PersonResponse deactivated;
         using (var response = await client.PutAsJsonAsync(
             PeopleApi.Path($"/{registered.Id}/status"),
             new { status = "deactivated", version = registered.Version },
+            PeopleApi.Json,
+            TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            deactivated = await PeopleApi.ReadPersonAsync(response);
+        }
+
+        using (var response = await client.PutAsJsonAsync(
+            PeopleApi.Path($"/{registered.Id}/status"),
+            new { status = "active", version = deactivated.Version },
             PeopleApi.Json,
             TestContext.Current.CancellationToken))
         {
@@ -118,7 +130,18 @@ public sealed class PersonChangeRecordsTests(PersonChangeRecordsTests.Fixture fi
 
         var changes = await ChangeRecordsApi.OfAsync(client, registered.Id);
 
-        Assert.Equal(new RecordedValue("status", ChangeValueKind.Enum, "active", "deactivated", null, null, null), Assert.Single(changes[^1].Changes));
+        Assert.Equal(
+            [
+                new RecordedValue("deactivatedBecause", ChangeValueKind.Enum, null, "administrator", null, null, null),
+                new RecordedValue("status", ChangeValueKind.Enum, "active", "deactivated", null, null, null),
+            ],
+            changes[^2].ValuesByProperty);
+        Assert.Equal(
+            [
+                new RecordedValue("deactivatedBecause", ChangeValueKind.Enum, "administrator", null, null, null, null),
+                new RecordedValue("status", ChangeValueKind.Enum, "deactivated", "active", null, null, null),
+            ],
+            changes[^1].ValuesByProperty);
     }
 
     [Fact]

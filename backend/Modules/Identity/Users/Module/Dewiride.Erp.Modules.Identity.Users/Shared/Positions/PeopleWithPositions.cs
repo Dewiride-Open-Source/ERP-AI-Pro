@@ -1,11 +1,13 @@
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
+using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 
 // Every person whose record is not deleted, with the position they hold on the date: their latest position that starts on or
 // before it. Soft-deleted departments, designations and managers keep their names here, because a position from before their
-// deletion still names them; ignoring the soft-delete filter covers the whole query, so the people are filtered by hand.
+// deletion still names them; ignoring the soft-delete filter covers the whole query, so the people are filtered by hand. A
+// manager counts as active only while their record is neither deactivated nor deleted.
 internal static class PeopleWithPositions
 {
     public static IQueryable<PersonRow> On(UsersDbContext context, DateOnly date)
@@ -32,6 +34,7 @@ internal static class PeopleWithPositions
                 DesignationName = designation!.Name,
                 ManagerId = position.ManagerId,
                 ManagerDisplayName = manager!.DisplayName,
+                ManagerActive = position.ManagerId == null ? null : manager.Status == UserStatus.Active && !manager.IsDeleted,
             };
     }
 }

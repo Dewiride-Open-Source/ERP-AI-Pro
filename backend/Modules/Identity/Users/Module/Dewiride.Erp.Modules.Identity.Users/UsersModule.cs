@@ -8,6 +8,7 @@ using Dewiride.Erp.Modules.Identity.Users.Contracts;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Integration;
+using Dewiride.Erp.Modules.Identity.Users.People.Application;
 using Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Permissions.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
@@ -59,6 +60,7 @@ public sealed class UsersModule : IModule
 
         builder.AddModuleDbContext<UsersDbContext>(UsersDbContext.SchemaName);
         builder.Services.AddHandlersFromAssembly(typeof(UsersModule).Assembly);
+        builder.Services.AddScoped<DirectoryAccountCheck>();
         builder.Services.AddScoped<IPersonAdmission, UserAdmission>();
         builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IRecordNames, UserRecordNames>());
         builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IPersonNames, UserRecordNames>());
@@ -73,6 +75,7 @@ public sealed class UsersModule : IModule
         DepartmentEndpoints.Map(group);
         DesignationEndpoints.Map(group);
         PositionEndpoints.Map(group);
+        TeamEndpoints.Map(group);
         OrgChartEndpoints.Map(group);
         PermissionEndpoints.Map(group);
         ProfileEndpoints.Map(group);

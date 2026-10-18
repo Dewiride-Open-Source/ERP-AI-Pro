@@ -44,6 +44,8 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
 
     public UserStatus Status { get; private set; }
 
+    public DeactivationReason? DeactivatedBecause { get; private set; }
+
     public IReadOnlyList<ErpRole> Roles => _roles;
 
     public DateTimeOffset? LastSignedInAt { get; private set; }
@@ -157,9 +159,22 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         return Result.Success();
     }
 
-    public void Deactivate() => Status = UserStatus.Deactivated;
+    public void Deactivate(DeactivationReason reason)
+    {
+        if (Status == UserStatus.Deactivated)
+        {
+            return;
+        }
 
-    public void Reactivate() => Status = UserStatus.Active;
+        Status = UserStatus.Deactivated;
+        DeactivatedBecause = reason;
+    }
+
+    public void Reactivate()
+    {
+        Status = UserStatus.Active;
+        DeactivatedBecause = null;
+    }
 
     private static Result<User> Create(
         Guid? entraObjectId,

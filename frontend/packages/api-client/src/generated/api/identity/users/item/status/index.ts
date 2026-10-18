@@ -11,7 +11,7 @@ import { type BaseRequestBuilder, type Parsable, type ParsableFactory, type Requ
  */
 export interface StatusRequestBuilder extends BaseRequestBuilder<StatusRequestBuilder> {
     /**
-     * Deactivates or reactivates a person; a deactivated person cannot sign in, and their sessions end at their next request.
+     * Deactivates or reactivates a person; a deactivated person cannot sign in, their sessions end at their next request, and their team reports from today to the manager the deactivation names.
      * @param body The request body
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {Promise<PersonResponse>}
@@ -27,7 +27,7 @@ export interface StatusRequestBuilder extends BaseRequestBuilder<StatusRequestBu
      */
      put(body: ChangePersonStatusRequest, requestConfiguration?: RequestConfiguration<object> | undefined) : Promise<PersonResponse | undefined>;
     /**
-     * Deactivates or reactivates a person; a deactivated person cannot sign in, and their sessions end at their next request.
+     * Deactivates or reactivates a person; a deactivated person cannot sign in, their sessions end at their next request, and their team reports from today to the manager the deactivation names.
      * @param body The request body
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
      * @returns {RequestInformation}

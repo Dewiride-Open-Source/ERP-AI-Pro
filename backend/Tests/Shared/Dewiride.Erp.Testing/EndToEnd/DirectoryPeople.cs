@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 using Dewiride.Erp.Testing.Graph;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -11,7 +12,8 @@ namespace Dewiride.Erp.Testing.EndToEnd;
 // The end-to-end host answers Microsoft Graph from its test directory, which holds only the people the specs add here, so a
 // spec adds every person it searches for, invites or shows the photo of. Like the persona sign-in, the route is the test
 // host's own: anonymous, taking no antiforgery token whether or not the request carries a session, and mapped only in the
-// Testing environment. Adding a person again replaces them.
+// Testing environment. Adding a person again replaces them, so a spec disables or deletes a person's account for the
+// directory's account check by adding them again with the account state "disabled" or "deleted"; absent means enabled.
 public static class DirectoryPeople
 {
     public const string Path = "/api/__test/directory/people";
@@ -67,7 +69,8 @@ public static class DirectoryPeople
             seed.DisplayName!.Trim(),
             seed.UserPrincipalName!.Trim(),
             string.IsNullOrWhiteSpace(seed.Mail) ? null : seed.Mail.Trim(),
-            photo));
+            photo,
+            seed.AccountState ?? DirectoryAccountState.Enabled));
 
         return TypedResults.NoContent();
     }

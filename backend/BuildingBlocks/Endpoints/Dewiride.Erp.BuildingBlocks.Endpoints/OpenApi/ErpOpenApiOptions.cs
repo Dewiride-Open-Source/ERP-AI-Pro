@@ -19,6 +19,7 @@ public static class ErpOpenApiOptions
         var referenceIds = new SchemaReferenceIds(options.CreateSchemaReferenceId);
         options.CreateSchemaReferenceId = referenceIds.Create;
         options.AddDocumentTransformer<ErpDocumentTransformer>();
+        options.AddDocumentTransformer<NullableReferenceTransformer>();
         options.AddSchemaTransformer<ProblemDetailsSchemaTransformer>();
     }
 }

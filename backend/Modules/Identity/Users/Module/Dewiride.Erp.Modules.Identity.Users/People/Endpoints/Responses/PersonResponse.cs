@@ -16,7 +16,9 @@ namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Responses;
 /// <param name="DesignationName">Name of that designation.</param>
 /// <param name="ManagerId">Record of the person they report to today.</param>
 /// <param name="ManagerDisplayName">Display name of that manager.</param>
+/// <param name="ManagerActive">Whether that manager's record is active; false when it is deactivated, so the person needs a new manager, and null when the person reports to no one today.</param>
 /// <param name="Status">Whether the person may sign in.</param>
+/// <param name="DeactivatedBecause">Why the record was deactivated: by an administrator, or by the check of the company directory, which found the person's Entra account disabled or deleted; null while the record is active.</param>
 /// <param name="Roles">Roles the person holds in the ERP besides Administrator and Employee, which come from their app roles in Microsoft Entra.</param>
 /// <param name="LastSignedInAt">UTC time of the person's last sign-in.</param>
 /// <param name="CreatedAt">UTC time the record was created.</param>
@@ -35,7 +37,9 @@ internal sealed record PersonResponse(
     string? DesignationName,
     Guid? ManagerId,
     string? ManagerDisplayName,
+    bool? ManagerActive,
     PersonStatus Status,
+    PersonDeactivationReason? DeactivatedBecause,
     IReadOnlyList<PersonRole> Roles,
     DateTimeOffset? LastSignedInAt,
     DateTimeOffset CreatedAt,

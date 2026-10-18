@@ -25,6 +25,7 @@ public sealed class UserTests
         Assert.Equal(new DateOnly(2026, 4, 1), user.DateOfJoining);
         Assert.Equal(UserStatus.Active, user.Status);
         Assert.True(user.IsActive);
+        Assert.Null(user.DeactivatedBecause);
         Assert.Null(user.LastSignedInAt);
     }
 
@@ -228,18 +229,37 @@ public sealed class UserTests
         Assert.Equal(SignedInAt, user.LastSignedInAt);
     }
 
-    [Fact]
-    public void Deactivate_ThenReactivate_ChangesWhetherThePersonIsActive()
+    [Theory]
+    [InlineData(nameof(DeactivationReason.Administrator))]
+    [InlineData(nameof(DeactivationReason.AccountDisabled))]
+    [InlineData(nameof(DeactivationReason.AccountDeleted))]
+    public void Deactivate_ThenReactivate_ChangesWhetherThePersonIsActiveAndWhyTheyAreNot(string reasonName)
     {
+        var reason = Enum.Parse<DeactivationReason>(reasonName);
         var user = User.FirstSignIn(ObjectId, "Meera Nair", "meera.nair@dewiride.com", SignedInAt).Value;
+        Assert.Null(user.DeactivatedBecause);
 
-        user.Deactivate();
+        user.Deactivate(reason);
         Assert.Equal(UserStatus.Deactivated, user.Status);
         Assert.False(user.IsActive);
+        Assert.Equal(reason, user.DeactivatedBecause);
 
         user.Reactivate();
         Assert.Equal(UserStatus.Active, user.Status);
         Assert.True(user.IsActive);
+        Assert.Null(user.DeactivatedBecause);
+    }
+
+    [Fact]
+    public void Deactivate_RecordDeactivatedAlready_KeepsTheReasonItWasDeactivatedForFirst()
+    {
+        var user = User.FirstSignIn(ObjectId, "Meera Nair", "meera.nair@dewiride.com", SignedInAt).Value;
+        user.Deactivate(DeactivationReason.AccountDeleted);
+
+        user.Deactivate(DeactivationReason.Administrator);
+
+        Assert.Equal(UserStatus.Deactivated, user.Status);
+        Assert.Equal(DeactivationReason.AccountDeleted, user.DeactivatedBecause);
     }
 
     [Fact]
