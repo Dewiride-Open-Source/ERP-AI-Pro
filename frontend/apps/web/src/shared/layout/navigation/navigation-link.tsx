@@ -8,8 +8,18 @@ import type { ReactNode } from "react";
 
 import { currentPage } from "./navigation-trail";
 
-export function NavigationLink({ href, title, icon }: { href: Route; title: string; icon: ReactNode }) {
-  const current = currentPage(usePathname(), href);
+export function NavigationLink({
+  href,
+  title,
+  icon,
+  entryPaths,
+}: {
+  href: Route;
+  title: string;
+  icon: ReactNode;
+  entryPaths: readonly Route[];
+}) {
+  const current = currentPage(usePathname(), href, entryPaths);
 
   return (
     <SidebarMenuItem>
