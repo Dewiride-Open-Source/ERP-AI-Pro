@@ -5,7 +5,6 @@ using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.Modules.Identity.Users.Contracts;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Integration;
@@ -63,7 +62,6 @@ public sealed class UsersModule : IModule
         builder.Services.AddHandlersFromAssembly(typeof(UsersModule).Assembly);
         builder.Services.AddScoped<DirectoryAccountCheck>();
         builder.Services.AddScoped<IPersonAdmission, UserAdmission>();
-        builder.Services.AddScoped<IPeopleCommands, PeopleCommands>();
         builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IRecordNames, UserRecordNames>());
         builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IPersonNames, UserRecordNames>());
         builder.Services.AddValidation();
