@@ -1100,7 +1100,7 @@
           "id": "user-management-user-lifecycle",
           "title": "User lifecycle",
           "scope": "Implement deactivate/reactivate with immediate session invalidation via a server-side security stamp validated on each request, an offboarding checklist hook for `hr-core`, and the contract for the nightly Entra directory sync job that `business-building-blocks-background-jobs-and-scheduling` schedules to flag disabled or deleted accounts.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-10-10",
           "acceptance": [
@@ -1113,7 +1113,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-10-18",
-          "notes": "From `user-management-users-module-and-just-in-time` (ADR-0039): deactivation, reactivation (PUT /api/identity/users/{id}/status) and soft deletion exist, and the session check and the bearer handler already refuse every request of a person whose record is deactivated or deleted (IPersonAdmission.AdmissionOfAsync on every request), so no security stamp is needed; this item keeps the offboarding checklist hook for hr-core and the directory sync contract, which flags accounts disabled or deleted in Entra, whose open sessions otherwise last until they end (residual risk 10 of docs/security/auth-threat-model.md). From user-management-directory-invitation-via-microsoft-graph (ADR-0040): GraphPeopleDirectory reads the directory only on behalf of a signed-in person, with the delegated User.ReadBasic.All, which cannot read accountEnabled; the nightly directory sync runs without a person, so it needs an application permission (User.Read.All with admin consent) and an application token (IAuthorizationHeaderProvider.CreateAuthorizationHeaderForAppAsync), which the owner decides when this item starts. From user-management-roles-and-permissions (owner decisions of 2026-10-11): the Administrator role still comes only from the Entra app role Erp.Admin, so the ERP knows an administrator only from the token of a request; refusing the deactivation or deletion of the last active administrator (residual risk 11 of docs/security/auth-threat-model.md) needs the record to keep whether its person held Erp.Admin at the last sign-in, and the count of the other active administrators read under an update lock in the same transaction as the change, so two administrators who deactivate each other at once cannot both succeed; this item adds both with deactivation and deletion. From user-management-departments-designations-and-reporting-lines (ADR-0042): a deactivated person keeps the reports whose positions name them and leaves the chart, so offboarding records another manager for those reports; a person someone reports to today or later cannot be deleted (409 user.manages-people), and because a status is not dated, a past date's chart leaves out people deactivated since. From the owner decision of 2026-10-18 on editions: inviting people one at a time from the directory stays Community, and the Enterprise item `integrations-entra-group-onboarding-and-sync` brings in whole Entra groups and keeps them in step. It builds on this item (the directory sync with its application permission and token) and on the invitation, so this item publishes in `Dewiride.Erp.Modules.Identity.Users.Contracts` what a companion module needs to invite a directory person with roles and to record their position."
+          "completedOn": "2026-10-18",
+          "notes": "ADR-0047: `POST /api/identity/users/directory/account-check` deactivates every active linked record whose Entra account is disabled or deleted, read through `IDirectoryAccounts` with the application permission `User.Read.All` (granted to both sign-in registrations on 2026-10-18 after a dry run that listed only that change), 15 ids at a time, and changes nothing on an answer without an enabled account; `User.DeactivatedBecause` records why. Deactivating a manager needs a team handover (`team`, listed by `GET /{id}/team`) applied in the same transaction, two administrators removing each other at once leave one active (`user.actor-inactive`), and `IPeopleCommands` in the Contracts invites a directory person and records a position for another module. The People page runs the check, the person page hands a team over, and people whose manager is deactivated are marked. The offboarding checklist hook moved to `hr-core-onboarding-and-offboarding`, and the nightly run to `business-building-blocks-background-jobs-and-scheduling`."
         }
       ]
     },
@@ -1242,7 +1243,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From `user-management-user-lifecycle` (ADR-0047): the nightly directory sync is `DirectoryAccountCheck` of the users module, which takes `IDirectoryAccounts` as an argument because only the API composes the sign-in services; this item runs it every night as the system actor, under which the audit trail names the ERP, and administrators run the same check from People until then."
         },
         {
           "id": "business-building-blocks-transactional-outbox-and-integration-events",
@@ -2826,7 +2828,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "Edition split (ADR-0030): the exit process publishes an exit integration event that the Enterprise `finance-payroll-full-and-final-and-benefits` consumes; Community code never names payroll."
+          "notes": "Edition split (ADR-0030): the exit process publishes an exit integration event that the Enterprise `finance-payroll-full-and-final-and-benefits` consumes; Community code never names payroll. From `user-management-user-lifecycle` (ADR-0047): the offboarding checklist hook moved here, because both directions need the integration events of `business-building-blocks-transactional-outbox-and-integration-events`: the users module publishes a deactivation in its Contracts for the checklist, and the exit process revokes access through the users module, where deactivating a manager needs a team handover; `IPeopleCommands` of the users Contracts invites a directory person and records a position for onboarding."
         },
         {
           "id": "hr-core-leave-management",
@@ -3367,7 +3369,8 @@
             "business-building-blocks-enterprise-edition-composition",
             "business-building-blocks-background-jobs-and-scheduling",
             "user-management-user-lifecycle"
-          ]
+          ],
+          "notes": "From `user-management-user-lifecycle` (ADR-0047): `IPeopleCommands` of `Dewiride.Erp.Modules.Identity.Users.Contracts` invites a directory person with ERP roles and records a position under the rules of the invitation and position routes, and `IDirectoryAccounts` reads account states with the application permission `User.Read.All` of the sign-in registrations."
         },
         {
           "id": "integrations-engineering-tool-connectors",
