@@ -17,10 +17,10 @@ The compose `migrator` service runs the API image with `dotnet /app/migrator/Dew
 
 With `IMAGE_TAG` in `.env` set to the new release, from `infra/compose` on the host (`-f compose.yaml -f compose.production.yaml` on every command):
 
-1. `docker compose ... pull api web` fetches the new images; the migrator runs from the api image.
+1. `docker compose ... pull api web proxy` fetches the new images; the migrator runs from the api image.
 2. Optionally `docker compose ... run --rm migrator status` lists what will run (exit code 3 means migrations are pending).
 3. `docker compose ... run --rm migrator` runs `migrate` once and returns its exit code. Stop here if it is not 0: nothing has been replaced, so the previous API keeps serving.
-4. `docker compose ... up -d --remove-orphans --wait` rolls the api and web containers. The migrator runs again as the api's dependency, finds nothing to apply and exits 0.
+4. `docker compose ... up -d --remove-orphans --wait` rolls the api, web and proxy containers. The migrator runs again as the api's dependency, finds nothing to apply and exits 0.
 
 The migrator's output names every schema it brought up to date, every seeder it ran and what the retention sweeps deleted; it is printed by step 3 and kept in the container log.
 

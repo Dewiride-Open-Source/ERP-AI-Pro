@@ -1,6 +1,9 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import type { IncomingHttpHeaders } from "node:http";
+import { request } from "node:https";
 import { join, posix, resolve } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { repoRoot } from "./lib/walk.ts";
@@ -11,11 +14,19 @@ const secretFiles = ["Erp__Platform__Database__ConnectionString", "Erp__Platform
 const projectName = "erp-ai-pro-smoke";
 const imageTag = process.env.IMAGE_TAG || "local";
 const apiImage = `ghcr.io/dewiride-open-source/erp-ai-pro/api:${imageTag}`;
+const proxyImage = `ghcr.io/dewiride-open-source/erp-ai-pro/proxy:${imageTag}`;
 const apiBaseUrl = "http://127.0.0.1:5080";
 const webBaseUrl = "http://127.0.0.1:3000";
+const proxyBaseUrl = "http://127.0.0.1:8080";
+const siteAddress = "127.0.0.1";
+const proxyHttpsPort = 8443;
+const proxyRootCertificate = "/data/caddy/pki/authorities/local/root.crt";
+const proxyUser = "caddy";
+const proxyServingWait = 30_000;
 const useShell = process.platform === "win32";
 const keyRingDirectory = "/home/app/.local/share/ERP-AI-Pro/DataProtection-Keys";
 const appUserId = 1654;
+const proxyUserId = 10001;
 const tarHeaderSize = 512;
 const tarEntryKinds = new Map([
   ["5", "a directory"],
@@ -25,9 +36,15 @@ const tarEntryKinds = new Map([
 
 type Check = { name: string; url: string; status: number; redirect?: string; header?: [string, string]; body?: string };
 
+type Answer = { status: number; location: string | null; header: (name: string) => string; body: () => Promise<string> };
+
 export type TarEntry = { name: string; type: string; mode: number; uid: number; gid: number };
 
-const expectedKeyRingEntry: TarEntry = { name: `${posix.basename(keyRingDirectory)}/`, type: "5", mode: 0o700, uid: appUserId, gid: appUserId };
+export type ImageDirectory = { label: string; path: string; expected: TarEntry };
+
+export const keyRing: ImageDirectory = { label: "api image", path: keyRingDirectory, expected: { name: `${posix.basename(keyRingDirectory)}/`, type: "5", mode: 0o700, uid: appUserId, gid: appUserId } };
+
+export const proxyData: ImageDirectory = { label: "proxy image", path: "/data", expected: { name: "data/", type: "5", mode: 0o700, uid: proxyUserId, gid: proxyUserId } };
 
 const stackTenantIssuer = "https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0";
 
@@ -54,6 +71,15 @@ const checks: Check[] = [
   { name: "api front-channel sign-out of an unknown Entra session", url: `${apiBaseUrl}/api/auth/signout-oidc?${unknownEntraSession}`, status: 200 },
   { name: "front-channel sign-out through the web origin", url: `${webBaseUrl}/api/auth/signout-oidc?${unknownEntraSession}`, status: 200 },
   { name: "sign-in refuses a return address on another site through the web origin", url: `${webBaseUrl}/api/auth/login?returnUrl=https%3A%2F%2Fexample.com`, status: 400, header: ["content-type", "application/problem+json"], body: '"request.invalid"' },
+  { name: "proxy redirects http to https", url: `${proxyBaseUrl}/login`, status: 308, redirect: `https://${siteAddress}/login` },
+];
+
+// Each runs over https to the proxy's local address without a server name, as a browser that opens an IP address does, and
+// trusts only the proxy's own root.
+const proxyChecks: Check[] = [
+  { name: "login page through the proxy", url: "/login", status: 200, header: ["content-security-policy", "'nonce-"] },
+  unauthenticated("anonymous api through the proxy", "/api/platform/system-info"),
+  { name: "sign-in refuses a return address on another site through the proxy", url: "/api/auth/login?returnUrl=https%3A%2F%2Fexample.com", status: 400, header: ["content-type", "application/problem+json"], body: '"request.invalid"' },
 ];
 
 function tarText(header: Uint8Array, offset: number, length: number): string {
@@ -88,11 +114,11 @@ function describeTarEntry(entry: TarEntry): string {
   return `${kind} owned by ${entry.uid}:${entry.gid} with mode ${(entry.mode & 0o7777).toString(8).padStart(4, "0")}`;
 }
 
-export function keyRingDirectoryProblem(entry: TarEntry): string | undefined {
-  if (entry.name !== expectedKeyRingEntry.name) return `api image ${keyRingDirectory}: expected the archive to start with "${expectedKeyRingEntry.name}", got "${entry.name}"`;
-  const expected = describeTarEntry(expectedKeyRingEntry);
+export function directoryProblem(directory: ImageDirectory, entry: TarEntry): string | undefined {
+  if (entry.name !== directory.expected.name) return `${directory.label} ${directory.path}: expected the archive to start with "${directory.expected.name}", got "${entry.name}"`;
+  const expected = describeTarEntry(directory.expected);
   const actual = describeTarEntry(entry);
-  return actual === expected ? undefined : `api image ${keyRingDirectory}: expected ${expected}, got ${actual}`;
+  return actual === expected ? undefined : `${directory.label} ${directory.path}: expected ${expected}, got ${actual}`;
 }
 
 function compose(...args: string[]): void {
@@ -116,34 +142,106 @@ function migratorOutcome(): string | undefined {
   return outcome === "exited:0" ? undefined : `migrator: expected "exited:0", got "${outcome || result.stderr.trim()}"`;
 }
 
-export function keyRingDirectoryOutcome(image: string): string | undefined {
+function directoryOutcome(image: string, directory: ImageDirectory): string | undefined {
   const created = spawnSync("docker", ["create", "--pull", "never", image], { encoding: "utf8", shell: useShell });
-  if (created.status !== 0) return `api image: docker create ${image} exited with ${created.status}: ${created.stderr.trim()}`;
+  if (created.status !== 0) return `${directory.label}: docker create ${image} exited with ${created.status}: ${created.stderr.trim()}`;
   const container = created.stdout.trim();
   try {
-    const archive = spawnSync("docker", ["cp", `${container}:${keyRingDirectory}`, "-"], { shell: useShell });
-    if (archive.status !== 0) return `api image ${keyRingDirectory}: docker cp exited with ${archive.status}: ${archive.stderr.toString().trim()}`;
-    return keyRingDirectoryProblem(readFirstTarEntry(archive.stdout));
+    const archive = spawnSync("docker", ["cp", `${container}:${directory.path}`, "-"], { shell: useShell });
+    if (archive.status !== 0) return `${directory.label} ${directory.path}: docker cp exited with ${archive.status}: ${archive.stderr.toString().trim()}`;
+    return directoryProblem(directory, readFirstTarEntry(archive.stdout));
   } catch (error) {
-    return `api image ${keyRingDirectory}: ${(error as Error).message}`;
+    return `${directory.label} ${directory.path}: ${(error as Error).message}`;
   } finally {
     spawnSync("docker", ["rm", container], { stdio: ["ignore", "ignore", "inherit"], shell: useShell });
   }
 }
 
-async function verify(check: Check): Promise<string | undefined> {
-  const response = await fetch(check.url, { redirect: "manual" });
-  if (response.status !== check.status) return `${check.name}: expected ${check.status}, got ${response.status}`;
-  if (check.redirect && response.headers.get("location") !== check.redirect) {
-    return `${check.name}: expected a redirect to ${check.redirect}, got ${response.headers.get("location")}`;
+function imageUserOutcome(image: string, expected: string): string | undefined {
+  const inspected = spawnSync("docker", ["image", "inspect", "--format", "{{.Config.User}}", image], { encoding: "utf8", shell: useShell });
+  if (inspected.status !== 0) return `proxy image: docker image inspect ${image} exited with ${inspected.status}: ${inspected.stderr.trim()}`;
+  const user = inspected.stdout.trim() || "root";
+  return user === expected ? undefined : `proxy image: expected the user ${expected}, got ${user}`;
+}
+
+async function problemOf(check: Check, answer: Answer): Promise<string | undefined> {
+  if (answer.status !== check.status) return `${check.name}: expected ${check.status}, got ${answer.status}`;
+  if (check.redirect && answer.location !== check.redirect) {
+    return `${check.name}: expected a redirect to ${check.redirect}, got ${answer.location}`;
   }
   if (check.header) {
     const [name, expected] = check.header;
-    const actual = response.headers.get(name) ?? "";
+    const actual = answer.header(name);
     if (!actual.includes(expected)) return `${check.name}: header ${name} "${actual}" does not contain "${expected}"`;
   }
-  if (check.body && !(await response.text()).includes(check.body)) return `${check.name}: body does not contain "${check.body}"`;
+  if (check.body && !(await answer.body()).includes(check.body)) return `${check.name}: body does not contain "${check.body}"`;
   return undefined;
+}
+
+async function verify(check: Check): Promise<string | undefined> {
+  const response = await fetch(check.url, { redirect: "manual" });
+  return problemOf(check, { status: response.status, location: response.headers.get("location"), header: (name) => response.headers.get(name) ?? "", body: () => response.text() });
+}
+
+function getThroughProxy(path: string, root: string): Promise<{ status: number; headers: IncomingHttpHeaders; body: string }> {
+  return new Promise((resolveAnswer, reject) => {
+    const outgoing = request({ host: siteAddress, port: proxyHttpsPort, path, ca: root, agent: false }, (incoming) => {
+      const chunks: Buffer[] = [];
+      incoming.on("data", (chunk: Buffer) => chunks.push(chunk));
+      incoming.on("error", reject);
+      incoming.on("end", () => resolveAnswer({ status: incoming.statusCode ?? 0, headers: incoming.headers, body: Buffer.concat(chunks).toString("utf8") }));
+    });
+    outgoing.on("error", reject);
+    outgoing.end();
+  });
+}
+
+async function verifyThroughProxy(check: Check, root: string): Promise<string | undefined> {
+  try {
+    const answer = await getThroughProxy(check.url, root);
+    const header = (name: string) => {
+      const value = answer.headers[name];
+      return Array.isArray(value) ? value.join(", ") : (value ?? "");
+    };
+    return await problemOf(check, { status: answer.status, location: answer.headers.location ?? null, header, body: () => Promise.resolve(answer.body) });
+  } catch (error) {
+    return `${check.name}: ${(error as Error).message}`;
+  }
+}
+
+function proxyRoot(): string | undefined {
+  const result = spawnSync("docker", ["compose", "-p", projectName, ...composeFiles, "exec", "-T", "proxy", "cat", proxyRootCertificate], {
+    cwd: composeDirectory,
+    encoding: "utf8",
+    shell: useShell,
+    env: { ...process.env, IMAGE_TAG: imageTag },
+  });
+  return result.status === 0 && result.stdout.includes("-----BEGIN CERTIFICATE-----") ? result.stdout : undefined;
+}
+
+// The proxy reports healthy once it runs, which can be before it has issued the certificate of its address.
+async function rootOfServingProxy(): Promise<string | Error> {
+  const deadline = Date.now() + proxyServingWait;
+  let last = `${proxyRootCertificate} is not readable`;
+  for (;;) {
+    const root = proxyRoot();
+    if (root !== undefined) {
+      try {
+        await getThroughProxy("/healthz", root);
+        return root;
+      } catch (error) {
+        last = (error as Error).message;
+      }
+    }
+    if (Date.now() >= deadline) return new Error(`proxy: no answer over https within ${proxyServingWait / 1000} seconds (${last})`);
+    await delay(1_000);
+  }
+}
+
+async function proxyOutcomes(): Promise<(string | undefined)[]> {
+  const root = await rootOfServingProxy();
+  if (root instanceof Error) return [root.message];
+  return Promise.all(proxyChecks.map((check) => verifyThroughProxy(check, root)));
 }
 
 async function main(): Promise<void> {
@@ -156,7 +254,8 @@ async function main(): Promise<void> {
   let failures: string[] = [];
   try {
     compose("up", "--detach", "--wait", "--wait-timeout", "180", "--no-build");
-    failures = [keyRingDirectoryOutcome(apiImage), migratorOutcome(), ...(await Promise.all(checks.map(verify)))].filter((f): f is string => f !== undefined);
+    const outcomes = [directoryOutcome(apiImage, keyRing), directoryOutcome(proxyImage, proxyData), imageUserOutcome(proxyImage, proxyUser), migratorOutcome(), ...(await Promise.all(checks.map(verify))), ...(await proxyOutcomes())];
+    failures = outcomes.filter((f): f is string => f !== undefined);
   } finally {
     if (failures.length > 0) compose("logs", "--no-color", "--tail", "100");
     compose("down", "--remove-orphans", "--volumes", "--timeout", "10");
@@ -168,7 +267,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log(`compose smoke ok: the api image holds ${keyRingDirectory} as ${describeTarEntry(expectedKeyRingEntry)}, the migrator completed and ${checks.length} checks passed against the running stack`);
+  console.log(`compose smoke ok: the api image holds ${keyRingDirectory} as ${describeTarEntry(keyRing.expected)}, the proxy image runs as ${proxyUser} and holds /data as ${describeTarEntry(proxyData.expected)}, the migrator completed and ${checks.length + proxyChecks.length} checks passed against the running stack, ${proxyChecks.length} of them over the proxy's https`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
