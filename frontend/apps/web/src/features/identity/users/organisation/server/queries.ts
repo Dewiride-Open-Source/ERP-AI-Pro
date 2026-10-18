@@ -70,7 +70,7 @@ export async function listDesignationOptions(): Promise<OrganisationOption[]> {
 
 export async function searchActivePeople(
   text: string,
-  { excluding }: { readonly excluding?: string } = {},
+  { excluding = [] }: { readonly excluding?: readonly string[] } = {},
 ): Promise<OrganisationOption[]> {
   const terms = [
     "status:eq:active",

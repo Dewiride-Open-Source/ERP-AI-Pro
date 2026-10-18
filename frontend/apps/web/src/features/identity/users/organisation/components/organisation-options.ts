@@ -59,9 +59,9 @@ export function designationOptions(designations: readonly DesignationEntry[]): O
 
 export function personOptions(
   people: readonly PersonEntry[],
-  excludedPersonId?: string,
+  excludedPersonIds: readonly string[] = [],
 ): OrganisationOption[] {
   return people
-    .filter((person) => person.id !== excludedPersonId)
+    .filter((person) => !excludedPersonIds.includes(person.id))
     .map((person) => ({ value: person.id, label: person.displayName, description: person.workEmail }));
 }

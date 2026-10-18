@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { lastSignInText, notRecorded, roleLabel, rolesText, statusLabel } from "./person-text.ts";
+import {
+  deactivationNote,
+  lastSignInText,
+  notRecorded,
+  roleLabel,
+  rolesText,
+  statusLabel,
+} from "./person-text.ts";
 
 test("statusLabel_EachStatus_IsTheWordOfTheFilter", () => {
   assert.equal(statusLabel("active"), "Active");
@@ -10,6 +17,22 @@ test("statusLabel_EachStatus_IsTheWordOfTheFilter", () => {
 
 test("statusLabel_NoStatus_IsNotRecorded", () => {
   assert.equal(statusLabel(undefined), notRecorded);
+});
+
+test("deactivationNote_EachReason_SaysWhoDeactivatedThePersonAndWhy", () => {
+  assert.equal(deactivationNote("administrator"), "Deactivated by an administrator.");
+  assert.equal(
+    deactivationNote("accountDisabled"),
+    "Deactivated by the account check, which found their Microsoft account disabled.",
+  );
+  assert.equal(
+    deactivationNote("accountDeleted"),
+    "Deactivated by the account check, which found their Microsoft account deleted.",
+  );
+});
+
+test("deactivationNote_NoReason_SaysNothing", () => {
+  assert.equal(deactivationNote(undefined), undefined);
 });
 
 test("roleLabel_EachBuiltInRole_HasItsPlainName", () => {

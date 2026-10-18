@@ -1,4 +1,4 @@
-import type { ErpRole, PersonRole, PersonStatus } from "@dewiride/erp-api-client";
+import type { ErpRole, PersonDeactivationReason, PersonRole, PersonStatus } from "@dewiride/erp-api-client";
 
 import { formatDateTimeIst } from "@/shared/format/dates";
 
@@ -8,6 +8,14 @@ const statusLabels: Readonly<Record<PersonStatus, string>> = {
   active: "Active",
   deactivated: "Deactivated",
 };
+
+const deactivationNotes: Readonly<Record<PersonDeactivationReason, string>> = {
+  administrator: "Deactivated by an administrator.",
+  accountDisabled: "Deactivated by the account check, which found their Microsoft account disabled.",
+  accountDeleted: "Deactivated by the account check, which found their Microsoft account deleted.",
+};
+
+export const needsNewManager = "Needs a new manager";
 
 const roleLabels: Readonly<Record<ErpRole, string>> = {
   employee: "Employee",
@@ -35,6 +43,10 @@ export const designationsUnavailable =
 
 export function statusLabel(status: PersonStatus | undefined): string {
   return status === undefined ? notRecorded : statusLabels[status];
+}
+
+export function deactivationNote(reason: PersonDeactivationReason | undefined): string | undefined {
+  return reason === undefined ? undefined : deactivationNotes[reason];
 }
 
 export function roleLabel(role: ErpRole): string {

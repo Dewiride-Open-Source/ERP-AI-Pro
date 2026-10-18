@@ -3,8 +3,6 @@ import { randomUUID } from "node:crypto";
 import {
   createDepartmentRecord,
   createDesignationRecord,
-  deactivatePersonRecord,
-  personRecord,
   recordMoveRecord,
   registerPersonRecord,
   removeRecords,
@@ -38,7 +36,7 @@ type Organisation = {
   readonly analyst: PersonRecord;
   readonly clerk: PersonRecord;
   readonly orphan: PersonRecord;
-  readonly leaver: PersonRecord;
+  readonly joiner: PersonRecord;
   readonly promotedOn: string;
 };
 
@@ -61,8 +59,8 @@ function todayInIndia(): string {
 }
 
 // The departments, designations and people are the test's own, under a prefix no other worker uses, and the chart is read
-// for the test's department, so no other worker's people reach its assertions. The leaver manages Zoya and is deactivated
-// afterwards, so Zoya names a manager outside the chart.
+// for the test's department, so no other worker's people reach its assertions. Ravi manages Zoya but joins only after every
+// date the test charts, so Zoya names a manager outside each chart.
 async function seedOrganisation(api: SignedInApi, feature: string): Promise<Organisation> {
   const prefix = uniquePrefix(feature);
   const promotedOn = isoDateAfter(400);
@@ -70,18 +68,18 @@ async function seedOrganisation(api: SignedInApi, feature: string): Promise<Orga
   const north = await createDepartmentRecord(api, `${prefix} Operations north`, operations.id);
   const headOf = await createDesignationRecord(api, `${prefix} Head of operations`);
   const senior = await createDesignationRecord(api, `${prefix} Senior lead`);
-  const register = (name: string, slug: string) =>
+  const register = (name: string, slug: string, dateOfJoining = joinedOn) =>
     registerPersonRecord(api, {
       displayName: `${prefix} ${name}`,
       workEmail: `${prefix}-${slug}@example.com`,
-      dateOfJoining: joinedOn,
+      dateOfJoining,
     });
   const head = await register("Asha Head", "head");
   const lead = await register("Vikram Lead", "lead");
   const analyst = await register("Meera Analyst", "analyst");
   const clerk = await register("Arjun Clerk", "clerk");
   const orphan = await register("Zoya Orphan", "orphan");
-  const leaver = await register("Ravi Leaver", "leaver");
+  const joiner = await register("Ravi Joiner", "joiner", isoDateAfter(800));
   await recordMoveRecord(api, head.id, {
     effectiveFrom: joinedOn,
     departmentId: operations.id,
@@ -108,13 +106,12 @@ async function seedOrganisation(api: SignedInApi, feature: string): Promise<Orga
     departmentId: operations.id,
     managerId: head.id,
   });
-  await recordMoveRecord(api, leaver.id, { effectiveFrom: joinedOn, departmentId: operations.id });
+  await recordMoveRecord(api, joiner.id, { effectiveFrom: joinedOn, departmentId: operations.id });
   await recordMoveRecord(api, orphan.id, {
     effectiveFrom: joinedOn,
     departmentId: operations.id,
-    managerId: leaver.id,
+    managerId: joiner.id,
   });
-  await deactivatePersonRecord(api, await personRecord(api, leaver.id));
   return {
     prefix,
     operations,
@@ -126,15 +123,15 @@ async function seedOrganisation(api: SignedInApi, feature: string): Promise<Orga
     analyst,
     clerk,
     orphan,
-    leaver,
+    joiner,
     promotedOn,
   };
 }
 
 function removeOrganisation(api: SignedInApi, organisation: Organisation): Promise<void> {
-  const { analyst, orphan, clerk, lead, head, leaver, north, operations, headOf, senior } = organisation;
+  const { analyst, orphan, clerk, lead, head, joiner, north, operations, headOf, senior } = organisation;
   return removeRecords(api, {
-    people: [analyst.id, orphan.id, clerk.id, lead.id, head.id, leaver.id],
+    people: [analyst.id, orphan.id, clerk.id, lead.id, head.id, joiner.id],
     departments: [north.id, operations.id],
     designations: [headOf.id, senior.id],
   });
@@ -150,10 +147,10 @@ function indented(lines: readonly string[], spaces: number): string[] {
   return lines.map((line) => `${" ".repeat(spaces)}${line}`);
 }
 
-// The chart of the operations department today: Asha manages Arjun and Vikram, who manages Meera, and Zoya reports to the
-// leaver, whose record is deactivated.
+// The chart of the operations department today: Asha manages Arjun and Vikram, who manages Meera, and Zoya reports to Ravi,
+// who has not joined yet.
 function operationsChart(organisation: Organisation, { linked }: { readonly linked: boolean }): string {
-  const { head, clerk, lead, orphan, leaver, operations, north, headOf } = organisation;
+  const { head, clerk, lead, orphan, joiner, operations, north, headOf } = organisation;
   return [
     `- list "Today's chart":`,
     "  - listitem:",
@@ -173,7 +170,7 @@ function operationsChart(organisation: Organisation, { linked }: { readonly link
     "  - listitem:",
     ...indented(nameLine(orphan, linked), 4),
     `    - paragraph: ${quoted(`No designation · ${operations.name}`)}`,
-    `    - paragraph: ${quoted(`Reports to ${leaver.displayName}, who is not on this chart.`)}`,
+    `    - paragraph: ${quoted(`Reports to ${joiner.displayName}, who is not on this chart.`)}`,
   ].join("\n");
 }
 

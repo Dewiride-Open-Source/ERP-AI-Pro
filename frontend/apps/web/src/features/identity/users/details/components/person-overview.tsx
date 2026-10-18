@@ -12,15 +12,23 @@ import { istDateKey } from "@/shared/format/dates";
 
 import { listDepartmentOptions, listDesignationOptions } from "../../organisation/server/queries";
 import { PersonStatusBadge } from "../../people/components/person-status-badge";
+import { deactivationNote } from "../../people/components/person-text";
 import { PersonRoles } from "../../roles/components/person-roles";
-import { getPerson, getPositions } from "../server/queries";
+import { getPerson, getPositions, getTeam } from "../server/queries";
 
 import { isOwnRecord } from "./person-action-text";
-import { PersonActions } from "./person-actions";
+import { PersonActions, type TeamRead } from "./person-actions";
 import { PersonSummary } from "./person-summary";
 import { PositionHistory, type MoveChoicesRead, type MovesRead } from "./position-history";
 
 const personTitle = "Person";
+
+const teamHandoverPermissions: readonly Permission[] = [
+  "identity.users.people.change-status",
+  "identity.users.positions.read",
+  "identity.users.positions.record",
+  "identity.users.positions.withdraw",
+];
 
 export async function PersonOverview({ userId }: { userId: string }) {
   const read = await getPerson(userId);
@@ -32,13 +40,18 @@ export async function PersonOverview({ userId }: { userId: string }) {
   const id = person.id ?? userId;
   const name = person.displayName || personTitle;
   const may = (permission: Permission) => mayShow(session, permission);
-  const [moves, choices, flags] = await Promise.all([
+  const ownRecord = ownRecordOf(person, session);
+  const [moves, choices, flags, team] = await Promise.all([
     may("identity.users.positions.read") ? readMoves(id) : undefined,
     may("identity.users.positions.record") ? readMoveChoices() : undefined,
     getFeatureFlags(),
+    !ownRecord && teamHandoverPermissions.every(may) ? readTeam(id) : undefined,
   ]);
   const showsHistory =
     may(auditNavigation.permission) && isFeatureEnabled(flags, auditNavigation.featureFlag);
+  const deactivatedBecause =
+    person.status === "deactivated" ? (person.deactivatedBecause ?? undefined) : undefined;
+  const deactivation = deactivationNote(deactivatedBecause);
 
   return (
     <div className="grid min-w-0 grid-cols-1 gap-section">
@@ -55,13 +68,20 @@ export async function PersonOverview({ userId }: { userId: string }) {
               </>
             ) : null}
           </p>
+          {deactivation === undefined ? null : (
+            <p className="text-sm text-muted-foreground" data-testid="person-deactivation-reason">
+              {deactivation}
+            </p>
+          )}
         </div>
         <PersonActions
           personId={id}
           personName={name}
           status={person.status ?? undefined}
+          deactivatedBecause={deactivatedBecause}
           version={person.version ?? undefined}
-          ownRecord={ownRecordOf(person, session)}
+          ownRecord={ownRecord}
+          team={team}
           rights={{
             edit: may("identity.users.people.update"),
             changeStatus: may("identity.users.people.change-status"),
@@ -107,6 +127,15 @@ function ownRecordOf(person: PersonResponse, session: HeldSession): boolean {
 async function readMoves(personId: string): Promise<MovesRead> {
   try {
     return { status: "read", moves: await getPositions(personId) };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { status: "failed", reason: describeFailure(error) };
+  }
+}
+
+async function readTeam(personId: string): Promise<TeamRead> {
+  try {
+    return { status: "read", members: await getTeam(personId) };
   } catch (error) {
     unstable_rethrow(error);
     return { status: "failed", reason: describeFailure(error) };

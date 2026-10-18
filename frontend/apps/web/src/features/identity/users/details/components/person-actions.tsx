@@ -1,11 +1,12 @@
-import type { PersonStatus } from "@dewiride/erp-api-client";
+import type { PersonDeactivationReason, PersonStatus } from "@dewiride/erp-api-client";
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import { InfoIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
 
 import { DeleteAction } from "./delete-action";
-import { ownRecordNote } from "./person-action-text";
+import { ownRecordNote, teamUnreadable } from "./person-action-text";
 import { StatusAction } from "./status-action";
+import type { TeamMember } from "./team-handover-dialog";
 
 export interface PersonActionRights {
   readonly edit: boolean;
@@ -13,25 +14,34 @@ export interface PersonActionRights {
   readonly delete: boolean;
 }
 
+export type TeamRead =
+  | { readonly status: "read"; readonly members: readonly TeamMember[] }
+  | { readonly status: "failed"; readonly reason: string };
+
 // The API refuses an administrator who deactivates or deletes their own record, so their own page explains that in place
 // of the two buttons.
 export function PersonActions({
   personId,
   personName,
   status,
+  deactivatedBecause,
   version,
   ownRecord,
+  team,
   rights,
 }: {
   personId: string;
   personName: string;
   status: PersonStatus | undefined;
+  deactivatedBecause: PersonDeactivationReason | undefined;
   version: string | undefined;
   ownRecord: boolean;
+  team: TeamRead | undefined;
   rights: PersonActionRights;
 }) {
   const offersStatusOrDeletion = rights.changeStatus || rights.delete;
   if (!rights.edit && !offersStatusOrDeletion) return null;
+  const offersStatus = !ownRecord && rights.changeStatus && status !== undefined && version !== undefined;
 
   return (
     <div className="flex flex-wrap items-start gap-2" data-testid="person-actions">
@@ -49,11 +59,27 @@ export function PersonActions({
           {ownRecordNote}
         </p>
       ) : null}
-      {!ownRecord && rights.changeStatus && status !== undefined && version !== undefined ? (
-        <StatusAction personId={personId} personName={personName} status={status} version={version} />
+      {offersStatus ? (
+        <StatusAction
+          personId={personId}
+          personName={personName}
+          status={status}
+          version={version}
+          deactivatedBecause={deactivatedBecause}
+          team={team?.status === "read" ? team.members : undefined}
+        />
       ) : null}
       {!ownRecord && rights.delete ? (
         <DeleteAction personId={personId} personName={personName} status={status} />
+      ) : null}
+      {offersStatus && team?.status === "failed" ? (
+        <p
+          role="status"
+          className="basis-full text-sm text-muted-foreground"
+          data-testid="person-team-unavailable"
+        >
+          {teamUnreadable(personName)} {team.reason}
+        </p>
       ) : null}
     </div>
   );
