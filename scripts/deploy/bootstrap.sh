@@ -4,16 +4,17 @@ USAGE='Usage: sudo bash scripts/deploy/bootstrap.sh --site-address <IPv4> --auth
 
 Prepares an Ubuntu 22.04, 24.04 or 26.04 LTS server for the ERP-AI-Pro production stack and keeps it so
 when run again: Docker Engine with live restore, the deploy account erp-ai-pro as the only member of the
-docker group, its checkout of this repository in /srv/erp-ai-pro/ERP-AI-Pro with the folder of the
-client certificates, .env and the two external volumes, the systemd units that start the stack at boot
-and run the retention sweeps every night, security updates that restart the server at 03:00 India time
-when one needs it, SSH with public keys only, and a firewall that admits SSH from the home network only.
-Every step changes only what differs, so a second run changes nothing.
+docker group and nobody in the lxd group, its checkout of this repository in /srv/erp-ai-pro/ERP-AI-Pro
+with the folder of the client certificates, .env and the two external volumes, the systemd units that
+start the stack at boot and run the retention sweeps every night, security updates that restart the
+server at 03:00 India time when one needs it, SSH with public keys only, and a firewall that admits SSH
+from the home network only. Every step changes only what differs, so a second run changes nothing.
 Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
   --site-address <IPv4>      The fixed address of this server on the home network, which people open the ERP at.
-  --authorized-keys <file>   The public keys that may sign in as erp-ai-pro, in authorized_keys format.
+  --authorized-keys <file>   The deploy account'"'"'s own public keys, in authorized_keys format; none may also sign in
+                             as the administrator.
   --home-network <CIDR>      The network allowed to reach SSH (default: the network of --site-address).
   --dry-run                  List what a run would change and change nothing; without root it compares what it can read.
   --help                     Show this help.'
@@ -22,9 +23,15 @@ Options:
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 
 readonly SUPPORTED_RELEASES=(jammy noble resolute)
-readonly BASE_PACKAGES=(openssh-server ufw unattended-upgrades git ca-certificates curl)
+readonly BASE_PACKAGES=(openssh-server ufw unattended-upgrades git ca-certificates curl python3)
+readonly APT_OPTIONS=(-qq -o DPkg::Lock::Timeout=600)
+readonly DOCKER_REPOSITORY='https://download.docker.com/linux/ubuntu'
+readonly DOCKER_KEYRING='/etc/apt/keyrings/docker.asc'
+readonly DOCKER_SOURCE='/etc/apt/sources.list.d/docker.sources'
 readonly DOCKER_PACKAGES=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
 readonly DOCKER_CONFLICTS=(docker.io docker-compose docker-compose-v2 docker-doc docker-buildx podman-docker containerd runc)
+readonly DAEMON_CONFIG='/etc/docker/daemon.json'
+readonly LXD_INSTALLER_SOCKET='lxd-installer.socket'
 readonly SSH_RULES_FILE='/etc/ssh/sshd_config.d/10-erp-ai-pro.conf'
 readonly SSH_EFFECTIVE_SETTINGS=(
   'passwordauthentication no'
@@ -34,12 +41,13 @@ readonly SSH_EFFECTIVE_SETTINGS=(
   'pubkeyauthentication yes'
   'x11forwarding no'
 )
-readonly UPDATES_FILE='/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades'
-readonly APT_OPTIONS=(-qq -o DPkg::Lock::Timeout=600)
+readonly UPDATES_FILE='/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf'
+readonly UPDATE_SERVICES=(apt-daily.service apt-daily-upgrade.service)
 readonly UPDATE_TIMERS=(apt-daily.timer apt-daily-upgrade.timer)
 readonly UNIT_FILES=(erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-retain.timer)
 readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer)
 readonly RETAIN_TIMER='erp-ai-pro-retain.timer'
+readonly SSH_RULE_COMMENT='SSH from the home network'
 
 SITE_ADDRESS=''
 AUTHORIZED_KEYS_FILE=''
@@ -96,6 +104,31 @@ package_installed() {
   [[ "$(dpkg-query -W -f='${Status}' "$1" 2> /dev/null || true)" == 'install ok installed' ]]
 }
 
+unit_state() {
+  systemctl is-enabled "$1" 2> /dev/null || true
+}
+
+# ufw translates what it prints, so every call whose output is read runs in the C locale.
+ufw_c() {
+  LC_ALL=C ufw "$@"
+}
+
+apt_update() {
+  if (( DRY_RUN )); then
+    printf '[dry-run] apt-get update\n' >&2
+    return 0
+  fi
+  local attempt
+  for attempt in 1 2 3 4 5 6 7 8 9 10; do
+    if apt-get "${APT_OPTIONS[@]}" update; then
+      return 0
+    fi
+    log_warn "apt-get update failed (attempt $attempt of 10), usually because the daily update holds the package lists; trying again in 30 seconds"
+    sleep 30
+  done
+  die "apt-get update kept failing; see the errors above"
+}
+
 check_platform() {
   log_step "Platform"
   [[ -r /etc/os-release ]] || die "/etc/os-release is missing; this script supports Ubuntu LTS only"
@@ -122,6 +155,10 @@ check_platform() {
   fi
 }
 
+admin_keys_file() {
+  printf '%s/.ssh/authorized_keys' "$(getent passwd "$ADMIN_USER" | cut -d: -f6)"
+}
+
 check_arguments() {
   log_step "Arguments"
   is_ipv4 "$SITE_ADDRESS" || die "--site-address must be an IPv4 address such as 192.168.1.20, not '$SITE_ADDRESS'"
@@ -140,7 +177,15 @@ check_arguments() {
   local count
   count="$(valid_key_count "$AUTHORIZED_KEYS_FILE")" || die "--authorized-keys: '$AUTHORIZED_KEYS_FILE' holds a line that is not a public key"
   (( count > 0 )) || die "--authorized-keys: '$AUTHORIZED_KEYS_FILE' holds no public key"
-  log_info "$count key(s) for $DEPLOY_USER from $AUTHORIZED_KEYS_FILE"
+
+  local admin_keys shared
+  admin_keys="$(admin_keys_file)"
+  if [[ -r "$admin_keys" ]] && valid_key_count "$admin_keys" > /dev/null; then
+    shared="$(comm -12 <(key_fingerprints "$AUTHORIZED_KEYS_FILE" | sort -u) <(key_fingerprints "$admin_keys" | sort -u))"
+    [[ -z "$shared" ]] \
+      || die "--authorized-keys shares $shared with $admin_keys; the deploy account is root through Docker, so it needs a key of its own (docs/operations/runbooks/host-setup.md)"
+  fi
+  log_info "$count key(s) of its own for $DEPLOY_USER from $AUTHORIZED_KEYS_FILE"
 }
 
 ensure_packages() {
@@ -157,30 +202,41 @@ ensure_packages() {
     return 0
   fi
   record_change "install ${missing[*]}"
-  run apt-get "${APT_OPTIONS[@]}" update
+  apt_update
   run env DEBIAN_FRONTEND=noninteractive apt-get "${APT_OPTIONS[@]}" install -y --no-install-recommends "${missing[@]}"
 }
 
-write_docker_apt_source() {
+docker_repository_configured() {
+  grep -rqsF -- "$DOCKER_REPOSITORY" /etc/apt/sources.list /etc/apt/sources.list.d/
+}
+
+add_docker_repository() {
   local codename architecture
   codename="$(os_release_field UBUNTU_CODENAME)"
   [[ -n "$codename" ]] || codename="$(os_release_field VERSION_CODENAME)"
   architecture="$(dpkg --print-architecture)"
+  run install -m 0755 -d /etc/apt/keyrings
+  run curl -fsSL --retry 3 "$DOCKER_REPOSITORY/gpg" -o "$DOCKER_KEYRING"
+  run chmod a+r "$DOCKER_KEYRING"
   if (( DRY_RUN )); then
-    printf '[dry-run] write /etc/apt/sources.list.d/docker.sources for %s on %s\n' "$codename" "$architecture" >&2
-    return 0
+    printf '[dry-run] write %s for %s on %s\n' "$DOCKER_SOURCE" "$codename" "$architecture" >&2
+  else
+    printf 'Types: deb\nURIs: %s\nSuites: %s\nComponents: stable\nArchitectures: %s\nSigned-By: %s\n' \
+      "$DOCKER_REPOSITORY" "$codename" "$architecture" "$DOCKER_KEYRING" > "$DOCKER_SOURCE"
   fi
-  printf 'Types: deb\nURIs: https://download.docker.com/linux/ubuntu\nSuites: %s\nComponents: stable\nArchitectures: %s\nSigned-By: /etc/apt/keyrings/docker.asc\n' \
-    "$codename" "$architecture" > /etc/apt/sources.list.d/docker.sources
+  apt_update
 }
 
 ensure_docker_engine() {
   log_step "Docker Engine"
   if command -v docker > /dev/null 2>&1 && docker compose version > /dev/null 2>&1; then
-    if package_installed docker-ce; then
+    if ! package_installed docker-ce; then
+      log_warn "Docker Engine comes from another source than Docker's repository; this script keeps it, and the runbook names the packages it expects"
+    elif docker_repository_configured; then
       log_info "in place: Docker Engine $(dpkg-query -W -f='${Version}' docker-ce) from Docker's repository, Compose $(docker compose version --short)"
     else
-      log_warn "Docker Engine comes from another source than Docker's repository; this script keeps it, and the runbook names the packages it expects"
+      record_change "add Docker's apt repository, without which apt cannot update the installed Docker Engine"
+      add_docker_repository
     fi
   else
     local -a conflicts=()
@@ -192,16 +248,12 @@ ensure_docker_engine() {
     done
     (( ${#conflicts[@]} == 0 )) || die "remove the unofficial Docker packages first, as Docker's install guide asks: sudo apt-get remove ${conflicts[*]}"
     record_change "install Docker Engine from Docker's repository: ${DOCKER_PACKAGES[*]}"
-    run install -m 0755 -d /etc/apt/keyrings
-    run curl -fsSL --retry 3 https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-    run chmod a+r /etc/apt/keyrings/docker.asc
-    write_docker_apt_source
-    run apt-get "${APT_OPTIONS[@]}" update
+    add_docker_repository
     run env DEBIAN_FRONTEND=noninteractive apt-get "${APT_OPTIONS[@]}" install -y "${DOCKER_PACKAGES[@]}"
   fi
   local service state
   for service in docker.service containerd.service; do
-    state="$(systemctl is-enabled "$service" 2> /dev/null || true)"
+    state="$(unit_state "$service")"
     if [[ "$service" == containerd.service && ( -z "$state" || "$state" == not-found ) ]]; then
       continue
     fi
@@ -212,21 +264,67 @@ ensure_docker_engine() {
   done
 }
 
+daemon_config_covers() {
+  python3 - "$1" "$2" << 'PYTHON'
+import json, sys
+with open(sys.argv[1], encoding="utf-8") as required_file, open(sys.argv[2], encoding="utf-8") as present_file:
+    required, present = json.load(required_file), json.load(present_file)
+sys.exit(0 if isinstance(present, dict) and all(present.get(key) == value for key, value in required.items()) else 1)
+PYTHON
+}
+
+live_restore_enabled() {
+  [[ "$(docker info --format '{{.LiveRestoreEnabled}}' 2> /dev/null || true)" == true ]]
+}
+
 ensure_docker_daemon_config() {
   log_step "Docker daemon configuration"
-  local source="$HOST_CONFIG_DIR/docker/daemon.json" target=/etc/docker/daemon.json
-  if [[ -f "$target" && -r "$target" ]] && ! cmp -s -- "$source" "$target"; then
-    die "$target already holds other settings; merge these into it by hand and run this script again: $(tr -s '\n ' ' ' < "$source")"
+  local source="$HOST_CONFIG_DIR/docker/daemon.json" apply=0
+  if [[ -f "$DAEMON_CONFIG" ]]; then
+    [[ -r "$DAEMON_CONFIG" ]] || die "cannot read $DAEMON_CONFIG"
+    daemon_config_covers "$source" "$DAEMON_CONFIG" \
+      || die "$DAEMON_CONFIG lacks live restore or log rotation; add these settings to it, keeping its own, and run this script again: $(tr -s '\n ' ' ' < "$source")"
+    log_info "in place: live restore and log rotation in $DAEMON_CONFIG"
+  else
+    if install_config "$source" "$DAEMON_CONFIG" 644 root:root "Docker daemon configuration: live restore and log rotation"; then
+      apply=1
+    fi
   fi
-  if install_config "$source" "$target" 644 root:root "Docker daemon configuration: live restore and log rotation"; then
-    run dockerd --validate --config-file "$target"
-    # Live restore applies on a reload, so the restart that applies the log options leaves running containers alone.
-    run systemctl reload docker.service
-    run systemctl restart docker.service
+  if (( ! apply )) && is_root && command -v docker > /dev/null 2>&1 && ! live_restore_enabled; then
+    record_change "apply $DAEMON_CONFIG, which Docker has not read yet (it reports live restore off)"
+    apply=1
   fi
+  if (( ! apply )); then
+    return 0
+  fi
+  run dockerd --validate --config-file "$DAEMON_CONFIG"
+  run systemctl reload docker.service
   if (( ! DRY_RUN )); then
-    [[ "$(docker info --format '{{.LiveRestoreEnabled}}')" == true ]] || die "Docker does not report live restore as enabled"
+    # Live restore applies on a reload, and only once it does may the restart that applies the log options run.
+    local attempt
+    for attempt in $(seq 1 30); do
+      if live_restore_enabled; then
+        break
+      fi
+      (( attempt < 30 )) || die "Docker did not turn live restore on after the reload, so it was not restarted"
+      sleep 1
+    done
   fi
+  run systemctl restart docker.service
+  if (( ! DRY_RUN )); then
+    live_restore_enabled || die "Docker does not report live restore as enabled after its restart"
+  fi
+}
+
+group_members() {
+  getent group "$1" | cut -d: -f4
+}
+
+refuse_primary_group() {
+  local group="$1" gid="$2"
+  local -a primary=()
+  mapfile -t primary < <(getent passwd | awk -F: -v gid="$gid" '$4 == gid { print $1 }')
+  (( ${#primary[@]} == 0 )) || die "$group is the primary group of ${primary[*]}; give them another primary group first, because membership of $group is root access"
 }
 
 ensure_docker_group() {
@@ -236,12 +334,7 @@ ensure_docker_group() {
     record_change "make $DEPLOY_USER the only member of the docker group"
     return 0
   fi
-  local gid
-  gid="$(cut -d: -f3 <<< "$entry")"
-  local -a primary=()
-  mapfile -t primary < <(getent passwd | awk -F: -v gid="$gid" '$4 == gid { print $1 }')
-  (( ${#primary[@]} == 0 )) || die "docker is the primary group of ${primary[*]}; give them another primary group first, because membership of docker is root access"
-
+  refuse_primary_group docker "$(cut -d: -f3 <<< "$entry")"
   local -a members=() others=()
   local member in_group=0
   IFS=, read -r -a members <<< "$(cut -d: -f4 <<< "$entry")"
@@ -297,6 +390,33 @@ ensure_deploy_account() {
   ensure_docker_group
 }
 
+ensure_no_lxd_access() {
+  log_step "LXD: nobody gets root through it"
+  if command -v snap > /dev/null 2>&1 && snap list lxd > /dev/null 2>&1; then
+    die "this server runs LXD, whose group is root access; the ERP's host must not, so move its containers elsewhere and remove the lxd snap first"
+  fi
+  local entry
+  if entry="$(getent group lxd)"; then
+    refuse_primary_group lxd "$(cut -d: -f3 <<< "$entry")"
+    local -a members=()
+    local member
+    IFS=, read -r -a members <<< "$(cut -d: -f4 <<< "$entry")"
+    for member in "${members[@]}"; do
+      record_change "remove $member from the lxd group, whose members can install LXD and become root through it"
+      run gpasswd --delete "$member" lxd > /dev/null
+    done
+    if (( ${#members[@]} == 0 )); then
+      log_info "in place: the lxd group has no members"
+    fi
+  fi
+  local state
+  state="$(unit_state "$LXD_INSTALLER_SOCKET")"
+  if [[ -n "$state" && "$state" != not-found && "$state" != masked ]]; then
+    record_change "mask $LXD_INSTALLER_SOCKET, which installs LXD on demand for members of lxd"
+    run systemctl mask --now --quiet "$LXD_INSTALLER_SOCKET"
+  fi
+}
+
 ensure_env_file() {
   local target="$DEPLOY_COMPOSE_DIR/.env" source="$REPO_ROOT/infra/compose/.env.example"
   if [[ -f "$target" ]]; then
@@ -318,14 +438,14 @@ ensure_env_file() {
   local staged
   staged="$(mktemp)"
   sed "s|^ERP_SITE_ADDRESS=.*|ERP_SITE_ADDRESS=$SITE_ADDRESS|" "$source" > "$staged"
-  install -m 600 -o "$DEPLOY_USER" -g "$DEPLOY_USER" -- "$staged" "$target"
+  install -m 600 -o "$DEPLOY_USER" -g "$DEPLOY_USER" -- "$staged" "$target" || die "cannot write $target"
   rm -f -- "$staged"
 }
 
 ensure_volumes() {
   if ! docker info > /dev/null 2>&1; then
     (( DRY_RUN )) || die "cannot reach the Docker daemon"
-    record_change "create the Docker volumes ${STACK_VOLUMES[*]} that are missing (Docker could not be asked without root)"
+    record_change "create the Docker volumes ${STACK_VOLUMES[*]} that are missing (Docker could not be asked)"
     return 0
   fi
   local volume
@@ -339,6 +459,35 @@ ensure_volumes() {
   done
 }
 
+ensure_checkout() {
+  local commit
+  commit="$(git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" rev-parse HEAD)" || die "cannot read the commit of $REPO_ROOT; run this script from a git checkout"
+  if [[ -d "$DEPLOY_CHECKOUT/.git" ]]; then
+    local owners
+    owners="$(stat -c %U -- "$DEPLOY_CHECKOUT" "$DEPLOY_CHECKOUT/.git" | sort -u | paste -sd, -)"
+    if [[ "$owners" != "$DEPLOY_USER" ]]; then
+      record_change "give the checkout back to $DEPLOY_USER (it belonged to $owners)"
+      run chown -R -- "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_CHECKOUT"
+    fi
+    log_info "in place: a checkout at $(git -c safe.directory="$DEPLOY_CHECKOUT" -C "$DEPLOY_CHECKOUT" rev-parse --short=12 HEAD), which deployments move and this script leaves"
+    return 0
+  fi
+  [[ ! -e "$DEPLOY_CHECKOUT" ]] || die "$DEPLOY_CHECKOUT exists but is not a git checkout; move it away and run this script again"
+  local origin partial="$DEPLOY_HOME/.ERP-AI-Pro.partial"
+  origin="$(git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" remote get-url origin)" || die "$REPO_ROOT has no remote origin for the deployment checkout to follow"
+  if ! git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" diff --quiet HEAD --; then
+    log_warn "$REPO_ROOT has uncommitted changes, which the deployment checkout does not get"
+  fi
+  record_change "check out commit ${commit:0:12} of $origin in $DEPLOY_CHECKOUT"
+  # The checkout takes its place only once it is complete and the deploy account's, so an interrupted run leaves no half checkout.
+  run rm -rf -- "$partial"
+  run git -c safe.directory="$REPO_ROOT" clone --quiet --no-local --no-checkout -- "$REPO_ROOT" "$partial"
+  run git -C "$partial" remote set-url origin "$origin"
+  run git -C "$partial" -c advice.detachedHead=false checkout --quiet --detach "$commit"
+  run chown -R -- "$DEPLOY_USER:$DEPLOY_USER" "$partial"
+  run mv -T -- "$partial" "$DEPLOY_CHECKOUT"
+}
+
 ensure_deployment_folder() {
   log_step "Deployment checkout $DEPLOY_CHECKOUT"
   require_command git
@@ -347,22 +496,7 @@ ensure_deployment_folder() {
     ensure_volumes
     return 0
   fi
-  local commit
-  commit="$(git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" rev-parse HEAD)" || die "cannot read the commit of $REPO_ROOT; run this script from a git checkout"
-  if [[ -d "$DEPLOY_CHECKOUT/.git" ]]; then
-    log_info "in place: a checkout at $(git -c safe.directory="$DEPLOY_CHECKOUT" -C "$DEPLOY_CHECKOUT" rev-parse --short=12 HEAD), which deployments move and this script leaves"
-  else
-    local origin
-    origin="$(git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" remote get-url origin)" || die "$REPO_ROOT has no remote origin for the deployment checkout to follow"
-    if ! git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" diff --quiet HEAD --; then
-      log_warn "$REPO_ROOT has uncommitted changes, which the deployment checkout does not get"
-    fi
-    record_change "check out commit ${commit:0:12} of $origin in $DEPLOY_CHECKOUT"
-    run git -c safe.directory="$REPO_ROOT" clone --quiet --no-local --no-checkout -- "$REPO_ROOT" "$DEPLOY_CHECKOUT"
-    run git -C "$DEPLOY_CHECKOUT" remote set-url origin "$origin"
-    run git -C "$DEPLOY_CHECKOUT" -c advice.detachedHead=false checkout --quiet --detach "$commit"
-    run chown -R -- "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_CHECKOUT"
-  fi
+  ensure_checkout
   ensure_directory "$DEPLOY_COMPOSE_DIR/secrets" 700 "$DEPLOY_USER:$DEPLOY_USER" "the folder of the client certificates"
   ensure_env_file
   ensure_volumes
@@ -383,7 +517,7 @@ ensure_units() {
     run systemctl daemon-reload
   fi
   for unit in "${ENABLED_UNITS[@]}"; do
-    if [[ "$(systemctl is-enabled "$unit" 2> /dev/null || true)" != enabled ]]; then
+    if [[ "$(unit_state "$unit")" != enabled ]]; then
       record_change "enable $unit"
       run systemctl enable --quiet "$unit"
     fi
@@ -403,25 +537,26 @@ ensure_units() {
       fi
     done
     if (( ${#missing[@]} > 0 )); then
-      log_info "systemd skips both units until $DEPLOY_COMPOSE_DIR/secrets holds ${missing[*]}"
+      log_info "systemd skips both services until $DEPLOY_COMPOSE_DIR/secrets holds ${missing[*]}"
     fi
   fi
 }
 
 ensure_nightly_updates() {
   log_step "Security updates and the nightly restart"
-  local source="$HOST_CONFIG_DIR/apt/52erp-ai-pro-unattended-upgrades"
+  local source="$HOST_CONFIG_DIR/apt/52erp-ai-pro-unattended-upgrades.conf"
   install_config "$source" "$UPDATES_FILE" 644 root:root "unattended upgrades every day, restarting at 03:00 India time when an update needs it" || true
-  local timer state
-  for timer in "${UPDATE_TIMERS[@]}"; do
-    state="$(systemctl is-enabled "$timer" 2> /dev/null || true)"
-    if [[ "$state" == masked ]]; then
-      record_change "unmask $timer, without which the daily updates never run"
-      run systemctl unmask --quiet "$timer"
+  local unit
+  for unit in "${UPDATE_SERVICES[@]}" "${UPDATE_TIMERS[@]}"; do
+    if [[ "$(unit_state "$unit")" == masked ]]; then
+      record_change "unmask $unit, without which the daily updates never run"
+      run systemctl unmask --quiet "$unit"
     fi
-    if [[ "$state" != enabled ]]; then
-      record_change "enable $timer"
-      run systemctl enable --now --quiet "$timer"
+  done
+  for unit in "${UPDATE_TIMERS[@]}"; do
+    if [[ "$(unit_state "$unit")" != enabled ]]; then
+      record_change "enable $unit"
+      run systemctl enable --now --quiet "$unit"
     fi
   done
   if (( ! DRY_RUN )); then
@@ -429,22 +564,45 @@ ensure_nightly_updates() {
     effective="$(apt-config dump)"
     while IFS= read -r setting; do
       grep -qxF -- "$setting" <<< "$effective" || die "APT does not apply '$setting'; a file that sorts after $UPDATES_FILE sets it again"
-    done < <(grep -vE '^[[:space:]]*(//|$)' "$source")
+    done < <(grep -vE '^[[:space:]]*(//|#|$)' "$source")
   fi
+}
+
+strict_modes_problem() {
+  local path="$1" owner mode
+  read -r owner mode < <(stat -c '%U %a' -- "$path")
+  if [[ "$owner" != "$ADMIN_USER" && "$owner" != root ]]; then
+    printf '%s belongs to %s' "$path" "$owner"
+  elif (( (8#$mode & 8#022) != 0 )); then
+    printf '%s has mode %s, which others may write' "$path" "$mode"
+  fi
+}
+
+check_admin_key() {
+  local admin_home admin_keys count problem path
+  admin_home="$(getent passwd "$ADMIN_USER" | cut -d: -f6)"
+  admin_keys="$(admin_keys_file)"
+  if ! [[ -r "$admin_keys" ]] || ! count="$(valid_key_count "$admin_keys")" || (( count == 0 )); then
+    die "$ADMIN_USER has no usable key in $admin_keys; add one from the administrator's computer (ssh-copy-id) before passwords are turned off"
+  fi
+  # sshd refuses keys whose files others may change (StrictModes), which would lock the administrator out once passwords are off.
+  for path in "$admin_home" "$admin_home/.ssh" "$admin_keys"; do
+    problem="$(strict_modes_problem "$path")"
+    [[ -z "$problem" ]] || die "sshd would refuse $ADMIN_USER's keys because $problem; fix it (chmod go-w) and run this script again"
+  done
+  log_info "$ADMIN_USER keeps $count key(s) to sign in with ($admin_keys)"
 }
 
 ensure_ssh_keys_only() {
   log_step "SSH: public keys only, no root sign-in"
-  local admin_home admin_keys count
-  admin_home="$(getent passwd "$ADMIN_USER" | cut -d: -f6)"
-  admin_keys="$admin_home/.ssh/authorized_keys"
-  if [[ -r "$admin_keys" ]] && count="$(valid_key_count "$admin_keys")" && (( count > 0 )); then
-    log_info "$ADMIN_USER keeps $count key(s) to sign in with ($admin_keys)"
-  else
-    die "$ADMIN_USER has no usable key in $admin_keys; add one from the administrator's computer (ssh-copy-id) before passwords are turned off"
+  check_admin_key
+  if is_root; then
+    local matches
+    matches="$(grep -hsE '^[[:space:]]*Match[[:space:]]' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf || true)"
+    [[ -z "$matches" ]] || die "sshd's configuration holds Match blocks ($matches), whose settings this script cannot prove; remove them and run it again"
   fi
 
-  local backup=''
+  local backup='' written=0
   if (( ! DRY_RUN )); then
     # sshd -t and -T need the privilege separation directory, which ssh.service creates only once it first starts.
     if [[ ! -d /run/sshd ]]; then
@@ -455,90 +613,143 @@ ensure_ssh_keys_only() {
       cp -p -- "$SSH_RULES_FILE" "$backup"
     fi
   fi
-  if install_config "$HOST_CONFIG_DIR/ssh/10-erp-ai-pro.conf" "$SSH_RULES_FILE" 644 root:root "the SSH sign-in rules" && (( ! DRY_RUN )); then
-    if ! sshd -t; then
-      if [[ -n "$backup" ]]; then
-        mv -f -- "$backup" "$SSH_RULES_FILE"
-      else
-        rm -f -- "$SSH_RULES_FILE"
-      fi
-      die "sshd refused its configuration with the new rules (see above); the previous rules are back in place"
+  if install_config "$HOST_CONFIG_DIR/ssh/10-erp-ai-pro.conf" "$SSH_RULES_FILE" 644 root:root "the SSH sign-in rules"; then
+    written=1
+  fi
+  if (( DRY_RUN )); then
+    return 0
+  fi
+  if ! sshd -t; then
+    if (( written )) && [[ -n "$backup" ]]; then
+      mv -f -- "$backup" "$SSH_RULES_FILE"
+    elif (( written )); then
+      rm -f -- "$SSH_RULES_FILE"
     fi
-    systemctl try-reload-or-restart ssh.service
+    die "sshd refuses its configuration (see above); any rules this run wrote were taken back"
   fi
   if [[ -n "$backup" ]]; then
     rm -f -- "$backup"
   fi
+  # The running sshd keeps what it read at its last start, so every run reloads it, not only one that wrote the rules.
+  systemctl try-reload-or-restart ssh.service
 
-  if is_root && (( ! DRY_RUN )); then
-    local effective setting
-    effective="$(sshd -T)"
-    for setting in "${SSH_EFFECTIVE_SETTINGS[@]}"; do
-      grep -qxF -- "$setting" <<< "$effective" \
-        || die "sshd does not apply '$setting'; a file that sorts before $(basename -- "$SSH_RULES_FILE") in /etc/ssh/sshd_config.d, or sshd_config itself, sets it first"
-    done
-    log_info "sshd applies: ${SSH_EFFECTIVE_SETTINGS[*]}"
-  fi
+  local effective setting ports
+  effective="$(sshd -T)"
+  for setting in "${SSH_EFFECTIVE_SETTINGS[@]}"; do
+    grep -qxF -- "$setting" <<< "$effective" \
+      || die "sshd does not apply '$setting'; a file that sorts before $(basename -- "$SSH_RULES_FILE") in /etc/ssh/sshd_config.d, or sshd_config itself, sets it first"
+  done
+  ports="$(awk '$1 == "port" { print $2 }' <<< "$effective" | sort -u | paste -sd, -)"
+  [[ "$ports" == 22 ]] || die "sshd listens on port(s) $ports, and the firewall admits SSH on port 22 only; move sshd back to port 22 and run this script again"
+  log_info "sshd applies: ${SSH_EFFECTIVE_SETTINGS[*]}, on port 22"
+}
+
+ancestor_pids() {
+  local pid="$$" parent
+  while [[ "$pid" =~ ^[0-9]+$ ]] && (( pid > 1 )); do
+    printf '%s\n' "$pid"
+    parent="$(awk '$1 == "PPid:" { print $2 }' "/proc/$pid/status" 2> /dev/null || true)"
+    pid="${parent:-0}"
+  done
+}
+
+# sudo resets the environment and may run the command on a terminal of its own, but the shells that started it keep SSH_CONNECTION.
+admin_session_address() {
+  local pid connection
+  while IFS= read -r pid; do
+    connection="$(tr '\0' '\n' 2> /dev/null < "/proc/$pid/environ" | sed -n 's/^SSH_CONNECTION=//p' || true)"
+    if [[ -n "$connection" ]]; then
+      printf '%s' "${connection%% *}"
+      return 0
+    fi
+  done < <(ancestor_pids)
+  return 1
+}
+
+runs_through_sshd() {
+  local pid
+  while IFS= read -r pid; do
+    case "$(cat "/proc/$pid/comm" 2> /dev/null || true)" in
+      sshd | sshd-session | sshd-auth) return 0 ;;
+    esac
+  done < <(ancestor_pids)
+  return 1
 }
 
 check_admin_session_address() {
   local address
-  address="$({ who -m 2> /dev/null || true; } | sed -n 's/.*(\([^)]*\)).*/\1/p')"
-  if [[ -z "$address" ]]; then
-    log_info "no remote session found on this terminal; the firewall admits SSH from $HOME_NETWORK"
-  elif is_ipv4 "$address"; then
+  if address="$(admin_session_address)"; then
+    if ! is_ipv4 "$address"; then
+      die "this session comes from $address, and the firewall admits SSH over IPv4 from $HOME_NETWORK only; sign in through $SITE_ADDRESS and run the script again"
+    fi
     ipv4_in_network "$address" "$HOME_NETWORK" \
       || die "this session comes from $address, outside $HOME_NETWORK, and the firewall would refuse its next sign-in; run the script from a device on the home network or pass --home-network"
     log_info "this session comes from $address, inside $HOME_NETWORK"
-  elif [[ "$address" =~ ^[0-9A-Fa-f:]+(%.+)?$ && "$address" == *:*:* ]]; then
-    die "this session comes from the IPv6 address $address, and the firewall admits SSH over IPv4 from $HOME_NETWORK only; sign in through $SITE_ADDRESS and run the script again"
+  elif runs_through_sshd; then
+    die "this run comes through SSH, but the address of the session cannot be read; sign in to $SITE_ADDRESS from a device on the home network and run the script from that login shell"
   else
-    log_info "cannot tell where this session comes from ('$address'); the firewall admits SSH from $HOME_NETWORK"
+    log_info "this run does not come through SSH; the firewall admits SSH from $HOME_NETWORK"
   fi
 }
 
 ensure_firewall() {
   log_step "Firewall: new connections to SSH only, from $HOME_NETWORK only"
   if ! is_root; then
-    record_change "deny new incoming connections except SSH from $HOME_NETWORK and turn the firewall on (its state could not be read without root)"
+    record_change "deny new incoming connections except SSH from $HOME_NETWORK, on IPv4 and IPv6, and turn the firewall on (its state could not be read without root)"
     return 0
   fi
   check_admin_session_address
 
-  local defaults=/etc/default/ufw
+  local defaults=/etc/default/ufw ipv6_changed=0
+  if ! grep -qx 'IPV6=yes' "$defaults"; then
+    record_change "make the firewall cover IPv6 (IPV6=yes in $defaults)"
+    if (( ! DRY_RUN )); then
+      if grep -q '^IPV6=' "$defaults"; then
+        sed -i 's/^IPV6=.*/IPV6=yes/' "$defaults"
+      else
+        printf 'IPV6=yes\n' >> "$defaults"
+      fi
+    fi
+    ipv6_changed=1
+  fi
   if ! grep -qx 'DEFAULT_INPUT_POLICY="DROP"' "$defaults"; then
     record_change "deny new incoming connections by default"
-    run ufw default deny incoming > /dev/null
+    run ufw_c default deny incoming > /dev/null
   fi
   if ! grep -qx 'DEFAULT_OUTPUT_POLICY="ACCEPT"' "$defaults"; then
     record_change "allow outgoing connections by default"
-    run ufw default allow outgoing > /dev/null
+    run ufw_c default allow outgoing > /dev/null
   fi
 
-  local -a rule=(allow proto tcp from "$HOME_NETWORK" to any port 22 comment 'SSH from the home network')
-  local outcome
-  if (( DRY_RUN )); then
-    outcome="$(ufw --dry-run "${rule[@]}")"
-  else
-    outcome="$(ufw "${rule[@]}")"
-  fi
-  if [[ "$outcome" == *'Skipping adding existing rule'* ]]; then
+  local added ours="from $HOME_NETWORK to any port 22 proto tcp"
+  local -a others=()
+  added="$(ufw_c show added | sed -n 's/^ufw //p')"
+  mapfile -t others < <(grep -vF -- "$ours" <<< "$added" | grep -v '^$' || true)
+  (( ${#others[@]} == 0 )) \
+    || die "the firewall holds rules this host must not have: $(printf "'%s' " "${others[@]}")— remove each with sudo ufw delete <rule>, and run this script again"
+  if grep -qF -- "$ours" <<< "$added"; then
     log_info "in place: SSH from $HOME_NETWORK"
   else
     record_change "allow SSH from $HOME_NETWORK"
+    run ufw_c allow proto tcp from "$HOME_NETWORK" to any port 22 comment "$SSH_RULE_COMMENT" > /dev/null
   fi
 
-  if [[ "$(ufw status)" == 'Status: active'* ]]; then
+  if [[ "$(ufw_c status)" == 'Status: active'* ]]; then
     log_info "in place: the firewall is on"
+    if (( ipv6_changed )); then
+      run ufw_c reload > /dev/null
+    fi
   else
     record_change "turn the firewall on"
-    run ufw --force enable > /dev/null
+    run ufw_c --force enable > /dev/null
   fi
 
-  local other
-  while IFS= read -r other; do
-    log_warn "the firewall also holds the rule '$other', which this script leaves"
-  done < <(ufw show added | sed -n 's/^ufw //p' | grep -vF -- "from $HOME_NETWORK to any port 22 proto tcp" || true)
+  if (( ! DRY_RUN )); then
+    local family
+    for family in iptables ip6tables; do
+      [[ "$("$family" -S INPUT | sed -n 1p)" == '-P INPUT DROP' ]] || die "$family does not drop new incoming connections by default"
+    done
+  fi
 }
 
 print_summary() {
@@ -553,18 +764,19 @@ print_summary() {
     printf '  - %s\n' "${CHANGES[@]}"
   fi
   log_info "next, as docs/operations/runbooks/host-setup.md describes: the client certificates in $DEPLOY_COMPOSE_DIR/secrets,"
-  log_info "the remaining values of $DEPLOY_COMPOSE_DIR/.env, and deployments signed in as $DEPLOY_USER"
+  log_info "the remaining values of $DEPLOY_COMPOSE_DIR/.env, and deployments signed in as $DEPLOY_USER with its own key"
 }
 
 main() {
   parse_bootstrap_args "$@"
-  require_command awk sed grep cmp stat install ip ssh-keygen systemctl timedatectl getent dpkg-query who
+  require_command awk sed grep cmp comm sort stat install ip ssh-keygen systemctl timedatectl getent dpkg-query
   check_platform
   check_arguments
   ensure_packages
   ensure_docker_engine
   ensure_docker_daemon_config
   ensure_deploy_account
+  ensure_no_lxd_access
   ensure_deployment_folder
   ensure_units
   ensure_nightly_updates

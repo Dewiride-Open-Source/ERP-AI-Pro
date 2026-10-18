@@ -10,7 +10,8 @@ const languages: Language[] = [
   { extensions: [".ts", ".tsx", ".mjs", ".js"], line: [/^\s*\/\//], blockStart: /\/\*/, blockEnd: /\*\// },
   { extensions: [".bicep"], line: [/^\s*\/\//], blockStart: /\/\*/, blockEnd: /\*\// },
   { extensions: [".yml", ".yaml", ".sh", ".editorconfig", ".dockerignore", ".gitignore"], line: [/^\s*#/] },
-  { extensions: ["Dockerfile"], line: [/^\s*#/] },
+  { extensions: ["Dockerfile", "Caddyfile", ".service", ".timer"], line: [/^\s*#/] },
+  { extensions: [".conf"], line: [/^\s*#/, /^\s*\/\//] },
   { extensions: [".css"], line: [], blockStart: /\/\*/, blockEnd: /\*\// },
 ];
 

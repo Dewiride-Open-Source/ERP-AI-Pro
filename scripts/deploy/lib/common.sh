@@ -154,7 +154,8 @@ install_config() {
     return 1
   fi
   record_change "$description ($target)"
-  run install -D -m "$mode" -o "${owner%%:*}" -g "${owner##*:}" -- "$source" "$target"
+  # Callers test the result, which suspends errexit inside this function, so a failed write must stop the run itself.
+  run install -D -m "$mode" -o "${owner%%:*}" -g "${owner##*:}" -- "$source" "$target" || die "cannot write $target"
   return 0
 }
 
@@ -166,12 +167,21 @@ ensure_directory() {
       return 0
     fi
     record_change "$description: mode $mode and owner $owner instead of $current ($path)"
-    run chmod -- "$mode" "$path"
-    run chown -- "$owner" "$path"
+    run chmod -- "$mode" "$path" || die "cannot change the mode of $path"
+    run chown -- "$owner" "$path" || die "cannot change the owner of $path"
     return 0
   fi
   record_change "$description ($path)"
-  run install -d -m "$mode" -o "${owner%%:*}" -g "${owner##*:}" -- "$path"
+  run install -d -m "$mode" -o "${owner%%:*}" -g "${owner##*:}" -- "$path" || die "cannot create $path"
+}
+
+key_fingerprints() {
+  local file="$1" line
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+    ssh-keygen -l -f /dev/stdin <<< "$line" | awk '{ print $2 }'
+  done < "$file"
 }
 
 valid_key_count() {

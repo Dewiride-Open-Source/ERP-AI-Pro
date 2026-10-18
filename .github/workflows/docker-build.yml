@@ -91,9 +91,13 @@ jobs:
         run: node scripts/checks/compose-smoke.ts
 
   host-bootstrap:
-    name: Bootstrap a fresh Ubuntu host
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    name: Bootstrap a fresh Ubuntu host (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-22.04, ubuntu-24.04, ubuntu-26.04]
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
