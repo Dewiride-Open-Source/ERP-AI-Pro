@@ -22,6 +22,8 @@ internal static class UserErrors
 
     public static readonly Error NotFound = Error.NotFound("user.not-found", "No person has this id.");
 
+    public static readonly Error OwnRecordNotFound = Error.NotFound("user.not-found", "The ERP holds no record of the signed-in person.");
+
     public static readonly Error EntraObjectIdTaken = Error.Conflict("user.entra-object-id-taken", "Another person's record already has this Entra object id.");
 
     public static readonly Error WorkEmailTaken = Error.Conflict("user.work-email-taken", "Another person's record already has this work email.");

@@ -1,13 +1,12 @@
 using System.Net;
 using System.Security.Claims;
 using System.Text;
-using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging.Testing;
-using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
 using Polly.Timeout;
@@ -15,10 +14,8 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace Dewiride.Erp.BuildingBlocks.UnitTests.Authentication.Graph;
 
-public sealed class GraphPeopleDirectoryTests
+public sealed class GraphPeopleDirectoryTests : IDisposable
 {
-    private const string AuthorizationHeader = "Bearer test-graph-token";
-
     private const string SearchText = "Meera";
 
     private static readonly Guid ObjectId = new("2b9c5e1f-7a4d-4c3b-9e8f-1a2b3c4d5e6f");
@@ -26,6 +23,8 @@ public sealed class GraphPeopleDirectoryTests
     private static readonly string Meera = $$"""{"id":"{{ObjectId:D}}","displayName":"Meera Nair","mail":"meera@dewiride.com","userPrincipalName":"meera.nair@dewiride.com"}""";
 
     private readonly FakeLogger<GraphPeopleDirectory> _logger = new();
+
+    private readonly InProcessCache _caches = new();
 
     private readonly ClaimsPrincipal _person = new(new ClaimsIdentity([new Claim("oid", Guid.CreateVersion7().ToString("D"))], "Cookies"));
 
@@ -48,7 +47,7 @@ public sealed class GraphPeopleDirectoryTests
         Assert.Equal("displayName", query["$orderby"].ToString());
         Assert.Equal(DirectorySearch.MaxPeople.ToString(System.Globalization.CultureInfo.InvariantCulture), query["$top"].ToString());
         Assert.Equal(MicrosoftGraph.EventualConsistency, request.ConsistencyLevel);
-        Assert.Equal(AuthorizationHeader, request.Authorization);
+        Assert.Equal(StubAuthorizationHeaders.AuthorizationHeader, request.Authorization);
         Assert.Equal([MicrosoftGraph.ReadBasicProfilesScope], headers.Scopes);
         Assert.Equal(OpenIdConnectDefaults.AuthenticationScheme, headers.Options?.AcquireTokenOptions.AuthenticationOptionsName);
         Assert.Same(_person, headers.Principal);
@@ -169,7 +168,7 @@ public sealed class GraphPeopleDirectoryTests
         Assert.Equal(new Uri(MicrosoftGraph.BaseAddress, $"users/{ObjectId:D}").AbsolutePath, request.Address.AbsolutePath);
         Assert.Equal("id,displayName,mail,userPrincipalName", QueryHelpers.ParseQuery(request.Address.Query)["$select"].ToString());
         Assert.Null(request.ConsistencyLevel);
-        Assert.Equal(AuthorizationHeader, request.Authorization);
+        Assert.Equal(StubAuthorizationHeaders.AuthorizationHeader, request.Authorization);
     }
 
     [Fact]
@@ -273,10 +272,12 @@ public sealed class GraphPeopleDirectoryTests
     {
         var accessor = new HttpContextAccessor { HttpContext = new DefaultHttpContext() };
         using var client = new HttpClient(new StubGraph(_ => throw new InvalidOperationException("Graph is never asked."))) { BaseAddress = MicrosoftGraph.BaseAddress };
-        var directory = new GraphPeopleDirectory(client, new StubAuthorizationHeaders(), accessor, _logger);
+        var directory = new GraphPeopleDirectory(client, new StubAuthorizationHeaders(), accessor, _caches.Cache, _logger);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => directory.SearchAsync(SearchText, TestContext.Current.CancellationToken));
     }
+
+    public void Dispose() => _caches.Dispose();
 
     private static HttpResponseMessage Json(HttpStatusCode status, string body) =>
         new(status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
@@ -288,48 +289,6 @@ public sealed class GraphPeopleDirectoryTests
         var client = new HttpClient(graph) { BaseAddress = MicrosoftGraph.BaseAddress };
 #pragma warning restore CA2000
 
-        return new GraphPeopleDirectory(client, headers ?? new StubAuthorizationHeaders(), accessor, _logger);
-    }
-
-    private sealed record GraphRequest(Uri Address, string? ConsistencyLevel, string? Authorization);
-
-    private sealed class StubGraph(Func<HttpRequestMessage, HttpResponseMessage> answer) : HttpMessageHandler
-    {
-        public List<GraphRequest> Requests { get; } = [];
-
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            Requests.Add(new GraphRequest(
-                request.RequestUri!,
-                request.Headers.TryGetValues(MicrosoftGraph.ConsistencyLevelHeader, out var levels) ? string.Join(',', levels) : null,
-                request.Headers.Authorization?.ToString()));
-
-            return Task.FromResult(answer(request));
-        }
-    }
-
-    private sealed class StubAuthorizationHeaders(Exception? refusal = null) : IAuthorizationHeaderProvider
-    {
-        public IReadOnlyList<string> Scopes { get; private set; } = [];
-
-        public AuthorizationHeaderProviderOptions? Options { get; private set; }
-
-        public ClaimsPrincipal? Principal { get; private set; }
-
-        public Task<string> CreateAuthorizationHeaderForUserAsync(IEnumerable<string> scopes, AuthorizationHeaderProviderOptions? authorizationHeaderProviderOptions = null, ClaimsPrincipal? claimsPrincipal = null, CancellationToken cancellationToken = default)
-        {
-            Scopes = [.. scopes];
-            Options = authorizationHeaderProviderOptions;
-            Principal = claimsPrincipal;
-
-            return refusal is null ? Task.FromResult(AuthorizationHeader) : Task.FromException<string>(refusal);
-        }
-
-        public Task<string> CreateAuthorizationHeaderForAppAsync(string scopes, AuthorizationHeaderProviderOptions? downstreamApiOptions = null, CancellationToken cancellationToken = default) =>
-            throw new InvalidOperationException("The directory never asks for an application token.");
-
-        public Task<string> CreateAuthorizationHeaderAsync(IEnumerable<string> scopes, AuthorizationHeaderProviderOptions? options = null, ClaimsPrincipal? claimsPrincipal = null, CancellationToken cancellationToken = default) =>
-            throw new InvalidOperationException("The directory asks for a token for the user.");
+        return new GraphPeopleDirectory(client, headers ?? new StubAuthorizationHeaders(), accessor, _caches.Cache, _logger);
     }
 }

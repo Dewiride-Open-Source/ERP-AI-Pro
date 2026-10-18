@@ -41,6 +41,22 @@ public sealed class PersonaSignInTests(PersonaSignInTests.Fixture fixture) : ICl
     }
 
     [Fact]
+    public async Task Post_KnownPersona_AdmitsTheNewPersonSoTheirOwnRecordAnswers()
+    {
+        using var client = TestSignIn.CreateClient(fixture.Factory);
+        using var response = await SignInAsync(client, "accountant");
+        var person = await response.Content.ReadFromJsonAsync<PersonaSignInResponse>(TestContext.Current.CancellationToken);
+
+        using var profile = await client.GetAsync(new Uri("/api/identity/users/me", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, profile.StatusCode);
+        using var body = JsonDocument.Parse(await profile.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(person!.Name, body.RootElement.GetProperty("displayName").GetString());
+        Assert.Equal(person.UserName, body.RootElement.GetProperty("workEmail").GetString());
+        Assert.Equal(["employee"], body.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()));
+    }
+
+    [Fact]
     public async Task Post_KnownPersona_AnswersThePersonTheirEntraSessionAndItsIssuerInThisShape()
     {
         using var client = TestSignIn.CreateClient(fixture.Factory);

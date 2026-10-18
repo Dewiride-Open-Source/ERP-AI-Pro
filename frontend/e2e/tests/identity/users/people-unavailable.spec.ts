@@ -35,6 +35,7 @@ test.describe("people list without the API", () => {
       await expect(people.list.table).toHaveCount(0);
       await expect(people.list.cardList).toHaveCount(0);
       await expect(people.registerLink).toBeVisible();
+      await expect(people.inviteButton).toBeVisible();
       await expect(people.permissionsLink).toBeVisible();
 
       await capture("people-unavailable");

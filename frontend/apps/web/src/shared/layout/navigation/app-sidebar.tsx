@@ -22,6 +22,8 @@ import { NavigationLink } from "./navigation-link";
 import { homePath, homeTitle, navigationAreas } from "./navigation-trail";
 
 export function AppSidebar({ entries }: { entries: readonly NavigationEntry[] }) {
+  const entryPaths = entries.map((entry) => entry.basePath);
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="flex-row items-center gap-1">
@@ -42,7 +44,12 @@ export function AppSidebar({ entries }: { entries: readonly NavigationEntry[] })
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavigationLink href={homePath} title={homeTitle} icon={<HouseIcon aria-hidden />} />
+                <NavigationLink
+                  href={homePath}
+                  title={homeTitle}
+                  icon={<HouseIcon aria-hidden />}
+                  entryPaths={entryPaths}
+                />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -61,6 +68,7 @@ export function AppSidebar({ entries }: { entries: readonly NavigationEntry[] })
                           href={entry.basePath}
                           title={entry.title}
                           icon={<Icon aria-hidden />}
+                          entryPaths={entryPaths}
                         />
                       );
                     })}

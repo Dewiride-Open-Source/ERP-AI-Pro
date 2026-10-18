@@ -2,7 +2,7 @@ using Dewiride.Erp.Testing.Authentication;
 
 namespace Dewiride.Erp.Testing.Graph;
 
-public sealed record TestDirectoryPerson(Guid ObjectId, string DisplayName, string UserPrincipalName, string? Mail)
+public sealed record TestDirectoryPerson(Guid ObjectId, string DisplayName, string UserPrincipalName, string? Mail, TestDirectoryPhoto? Photo = null)
 {
     public static TestDirectoryPerson Of(TestUser user)
     {

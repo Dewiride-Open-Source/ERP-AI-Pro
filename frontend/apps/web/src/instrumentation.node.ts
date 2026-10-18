@@ -1,6 +1,7 @@
 import { OTLPHttpJsonTraceExporter, OTLPHttpProtoTraceExporter, registerOTel } from "@vercel/otel";
 
 import { EnvironmentValidationError, readServerEnv, type ServerEnv } from "./shared/config/env.schema";
+import { queryFreeSpans } from "./shared/telemetry/query-free-spans";
 
 export function registerNodeRuntime() {
   const env = validatedServerEnv();
@@ -8,6 +9,7 @@ export function registerNodeRuntime() {
   const url = `${env.otelExporterOtlpEndpoint}/v1/traces`;
   registerOTel({
     serviceName: env.otelServiceName,
+    spanProcessors: [queryFreeSpans, "auto"],
     traceExporter:
       env.otelExporterOtlpProtocol === "http/json"
         ? new OTLPHttpJsonTraceExporter({ url })

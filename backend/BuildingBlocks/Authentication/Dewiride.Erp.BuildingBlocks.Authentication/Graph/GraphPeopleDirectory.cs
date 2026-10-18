@@ -1,12 +1,15 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
+using Dewiride.Erp.BuildingBlocks.Authentication.SecurityEvents;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Client;
@@ -20,24 +23,40 @@ namespace Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 // they may read there. The search text travels in the query string, which the HTTP client's logs and traces redact, and is
 // logged nowhere here. Entra or Graph refusing the person (consent missing, a sign-in interaction required, 401 or 403) is a
 // refusal; a directory that cannot be reached, or still fails or throttles once the resilience handler gives up, is
-// unavailable; any other answer is a fault of the ERP and fails the request.
+// unavailable; any other answer is a fault of the ERP and fails the request. A person's own photo is read with User.Read, the
+// least privileged of the permissions the sign-in registrations hold that reads it (Microsoft Graph, "Get profilePhoto"): the
+// 240x240 size the pages show first, then the largest one, because a photo uploaded smaller, or one Entra keeps at a size of
+// its own, has no 240x240 size. What Graph answered, a photo or none, is kept in process by the person's object id for
+// PhotoLifetime, so the account button of every page asks Graph for a person's photo once in that time; a refusal or an
+// unavailable directory is asked again at the next request.
 internal sealed partial class GraphPeopleDirectory(
     HttpClient client,
     IAuthorizationHeaderProvider authorizationHeaders,
     IHttpContextAccessor httpContextAccessor,
+    HybridCache cache,
     ILogger<GraphPeopleDirectory> logger) : IPeopleDirectory
 {
     private const string SearchOperation = "search";
 
     private const string FindOperation = "lookup";
 
+    private const string PhotoOperation = "photo";
+
     private const string SelectedProperties = "id,displayName,mail,userPrincipalName";
 
     private const string GuestMarker = "#EXT#@";
 
+    private const string PhotoCacheKeyPrefix = "directory-photo:";
+
+    private static readonly TimeSpan PhotoLifetime = TimeSpan.FromMinutes(15);
+
     private static readonly string[] SearchedProperties = ["displayName", "mail", "userPrincipalName"];
 
-    private static readonly string[] Scopes = [MicrosoftGraph.ReadBasicProfilesScope];
+    private static readonly string[] PhotoPaths = ["me/photos/240x240/$value", "me/photo/$value"];
+
+    private static readonly string[] DirectoryScopes = [MicrosoftGraph.ReadBasicProfilesScope];
+
+    private static readonly string[] OwnProfileScopes = [MicrosoftGraph.ReadOwnProfileScope];
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
@@ -48,13 +67,17 @@ internal sealed partial class GraphPeopleDirectory(
         AcquireTokenOptions = new AcquireTokenOptions { AuthenticationOptionsName = OpenIdConnectDefaults.AuthenticationScheme },
     };
 
+    private static readonly HybridCacheEntryOptions CachedPhoto = new() { Expiration = PhotoLifetime, LocalCacheExpiration = PhotoLifetime };
+
+    private static readonly HybridCacheEntryOptions CachedPhotoOnly = new() { Flags = HybridCacheEntryFlags.DisableUnderlyingData };
+
     public async Task<Result<DirectorySearch>> SearchAsync(string text, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(text);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, SearchPath(text));
         request.Headers.Add(MicrosoftGraph.ConsistencyLevelHeader, MicrosoftGraph.EventualConsistency);
-        var sent = await SendAsync(request, SearchOperation, cancellationToken).ConfigureAwait(false);
+        var sent = await SendAsync(request, SearchOperation, DirectoryScopes, SignedInPerson(), HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
         if (sent.IsFailure)
         {
             return sent.Error!;
@@ -75,7 +98,7 @@ internal sealed partial class GraphPeopleDirectory(
     public async Task<Result<DirectoryPerson>> FindAsync(Guid objectId, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"users/{objectId:D}?$select={SelectedProperties}");
-        var sent = await SendAsync(request, FindOperation, cancellationToken).ConfigureAwait(false);
+        var sent = await SendAsync(request, FindOperation, DirectoryScopes, SignedInPerson(), HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
         if (sent.IsFailure)
         {
             return sent.Error!;
@@ -99,6 +122,27 @@ internal sealed partial class GraphPeopleDirectory(
             : throw new InvalidOperationException("Microsoft Graph answered the lookup of a person with another person or with one that has no sign-in name.");
     }
 
+    // The cache keeps the photo's bytes, and an empty array for a person without one; a read that finds no entry answers
+    // null, because it never asks Graph itself.
+    public async Task<Result<DirectoryPhoto>> OwnPhotoAsync(CancellationToken cancellationToken)
+    {
+        var person = SignedInPerson();
+        var key = PhotoCacheKey(person);
+        var cached = await cache.GetOrCreateAsync(key, static _ => ValueTask.FromResult<byte[]?>(null), CachedPhotoOnly, cancellationToken: cancellationToken).ConfigureAwait(false);
+        if (cached is not null)
+        {
+            return cached.Length == 0 ? DirectoryErrors.PhotoNotFound : new DirectoryPhoto(cached, CachedContentTypeOf(cached));
+        }
+
+        var photo = await ReadOwnPhotoAsync(person, cancellationToken).ConfigureAwait(false);
+        if (photo.IsSuccess || photo.Error == DirectoryErrors.PhotoNotFound)
+        {
+            await cache.SetAsync(key, photo.IsSuccess ? photo.Value.Content : [], CachedPhoto, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+
+        return photo;
+    }
+
     internal static string SearchPath(string text)
     {
         var term = text.Trim().Replace("\\", "\\\\", StringComparison.Ordinal).Replace("\"", "\\\"", StringComparison.Ordinal);
@@ -106,6 +150,11 @@ internal sealed partial class GraphPeopleDirectory(
 
         return $"users?$search={Uri.EscapeDataString(search)}&$select={SelectedProperties}&$orderby=displayName&$top={DirectorySearch.MaxPeople}&$count=true";
     }
+
+    internal static string PhotoCacheKey(ClaimsPrincipal person) =>
+        SignInAudit.ObjectIdOf(person) is { } objectId
+            ? $"{PhotoCacheKeyPrefix}{objectId:D}"
+            : throw new InvalidOperationException("The signed-in person carries no Entra object id, by which the directory keeps their photo.");
 
     // Every user of the directory has an object id and a user principal name; one Graph returned without either could not be
     // recorded, so it is left out rather than offered. A guest of another organisation is held under a user principal name
@@ -125,6 +174,9 @@ internal sealed partial class GraphPeopleDirectory(
         return new DirectoryPerson(objectId, displayName, signInName, userPrincipalName, mail);
     }
 
+    private static string CachedContentTypeOf(byte[] photo) =>
+        ProfilePhotos.ContentTypeOf(photo) ?? throw new InvalidOperationException("The cache holds a profile photo that is no JPEG, PNG, GIF or WebP image.");
+
     private static async Task<string?> GraphErrorCodeAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         try
@@ -139,14 +191,70 @@ internal sealed partial class GraphPeopleDirectory(
         }
     }
 
-    private async Task<Result<HttpResponseMessage>> SendAsync(HttpRequestMessage request, string operation, CancellationToken cancellationToken)
-    {
-        var person = httpContextAccessor.HttpContext?.User is { Identity.IsAuthenticated: true } user
+    private ClaimsPrincipal SignedInPerson() =>
+        httpContextAccessor.HttpContext?.User is { Identity.IsAuthenticated: true } user
             ? user
             : throw new InvalidOperationException("The company directory is read only on behalf of a signed-in person.");
+
+    private async Task<Result<DirectoryPhoto>> ReadOwnPhotoAsync(ClaimsPrincipal person, CancellationToken cancellationToken)
+    {
+        foreach (var path in PhotoPaths)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, path);
+            var sent = await SendAsync(request, PhotoOperation, OwnProfileScopes, person, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            if (sent.IsFailure)
+            {
+                return sent.Error!;
+            }
+
+            using var response = sent.Value;
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                continue;
+            }
+
+            return response.IsSuccessStatusCode
+                ? await PhotoOfAsync(response, cancellationToken).ConfigureAwait(false)
+                : await RefusalAsync(response, PhotoOperation, cancellationToken).ConfigureAwait(false);
+        }
+
+        return DirectoryErrors.PhotoNotFound;
+    }
+
+    private async Task<Result<DirectoryPhoto>> PhotoOfAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        byte[]? content;
         try
         {
-            var authorization = await authorizationHeaders.CreateAuthorizationHeaderForUserAsync(Scopes, TokenOptions, person, cancellationToken).ConfigureAwait(false);
+            content = await ProfilePhotos.ReadAsync(response.Content, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or IOException && !cancellationToken.IsCancellationRequested)
+        {
+            LogUnreachable(logger, exception, PhotoOperation);
+            return DirectoryErrors.Unavailable;
+        }
+
+        if (content is null)
+        {
+            throw new InvalidOperationException($"Microsoft Graph answered a profile photo larger than {ProfilePhotos.MaxBytes} bytes.");
+        }
+
+        return ProfilePhotos.ContentTypeOf(content) is { } contentType
+            ? new DirectoryPhoto(content, contentType)
+            : throw new InvalidOperationException("Microsoft Graph answered a profile photo that is no JPEG, PNG, GIF or WebP image.");
+    }
+
+    private async Task<Result<HttpResponseMessage>> SendAsync(
+        HttpRequestMessage request,
+        string operation,
+        IEnumerable<string> scopes,
+        ClaimsPrincipal person,
+        HttpCompletionOption completion,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var authorization = await authorizationHeaders.CreateAuthorizationHeaderForUserAsync(scopes, TokenOptions, person, cancellationToken).ConfigureAwait(false);
             request.Headers.Authorization = AuthenticationHeaderValue.Parse(authorization);
         }
         catch (MicrosoftIdentityWebChallengeUserException exception)
@@ -167,7 +275,7 @@ internal sealed partial class GraphPeopleDirectory(
 
         try
         {
-            return await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            return await client.SendAsync(request, completion, cancellationToken).ConfigureAwait(false);
         }
         catch (HttpRequestException exception)
         {

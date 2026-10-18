@@ -1,10 +1,12 @@
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 
-namespace Dewiride.Erp.BuildingBlocks.Application.Actors;
+namespace Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 
 public static class DirectoryErrors
 {
     public static readonly Error PersonNotFound = Error.NotFound("directory.person-not-found", "The company directory holds no person with this Entra object id.");
+
+    public static readonly Error PhotoNotFound = Error.NotFound("directory.photo-not-found", "The company directory holds no photo of the signed-in person.");
 
     public static readonly Error AccessDenied = Error.Forbidden("directory.access-denied", "Microsoft Entra does not let the ERP read the company directory on your behalf; signing in again, or consent for the whole organisation, may be needed.");
 

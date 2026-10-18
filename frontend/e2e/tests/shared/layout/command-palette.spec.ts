@@ -78,8 +78,11 @@ test.describe("page search", () => {
             - group "Organisation":
               - text: Organisation
               - option "People"
+              - option "Organisation chart"
+              - option "Departments"
+              - option "Designations"
       `);
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(5);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(8);
       await expectActive(shell, "Home");
       await expect(shell.paletteStatus).toHaveText("");
       await expect(shell.paletteOption("Home")).not.toHaveAttribute("aria-describedby");
@@ -94,6 +97,15 @@ test.describe("page search", () => {
       );
       await expect(shell.paletteOption("People")).toHaveAccessibleDescription(
         "Register people, assign their roles and record their moves.",
+      );
+      await expect(shell.paletteOption("Organisation chart")).toHaveAccessibleDescription(
+        "See who works in each department and who reports to whom.",
+      );
+      await expect(shell.paletteOption("Departments")).toHaveAccessibleDescription(
+        "See the company's departments and which department each one sits under.",
+      );
+      await expect(shell.paletteOption("Designations")).toHaveAccessibleDescription(
+        "See the designations people can hold in the company.",
       );
       await expect(shell.palette).toHaveAccessibleDescription(keyboardHint);
       if ((page.viewportSize()?.width ?? 0) >= hintMinWidth) await expect(hint).toBeVisible();
@@ -121,13 +133,19 @@ test.describe("page search", () => {
       await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
       await expectActive(shell, "System");
       await shell.paletteSearch.fill("organisation");
-      await expect(shell.paletteStatus).toHaveText("1 page");
+      await expect(shell.paletteStatus).toHaveText("4 pages");
       await expect(shell.paletteResults).toMatchAriaSnapshot(`
         - listbox "Pages":
           - group "Organisation":
             - text: Organisation
             - option "People" [selected]
+            - option "Organisation chart"
+            - option "Departments"
+            - option "Designations"
       `);
+      await shell.paletteSearch.fill("organisation chart");
+      await expect(shell.paletteStatus).toHaveText("1 page");
+      await expectActive(shell, "Organisation chart");
 
       await shell.paletteSearch.fill("zzz");
       await expect(shell.paletteResults).toHaveCount(0);
@@ -142,7 +160,7 @@ test.describe("page search", () => {
       await expect(page).toHaveURL((url) => url.pathname === homePath);
 
       await shell.paletteSearch.fill("");
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(5);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(8);
       await expect(shell.paletteStatus).toHaveText("");
       await expect(shell.paletteSearch).toHaveAttribute("aria-expanded", "true");
       await expectActive(shell, "Home");
@@ -170,7 +188,13 @@ test.describe("page search", () => {
       ["ArrowDown", "Attachments"],
       ["ArrowDown", "Audit trail"],
       ["ArrowDown", "People"],
+      ["ArrowDown", "Organisation chart"],
+      ["ArrowDown", "Departments"],
+      ["ArrowDown", "Designations"],
       ["ArrowDown", "Home"],
+      ["ArrowUp", "Designations"],
+      ["ArrowUp", "Departments"],
+      ["ArrowUp", "Organisation chart"],
       ["ArrowUp", "People"],
       ["ArrowUp", "Audit trail"],
       ["ArrowUp", "Attachments"],
@@ -285,12 +309,9 @@ test.describe("page search", () => {
     expect(await bottomOnceOpened(shell.palette), "bottom edge of the page search").toBeLessThanOrEqual(
       screen.height,
     );
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("ArrowDown");
-    await expectActive(shell, "People");
-    await expect(shell.paletteOption("People")).toBeInViewport({ ratio: 0.99 });
+    for (let step = 0; step < 7; step += 1) await page.keyboard.press("ArrowDown");
+    await expectActive(shell, "Designations");
+    await expect(shell.paletteOption("Designations")).toBeInViewport({ ratio: 0.99 });
   });
 
   test.describe("with a keyboard", () => {

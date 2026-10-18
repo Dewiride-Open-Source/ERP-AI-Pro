@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@dewiride/erp-ui/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@dewiride/erp-ui/components/ui/avatar";
 import { Button } from "@dewiride/erp-ui/components/ui/button";
 import {
   DropdownMenu,
@@ -13,16 +13,29 @@ import {
 import { Spinner } from "@dewiride/erp-ui/components/ui/spinner";
 import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { ChevronDownIcon, LogOutIcon, UserIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { useSignOutForm } from "../hooks/use-sign-out-form";
 
-export type MenuPerson = { readonly name: string; readonly userName: string; readonly initials: string };
+export type MenuPerson = {
+  readonly name: string;
+  readonly userName: string;
+  readonly initials: string;
+  readonly photo: string | undefined;
+};
 
 // The sign-out form stays outside the menu, because the menu unmounts its items as it closes and a removed form cannot be
 // sent. While the sign-out is under way the menu stays shut and the button keeps its focus until the page leaves. The
-// menu takes its own name: Chrome would name it after the button's whole content, the hidden initials included.
-export function UserMenu({ person }: { person: MenuPerson | undefined }) {
+// menu takes its own name: Chrome would name it after the button's whole content, the hidden initials included. The photo
+// replaces the initials only once it has loaded, so a person without one, or one the directory cannot answer, keeps them.
+export function UserMenu({
+  person,
+  showsProfile,
+}: {
+  person: MenuPerson | undefined;
+  showsProfile: boolean;
+}) {
   const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
   const { pending, formProps, tokenFieldProps, signOut } = useSignOutForm();
@@ -46,6 +59,7 @@ export function UserMenu({ person }: { person: MenuPerson | undefined }) {
               <Spinner aria-hidden />
             ) : (
               <Avatar size="sm" aria-hidden>
+                {person?.photo === undefined ? null : <AvatarImage src={person.photo} alt="" />}
                 <AvatarFallback>
                   {initials === "" ? <UserIcon className="size-3.5" /> : initials}
                 </AvatarFallback>
@@ -73,6 +87,14 @@ export function UserMenu({ person }: { person: MenuPerson | undefined }) {
             {person?.userName ? <span className="truncate font-normal">{person.userName}</span> : null}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          {showsProfile ? (
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
+                <UserIcon aria-hidden />
+                My profile
+              </Link>
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem onSelect={signOut}>
             <LogOutIcon aria-hidden />
             Sign out

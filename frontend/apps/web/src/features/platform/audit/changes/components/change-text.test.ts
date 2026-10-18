@@ -42,6 +42,7 @@ test("recordTypeLabel_EveryChangeKeyTheHistoryRecords_HasAName", () => {
   assert.equal(recordTypeLabel(department), "Department");
   assert.equal(recordTypeLabel("identity.users.designations"), "Designation");
   assert.equal(recordTypeLabel("identity.users.positions"), "Move");
+  assert.equal(recordTypeLabel("identity.users.themes"), "Colour theme");
   assert.equal(recordTypeLabel("platform.attachments.files"), "File");
 });
 
@@ -129,6 +130,25 @@ test("changeSentence_ARecordFiledUnderAnother_NamesTheRecordItIsFiledUnder", () 
   assert.deepEqual(changeSentence({ ...move, operation: "deleted", subjectName: null }), {
     actor: "Asha Rao",
     action: "deleted a move of a person",
+    subject: undefined,
+  });
+});
+
+test("changeSentence_ARecordItsSubjectHoldsOneOf_IsTheOneOfThatSubject", () => {
+  const theme = change({
+    entityType: "identity.users.themes",
+    subjectType: people,
+    subjectName: "Vikram Iyer",
+  });
+
+  assert.deepEqual(changeSentence(theme), {
+    actor: "Asha Rao",
+    action: "set the colour theme of",
+    subject: "Vikram Iyer",
+  });
+  assert.deepEqual(changeSentence({ ...theme, operation: "updated", subjectName: null }), {
+    actor: "Asha Rao",
+    action: "changed the colour theme of a person",
     subject: undefined,
   });
 });

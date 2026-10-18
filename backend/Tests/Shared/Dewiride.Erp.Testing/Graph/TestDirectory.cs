@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
@@ -13,11 +14,18 @@ namespace Dewiride.Erp.Testing.Graph;
 // user lookup of the company directory, for the people a test adds, the way Graph does, and only to a bearer token the test
 // token endpoint issued for the directory permission; a search also needs ConsistencyLevel eventual. A display name matches
 // when every word of the search text starts one of its words, an email address or a sign-in name when it starts with the
-// text. A test can make the directory refuse every request. Anything else fails the request that sent it, so no test host
-// reaches Graph.
+// text. It answers the photo of the person a token was issued to, only to a token issued for User.Read, and ImageNotFound
+// for a person without one or outside the directory. A test can make the directory refuse every request. Anything else
+// fails the request that sent it, so no test host reaches Graph.
 public sealed class TestDirectory(TestTokenEndpoint tokenEndpoint)
 {
     public const string AccessDeniedCode = "Authorization_RequestDenied";
+
+    public const string ImageNotFoundCode = "ImageNotFound";
+
+    public const string SizedPhotoPath = "/v1.0/me/photos/240x240/$value";
+
+    public const string PhotoPath = "/v1.0/me/photo/$value";
 
     private const string UsersPath = "/v1.0/users";
 
@@ -43,7 +51,8 @@ public sealed class TestDirectory(TestTokenEndpoint tokenEndpoint)
     private HttpResponseMessage Answer(HttpRequestMessage request)
     {
         var address = request.RequestUri ?? throw new InvalidOperationException("The API sent Microsoft Graph a request without an address.");
-        if (request.Method != HttpMethod.Get || address.Host != MicrosoftGraph.BaseAddress.Host || !address.AbsolutePath.StartsWith(UsersPath, StringComparison.Ordinal))
+        var photo = address.AbsolutePath is SizedPhotoPath or PhotoPath;
+        if (request.Method != HttpMethod.Get || address.Host != MicrosoftGraph.BaseAddress.Host || !(photo || address.AbsolutePath.StartsWith(UsersPath, StringComparison.Ordinal)))
         {
             throw new InvalidOperationException($"The API sent {request.Method} {address.GetLeftPart(UriPartial.Path)} to Microsoft Graph, which the test directory does not serve; no test host may reach Graph.");
         }
@@ -52,7 +61,8 @@ public sealed class TestDirectory(TestTokenEndpoint tokenEndpoint)
         var accessToken = request.Headers.Authorization is { Scheme: "Bearer", Parameter: { } parameter } ? parameter : null;
         _requests.Enqueue(new TestDirectoryRequest(address, consistencyLevel, accessToken));
 
-        if (accessToken is null || tokenEndpoint.ScopeOf(accessToken) is not { } scope || !scope.Split(' ').Contains(MicrosoftGraph.ReadBasicProfilesScope, StringComparer.Ordinal))
+        var permission = photo ? MicrosoftGraph.ReadOwnProfileScope : MicrosoftGraph.ReadBasicProfilesScope;
+        if (accessToken is null || tokenEndpoint.ScopeOf(accessToken) is not { } scope || !Grants(scope, permission))
         {
             return Error(HttpStatusCode.Unauthorized, "InvalidAuthenticationToken");
         }
@@ -60,6 +70,11 @@ public sealed class TestDirectory(TestTokenEndpoint tokenEndpoint)
         if (_refusing)
         {
             return Error(HttpStatusCode.Forbidden, AccessDeniedCode);
+        }
+
+        if (photo)
+        {
+            return OwnPhoto(tokenEndpoint.SubjectOf(accessToken), sized: address.AbsolutePath == SizedPhotoPath);
         }
 
         if (address.AbsolutePath == UsersPath)
@@ -73,6 +88,27 @@ public sealed class TestDirectory(TestTokenEndpoint tokenEndpoint)
         }
 
         throw new InvalidOperationException($"The API sent GET {address.GetLeftPart(UriPartial.Path)} to Microsoft Graph, which the test directory does not serve; no test host may reach Graph.");
+    }
+
+    // Graph reads the permissions of a token by their short names, which Entra writes into it whichever way the API asked.
+    private static bool Grants(string scope, string permission)
+    {
+        var name = permission[(permission.LastIndexOf('/') + 1)..];
+
+        return scope.Split(' ').Any(granted => string.Equals(granted, permission, StringComparison.Ordinal) || string.Equals(granted, name, StringComparison.Ordinal));
+    }
+
+    private HttpResponseMessage OwnPhoto(Guid? owner, bool sized)
+    {
+        if (owner is not { } objectId || !_people.TryGetValue(objectId, out var person) || person.Photo is not { } photo || (sized && !photo.Sized))
+        {
+            return Error(HttpStatusCode.NotFound, ImageNotFoundCode);
+        }
+
+        var content = new ByteArrayContent(photo.Content);
+        content.Headers.ContentType = new MediaTypeHeaderValue(photo.ContentType);
+
+        return new HttpResponseMessage(HttpStatusCode.OK) { Content = content };
     }
 
     private HttpResponseMessage Search(Uri address, string? consistencyLevel)

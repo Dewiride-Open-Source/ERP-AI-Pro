@@ -101,9 +101,16 @@ export async function deactivatePersonRecord(
   expect(response.status(), `the deactivation of ${person.id}`).toBe(200);
 }
 
-export async function createDepartmentRecord(api: SignedInApi, name: string): Promise<NamedRecord> {
+export async function createDepartmentRecord(
+  api: SignedInApi,
+  name: string,
+  parentId?: string,
+): Promise<NamedRecord> {
   return created(
-    await api.post(departmentsApi, { headers: { "Idempotency-Key": randomUUID() }, data: { name } }),
+    await api.post(departmentsApi, {
+      headers: { "Idempotency-Key": randomUUID() },
+      data: parentId === undefined ? { name } : { name, parentId },
+    }),
     name,
   );
 }

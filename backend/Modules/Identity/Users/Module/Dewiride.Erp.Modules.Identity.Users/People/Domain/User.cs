@@ -7,9 +7,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.People.Domain;
 
 // Entra keeps a person's name and work email, so every sign-in brings them up to date; the employee code, phone number,
 // date of joining and the roles assigned in the ERP are kept here by administrators, and the person's department,
-// designation and manager by their dated positions. A person holds
-// Administrator and Employee through the app roles of their Entra account, so only Finance, HR and Manager are assigned
-// here. A record an administrator registers by work email is linked to the person's Entra account at their first sign-in;
+// designation and manager by their dated positions. A person holds Administrator and Employee through the app roles of
+// their Entra account, so only Finance, HR and Manager are assigned here. A record an administrator registers by work email is linked to the person's Entra account at their first sign-in;
 // one invited from the company directory is linked from the start.
 internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, IVersioned
 {

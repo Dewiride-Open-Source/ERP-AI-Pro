@@ -13,6 +13,7 @@ interface RecordType {
   readonly label: string;
   readonly noun: string;
   readonly createdVerb?: string;
+  readonly onePerSubject?: boolean;
 }
 
 // A change key the API records but this table does not know yet shows as the key itself, so a new kind of record is never
@@ -22,6 +23,10 @@ const recordTypes = new Map<string, RecordType>([
   ["identity.users.departments", { label: "Department", noun: "department" }],
   ["identity.users.designations", { label: "Designation", noun: "designation" }],
   ["identity.users.positions", { label: "Move", noun: "move" }],
+  [
+    "identity.users.themes",
+    { label: "Colour theme", noun: "colour theme", createdVerb: "set", onePerSubject: true },
+  ],
   ["platform.attachments.files", { label: "File", noun: "file", createdVerb: "uploaded" }],
 ]);
 
@@ -106,7 +111,8 @@ export function recordHistoryLinkText(subjectName: string | null | undefined): s
   return name === undefined ? "Show the history of this record" : `Show the history of ${name}`;
 }
 
-// A record filed under another, such as a move under its person, is named through the record it is filed under.
+// A record filed under another, such as a move under its person, is named through the record it is filed under; one its
+// subject holds only one of, such as a person's colour theme, is the one of that subject.
 export function changeSentence(change: ChangeRecordResponse): ChangeSentence {
   const operation = change.operation ?? "updated";
   const entityType = change.entityType ?? "";
@@ -126,7 +132,8 @@ export function changeSentence(change: ChangeRecordResponse): ChangeSentence {
     };
   }
   const filedUnder = subject === undefined ? ` ${withArticle(recordNoun(subjectType))}` : "";
-  return { actor, action: `${verb} ${withArticle(noun)} of${filedUnder}`, subject };
+  const record = recordTypes.get(entityType)?.onePerSubject === true ? `the ${noun}` : withArticle(noun);
+  return { actor, action: `${verb} ${record} of${filedUnder}`, subject };
 }
 
 export function shownValues(

@@ -185,6 +185,9 @@ const serverFunctionMessage =
 const harnessServerFunctionMessage =
   "A design-harness Server Function starts with `await requireSignedInPerson()`: it changes only demo data, so a person the API has just confirmed may use it (ADR-0036, rule X4).";
 
+const ownProfileServerFunctionMessage =
+  "A Server Function of My profile starts with `await requireSignedInPerson()`: it changes only the signed-in person's own record, through a route any signed-in person may call, so a person the API has just confirmed may use it (ADR-0036, rule X4).";
+
 const serverFunctionExport = 'Program > ExpressionStatement[directive="use server"] ~ ';
 
 const serverFunctionBody = `${serverFunctionExport}ExportNamedDeclaration > FunctionDeclaration > BlockStatement`;
@@ -231,13 +234,19 @@ const serverFunctions = [
   ...serverFunctionFileShapes,
 ].map((selector) => ({ selector, message: serverFunctionMessage }));
 
-const harnessSessionCheck = `:matches(ExpressionStatement${awaitsSignedInPerson("expression")}, VariableDeclaration[declarations.length=1]${awaitsSignedInPerson("declarations.0.init")})`;
+const sessionCheckAlone = `:matches(ExpressionStatement${awaitsSignedInPerson("expression")}, VariableDeclaration[declarations.length=1]${awaitsSignedInPerson("declarations.0.init")})`;
 
-const harnessServerFunctions = [
-  `${serverFunctionBody} > :first-child:not(${harnessSessionCheck})`,
-  `${serverFunctionBody}[body.length=0]`,
-  ...serverFunctionFileShapes,
-].map((selector) => ({ selector, message: harnessServerFunctionMessage }));
+function sessionCheckedServerFunctions(message) {
+  return [
+    `${serverFunctionBody} > :first-child:not(${sessionCheckAlone})`,
+    `${serverFunctionBody}[body.length=0]`,
+    ...serverFunctionFileShapes,
+  ].map((selector) => ({ selector, message }));
+}
+
+const harnessServerFunctions = sessionCheckedServerFunctions(harnessServerFunctionMessage);
+
+const ownProfileServerFunctions = sessionCheckedServerFunctions(ownProfileServerFunctionMessage);
 
 const inlineServerFunction = {
   selector: ':function > BlockStatement > ExpressionStatement[directive="use server"]',
@@ -273,6 +282,11 @@ const syntaxScopes = {
     files: [`src/features/platform/design/**/*.${sourceExtensions}`],
     restrictions: apiClientDynamicImports,
     serverFunctionRules: harnessServerFunctions,
+  },
+  "own-profile": {
+    files: [`src/features/identity/users/profile/**/*.${sourceExtensions}`],
+    restrictions: apiClientDynamicImports,
+    serverFunctionRules: ownProfileServerFunctions,
   },
   "shared-api": {
     files: [`src/shared/api/**/*.${sourceExtensions}`],
@@ -318,6 +332,13 @@ export function featureBoundaryConfigs() {
       files: syntaxScopes["design-harness"].files,
       rules: {
         "no-restricted-syntax": restrictedSyntax(syntaxScopes["design-harness"]),
+      },
+    },
+    {
+      name: "erp/feature-boundaries/own-profile",
+      files: syntaxScopes["own-profile"].files,
+      rules: {
+        "no-restricted-syntax": restrictedSyntax(syntaxScopes["own-profile"]),
       },
     },
     {

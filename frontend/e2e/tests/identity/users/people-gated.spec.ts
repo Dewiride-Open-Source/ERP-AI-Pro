@@ -4,6 +4,7 @@ import { peopleApi } from "../../../fixtures/person-records";
 import { gatedBaseURL } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { peoplePath } from "../../../pages/identity/users/people.page";
+import { profilePath } from "../../../pages/identity/users/profile.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 // An administrator holds every permission of the users module, so only the disabled module can hide its pages from them.
@@ -43,6 +44,10 @@ test.describe("people pages with the users module disabled", () => {
         `${peoplePath}/permissions`,
         `${peoplePath}/${person}`,
         `${peoplePath}/${person}/edit`,
+        `${peoplePath}/org-chart`,
+        `${peoplePath}/departments`,
+        `${peoplePath}/designations`,
+        profilePath,
       ]) {
         const response = await page.goto(path);
 
@@ -52,8 +57,33 @@ test.describe("people pages with the users module disabled", () => {
     });
   });
 
+  test("offers no profile, photo or saved theme in the account menu", async ({ page }) => {
+    const shell = new AppShell(page);
+    const photoRequests: string[] = [];
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === `${peopleApi}/me/photo`) photoRequests.push(request.url());
+    });
+    await page.goto("/");
+    await shell.waitUntilInteractive();
+
+    await shell.openUserMenu();
+
+    await expect(shell.userMenu.getByRole("menuitem")).toHaveText(["Sign out"]);
+    await expect(shell.profileItem).toHaveCount(0);
+    await expect(shell.userMenuButton.locator("[data-slot='avatar-image']")).toHaveCount(0);
+    expect(photoRequests, "requests for the photo").toEqual([]);
+  });
+
   test("the API answers the people routes with the disabled module's problem", async ({ api }) => {
-    for (const path of [peopleApi, `${peopleApi}/permissions`]) {
+    for (const path of [
+      peopleApi,
+      `${peopleApi}/permissions`,
+      `${peopleApi}/org-chart`,
+      `${peopleApi}/departments`,
+      `${peopleApi}/designations`,
+      `${peopleApi}/me`,
+      `${peopleApi}/me/photo`,
+    ]) {
       const gated = await api.get(path);
       expect(gated.status(), path).toBe(404);
       expect(gated.headers()["content-type"], path).toContain("application/problem+json");

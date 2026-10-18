@@ -24,8 +24,20 @@ test.describe("navigation for an employee", () => {
             - listitem:
               - link "Attachments":
                 - /url: /platform/attachments
+          - text: Organisation
+          - list "Organisation":
+            - listitem:
+              - link "Organisation chart":
+                - /url: /identity/users/org-chart
+            - listitem:
+              - link "Departments":
+                - /url: /identity/users/departments
+            - listitem:
+              - link "Designations":
+                - /url: /identity/users/designations
       `);
       await expect(shell.navigationLink("System")).toHaveCount(0);
+      await expect(shell.navigationLink("People")).toHaveCount(0);
       await capture("navigation-employee", shell.usesDrawer ? shell.drawerPanel : shell.sidebarPanel);
       await shell.closeDrawer();
 
@@ -37,8 +49,13 @@ test.describe("navigation for an employee", () => {
           - group "Platform":
             - text: Platform
             - option "Attachments"
+          - group "Organisation":
+            - text: Organisation
+            - option "Organisation chart"
+            - option "Departments"
+            - option "Designations"
       `);
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(2);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(5);
       await shell.paletteSearch.fill("recent starts");
       await expect(shell.paletteEmpty).toBeVisible();
       await expect(shell.paletteStatus).toHaveText("No page matches your search.");

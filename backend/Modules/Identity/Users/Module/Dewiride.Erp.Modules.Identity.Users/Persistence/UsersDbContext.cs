@@ -3,6 +3,7 @@ using Dewiride.Erp.Modules.Identity.Users.Departments.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Designations.Domain;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Domain;
+using Dewiride.Erp.Modules.Identity.Users.Profile.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Persistence;
@@ -18,4 +19,6 @@ internal sealed class UsersDbContext(DbContextOptions<UsersDbContext> options) :
     public DbSet<Designation> Designations => Set<Designation>();
 
     public DbSet<Position> Positions => Set<Position>();
+
+    public DbSet<PersonTheme> PersonThemes => Set<PersonTheme>();
 }
