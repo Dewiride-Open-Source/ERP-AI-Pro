@@ -81,7 +81,7 @@ A list endpoint takes the shared request record `PagingParameters` (`BuildingBlo
 
 ## Files on the wire
 
-Three routes do not exchange JSON: the upload and the download of `Platform/Attachments` ([attachments](attachments.md)), and the export of the change history of `Platform/Audit` (below the table).
+Four routes do not exchange JSON: the upload and the download of `Platform/Attachments` ([attachments](attachments.md)), the export of the change history of `Platform/Audit` (below the table), and the caller's photo `GET /api/identity/users/me/photo` ([ADR-0046](../adr/0046-organisation-pages-my-profile-and-the-saved-theme.md)): the image bytes Microsoft Graph holds, at most 1 MiB, with the `Content-Type` its leading bytes show (`image/jpeg`, `image/png`, `image/gif` or `image/webp`, the document's `Produces<Stream>` entries), because the API sends `nosniff`; 204 without a body when the directory holds no photo, so the web app's `AvatarImage` leaves the initials without a failed image load; and `Cache-Control: private, max-age=3600` with `Vary: Authorization, Cookie` (`WithCallerDataCaching`), so a browser reuses it only for the same session or token.
 
 | | Upload: `POST /api/platform/attachments` | Download: `GET /api/platform/attachments/{id}/content?link=` |
 |---|---|---|
@@ -166,7 +166,7 @@ Every route that is not anonymous requires one permission, except the routes any
 | Roles | a person holds the permissions of Administrator while their token carries the app role `Erp.Admin` (every permission), of Employee while it carries `Erp.User`, and of the roles assigned to their record in the ERP: `finance`, `hr` and `manager` (`PersonRole`); an application holds none |
 | When a change counts | a role assigned or taken in the ERP from the person's next request; an app role changed in Microsoft Entra from their next sign-in |
 | Refusal | 403 `request.forbidden`, after authentication (401) and before the antiforgery check (400) and the feature gate (404 `feature.disabled`), so a caller without the permission learns neither; a route checks what a request asks for beyond its permission the same way (`ICallerPermissions`): naming roles in `POST /api/identity/users` or `POST /api/identity/users/invitations` needs `identity.users.people.assign-roles`, and the organisation chart of a date other than today (`GET /api/identity/users/org-chart?on=`) needs `identity.users.positions.read` |
-| Routes for any signed-in caller | `GET /api/auth/me`, `GET` and `POST /api/auth/session`, `GET /api/auth/antiforgery`, `GET /api/platform/features` |
+| Routes for any signed-in caller | `GET /api/auth/me`, `GET` and `POST /api/auth/session`, `GET /api/auth/antiforgery`, `GET /api/platform/features`, and the caller's own record `GET /api/identity/users/me`, `GET /api/identity/users/me/photo` and `PUT /api/identity/users/me/theme` ([ADR-0046](../adr/0046-organisation-pages-my-profile-and-the-saved-theme.md)) |
 | Proved by | `AssignedRoleTests`, `BearerTokenPermissionTests`, `CurrentUserEndpointTests` (host), `RoleAssignmentTests`, `PeopleEndpointsTests`, `OrgChartEndpointsTests`, `PermissionEndpointsTests`, `AttachmentEndpointsTests`, `SystemInfoEndpointsTests` (modules), `PermissionCatalogTests`, `PermissionRouteExtensionsTests`, `PermissionAuthorizationHandlerTests` (unit), `ModuleCatalogTests` (architecture) |
 
 ## The OpenAPI document
