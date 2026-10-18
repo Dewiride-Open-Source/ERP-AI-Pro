@@ -43,6 +43,9 @@ test.describe("people pages with the users module disabled", () => {
         `${peoplePath}/permissions`,
         `${peoplePath}/${person}`,
         `${peoplePath}/${person}/edit`,
+        `${peoplePath}/org-chart`,
+        `${peoplePath}/departments`,
+        `${peoplePath}/designations`,
       ]) {
         const response = await page.goto(path);
 
@@ -53,7 +56,13 @@ test.describe("people pages with the users module disabled", () => {
   });
 
   test("the API answers the people routes with the disabled module's problem", async ({ api }) => {
-    for (const path of [peopleApi, `${peopleApi}/permissions`]) {
+    for (const path of [
+      peopleApi,
+      `${peopleApi}/permissions`,
+      `${peopleApi}/org-chart`,
+      `${peopleApi}/departments`,
+      `${peopleApi}/designations`,
+    ]) {
       const gated = await api.get(path);
       expect(gated.status(), path).toBe(404);
       expect(gated.headers()["content-type"], path).toContain("application/problem+json");

@@ -26,7 +26,7 @@ test.describe("start page without the API", () => {
       await start.goto();
 
       await expect(start.heading).toHaveText("Welcome");
-      await expect(start.areas).toHaveCount(4);
+      await expect(start.areas).toHaveCount(7);
       await expect(start.noAreas).toHaveCount(0);
       await expect(
         start.shell.userMenuButton,
@@ -61,6 +61,18 @@ test.describe("start page without the API", () => {
               - heading "People" [level=3]
               - text: /Register people, assign their roles/
               - link "Open People"
+            - listitem:
+              - heading "Organisation chart" [level=3]
+              - text: /who reports to whom/
+              - link "Open Organisation chart"
+            - listitem:
+              - heading "Departments" [level=3]
+              - text: /which department each one sits under/
+              - link "Open Departments"
+            - listitem:
+              - heading "Designations" [level=3]
+              - text: /designations people can hold/
+              - link "Open Designations"
       `);
 
       await capture("start-unavailable");

@@ -14,6 +14,14 @@ type WebRoute = {
   readonly foreignMarkers: readonly string[];
 };
 
+const departmentsMarker = "departments-add";
+
+const designationsMarker = "designations-add";
+
+const orgChartMarker = "org-chart-expand-all";
+
+const organisationMarkers = [departmentsMarker, designationsMarker, orgChartMarker];
+
 const routes: readonly WebRoute[] = [
   {
     path: "/design/form-kit",
@@ -27,6 +35,7 @@ const routes: readonly WebRoute[] = [
       "animated-list-item",
       "audit-export",
       "No people match these filters.",
+      ...organisationMarkers,
     ],
   },
   {
@@ -40,6 +49,7 @@ const routes: readonly WebRoute[] = [
       "animated-list-item",
       "audit-export",
       "No people match these filters.",
+      ...organisationMarkers,
     ],
   },
   {
@@ -53,6 +63,7 @@ const routes: readonly WebRoute[] = [
       "No bills match these filters.",
       "audit-export",
       "No people match these filters.",
+      ...organisationMarkers,
     ],
   },
   {
@@ -66,6 +77,7 @@ const routes: readonly WebRoute[] = [
       "animated-list-item",
       "audit-export",
       "No people match these filters.",
+      ...organisationMarkers,
     ],
   },
   {
@@ -78,6 +90,7 @@ const routes: readonly WebRoute[] = [
       "animated-list-item",
       "audit-export",
       "No people match these filters.",
+      ...organisationMarkers,
     ],
   },
   {
@@ -91,6 +104,7 @@ const routes: readonly WebRoute[] = [
       "animated-list-item",
       "audit-export",
       "No people match these filters.",
+      ...organisationMarkers,
     ],
   },
   {
@@ -105,6 +119,7 @@ const routes: readonly WebRoute[] = [
       "No bills match these filters.",
       "animated-list-item",
       "No people match these filters.",
+      ...organisationMarkers,
     ],
   },
   {
@@ -120,6 +135,7 @@ const routes: readonly WebRoute[] = [
       "No bills match these filters.",
       "animated-list-item",
       "audit-export",
+      ...organisationMarkers,
     ],
   },
   {
@@ -136,6 +152,55 @@ const routes: readonly WebRoute[] = [
       "supplier-example-form",
       "motion-demo-preference",
       "No bills match these filters.",
+      "animated-list-item",
+      ...organisationMarkers,
+    ],
+  },
+  {
+    path: "/identity/users/departments",
+    ownMarkers: [departmentsMarker],
+    foreignMarkers: [
+      designationsMarker,
+      orgChartMarker,
+      "record-move",
+      "audit-export",
+      "No people match these filters.",
+      "upload-progress",
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
+      "animated-list-item",
+    ],
+  },
+  {
+    path: "/identity/users/designations",
+    ownMarkers: [designationsMarker],
+    foreignMarkers: [
+      departmentsMarker,
+      orgChartMarker,
+      "record-move",
+      "audit-export",
+      "No people match these filters.",
+      "upload-progress",
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
+      "animated-list-item",
+    ],
+  },
+  {
+    path: "/identity/users/org-chart",
+    ownMarkers: [orgChartMarker],
+    foreignMarkers: [
+      departmentsMarker,
+      designationsMarker,
+      "record-move",
+      "audit-export",
+      "No people match these filters.",
+      "upload-progress",
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
       "animated-list-item",
     ],
   },

@@ -42,6 +42,15 @@ const sidebarSnapshot = `
       - listitem:
         - link "People":
           - /url: /identity/users
+      - listitem:
+        - link "Organisation chart":
+          - /url: /identity/users/org-chart
+      - listitem:
+        - link "Departments":
+          - /url: /identity/users/departments
+      - listitem:
+        - link "Designations":
+          - /url: /identity/users/designations
 `;
 
 const drawerSnapshot = `
@@ -74,6 +83,15 @@ const drawerSnapshot = `
         - listitem:
           - link "People":
             - /url: /identity/users
+        - listitem:
+          - link "Organisation chart":
+            - /url: /identity/users/org-chart
+        - listitem:
+          - link "Departments":
+            - /url: /identity/users/departments
+        - listitem:
+          - link "Designations":
+            - /url: /identity/users/designations
 `;
 
 const wideBannerOnTheStartPage = `
@@ -151,7 +169,15 @@ test.describe("app shell navigation", () => {
         await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
         await expect(shell.sidebar).toMatchAriaSnapshot(sidebarSnapshot);
         await expect(shell.navigationLink("Attachments")).toHaveAttribute("aria-current", "page");
-        for (const other of ["Home", "System", "Audit trail", "People"]) {
+        for (const other of [
+          "Home",
+          "System",
+          "Audit trail",
+          "People",
+          "Organisation chart",
+          "Departments",
+          "Designations",
+        ]) {
           await expect(shell.navigationLink(other)).not.toHaveAttribute("aria-current");
         }
         await capture("sidebar-expanded", shell.sidebarPanel);
@@ -345,6 +371,22 @@ test.describe("app shell navigation", () => {
                   - /url: /identity/users
         `);
         await expect(shell.navigationLink("People")).toHaveAttribute("aria-current", "true");
+
+        // Departments has an entry of its own inside People's path, so it alone is marked and ends the trail.
+        await page.goto(`${peoplePath}/departments`);
+        await expect(page.getByRole("heading", { name: "Departments", level: 1 })).toBeVisible();
+        await expect(shell.breadcrumbs).toMatchAriaSnapshot(`
+          - navigation "Breadcrumb":
+            - list:
+              - listitem:
+                - link "Home":
+                  - /url: /
+              - listitem: Organisation
+              - listitem:
+                - link "Departments" [disabled]
+        `);
+        await expect(shell.navigationLink("Departments")).toHaveAttribute("aria-current", "page");
+        await expect(shell.navigationLink("People")).not.toHaveAttribute("aria-current");
 
         await page.goto(formKitPath);
         await expect(page.getByRole("heading", { name: "Form kit", level: 1 })).toBeVisible();

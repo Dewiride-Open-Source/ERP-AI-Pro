@@ -1,8 +1,17 @@
 import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { departmentsPath } from "../../../pages/identity/users/departments.page";
+import { designationsPath } from "../../../pages/identity/users/designations.page";
+import { orgChartPath } from "../../../pages/identity/users/org-chart.page";
 import { peoplePath } from "../../../pages/identity/users/people.page";
 import { attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { auditTrailPath } from "../../../pages/platform/audit/changes.page";
 import { StartPage } from "../../../pages/platform/home/start.page";
+
+const organisationPages = [
+  ["Organisation chart", orgChartPath],
+  ["Departments", departmentsPath],
+  ["Designations", designationsPath],
+] as const;
 
 test.describe("start page", () => {
   test.use({ persona: "administrator" });
@@ -12,7 +21,7 @@ test.describe("start page", () => {
     await start.goto();
 
     await expect(page).toHaveTitle(/Home · ERP-AI-Pro/);
-    await expect(start.areas).toHaveCount(4);
+    await expect(start.areas).toHaveCount(7);
     await expect(start.noAreas).toHaveCount(0);
     await expect(page.getByRole("main")).toMatchAriaSnapshot(`
       - paragraph: Home
@@ -37,6 +46,18 @@ test.describe("start page", () => {
             - heading "People" [level=3]
             - text: /Register people, assign their roles/
             - link "Open People"
+          - listitem:
+            - heading "Organisation chart" [level=3]
+            - text: /who reports to whom/
+            - link "Open Organisation chart"
+          - listitem:
+            - heading "Departments" [level=3]
+            - text: /which department each one sits under/
+            - link "Open Departments"
+          - listitem:
+            - heading "Designations" [level=3]
+            - text: /designations people can hold/
+            - link "Open Designations"
     `);
     await capture("start");
 
@@ -52,6 +73,12 @@ test.describe("start page", () => {
     await expect(page).toHaveURL((url) => url.pathname === peoplePath);
     await page.goBack();
     await expect(start.heading).toBeVisible();
+    for (const [title, path] of organisationPages) {
+      await start.openLink(title).click();
+      await expect(page).toHaveURL((url) => url.pathname === path);
+      await page.goBack();
+      await expect(start.heading).toBeVisible();
+    }
     await start.openLink("System").click();
     await expect(page).toHaveURL((url) => url.pathname === "/platform/system-info");
   });
@@ -69,9 +96,10 @@ test.describe("start page for an employee", () => {
     const start = new StartPage(page);
     await start.goto();
 
-    await expect(start.areas).toHaveCount(1);
+    await expect(start.areas).toHaveCount(4);
     await expect(start.noAreas).toHaveCount(0);
     await expect(start.openLink("System")).toHaveCount(0);
+    await expect(start.openLink("People")).toHaveCount(0);
     await expect(page.getByRole("main")).toMatchAriaSnapshot(`
       - paragraph: Home
       - heading /^Welcome, / [level=1]
@@ -83,9 +111,27 @@ test.describe("start page for an employee", () => {
             - heading "Attachments" [level=3]
             - text: /Upload and download the files/
             - link "Open Attachments"
+          - listitem:
+            - heading "Organisation chart" [level=3]
+            - text: /who reports to whom/
+            - link "Open Organisation chart"
+          - listitem:
+            - heading "Departments" [level=3]
+            - text: /which department each one sits under/
+            - link "Open Departments"
+          - listitem:
+            - heading "Designations" [level=3]
+            - text: /designations people can hold/
+            - link "Open Designations"
     `);
     await capture("start-employee");
 
+    for (const [title, path] of organisationPages) {
+      await start.openLink(title).click();
+      await expect(page).toHaveURL((url) => url.pathname === path);
+      await page.goBack();
+      await expect(start.heading).toBeVisible();
+    }
     await start.openLink("Attachments").click();
     await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
   });
