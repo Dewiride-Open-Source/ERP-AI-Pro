@@ -445,9 +445,15 @@ ensure_ssh_keys_only() {
   fi
 
   local backup=''
-  if (( ! DRY_RUN )) && [[ -f "$SSH_RULES_FILE" ]]; then
-    backup="$(mktemp)"
-    cp -p -- "$SSH_RULES_FILE" "$backup"
+  if (( ! DRY_RUN )); then
+    # sshd -t and -T need the privilege separation directory, which ssh.service creates only once it first starts.
+    if [[ ! -d /run/sshd ]]; then
+      install -d -m 0755 /run/sshd
+    fi
+    if [[ -f "$SSH_RULES_FILE" ]]; then
+      backup="$(mktemp)"
+      cp -p -- "$SSH_RULES_FILE" "$backup"
+    fi
   fi
   if install_config "$HOST_CONFIG_DIR/ssh/10-erp-ai-pro.conf" "$SSH_RULES_FILE" 644 root:root "the SSH sign-in rules" && (( ! DRY_RUN )); then
     if ! sshd -t; then
