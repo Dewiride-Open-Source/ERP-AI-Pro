@@ -150,6 +150,12 @@ export interface ChangeRecordResponse extends AdditionalDataHolder, Parsable {
     subjectType?: string | null;
 }
 export type ChangeValueKind = (typeof ChangeValueKindObject)[keyof typeof ChangeValueKindObject];
+export interface ChooseOwnThemeRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Colour theme the signed-in person chose for the web app: system follows the theme of their device.
+     */
+    theme?: ThemePreference | null;
+}
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
@@ -194,6 +200,15 @@ export function createChangePersonStatusRequestFromDiscriminatorValue(parseNode:
 // @ts-ignore
 export function createChangeRecordResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoChangeRecordResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ChooseOwnThemeRequest}
+ */
+// @ts-ignore
+export function createChooseOwnThemeRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoChooseOwnThemeRequest;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -448,6 +463,15 @@ export function createProblemDetailsFromDiscriminatorValue(parseNode: ParseNode 
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ProfileResponse}
+ */
+// @ts-ignore
+export function createProfileResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoProfileResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {RecentStartupsResponse}
  */
 // @ts-ignore
@@ -656,6 +680,17 @@ export function deserializeIntoChangeRecordResponse(changeRecordResponse: Partia
         "subjectId": n => { changeRecordResponse.subjectId = n.getGuidValue(); },
         "subjectName": n => { changeRecordResponse.subjectName = n.getStringValue(); },
         "subjectType": n => { changeRecordResponse.subjectType = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ChooseOwnThemeRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoChooseOwnThemeRequest(chooseOwnThemeRequest: Partial<ChooseOwnThemeRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "theme": n => { chooseOwnThemeRequest.theme = n.getEnumValue<ThemePreference>(ThemePreferenceObject); },
     }
 }
 /**
@@ -1038,6 +1073,27 @@ export function deserializeIntoProblemDetails(problemDetails: Partial<ProblemDet
         "title": n => { problemDetails.title = n.getStringValue(); problemDetails.message = problemDetails.title ?? ""; },
         "traceId": n => { problemDetails.traceId = n.getStringValue(); },
         "type": n => { problemDetails.type = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ProfileResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoProfileResponse(profileResponse: Partial<ProfileResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "dateOfJoining": n => { profileResponse.dateOfJoining = n.getDateOnlyValue(); },
+        "departmentName": n => { profileResponse.departmentName = n.getStringValue(); },
+        "designationName": n => { profileResponse.designationName = n.getStringValue(); },
+        "displayName": n => { profileResponse.displayName = n.getStringValue(); },
+        "employeeCode": n => { profileResponse.employeeCode = n.getStringValue(); },
+        "id": n => { profileResponse.id = n.getGuidValue(); },
+        "managerDisplayName": n => { profileResponse.managerDisplayName = n.getStringValue(); },
+        "phoneNumber": n => { profileResponse.phoneNumber = n.getStringValue(); },
+        "roles": n => { profileResponse.roles = n.getCollectionOfEnumValues<ErpRole>(ErpRoleObject); },
+        "theme": n => { profileResponse.theme = n.getEnumValue<ThemePreference>(ThemePreferenceObject); },
+        "workEmail": n => { profileResponse.workEmail = n.getStringValue(); },
     }
 }
 /**
@@ -1664,6 +1720,52 @@ export interface ProblemDetails extends AdditionalDataHolder, ApiError, Parsable
      */
     type?: string | null;
 }
+export interface ProfileResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The dateOfJoining property
+     */
+    dateOfJoining?: DateOnly | null;
+    /**
+     * The departmentName property
+     */
+    departmentName?: string | null;
+    /**
+     * The designationName property
+     */
+    designationName?: string | null;
+    /**
+     * The displayName property
+     */
+    displayName?: string | null;
+    /**
+     * The employeeCode property
+     */
+    employeeCode?: string | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The managerDisplayName property
+     */
+    managerDisplayName?: string | null;
+    /**
+     * The phoneNumber property
+     */
+    phoneNumber?: string | null;
+    /**
+     * The roles property
+     */
+    roles?: ErpRole[] | null;
+    /**
+     * The theme property
+     */
+    theme?: ThemePreference | null;
+    /**
+     * The workEmail property
+     */
+    workEmail?: string | null;
+}
 export interface RecentStartupsResponse extends AdditionalDataHolder, Parsable {
     /**
      * The startups property
@@ -1802,6 +1904,18 @@ export function serializeChangeRecordResponse(writer: SerializationWriter, chang
     writer.writeStringValue("subjectName", changeRecordResponse.subjectName);
     writer.writeStringValue("subjectType", changeRecordResponse.subjectType);
     writer.writeAdditionalData(changeRecordResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ChooseOwnThemeRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeChooseOwnThemeRequest(writer: SerializationWriter, chooseOwnThemeRequest: Partial<ChooseOwnThemeRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!chooseOwnThemeRequest || isSerializingDerivedType) { return; }
+    writer.writeEnumValue<ThemePreference>("theme", chooseOwnThemeRequest.theme);
+    writer.writeAdditionalData(chooseOwnThemeRequest.additionalData);
 }
 /**
  * Serializes information the current object
@@ -2219,6 +2333,29 @@ export function serializeProblemDetails(writer: SerializationWriter, problemDeta
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ProfileResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeProfileResponse(writer: SerializationWriter, profileResponse: Partial<ProfileResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!profileResponse || isSerializingDerivedType) { return; }
+    writer.writeDateOnlyValue("dateOfJoining", profileResponse.dateOfJoining);
+    writer.writeStringValue("departmentName", profileResponse.departmentName);
+    writer.writeStringValue("designationName", profileResponse.designationName);
+    writer.writeStringValue("displayName", profileResponse.displayName);
+    writer.writeStringValue("employeeCode", profileResponse.employeeCode);
+    writer.writeGuidValue("id", profileResponse.id);
+    writer.writeStringValue("managerDisplayName", profileResponse.managerDisplayName);
+    writer.writeStringValue("phoneNumber", profileResponse.phoneNumber);
+    if(profileResponse.roles)
+    writer.writeCollectionOfEnumValues<ErpRole>("roles", profileResponse.roles);
+    writer.writeEnumValue<ThemePreference>("theme", profileResponse.theme);
+    writer.writeStringValue("workEmail", profileResponse.workEmail);
+    writer.writeAdditionalData(profileResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param RecentStartupsResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -2425,6 +2562,7 @@ export interface SystemInfoResponse extends AdditionalDataHolder, Parsable {
      */
     version?: string | null;
 }
+export type ThemePreference = (typeof ThemePreferenceObject)[keyof typeof ThemePreferenceObject];
 export interface UpdateDepartmentRequest extends AdditionalDataHolder, Parsable {
     /**
      * Name of the department, unique among the departments under the same parent.
@@ -2546,6 +2684,11 @@ export const PersonRoleObject = {
 export const PersonStatusObject = {
     Active: "active",
     Deactivated: "deactivated",
+} as const;
+export const ThemePreferenceObject = {
+    System: "system",
+    Light: "light",
+    Dark: "dark",
 } as const;
 /* tslint:enable */
 /* eslint-enable */

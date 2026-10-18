@@ -13,5 +13,7 @@ public static class MicrosoftGraph
     // directory never asks an administrator for consent.
     public const string ReadBasicProfilesScope = "https://graph.microsoft.com/User.ReadBasic.All";
 
+    public const string ReadOwnProfileScope = "https://graph.microsoft.com/User.Read";
+
     public static Uri BaseAddress { get; } = new("https://graph.microsoft.com/v1.0/");
 }

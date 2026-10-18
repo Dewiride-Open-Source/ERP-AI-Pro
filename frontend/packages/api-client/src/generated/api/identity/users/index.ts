@@ -14,6 +14,8 @@ import { InvitationsRequestBuilderRequestsMetadata, type InvitationsRequestBuild
 // @ts-ignore
 import { type UsersItemRequestBuilder, UsersItemRequestBuilderNavigationMetadata, UsersItemRequestBuilderRequestsMetadata } from './item/index.js';
 // @ts-ignore
+import { MeRequestBuilderNavigationMetadata, MeRequestBuilderRequestsMetadata, type MeRequestBuilder } from './me/index.js';
+// @ts-ignore
 import { OrgChartRequestBuilderRequestsMetadata, type OrgChartRequestBuilder } from './orgChart/index.js';
 // @ts-ignore
 import { PermissionsRequestBuilderRequestsMetadata, type PermissionsRequestBuilder } from './permissions/index.js';
@@ -40,6 +42,10 @@ export interface UsersRequestBuilder extends BaseRequestBuilder<UsersRequestBuil
      * The invitations property
      */
     get invitations(): InvitationsRequestBuilder;
+    /**
+     * The me property
+     */
+    get me(): MeRequestBuilder;
     /**
      * The orgChart property
      */
@@ -144,6 +150,10 @@ export const UsersRequestBuilderNavigationMetadata: Record<Exclude<keyof UsersRe
     },
     invitations: {
         requestsMetadata: InvitationsRequestBuilderRequestsMetadata,
+    },
+    me: {
+        requestsMetadata: MeRequestBuilderRequestsMetadata,
+        navigationMetadata: MeRequestBuilderNavigationMetadata,
     },
     orgChart: {
         requestsMetadata: OrgChartRequestBuilderRequestsMetadata,

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Requests;

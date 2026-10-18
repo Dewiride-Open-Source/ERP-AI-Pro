@@ -12,6 +12,7 @@ using Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Permissions.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Endpoints;
+using Dewiride.Erp.Modules.Identity.Users.Profile.Endpoints;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -74,5 +75,6 @@ public sealed class UsersModule : IModule
         PositionEndpoints.Map(group);
         OrgChartEndpoints.Map(group);
         PermissionEndpoints.Map(group);
+        ProfileEndpoints.Map(group);
     }
 }

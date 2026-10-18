@@ -14,7 +14,8 @@ namespace Dewiride.Erp.Testing.Authentication;
 // from CodeWithoutClientInfoFor with the same tokens and no client info, and refuses every other code as Entra refuses an
 // expired one. It redeems a refresh token it issued for the scopes MSAL asks, as Entra does when the API calls Microsoft
 // Graph for the person, unless a test made the person's consent missing; instance discovery answers with the aliases of
-// the public cloud. Anything else fails the request that sent it. ClientInfoFor is that client info, from whose account
+// the public cloud. Anything else fails the request that sent it. ScopeOf and SubjectOf tell what an access token it issued
+// grants and whose it is, which Graph reads from the token itself. ClientInfoFor is that client info, from whose account
 // Microsoft.Identity.Web adds uid and utid; the sign-in asks Entra for no client info on the callback, and
 // Microsoft.Identity.Web ignores one posted there.
 public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
@@ -43,7 +44,7 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 
     private readonly ConcurrentQueue<string> _issuedTokens = new();
 
-    private readonly ConcurrentDictionary<string, string> _accessTokenScopes = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, (Guid Subject, string Scope)> _accessTokens = new(StringComparer.Ordinal);
 
     private readonly ConcurrentDictionary<Guid, TestUser> _admitted = new();
 
@@ -109,7 +110,14 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
     {
         ArgumentNullException.ThrowIfNull(accessToken);
 
-        return _accessTokenScopes.GetValueOrDefault(accessToken);
+        return _accessTokens.TryGetValue(accessToken, out var issued) ? issued.Scope : null;
+    }
+
+    public Guid? SubjectOf(string accessToken)
+    {
+        ArgumentNullException.ThrowIfNull(accessToken);
+
+        return _accessTokens.TryGetValue(accessToken, out var issued) ? issued.Subject : null;
     }
 
     public HttpClient GetHttpClient() => _client;
@@ -225,7 +233,7 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             _issuedTokens.Enqueue(token);
         }
 
-        _accessTokenScopes[tokens[0]] = scope;
+        _accessTokens[tokens[0]] = (user.ObjectId, scope);
 
         return new Dictionary<string, object>(StringComparer.Ordinal)
         {

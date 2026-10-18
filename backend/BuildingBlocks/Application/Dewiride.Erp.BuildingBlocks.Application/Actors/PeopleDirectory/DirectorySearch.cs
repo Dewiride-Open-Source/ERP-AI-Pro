@@ -1,4 +1,4 @@
-namespace Dewiride.Erp.BuildingBlocks.Application.Actors;
+namespace Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 
 public sealed record DirectorySearch(IReadOnlyList<DirectoryPerson> People, bool HasMore)
 {

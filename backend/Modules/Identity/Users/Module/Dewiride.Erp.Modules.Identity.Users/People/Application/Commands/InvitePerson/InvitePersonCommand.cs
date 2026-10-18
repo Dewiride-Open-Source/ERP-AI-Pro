@@ -1,4 +1,4 @@
-using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 

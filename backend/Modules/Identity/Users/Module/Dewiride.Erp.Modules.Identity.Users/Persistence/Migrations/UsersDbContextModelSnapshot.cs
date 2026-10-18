@@ -18,10 +18,79 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("identity_users")
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes.ChangeRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("json");
+
+                    b.Property<string>("ClientAddress")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte>("Operation")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<short>("ValueCount")
+                        .HasColumnType("smallint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorrelationId")
+                        .HasFilter("[CorrelationId] IS NOT NULL");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("ActorId", "OccurredAt");
+
+                    b.HasIndex("EntityId", "OccurredAt");
+
+                    b.HasIndex("EntityType", "OccurredAt");
+
+                    b.HasIndex("SubjectId", "OccurredAt");
+
+                    b.ToTable("ChangeRecords", "audit", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
 
             modelBuilder.Entity("Dewiride.Erp.Modules.Identity.Users.Departments.Domain.Department", b =>
                 {
@@ -70,6 +139,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Departments", "identity_users");
+
+                    b.HasAnnotation("Erp:ChangeRecords:Key", "identity.users.departments");
                 });
 
             modelBuilder.Entity("Dewiride.Erp.Modules.Identity.Users.Designations.Domain.Designation", b =>
@@ -116,6 +187,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Designations", "identity_users");
+
+                    b.HasAnnotation("Erp:ChangeRecords:Key", "identity.users.designations");
                 });
 
             modelBuilder.Entity("Dewiride.Erp.Modules.Identity.Users.People.Domain.User", b =>
@@ -154,7 +227,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LastSignedInAt")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("datetimeoffset")
+                        .HasAnnotation("Erp:ChangeRecords:Excluded", true);
 
                     b.Property<DateTimeOffset?>("ModifiedAt")
                         .HasColumnType("datetimeoffset");
@@ -180,6 +254,10 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint");
 
+                    b.Property<byte>("Theme")
+                        .HasColumnType("tinyint")
+                        .HasAnnotation("Erp:ChangeRecords:Excluded", true);
+
                     b.Property<string>("WorkEmail")
                         .IsRequired()
                         .HasMaxLength(254)
@@ -202,6 +280,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                         .HasFilter("[EntraObjectId] IS NULL AND [IsDeleted] = 0");
 
                     b.ToTable("Users", "identity_users");
+
+                    b.HasAnnotation("Erp:ChangeRecords:Key", "identity.users.people");
                 });
 
             modelBuilder.Entity("Dewiride.Erp.Modules.Identity.Users.Positions.Domain.Position", b =>
@@ -248,6 +328,10 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("Positions", "identity_users");
+
+                    b
+                        .HasAnnotation("Erp:ChangeRecords:Key", "identity.users.positions")
+                        .HasAnnotation("Erp:ChangeRecords:Subject", "UserId");
                 });
 
             modelBuilder.Entity("Dewiride.Erp.Modules.Identity.Users.Departments.Domain.Department", b =>

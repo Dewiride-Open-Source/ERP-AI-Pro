@@ -30,6 +30,9 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         "POST /api/auth/session",
         "GET /api/auth/antiforgery",
         "GET /api/platform/features",
+        "GET /api/identity/users/me",
+        "GET /api/identity/users/me/photo",
+        "PUT /api/identity/users/me/theme",
     ];
 
     private static readonly string[] GeneratedBaseTypes = ["Microsoft.EntityFrameworkCore.Migrations.Migration", "Microsoft.EntityFrameworkCore.Infrastructure.ModelSnapshot"];

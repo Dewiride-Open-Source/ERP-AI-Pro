@@ -1,4 +1,4 @@
-using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 using Dewiride.Erp.BuildingBlocks.Authentication.Antiforgery;
 using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
@@ -88,6 +88,7 @@ public static class AuthenticationRegistration
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IAuthorizationHandler, PermissionAuthorizationHandler>());
         builder.Services.AddHttpContextAccessor();
         builder.Services.TryAddScoped<ICallerPermissions, CallerPermissions>();
+        builder.Services.TryAddScoped<ICallerRoles, HttpCallerRoles>();
 
         builder.Services.TryAddSingleton<BoundedIdentityModelLogger>();
         builder.Services.TryAddSingleton<AnonymousSecurityEventBudget>();
