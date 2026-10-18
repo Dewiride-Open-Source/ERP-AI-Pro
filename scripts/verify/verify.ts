@@ -95,8 +95,9 @@ if (values.docker) {
   steps.push(
     { name: "docker build api", cwd: repoRoot, command: "docker", args: ["build", "-f", "infra/docker/api.Dockerfile", "-t", "ghcr.io/dewiride-open-source/erp-ai-pro/api:verify", "."] },
     { name: "docker build web", cwd: repoRoot, command: "docker", args: ["build", "-f", "infra/docker/web.Dockerfile", "-t", "ghcr.io/dewiride-open-source/erp-ai-pro/web:verify", "."] },
+    { name: "docker build proxy", cwd: repoRoot, command: "docker", args: ["build", "-f", "infra/docker/proxy.Dockerfile", "-t", "ghcr.io/dewiride-open-source/erp-ai-pro/proxy:verify", "."] },
     { name: "compose config (local)", cwd: compose, command: "docker", args: ["compose", "-f", "compose.yaml", "-f", "compose.override.yaml", "config", "--quiet"] },
-    { name: "compose config (production)", cwd: compose, command: "docker", args: ["compose", "-f", "compose.yaml", "-f", "compose.production.yaml", "config", "--quiet"], env: { IMAGE_TAG: "verify" } },
+    { name: "compose config (production)", cwd: compose, command: "docker", args: ["compose", "-f", "compose.yaml", "-f", "compose.production.yaml", "config", "--quiet"], env: { IMAGE_TAG: "verify", ERP_SITE_ADDRESS: "192.0.2.10" } },
     { name: "compose smoke", cwd: repoRoot, command: "node", args: ["scripts/checks/compose-smoke.ts"], env: { IMAGE_TAG: "verify" } },
   );
 }

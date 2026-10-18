@@ -52,6 +52,22 @@ services:
       - "3000"
     restart: unless-stopped
 
+  proxy:
+    image: ghcr.io/dewiride-open-source/erp-ai-pro/proxy:${IMAGE_TAG:-local}
+    build:
+      context: ../..
+      dockerfile: infra/docker/proxy.Dockerfile
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: 0
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - erp
+    restart: unless-stopped
+
 networks:
   erp:
     driver: bridge

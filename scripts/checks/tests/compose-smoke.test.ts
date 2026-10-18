@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { keyRingDirectoryProblem, readFirstTarEntry, type TarEntry } from '../compose-smoke.ts';
+import { directoryProblem, keyRing, proxyData, readFirstTarEntry, type TarEntry } from '../compose-smoke.ts';
 
 type HeaderFields = { name: string; type: string; mode: number; uid: number; gid: number; prefix?: string; magic?: string; modeField?: string };
 
@@ -41,7 +41,7 @@ test('readFirstTarEntry refuses a stream that is shorter than a header, not usta
 });
 
 test('the key ring directory passes only as a directory owned by 1654:1654 with mode 0700', () => {
-  assert.equal(keyRingDirectoryProblem(keyRingFolder), undefined);
+  assert.equal(directoryProblem(keyRing, keyRingFolder), undefined);
   const refused: [Partial<TarEntry>, string][] = [
     [{ uid: 0, gid: 0, mode: 0o755 }, 'got a directory owned by 0:0 with mode 0755'],
     [{ gid: 0 }, 'got a directory owned by 1654:0 with mode 0700'],
@@ -52,12 +52,26 @@ test('the key ring directory passes only as a directory owned by 1654:1654 with 
   ];
   for (const [change, message] of refused) {
     assert.equal(
-      keyRingDirectoryProblem({ ...keyRingFolder, ...change }),
+      directoryProblem(keyRing, { ...keyRingFolder, ...change }),
       `api image /home/app/.local/share/ERP-AI-Pro/DataProtection-Keys: expected a directory owned by 1654:1654 with mode 0700, ${message}`,
     );
   }
   assert.equal(
-    keyRingDirectoryProblem({ ...keyRingFolder, name: 'DataProtection-Keys/key-0.xml' }),
+    directoryProblem(keyRing, { ...keyRingFolder, name: 'DataProtection-Keys/key-0.xml' }),
     'api image /home/app/.local/share/ERP-AI-Pro/DataProtection-Keys: expected the archive to start with "DataProtection-Keys/", got "DataProtection-Keys/key-0.xml"',
   );
+});
+
+test('the proxy data directory passes only as a directory owned by 10001:10001 with mode 0700', () => {
+  const proxyFolder: TarEntry = { name: 'data/', type: '5', mode: 0o700, uid: 10001, gid: 10001 };
+  assert.equal(directoryProblem(proxyData, proxyFolder), undefined);
+  const refused: [Partial<TarEntry>, string][] = [
+    [{ uid: 0, gid: 0, mode: 0o755 }, 'got a directory owned by 0:0 with mode 0755'],
+    [{ mode: 0o1777 }, 'got a directory owned by 10001:10001 with mode 1777'],
+    [{ uid: 1654 }, 'got a directory owned by 1654:10001 with mode 0700'],
+  ];
+  for (const [change, message] of refused) {
+    assert.equal(directoryProblem(proxyData, { ...proxyFolder, ...change }), `proxy image /data: expected a directory owned by 10001:10001 with mode 0700, ${message}`);
+  }
+  assert.equal(directoryProblem(proxyData, { ...proxyFolder, name: 'caddy/' }), 'proxy image /data: expected the archive to start with "data/", got "caddy/"');
 });

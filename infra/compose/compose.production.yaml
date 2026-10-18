@@ -76,10 +76,40 @@ services:
         max-size: 20m
         max-file: "5"
 
+  proxy:
+    environment:
+      ERP_SITE_ADDRESS: ${ERP_SITE_ADDRESS:?set ERP_SITE_ADDRESS in .env to the address people open the ERP at}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - type: volume
+        source: proxy-data
+        target: /data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+    logging:
+      driver: json-file
+      options:
+        max-size: 20m
+        max-file: "5"
+
 volumes:
   data-protection-keys:
     external: true
     name: erp-ai-pro-data-protection-keys
+  proxy-data:
+    external: true
+    name: erp-ai-pro-proxy-data
 
 secrets:
   erp-runtime-client.pem:
