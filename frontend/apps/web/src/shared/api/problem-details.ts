@@ -35,7 +35,7 @@ export function toApiError(error: unknown): unknown {
 
   const body = error as Partial<Record<keyof HttpValidationProblemDetails, unknown>>;
   const title = text(body.title) ?? text(error.message);
-  const fields = validationFields(body.errors);
+  const fields = validationFields(body.errors) ?? undeclaredFields(error);
 
   return new ApiError({
     status: error.responseStatusCode,
@@ -77,6 +77,12 @@ function isHttpFailure(error: unknown): error is HttpFailure {
 function validationFields(errors: unknown): Record<string, readonly string[]> | undefined {
   if (typeof errors !== "object" || errors === null || !("additionalData" in errors)) return undefined;
   return recordFields(errors.additionalData);
+}
+
+function undeclaredFields(error: HttpFailure): Record<string, readonly string[]> | undefined {
+  const additional = (error as { readonly additionalData?: unknown }).additionalData;
+  if (typeof additional !== "object" || additional === null || !("errors" in additional)) return undefined;
+  return recordFields(additional.errors);
 }
 
 function recordFields(value: unknown): Record<string, readonly string[]> | undefined {

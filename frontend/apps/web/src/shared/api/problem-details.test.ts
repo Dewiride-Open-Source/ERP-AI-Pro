@@ -51,6 +51,23 @@ test("toApiError_ValidationProblem_ExposesTheFieldErrors", () => {
   assert.deepEqual(error.problem.fields, { take: ["The field Take must be between 1 and 100."] });
 });
 
+test("toApiError_ProblemWhoseSchemaDeclaresNoErrors_ExposesTheFieldErrorsTheClientKeptAside", () => {
+  const thrown = {
+    responseStatusCode: 400,
+    title: "The employee code is not valid.",
+    code: "user.employee-code-invalid",
+    additionalData: { errors: { employeeCode: ["Use letters, digits, hyphens and slashes only."] } },
+  };
+
+  const error = toApiError(thrown);
+
+  assert.ok(error instanceof ApiError);
+  assert.equal(error.problem.code, "user.employee-code-invalid");
+  assert.deepEqual(error.problem.fields, {
+    employeeCode: ["Use letters, digits, hyphens and slashes only."],
+  });
+});
+
 test("toApiError_FieldErrorsThatAreNotStringLists_AreLeftOut", () => {
   const thrown = {
     responseStatusCode: 400,
