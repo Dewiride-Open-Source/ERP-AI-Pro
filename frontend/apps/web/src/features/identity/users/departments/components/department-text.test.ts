@@ -10,8 +10,17 @@ import {
   departmentDeletion,
   editLabel,
   historyLabel,
+  otherParentsMessage,
   showChildrenLabel,
 } from "./department-text.ts";
+
+test("otherParentsMessage_NoOtherDepartmentCanHoldTheEditedOne_SaysItStaysAtTheTop", () => {
+  assert.equal(otherParentsMessage(0), "No other department can hold it, so it stays at the top.");
+});
+
+test("otherParentsMessage_OtherDepartmentsCanHoldIt_SaysNoneMatchesTheSearch", () => {
+  assert.equal(otherParentsMessage(3), "No department matches.");
+});
 
 test("childCountLabel_OneOrMoreDepartments_CountsThemInWords", () => {
   assert.equal(childCountLabel(1), "1 department under it");

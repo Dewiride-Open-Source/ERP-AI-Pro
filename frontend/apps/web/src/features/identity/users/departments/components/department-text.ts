@@ -1,6 +1,7 @@
 import type { ProblemMessages } from "@/shared/forms/errors/problem-to-form-state";
 
 import { countLabel } from "../../organisation/components/disclosure-tree.ts";
+import { noChoiceMessage } from "../../positions/components/move-text.ts";
 import { organisationBusy } from "../../positions/forms/record-move.schema.ts";
 
 export interface DepartmentDeletion {
@@ -48,6 +49,14 @@ export function deleteLabel(name: string): string {
 
 export function historyLabel(name: string): string {
   return `Change history of ${name}`;
+}
+
+// A department can sit under none of those within it, so the list of an edited department's places can be empty while
+// other departments exist.
+export function otherParentsMessage(optionCount: number): string {
+  return optionCount === 0
+    ? "No other department can hold it, so it stays at the top."
+    : noChoiceMessage("department", optionCount);
 }
 
 export function addedMessage(name: string): string {

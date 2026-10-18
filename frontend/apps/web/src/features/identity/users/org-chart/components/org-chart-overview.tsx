@@ -1,4 +1,3 @@
-import type { DepartmentResponse, OrgChartPersonResponse } from "@dewiride/erp-api-client";
 import { buttonVariants } from "@dewiride/erp-ui/components/ui/button";
 import {
   Card,
@@ -17,16 +16,12 @@ import { mayShow } from "@/shared/auth/permissions";
 import { requireSession } from "@/shared/auth/session";
 import { istDateKey } from "@/shared/format/dates";
 
-import { departmentRecords, departmentsWithin } from "../../departments/components/department-tree";
 import { listDepartments } from "../../departments/server/queries";
 import { orgChartNavigation } from "../../nav";
-import { departmentOptions } from "../../organisation/components/organisation-options";
-import { unknownDepartment } from "../../people/components/person-text";
 import { getOrgChart } from "../server/queries";
 
-import { chartPage, chartPeople, chartPeopleCount, orgChart } from "./org-chart";
+import { shownChart } from "./org-chart";
 import { OrgChartBrowser } from "./org-chart-browser";
-import type { DepartmentChoices } from "./org-chart-filters";
 import { chartHeading, otherDateRefusal } from "./org-chart-text";
 import { orgChartHref, readOrgChartView, type OrgChartView, type SearchParameters } from "./org-chart-view";
 
@@ -63,7 +58,11 @@ export async function OrgChartOverview({ searchParameters }: { searchParameters:
     );
   }
 
-  const shown = shownChart(view, chart.value, departments);
+  const shown = shownChart(
+    view,
+    chart.value,
+    departments.status === "fulfilled" ? departments.value : undefined,
+  );
   if (shown.page.page !== view.page) redirect(orgChartHref({ ...view, page: shown.page.page }));
 
   return (
@@ -80,42 +79,6 @@ export async function OrgChartOverview({ searchParameters }: { searchParameters:
       />
     </ChartFrame>
   );
-}
-
-// The chosen department takes in the departments under it; while the departments cannot be read, only the people directly
-// in it can be told apart.
-function shownChart(
-  view: OrgChartView,
-  people: readonly OrgChartPersonResponse[],
-  departments: PromiseSettledResult<readonly DepartmentResponse[]>,
-) {
-  const records = departments.status === "fulfilled" ? departmentRecords(departments.value) : undefined;
-  const options = records === undefined ? undefined : departmentOptions(records);
-  const chosen = view.department;
-  const within =
-    chosen === undefined
-      ? undefined
-      : records === undefined
-        ? new Set([chosen])
-        : departmentsWithin(records, chosen);
-  const roots = orgChart(chartPeople(people), { departments: within });
-  const chosenRecord = chosen === undefined ? undefined : records?.find((record) => record.id === chosen);
-  const choices: DepartmentChoices =
-    options === undefined
-      ? { status: "failed" }
-      : {
-          status: "read",
-          options:
-            chosen === undefined || chosenRecord !== undefined
-              ? options
-              : [...options, { value: chosen, label: unknownDepartment }],
-        };
-  return {
-    page: chartPage(roots, view.page),
-    peopleCount: chartPeopleCount(roots),
-    departments: choices,
-    departmentName: chosenRecord?.name,
-  };
 }
 
 function isOtherDateRefusal(reason: unknown, view: OrgChartView): boolean {

@@ -8,8 +8,8 @@ import { ChevronLeftIcon, ChevronRightIcon, ChevronsLeftIcon, ChevronsRightIcon 
 import { useFilterFormState } from "@/shared/lists/filter-state/use-filter-form-state";
 import { ListLink, ListNavigationProvider, useListNavigation } from "@/shared/lists/list-navigation";
 
-import type { ChartNode } from "./org-chart";
-import { OrgChartFilters, type DepartmentChoices } from "./org-chart-filters";
+import type { ChartNode, DepartmentChoices } from "./org-chart";
+import { OrgChartFilters } from "./org-chart-filters";
 import { emptyChartMessage, pageLabel, peopleOnChartLabel } from "./org-chart-text";
 import { OrgChartTree } from "./org-chart-tree";
 import { filterSignature, orgChartHref, type OrgChartView } from "./org-chart-view";

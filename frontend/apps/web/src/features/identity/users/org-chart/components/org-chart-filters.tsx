@@ -10,9 +10,9 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { ListLink, useListNavigation } from "@/shared/lists/list-navigation";
 
-import type { OrganisationOption } from "../../organisation/components/organisation-options";
 import { noChoiceMessage } from "../../positions/components/move-text";
 
+import type { DepartmentChoices } from "./org-chart";
 import { departmentsUnreadable, departmentsUnreadableWhileChosen } from "./org-chart-text";
 import {
   filterSignature,
@@ -21,10 +21,6 @@ import {
   orgChartPath,
   type OrgChartView,
 } from "./org-chart-view";
-
-export type DepartmentChoices =
-  | { readonly status: "read"; readonly options: readonly OrganisationOption[] }
-  | { readonly status: "failed" };
 
 const notADate = "Enter a real date as day-month-year, for example 31-03-2026.";
 

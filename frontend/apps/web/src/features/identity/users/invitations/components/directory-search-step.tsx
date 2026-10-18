@@ -74,7 +74,9 @@ export function DirectorySearchStep({
         {searchSummary(reading, search)}
       </p>
 
-      {failure ? <FormAlert title={failure.error} messages={[]} reference={failure.reference} /> : null}
+      {failure ? (
+        <FormAlert key={search.answerKey} title={failure.error} messages={[]} reference={failure.reference} />
+      ) : null}
 
       {people.length > 0 ? (
         <ul

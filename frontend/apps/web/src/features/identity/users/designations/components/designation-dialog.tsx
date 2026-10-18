@@ -115,7 +115,7 @@ function AddDesignationForm({
 
   return (
     <>
-      <DialogHeader>
+      <DialogHeader className="pr-8">
         <DialogTitle>Add a designation</DialogTitle>
         <DialogDescription>
           Name a designation people can hold, such as Accountant or Team lead.
@@ -175,7 +175,7 @@ function RenameDesignationForm({
 
   return (
     <>
-      <DialogHeader>
+      <DialogHeader className="pr-8">
         <DialogTitle className="wrap-anywhere">Rename {designation.name}</DialogTitle>
         <DialogDescription>
           The new name shows for everyone who holds it, also in their past moves.

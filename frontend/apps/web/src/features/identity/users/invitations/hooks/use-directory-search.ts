@@ -14,6 +14,7 @@ import {
 export interface DirectorySearchState extends SearchProgress {
   readonly text: string;
   readonly reading: SearchText;
+  readonly answerKey: number;
   readonly search: (text: string) => void;
   readonly again: () => void;
 }
@@ -24,12 +25,14 @@ const browserTimer: PauseTimer<ReturnType<typeof setTimeout>> = {
 };
 
 // Text the API would refuse is never sent, and taking a ticket for it drops the answer of a search already on its way, so
-// the people shown always belong to the text in the field.
+// the people shown always belong to the text in the field. Each answer has a key of its own, so a failure shown again in
+// the same words is announced again.
 export function useDirectorySearch(
   find: (text: string) => Promise<DirectorySearchAnswer>,
 ): DirectorySearchState {
   const [text, setText] = useState("");
   const [answer, setAnswer] = useState<DirectorySearchAnswer | undefined>(undefined);
+  const [answerKey, setAnswerKey] = useState(0);
   const [waiting, setWaiting] = useState(false);
   const [searching, startSearch] = useTransition();
   const [sequence] = useState(() => personSearchSequence(browserTimer));
@@ -47,7 +50,9 @@ export function useDirectorySearch(
         const failed = rejectedActionState(error, unstable_isUnrecognizedActionError);
         found = { error: failed.message, reference: failed.reference };
       }
-      if (sequence.isLatest(ticket)) setAnswer(found);
+      if (!sequence.isLatest(ticket)) return;
+      setAnswer(found);
+      setAnswerKey((key) => key + 1);
     });
   };
 
@@ -76,5 +81,13 @@ export function useDirectorySearch(
     send(reading.text);
   };
 
-  return { text, reading: readSearchText(text), answer, loading: waiting || searching, search, again };
+  return {
+    text,
+    reading: readSearchText(text),
+    answer,
+    answerKey,
+    loading: waiting || searching,
+    search,
+    again,
+  };
 }

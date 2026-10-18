@@ -35,6 +35,7 @@ import {
 } from "../forms/department.schema";
 import { createDepartment, updateDepartment } from "../server/actions";
 
+import { otherParentsMessage } from "./department-text";
 import { parentChoices, type DepartmentRecord } from "./department-tree";
 
 export type EditableDepartment = DepartmentRecord & { readonly version: string };
@@ -141,7 +142,7 @@ function AddDepartmentForm({
 
   return (
     <>
-      <DialogHeader>
+      <DialogHeader className="pr-8">
         <DialogTitle>Add a department</DialogTitle>
         <DialogDescription>
           Name the department and choose the department it sits under, or leave that empty to add it at the
@@ -165,6 +166,7 @@ function AddDepartmentForm({
                 field={field}
                 error={fieldState.error}
                 parents={parents}
+                emptyMessage={noChoiceMessage("department", parents.length)}
               />
             )}
           />
@@ -210,7 +212,7 @@ function EditDepartmentForm({
 
   return (
     <>
-      <DialogHeader>
+      <DialogHeader className="pr-8">
         <DialogTitle className="wrap-anywhere">Rename or move {department.name}</DialogTitle>
         <DialogDescription>
           The name and the department it sits under hold for every date, so people&apos;s past moves show them
@@ -234,6 +236,7 @@ function EditDepartmentForm({
                 field={field}
                 error={fieldState.error}
                 parents={parents}
+                emptyMessage={otherParentsMessage(parents.length)}
               />
             )}
           />
@@ -278,11 +281,13 @@ function ParentField({
   field,
   error,
   parents,
+  emptyMessage,
 }: {
   id: string;
   field: ParentControl;
   error: FieldError | undefined;
   parents: readonly OrganisationOption[];
+  emptyMessage: string;
 }) {
   return (
     <FormField
@@ -301,7 +306,7 @@ function ParentField({
           onValueChange={(value) => field.onChange(value ?? "")}
           onBlur={field.onBlur}
           placeholder="Search departments"
-          emptyMessage={noChoiceMessage("department", parents.length)}
+          emptyMessage={emptyMessage}
         />
       )}
     </FormField>

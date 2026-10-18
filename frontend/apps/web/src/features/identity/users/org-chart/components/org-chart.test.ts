@@ -8,6 +8,7 @@ import {
   initiallyExpanded,
   orgChart,
   peopleAtTheTopPerPage,
+  shownChart,
   type ChartNode,
   type ChartPerson,
 } from "./org-chart.ts";
@@ -145,4 +146,86 @@ test("initiallyExpanded_Chart_OpensOnlyTheTopPeopleWhoManageSomeone", () => {
 test("chartPeopleCount_Chart_CountsEveryoneAtEveryLevel", () => {
   assert.equal(chartPeopleCount(orgChart(people)), people.length);
   assert.equal(chartPeopleCount([]), 0);
+});
+
+const operations = "0199f3a4-5b6c-7d8e-9f01-000000000001";
+const north = "0199f3a4-5b6c-7d8e-9f01-000000000002";
+const sales = "0199f3a4-5b6c-7d8e-9f01-000000000003";
+const deleted = "0199f3a4-5b6c-7d8e-9f01-000000000009";
+
+const departments = [
+  { id: operations, name: "Operations", parentId: null, version: "AAAAAAAAB9E=" },
+  { id: north, name: "North", parentId: operations, version: "AAAAAAAAB9F=" },
+  { id: sales, name: "Sales", parentId: null, version: "AAAAAAAAB9G=" },
+];
+
+const responses = [
+  { id: "p-head", displayName: "Asha Rao", departmentId: operations, departmentName: "Operations" },
+  {
+    id: "p-lead",
+    displayName: "Vikram Iyer",
+    departmentId: north,
+    departmentName: "North",
+    managerId: "p-head",
+  },
+  { id: "p-seller", displayName: "Ravi Menon", departmentId: sales, departmentName: "Sales" },
+];
+
+function shownNames(chart: ReturnType<typeof shownChart>): string[] {
+  const names: string[] = [];
+  const visit = (nodes: typeof chart.page.roots) => {
+    for (const node of nodes) {
+      names.push(node.name);
+      visit(node.children);
+    }
+  };
+  visit(chart.page.roots);
+  return names;
+}
+
+test("shownChart_NoDepartmentChosen_ShowsEveryoneWithEveryDepartmentToChoose", () => {
+  const chart = shownChart({ department: undefined, on: undefined, page: 1 }, responses, departments);
+
+  assert.deepEqual(shownNames(chart), ["Asha Rao", "Vikram Iyer", "Ravi Menon"]);
+  assert.equal(chart.peopleCount, 3);
+  assert.equal(chart.departmentName, undefined);
+  assert.deepEqual(
+    chart.departments.status === "read" ? chart.departments.options.map((option) => option.value) : [],
+    [operations, north, sales],
+  );
+});
+
+test("shownChart_DepartmentChosen_ShowsThePeopleOfItAndOfTheDepartmentsUnderIt", () => {
+  const chart = shownChart({ department: operations, on: undefined, page: 1 }, responses, departments);
+
+  assert.deepEqual(shownNames(chart), ["Asha Rao", "Vikram Iyer"]);
+  assert.equal(chart.departmentName, "Operations");
+});
+
+test("shownChart_DepartmentTheListNoLongerHolds_StaysChosenAsAnUnknownDepartmentWithNobodyShown", () => {
+  const chart = shownChart({ department: deleted, on: undefined, page: 1 }, responses, departments);
+
+  assert.deepEqual(shownNames(chart), []);
+  assert.equal(chart.peopleCount, 0);
+  assert.equal(chart.departmentName, undefined);
+  assert.equal(chart.departments.status, "read");
+  assert.deepEqual(chart.departments.status === "read" ? chart.departments.options.at(-1) : undefined, {
+    value: deleted,
+    label: "Unknown department",
+  });
+});
+
+test("shownChart_DepartmentsCouldNotBeRead_ShowsOnlyThePeopleDirectlyInTheChosenOne", () => {
+  const chart = shownChart({ department: operations, on: undefined, page: 1 }, responses, undefined);
+
+  assert.deepEqual(shownNames(chart), ["Asha Rao"]);
+  assert.deepEqual(chart.departments, { status: "failed" });
+  assert.equal(chart.departmentName, undefined);
+});
+
+test("shownChart_DepartmentsCouldNotBeReadAndNoneChosen_ShowsEveryone", () => {
+  const chart = shownChart({ department: undefined, on: undefined, page: 1 }, responses, undefined);
+
+  assert.equal(chart.peopleCount, 3);
+  assert.deepEqual(chart.departments, { status: "failed" });
 });

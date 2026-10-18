@@ -1,4 +1,16 @@
+import {
+  departmentRecords,
+  departmentsWithin,
+  type DepartmentResponseLike,
+} from "../../departments/components/department-tree.ts";
 import { byName } from "../../organisation/components/disclosure-tree.ts";
+import {
+  departmentOptions,
+  type OrganisationOption,
+} from "../../organisation/components/organisation-options.ts";
+import { unknownDepartment } from "../../people/components/person-text.ts";
+
+import type { OrgChartView } from "./org-chart-view.ts";
 
 export interface ChartPerson {
   readonly id: string;
@@ -113,4 +125,52 @@ export function initiallyExpanded(roots: readonly ChartNode[]): readonly string[
 
 export function chartPeopleCount(roots: readonly ChartNode[]): number {
   return roots.reduce((count, root) => count + 1 + chartPeopleCount(root.children), 0);
+}
+
+export type DepartmentChoices =
+  | { readonly status: "read"; readonly options: readonly OrganisationOption[] }
+  | { readonly status: "failed" };
+
+export interface ShownChart {
+  readonly page: ChartPage;
+  readonly peopleCount: number;
+  readonly departments: DepartmentChoices;
+  readonly departmentName: string | undefined;
+}
+
+// The chosen department takes in the departments under it; while the departments cannot be read, only the people directly
+// in it can be told apart. A chosen department that the list does not hold, as a deleted one whose address a person kept,
+// stays chosen under a name that says it is not known.
+export function shownChart(
+  view: OrgChartView,
+  people: readonly ChartPersonResponseLike[],
+  departments: readonly DepartmentResponseLike[] | undefined,
+): ShownChart {
+  const records = departments === undefined ? undefined : departmentRecords(departments);
+  const chosen = view.department;
+  const within =
+    chosen === undefined
+      ? undefined
+      : records === undefined
+        ? new Set([chosen])
+        : departmentsWithin(records, chosen);
+  const roots = orgChart(chartPeople(people), { departments: within });
+  const chosenRecord = chosen === undefined ? undefined : records?.find((record) => record.id === chosen);
+  const options = records === undefined ? undefined : departmentOptions(records);
+  const choices: DepartmentChoices =
+    options === undefined
+      ? { status: "failed" }
+      : {
+          status: "read",
+          options:
+            chosen === undefined || chosenRecord !== undefined
+              ? options
+              : [...options, { value: chosen, label: unknownDepartment }],
+        };
+  return {
+    page: chartPage(roots, view.page),
+    peopleCount: chartPeopleCount(roots),
+    departments: choices,
+    departmentName: chosenRecord?.name,
+  };
 }

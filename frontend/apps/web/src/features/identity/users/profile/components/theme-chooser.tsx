@@ -36,7 +36,7 @@ export function ThemeChooser({ labelledBy }: { labelledBy: string }) {
             id={`profile-theme-${value}`}
             value={value}
             aria-describedby={`profile-theme-${value}-hint`}
-            className="mt-0.5"
+            className="mt-0.5 forced-colors:data-checked:outline-2 forced-colors:data-checked:outline-offset-2"
           />
           <div className="grid gap-1">
             <Label htmlFor={`profile-theme-${value}`}>{label}</Label>
