@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { withholdClientBundles } from "../../../fixtures/client-bundles";
 import {
@@ -135,6 +135,10 @@ function names(people: readonly SeededPerson[]): string[] {
 
 async function expectAddress(page: Page, search: string): Promise<void> {
   await expect(page).toHaveURL((url) => url.pathname === peoplePath && url.search === search);
+}
+
+async function fitsItsWidth(target: Locator): Promise<boolean> {
+  return target.evaluate((element) => element.scrollWidth <= element.clientWidth);
 }
 
 test.describe("people list", () => {
@@ -364,7 +368,19 @@ test.describe("people list", () => {
                 - cell "None"
                 - cell "Not signed in yet"
             `);
+
+            // Ten columns are wider than the card on a desktop screen, so the table scrolls sideways inside the card and its
+            // scrolling area takes keyboard focus.
+            await expect(page.getByRole("region", { name: "All people" })).toHaveAttribute("tabindex", "0");
+            const lastColumn = list.columnHeader("Last signed in");
+            await expect(lastColumn).not.toBeInViewport();
+            await list.columnHeader("Name").hover();
+            await page.mouse.wheel(4000, 0);
+            await expect(lastColumn).toBeInViewport();
+            await page.mouse.wheel(-4000, 0);
+            await expect(lastColumn).not.toBeInViewport();
           }
+          expect(await fitsItsWidth(people.listCard), "the list stays inside its card").toBe(true);
           await capture("people");
 
           await people.nameLink(aarav!.displayName).click();

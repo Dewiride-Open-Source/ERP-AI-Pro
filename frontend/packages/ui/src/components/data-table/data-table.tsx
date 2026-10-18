@@ -282,7 +282,7 @@ export function DataTable<TRow extends RowData>({
     <div
       data-slot="data-table"
       data-hydrating={interactive ? undefined : ""}
-      className="@container/data-table grid min-w-0 gap-4"
+      className="@container/data-table grid min-w-0 grid-cols-1 gap-4"
     >
       {filters !== undefined || sortChoices.length > 0 || columnChoices.length > 0 ? (
         <div className="flex flex-wrap items-end gap-3">
