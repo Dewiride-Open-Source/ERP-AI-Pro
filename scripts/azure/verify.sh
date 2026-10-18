@@ -410,6 +410,27 @@ verify_required_resource_access() {
       fail "'$display_name' requests Microsoft Graph delegated scope $scope ($scope_id not in requiredResourceAccess); $ENTRA_HINT"
     fi
   done
+  local requested_roles
+  requested_roles="$(json_eval "$registration_json" '(value.requiredResourceAccess || []).filter((r) => String(r.resourceAppId).toLowerCase() === args[0].toLowerCase()).flatMap((r) => r.resourceAccess || []).filter((a) => a.type === "Role").map((a) => String(a.id).toLowerCase())' "$GRAPH_APP_ID")"
+  if grep -qix "$GRAPH_ROLE_USER_READ_ALL" <<< "$requested_roles"; then
+    pass "'$display_name' requests Microsoft Graph application permission ${GRAPH_ROLE_VALUES[*]}"
+  else
+    fail "'$display_name' requests Microsoft Graph application permission ${GRAPH_ROLE_VALUES[*]} ($GRAPH_ROLE_USER_READ_ALL not in requiredResourceAccess); $ENTRA_HINT"
+  fi
+}
+
+verify_application_permission_grant() {
+  local principal_id="$1" app_id="$2" display_name="$3"
+  local granted
+  if ! granted="$(application_permission_assignment_id "$principal_id" 2>&1)"; then
+    fail "'$display_name' Microsoft Graph application consent granted (query failed: $(query_error_summary "$granted"))"
+    return 0
+  fi
+  if [[ -n "$granted" ]]; then
+    pass "'$display_name' Microsoft Graph application consent covers ${GRAPH_ROLE_VALUES[*]}"
+  else
+    fail "'$display_name' Microsoft Graph application consent covers ${GRAPH_ROLE_VALUES[*]}; $ENTRA_HINT or, as Privileged Role Administrator: az ad app permission admin-consent --id $app_id"
+  fi
 }
 
 verify_permission_grant() {
@@ -533,6 +554,7 @@ verify_signin_registration() {
     verify_service_principal_shape "$principal_json" "$display_name"
     assert_equals "'$display_name' service principal requires assignment" 'true' "$(json_eval "$principal_json" 'value.appRoleAssignmentRequired')"
     verify_permission_grant "$app_id" "$display_name"
+    verify_application_permission_grant "$principal_id" "$app_id" "$display_name"
     verify_app_role_assignment "$principal_id" "$operator_id" "$display_name"
   fi
 
@@ -592,7 +614,7 @@ verify_entra() {
   local operator_id="$1"
   OPERATOR_ID="$operator_id"
   log_step "Resolving Microsoft Graph"
-  resolve_graph_scope_ids
+  resolve_graph_permission_ids
   log_info "Microsoft Graph service principal: $GRAPH_SP_OBJECT_ID"
   local label
   for label in "${SIGNIN_LABELS[@]}"; do

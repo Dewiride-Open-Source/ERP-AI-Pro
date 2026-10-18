@@ -148,6 +148,7 @@ converge_signin_app() {
   sp_id="$(ensure_service_principal "$app_id")"
   ensure_assignment_required "$sp_id"
   ensure_permission_grant "$app_id" "$sp_id"
+  ensure_application_permission_grant "$app_id" "$sp_id"
   local thumbprint
   thumbprint="$(ensure_certificate "$vault" "$SIGNIN_CERTIFICATE_NAME" "$common_name" "$SIGNIN_CERTIFICATE_CONTENT_TYPE")"
   ensure_key_credential "$app_id" "$vault" "$SIGNIN_CERTIFICATE_NAME" "$thumbprint"
@@ -180,7 +181,7 @@ run_converge() {
   local operator_id admin_role_id
   operator_id="$(signed_in_user_object_id)"
   log_info "operator: $operator_id"
-  resolve_graph_scope_ids
+  resolve_graph_permission_ids
   log_info "Microsoft Graph service principal: $GRAPH_SP_OBJECT_ID"
   admin_role_id="$(app_role_id "$APP_ROLE_ADMIN_VALUE")"
 

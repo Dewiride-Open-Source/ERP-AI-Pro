@@ -11,6 +11,7 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
 readonly GRAPH_BASE_URL='https://graph.microsoft.com/v1.0'
 readonly GRAPH_APP_ID='00000003-0000-0000-c000-000000000000'
 readonly GRAPH_SCOPE_VALUES=(openid profile offline_access User.Read User.ReadBasic.All)
+readonly GRAPH_ROLE_VALUES=(User.Read.All)
 readonly PENDING_ID='<pending>'
 readonly APP_ROLES_FILE='scripts/azure/entra/app-roles.json'
 readonly OPTIONAL_CLAIMS_FILE='scripts/azure/entra/optional-claims.json'
@@ -37,6 +38,7 @@ GRAPH_SCOPE_PROFILE=''
 GRAPH_SCOPE_OFFLINE_ACCESS=''
 GRAPH_SCOPE_USER_READ=''
 GRAPH_SCOPE_USER_READ_BASIC_ALL=''
+GRAPH_ROLE_USER_READ_ALL=''
 PERMISSION_GRANT_FAILURES=()
 CERTIFICATE_POLICY_FILE=''
 CLEAR_REDIRECT_URIS_ALLOWED="${CLEAR_REDIRECT_URIS_ALLOWED:-0}"
@@ -390,10 +392,10 @@ ensure_app_roles() {
   esac
 }
 
-resolve_graph_scope_ids() {
+resolve_graph_permission_ids() {
   local json
   json="$(az_read ad sp show --id "$GRAPH_APP_ID" --output json \
-    --query "{id: id, openid: oauth2PermissionScopes[?value=='openid'].id | [0], profile: oauth2PermissionScopes[?value=='profile'].id | [0], offlineAccess: oauth2PermissionScopes[?value=='offline_access'].id | [0], userRead: oauth2PermissionScopes[?value=='User.Read'].id | [0], userReadBasicAll: oauth2PermissionScopes[?value=='User.ReadBasic.All'].id | [0]}")" \
+    --query "{id: id, openid: oauth2PermissionScopes[?value=='openid'].id | [0], profile: oauth2PermissionScopes[?value=='profile'].id | [0], offlineAccess: oauth2PermissionScopes[?value=='offline_access'].id | [0], userRead: oauth2PermissionScopes[?value=='User.Read'].id | [0], userReadBasicAll: oauth2PermissionScopes[?value=='User.ReadBasic.All'].id | [0], userReadAll: appRoles[?value=='User.Read.All' && contains(allowedMemberTypes, 'Application')].id | [0]}")" \
     || die "cannot read the Microsoft Graph service principal ($GRAPH_APP_ID)"
   GRAPH_SP_OBJECT_ID="$(json_field "$json" id)"
   GRAPH_SCOPE_OPENID="$(json_field "$json" openid)"
@@ -401,23 +403,29 @@ resolve_graph_scope_ids() {
   GRAPH_SCOPE_OFFLINE_ACCESS="$(json_field "$json" offlineAccess)"
   GRAPH_SCOPE_USER_READ="$(json_field "$json" userRead)"
   GRAPH_SCOPE_USER_READ_BASIC_ALL="$(json_field "$json" userReadBasicAll)"
+  GRAPH_ROLE_USER_READ_ALL="$(json_field "$json" userReadAll)"
   is_guid "$GRAPH_SP_OBJECT_ID" || die "the Microsoft Graph service principal has no object id"
   is_guid "$GRAPH_SCOPE_OPENID" || die "Microsoft Graph delegated permission 'openid' not found"
   is_guid "$GRAPH_SCOPE_PROFILE" || die "Microsoft Graph delegated permission 'profile' not found"
   is_guid "$GRAPH_SCOPE_OFFLINE_ACCESS" || die "Microsoft Graph delegated permission 'offline_access' not found"
   is_guid "$GRAPH_SCOPE_USER_READ" || die "Microsoft Graph delegated permission 'User.Read' not found"
   is_guid "$GRAPH_SCOPE_USER_READ_BASIC_ALL" || die "Microsoft Graph delegated permission 'User.ReadBasic.All' not found"
+  is_guid "$GRAPH_ROLE_USER_READ_ALL" || die "Microsoft Graph application permission 'User.Read.All' not found"
+}
+
+graph_permissions_text() {
+  printf 'delegated %s; application %s' "${GRAPH_SCOPE_VALUES[*]}" "${GRAPH_ROLE_VALUES[*]}"
 }
 
 required_resource_access_json() {
-  printf '[{"resourceAppId":"%s","resourceAccess":[{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"}]}]' \
-    "$GRAPH_APP_ID" "$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ" "$GRAPH_SCOPE_USER_READ_BASIC_ALL"
+  printf '[{"resourceAppId":"%s","resourceAccess":[{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Scope"},{"id":"%s","type":"Role"}]}]' \
+    "$GRAPH_APP_ID" "$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ" "$GRAPH_SCOPE_USER_READ_BASIC_ALL" "$GRAPH_ROLE_USER_READ_ALL"
 }
 
 required_resource_access_matches() {
   local current_json="$1"
-  node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const current = JSON.parse(raw) ?? []; const [resourceAppId, ...scopeIds] = process.argv.slice(1).map((value) => value.toLowerCase()); const expected = scopeIds.map((id) => id + ":scope").sort().join(","); const matches = current.length === 1 && String(current[0].resourceAppId).toLowerCase() === resourceAppId && (current[0].resourceAccess ?? []).map((access) => String(access.id).toLowerCase() + ":" + String(access.type).toLowerCase()).sort().join(",") === expected; process.exit(matches ? 0 : 1); });' \
-    "$GRAPH_APP_ID" "$GRAPH_SCOPE_OPENID" "$GRAPH_SCOPE_PROFILE" "$GRAPH_SCOPE_OFFLINE_ACCESS" "$GRAPH_SCOPE_USER_READ" "$GRAPH_SCOPE_USER_READ_BASIC_ALL" <<< "$current_json"
+  node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const current = JSON.parse(raw) ?? []; const [resourceAppId, ...accesses] = process.argv.slice(1).map((value) => value.toLowerCase()); const expected = accesses.sort().join(","); const matches = current.length === 1 && String(current[0].resourceAppId).toLowerCase() === resourceAppId && (current[0].resourceAccess ?? []).map((access) => String(access.id).toLowerCase() + ":" + String(access.type).toLowerCase()).sort().join(",") === expected; process.exit(matches ? 0 : 1); });' \
+    "$GRAPH_APP_ID" "$GRAPH_SCOPE_OPENID:scope" "$GRAPH_SCOPE_PROFILE:scope" "$GRAPH_SCOPE_OFFLINE_ACCESS:scope" "$GRAPH_SCOPE_USER_READ:scope" "$GRAPH_SCOPE_USER_READ_BASIC_ALL:scope" "$GRAPH_ROLE_USER_READ_ALL:role" <<< "$current_json"
 }
 
 ensure_required_resource_access() {
@@ -432,11 +440,11 @@ ensure_required_resource_access() {
   local current
   current="$(az_read ad app show --id "$object_id" --query requiredResourceAccess --output json)" || die "cannot read the required resource access of $object_id"
   if required_resource_access_matches "$current"; then
-    log_info "Graph delegated permissions unchanged (${GRAPH_SCOPE_VALUES[*]})"
+    log_info "Graph permissions unchanged ($(graph_permissions_text))"
     return 0
   fi
   run az ad app update --id "$object_id" --required-resource-accesses "$desired" --output none --only-show-errors
-  log_change "Graph delegated permissions (${GRAPH_SCOPE_VALUES[*]})" updated
+  log_change "Graph permissions ($(graph_permissions_text))" updated
 }
 
 ensure_service_principal() {
@@ -528,6 +536,40 @@ ensure_permission_grant() {
   fi
   PERMISSION_GRANT_FAILURES+=("$app_id")
   log_warn "Graph refused the consent grant for $app_id (see the error above); when the tenant requires an administrator, run: az ad app permission admin-consent --id $app_id"
+}
+
+application_permission_assignment_id() {
+  local sp_id="$1"
+  graph_get "servicePrincipals/$sp_id/appRoleAssignments?\$top=999" \
+    "value[?resourceId=='$GRAPH_SP_OBJECT_ID' && appRoleId=='$GRAPH_ROLE_USER_READ_ALL'].id | [0]"
+}
+
+ensure_application_permission_grant_once() {
+  local sp_id="$1" body="$2"
+  local existing
+  existing="$(application_permission_assignment_id "$sp_id")" || return 1
+  if [[ -n "$existing" ]]; then
+    log_info "Graph application consent unchanged (${GRAPH_ROLE_VALUES[*]})"
+    return 0
+  fi
+  graph_post "servicePrincipals/$sp_id/appRoleAssignments" "$body" || return 1
+  log_change "Graph application consent (${GRAPH_ROLE_VALUES[*]})" granted
+}
+
+ensure_application_permission_grant() {
+  (( $# == 2 )) || die "ensure_application_permission_grant: usage ensure_application_permission_grant <app-id> <service-principal-object-id>"
+  local app_id="$1" sp_id="$2"
+  local body
+  body="$(printf '{"principalId":"%s","resourceId":"%s","appRoleId":"%s"}' "$sp_id" "$GRAPH_SP_OBJECT_ID" "$GRAPH_ROLE_USER_READ_ALL")"
+  if is_pending "$sp_id"; then
+    graph_post "servicePrincipals/$sp_id/appRoleAssignments" "$body"
+    return 0
+  fi
+  if retry 6 10 -- ensure_application_permission_grant_once "$sp_id" "$body"; then
+    return 0
+  fi
+  PERMISSION_GRANT_FAILURES+=("$app_id")
+  log_warn "Graph refused the application consent for $app_id (see the error above); granting a Microsoft Graph application permission needs a Privileged Role Administrator or Global Administrator, who can run: az ad app permission admin-consent --id $app_id"
 }
 
 app_role_assignment_id() {
