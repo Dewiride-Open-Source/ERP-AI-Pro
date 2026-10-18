@@ -1,4 +1,9 @@
-import { peopleNavigation } from "@/features/identity/users";
+import {
+  departmentsNavigation,
+  designationsNavigation,
+  orgChartNavigation,
+  peopleNavigation,
+} from "@/features/identity/users";
 import { attachmentsNavigation } from "@/features/platform/attachments";
 import { auditNavigation } from "@/features/platform/audit";
 import { systemInfoNavigation } from "@/features/platform/system-info";
@@ -9,4 +14,7 @@ export const navigation: readonly NavigationEntry[] = [
   attachmentsNavigation,
   auditNavigation,
   peopleNavigation,
+  orgChartNavigation,
+  departmentsNavigation,
+  designationsNavigation,
 ];
