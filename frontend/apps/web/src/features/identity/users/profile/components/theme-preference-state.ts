@@ -10,16 +10,19 @@ export const unsavedChoiceLifetimeMs = 2 * 60 * 1000;
 // the person first chooses a theme other than system.
 export type AccountTheme = { readonly theme: ThemePreference; readonly choiceId: string | null };
 
-// A choice noted in this browser until its save answers: whose it is, the theme, and the account's choice it replaced.
+// A choice noted in this browser until its save answers: whose it is, the theme, the account's choice it replaced and, for a
+// choice made while another save was on its way, the theme of that save.
 export type UnsavedChoice = {
   readonly person: string;
   readonly theme: ThemePreference;
   readonly over: string | null;
+  readonly after: ThemePreference | null;
 };
 
 export type ThemeKeeping = {
   readonly person: string;
   readonly account: AccountTheme;
+  readonly accountKnown: boolean;
   readonly previous: ThemePreference | undefined;
   readonly noted: UnsavedChoice | undefined;
   readonly sending: ThemePreference | undefined;
@@ -40,21 +43,30 @@ export function isThemePreference(value: unknown): value is ThemePreference {
 }
 
 export function isSameChoice(one: UnsavedChoice, other: UnsavedChoice): boolean {
-  return one.person === other.person && one.theme === other.theme && one.over === other.over;
+  return (
+    one.person === other.person &&
+    one.theme === other.theme &&
+    one.over === other.over &&
+    one.after === other.after
+  );
 }
 
-// A choice noted in this browser counts only for the person who made it, and only while the account still holds the choice
-// it replaced: a page loaded while its save was still on the way read that choice, while any theme saved since, here or in
-// another browser, is a later choice.
+// A choice noted in this browser counts only for the person who made it, and only while the account holds the choice it
+// replaced or, for a choice made while another save was on its way, the theme of that save: a page loaded before the
+// choice's own save arrived read one of those, while any other theme saved since, here or in another browser, is a later
+// choice.
 export function startKeeping(
   person: string,
   account: AccountTheme,
   found: UnsavedChoice | undefined,
 ): ThemeKeeping {
-  const counts = found?.person === person && found.over === account.choiceId;
+  const counts =
+    found?.person === person &&
+    (found.over === account.choiceId || (found.after !== null && found.after === account.theme));
   return {
     person,
     account,
+    accountKnown: true,
     previous: undefined,
     noted: counts ? found : undefined,
     sending: undefined,
@@ -85,25 +97,32 @@ export function nextThemeStep(
   if (shown === undefined || shown === keeping.previous) return [keeping, nothing];
   const moved = { ...keeping, previous: shown };
   if (moved.sending !== undefined) {
-    const choice = choiceOf(moved, shown);
+    const choice = choiceOf(moved, shown, moved.sending);
     return [
       { ...moved, noted: choice, wanted: shown === moved.sending ? undefined : shown },
       { kind: "note", choice },
     ];
   }
 
-  return shown === moved.account.theme ? forget(moved) : send(moved, shown);
+  return holdsAlready(moved, shown) ? forget(moved) : send(moved, shown);
 }
 
 // A save that fails changes nothing on screen, because the theme still applies here, and its note stays, so the next page
-// this browser loads saves it again while the account still holds the choice it replaced.
+// this browser loads saves it again while the account still holds the choice it replaced. The failed save may have reached
+// the account all the same, so until an answer or a read says what the account holds, every choice is saved.
 export function themeAnswered(
   keeping: ThemeKeeping,
   answer: AccountTheme | undefined,
 ): [ThemeKeeping, ThemeStep] {
-  const settled = { ...keeping, account: answer ?? keeping.account, sending: undefined, wanted: undefined };
+  const settled = {
+    ...keeping,
+    account: answer ?? keeping.account,
+    accountKnown: answer !== undefined,
+    sending: undefined,
+    wanted: undefined,
+  };
   const { wanted } = keeping;
-  if (wanted !== undefined && wanted !== settled.account.theme) return send(settled, wanted);
+  if (wanted !== undefined && !holdsAlready(settled, wanted)) return send(settled, wanted);
   if (wanted === undefined && answer === undefined) return [settled, nothing];
   return forget(settled);
 }
@@ -111,7 +130,7 @@ export function themeAnswered(
 // A later read of the account, as a refresh of the page brings, replaces what the keeper knows unless a save is on its way,
 // whose answer is the newer.
 export function accountRead(keeping: ThemeKeeping, account: AccountTheme): ThemeKeeping {
-  return keeping.sending === undefined ? { ...keeping, account } : keeping;
+  return keeping.sending === undefined ? { ...keeping, account, accountKnown: true } : keeping;
 }
 
 // A choice whose save never answered counts for a short while only, so a choice left unsaved long ago never overrides one
@@ -126,24 +145,44 @@ export function unsavedChoiceOf(stored: string | null, now: number): UnsavedChoi
   }
 
   if (typeof parsed !== "object" || parsed === null) return undefined;
-  const { person, theme, over, chosenAt } = parsed as Record<string, unknown>;
+  const { person, theme, over, after, chosenAt } = parsed as Record<string, unknown>;
   const fresh = typeof chosenAt === "number" && chosenAt <= now && now - chosenAt <= unsavedChoiceLifetimeMs;
   const replaced = over === null || (typeof over === "string" && over !== "");
-  return fresh && typeof person === "string" && person !== "" && isThemePreference(theme) && replaced
-    ? { person, theme, over }
+  const followed = after === null || isThemePreference(after);
+  return fresh &&
+    typeof person === "string" &&
+    person !== "" &&
+    isThemePreference(theme) &&
+    replaced &&
+    followed
+    ? { person, theme, over, after }
     : undefined;
 }
 
 export function unsavedChoiceText(choice: UnsavedChoice, now: number): string {
-  return JSON.stringify({ person: choice.person, theme: choice.theme, over: choice.over, chosenAt: now });
+  return JSON.stringify({
+    person: choice.person,
+    theme: choice.theme,
+    over: choice.over,
+    after: choice.after,
+    chosenAt: now,
+  });
 }
 
-function choiceOf(keeping: ThemeKeeping, theme: ThemePreference): UnsavedChoice {
-  return { person: keeping.person, theme, over: keeping.account.choiceId };
+function holdsAlready(keeping: ThemeKeeping, theme: ThemePreference): boolean {
+  return keeping.accountKnown && theme === keeping.account.theme;
+}
+
+function choiceOf(
+  keeping: ThemeKeeping,
+  theme: ThemePreference,
+  after: ThemePreference | null,
+): UnsavedChoice {
+  return { person: keeping.person, theme, over: keeping.account.choiceId, after };
 }
 
 function send(keeping: ThemeKeeping, theme: ThemePreference): [ThemeKeeping, ThemeStep] {
-  const choice = choiceOf(keeping, theme);
+  const choice = choiceOf(keeping, theme, null);
   return [
     { ...keeping, noted: choice, sending: theme },
     { kind: "send", choice },

@@ -10,7 +10,7 @@ namespace Dewiride.Erp.Modules.Identity.Users.Profile.Application.Commands.Choos
 
 // The theme is the person's own setting, so the latest choice wins and the command names no version. A person who never
 // chose a theme follows the theme of their device, so choosing that theme first keeps no row. Two first choices saved at once
-// both add the person's row, and the one saved second answers a conflict.
+// both add the person's row, and the one saved second answers a conflict, which the route tries again.
 internal sealed class ChooseOwnThemeHandler(UsersDbContext context, IActorContext actor) : ICommandHandler<ChooseOwnThemeCommand, ChosenTheme>
 {
     public async Task<Result<ChosenTheme>> HandleAsync(ChooseOwnThemeCommand command, CancellationToken cancellationToken)

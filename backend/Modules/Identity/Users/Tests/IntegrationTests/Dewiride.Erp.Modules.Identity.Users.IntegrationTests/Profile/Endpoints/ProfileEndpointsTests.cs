@@ -272,6 +272,18 @@ public sealed class ProfileEndpointsTests(ProfileEndpointsTests.Fixture fixture)
     }
 
     [Fact]
+    public async Task ChooseTheme_FirstChoiceSavedFromSeveralTabsAtOnce_AnswersEachWithTheChoiceTheAccountHolds()
+    {
+        using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
+
+        var answers = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => ChooseThemeAsync(client, "dark")));
+
+        var profile = await ProfileOfAsync(client);
+        Assert.Equal(ThemePreference.Dark, profile.Theme);
+        Assert.All(answers, answer => Assert.Equal(new ThemeChoiceResponse(ThemePreference.Dark, profile.ThemeChoiceId), answer));
+    }
+
+    [Fact]
     public async Task ChooseTheme_SystemBeforeAnyOtherTheme_KeepsTheThemeOfTheirDeviceWithoutAChoice()
     {
         using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));

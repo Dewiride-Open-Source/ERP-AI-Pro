@@ -29,8 +29,14 @@ const darkAccount: AccountTheme = { theme: "dark", choiceId: "8a1f0c2e-7b3d-8e4f
 
 const lightAccount: AccountTheme = { theme: "light", choiceId: "8b2e1d3f-6c4a-8f5e-8b6c-7d8e9f0a1b2c" };
 
-function noted(theme: "system" | "light" | "dark", over: string | null, person = meera): UnsavedChoice {
-  return { person, theme, over };
+type Theme = "system" | "light" | "dark";
+
+function noted(
+  theme: Theme,
+  over: string | null,
+  { person = meera, after = null }: { readonly person?: string; readonly after?: Theme | null } = {},
+): UnsavedChoice {
+  return { person, theme, over, after };
 }
 
 function watching(account: AccountTheme): ThemeKeeping {
@@ -106,8 +112,30 @@ test("startKeeping_SameThemeRestoredInAnotherBrowserSince_IgnoresTheNotedChoice"
   assert.equal(startKeeping(meera, restored, noted("light", darkAccount.choiceId)).noted, undefined);
 });
 
+test("startKeeping_ChoiceNotedWhileAnotherSaveWasOnItsWayThatArrivedSince_SavesTheNotedChoice", () => {
+  const keeping = startKeeping(meera, darkAccount, noted("light", null, { after: "dark" }));
+
+  assert.deepEqual(nextThemeStep(keeping, "light")[1], {
+    kind: "send",
+    choice: noted("light", darkAccount.choiceId),
+  });
+});
+
+test("startKeeping_ChoiceNotedWhileAnotherSaveWasOnItsWayThatNeverArrived_SavesTheNotedChoice", () => {
+  const keeping = startKeeping(meera, systemAccount, noted("light", null, { after: "dark" }));
+
+  assert.deepEqual(nextThemeStep(keeping, "light")[1], { kind: "send", choice: noted("light", null) });
+});
+
+test("startKeeping_ChoiceNotedWhileAnotherSaveWasOnItsWayButTheAccountHoldsAThirdTheme_IgnoresIt", () => {
+  const keeping = startKeeping(meera, lightAccount, noted("system", null, { after: "dark" }));
+
+  assert.equal(keeping.noted, undefined);
+  assert.deepEqual(nextThemeStep(keeping, "system")[1], { kind: "apply", theme: "light" });
+});
+
 test("startKeeping_ChoiceNotedByAnotherPersonOnThisBrowser_IgnoresIt", () => {
-  const keeping = startKeeping(meera, systemAccount, noted("dark", null, arjun));
+  const keeping = startKeeping(meera, systemAccount, noted("dark", null, { person: arjun }));
 
   assert.equal(keeping.noted, undefined);
   assert.deepEqual(nextThemeStep(keeping, "dark")[1], { kind: "apply", theme: "system" });
@@ -132,7 +160,7 @@ test("nextThemeStep_ChoiceWhileASaveIsOnItsWay_NotesItAndWaits", () => {
 
   const [keeping, step] = nextThemeStep(sending, "light");
 
-  assert.deepEqual(step, { kind: "note", choice: noted("light", null) });
+  assert.deepEqual(step, { kind: "note", choice: noted("light", null, { after: "dark" }) });
   assert.equal(keeping.wanted, "light");
   assert.equal(keeping.sending, "dark");
 });
@@ -156,7 +184,7 @@ test("themeAnswered_ChoiceBackToTheThemeOnItsWay_ForgetsTheNoteOnceItIsSaved", (
   const [keeping, step] = themeAnswered(back, darkAccount);
 
   assert.equal(back.wanted, undefined);
-  assert.deepEqual(step, { kind: "forget", choice: noted("dark", null) });
+  assert.deepEqual(step, { kind: "forget", choice: noted("dark", null, { after: "dark" }) });
   assert.deepEqual(keeping.account, darkAccount);
   assert.equal(keeping.noted, undefined);
 });
@@ -189,14 +217,31 @@ test("themeAnswered_SaveFailedWhileAnotherChoiceWaited_SavesTheWaitingChoice", (
   assert.deepEqual(themeAnswered(waiting, undefined)[1], { kind: "send", choice: noted("light", null) });
 });
 
-test("nextThemeStep_ChoiceBackToTheAccountsThemeAfterASaveFailed_ForgetsTheFailedChoice", () => {
+test("nextThemeStep_ChoiceOfTheThemeTheAccountHeldBeforeASaveFailed_SavesItAsTheFailedSaveMayHaveArrived", () => {
   const [sending] = nextThemeStep(watching(systemAccount), "dark");
   const [failed] = themeAnswered(sending, undefined);
 
   const [keeping, step] = nextThemeStep(failed, "system");
 
-  assert.deepEqual(step, { kind: "forget", choice: noted("dark", null) });
-  assert.equal(keeping.noted, undefined);
+  assert.equal(failed.accountKnown, false);
+  assert.deepEqual(step, { kind: "send", choice: noted("system", null) });
+  assert.equal(keeping.sending, "system");
+});
+
+test("themeAnswered_SaveFailedWhileTheAccountsThemeWaited_SavesItAsTheFailedSaveMayHaveArrived", () => {
+  const [sending] = nextThemeStep(watching(systemAccount), "dark");
+  const [waiting] = nextThemeStep(sending, "system");
+
+  assert.deepEqual(themeAnswered(waiting, undefined)[1], { kind: "send", choice: noted("system", null) });
+});
+
+test("accountRead_AfterAFailedSave_KnowsTheAccountAgainSoItsThemeIsNotSaved", () => {
+  const [sending] = nextThemeStep(watching(systemAccount), "dark");
+  const [failed] = themeAnswered(sending, undefined);
+  const read = accountRead(failed, systemAccount);
+
+  assert.equal(read.accountKnown, true);
+  assert.deepEqual(nextThemeStep(read, "system")[1], { kind: "forget", choice: noted("dark", null) });
 });
 
 test("nextThemeStep_ChoiceAfterASaveThatFailed_SavesTheNewChoice", () => {
@@ -206,16 +251,15 @@ test("nextThemeStep_ChoiceAfterASaveThatFailed_SavesTheNewChoice", () => {
   assert.deepEqual(nextThemeStep(failed, "light")[1], { kind: "send", choice: noted("light", null) });
 });
 
-test("nextThemeStep_ChoiceBackToTheSavedThemeAfterAnAnswer_SavesNothing", () => {
+test("themeAnswered_ChoiceBackToAThemeSavedEarlierWhileAnotherSaveWasOnItsWay_SavesItOverTheAnsweredChoice", () => {
   const [sending] = nextThemeStep(watching(systemAccount), "dark");
   const [saved] = themeAnswered(sending, darkAccount);
   const [chosen] = nextThemeStep(saved, "light");
-  const [failed] = themeAnswered(chosen, undefined);
+  const [back] = nextThemeStep(chosen, "dark");
+  const [answered, step] = themeAnswered(back, lightAccount);
 
-  assert.deepEqual(nextThemeStep(failed, "dark")[1], {
-    kind: "forget",
-    choice: noted("light", darkAccount.choiceId),
-  });
+  assert.deepEqual(step, { kind: "send", choice: noted("dark", lightAccount.choiceId) });
+  assert.deepEqual(nextThemeStep(themeAnswered(answered, darkAccount)[0], "dark")[1], { kind: "none" });
 });
 
 test("accountRead_NoSaveOnItsWay_KnowsTheAccountAsRead", () => {
@@ -230,7 +274,7 @@ test("accountRead_SaveOnItsWay_WaitsForItsAnswer", () => {
 
 test("unsavedChoiceOf_ChoiceNotedWithinItsLifetime_IsThatChoice", () => {
   const first = noted("dark", null);
-  const later = noted("light", darkAccount.choiceId);
+  const later = noted("light", darkAccount.choiceId, { after: "system" });
 
   assert.deepEqual(unsavedChoiceOf(unsavedChoiceText(first, now), now), first);
   assert.deepEqual(unsavedChoiceOf(unsavedChoiceText(later, now - unsavedChoiceLifetimeMs), now), later);
@@ -257,7 +301,9 @@ test("unsavedChoiceOf_NothingOrSomethingElseStored_IsNone", () => {
     `{"person":"${meera}","theme":"dark","chosenAt":${now}}`,
     `{"person":"${meera}","theme":"dark","over":"","chosenAt":${now}}`,
     `{"person":"${meera}","theme":"dark","over":3,"chosenAt":${now}}`,
-    `{"person":"${meera}","theme":"dark","over":null}`,
+    `{"person":"${meera}","theme":"dark","over":null,"after":null}`,
+    `{"person":"${meera}","theme":"dark","over":null,"chosenAt":${now}}`,
+    `{"person":"${meera}","theme":"dark","over":null,"after":"sepia","chosenAt":${now}}`,
   ]) {
     assert.equal(unsavedChoiceOf(stored, now), undefined, String(stored));
   }
@@ -267,9 +313,10 @@ test("isSameChoice_SamePersonThemeAndReplacedChoice_IsTheSameChoice", () => {
   const choice = noted("dark", null);
 
   assert.equal(isSameChoice(choice, { ...choice }), true);
-  assert.equal(isSameChoice(choice, noted("dark", null, arjun)), false);
+  assert.equal(isSameChoice(choice, noted("dark", null, { person: arjun })), false);
   assert.equal(isSameChoice(choice, noted("light", null)), false);
   assert.equal(isSameChoice(choice, noted("dark", darkAccount.choiceId)), false);
+  assert.equal(isSameChoice(choice, noted("dark", null, { after: "light" })), false);
 });
 
 test("isThemePreference_EachThemeOfTheApi_IsATheme", () => {

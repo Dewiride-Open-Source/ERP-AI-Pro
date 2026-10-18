@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Application.Queries;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Caching;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Modules.Identity.Users.Profile.Application;
 using Dewiride.Erp.Modules.Identity.Users.Profile.Application.Commands.ChooseOwnTheme;
 using Dewiride.Erp.Modules.Identity.Users.Profile.Application.Queries.GetOwnProfile;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Profile.Endpoints;
 
@@ -85,12 +87,23 @@ internal static class ProfileEndpoints
         return photo.Error == DirectoryErrors.PhotoNotFound ? TypedResults.NoContent() : photo.Error!.ToProblem();
     }
 
+    // Two first choices of one person saved at once both add the person's theme row, and the one saved second answers a
+    // conflict; it is tried once more in a scope of its own, which finds the row the other added and answers the choice the
+    // account then holds.
     private static async Task<Results<Ok<ThemeChoiceResponse>, ProblemHttpResult>> ChooseThemeAsync(
         ChooseOwnThemeRequest request,
         ICommandHandler<ChooseOwnThemeCommand, ChosenTheme> handler,
+        IServiceScopeFactory scopes,
         CancellationToken cancellationToken)
     {
-        var chosen = await handler.HandleAsync(new ChooseOwnThemeCommand(request.Theme), cancellationToken);
+        var command = new ChooseOwnThemeCommand(request.Theme);
+        var chosen = await handler.HandleAsync(command, cancellationToken);
+        if (chosen.IsFailure && chosen.Error!.Kind == ErrorKind.Conflict)
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            var again = scope.ServiceProvider.GetRequiredService<ICommandHandler<ChooseOwnThemeCommand, ChosenTheme>>();
+            chosen = await again.HandleAsync(command, cancellationToken);
+        }
 
         return chosen.IsSuccess
             ? TypedResults.Ok(new ThemeChoiceResponse(chosen.Value.Theme, chosen.Value.ChoiceId))
