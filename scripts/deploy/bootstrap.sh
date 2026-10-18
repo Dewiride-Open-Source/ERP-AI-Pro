@@ -323,7 +323,8 @@ group_members() {
 refuse_primary_group() {
   local group="$1" gid="$2"
   local -a primary=()
-  mapfile -t primary < <(getent passwd | awk -F: -v gid="$gid" '$4 == gid { print $1 }')
+  # A service account without a login shell, such as the lxd account LXD's snap brings, is no way in for a person.
+  mapfile -t primary < <(getent passwd | awk -F: -v gid="$gid" '$4 == gid && $7 !~ /(nologin|false)$/ { print $1 }')
   (( ${#primary[@]} == 0 )) || die "$group is the primary group of ${primary[*]}; give them another primary group first, because membership of $group is root access"
 }
 
