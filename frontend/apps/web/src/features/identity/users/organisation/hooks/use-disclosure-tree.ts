@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { branchIds, toggledBranch, withBranches, type TreeBranch } from "../components/disclosure-tree";
 
@@ -17,12 +17,13 @@ export function useDisclosureTree(
   initiallyExpanded: readonly string[] = [],
 ): DisclosureTree {
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set(initiallyExpanded));
+  const toggle = useCallback((id: string) => setExpanded((current) => toggledBranch(current, id)), []);
+  const expand = useCallback(
+    (ids: readonly string[]) => setExpanded((current) => withBranches(current, ids)),
+    [],
+  );
+  const expandAll = useCallback(() => setExpanded(new Set(branchIds(nodes))), [nodes]);
+  const collapseAll = useCallback(() => setExpanded(noBranches), []);
 
-  return {
-    isExpanded: (id) => expanded.has(id),
-    toggle: (id) => setExpanded((current) => toggledBranch(current, id)),
-    expand: (ids) => setExpanded((current) => withBranches(current, ids)),
-    expandAll: () => setExpanded(new Set(branchIds(nodes))),
-    collapseAll: () => setExpanded(noBranches),
-  };
+  return { isExpanded: (id) => expanded.has(id), toggle, expand, expandAll, collapseAll };
 }
