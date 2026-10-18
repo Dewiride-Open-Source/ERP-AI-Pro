@@ -1,0 +1,15 @@
+[Unit]
+Description=ERP-AI-Pro retention sweeps
+Documentation=https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/operations/runbooks/migrations.md
+Wants=docker.service network-online.target
+After=docker.service network-online.target erp-ai-pro.service
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets/erp-migrator-client.pem
+
+[Service]
+Type=oneshot
+User=erp-ai-pro
+Group=erp-ai-pro
+WorkingDirectory=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose
+ExecStart=/usr/bin/docker compose -f compose.yaml -f compose.production.yaml run --rm -T migrator retain
+TimeoutStartSec=30min

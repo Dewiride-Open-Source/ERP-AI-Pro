@@ -89,3 +89,15 @@ jobs:
           node-version: 24
       - name: Smoke test the running stack
         run: node scripts/checks/compose-smoke.ts
+
+  host-bootstrap:
+    name: Bootstrap a fresh Ubuntu host
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check the deploy scripts
+        run: bash scripts/deploy/check.sh
+      - name: Bootstrap the runner twice and prove the result
+        run: bash scripts/deploy/tests/bootstrap-runner.sh

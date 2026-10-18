@@ -1,0 +1,5 @@
+// The host's clock is UTC, which bootstrap.sh checks, so 21:30 is 03:00 India time.
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "21:30";
