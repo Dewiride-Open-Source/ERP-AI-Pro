@@ -45,7 +45,7 @@ A new secret *version* behind an existing reference is picked up within the secr
 az appconfig kv set --name appcs-erp-ai-pro --auth-mode login --key Erp:Sentinel --label production --value "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --yes
 ```
 
-Recreating the api container applies everything at once: `docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api`, on the server as the deploy account `erp-ai-pro` from the deployment checkout `/srv/erp-ai-pro/ERP-AI-Pro`, where every server command of this runbook runs ([host setup runbook](host-setup.md)). `--force-recreate` is required: a plain `up -d` leaves a running container untouched when its definition has not changed, so it keeps the old configuration and the old bind-mounted certificate file.
+Recreating the api container applies everything at once: `docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api`, on the server as the deploy account `erp-ai-pro` from the deployment checkout `/srv/erp-ai-pro/ERP-AI-Pro`, where every `docker compose` command of this runbook runs; placing a certificate is the administrator's, with sudo ([host setup runbook](host-setup.md)). `--force-recreate` is required: a plain `up -d` leaves a running container untouched when its definition has not changed, so it keeps the old configuration and the old bind-mounted certificate file.
 
 ## 5. Rotation
 

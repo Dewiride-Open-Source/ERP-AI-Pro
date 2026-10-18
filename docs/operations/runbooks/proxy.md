@@ -16,7 +16,7 @@ The host bootstrap creates the proxy's volume once ([host setup runbook](host-se
 docker volume create erp-ai-pro-proxy-data
 ```
 
-It holds the authority's root and intermediate with their keys and every certificate the proxy issued or obtained. Only root and the `docker` group, whose only member is the deploy account `erp-ai-pro`, can read it. It is external, so `docker compose down -v` keeps it. Never remove it: the proxy would create a new root, and every device would have to trust that one instead.
+It holds the authority's root and intermediate with their keys and every certificate the proxy issued or obtained. Only root and the `docker` group, whose only member is the deploy account `erp-ai-pro`, can read it; the host bootstrap also keeps the `lxd` group, which would be root as well, empty. It is external, so `docker compose down -v` keeps it. Never remove it: the proxy would create a new root, and every device would have to trust that one instead.
 
 ## Exporting the root certificate
 
