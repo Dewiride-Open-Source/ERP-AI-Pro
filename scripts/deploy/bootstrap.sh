@@ -206,9 +206,12 @@ ensure_packages() {
   run env DEBIAN_FRONTEND=noninteractive apt-get "${APT_OPTIONS[@]}" install -y --no-install-recommends "${missing[@]}"
 }
 
-# apt lists the indexes of enabled sources only, so a commented or disabled entry does not count.
+# apt lists the indexes of enabled sources only, so a commented or disabled entry does not count. The list is read whole first:
+# under pipefail, a grep that stops at the first match would fail apt-get with SIGPIPE.
 docker_repository_configured() {
-  apt-get indextargets 2> /dev/null | grep -qF -- "$DOCKER_REPOSITORY"
+  local targets
+  targets="$(apt-get indextargets 2> /dev/null || true)"
+  grep -qF -- "$DOCKER_REPOSITORY" <<< "$targets"
 }
 
 add_docker_repository() {

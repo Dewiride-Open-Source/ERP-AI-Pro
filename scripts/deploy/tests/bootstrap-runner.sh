@@ -141,8 +141,10 @@ prove_sign_in() {
 
 prove_docker() {
   log_step "Docker Engine from Docker's repository"
-  apt-cache policy docker-ce | grep -qF 'download.docker.com' || die "docker-ce does not come from Docker's repository: $(apt-cache policy docker-ce)"
-  dpkg-query -W -f='${Status}' docker-compose-plugin 2> /dev/null | grep -qx 'install ok installed' || die "docker-compose-plugin is not installed"
+  local policy
+  policy="$(apt-cache policy docker-ce)"
+  grep -qF 'download.docker.com' <<< "$policy" || die "docker-ce does not come from Docker's repository: $policy"
+  [[ "$(dpkg-query -W -f='${Status}' docker-compose-plugin 2> /dev/null || true)" == 'install ok installed' ]] || die "docker-compose-plugin is not installed"
   printf 'FROM scratch\nCMD ["none"]\n' | sudo docker build --quiet --tag erp-ai-pro-log-check - > /dev/null
   sudo docker create --name erp-ai-pro-log-check erp-ai-pro-log-check > /dev/null
   local logging
