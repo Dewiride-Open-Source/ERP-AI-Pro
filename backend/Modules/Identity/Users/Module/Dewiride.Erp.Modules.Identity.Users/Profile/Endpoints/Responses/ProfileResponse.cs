@@ -14,7 +14,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.Profile.Endpoints.Responses;
 /// <param name="DesignationName">Name of the designation of the position the person holds today.</param>
 /// <param name="ManagerDisplayName">Display name of the person they report to today.</param>
 /// <param name="Roles">Built-in roles the person holds, in the order the ERP lists them: Administrator and Employee through their app roles in Microsoft Entra, the others assigned in the ERP.</param>
-/// <param name="Theme">Colour theme the person chose for the web app.</param>
+/// <param name="Theme">Colour theme the person chose for the web app: system until they choose another.</param>
+/// <param name="ThemeChoiceId">Identifier of the person's choice of theme, which changes whenever the theme does; absent until they first choose a theme other than system.</param>
 internal sealed record ProfileResponse(
     Guid Id,
     string DisplayName,
@@ -26,4 +27,5 @@ internal sealed record ProfileResponse(
     string? DesignationName,
     string? ManagerDisplayName,
     IReadOnlyList<ErpRole> Roles,
-    ThemePreference Theme);
+    ThemePreference Theme,
+    Guid? ThemeChoiceId);

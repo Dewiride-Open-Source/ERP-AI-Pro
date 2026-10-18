@@ -6,10 +6,9 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 namespace Dewiride.Erp.Modules.Identity.Users.People.Domain;
 
 // Entra keeps a person's name and work email, so every sign-in brings them up to date; the employee code, phone number,
-// date of joining and the roles assigned in the ERP are kept here by administrators, the person's department,
-// designation and manager by their dated positions, and the colour theme by the person. A person holds
-// Administrator and Employee through the app roles of their Entra account, so only Finance, HR and Manager are assigned
-// here. A record an administrator registers by work email is linked to the person's Entra account at their first sign-in;
+// date of joining and the roles assigned in the ERP are kept here by administrators, and the person's department,
+// designation and manager by their dated positions. A person holds Administrator and Employee through the app roles of
+// their Entra account, so only Finance, HR and Manager are assigned here. A record an administrator registers by work email is linked to the person's Entra account at their first sign-in;
 // one invited from the company directory is linked from the start.
 internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, IVersioned
 {
@@ -46,8 +45,6 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
     public UserStatus Status { get; private set; }
 
     public IReadOnlyList<ErpRole> Roles => _roles;
-
-    public UserTheme Theme { get; private set; } = UserTheme.System;
 
     public DateTimeOffset? LastSignedInAt { get; private set; }
 
@@ -158,16 +155,6 @@ internal sealed class User : AggregateRoot<UserId>, IAuditable, ISoftDeletable, 
         _roles = assigned;
 
         return Result.Success();
-    }
-
-    public void ChooseTheme(UserTheme theme)
-    {
-        if (!Enum.IsDefined(theme))
-        {
-            throw new ArgumentOutOfRangeException(nameof(theme), theme, "A person chooses the system, light or dark theme.");
-        }
-
-        Theme = theme;
     }
 
     public void Deactivate() => Status = UserStatus.Deactivated;

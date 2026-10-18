@@ -3,6 +3,7 @@ using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 using Dewiride.Erp.BuildingBlocks.Kernel.Access;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Shared;
@@ -42,7 +43,11 @@ public sealed class ProfileEndpointsTests(ProfileEndpointsTests.Fixture fixture)
         var department = await OrganisationApi.CreateDepartmentAsync(administrator, OrganisationApi.UniqueName("Finance"));
         var designation = await OrganisationApi.CreateDesignationAsync(administrator, OrganisationApi.UniqueName("Accountant"));
         var manager = await PeopleApi.RegisterAsync(administrator, new { displayName = "Arjun Rao", workEmail = PeopleApi.UniqueWorkEmail() });
+        var laterDepartment = await OrganisationApi.CreateDepartmentAsync(administrator, OrganisationApi.UniqueName("Treasury"));
+        var laterDesignation = await OrganisationApi.CreateDesignationAsync(administrator, OrganisationApi.UniqueName("Treasurer"));
+        var laterManager = await PeopleApi.RegisterAsync(administrator, new { displayName = "Kavya Menon", workEmail = PeopleApi.UniqueWorkEmail() });
         await OrganisationApi.RecordPositionAsync(administrator, record.Id, OrganisationApi.Today, department.Id, designation.Id, manager.Id);
+        await OrganisationApi.RecordPositionAsync(administrator, record.Id, OrganisationApi.Today.AddDays(30), laterDepartment.Id, laterDesignation.Id, laterManager.Id);
         await AssignFinanceAsync(administrator, record.Id);
 
         var profile = await ProfileOfAsync(client);
@@ -58,6 +63,7 @@ public sealed class ProfileEndpointsTests(ProfileEndpointsTests.Fixture fixture)
         Assert.Equal("Arjun Rao", profile.ManagerDisplayName);
         Assert.Equal([ErpRole.Employee, ErpRole.Finance], profile.Roles);
         Assert.Equal(ThemePreference.System, profile.Theme);
+        Assert.Null(profile.ThemeChoiceId);
     }
 
     [Fact]
@@ -82,7 +88,7 @@ public sealed class ProfileEndpointsTests(ProfileEndpointsTests.Fixture fixture)
         using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
 
         Assert.Equal(
-            ["id", "displayName", "workEmail", "employeeCode", "phoneNumber", "dateOfJoining", "departmentName", "designationName", "managerDisplayName", "roles", "theme"],
+            ["id", "displayName", "workEmail", "employeeCode", "phoneNumber", "dateOfJoining", "departmentName", "designationName", "managerDisplayName", "roles", "theme", "themeChoiceId"],
             body.RootElement.EnumerateObject().Select(member => member.Name));
         Assert.Equal(["employee"], body.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetString()));
         Assert.Equal("system", body.RootElement.GetProperty("theme").GetString());
@@ -200,42 +206,127 @@ public sealed class ProfileEndpointsTests(ProfileEndpointsTests.Fixture fixture)
     }
 
     [Fact]
-    public async Task ChooseTheme_SignedInPerson_Answers204AndTheirProfileThenHoldsIt()
+    public async Task ChooseTheme_SignedInPerson_AnswersTheChoiceTheirProfileThenHolds()
     {
         using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
 
-        using var response = await PutThemeAsync(client, new { theme = "dark" });
+        var chosen = await ChooseThemeAsync(client, "dark");
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal(ThemePreference.Dark, (await ProfileOfAsync(client)).Theme);
+        Assert.Equal(ThemePreference.Dark, chosen.Theme);
+        Assert.NotNull(chosen.ChoiceId);
+        var profile = await ProfileOfAsync(client);
+        Assert.Equal(ThemePreference.Dark, profile.Theme);
+        Assert.Equal(chosen.ChoiceId, profile.ThemeChoiceId);
     }
 
     [Fact]
-    public async Task ChooseTheme_LaterChoice_ReplacesTheEarlierOne()
+    public async Task ChooseTheme_SignedInPerson_WritesTheThemeAndItsChoiceAsCamelCaseNames()
     {
         using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
-        using var dark = await PutThemeAsync(client, new { theme = "dark" });
 
-        using var light = await PutThemeAsync(client, new { theme = "light" });
+        using var response = await PutThemeAsync(client, new { theme = "light" });
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
 
-        Assert.Equal(HttpStatusCode.NoContent, dark.StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, light.StatusCode);
-        Assert.Equal(ThemePreference.Light, (await ProfileOfAsync(client)).Theme);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(["theme", "choiceId"], body.RootElement.EnumerateObject().Select(member => member.Name));
+        Assert.Equal("light", body.RootElement.GetProperty("theme").GetString());
     }
 
     [Fact]
-    public async Task ChooseTheme_SignedInPerson_WritesNoChangeRecordOfTheirRecord()
+    public async Task ChooseTheme_LaterChoice_ReplacesTheEarlierOneWithAChoiceOfItsOwn()
+    {
+        using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
+        var dark = await ChooseThemeAsync(client, "dark");
+
+        var light = await ChooseThemeAsync(client, "light");
+
+        Assert.Equal(ThemePreference.Light, light.Theme);
+        Assert.NotEqual(dark.ChoiceId, light.ChoiceId);
+        var profile = await ProfileOfAsync(client);
+        Assert.Equal(ThemePreference.Light, profile.Theme);
+        Assert.Equal(light.ChoiceId, profile.ThemeChoiceId);
+    }
+
+    [Fact]
+    public async Task ChooseTheme_TheThemeTheAccountHolds_AnswersTheSameChoice()
+    {
+        using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
+        var first = await ChooseThemeAsync(client, "dark");
+
+        var again = await ChooseThemeAsync(client, "dark");
+
+        Assert.Equal(first, again);
+    }
+
+    [Fact]
+    public async Task ChooseTheme_ThemeChosenAgainAfterAnother_AnswersANewChoice()
+    {
+        using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
+        var dark = await ChooseThemeAsync(client, "dark");
+        await ChooseThemeAsync(client, "light");
+
+        var darkAgain = await ChooseThemeAsync(client, "dark");
+
+        Assert.Equal(ThemePreference.Dark, darkAgain.Theme);
+        Assert.NotEqual(dark.ChoiceId, darkAgain.ChoiceId);
+    }
+
+    [Fact]
+    public async Task ChooseTheme_SystemBeforeAnyOtherTheme_KeepsTheThemeOfTheirDeviceWithoutAChoice()
+    {
+        using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
+
+        var chosen = await ChooseThemeAsync(client, "system");
+
+        Assert.Equal(ThemePreference.System, chosen.Theme);
+        Assert.Null(chosen.ChoiceId);
+        Assert.Null((await ProfileOfAsync(client)).ThemeChoiceId);
+    }
+
+    [Fact]
+    public async Task ChooseTheme_WhileAnAdministratorEditsTheirRecord_LeavesTheVersionTheEditHolds()
+    {
+        using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
+        var record = await ProfileOfAsync(client);
+        using var administrator = fixture.Factory.CreateClient().AsUser(TestUsers.Administrator);
+        using var read = await administrator.GetAsync(PeopleApi.Path($"/{record.Id}"), TestContext.Current.CancellationToken);
+        var opened = await PeopleApi.ReadPersonAsync(read);
+
+        await ChooseThemeAsync(client, "dark");
+        await ChooseThemeAsync(client, "light");
+        using var saved = await administrator.PutAsJsonAsync(
+            PeopleApi.Path($"/{record.Id}"),
+            new { phoneNumber = "+91 98765 00005", version = opened.Version },
+            PeopleApi.Json,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChooseTheme_SignedInPerson_RecordsEachThemeUnderThemWithoutItsChoiceOrAChangeOfTheirRecord()
     {
         using var client = await InvitationApi.SignInAsync(fixture.Factory, NewPerson("Meera Nair", [AppRoles.User]));
         var record = await ProfileOfAsync(client);
         using var administrator = fixture.Factory.CreateClient().AsUser(TestUsers.Administrator);
         var before = await ChangeRecordsApi.OfAsync(administrator, record.Id);
 
-        using var response = await PutThemeAsync(client, new { theme = "dark" });
+        await ChooseThemeAsync(client, "dark");
+        await ChooseThemeAsync(client, "dark");
+        await ChooseThemeAsync(client, "light");
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var themes = (await ChangeRecordsApi.OfAsync(administrator, record.Id)).Skip(before.Count).ToList();
         Assert.NotEmpty(before);
-        Assert.Equal(before.Count, (await ChangeRecordsApi.OfAsync(administrator, record.Id)).Count);
+        Assert.All(before, change => Assert.Equal(ChangeRecordsApi.PeopleKey, change.EntityType));
+        Assert.Equal([ChangeOperation.Created, ChangeOperation.Updated], themes.Select(change => change.Operation));
+        Assert.All(themes, change =>
+        {
+            Assert.Equal(ChangeRecordsApi.ThemesKey, change.EntityType);
+            Assert.Equal(record.Id, change.EntityId);
+            Assert.Equal(ChangeRecordsApi.PeopleKey, change.SubjectType);
+        });
+        Assert.Equal(new RecordedValue("theme", ChangeValueKind.Enum, null, "dark", null, null, null), Assert.Single(themes[0].Changes));
+        Assert.Equal(new RecordedValue("theme", ChangeValueKind.Enum, "dark", "light", null, null, null), Assert.Single(themes[1].Changes));
     }
 
     [Theory]
@@ -337,6 +428,14 @@ public sealed class ProfileEndpointsTests(ProfileEndpointsTests.Fixture fixture)
 
     private static Task<HttpResponseMessage> PutThemeAsync(HttpClient client, object body) =>
         client.PutAsJsonAsync(new Uri(ThemeRoute, UriKind.Relative), body, PeopleApi.Json, TestContext.Current.CancellationToken);
+
+    private static async Task<ThemeChoiceResponse> ChooseThemeAsync(HttpClient client, string theme)
+    {
+        using var response = await PutThemeAsync(client, new { theme });
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        return await OrganisationApi.ReadAsync<ThemeChoiceResponse>(response);
+    }
 
     private static async Task AssignFinanceAsync(HttpClient administrator, Guid id)
     {

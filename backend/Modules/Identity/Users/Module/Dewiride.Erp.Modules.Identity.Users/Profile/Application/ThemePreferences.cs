@@ -1,5 +1,5 @@
 using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
-using Dewiride.Erp.Modules.Identity.Users.People.Domain;
+using Dewiride.Erp.Modules.Identity.Users.Profile.Domain;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Profile.Application;
 
@@ -20,4 +20,7 @@ internal static class ThemePreferences
         ThemePreference.Dark => UserTheme.Dark,
         _ => throw new ArgumentOutOfRangeException(nameof(preference), preference, null),
     };
+
+    public static ChosenTheme Of(PersonTheme? chosen) =>
+        chosen is null ? ChosenTheme.DeviceTheme : new ChosenTheme(ToPreference(chosen.Theme), chosen.ChoiceId);
 }

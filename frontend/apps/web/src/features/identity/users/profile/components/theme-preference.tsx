@@ -1,20 +1,23 @@
 "use client";
 
-import type { ThemePreference as SavedTheme } from "@dewiride/erp-api-client";
 import { useThemeChoice } from "@dewiride/erp-ui/components/theme/use-theme-choice";
 import { unstable_rethrow } from "next/navigation";
-import { useEffect, useRef, useTransition } from "react";
+import { useCallback, useEffect, useRef, useTransition } from "react";
 
 import { saveTheme } from "../server/actions";
 
 import {
+  accountRead,
+  isSameChoice,
   nextThemeStep,
   startKeeping,
-  themeSaved,
+  themeAnswered,
   unsavedChoiceKey,
   unsavedChoiceOf,
   unsavedChoiceText,
+  type AccountTheme,
   type ThemeKeeping,
+  type ThemeStep,
   type UnsavedChoice,
 } from "./theme-preference-state";
 
@@ -27,50 +30,89 @@ function inStorage<T>(access: (storage: Storage) => T, blocked: T): T {
   }
 }
 
-function takeUnsavedChoice(): UnsavedChoice | undefined {
-  return inStorage((storage) => {
-    const stored = storage.getItem(unsavedChoiceKey);
-    storage.removeItem(unsavedChoiceKey);
-    return unsavedChoiceOf(stored, Date.now());
-  }, undefined);
+function storedChoice(storage: Storage): UnsavedChoice | undefined {
+  return unsavedChoiceOf(storage.getItem(unsavedChoiceKey), Date.now());
+}
+
+// A stored choice that does not count for this page, another person's or one the account has moved past, is removed.
+function startFromStorage(person: string, account: AccountTheme): ThemeKeeping {
+  const keeping = startKeeping(person, account, inStorage(storedChoice, undefined));
+  if (keeping.noted === undefined) inStorage((storage) => storage.removeItem(unsavedChoiceKey), undefined);
+  return keeping;
 }
 
 function noteUnsavedChoice(choice: UnsavedChoice): void {
   inStorage((storage) => storage.setItem(unsavedChoiceKey, unsavedChoiceText(choice, Date.now())), undefined);
 }
 
+// Another tab of this browser may have noted a later choice since, which stays.
+function forgetUnsavedChoice(choice: UnsavedChoice): void {
+  inStorage((storage) => {
+    const stored = storedChoice(storage);
+    if (stored !== undefined && isSameChoice(stored, choice)) storage.removeItem(unsavedChoiceKey);
+  }, undefined);
+}
+
+async function savedAccount(theme: UnsavedChoice["theme"]): Promise<AccountTheme | undefined> {
+  try {
+    const outcome = await saveTheme(theme);
+    return outcome.saved ? outcome.account : undefined;
+  } catch (error) {
+    unstable_rethrow(error);
+    return undefined;
+  }
+}
+
 // Mounted once by the shell: it puts the theme the person saved in place when this browser holds another, and saves every
-// theme they choose afterwards, with the top bar's toggle or on My profile, so their choice follows them to every browser. A
-// save that fails changes nothing on screen, because the theme still applies here, and the next choice saves again. Every
-// choice is noted with the theme it replaced and kept until the next page this browser loads, which saves it again while the
-// account still holds the replaced theme, as when a reload read the account before the save arrived.
-export function ThemePreference({ saved }: { saved: SavedTheme }) {
+// theme they choose afterwards, with the top bar's toggle or on My profile, so their choice follows them to every browser.
+// Each choice is noted in this browser until its save answers, so a page loaded before the save arrived, as when the person
+// reloads straight after choosing, saves it again instead of putting the older theme back.
+export function ThemePreference({ person, account }: { person: string; account: AccountTheme }) {
   const { choice, choose } = useThemeChoice();
   const keeping = useRef<ThemeKeeping | undefined>(undefined);
   const [, startSaving] = useTransition();
+  const { theme: accountTheme, choiceId: accountChoiceId } = account;
 
-  useEffect(() => {
-    if (keeping.current !== undefined) keeping.current = themeSaved(keeping.current, saved);
-  }, [saved]);
-
-  useEffect(() => {
-    const [next, step] = nextThemeStep(keeping.current ?? startKeeping(saved, takeUnsavedChoice()), choice);
-    keeping.current = next;
-    if (step.kind === "apply") choose(step.theme);
-    if (step.kind !== "save") return;
-
-    const chosen = step.theme;
-    noteUnsavedChoice({ theme: chosen, over: next.lastSaved });
-    startSaving(async () => {
-      try {
-        const outcome = await saveTheme(chosen);
-        if (!outcome.saved) return;
-        if (keeping.current !== undefined) keeping.current = themeSaved(keeping.current, chosen);
-      } catch (error) {
-        unstable_rethrow(error);
+  const perform = useCallback(
+    function perform([next, step]: [ThemeKeeping, ThemeStep]) {
+      keeping.current = next;
+      switch (step.kind) {
+        case "apply":
+          choose(step.theme);
+          return;
+        case "note":
+          noteUnsavedChoice(step.choice);
+          return;
+        case "forget":
+          forgetUnsavedChoice(step.choice);
+          return;
+        case "send": {
+          noteUnsavedChoice(step.choice);
+          const { theme } = step.choice;
+          startSaving(async () => {
+            const answer = await savedAccount(theme);
+            if (keeping.current !== undefined) perform(themeAnswered(keeping.current, answer));
+          });
+          return;
+        }
+        case "none":
+          return;
       }
-    });
-  }, [choice, choose, saved]);
+    },
+    [choose],
+  );
+
+  useEffect(() => {
+    if (keeping.current !== undefined) {
+      keeping.current = accountRead(keeping.current, { theme: accountTheme, choiceId: accountChoiceId });
+    }
+  }, [accountTheme, accountChoiceId]);
+
+  useEffect(() => {
+    const current =
+      keeping.current ?? startFromStorage(person, { theme: accountTheme, choiceId: accountChoiceId });
+    perform(nextThemeStep(current, choice));
+  }, [choice, person, accountTheme, accountChoiceId, perform]);
 
   return null;
 }

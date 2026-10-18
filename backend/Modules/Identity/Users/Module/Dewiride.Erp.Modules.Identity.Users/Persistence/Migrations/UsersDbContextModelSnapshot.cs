@@ -254,10 +254,6 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                     b.Property<byte>("Status")
                         .HasColumnType("tinyint");
 
-                    b.Property<byte>("Theme")
-                        .HasColumnType("tinyint")
-                        .HasAnnotation("Erp:ChangeRecords:Excluded", true);
-
                     b.Property<string>("WorkEmail")
                         .IsRequired()
                         .HasMaxLength(254)
@@ -334,6 +330,39 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                         .HasAnnotation("Erp:ChangeRecords:Subject", "UserId");
                 });
 
+            modelBuilder.Entity("Dewiride.Erp.Modules.Identity.Users.Profile.Domain.PersonTheme", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ChoiceId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasAnnotation("Erp:ChangeRecords:Excluded", true);
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Theme")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PersonThemes", "identity_users");
+
+                    b
+                        .HasAnnotation("Erp:ChangeRecords:Key", "identity.users.themes")
+                        .HasAnnotation("Erp:ChangeRecords:Subject", "Id");
+                });
+
             modelBuilder.Entity("Dewiride.Erp.Modules.Identity.Users.Departments.Domain.Department", b =>
                 {
                     b.HasOne("Dewiride.Erp.Modules.Identity.Users.Departments.Domain.Department", null)
@@ -362,6 +391,15 @@ namespace Dewiride.Erp.Modules.Identity.Users.Persistence.Migrations
                     b.HasOne("Dewiride.Erp.Modules.Identity.Users.People.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.Modules.Identity.Users.Profile.Domain.PersonTheme", b =>
+                {
+                    b.HasOne("Dewiride.Erp.Modules.Identity.Users.People.Domain.User", null)
+                        .WithOne()
+                        .HasForeignKey("Dewiride.Erp.Modules.Identity.Users.Profile.Domain.PersonTheme", "Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

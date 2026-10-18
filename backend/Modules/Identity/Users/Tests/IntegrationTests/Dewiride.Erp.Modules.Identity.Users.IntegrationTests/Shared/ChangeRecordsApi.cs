@@ -17,6 +17,8 @@ internal static class ChangeRecordsApi
 
     public const string PositionsKey = "identity.users.positions";
 
+    public const string ThemesKey = "identity.users.themes";
+
     private const string Route = "/api/platform/audit/changes";
 
     public static async Task<IReadOnlyList<RecordedChange>> OfAsync(HttpClient administrator, Guid subjectId)

@@ -29,6 +29,10 @@ internal sealed class GetOwnProfileHandler(UsersDbContext context, IActorContext
         }
 
         var user = row.User;
+        var theme = await context.PersonThemes
+            .AsNoTracking()
+            .SingleOrDefaultAsync(t => t.Id == user.Id, cancellationToken)
+            .ConfigureAwait(false);
 
         return new OwnProfile(
             user.Id.Value,
@@ -41,6 +45,6 @@ internal sealed class GetOwnProfileHandler(UsersDbContext context, IActorContext
             row.DesignationName,
             row.ManagerDisplayName,
             [.. Enum.GetValues<ErpRole>().Where(query.HeldRoles.Contains)],
-            ThemePreferences.ToPreference(user.Theme));
+            ThemePreferences.Of(theme));
     }
 }

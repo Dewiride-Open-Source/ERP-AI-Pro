@@ -298,36 +298,4 @@ public sealed class UserTests
     {
         Assert.Equal("meera.nair@dewiride.com", User.NormaliseWorkEmail("  Meera.NAIR@Dewiride.com "));
     }
-
-    [Fact]
-    public void FirstSignIn_NewRecord_FollowsTheThemeOfThePersonsDevice()
-    {
-        var user = User.FirstSignIn(ObjectId, "Meera Nair", "meera.nair@dewiride.com", SignedInAt).Value;
-
-        Assert.Equal(UserTheme.System, user.Theme);
-    }
-
-    [Theory]
-    [InlineData(nameof(UserTheme.Dark))]
-    [InlineData(nameof(UserTheme.Light))]
-    [InlineData(nameof(UserTheme.System))]
-    public void ChooseTheme_AThemeOfTheWebApp_KeepsIt(string themeName)
-    {
-        var theme = Enum.Parse<UserTheme>(themeName);
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, []).Value;
-        user.ChooseTheme(theme == UserTheme.Dark ? UserTheme.Light : UserTheme.Dark);
-
-        user.ChooseTheme(theme);
-
-        Assert.Equal(theme, user.Theme);
-    }
-
-    [Fact]
-    public void ChooseTheme_AValueThatNamesNoTheme_ThrowsAndKeepsTheTheme()
-    {
-        var user = User.Register("Meera Nair", "meera.nair@dewiride.com", null, null, null, []).Value;
-
-        Assert.Throws<ArgumentOutOfRangeException>(() => user.ChooseTheme((UserTheme)0));
-        Assert.Equal(UserTheme.System, user.Theme);
-    }
 }

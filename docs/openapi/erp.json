@@ -3289,7 +3289,7 @@
         "tags": [
           "Identity.Users"
         ],
-        "summary": "Saves the colour theme the signed-in person chose, which the web app applies in every browser they sign in from.",
+        "summary": "Saves the colour theme the signed-in person chose, which the web app applies in every browser they sign in from, and answers the choice the account then holds.",
         "operationId": "Identity.Users.ChooseOwnTheme",
         "requestBody": {
           "content": {
@@ -3362,8 +3362,15 @@
               }
             }
           },
-          "204": {
-            "description": "No Content"
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ThemeChoiceResponse"
+                }
+              }
+            }
           },
           "409": {
             "description": "Conflict",
@@ -6433,7 +6440,8 @@
           "designationName",
           "managerDisplayName",
           "roles",
-          "theme"
+          "theme",
+          "themeChoiceId"
         ],
         "type": "object",
         "properties": {
@@ -6492,6 +6500,13 @@
           },
           "theme": {
             "$ref": "#/components/schemas/ThemePreference"
+          },
+          "themeChoiceId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -6708,6 +6723,25 @@
           "uptimeSeconds": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "ThemeChoiceResponse": {
+        "required": [
+          "theme",
+          "choiceId"
+        ],
+        "type": "object",
+        "properties": {
+          "theme": {
+            "$ref": "#/components/schemas/ThemePreference"
+          },
+          "choiceId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

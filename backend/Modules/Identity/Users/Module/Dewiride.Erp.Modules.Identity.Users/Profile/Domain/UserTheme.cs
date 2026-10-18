@@ -1,4 +1,4 @@
-namespace Dewiride.Erp.Modules.Identity.Users.People.Domain;
+namespace Dewiride.Erp.Modules.Identity.Users.Profile.Domain;
 
 internal enum UserTheme : byte
 {

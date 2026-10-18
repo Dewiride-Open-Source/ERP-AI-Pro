@@ -1,5 +1,4 @@
 using Dewiride.Erp.BuildingBlocks.Kernel.Access;
-using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 
 namespace Dewiride.Erp.Modules.Identity.Users.Profile.Application;
 
@@ -14,4 +13,4 @@ internal sealed record OwnProfile(
     string? DesignationName,
     string? ManagerDisplayName,
     IReadOnlyList<ErpRole> Roles,
-    ThemePreference Theme);
+    ChosenTheme Theme);

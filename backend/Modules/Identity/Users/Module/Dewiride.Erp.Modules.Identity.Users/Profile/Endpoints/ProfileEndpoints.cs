@@ -43,7 +43,7 @@ internal static class ProfileEndpoints
 
         group.MapPut("/me/theme", ChooseThemeAsync)
             .WithName("Identity.Users.ChooseOwnTheme")
-            .WithSummary("Saves the colour theme the signed-in person chose, which the web app applies in every browser they sign in from.")
+            .WithSummary("Saves the colour theme the signed-in person chose, which the web app applies in every browser they sign in from, and answers the choice the account then holds.")
             .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
@@ -59,7 +59,8 @@ internal static class ProfileEndpoints
             profile.DesignationName,
             profile.ManagerDisplayName,
             profile.Roles,
-            profile.Theme);
+            profile.Theme.Theme,
+            profile.Theme.ChoiceId);
 
     private static async Task<Results<Ok<ProfileResponse>, ProblemHttpResult>> GetAsync(
         IQueryHandler<GetOwnProfileQuery, OwnProfile> handler,
@@ -84,13 +85,15 @@ internal static class ProfileEndpoints
         return photo.Error == DirectoryErrors.PhotoNotFound ? TypedResults.NoContent() : photo.Error!.ToProblem();
     }
 
-    private static async Task<Results<NoContent, ProblemHttpResult>> ChooseThemeAsync(
+    private static async Task<Results<Ok<ThemeChoiceResponse>, ProblemHttpResult>> ChooseThemeAsync(
         ChooseOwnThemeRequest request,
-        ICommandHandler<ChooseOwnThemeCommand, Guid> handler,
+        ICommandHandler<ChooseOwnThemeCommand, ChosenTheme> handler,
         CancellationToken cancellationToken)
     {
         var chosen = await handler.HandleAsync(new ChooseOwnThemeCommand(request.Theme), cancellationToken);
 
-        return chosen.IsSuccess ? TypedResults.NoContent() : chosen.Error!.ToProblem();
+        return chosen.IsSuccess
+            ? TypedResults.Ok(new ThemeChoiceResponse(chosen.Value.Theme, chosen.Value.ChoiceId))
+            : chosen.Error!.ToProblem();
     }
 }
