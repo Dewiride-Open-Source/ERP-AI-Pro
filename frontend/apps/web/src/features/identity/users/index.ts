@@ -1,8 +1,14 @@
+export { DepartmentsOverview } from "./departments/components/departments-overview";
+export { DepartmentsOverviewSkeleton } from "./departments/components/departments-overview-skeleton";
+export { DesignationsOverview } from "./designations/components/designations-overview";
+export { DesignationsOverviewSkeleton } from "./designations/components/designations-overview-skeleton";
 export { PersonOverview } from "./details/components/person-overview";
 export { personPageTitle } from "./details/components/person-page-title";
 export { EditPerson } from "./editing/components/edit-person";
 export { editPersonPageTitle } from "./editing/components/edit-person-page-title";
 export { departmentsNavigation, designationsNavigation, orgChartNavigation, peopleNavigation } from "./nav";
+export { OrgChartOverview } from "./org-chart/components/org-chart-overview";
+export { OrgChartOverviewSkeleton } from "./org-chart/components/org-chart-overview-skeleton";
 export { PeopleOverview } from "./people/components/people-overview";
 export { PeopleOverviewSkeleton } from "./people/components/people-overview-skeleton";
 export { PermissionsOverview } from "./permissions/components/permissions-overview";

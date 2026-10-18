@@ -1,5 +1,16 @@
-import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+
+import { DesignationsOverview, designationsNavigation } from "@/features/identity/users";
+import { pageMetadata, RequirePermission } from "@/shared/auth/require-permission";
+
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata(designationsNavigation.title, designationsNavigation.permission);
+}
 
 export default function DesignationsPage() {
-  notFound();
+  return (
+    <RequirePermission permission={designationsNavigation.permission}>
+      <DesignationsOverview />
+    </RequirePermission>
+  );
 }
