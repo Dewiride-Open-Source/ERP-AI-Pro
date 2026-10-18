@@ -75,8 +75,9 @@ What keeps the run from locking anyone out:
 
 - It refuses to turn passwords off while the administrator has no key that sshd would accept.
 - It tests the SSH configuration with `sshd -t` and puts back any rules it wrote when that fails.
-- It refuses an sshd on another port than 22, and `Match` blocks, whose settings it cannot prove.
-- Before it turns the firewall on, it reads the address its own SSH session comes from. It refuses one outside the home network, an IPv6 address, and a session through SSH whose address it cannot read.
+- It refuses an sshd that listens elsewhere than port 22, whether through `Port`, a `ListenAddress` or the socket that starts it, and `Match` blocks or other included files, whose settings it cannot prove.
+- Before it turns the firewall on, it reads the address its own SSH session comes from. It refuses one outside the home network, an IPv6 address, a session that reached another port than 22, and a session through SSH whose address it cannot read.
+- It admits SSH from the home network before it changes the firewall in any other way, and stops at any other rule before changing defaults, so removing that rule as it asks never closes SSH.
 
 Afterwards:
 
@@ -189,7 +190,13 @@ The root is valid for ten years and stays the same as long as the volume `erp-ai
   - A minor or major release, for which live restore promises nothing, needs the stack stopped first: `sudo systemctl stop erp-ai-pro.service`, then the same upgrade, then `sudo systemctl start erp-ai-pro.service`. The start waits until every container is healthy, and fails otherwise.
 - **Re-running the bootstrap.**
   - After changing the host by hand, or when a release changes `infra/host` or `scripts/deploy`, run it again from a fresh clone of the running release (`--branch <tag>`). It puts back what drifted and changes nothing else.
-  - It never touches the deployment checkout, `.env` or the certificates once they exist.
+  - Pass the deploy account's present keys, which a run with sudo can read, so they stay as they are:
+
+    ```bash
+    sudo bash ERP-AI-Pro/scripts/deploy/bootstrap.sh --site-address <address> --authorized-keys /srv/erp-ai-pro/.ssh/authorized_keys
+    ```
+
+  - It never moves the deployment checkout or changes `.env` or the certificates once they exist. It only gives files of the checkout that belong to someone else back to `erp-ai-pro`, the certificates aside.
 - **Never do these:**
   - remove the two volumes;
   - add an account to the `docker` or `lxd` group;

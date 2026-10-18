@@ -17,7 +17,7 @@ The compose `migrator` service runs the API image with `dotnet /app/migrator/Dew
 
 As the deploy account `erp-ai-pro` on the host ([host setup runbook](host-setup.md)):
 
-1. Move the deployment checkout to the release, so the compose files match its images: `git -C /srv/erp-ai-pro/ERP-AI-Pro fetch --tags` and `git -C /srv/erp-ai-pro/ERP-AI-Pro checkout --detach <tag>`. When the release changes `infra/host` or `scripts/deploy`, the administrator also runs the bootstrap again from a clone of that tag.
+1. Move the deployment checkout to the release, so the compose files match its images: `git -C /srv/erp-ai-pro/ERP-AI-Pro fetch --tags` and `git -C /srv/erp-ai-pro/ERP-AI-Pro checkout --detach <tag>`. When the release changes `infra/host` or `scripts/deploy`, the administrator also runs the bootstrap again from a clone of that tag (host setup runbook, "Re-running the bootstrap").
 2. Set `IMAGE_TAG` in `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env` to the release.
 
 Then, from `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose` (`-f compose.yaml -f compose.production.yaml` on every command):

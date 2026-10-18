@@ -42,10 +42,10 @@ Date: 2026-10-18
 - **The deploy account `erp-ai-pro`.**
   - Home `/srv/erp-ai-pro` (0750); no usable password (`*`); its `authorized_keys` is the given file.
   - That file must hold keys of its own: the bootstrap refuses one that also signs in as the administrator, because the account is root through Docker.
-  - It is the only member of `docker`: the bootstrap removes every other member, the administrator included, who from then on runs Docker through sudo. It refuses a host where `docker` is someone's primary group.
-- **No root through LXD.** The bootstrap removes every member of `lxd` and masks `lxd-installer.socket`, so LXD, preinstalled as a snap on Ubuntu 22.04 and installed on demand from 24.04, answers root alone.
+  - It is the only member of `docker`: the bootstrap removes every other member, the administrator included, who from then on runs Docker through sudo. It refuses a host where `docker` is any account's primary group.
+- **No root through LXD.** The bootstrap removes every member of `lxd` and masks `lxd-installer.socket`, so LXD, preinstalled as a snap on Ubuntu 22.04 and installed on demand from 24.04, answers root alone. It refuses `lxd` as the primary group of an account with a login shell; the account LXD's snap brings has none.
 - **The deployment checkout.**
-  - `/srv/erp-ai-pro/ERP-AI-Pro` is cloned from the checkout the bootstrap runs from, at its commit, with that checkout's `origin`, into a temporary folder. That folder takes the checkout's place once it is complete and owned by the deploy account. A checkout found with another owner is given back to the deploy account. Otherwise deployments move it, and the bootstrap never does.
+  - `/srv/erp-ai-pro/ERP-AI-Pro` is cloned from the checkout the bootstrap runs from, at its commit, with that checkout's `origin`, into a temporary folder. That folder takes the checkout's place once it is complete and owned by the deploy account. Files of a checkout that belong to someone else are given back to the deploy account, the certificates aside. Deployments move it, and the bootstrap never does.
   - It holds `infra/compose/secrets` (0700, the deploy account's) for the two client certificates. The administrator installs them with sudo, owned by 1654 with mode 0400.
   - `infra/compose/.env` (0600) is copied once from `.env.example` with `ERP_SITE_ADDRESS` filled in. A later run only warns when the address differs, because the address changes together with the production sign-in settings (ADR-0048).
   - The bootstrap creates both external volumes when they are missing.
@@ -58,11 +58,12 @@ Date: 2026-10-18
 - **The ERP's ports are IPv4 only.** `compose.production.yaml` publishes the proxy's 80 and 443 on `0.0.0.0`. The router's address translation keeps the IPv4 ports inside the home network, since nothing is forwarded, and the global IPv6 address reaches no published port.
 - **SSH.**
   - `infra/host/ssh/10-erp-ai-pro.conf` sorts before every other file of `sshd_config.d`. It sets `PasswordAuthentication no`, `KbdInteractiveAuthentication no`, `AuthenticationMethods publickey`, `PermitRootLogin no` and `X11Forwarding no`.
-  - First, the bootstrap checks that the administrator has a usable key in `authorized_keys`, and that sshd's StrictModes would accept it: the home, `~/.ssh` and the file belong to the administrator or root, and nobody else may write them. It refuses `Match` blocks, whose settings it cannot prove.
-  - Every run tests the configuration with `sshd -t`, putting back any rules it wrote when that fails, then reloads `ssh.service`. It proves the effective values with `sshd -T`, and refuses an sshd that listens on another port than 22.
+  - First, the bootstrap checks that the administrator has a usable key in `authorized_keys`, and that sshd's StrictModes would accept it: the home, `~/.ssh` and the file belong to the administrator or root, and nobody else may write them. It refuses `Match` blocks and every `Include` but Ubuntu's own, whose settings it cannot prove, matching the keywords without regard to case as sshd does.
+  - Every run tests the configuration with `sshd -t`, putting back any rules it wrote when that fails, then reloads `ssh.service`. It proves the effective values with `sshd -T`. It refuses an sshd that listens elsewhere than port 22, through `Port`, a `ListenAddress` or the listeners of `ssh.socket`.
 - **The firewall.**
-  - ufw covers IPv6 (`IPV6=yes`), denies new incoming connections by default, allows outgoing ones, and holds one rule: SSH over IPv4 from the home network. The bootstrap refuses any other rule and proves that `iptables` and `ip6tables` both drop by default.
-  - Before turning the firewall on, it reads its own session's address from the `SSH_CONNECTION` of the processes that started it. It refuses an address outside the home network or over IPv6, and a session through sshd whose address it cannot read.
+  - ufw covers IPv6 (`IPV6=yes`), denies new incoming connections by default, allows outgoing ones, and holds one rule: SSH over IPv4 from the home network.
+  - The bootstrap first admits SSH from the home network, then refuses any other rule before it changes anything else. It turns the firewall on, or reloads it when the running rules do not drop by default, and proves that `iptables`, and `ip6tables` wherever the kernel has IPv6, both drop by default.
+  - Before any of that, it reads its own session's address and port from the `SSH_CONNECTION` of the processes that started it. It refuses an address outside the home network or over IPv6, a session that reached another port than 22, and a session through sshd whose address it cannot read.
 - **Nightly updates.**
   - `infra/host/apt/52erp-ai-pro-unattended-upgrades.conf` sets `APT::Periodic::Enable "1"`, keeps the daily list update and upgrade on, and sets `Automatic-Reboot "true"` and `Automatic-Reboot-Time "21:30"`, which is 03:00 India time on a UTC clock.
   - The bootstrap unmasks the update services and timers, enables the timers, and proves the settings with `apt-config dump`.

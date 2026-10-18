@@ -206,8 +206,9 @@ ensure_packages() {
   run env DEBIAN_FRONTEND=noninteractive apt-get "${APT_OPTIONS[@]}" install -y --no-install-recommends "${missing[@]}"
 }
 
+# apt lists the indexes of enabled sources only, so a commented or disabled entry does not count.
 docker_repository_configured() {
-  grep -rqsF -- "$DOCKER_REPOSITORY" /etc/apt/sources.list /etc/apt/sources.list.d/
+  apt-get indextargets 2> /dev/null | grep -qF -- "$DOCKER_REPOSITORY"
 }
 
 add_docker_repository() {
@@ -248,7 +249,11 @@ ensure_docker_engine() {
     done
     (( ${#conflicts[@]} == 0 )) || die "remove the unofficial Docker packages first, as Docker's install guide asks: sudo apt-get remove ${conflicts[*]}"
     record_change "install Docker Engine from Docker's repository: ${DOCKER_PACKAGES[*]}"
-    add_docker_repository
+    if docker_repository_configured; then
+      apt_update
+    else
+      add_docker_repository
+    fi
     run env DEBIAN_FRONTEND=noninteractive apt-get "${APT_OPTIONS[@]}" install -y "${DOCKER_PACKAGES[@]}"
   fi
   local service state
@@ -280,8 +285,12 @@ live_restore_enabled() {
 ensure_docker_daemon_config() {
   log_step "Docker daemon configuration"
   local source="$HOST_CONFIG_DIR/docker/daemon.json" apply=0
+  if [[ -f "$DAEMON_CONFIG" && ! -r "$DAEMON_CONFIG" ]]; then
+    (( DRY_RUN )) || die "cannot read $DAEMON_CONFIG"
+    record_change "check $DAEMON_CONFIG for live restore and log rotation (it could not be read without root, so a run with sudo compares it)"
+    return 0
+  fi
   if [[ -f "$DAEMON_CONFIG" ]]; then
-    [[ -r "$DAEMON_CONFIG" ]] || die "cannot read $DAEMON_CONFIG"
     daemon_config_covers "$source" "$DAEMON_CONFIG" \
       || die "$DAEMON_CONFIG lacks live restore or log rotation; add these settings to it, keeping its own, and run this script again: $(tr -s '\n ' ' ' < "$source")"
     log_info "in place: live restore and log rotation in $DAEMON_CONFIG"
@@ -316,15 +325,10 @@ ensure_docker_daemon_config() {
   fi
 }
 
-group_members() {
-  getent group "$1" | cut -d: -f4
-}
-
 refuse_primary_group() {
-  local group="$1" gid="$2"
+  local group="$1" gid="$2" spare_service_accounts="${3:-0}"
   local -a primary=()
-  # A service account without a login shell, such as the lxd account LXD's snap brings, is no way in for a person.
-  mapfile -t primary < <(getent passwd | awk -F: -v gid="$gid" '$4 == gid && $7 !~ /(nologin|false)$/ { print $1 }')
+  mapfile -t primary < <(getent passwd | awk -F: -v gid="$gid" -v spare="$spare_service_accounts" '$4 == gid && !(spare && $7 ~ /(nologin|false)$/) { print $1 }')
   (( ${#primary[@]} == 0 )) || die "$group is the primary group of ${primary[*]}; give them another primary group first, because membership of $group is root access"
 }
 
@@ -395,7 +399,8 @@ ensure_no_lxd_access() {
   log_step "LXD: nobody gets root through it"
   local entry
   if entry="$(getent group lxd)"; then
-    refuse_primary_group lxd "$(cut -d: -f3 <<< "$entry")"
+    # The account LXD's own snap brings has lxd as its group and no login shell, so it is no way in for a person.
+    refuse_primary_group lxd "$(cut -d: -f3 <<< "$entry")" 1
     local -a members=()
     local member
     IFS=, read -r -a members <<< "$(cut -d: -f4 <<< "$entry")"
@@ -461,11 +466,13 @@ ensure_checkout() {
   local commit
   commit="$(git -c safe.directory="$REPO_ROOT" -C "$REPO_ROOT" rev-parse HEAD)" || die "cannot read the commit of $REPO_ROOT; run this script from a git checkout"
   if [[ -d "$DEPLOY_CHECKOUT/.git" ]]; then
-    local owners
-    owners="$(stat -c %U -- "$DEPLOY_CHECKOUT" "$DEPLOY_CHECKOUT/.git" | sort -u | paste -sd, -)"
-    if [[ "$owners" != "$DEPLOY_USER" ]]; then
-      record_change "give the checkout back to $DEPLOY_USER (it belonged to $owners)"
-      run chown -R -- "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_CHECKOUT"
+    # The client certificates belong to the image user, and the bootstrap never changes them.
+    local -a foreign_files=(find "$DEPLOY_CHECKOUT" -path "$DEPLOY_COMPOSE_DIR/secrets" -prune -o ! -user "$DEPLOY_USER")
+    local foreign
+    foreign="$("${foreign_files[@]}" -print | wc -l)"
+    if (( foreign > 0 )); then
+      record_change "give $foreign file(s) of the checkout back to $DEPLOY_USER, the client certificates aside"
+      run "${foreign_files[@]}" -exec chown -h "$DEPLOY_USER:$DEPLOY_USER" {} +
     fi
     log_info "in place: a checkout at $(git -c safe.directory="$DEPLOY_CHECKOUT" -C "$DEPLOY_CHECKOUT" rev-parse --short=12 HEAD), which deployments move and this script leaves"
     return 0
@@ -595,9 +602,13 @@ ensure_ssh_keys_only() {
   log_step "SSH: public keys only, no root sign-in"
   check_admin_key
   if is_root; then
-    local matches
-    matches="$(grep -hsE '^[[:space:]]*Match[[:space:]]' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf || true)"
+    # sshd reads its keywords without regard to case.
+    local matches includes
+    matches="$(grep -ihsE '^[[:space:]]*match([[:space:]]|=)' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf || true)"
     [[ -z "$matches" ]] || die "sshd's configuration holds Match blocks ($matches), whose settings this script cannot prove; remove them and run it again"
+    includes="$(grep -ihsE '^[[:space:]]*include([[:space:]]|=)' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/*.conf \
+      | grep -vxE '[[:space:]]*Include[[:space:]]+/etc/ssh/sshd_config\.d/\*\.conf[[:space:]]*' || true)"
+    [[ -z "$includes" ]] || die "sshd's configuration includes other files ($includes), whose settings this script cannot prove; keep only Ubuntu's Include of /etc/ssh/sshd_config.d/*.conf and run it again"
   fi
 
   local backup='' written=0
@@ -637,7 +648,11 @@ ensure_ssh_keys_only() {
     grep -qxF -- "$setting" <<< "$effective" \
       || die "sshd does not apply '$setting'; a file that sorts before $(basename -- "$SSH_RULES_FILE") in /etc/ssh/sshd_config.d, or sshd_config itself, sets it first"
   done
-  ports="$(awk '$1 == "port" { print $2 }' <<< "$effective" | sort -u | paste -sd, -)"
+  # A ListenAddress with a port of its own, or the socket that activates sshd, can listen elsewhere while Port still says 22.
+  ports="$( {
+    awk '$1 == "port" { print ":" $2 } $1 == "listenaddress" { print $2 }' <<< "$effective"
+    systemctl show --property=Listen --value ssh.socket 2> /dev/null | awk '{ print $1 }'
+  } | sed -n 's/.*:\([0-9][0-9]*\)$/\1/p' | sort -u | paste -sd, -)"
   [[ "$ports" == 22 ]] || die "sshd listens on port(s) $ports, and the firewall admits SSH on port 22 only; move sshd back to port 22 and run this script again"
   log_info "sshd applies: ${SSH_EFFECTIVE_SETTINGS[*]}, on port 22"
 }
@@ -652,12 +667,12 @@ ancestor_pids() {
 }
 
 # sudo resets the environment and may run the command on a terminal of its own, but the shells that started it keep SSH_CONNECTION.
-admin_session_address() {
+admin_session_connection() {
   local pid connection
   while IFS= read -r pid; do
     connection="$(tr '\0' '\n' 2> /dev/null < "/proc/$pid/environ" | sed -n 's/^SSH_CONNECTION=//p' || true)"
     if [[ -n "$connection" ]]; then
-      printf '%s' "${connection%% *}"
+      printf '%s' "$connection"
       return 0
     fi
   done < <(ancestor_pids)
@@ -675,8 +690,11 @@ runs_through_sshd() {
 }
 
 check_admin_session_address() {
-  local address
-  if address="$(admin_session_address)"; then
+  local connection address server_port
+  if connection="$(admin_session_connection)"; then
+    read -r address _ _ server_port <<< "$connection"
+    [[ "$server_port" == 22 ]] \
+      || die "this session reached sshd on port ${server_port:-unknown}, and the firewall admits SSH on port 22 only; sign in on port 22 and run the script again"
     if ! is_ipv4 "$address"; then
       die "this session comes from $address, and the firewall admits SSH over IPv4 from $HOME_NETWORK only; sign in through $SITE_ADDRESS and run the script again"
     fi
@@ -698,7 +716,29 @@ ensure_firewall() {
   fi
   check_admin_session_address
 
-  local defaults=/etc/default/ufw ipv6_changed=0
+  # The rules are read, and SSH from the home network admitted, before anything else changes, so no run leaves SSH closed.
+  local added line ours="allow from $HOME_NETWORK to any port 22 proto tcp" have_ours=0
+  local -a others=()
+  added="$(ufw_c show added | sed -n 's/^ufw //p')"
+  while IFS= read -r line; do
+    if [[ -z "$line" ]]; then
+      continue
+    elif [[ "$line" == "$ours" || "$line" == "$ours comment "* ]]; then
+      have_ours=1
+    else
+      others+=("$line")
+    fi
+  done <<< "$added"
+  if (( have_ours )); then
+    log_info "in place: SSH from $HOME_NETWORK"
+  else
+    record_change "allow SSH from $HOME_NETWORK"
+    run ufw_c allow proto tcp from "$HOME_NETWORK" to any port 22 comment "$SSH_RULE_COMMENT" > /dev/null
+  fi
+  (( ${#others[@]} == 0 )) \
+    || die "the firewall holds rules this host must not have: $(printf "'%s' " "${others[@]}")— SSH from $HOME_NETWORK stays admitted, so remove each with sudo ufw delete <rule> and run this script again"
+
+  local defaults=/etc/default/ufw
   if ! grep -qx 'IPV6=yes' "$defaults"; then
     record_change "make the firewall cover IPv6 (IPV6=yes in $defaults)"
     if (( ! DRY_RUN )); then
@@ -708,7 +748,6 @@ ensure_firewall() {
         printf 'IPV6=yes\n' >> "$defaults"
       fi
     fi
-    ipv6_changed=1
   fi
   if ! grep -qx 'DEFAULT_INPUT_POLICY="DROP"' "$defaults"; then
     record_change "deny new incoming connections by default"
@@ -719,34 +758,25 @@ ensure_firewall() {
     run ufw_c default allow outgoing > /dev/null
   fi
 
-  local added ours="from $HOME_NETWORK to any port 22 proto tcp"
-  local -a others=()
-  added="$(ufw_c show added | sed -n 's/^ufw //p')"
-  mapfile -t others < <(grep -vF -- "$ours" <<< "$added" | grep -v '^$' || true)
-  (( ${#others[@]} == 0 )) \
-    || die "the firewall holds rules this host must not have: $(printf "'%s' " "${others[@]}")— remove each with sudo ufw delete <rule>, and run this script again"
-  if grep -qF -- "$ours" <<< "$added"; then
-    log_info "in place: SSH from $HOME_NETWORK"
-  else
-    record_change "allow SSH from $HOME_NETWORK"
-    run ufw_c allow proto tcp from "$HOME_NETWORK" to any port 22 comment "$SSH_RULE_COMMENT" > /dev/null
-  fi
-
-  if [[ "$(ufw_c status)" == 'Status: active'* ]]; then
-    log_info "in place: the firewall is on"
-    if (( ipv6_changed )); then
-      run ufw_c reload > /dev/null
-    fi
-  else
+  if [[ "$(ufw_c status)" != 'Status: active'* ]]; then
     record_change "turn the firewall on"
     run ufw_c --force enable > /dev/null
+  elif firewall_drops_by_default; then
+    log_info "in place: the firewall is on"
+  else
+    record_change "reload the firewall, whose running rules do not drop new connections on IPv4 and IPv6 yet"
+    run ufw_c reload > /dev/null
   fi
-
   if (( ! DRY_RUN )); then
-    local family
-    for family in iptables ip6tables; do
-      [[ "$("$family" -S INPUT | sed -n 1p)" == '-P INPUT DROP' ]] || die "$family does not drop new incoming connections by default"
-    done
+    firewall_drops_by_default || die "the firewall does not drop new incoming connections by default on IPv4 and IPv6"
+  fi
+}
+
+firewall_drops_by_default() {
+  [[ "$(iptables -S INPUT 2> /dev/null | sed -n 1p)" == '-P INPUT DROP' ]] || return 1
+  # A kernel started without IPv6 has no ip6tables to set, and ufw leaves IPv6 alone there.
+  if [[ -e /proc/net/if_inet6 ]]; then
+    [[ "$(ip6tables -S INPUT 2> /dev/null | sed -n 1p)" == '-P INPUT DROP' ]] || return 1
   fi
 }
 
