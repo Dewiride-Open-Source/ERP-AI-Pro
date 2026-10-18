@@ -1,15 +1,6 @@
 import type { ChangeRecordResponse } from "@dewiride/erp-api-client";
-import {
-  Timeline,
-  TimelineContent,
-  TimelineGroup,
-  TimelineItem,
-  TimelineTime,
-} from "@dewiride/erp-ui/components/timeline/timeline";
-import { ChevronRightIcon } from "lucide-react";
-import { Fragment } from "react";
+import { Timeline, TimelineGroup } from "@dewiride/erp-ui/components/timeline/timeline";
 
-import { formatTimeIst } from "@/shared/format/dates";
 import { ListLink } from "@/shared/lists/list-navigation";
 import { filterSignature, listHref, withFilters, type ListQuery } from "@/shared/lists/list-query";
 
@@ -17,15 +8,8 @@ import { auditNavigation } from "../../nav";
 import { changesList } from "../lists/changes.list";
 
 import { changeDays } from "./change-days";
-import {
-  actorChangesLinkText,
-  changeSentence,
-  recordHistoryLinkText,
-  shownValues,
-  snapshotSummary,
-  type ShownValue,
-  type ShownValues,
-} from "./change-text";
+import { ChangeEntry } from "./change-entry";
+import { actorChangesLinkText, recordHistoryLinkText } from "./change-text";
 
 const linkClass = "rounded-sm wrap-anywhere text-primary underline-offset-4 focus-ring hover:underline";
 
@@ -73,47 +57,28 @@ function ChangeItem({
   headingId: string;
 }) {
   const { basePath } = auditNavigation;
-  const sentence = changeSentence(change);
-  const values = shownValues(change.operation, change.changes ?? []);
   const actorHref = linkTo(query, "actor", change.actorId);
   const recordHref = linkTo(query, "record", change.subjectId);
-  const occurredAt = change.occurredAt;
 
   return (
-    <TimelineItem data-testid="audit-change">
-      {occurredAt === null || occurredAt === undefined || Number.isNaN(occurredAt.getTime()) ? null : (
-        <TimelineTime dateTime={occurredAt.toISOString()}>{formatTimeIst(occurredAt)}</TimelineTime>
-      )}
-      <TimelineContent>
-        <p data-testid="audit-change-summary" className="wrap-anywhere">
-          <span className="font-medium">{sentence.actor}</span> {sentence.action}
-          {sentence.subject === undefined ? null : (
-            <>
-              {" "}
-              <span className="font-medium">{sentence.subject}</span>
-            </>
-          )}
-          .
-        </p>
-        <ChangeValues values={values} />
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
-          {recordHref === undefined || filtersOf(recordHref) === current ? null : (
-            <ChangeLink
-              href={listHref(basePath, recordHref, changesList)}
-              text={recordHistoryLinkText(change.subjectName)}
-              headingId={headingId}
-            />
-          )}
-          {actorHref === undefined || filtersOf(actorHref) === current ? null : (
-            <ChangeLink
-              href={listHref(basePath, actorHref, changesList)}
-              text={actorChangesLinkText(change.actorKind, change.actorName)}
-              headingId={headingId}
-            />
-          )}
-        </div>
-      </TimelineContent>
-    </TimelineItem>
+    <ChangeEntry change={change}>
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        {recordHref === undefined || filtersOf(recordHref) === current ? null : (
+          <ChangeLink
+            href={listHref(basePath, recordHref, changesList)}
+            text={recordHistoryLinkText(change.subjectName)}
+            headingId={headingId}
+          />
+        )}
+        {actorHref === undefined || filtersOf(actorHref) === current ? null : (
+          <ChangeLink
+            href={listHref(basePath, actorHref, changesList)}
+            text={actorChangesLinkText(change.actorKind, change.actorName)}
+            headingId={headingId}
+          />
+        )}
+      </div>
+    </ChangeEntry>
   );
 }
 
@@ -122,48 +87,6 @@ function ChangeLink({ href, text, headingId }: { href: string; text: string; hea
     <ListLink href={href} disabled={false} aria-label={text} className={linkClass} focusOnFollow={headingId}>
       {text}
     </ListLink>
-  );
-}
-
-// What a change altered shows at once; the values a record was created with, or had when it was deleted, fold under a single
-// line, so a page of new records stays short and each one opens on demand.
-function ChangeValues({ values }: { values: ShownValues }) {
-  if (values.values.length === 0) return null;
-  if (values.reading === "changed") return <ChangedValues values={values.values} />;
-  return (
-    <details className="group/values" data-testid="audit-change-snapshot">
-      <summary className="inline-flex w-fit cursor-pointer list-none items-center gap-1 rounded-sm text-muted-foreground focus-ring hover:text-foreground [&::-webkit-details-marker]:hidden">
-        <ChevronRightIcon aria-hidden className="size-4 transition-transform group-open/values:rotate-90" />
-        {snapshotSummary(values.reading, values.values.length)}
-      </summary>
-      <div className="mt-2">
-        <ChangedValues values={values.values} />
-      </div>
-    </details>
-  );
-}
-
-function ChangedValues({ values }: { values: readonly ShownValue[] }) {
-  return (
-    <dl
-      className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-4 gap-y-1"
-      data-testid="audit-change-values"
-    >
-      {values.map((value, index) => (
-        <Fragment key={`${value.label}-${index}`}>
-          <dt className="text-muted-foreground">{value.label}</dt>
-          <dd className="min-w-0 break-words">
-            {value.value}
-            {value.was === undefined ? null : (
-              <>
-                {" "}
-                <span className="text-muted-foreground">(was {value.was})</span>
-              </>
-            )}
-          </dd>
-        </Fragment>
-      ))}
-    </dl>
   );
 }
 

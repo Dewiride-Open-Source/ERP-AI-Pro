@@ -22,8 +22,8 @@ public sealed class AuditModule : IModule
         FeatureFlag: FeatureFlag,
         Permissions:
         [
-            new(AuditPermissions.ReadChanges, []),
-            new(AuditPermissions.ExportChanges, []),
+            new(AuditPermissions.ReadChanges, [], "See the audit trail of who changed what in the ERP, and when."),
+            new(AuditPermissions.ExportChanges, [], "Download the audit trail as a CSV file."),
         ],
         Capabilities: []);
 

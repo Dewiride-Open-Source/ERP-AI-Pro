@@ -21,6 +21,7 @@ import { groupIndian } from "@dewiride/erp-ui/lib/indian-number";
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 
+import { leavesGroup } from "@/shared/forms/client/field-focus";
 import { fieldErrorMessages } from "@/shared/forms/client/form-feedback";
 import { useActionForm } from "@/shared/forms/client/use-action-form";
 import { identifierLengths } from "@/shared/forms/schemas/indian-identifiers";
@@ -37,8 +38,7 @@ import {
 import { registerSupplierExample } from "../server/actions";
 
 import { AgreementDocumentField } from "./agreement-document-field";
-import { leavesGroup } from "./field-focus";
-import { categoryOptions, serverAnswerLabels, stateLabels } from "./supplier-choices";
+import { categoryOptions, serverAnswerLabel, serverAnswerLabels, stateLabels } from "./supplier-choices";
 import { ValidityField } from "./validity-field";
 
 const identifierFields = [
@@ -284,7 +284,7 @@ export function SupplierExampleForm({ labelledBy }: { labelledBy: string }) {
                   }}
                 >
                   <SelectTrigger {...frame} ref={field.ref} className="w-full md:w-fit">
-                    <SelectValue />
+                    <SelectValue>{serverAnswerLabel(field.value)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {serverAnswers.map((value) => (

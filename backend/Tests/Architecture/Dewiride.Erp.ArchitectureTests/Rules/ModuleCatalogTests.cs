@@ -97,6 +97,28 @@ public sealed class ModuleCatalogTests : IClassFixture<ErpApiFactory>
         }
     }
 
+    [Fact]
+    public void ModuleDescriptors_DescribeEveryPermissionInOneSentence()
+    {
+        var permissions = HostModules.All.SelectMany(module => module.Descriptor.Permissions).ToList();
+
+        Assert.NotEmpty(permissions);
+        Assert.All(permissions, permission => Assert.Matches(@"\A[A-Z][^.!?\r\n]*\.\z", permission.Description));
+    }
+
+    [Fact]
+    public void ModuleDescriptors_DescribeNoTwoPermissionsAlike()
+    {
+        var alike = HostModules.All
+            .SelectMany(module => module.Descriptor.Permissions)
+            .GroupBy(permission => permission.Description, StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .Select(group => $"\"{group.Key}\": {string.Join(", ", group.Select(permission => permission.Name))}")
+            .ToList();
+
+        Assert.Empty(alike);
+    }
+
     private static bool IsGeneratedPersistenceType(Type type)
     {
         for (var current = type.BaseType; current is not null; current = current.BaseType)

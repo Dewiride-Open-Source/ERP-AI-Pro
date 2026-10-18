@@ -991,6 +991,7 @@ test.describe("design system kitchen sink", () => {
               - text: 01-04-2026
             - group:
               - button "Choose date" [disabled]
+        - button "Choose dates in a dialog"
         - heading "Date range" [level=3]
         - group:
           - text: Statement period From
@@ -2355,6 +2356,45 @@ test.describe("design system kitchen sink", () => {
       await expect(contractTo).not.toHaveAttribute("aria-invalid");
       await contractFrom.fill("01-04-2026");
       await expect(contractFrom).not.toHaveAttribute("aria-invalid");
+
+      const datesDialogTrigger = dates.getByRole("button", { name: "Choose dates in a dialog" });
+      const datesDialog = page.getByRole("dialog", { name: "Dates in a dialog" });
+      await datesDialogTrigger.click();
+      await expect(datesDialog).toBeVisible();
+      const paymentCalendarButton = page.locator(
+        "[data-slot='field']:has(#ks-forms-dialog-payment-date) button[aria-label='Choose date']",
+      );
+      await paymentCalendarButton.focus();
+      await page.keyboard.press("Enter");
+      await expect(calendar).toBeVisible();
+      await expect(calendar.getByRole("button", { name: /\b31 March 2026/ })).toBeFocused();
+      await page.keyboard.press("ArrowRight");
+      await expect(calendar.getByRole("button", { name: /\b1 April 2026/ })).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(calendar).toBeHidden();
+      await expect(datesDialog).toBeVisible();
+      await expect(paymentCalendarButton).toBeFocused();
+      const billingCalendarButton = page.locator(
+        "[data-slot='field']:has(#ks-forms-dialog-billing-period) button[aria-label='Choose dates']",
+      );
+      await billingCalendarButton.focus();
+      await page.keyboard.press("Enter");
+      await expect(rangeCalendar).toBeVisible();
+      await expect(rangeCalendar.getByRole("button", { name: /\b1 April 2026/ })).toBeFocused();
+      await capture("forms-dates-in-a-dialog", rangeCalendar);
+      await page.keyboard.press("ArrowRight");
+      await expect(rangeCalendar.getByRole("button", { name: /\b2 April 2026/ })).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(rangeCalendar).toBeHidden();
+      await expect(datesDialog).toBeVisible();
+      await expect(billingCalendarButton).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(datesDialog).toBeHidden();
+      await expect(datesDialogTrigger).toBeFocused();
+      await datesDialogTrigger.click();
+      await datesDialog.getByRole("button", { name: "Done" }).click();
+      await expect(datesDialog).toBeHidden();
+      await expect(datesDialogTrigger).toBeFocused();
 
       const combos = kitchenSink.specimen("Combobox");
       const account = combos.getByRole("combobox", { name: "Expense account", exact: true });

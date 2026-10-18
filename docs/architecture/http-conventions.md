@@ -162,11 +162,12 @@ Every route that is not anonymous requires one permission, except the routes any
 | Rule | Detail |
 |---|---|
 | Names | `<domain>.<module>.<feature>.<action>`, four lower-case segments of letters, digits and `-`, declared by the module that owns them; the OpenAPI document lists them all in the enum schema `Permission` |
+| Catalogue | each declaration carries one sentence saying what a holder may do; `GET /api/identity/users/permissions` (`identity.users.people.read`) answers every permission in ordinal order with that sentence and the built-in roles that hold it (`ErpRole`, `administrator` always among them), which the roles and permissions page shows ([ADR-0045](../adr/0045-people-pages-and-the-permission-catalogue.md)) |
 | Roles | a person holds the permissions of Administrator while their token carries the app role `Erp.Admin` (every permission), of Employee while it carries `Erp.User`, and of the roles assigned to their record in the ERP: `finance`, `hr` and `manager` (`PersonRole`); an application holds none |
 | When a change counts | a role assigned or taken in the ERP from the person's next request; an app role changed in Microsoft Entra from their next sign-in |
 | Refusal | 403 `request.forbidden`, after authentication (401) and before the antiforgery check (400) and the feature gate (404 `feature.disabled`), so a caller without the permission learns neither; a route checks what a request asks for beyond its permission the same way (`ICallerPermissions`): naming roles in `POST /api/identity/users` or `POST /api/identity/users/invitations` needs `identity.users.people.assign-roles`, and the organisation chart of a date other than today (`GET /api/identity/users/org-chart?on=`) needs `identity.users.positions.read` |
 | Routes for any signed-in caller | `GET /api/auth/me`, `GET` and `POST /api/auth/session`, `GET /api/auth/antiforgery`, `GET /api/platform/features` |
-| Proved by | `AssignedRoleTests`, `BearerTokenPermissionTests`, `CurrentUserEndpointTests` (host), `RoleAssignmentTests`, `PeopleEndpointsTests`, `OrgChartEndpointsTests`, `AttachmentEndpointsTests`, `SystemInfoEndpointsTests` (modules), `PermissionCatalogTests`, `PermissionRouteExtensionsTests`, `PermissionAuthorizationHandlerTests` (unit), `ModuleCatalogTests` (architecture) |
+| Proved by | `AssignedRoleTests`, `BearerTokenPermissionTests`, `CurrentUserEndpointTests` (host), `RoleAssignmentTests`, `PeopleEndpointsTests`, `OrgChartEndpointsTests`, `PermissionEndpointsTests`, `AttachmentEndpointsTests`, `SystemInfoEndpointsTests` (modules), `PermissionCatalogTests`, `PermissionRouteExtensionsTests`, `PermissionAuthorizationHandlerTests` (unit), `ModuleCatalogTests` (architecture) |
 
 ## The OpenAPI document
 

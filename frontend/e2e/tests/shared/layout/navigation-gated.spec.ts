@@ -2,6 +2,7 @@ import { gatedBaseURL } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { AppShell, showsBreadcrumbs } from "../../../pages/shared/layout/app-shell.page";
 
+// An administrator holds every permission, so only the disabled modules can keep their pages out of the shell.
 test.describe("app shell navigation with the system-info module disabled", () => {
   test.skip(
     !gatedBaseURL,
@@ -9,6 +10,7 @@ test.describe("app shell navigation with the system-info module disabled", () =>
   );
   test.use({
     baseURL: gatedBaseURL ?? "",
+    persona: "administrator",
     expectedConsoleError: /the server responded with a status of 404/,
   });
 

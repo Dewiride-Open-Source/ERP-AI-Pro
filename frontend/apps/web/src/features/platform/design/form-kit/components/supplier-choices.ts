@@ -51,3 +51,9 @@ export const serverAnswerLabels: Readonly<Record<ServerAnswer, string>> = {
   "server-error": "Fail with a server error",
   unreachable: "Do not respond (API unreachable)",
 };
+
+const serverAnswerNames: ReadonlyMap<string, string> = new Map(Object.entries(serverAnswerLabels));
+
+export function serverAnswerLabel(answer: string): string | undefined {
+  return serverAnswerNames.get(answer);
+}

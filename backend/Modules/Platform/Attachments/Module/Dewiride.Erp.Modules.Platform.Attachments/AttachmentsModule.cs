@@ -26,9 +26,9 @@ public sealed class AttachmentsModule : IModule
         FeatureFlag: FeatureFlag,
         Permissions:
         [
-            new(AttachmentsPermissions.Upload, [ErpRole.Employee]),
-            new(AttachmentsPermissions.Read, [ErpRole.Employee]),
-            new(AttachmentsPermissions.Delete, []),
+            new(AttachmentsPermissions.Upload, [ErpRole.Employee], "Upload files."),
+            new(AttachmentsPermissions.Read, [ErpRole.Employee], "See the stored files and download them."),
+            new(AttachmentsPermissions.Delete, [], "Delete stored files."),
         ],
         Capabilities: []);
 
