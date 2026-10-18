@@ -1,12 +1,11 @@
 import { expect, type APIRequestContext } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { link, open, readFile, rename, rm, stat, utimes } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { turnFolderVariable } from "../global-setup";
 import { addDirectoryPerson, type DirectoryAccountState } from "./directory";
 import { peopleApi, type PersonRecord } from "./person-records";
-import { apiBaseURL } from "./targets";
 import type { SignedInApi } from "./test";
 
 export const accountCheckApi = `${peopleApi}/directory/account-check`;
@@ -28,8 +27,6 @@ export type Deactivation = {
   readonly managerId: string | null;
   readonly managerActive: boolean | null;
 };
-
-const turnFile = join(tmpdir(), `erp-ai-pro-e2e-account-check-${new URL(apiBaseURL).port}.lock`);
 
 const turnWait = 75_000;
 
@@ -82,24 +79,26 @@ export async function deactivationOf(api: SignedInApi, id: string): Promise<Deac
 // Every check deactivates each active, linked person whose account the test directory holds as disabled or deleted, whoever
 // marked it, and every worker and project of a run shares the API host's one database, so the tests that check take turns: a
 // test marks accounts and runs its checks only in its turn, which starts with a check of its own that deactivates whatever an
-// interrupted turn left marked. A turn is a file its holder creates with a token of its own and touches while it holds it. A
-// turn untouched for longer than a holder ever pauses, or held by this worker, which runs one test at a time, was left behind:
-// it is moved aside first, which only one worker can do, and removed only when it is still the turn found left behind, so a
-// turn claimed meanwhile is put back, and a holder removes its turn only while it still holds its token.
+// interrupted turn left marked. A turn is a file in the run's folder for turns, which its holder creates with a token of its own
+// and touches while it holds it. A turn untouched for longer than a holder ever pauses, or held by this worker, which runs one
+// test at a time, was left behind: it is moved aside first, which only one worker can do, and removed only when it is still the
+// turn found left behind, so a turn claimed meanwhile is put back, and a holder removes its turn only while it still holds its
+// token.
 export async function takeAccountCheckTurn(api: SignedInApi): Promise<() => Promise<void>> {
+  const file = turnFile();
   const token = randomUUID();
   await expect
-    .poll(() => claimTurn(token), {
+    .poll(() => claimTurn(file, token), {
       message: "a turn to check the Microsoft accounts",
       timeout: turnWait,
       intervals: [100, 250, 500],
     })
     .toBe(true);
-  const touching = setInterval(() => void touchTurn(token), turnTouchInterval);
+  const touching = setInterval(() => void touchTurn(file, token), turnTouchInterval);
   touching.unref();
   const release = async () => {
     clearInterval(touching);
-    await releaseTurn(token);
+    await releaseTurn(file, token);
   };
   try {
     await checkAccounts(api);
@@ -112,9 +111,18 @@ export async function takeAccountCheckTurn(api: SignedInApi): Promise<() => Prom
 
 type Turn = { readonly token: string; readonly pid: number };
 
-async function claimTurn(token: string): Promise<boolean> {
+// Playwright makes what the global setup sets available inside tests only, so the folder is read when a test asks for a turn.
+function turnFile(): string {
+  const folder = process.env[turnFolderVariable];
+  if (!folder) {
+    throw new Error(`${turnFolderVariable} is not set: the global setup makes the run's folder for turns`);
+  }
+  return join(folder, "account-check.lock");
+}
+
+async function claimTurn(file: string, token: string): Promise<boolean> {
   try {
-    const turn = await open(turnFile, "wx");
+    const turn = await open(file, "wx", 0o600);
     try {
       await turn.writeFile(JSON.stringify({ token, pid: process.pid } satisfies Turn));
     } finally {
@@ -124,9 +132,9 @@ async function claimTurn(token: string): Promise<boolean> {
   } catch (error) {
     if (!hasCode(error, "EEXIST")) throw error;
   }
-  const held = await heldTurn(turnFile);
+  const held = await heldTurn(file);
   if (held !== undefined && (held.turn?.pid === process.pid || Date.now() - held.touchedAt > turnLeftAfter)) {
-    await takeOver(held.turn);
+    await takeOver(file, held.turn);
   }
   return false;
 }
@@ -143,10 +151,10 @@ async function heldTurn(
   }
 }
 
-async function takeOver(leftBehind: Turn | undefined): Promise<void> {
-  const aside = `${turnFile}.${randomUUID()}`;
+async function takeOver(file: string, leftBehind: Turn | undefined): Promise<void> {
+  const aside = `${file}.${randomUUID()}`;
   try {
-    await rename(turnFile, aside);
+    await rename(file, aside);
   } catch (error) {
     if (hasCode(error, "ENOENT")) return;
     throw error;
@@ -154,7 +162,7 @@ async function takeOver(leftBehind: Turn | undefined): Promise<void> {
   const moved = await heldTurn(aside);
   if (moved !== undefined && moved.turn?.token !== leftBehind?.token) {
     try {
-      await link(aside, turnFile);
+      await link(aside, file);
     } catch (error) {
       if (!hasCode(error, "EEXIST")) throw error;
     }
@@ -162,16 +170,16 @@ async function takeOver(leftBehind: Turn | undefined): Promise<void> {
   await rm(aside, { force: true });
 }
 
-async function touchTurn(token: string): Promise<void> {
-  const held = await heldTurn(turnFile).catch(() => undefined);
+async function touchTurn(file: string, token: string): Promise<void> {
+  const held = await heldTurn(file).catch(() => undefined);
   if (held?.turn?.token !== token) return;
   const now = new Date();
-  await utimes(turnFile, now, now).catch(() => undefined);
+  await utimes(file, now, now).catch(() => undefined);
 }
 
-async function releaseTurn(token: string): Promise<void> {
-  const held = await heldTurn(turnFile);
-  if (held?.turn?.token === token) await rm(turnFile, { force: true });
+async function releaseTurn(file: string, token: string): Promise<void> {
+  const held = await heldTurn(file);
+  if (held?.turn?.token === token) await rm(file, { force: true });
 }
 
 function turnOf(text: string): Turn | undefined {
