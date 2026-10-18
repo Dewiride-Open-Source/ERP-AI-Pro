@@ -1,4 +1,5 @@
 using System.Net;
+using Dewiride.Erp.BuildingBlocks.Application.Actors.PeopleDirectory;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.Modules.Identity.Users.Contracts;
@@ -229,6 +230,77 @@ public sealed class TeamHandoverTests(ErpApiFactory factory) : IClassFixture<Erp
         using var response = await DeactivateAsync(client, manager);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangeStatus_TeamOfAManagerTheAccountCheckDeactivated_MovesTheTeamAndKeepsTheReason()
+    {
+        using var client = Administrator();
+        var team = await TeamOfAManagerTheCheckDeactivatedAsync(client);
+
+        using var response = await DeactivateAsync(client, await GetAsync(client, team.Manager.Id), new { managerId = team.Successor.Id });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var manager = await GetAsync(client, team.Manager.Id);
+        Assert.Equal((PersonStatus.Deactivated, PersonDeactivationReason.AccountDisabled), (manager.Status, manager.DeactivatedBecause));
+        Assert.Contains(await PositionsOfAsync(client, team.Report.Id), position => position.EffectiveFrom == Today && position.ManagerId == team.Successor.Id);
+        Assert.True((await GetAsync(client, team.Report.Id)).ManagerActive);
+    }
+
+    [Fact]
+    public async Task ChangeStatus_TeamHandedOverAgainFromTheSameVersion_Returns409ConcurrencyConflictAndChangesNothing()
+    {
+        using var client = Administrator();
+        var team = await TeamOfAManagerTheCheckDeactivatedAsync(client);
+        var page = await GetAsync(client, team.Manager.Id);
+        using (var first = await DeactivateAsync(client, page, new { managerId = team.Successor.Id }))
+        {
+            Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        }
+
+        var positions = await PositionsOfAsync(client, team.Report.Id);
+
+        using var second = await DeactivateAsync(client, page, new { managerId = team.Other.Id });
+
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+        Assert.Equal("concurrency.conflict", await OrganisationApi.CodeOfAsync(second));
+        Assert.Equal(positions, await PositionsOfAsync(client, team.Report.Id));
+    }
+
+    [Fact]
+    public async Task ChangeStatus_TeamOfAManagerFromAVersionReadBeforeTheAccountCheckDeactivatedThem_Returns409ConcurrencyConflictAndChangesNothing()
+    {
+        using var client = Administrator();
+        var team = await TeamOfAManagerTheCheckDeactivatedAsync(client);
+        var positions = await PositionsOfAsync(client, team.Report.Id);
+
+        using var response = await DeactivateAsync(client, team.Manager, new { managerId = team.Successor.Id });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("concurrency.conflict", await OrganisationApi.CodeOfAsync(response));
+        Assert.Equal(positions, await PositionsOfAsync(client, team.Report.Id));
+    }
+
+    private async Task<(PersonResponse Manager, PersonResponse Report, PersonResponse Successor, PersonResponse Other)> TeamOfAManagerTheCheckDeactivatedAsync(HttpClient client)
+    {
+        var manager = await RegisterAsync(client, "Lead");
+        var managerAccount = await AccountCheckApi.LinkAsync(factory, manager.Id);
+        await AccountCheckApi.LinkAsync(factory, (await RegisterAsync(client, "Enabled")).Id);
+        var report = await RegisterAsync(client, "Report");
+        var successor = await RegisterAsync(client, "Successor");
+        var other = await RegisterAsync(client, "Other");
+        await OrganisationApi.RecordPositionAsync(client, report.Id, Today.AddDays(-30), managerId: manager.Id);
+        AccountCheckApi.MarkAccount(factory, managerAccount, DirectoryAccountState.Disabled);
+        try
+        {
+            await AccountCheckApi.CheckAsync(client);
+        }
+        finally
+        {
+            AccountCheckApi.MarkAccount(factory, managerAccount, DirectoryAccountState.Enabled);
+        }
+
+        return (manager, report, successor, other);
     }
 
     private static Task<HttpResponseMessage> DeactivateAsync(HttpClient client, PersonResponse person, object? team = null) =>

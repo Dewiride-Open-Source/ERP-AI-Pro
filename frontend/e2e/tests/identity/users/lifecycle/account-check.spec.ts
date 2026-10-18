@@ -9,8 +9,9 @@ import {
   type LinkedPerson,
 } from "../../../../fixtures/account-check";
 import { withholdClientBundles } from "../../../../fixtures/client-bundles";
+import { setApplicationAccess } from "../../../../fixtures/directory";
 import { removeRecords, uniquePrefix } from "../../../../fixtures/person-records";
-import { answerServerFunctionCalls, holdServerFunctionCalls } from "../../../../fixtures/server-functions";
+import { holdServerFunctionCalls } from "../../../../fixtures/server-functions";
 import { expect, test, themes, type SignedInApi } from "../../../../fixtures/test";
 import { AccountCheckDialog } from "../../../../pages/identity/users/account-check.page";
 import { PeoplePage, peoplePath } from "../../../../pages/identity/users/people.page";
@@ -22,7 +23,7 @@ const dialogDescription =
 const accessDenied =
   "Microsoft has not granted the ERP permission to read accounts, so no one was checked. Whoever looks after your organisation's Microsoft Entra needs to grant it.";
 
-const reference = "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01";
+const refusedWithAReference = new RegExp(`^${accessDenied.replaceAll(".", "\\.")} Reference: \\S+$`);
 
 type LinkedPeople = {
   readonly prefix: string;
@@ -212,24 +213,24 @@ test.describe("checking the Microsoft accounts", () => {
 
       test("explains a check Microsoft refused, beside the buttons, and announces it again on every try", async ({
         page,
+        api,
+        request,
         capture,
       }) => {
+        test.slow();
         const check = new AccountCheckDialog(page);
         const people = new PeoplePage(page);
-        await people.goto();
-        await people.waitUntilInteractive();
-        await check.open();
-        const removeAnswer = await answerServerFunctionCalls(page, peoplePath, {
-          status: "refused",
-          message: accessDenied,
-          reference,
-        });
+        const endTurn = await takeAccountCheckTurn(api);
+        await setApplicationAccess(request, { refused: true });
         try {
+          await people.goto();
+          await people.waitUntilInteractive();
+          await check.open();
           await check.run.focus();
           await page.keyboard.press("Enter");
 
           await expect(check.error).toHaveRole("alert");
-          await expect(check.error).toHaveText(`${accessDenied} Reference: ${reference}`);
+          await expect(check.error).toHaveText(refusedWithAReference);
           await expect(check.run).toBeFocused();
           await expect(check.status).toHaveText("");
           await expect(check.dialog).toMatchAriaSnapshot(`
@@ -237,7 +238,7 @@ test.describe("checking the Microsoft accounts", () => {
               - heading "Check Microsoft accounts" [level=2]
               - paragraph: ${dialogDescription}
               - status
-              - alert: ${JSON.stringify(`${accessDenied} Reference: ${reference}`)}
+              - alert: /^Microsoft has not granted the ERP permission to read accounts.+ Reference:\\s\\S+$/
               - button "Cancel"
               - button "Check"
               - button "Close"
@@ -248,10 +249,11 @@ test.describe("checking the Microsoft accounts", () => {
           await page.keyboard.press("Enter");
           await expect(check.error).toHaveCount(0);
           release();
-          await expect(check.error).toHaveText(`${accessDenied} Reference: ${reference}`);
+          await expect(check.error).toHaveText(refusedWithAReference);
           await expect(check.run).toBeFocused();
         } finally {
-          await removeAnswer();
+          await setApplicationAccess(request, { refused: false });
+          await endTurn();
         }
       });
     });

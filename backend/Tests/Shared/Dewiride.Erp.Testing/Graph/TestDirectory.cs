@@ -62,6 +62,8 @@ public sealed class TestDirectory(TestTokenEndpoint tokenEndpoint)
 
     public void RefuseApplicationTokens() => _refusingApplications = true;
 
+    public void AllowApplicationTokens() => _refusingApplications = false;
+
     public HttpMessageHandler CreateHandler() => new Handler(this);
 
     private HttpResponseMessage Answer(HttpRequestMessage request)

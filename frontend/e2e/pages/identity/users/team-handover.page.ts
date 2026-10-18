@@ -4,6 +4,7 @@ import type { Locator, Page } from "@playwright/test";
 // cancel button of each.
 export class TeamHandoverDialog {
   readonly dialog: Locator;
+  readonly team: Locator;
   readonly members: Locator;
   readonly choice: Locator;
   readonly anotherPerson: Locator;
@@ -16,8 +17,9 @@ export class TeamHandoverDialog {
 
   constructor(page: Page, { title, cancel }: { readonly title: string; readonly cancel: string }) {
     this.dialog = page.getByRole("dialog", { name: title });
+    this.team = this.dialog.getByTestId("team-handover-team");
     this.members = this.dialog.getByTestId("team-handover-members");
-    this.choice = this.dialog.getByRole("radiogroup", { name: "Who they report to from today" });
+    this.choice = this.dialog.getByRole("radiogroup", { name: /^Who the team of .+ reports to from today$/ });
     this.anotherPerson = this.choice.getByRole("radio", { name: "Another person", exact: true });
     this.noManager = this.choice.getByRole("radio", { name: "No manager", exact: true });
     this.manager = this.dialog.getByRole("combobox", { name: "New manager" });

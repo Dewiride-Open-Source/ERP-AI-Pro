@@ -80,7 +80,7 @@ export async function searchActivePeople(
     client.api.identity.users.get({
       queryParameters: {
         page: 1,
-        pageSize: searchResultLimit,
+        pageSize: Math.min(searchResultLimit + excluding.length, lookupPageSize),
         sort: "displayName:asc",
         filter: terms.join(";"),
       },
@@ -93,5 +93,6 @@ export async function searchActivePeople(
         : [],
     ),
     excluding,
+    searchResultLimit,
   );
 }

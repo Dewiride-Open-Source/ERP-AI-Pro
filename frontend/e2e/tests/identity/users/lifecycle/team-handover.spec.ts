@@ -159,6 +159,7 @@ test.describe("deactivating a manager and handing over their team", () => {
 
           await personPage.statusAction.click();
           await expect(handover.dialog).toBeVisible();
+          await expect(handover.team).toBeFocused();
           await expect(handover.dialog).toMatchAriaSnapshot(`
             - dialog "Deactivate ${manager.displayName}?":
               - heading "Deactivate ${manager.displayName}?" [level=2]
@@ -167,9 +168,9 @@ test.describe("deactivating a manager and handing over their team", () => {
               - list "People who report to ${manager.displayName}":
                 - listitem: ${kiran.displayName}
                 - listitem: ${meera.displayName}
-              - group "Who they report to from today":
-                - text: Who they report to from today
-                - radiogroup "Who they report to from today":
+              - group "Who the team of ${manager.displayName} reports to from today":
+                - text: Who the team of ${manager.displayName} reports to from today
+                - radiogroup "Who the team of ${manager.displayName} reports to from today":
                   - radio "Another person"
                   - radio "No manager"
                   - paragraph: They report to no one until a move gives them a manager.
@@ -191,7 +192,7 @@ test.describe("deactivating a manager and handing over their team", () => {
           await expect(handover.anotherPerson).toBeFocused();
           await expect(handover.choice).toHaveAttribute("aria-invalid", "true");
           await expect(handover.fieldOf(handover.choice)).toContainText(
-            "Choose who they report to from today.",
+            "Choose who the team reports to from today.",
           );
           await capture("team-handover-refused-in-the-browser", handover.dialog);
 
@@ -399,6 +400,7 @@ test.describe("deactivating a manager and handing over their team", () => {
             cancel: "Cancel",
           });
           await personPage.handOverTeam.click();
+          await expect(handover.team).toBeFocused();
           await expect(handover.dialog).toMatchAriaSnapshot(`
             - dialog "Hand over the team of ${manager.displayName}":
               - heading "Hand over the team of ${manager.displayName}" [level=2]
@@ -407,7 +409,7 @@ test.describe("deactivating a manager and handing over their team", () => {
               - list "People who report to ${manager.displayName}":
                 - listitem: ${kiran.displayName}
                 - listitem: ${meera.displayName}
-              - group "Who they report to from today"
+              - group "Who the team of ${manager.displayName} reports to from today"
               - button "Cancel"
               - button "Hand over the team"
               - button "Close"

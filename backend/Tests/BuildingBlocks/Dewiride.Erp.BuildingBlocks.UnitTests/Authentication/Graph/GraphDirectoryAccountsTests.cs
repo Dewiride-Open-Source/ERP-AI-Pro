@@ -166,6 +166,23 @@ public sealed partial class GraphDirectoryAccountsTests
         Assert.DoesNotContain(EnabledAccount.ToString("D"), record.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData(HttpStatusCode.Forbidden, "", "directory.access-denied")]
+    [InlineData(HttpStatusCode.Forbidden, "<html><body>Forbidden</body></html>", "directory.access-denied")]
+    [InlineData(HttpStatusCode.ServiceUnavailable, "", "directory.unavailable")]
+    [InlineData(HttpStatusCode.ServiceUnavailable, "<html><body>Service Unavailable</body></html>", "directory.unavailable")]
+    public async Task StatesOfAsync_GraphRefusesOrFailsWithoutAJsonBody_AnswersTheErrorAndLogsWithoutAnId(HttpStatusCode status, string body, string code)
+    {
+        var graph = new StubGraph(_ => new HttpResponseMessage(status) { Content = new StringContent(body, Encoding.UTF8, "text/html") });
+
+        var result = await Accounts(graph).StatesOfAsync([EnabledAccount], TestContext.Current.CancellationToken);
+
+        Assert.Equal(code, result.Error?.Code);
+        var record = Assert.Single(_logger.Collector.GetSnapshot());
+        Assert.Equal(LogLevel.Warning, record.Level);
+        Assert.DoesNotContain(EnabledAccount.ToString("D"), record.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public async Task StatesOfAsync_GraphRefusesTheApplication_AnswersTheRefusalOfTheApplicationsPermission()
     {

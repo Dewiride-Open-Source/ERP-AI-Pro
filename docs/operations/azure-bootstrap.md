@@ -30,7 +30,7 @@ The storage account accepts Entra ID only: `allowSharedKeyAccess` is `false`, so
 | openssl | on `PATH`; `export-runtime-certificate.sh` checks the exported PEM with it |
 | Node.js | 24 LTS (`node` parses deployment output; `jq` is never required) |
 | Subscription rights | Owner, or Contributor plus User Access Administrator, on the subscription or on the resource group once it exists; the storage account lock needs `Microsoft.Authorization/locks/*`, which both combinations include |
-| Entra rights | Application Administrator or Cloud Application Administrator for `entra.sh`; Global Administrator only when the tenant refuses the delegated permission grant and the admin-consent fallback in section 5a is needed |
+| Entra rights | Application Administrator or Cloud Application Administrator for `entra.sh`, except the grant of the application permission `User.Read.All`, which needs a Privileged Role Administrator or a Global Administrator (or one of them runs the printed `az ad app permission admin-consent` once); Global Administrator otherwise only when the tenant refuses the delegated permission grant and the admin-consent fallback in section 5a is needed |
 
 ## 3. Parameter file
 
@@ -110,7 +110,7 @@ Sign-in each script needs:
 |---|---|
 | `check.sh` | none |
 | `provision.sh` | `az login --tenant <ERP_AZURE_TENANT_ID>` as the operator: the subscription rights above plus directory read access to resolve the developers group and the runtime service principal; App Configuration Data Owner on the store for `Erp:Platform:Attachments:BlobServiceUri` and the sentinels |
-| `entra.sh` | the same sign-in as Application Administrator or Cloud Application Administrator (Global Administrator only for the admin-consent fallback in section 5a), plus the operator's Key Vault Certificates Officer role on both vaults and App Configuration Data Owner on the store |
+| `entra.sh` | the same sign-in as Application Administrator or Cloud Application Administrator (Privileged Role Administrator or Global Administrator for the grant of the application permission `User.Read.All`, Global Administrator otherwise only for the admin-consent fallback in section 5a), plus the operator's Key Vault Certificates Officer role on both vaults and App Configuration Data Owner on the store |
 | `export-runtime-certificate.sh` | the operator's Key Vault Secrets Officer role on the production vault |
 | `seed.sh` | the operator's roles on the store and both vaults |
 | `verify.sh` | read access to the resource group, App Configuration Data Reader or Owner on the store, key read rights on both vaults and a blob data role on the development `attachments` container for the listing (the operator's roles cover this); `--entra` additionally needs directory read access and certificate read rights on both vaults |

@@ -39,7 +39,7 @@ const statusChangeRequest = z.object({
   version: recordVersionSchema,
 });
 
-const newManagerQuery = z.object({ id: personId, team: z.array(personId), text: z.string() });
+const newManagerQuery = z.object({ id: personId, team: z.array(personId).max(1000), text: z.string() });
 
 const personNotFound = "user.not-found";
 

@@ -1,7 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
-using Dewiride.Erp.Modules.Identity.Users.Positions.Application;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 using Microsoft.EntityFrameworkCore;
@@ -66,6 +65,8 @@ internal sealed class TeamHandoverPlan
 
         return new TeamHandoverPlan(withdrawn, recorded);
     }
+
+    public bool MovesNobody => _recorded.Count == 0;
 
     public void Apply(UsersDbContext context)
     {

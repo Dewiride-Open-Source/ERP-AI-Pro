@@ -217,6 +217,40 @@ public sealed class AccountCheckEndpointsTests(ErpApiFactory factory) : IClassFi
         AccountCheckApi.MarkAccount(factory, person.ObjectId, DirectoryAccountState.Enabled);
     }
 
+    [Theory]
+    [InlineData(DirectoryAccountState.Disabled)]
+    [InlineData(DirectoryAccountState.Deleted)]
+    public async Task CheckDirectoryAccounts_AnswerWithoutTheEnabledAccountOfTheAdministratorRunningIt_Returns503AndDeactivatesNobody(DirectoryAccountState own)
+    {
+        var administrator = NewAdministrator();
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
+            context.Users.Add(User.Invite(administrator.ObjectId, administrator.Name, administrator.UserName, null, null, null, []).Value);
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var client = factory.CreateClient().AsUser(administrator);
+        using var other = Administrator();
+        var person = await RegisterLinkedAsync(other, "Kept");
+        await RegisterLinkedAsync(other, "Enabled");
+        AccountCheckApi.MarkAccount(factory, person.ObjectId, DirectoryAccountState.Disabled);
+        AccountCheckApi.MarkAccount(factory, administrator.ObjectId, own);
+        try
+        {
+            using var response = await AccountCheckApi.PostAsync(client);
+
+            Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+            Assert.Equal("directory.unavailable", PeopleApi.CodeOf(await PeopleApi.ReadProblemAsync(response)));
+            Assert.Equal(PersonStatus.Active, (await GetAsync(other, person.Person.Id)).Status);
+        }
+        finally
+        {
+            AccountCheckApi.MarkAccount(factory, person.ObjectId, DirectoryAccountState.Enabled);
+            AccountCheckApi.MarkAccount(factory, administrator.ObjectId, DirectoryAccountState.Enabled);
+        }
+    }
+
     [Fact]
     public async Task CheckDirectoryAccounts_AsPersonWithoutThePermissionToChangeStatus_Returns403()
     {

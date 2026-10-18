@@ -3,7 +3,7 @@ using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace Dewiride.Erp.Modules.Identity.Users.Positions.Application;
+namespace Dewiride.Erp.Modules.Identity.Users.Shared.Positions;
 
 // A position holds from its own date until the date the person's next position starts.
 internal static class PositionHistory

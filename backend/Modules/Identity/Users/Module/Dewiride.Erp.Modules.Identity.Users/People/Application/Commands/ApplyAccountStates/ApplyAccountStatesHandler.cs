@@ -12,7 +12,9 @@ namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.ApplyA
 // A person whose Entra account is disabled or deleted is deactivated at once, so their sessions end at their next request,
 // with the reason their change records keep. Nobody else's position changes: their team keeps naming them, and each member's
 // record answers that their manager is not active. An answer without a single enabled account cannot be the company
-// directory, whose people sign in with enabled accounts, so it changes nothing and counts as a directory that cannot answer.
+// directory, whose people sign in with enabled accounts, and neither can one that does not answer the account of the person
+// running the check as enabled, who signed in with it; either changes nothing and counts as a directory that cannot answer, so
+// a wrong answer never deactivates the administrator who could reactivate the others.
 internal sealed partial class ApplyAccountStatesHandler(UsersDbContext context, IActorContext actor, ILogger<ApplyAccountStatesHandler> logger)
     : ICommandHandler<ApplyAccountStatesCommand, AccountCheckDetails>
 {
@@ -24,6 +26,12 @@ internal sealed partial class ApplyAccountStatesHandler(UsersDbContext context, 
         if (states.Count > 0 && !states.Values.Contains(DirectoryAccountState.Enabled))
         {
             LogNoEnabledAccount(logger, states.Count);
+            return DirectoryErrors.Unavailable;
+        }
+
+        if (states.TryGetValue(actor.ActorId, out var own) && own != DirectoryAccountState.Enabled)
+        {
+            LogOwnAccountNotEnabled(logger, states.Count);
             return DirectoryErrors.Unavailable;
         }
 
@@ -62,4 +70,7 @@ internal sealed partial class ApplyAccountStatesHandler(UsersDbContext context, 
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "The company directory answered the account check of {CheckedCount} accounts without one enabled account, so nobody was deactivated")]
     private static partial void LogNoEnabledAccount(ILogger logger, int checkedCount);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "The company directory answered the account check of {CheckedCount} accounts without the enabled account of the person running it, so nobody was deactivated")]
+    private static partial void LogOwnAccountNotEnabled(ILogger logger, int checkedCount);
 }

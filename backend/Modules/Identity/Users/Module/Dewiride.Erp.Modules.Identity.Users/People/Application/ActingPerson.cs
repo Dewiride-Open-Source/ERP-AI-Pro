@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application;
 
 // The acting administrator always holds Erp.Admin, so the ERP loses its last administrator only when two of them deactivate or
-// delete each other at once, each while their own record still admits them. A deactivation, a deletion or the directory check
+// delete each other at once, each while their own record still admits them. A status change, a deletion or the directory check
 // therefore reads the records of the person making it again, under the organisation lock that runs those writes one after the
 // other, and is refused when every record naming that person is deactivated or deleted, as their next request would be. An
 // actor no record names, such as the system, is not checked.

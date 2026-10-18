@@ -60,8 +60,10 @@ export function designationOptions(designations: readonly DesignationEntry[]): O
 export function personOptions(
   people: readonly PersonEntry[],
   excludedPersonIds: readonly string[] = [],
+  limit = Number.POSITIVE_INFINITY,
 ): OrganisationOption[] {
   return people
     .filter((person) => !excludedPersonIds.includes(person.id))
+    .slice(0, limit)
     .map((person) => ({ value: person.id, label: person.displayName, description: person.workEmail }));
 }

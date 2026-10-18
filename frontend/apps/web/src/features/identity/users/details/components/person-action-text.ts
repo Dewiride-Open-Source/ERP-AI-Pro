@@ -127,6 +127,10 @@ export function teamMembersLabel(name: string): string {
   return `People who report to ${name}`;
 }
 
+export function teamReportsToLabel(name: string): string {
+  return `Who the team of ${name} reports to from today`;
+}
+
 export function teamUnreadable(name: string): string {
   return `The people who report to ${name} could not be read, so their team cannot be handed over now.`;
 }

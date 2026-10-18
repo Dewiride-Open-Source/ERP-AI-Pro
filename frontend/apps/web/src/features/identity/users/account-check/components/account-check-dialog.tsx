@@ -182,7 +182,7 @@ function DeactivatedPeople({ result, onLeave }: { result: AccountCheckResult; on
         >
           <Link
             href={`/identity/users/${person.id}`}
-            onClick={onLeave}
+            onNavigate={onLeave}
             className="rounded-sm font-medium wrap-anywhere text-primary underline-offset-4 focus-ring hover:underline"
           >
             {person.displayName}

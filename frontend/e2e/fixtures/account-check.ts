@@ -1,6 +1,6 @@
 import { expect, type APIRequestContext } from "@playwright/test";
 import { randomUUID } from "node:crypto";
-import { open, readFile, rm, stat } from "node:fs/promises";
+import { link, open, readFile, rename, rm, stat, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -33,7 +33,9 @@ const turnFile = join(tmpdir(), `erp-ai-pro-e2e-account-check-${new URL(apiBaseU
 
 const turnWait = 75_000;
 
-const unwrittenTurnAge = 10_000;
+const turnTouchInterval = 2_000;
+
+const turnLeftAfter = 20_000;
 
 // The check reads only the people linked to an account, and an invitation from the directory links the record from the start.
 export async function inviteLinkedPerson(
@@ -80,17 +82,25 @@ export async function deactivationOf(api: SignedInApi, id: string): Promise<Deac
 // Every check deactivates each active, linked person whose account the test directory holds as disabled or deleted, whoever
 // marked it, and every worker and project of a run shares the API host's one database, so the tests that check take turns: a
 // test marks accounts and runs its checks only in its turn, which starts with a check of its own that deactivates whatever an
-// interrupted turn left marked. A turn is a file its holder creates and removes; Playwright replaces the worker of a failed
-// test, so a turn whose process is gone, or is this worker, which runs one test at a time, was left behind and is taken over.
+// interrupted turn left marked. A turn is a file its holder creates with a token of its own and touches while it holds it. A
+// turn untouched for longer than a holder ever pauses, or held by this worker, which runs one test at a time, was left behind:
+// it is moved aside first, which only one worker can do, and removed only when it is still the turn found left behind, so a
+// turn claimed meanwhile is put back, and a holder removes its turn only while it still holds its token.
 export async function takeAccountCheckTurn(api: SignedInApi): Promise<() => Promise<void>> {
+  const token = randomUUID();
   await expect
-    .poll(claimTurn, {
+    .poll(() => claimTurn(token), {
       message: "a turn to check the Microsoft accounts",
       timeout: turnWait,
       intervals: [100, 250, 500],
     })
     .toBe(true);
-  const release = () => rm(turnFile, { force: true });
+  const touching = setInterval(() => void touchTurn(token), turnTouchInterval);
+  touching.unref();
+  const release = async () => {
+    clearInterval(touching);
+    await releaseTurn(token);
+  };
   try {
     await checkAccounts(api);
   } catch (error) {
@@ -100,11 +110,13 @@ export async function takeAccountCheckTurn(api: SignedInApi): Promise<() => Prom
   return release;
 }
 
-async function claimTurn(): Promise<boolean> {
+type Turn = { readonly token: string; readonly pid: number };
+
+async function claimTurn(token: string): Promise<boolean> {
   try {
     const turn = await open(turnFile, "wx");
     try {
-      await turn.writeFile(String(process.pid));
+      await turn.writeFile(JSON.stringify({ token, pid: process.pid } satisfies Turn));
     } finally {
       await turn.close();
     }
@@ -112,29 +124,69 @@ async function claimTurn(): Promise<boolean> {
   } catch (error) {
     if (!hasCode(error, "EEXIST")) throw error;
   }
-  if (await turnLeftBehind()) await rm(turnFile, { force: true });
+  const held = await heldTurn(turnFile);
+  if (held !== undefined && (held.turn?.pid === process.pid || Date.now() - held.touchedAt > turnLeftAfter)) {
+    await takeOver(held.turn);
+  }
   return false;
 }
 
-async function turnLeftBehind(): Promise<boolean> {
-  let holder: number;
-  let writtenAt: number;
+async function heldTurn(
+  file: string,
+): Promise<{ readonly turn: Turn | undefined; readonly touchedAt: number } | undefined> {
   try {
-    [holder, writtenAt] = await Promise.all([
-      readFile(turnFile, "utf8").then((text) => Number.parseInt(text, 10)),
-      stat(turnFile).then((file) => file.mtimeMs),
-    ]);
+    const [text, written] = await Promise.all([readFile(file, "utf8"), stat(file)]);
+    return { turn: turnOf(text), touchedAt: written.mtimeMs };
   } catch (error) {
-    if (hasCode(error, "ENOENT")) return false;
+    if (hasCode(error, "ENOENT")) return undefined;
     throw error;
   }
-  if (!Number.isInteger(holder) || holder <= 0) return Date.now() - writtenAt > unwrittenTurnAge;
-  if (holder === process.pid) return true;
+}
+
+async function takeOver(leftBehind: Turn | undefined): Promise<void> {
+  const aside = `${turnFile}.${randomUUID()}`;
   try {
-    process.kill(holder, 0);
-    return false;
+    await rename(turnFile, aside);
   } catch (error) {
-    return hasCode(error, "ESRCH");
+    if (hasCode(error, "ENOENT")) return;
+    throw error;
+  }
+  const moved = await heldTurn(aside);
+  if (moved !== undefined && moved.turn?.token !== leftBehind?.token) {
+    try {
+      await link(aside, turnFile);
+    } catch (error) {
+      if (!hasCode(error, "EEXIST")) throw error;
+    }
+  }
+  await rm(aside, { force: true });
+}
+
+async function touchTurn(token: string): Promise<void> {
+  const held = await heldTurn(turnFile).catch(() => undefined);
+  if (held?.turn?.token !== token) return;
+  const now = new Date();
+  await utimes(turnFile, now, now).catch(() => undefined);
+}
+
+async function releaseTurn(token: string): Promise<void> {
+  const held = await heldTurn(turnFile);
+  if (held?.turn?.token === token) await rm(turnFile, { force: true });
+}
+
+function turnOf(text: string): Turn | undefined {
+  try {
+    const turn: unknown = JSON.parse(text);
+    return typeof turn === "object" &&
+      turn !== null &&
+      "token" in turn &&
+      typeof turn.token === "string" &&
+      "pid" in turn &&
+      typeof turn.pid === "number"
+      ? { token: turn.token, pid: turn.pid }
+      : undefined;
+  } catch {
+    return undefined;
   }
 }
 

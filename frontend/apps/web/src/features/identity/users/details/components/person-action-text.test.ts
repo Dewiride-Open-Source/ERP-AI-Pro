@@ -12,6 +12,7 @@ import {
   statusProblemMessages,
   teamHandover,
   teamMembersLabel,
+  teamReportsToLabel,
   teamUnreadable,
 } from "./person-action-text.ts";
 
@@ -103,6 +104,7 @@ test("teamHandover_ALargeTeam_GroupsItsCountTheIndianWay", () => {
 
 test("teamMembersLabel_AndTeamUnreadable_NameThePerson", () => {
   assert.equal(teamMembersLabel("Meera Nair"), "People who report to Meera Nair");
+  assert.equal(teamReportsToLabel("Meera Nair"), "Who the team of Meera Nair reports to from today");
   assert.equal(
     teamUnreadable("Meera Nair"),
     "The people who report to Meera Nair could not be read, so their team cannot be handed over now.",

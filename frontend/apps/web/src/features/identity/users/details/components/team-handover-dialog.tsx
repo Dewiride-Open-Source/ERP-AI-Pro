@@ -15,7 +15,7 @@ import {
 import { FieldError, FieldGroup, FieldLegend, FieldSet } from "@dewiride/erp-ui/components/ui/field";
 import { Label } from "@dewiride/erp-ui/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@dewiride/erp-ui/components/ui/radio-group";
-import { useCallback, useMemo, type ReactElement, type Ref } from "react";
+import { useCallback, useMemo, useRef, type ReactElement, type Ref, type RefObject } from "react";
 import { Controller, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -35,6 +35,7 @@ import { SavingDialogClose, SavingDialogCornerClose } from "./person-action-cont
 import {
   teamHandover,
   teamMembersLabel,
+  teamReportsToLabel,
   type TeamHandover,
   type TeamHandoverMode,
 } from "./person-action-text";
@@ -61,6 +62,7 @@ export function TeamHandoverDialog({
 }: TeamOf & { mode: TeamHandoverMode; trigger: ReactElement; onHandedOver: () => void }) {
   const { open, saving, setOpen, setSaving, onOpenChange } = useSavingDialog();
   const texts = teamHandover(mode, personName, team.length);
+  const teamText = useRef<HTMLParagraphElement>(null);
   const handedOver = useCallback(() => {
     setOpen(false);
     toast.success(texts.done);
@@ -73,6 +75,10 @@ export function TeamHandoverDialog({
       <DialogContent
         showCloseButton={false}
         className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          teamText.current?.focus();
+        }}
       >
         <DialogHeader>
           <DialogTitle>{texts.title}</DialogTitle>
@@ -86,6 +92,7 @@ export function TeamHandoverDialog({
           version={version}
           team={team}
           texts={texts}
+          teamText={teamText}
           onHandedOver={handedOver}
           onSavingChange={setSaving}
         />
@@ -104,11 +111,13 @@ function TeamHandoverForm({
   version,
   team,
   texts,
+  teamText,
   onHandedOver,
   onSavingChange,
 }: TeamOf & {
   mode: TeamHandoverMode;
   texts: TeamHandover;
+  teamText: RefObject<HTMLParagraphElement | null>;
   onHandedOver: () => void;
   onSavingChange: (saving: boolean) => void;
 }) {
@@ -143,7 +152,9 @@ function TeamHandoverForm({
       data-testid="team-handover-form"
     >
       <div className="grid min-w-0 gap-2">
-        <p className="text-sm">{texts.team}</p>
+        <p ref={teamText} tabIndex={-1} className="text-sm outline-none" data-testid="team-handover-team">
+          {texts.team}
+        </p>
         <ul
           aria-label={teamMembersLabel(personName)}
           className="grid min-w-0 gap-1 rounded-lg border bg-muted/40 px-3 py-2 text-sm"
@@ -164,6 +175,7 @@ function TeamHandoverForm({
           render={({ field, fieldState }) => (
             <ReportsToChoice
               id={fieldId("reportsTo")}
+              personName={personName}
               ref={field.ref}
               value={field.value}
               onValueChange={(value) => {
@@ -228,6 +240,7 @@ function TeamHandoverForm({
 // The first choice carries the field's own id, so a message about the choice links to and focuses the group.
 function ReportsToChoice({
   id,
+  personName,
   ref,
   value,
   onValueChange,
@@ -235,6 +248,7 @@ function ReportsToChoice({
   errors,
 }: {
   id: string;
+  personName: string;
   ref: Ref<HTMLButtonElement>;
   value: string;
   onValueChange: (value: string) => void;
@@ -251,7 +265,7 @@ function ReportsToChoice({
   return (
     <FieldSet data-invalid={invalid || undefined} className="gap-3">
       <FieldLegend id={legendId} variant="label" className="mb-0">
-        Who they report to from today{" "}
+        {teamReportsToLabel(personName)}{" "}
         <span aria-hidden="true" className="font-normal text-muted-foreground">
           (required)
         </span>

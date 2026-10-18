@@ -8,7 +8,7 @@ import { ownRecordInactive, ownStatusRefused } from "../components/person-action
 
 export const reportsToChoices = ["person", "nobody"] as const;
 
-export const reportsToMissing = "Choose who they report to from today.";
+export const reportsToMissing = "Choose who the team reports to from today.";
 
 export const newManagerMissing = "Choose their new manager from the list.";
 

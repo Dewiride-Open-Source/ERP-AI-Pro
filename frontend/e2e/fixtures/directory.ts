@@ -2,6 +2,8 @@ import { expect, type APIRequestContext } from "@playwright/test";
 
 export const directoryPeoplePath = "/api/__test/directory/people";
 
+export const directoryApplicationAccessPath = "/api/__test/directory/application-access";
+
 export type DirectoryPhoto = { readonly contentType: "image/jpeg" | "image/png"; readonly base64: string };
 
 export type DirectoryAccountState = "enabled" | "disabled" | "deleted";
@@ -25,4 +27,15 @@ export async function addDirectoryPerson(
 ): Promise<void> {
   const response = await request.post(directoryPeoplePath, { data: person });
   expect(response.status(), `adding ${person.displayName} to the test directory`).toBe(204);
+}
+
+export async function setApplicationAccess(
+  request: APIRequestContext,
+  { refused }: { readonly refused: boolean },
+): Promise<void> {
+  const response = await request.put(directoryApplicationAccessPath, { data: { refused } });
+  expect(
+    response.status(),
+    refused ? "refusing the application in the test directory" : "allowing it again",
+  ).toBe(204);
 }
