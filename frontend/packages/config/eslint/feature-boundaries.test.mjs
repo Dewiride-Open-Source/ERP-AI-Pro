@@ -63,6 +63,10 @@ const harnessServerFunction = [
   "no-restricted-syntax",
   /A design-harness Server Function starts with `await requireSignedInPerson\(\)`/,
 ];
+const ownProfileServerFunction = [
+  "no-restricted-syntax",
+  /A Server Function of My profile starts with `await requireSignedInPerson\(\)`/,
+];
 
 const componentFile = "src/features/platform/attachments/files/components/upload-panel.tsx";
 const startupsConsumer = "src/features/platform/system-info/info/components/system-info-overview.tsx";
@@ -73,6 +77,7 @@ const pageFile = "src/app/(app)/platform/attachments/page.tsx";
 const loadingFile = "src/app/(app)/platform/attachments/loading.tsx";
 const actionsFile = "src/features/platform/attachments/files/server/actions.ts";
 const harnessActionsFile = "src/features/platform/design/feedback/server/actions.ts";
+const ownProfileActionsFile = "src/features/identity/users/profile/server/actions.ts";
 
 const cases = [
   {
@@ -890,6 +895,59 @@ const cases = [
       "};",
     ].join("\n"),
     expected: Array.from({ length: 5 }, () => harnessServerFunction),
+  },
+  {
+    title: "nextConfig_OwnProfileServerFunctionsThatStartWithTheSessionCheck_AreAllowed",
+    file: ownProfileActionsFile,
+    code: [
+      '"use server";',
+      'import { holdsPermission } from "@/shared/auth/permissions";',
+      'import { requireSignedInPerson } from "@/shared/auth/session";',
+      "export type ThemeSaveOutcome = { readonly saved: boolean };",
+      "export async function saveTheme(theme: string): Promise<ThemeSaveOutcome> {",
+      "  await requireSignedInPerson();",
+      '  return { saved: theme !== "" };',
+      "}",
+      "export async function readOwnRoles(): Promise<number> {",
+      "  const person = await requireSignedInPerson();",
+      '  if (!holdsPermission(person, "identity.users.people.read")) return 0;',
+      "  return person.roles.length;",
+      "}",
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_OwnProfileServerFunctionThatDoesNotStartWithTheSessionCheck_IsReported",
+    file: ownProfileActionsFile,
+    code: [
+      '"use server";',
+      'import { requireSession, requireSignedInPerson } from "@/shared/auth/session";',
+      "export async function afterParsing(theme: string): Promise<void> {",
+      "  const parsed = theme.trim();",
+      "  await requireSignedInPerson();",
+      "  void parsed;",
+      "}",
+      "export async function withTheRenderCheck(): Promise<void> {",
+      "  await requireSession();",
+      "}",
+      "export async function withAnEmptyBody(): Promise<void> {}",
+      "export const saveTheme = async (): Promise<void> => {",
+      "  await requireSignedInPerson();",
+      "};",
+    ].join("\n"),
+    expected: Array.from({ length: 4 }, () => ownProfileServerFunction),
+  },
+  {
+    title: "nextConfig_ServerFunctionOfAnotherUsersFeatureWithTheSessionCheckAlone_IsReported",
+    file: "src/features/identity/users/roles/server/actions.ts",
+    code: [
+      '"use server";',
+      'import { requireSignedInPerson } from "@/shared/auth/session";',
+      "export async function assignRoles(): Promise<void> {",
+      "  await requireSignedInPerson();",
+      "}",
+    ].join("\n"),
+    expected: [serverFunction],
   },
   {
     title: "nextConfig_ExportedFunctionsOfAFileWithoutTheUseServerDirective_AreNotChecked",

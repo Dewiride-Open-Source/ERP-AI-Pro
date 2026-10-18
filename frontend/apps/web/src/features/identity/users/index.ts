@@ -14,3 +14,8 @@ export { PeopleOverviewSkeleton } from "./people/components/people-overview-skel
 export { PermissionsOverview } from "./permissions/components/permissions-overview";
 export { PermissionsOverviewSkeleton } from "./permissions/components/permissions-overview-skeleton";
 export { RegisterPerson } from "./registration/components/register-person";
+export { ownPhotoPath } from "./profile/components/own-photo";
+export { OwnThemeKeeper } from "./profile/components/own-theme-keeper";
+export { ProfileOverview } from "./profile/components/profile-overview";
+export { ProfileOverviewSkeleton } from "./profile/components/profile-overview-skeleton";
+export { profileTitle } from "./profile/components/profile-text";
