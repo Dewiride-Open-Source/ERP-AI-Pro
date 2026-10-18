@@ -40,6 +40,7 @@ test("personRows_APersonWithEveryDetail_KeepsEachAsAPlainValue", () => {
     departmentName: "Accounts",
     designationName: "Analyst",
     managerDisplayName: "Vikram Iyer",
+    needsNewManager: false,
     dateOfJoining: "2026-04-01",
     status: "deactivated",
     roles: ["finance", "manager"],
@@ -55,6 +56,7 @@ test("personRows_DetailsTheApiLeftOutOrSentAsNull_AreUndefined", () => {
       departmentName: null,
       designationName: null,
       managerDisplayName: null,
+      managerActive: null,
       dateOfJoining: null,
       status: null,
       roles: null,
@@ -70,11 +72,24 @@ test("personRows_DetailsTheApiLeftOutOrSentAsNull_AreUndefined", () => {
     departmentName: undefined,
     designationName: undefined,
     managerDisplayName: undefined,
+    needsNewManager: false,
     dateOfJoining: undefined,
     status: undefined,
     roles: [],
     lastSignedInAt: undefined,
   });
+});
+
+test("personRows_ManagerOfTodayDeactivated_MarksThePersonAsNeedingANewManager", () => {
+  const [deactivatedManager, activeManager, noManager] = personRows([
+    person({ managerDisplayName: "Vikram Iyer", managerActive: false }),
+    person({ managerDisplayName: "Vikram Iyer", managerActive: true }),
+    person({}),
+  ]);
+
+  assert.equal(deactivatedManager?.needsNewManager, true);
+  assert.equal(activeManager?.needsNewManager, false);
+  assert.equal(noManager?.needsNewManager, false);
 });
 
 test("personRows_APersonWithoutAnIdOrAName_IsLeftOut", () => {

@@ -13,6 +13,7 @@ export interface PersonRow {
   readonly departmentName: string | undefined;
   readonly designationName: string | undefined;
   readonly managerDisplayName: string | undefined;
+  readonly needsNewManager: boolean;
   readonly dateOfJoining: string | undefined;
   readonly status: PersonStatus | undefined;
   readonly roles: readonly PersonRole[];
@@ -31,6 +32,7 @@ export function personRows(people: readonly PersonResponse[]): PersonRow[] {
             departmentName: person.departmentName ?? undefined,
             designationName: person.designationName ?? undefined,
             managerDisplayName: person.managerDisplayName ?? undefined,
+            needsNewManager: person.managerActive === false,
             dateOfJoining: isoDateOf(person.dateOfJoining),
             status: person.status ?? undefined,
             roles: person.roles ?? [],

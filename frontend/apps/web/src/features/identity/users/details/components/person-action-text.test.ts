@@ -5,10 +5,15 @@ import {
   deletion,
   deletionProblemMessages,
   isOwnRecord,
+  ownRecordInactive,
   pageOutOfDate,
   refusedOutcome,
   statusChange,
   statusProblemMessages,
+  teamHandover,
+  teamMembersLabel,
+  teamReportsToLabel,
+  teamUnreadable,
 } from "./person-action-text.ts";
 
 test("statusChange_ActivePerson_OffersToDeactivateThemAsADestructiveStep", () => {
@@ -36,6 +41,74 @@ test("statusChange_DeactivatedPerson_OffersToReactivateThem", () => {
     done: "Reactivated Meera Nair.",
     tone: "default",
   });
+});
+
+test("statusChange_PersonAnAdministratorDeactivated_SaysTheyCanSignInAgain", () => {
+  assert.deepEqual(
+    statusChange("deactivated", "Meera Nair", "administrator"),
+    statusChange("deactivated", "Meera Nair"),
+  );
+});
+
+test("statusChange_PersonWhoseMicrosoftAccountWasFoundDisabled_SaysTheNextCheckDeactivatesThemWhileItStaysDisabled", () => {
+  assert.equal(
+    statusChange("deactivated", "Meera Nair", "accountDisabled").description,
+    "Meera Nair can sign in again once their Microsoft account is enabled. While it stays disabled, the next check of Microsoft accounts deactivates them again.",
+  );
+});
+
+test("statusChange_PersonWhoseMicrosoftAccountWasFoundDeleted_SaysTheyCannotSignInWithIt", () => {
+  assert.equal(
+    statusChange("deactivated", "Meera Nair", "accountDeleted").description,
+    "Their Microsoft account was deleted, so Meera Nair cannot sign in with it, and the next check of Microsoft accounts deactivates them again.",
+  );
+});
+
+test("statusChange_ActivePersonWithAReason_IgnoresTheReason", () => {
+  assert.deepEqual(
+    statusChange("active", "Meera Nair", "accountDisabled"),
+    statusChange("active", "Meera Nair"),
+  );
+});
+
+test("teamHandover_DeactivatingAManager_AsksAsADeactivationDoesAndCountsTheirTeam", () => {
+  assert.deepEqual(teamHandover("deactivate", "Meera Nair", 2), {
+    title: "Deactivate Meera Nair?",
+    description:
+      "Meera Nair can no longer sign in, and any session they have open ends at their next step in the ERP. You can reactivate them later.",
+    team: "2 people report to Meera Nair today or from a later date.",
+    confirm: "Deactivate",
+    cancel: "Keep them active",
+    done: "Deactivated Meera Nair.",
+  });
+});
+
+test("teamHandover_DeactivatedManager_AsksToHandTheTeamOver", () => {
+  assert.deepEqual(teamHandover("hand-over", "Meera Nair", 1), {
+    title: "Hand over the team of Meera Nair",
+    description:
+      "Meera Nair is deactivated, so the people who report to them need someone else to report to.",
+    team: "1 person reports to Meera Nair today or from a later date.",
+    confirm: "Hand over the team",
+    cancel: "Cancel",
+    done: "Handed over the team of Meera Nair.",
+  });
+});
+
+test("teamHandover_ALargeTeam_GroupsItsCountTheIndianWay", () => {
+  assert.equal(
+    teamHandover("deactivate", "Meera Nair", 125000).team,
+    "1,25,000 people report to Meera Nair today or from a later date.",
+  );
+});
+
+test("teamMembersLabel_AndTeamUnreadable_NameThePerson", () => {
+  assert.equal(teamMembersLabel("Meera Nair"), "People who report to Meera Nair");
+  assert.equal(teamReportsToLabel("Meera Nair"), "Who the team of Meera Nair reports to from today");
+  assert.equal(
+    teamUnreadable("Meera Nair"),
+    "The people who report to Meera Nair could not be read, so their team cannot be handed over now.",
+  );
 });
 
 test("deletion_ActivePerson_AdvisesDeactivatingToKeepThemOut", () => {
@@ -111,5 +184,17 @@ test("problemMessages_RefusalsOfTheOwnRecordAndAManager_AreWordedForThePerson", 
   assert.equal(
     deletionProblemMessages["user.manages-people"],
     "People report to this person today or from a later date. Record another manager for them first.",
+  );
+});
+
+test("statusProblemMessages_ADeactivationThatNeedsTheTeamHandedOverOrAnInactiveAdministrator_AreWorded", () => {
+  assert.equal(
+    statusProblemMessages["user.team-handover-required"],
+    "People report to this person today or from a later date. Reload the page to choose who they report to, then deactivate them again.",
+  );
+  assert.equal(statusProblemMessages["user.actor-inactive"], ownRecordInactive);
+  assert.equal(
+    ownRecordInactive,
+    "Your own record in the ERP was deactivated or deleted meanwhile, so nothing was changed.",
   );
 });

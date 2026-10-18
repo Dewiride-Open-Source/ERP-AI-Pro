@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text.Json;
+using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.EndToEnd;
@@ -81,6 +83,56 @@ public sealed class DirectoryPeopleTests(DirectoryPeopleTests.Fixture fixture) :
     }
 
     [Fact]
+    public async Task Post_PersonWithADisabledAccount_IsWhomTheAccountCheckOfAnAdministratorDeactivates()
+    {
+        using var administrator = TestSignIn.CreateClient(fixture.Factory);
+        await SignInAsync(administrator, "administrator");
+        using var anonymous = fixture.Factory.CreateClient();
+        var objectId = Guid.CreateVersion7();
+        using (var added = await anonymous.PostAsJsonAsync(new Uri(DirectoryPeople.Path, UriKind.Relative), Seed(objectId, photo: null), TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, added.StatusCode);
+        }
+
+        Guid personId;
+        using (var invitation = new HttpRequestMessage(HttpMethod.Post, new Uri("/api/identity/users/invitations", UriKind.Relative)) { Content = JsonContent.Create(new { entraObjectId = objectId }) })
+        {
+            invitation.Headers.Add(IdempotencyKeyHeader.Name, Guid.CreateVersion7().ToString());
+            using var invited = await administrator.SendAsync(invitation, TestContext.Current.CancellationToken);
+            Assert.Equal(HttpStatusCode.Created, invited.StatusCode);
+            using var body = JsonDocument.Parse(await invited.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            personId = body.RootElement.GetProperty("id").GetGuid();
+        }
+
+        var disabled = new { objectId, displayName = "Meera Nair", userPrincipalName = $"meera.nair.{objectId:N}@dewiride.test", accountState = "disabled" };
+        using (var marked = await anonymous.PostAsJsonAsync(new Uri(DirectoryPeople.Path, UriKind.Relative), disabled, TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, marked.StatusCode);
+        }
+
+        using var check = await administrator.PostAsync(new Uri("/api/identity/users/directory/account-check", UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, check.StatusCode);
+        using var outcome = JsonDocument.Parse(await check.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var deactivated = Assert.Single(outcome.RootElement.GetProperty("deactivated").EnumerateArray(), person => person.GetProperty("id").GetGuid() == personId);
+        Assert.Equal("accountDisabled", deactivated.GetProperty("deactivatedBecause").GetString());
+    }
+
+    [Fact]
+    public async Task Post_PersonWithAnAccountStateTheDirectoryDoesNotKnow_Answers400()
+    {
+        using var anonymous = fixture.Factory.CreateClient();
+        var objectId = Guid.CreateVersion7();
+
+        using var response = await anonymous.PostAsJsonAsync(
+            new Uri(DirectoryPeople.Path, UriKind.Relative),
+            new { objectId, displayName = "Meera Nair", userPrincipalName = $"meera.nair.{objectId:N}@dewiride.test", accountState = "suspended" },
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Map_InTheDevelopmentEnvironment_StopsTheHostFromStarting()
     {
         await using var factory = new ErpApiFactory().WithTestEndpoints(DirectoryPeople.Map);
@@ -95,9 +147,9 @@ public sealed class DirectoryPeopleTests(DirectoryPeopleTests.Fixture fixture) :
 
     private static object Photo(string contentType, string base64) => new { contentType, base64 };
 
-    private static async Task<PersonaSignInResponse> SignInAsync(HttpClient client)
+    private static async Task<PersonaSignInResponse> SignInAsync(HttpClient client, string persona = "accountant")
     {
-        using var response = await client.PostAsync(new Uri($"{PersonaSignIn.PathPrefix}/accountant", UriKind.Relative), content: null, TestContext.Current.CancellationToken);
+        using var response = await client.PostAsync(new Uri($"{PersonaSignIn.PathPrefix}/{persona}", UriKind.Relative), content: null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var person = await response.Content.ReadFromJsonAsync<PersonaSignInResponse>(TestContext.Current.CancellationToken);
         Assert.NotNull(person);

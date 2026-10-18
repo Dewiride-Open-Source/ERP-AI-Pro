@@ -35,8 +35,10 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
         Assert.Null(person.DepartmentId);
         Assert.Null(person.DesignationId);
         Assert.Null(person.ManagerId);
+        Assert.Null(person.ManagerActive);
         Assert.Equal(new DateOnly(2026, 4, 1), person.DateOfJoining);
         Assert.Equal(PersonStatus.Active, person.Status);
+        Assert.Null(person.DeactivatedBecause);
         Assert.Null(person.LastSignedInAt);
         Assert.False(string.IsNullOrEmpty(person.Version));
     }
@@ -140,6 +142,8 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
     [InlineData("DELETE", "/{id}")]
     [InlineData("GET", "/directory?search=meera")]
     [InlineData("POST", "/invitations")]
+    [InlineData("POST", "/directory/account-check")]
+    [InlineData("GET", "/{id}/team")]
     public async Task EveryRoute_AsPersonWithoutItsPermission_Returns403RequestForbidden(string method, string suffix)
     {
         using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
@@ -163,6 +167,7 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
     [InlineData("POST", "/api/identity/users/invitations", UsersPermissions.Register)]
     [InlineData("PUT", "/api/identity/users/{id:guid}", UsersPermissions.Update)]
     [InlineData("PUT", "/api/identity/users/{id:guid}/status", UsersPermissions.ChangeStatus)]
+    [InlineData("POST", "/api/identity/users/directory/account-check", UsersPermissions.ChangeStatus)]
     [InlineData("PUT", "/api/identity/users/{id:guid}/roles", UsersPermissions.AssignRoles)]
     [InlineData("DELETE", "/api/identity/users/{id:guid}", UsersPermissions.Delete)]
     public void Route_OfEachUseCase_RequiresItsOwnPermission(string method, string route, string permission)
@@ -367,8 +372,8 @@ public sealed class PeopleEndpointsTests(ErpApiFactory factory) : IClassFixture<
         var deactivated = await ChangeStatusAsync(client, registered, "deactivated");
         var reactivated = await ChangeStatusAsync(client, deactivated, "active");
 
-        Assert.Equal(PersonStatus.Deactivated, deactivated.Status);
-        Assert.Equal(PersonStatus.Active, reactivated.Status);
+        Assert.Equal((PersonStatus.Deactivated, PersonDeactivationReason.Administrator), (deactivated.Status, deactivated.DeactivatedBecause));
+        Assert.Equal((PersonStatus.Active, (PersonDeactivationReason?)null), (reactivated.Status, reactivated.DeactivatedBecause));
         Assert.NotEqual(deactivated.Version, reactivated.Version);
     }
 

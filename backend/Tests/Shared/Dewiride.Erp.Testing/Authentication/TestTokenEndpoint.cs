@@ -13,11 +13,12 @@ namespace Dewiride.Erp.Testing.Authentication;
 // put the person's account in the token cache, for a persona of TestUsers or a person a test host admitted, redeems a code
 // from CodeWithoutClientInfoFor with the same tokens and no client info, and refuses every other code as Entra refuses an
 // expired one. It redeems a refresh token it issued for the scopes MSAL asks, as Entra does when the API calls Microsoft
-// Graph for the person, unless a test made the person's consent missing; instance discovery answers with the aliases of
-// the public cloud. Anything else fails the request that sent it. ScopeOf and SubjectOf tell what an access token it issued
-// grants and whose it is, which Graph reads from the token itself. ClientInfoFor is that client info, from whose account
-// Microsoft.Identity.Web adds uid and utid; the sign-in asks Entra for no client info on the callback, and
-// Microsoft.Identity.Web ignores one posted there.
+// Graph for the person, unless a test made the person's consent missing, and answers the client credentials grant, signed
+// for with a client assertion, with an application token of Microsoft Graph's .default scope and nobody as its subject;
+// instance discovery answers with the aliases of the public cloud. Anything else fails the request that sent it. ScopeOf,
+// SubjectOf and IsApplicationToken tell what an access token it issued grants and whose it is, which Graph reads from the
+// token itself. ClientInfoFor is that client info, from whose account Microsoft.Identity.Web adds uid and utid; the sign-in
+// asks Entra for no client info on the callback, and Microsoft.Identity.Web ignores one posted there.
 public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 {
     public const string RefusedCodeError = "invalid_grant";
@@ -26,7 +27,15 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 
     public const string ConsentRequiredDescription = "AADSTS65001: The user or administrator has not consented to use the application. Send an interactive authorization request for this user and resource.";
 
+    public const string ApplicationScope = "https://graph.microsoft.com/.default";
+
     private const string SignInScope = "openid profile offline_access User.Read";
+
+    private const string ClientCredentialsGrant = "client_credentials";
+
+    private const string ClientAssertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+
+    private const string ApplicationTokenPrefix = "test-application-token.";
 
     private const string CodePrefix = "test-sign-in.";
 
@@ -44,7 +53,7 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
 
     private readonly ConcurrentQueue<string> _issuedTokens = new();
 
-    private readonly ConcurrentDictionary<string, (Guid Subject, string Scope)> _accessTokens = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, (Guid? Subject, string Scope)> _accessTokens = new(StringComparer.Ordinal);
 
     private readonly ConcurrentDictionary<Guid, TestUser> _admitted = new();
 
@@ -120,6 +129,13 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         return _accessTokens.TryGetValue(accessToken, out var issued) ? issued.Subject : null;
     }
 
+    public bool IsApplicationToken(string accessToken)
+    {
+        ArgumentNullException.ThrowIfNull(accessToken);
+
+        return _accessTokens.TryGetValue(accessToken, out var issued) && issued.Subject is null;
+    }
+
     public HttpClient GetHttpClient() => _client;
 
     public void Dispose() => _client.Dispose();
@@ -139,9 +155,12 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
                 .ToDictionary(field => field.Key, field => field.Value.ToString(), StringComparer.Ordinal);
             _requests.Enqueue(new TestTokenRequest(address, form));
 
-            return form.GetValueOrDefault("grant_type") == RefreshTokenGrant
-                ? Refresh(form.GetValueOrDefault("refresh_token"), form.GetValueOrDefault("scope"))
-                : Redeem(form.GetValueOrDefault("code"));
+            return form.GetValueOrDefault("grant_type") switch
+            {
+                RefreshTokenGrant => Refresh(form.GetValueOrDefault("refresh_token"), form.GetValueOrDefault("scope")),
+                ClientCredentialsGrant => ApplicationToken(form),
+                _ => Redeem(form.GetValueOrDefault("code")),
+            };
         }
 
         throw new InvalidOperationException($"MSAL sent {request.Method} {address.GetLeftPart(UriPartial.Path)}, which the test token endpoint does not serve; no test host may reach Entra.");
@@ -162,19 +181,44 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
             return Json(HttpStatusCode.OK, tokens);
         }
 
-        return Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeDescription, 70008));
+        return Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeError, RefusedCodeDescription, 70008));
     }
 
     private HttpResponseMessage Refresh(string? refreshToken, string? scope)
     {
         if (RefreshedUserFor(refreshToken) is not { } user || string.IsNullOrWhiteSpace(scope))
         {
-            return Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeDescription, 70008));
+            return Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeError, RefusedCodeDescription, 70008));
         }
 
         return _consentMissing.ContainsKey(user.ObjectId)
-            ? Json(HttpStatusCode.BadRequest, Refusal(ConsentRequiredDescription, 65001))
+            ? Json(HttpStatusCode.BadRequest, Refusal(RefusedCodeError, ConsentRequiredDescription, 65001))
             : Json(HttpStatusCode.OK, Tokens(user, scope));
+    }
+
+    private HttpResponseMessage ApplicationToken(Dictionary<string, string> form)
+    {
+        if (form.GetValueOrDefault("client_assertion_type") != ClientAssertionType || string.IsNullOrEmpty(form.GetValueOrDefault("client_assertion")))
+        {
+            return Json(HttpStatusCode.Unauthorized, Refusal("invalid_client", "AADSTS7000216: 'client_assertion', 'client_secret' or 'request' is required for the 'client_credentials' grant type.", 7000216));
+        }
+
+        if (form.GetValueOrDefault("scope")?.Split(' ', StringSplitOptions.RemoveEmptyEntries) is not [ApplicationScope])
+        {
+            return Json(HttpStatusCode.BadRequest, Refusal("invalid_scope", "AADSTS1002012: The provided value for scope is not valid. Client credential flows must have a scope value with /.default suffixed to the resource identifier (application ID URI).", 1002012));
+        }
+
+        var token = $"{ApplicationTokenPrefix}{Interlocked.Increment(ref _issuedAccessTokens)}";
+        _issuedTokens.Enqueue(token);
+        _accessTokens[token] = (null, ApplicationScope);
+
+        return Json(HttpStatusCode.OK, new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["token_type"] = "Bearer",
+            ["expires_in"] = 3600,
+            ["ext_expires_in"] = 3600,
+            ["access_token"] = token,
+        });
     }
 
     private TestUser? UserFor(string? code, string prefix) =>
@@ -248,9 +292,9 @@ public sealed class TestTokenEndpoint : IMsalHttpClientFactory, IDisposable
         };
     }
 
-    private static Dictionary<string, object> Refusal(string description, int errorCode) => new(StringComparer.Ordinal)
+    private static Dictionary<string, object> Refusal(string error, string description, int errorCode) => new(StringComparer.Ordinal)
     {
-        ["error"] = RefusedCodeError,
+        ["error"] = error,
         ["error_description"] = description,
         ["error_codes"] = new[] { errorCode },
     };

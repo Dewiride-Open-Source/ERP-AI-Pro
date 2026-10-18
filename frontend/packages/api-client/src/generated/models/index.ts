@@ -87,6 +87,10 @@ export interface ChangePersonStatusRequest extends AdditionalDataHolder, Parsabl
      */
     status?: PersonStatus | null;
     /**
+     * Who the person's team reports to from today, given with a deactivation only: the team is everyone whose position names the person as manager today or from a later date, and deactivating a person with a team needs it. Giving it also needs the permissions identity.users.positions.record and identity.users.positions.withdraw.
+     */
+    team?: TeamHandoverRequest | null;
+    /**
      * Version of the record the change was made from, as the API last returned it.
      */
     version?: string | null;
@@ -237,6 +241,15 @@ export function createCreateDesignationRequestFromDiscriminatorValue(parseNode: 
 export function createCurrentUserResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoCurrentUserResponse;
 }
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {DeactivatedPersonResponse}
+ */
+// @ts-ignore
+export function createDeactivatedPersonResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoDeactivatedPersonResponse;
+}
 export interface CreateDepartmentRequest extends AdditionalDataHolder, Parsable {
     /**
      * Name of the department, unique among the departments under the same parent.
@@ -270,6 +283,15 @@ export interface CreateDesignationRequest extends AdditionalDataHolder, Parsable
 // @ts-ignore
 export function createDesignationResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoDesignationResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {DirectoryAccountCheckResponse}
+ */
+// @ts-ignore
+export function createDirectoryAccountCheckResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoDirectoryAccountCheckResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -526,6 +548,24 @@ export function createSystemInfoResponseFromDiscriminatorValue(parseNode: ParseN
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {TeamHandoverRequest}
+ */
+// @ts-ignore
+export function createTeamHandoverRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoTeamHandoverRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {TeamMemberResponse}
+ */
+// @ts-ignore
+export function createTeamMemberResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoTeamMemberResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {ThemeChoiceResponse}
  */
 // @ts-ignore
@@ -589,6 +629,20 @@ export interface CurrentUserResponse extends AdditionalDataHolder, Parsable {
      * The userName property
      */
     userName?: string | null;
+}
+export interface DeactivatedPersonResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The deactivatedBecause property
+     */
+    deactivatedBecause?: PersonDeactivationReason | null;
+    /**
+     * The displayName property
+     */
+    displayName?: string | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
 }
 export interface DepartmentResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -664,6 +718,7 @@ export function deserializeIntoChangedValueResponse(changedValueResponse: Partia
 export function deserializeIntoChangePersonStatusRequest(changePersonStatusRequest: Partial<ChangePersonStatusRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "status": n => { changePersonStatusRequest.status = n.getEnumValue<PersonStatus>(PersonStatusObject); },
+        "team": n => { changePersonStatusRequest.team = n.getObjectValue<TeamHandoverRequest>(createTeamHandoverRequestFromDiscriminatorValue); },
         "version": n => { changePersonStatusRequest.version = n.getStringValue(); },
     }
 }
@@ -742,6 +797,19 @@ export function deserializeIntoCurrentUserResponse(currentUserResponse: Partial<
 }
 /**
  * The deserialization information for the current model
+ * @param DeactivatedPersonResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoDeactivatedPersonResponse(deactivatedPersonResponse: Partial<DeactivatedPersonResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "deactivatedBecause": n => { deactivatedPersonResponse.deactivatedBecause = n.getEnumValue<PersonDeactivationReason>(PersonDeactivationReasonObject); },
+        "displayName": n => { deactivatedPersonResponse.displayName = n.getStringValue(); },
+        "id": n => { deactivatedPersonResponse.id = n.getGuidValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param DepartmentResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -765,6 +833,18 @@ export function deserializeIntoDesignationResponse(designationResponse: Partial<
         "id": n => { designationResponse.id = n.getGuidValue(); },
         "name": n => { designationResponse.name = n.getStringValue(); },
         "version": n => { designationResponse.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param DirectoryAccountCheckResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoDirectoryAccountCheckResponse(directoryAccountCheckResponse: Partial<DirectoryAccountCheckResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "checkedCount": n => { directoryAccountCheckResponse.checkedCount = n.getNumberValue(); },
+        "deactivated": n => { directoryAccountCheckResponse.deactivated = n.getCollectionOfObjectValues<DeactivatedPersonResponse>(createDeactivatedPersonResponseFromDiscriminatorValue); },
     }
 }
 /**
@@ -1031,6 +1111,7 @@ export function deserializeIntoPersonResponse(personResponse: Partial<PersonResp
     return {
         "createdAt": n => { personResponse.createdAt = n.getDateValue(); },
         "dateOfJoining": n => { personResponse.dateOfJoining = n.getDateOnlyValue(); },
+        "deactivatedBecause": n => { personResponse.deactivatedBecause = n.getEnumValue<PersonDeactivationReason>(PersonDeactivationReasonObject); },
         "departmentId": n => { personResponse.departmentId = n.getGuidValue(); },
         "departmentName": n => { personResponse.departmentName = n.getStringValue(); },
         "designationId": n => { personResponse.designationId = n.getGuidValue(); },
@@ -1040,6 +1121,7 @@ export function deserializeIntoPersonResponse(personResponse: Partial<PersonResp
         "entraObjectId": n => { personResponse.entraObjectId = n.getGuidValue(); },
         "id": n => { personResponse.id = n.getGuidValue(); },
         "lastSignedInAt": n => { personResponse.lastSignedInAt = n.getDateValue(); },
+        "managerActive": n => { personResponse.managerActive = n.getBooleanValue(); },
         "managerDisplayName": n => { personResponse.managerDisplayName = n.getStringValue(); },
         "managerId": n => { personResponse.managerId = n.getGuidValue(); },
         "phoneNumber": n => { personResponse.phoneNumber = n.getStringValue(); },
@@ -1193,6 +1275,29 @@ export function deserializeIntoSystemInfoResponse(systemInfoResponse: Partial<Sy
 }
 /**
  * The deserialization information for the current model
+ * @param TeamHandoverRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoTeamHandoverRequest(teamHandoverRequest: Partial<TeamHandoverRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "managerId": n => { teamHandoverRequest.managerId = n.getGuidValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param TeamMemberResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoTeamMemberResponse(teamMemberResponse: Partial<TeamMemberResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "displayName": n => { teamMemberResponse.displayName = n.getStringValue(); },
+        "id": n => { teamMemberResponse.id = n.getGuidValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param ThemeChoiceResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -1267,6 +1372,16 @@ export interface DesignationResponse extends AdditionalDataHolder, Parsable {
      * The version property
      */
     version?: string | null;
+}
+export interface DirectoryAccountCheckResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The checkedCount property
+     */
+    checkedCount?: number | null;
+    /**
+     * The deactivated property
+     */
+    deactivated?: DeactivatedPersonResponse[] | null;
 }
 export interface DirectoryPersonResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -1602,6 +1717,7 @@ export interface PermissionResponse extends AdditionalDataHolder, Parsable {
      */
     name?: string | null;
 }
+export type PersonDeactivationReason = (typeof PersonDeactivationReasonObject)[keyof typeof PersonDeactivationReasonObject];
 export interface PersonResponse extends AdditionalDataHolder, Parsable {
     /**
      * The createdAt property
@@ -1611,6 +1727,10 @@ export interface PersonResponse extends AdditionalDataHolder, Parsable {
      * The dateOfJoining property
      */
     dateOfJoining?: DateOnly | null;
+    /**
+     * The deactivatedBecause property
+     */
+    deactivatedBecause?: PersonDeactivationReason | null;
     /**
      * The departmentId property
      */
@@ -1647,6 +1767,10 @@ export interface PersonResponse extends AdditionalDataHolder, Parsable {
      * The lastSignedInAt property
      */
     lastSignedInAt?: Date | null;
+    /**
+     * The managerActive property
+     */
+    managerActive?: boolean | null;
     /**
      * The managerDisplayName property
      */
@@ -1903,6 +2027,7 @@ export function serializeChangedValueResponse(writer: SerializationWriter, chang
 export function serializeChangePersonStatusRequest(writer: SerializationWriter, changePersonStatusRequest: Partial<ChangePersonStatusRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
     if (!changePersonStatusRequest || isSerializingDerivedType) { return; }
     writer.writeEnumValue<PersonStatus>("status", changePersonStatusRequest.status);
+    writer.writeObjectValue<TeamHandoverRequest>("team", changePersonStatusRequest.team, serializeTeamHandoverRequest);
     writer.writeStringValue("version", changePersonStatusRequest.version);
     writer.writeAdditionalData(changePersonStatusRequest.additionalData);
 }
@@ -1987,6 +2112,20 @@ export function serializeCurrentUserResponse(writer: SerializationWriter, curren
 }
 /**
  * Serializes information the current object
+ * @param DeactivatedPersonResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeDeactivatedPersonResponse(writer: SerializationWriter, deactivatedPersonResponse: Partial<DeactivatedPersonResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!deactivatedPersonResponse || isSerializingDerivedType) { return; }
+    writer.writeEnumValue<PersonDeactivationReason>("deactivatedBecause", deactivatedPersonResponse.deactivatedBecause);
+    writer.writeStringValue("displayName", deactivatedPersonResponse.displayName);
+    writer.writeGuidValue("id", deactivatedPersonResponse.id);
+    writer.writeAdditionalData(deactivatedPersonResponse.additionalData);
+}
+/**
+ * Serializes information the current object
  * @param DepartmentResponse The instance to serialize from.
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param writer Serialization writer to use to serialize this model
@@ -2013,6 +2152,19 @@ export function serializeDesignationResponse(writer: SerializationWriter, design
     writer.writeStringValue("name", designationResponse.name);
     writer.writeStringValue("version", designationResponse.version);
     writer.writeAdditionalData(designationResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param DirectoryAccountCheckResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeDirectoryAccountCheckResponse(writer: SerializationWriter, directoryAccountCheckResponse: Partial<DirectoryAccountCheckResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!directoryAccountCheckResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("checkedCount", directoryAccountCheckResponse.checkedCount);
+    writer.writeCollectionOfObjectValues<DeactivatedPersonResponse>("deactivated", directoryAccountCheckResponse.deactivated, serializeDeactivatedPersonResponse);
+    writer.writeAdditionalData(directoryAccountCheckResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -2300,6 +2452,7 @@ export function serializePersonResponse(writer: SerializationWriter, personRespo
     if (!personResponse || isSerializingDerivedType) { return; }
     writer.writeDateValue("createdAt", personResponse.createdAt);
     writer.writeDateOnlyValue("dateOfJoining", personResponse.dateOfJoining);
+    writer.writeEnumValue<PersonDeactivationReason>("deactivatedBecause", personResponse.deactivatedBecause);
     writer.writeGuidValue("departmentId", personResponse.departmentId);
     writer.writeStringValue("departmentName", personResponse.departmentName);
     writer.writeGuidValue("designationId", personResponse.designationId);
@@ -2309,6 +2462,7 @@ export function serializePersonResponse(writer: SerializationWriter, personRespo
     writer.writeGuidValue("entraObjectId", personResponse.entraObjectId);
     writer.writeGuidValue("id", personResponse.id);
     writer.writeDateValue("lastSignedInAt", personResponse.lastSignedInAt);
+    writer.writeBooleanValue("managerActive", personResponse.managerActive);
     writer.writeStringValue("managerDisplayName", personResponse.managerDisplayName);
     writer.writeGuidValue("managerId", personResponse.managerId);
     writer.writeStringValue("phoneNumber", personResponse.phoneNumber);
@@ -2475,6 +2629,31 @@ export function serializeSystemInfoResponse(writer: SerializationWriter, systemI
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param TeamHandoverRequest The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeTeamHandoverRequest(writer: SerializationWriter, teamHandoverRequest: Partial<TeamHandoverRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!teamHandoverRequest || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("managerId", teamHandoverRequest.managerId);
+    writer.writeAdditionalData(teamHandoverRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param TeamMemberResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeTeamMemberResponse(writer: SerializationWriter, teamMemberResponse: Partial<TeamMemberResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!teamMemberResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("displayName", teamMemberResponse.displayName);
+    writer.writeGuidValue("id", teamMemberResponse.id);
+    writer.writeAdditionalData(teamMemberResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param ThemeChoiceResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -2602,6 +2781,22 @@ export interface SystemInfoResponse extends AdditionalDataHolder, Parsable {
      */
     version?: string | null;
 }
+export interface TeamHandoverRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Person the team reports to from today: an active person outside the team, never the person deactivated; null makes the team report to no one.
+     */
+    managerId?: Guid | null;
+}
+export interface TeamMemberResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The displayName property
+     */
+    displayName?: string | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+}
 export interface ThemeChoiceResponse extends AdditionalDataHolder, Parsable {
     /**
      * The choiceId property
@@ -2725,6 +2920,11 @@ export const PermissionObject = {
     PlatformAuditChangesRead: "platform.audit.changes.read",
     PlatformSystemInfoInfoRead: "platform.system-info.info.read",
     PlatformSystemInfoStartupsRead: "platform.system-info.startups.read",
+} as const;
+export const PersonDeactivationReasonObject = {
+    Administrator: "administrator",
+    AccountDisabled: "accountDisabled",
+    AccountDeleted: "accountDeleted",
 } as const;
 export const PersonRoleObject = {
     Finance: "finance",

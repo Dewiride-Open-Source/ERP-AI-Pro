@@ -97,7 +97,7 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     {
         var objectId = Guid.CreateVersion7();
         var user = User.FirstSignIn(objectId, "Meera Nair", PeopleApi.UniqueWorkEmail(), DateTimeOffset.UnixEpoch).Value;
-        user.Deactivate();
+        user.Deactivate(DeactivationReason.Administrator);
         await RegisterAsync(user);
 
         Assert.False(await AdmitAsync(new SignedInPerson(objectId, "Someone Else", PeopleApi.UniqueWorkEmail())));
@@ -190,7 +190,7 @@ public sealed class UserAdmissionTests(ErpApiFactory factory) : IClassFixture<Er
     {
         var objectId = Guid.CreateVersion7();
         var user = User.FirstSignIn(objectId, "Meera Nair", PeopleApi.UniqueWorkEmail(), DateTimeOffset.UnixEpoch).Value;
-        user.Deactivate();
+        user.Deactivate(DeactivationReason.Administrator);
         await RegisterAsync(user);
 
         Assert.Null(await AdmissionOfAsync(objectId));

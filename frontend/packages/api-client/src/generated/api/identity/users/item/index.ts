@@ -10,6 +10,8 @@ import { RolesRequestBuilderRequestsMetadata, type RolesRequestBuilder } from '.
 // @ts-ignore
 import { StatusRequestBuilderRequestsMetadata, type StatusRequestBuilder } from './status/index.js';
 // @ts-ignore
+import { TeamRequestBuilderRequestsMetadata, type TeamRequestBuilder } from './team/index.js';
+// @ts-ignore
 import { type BaseRequestBuilder, type KeysToExcludeForNavigationMetadata, type NavigationMetadata, type Parsable, type ParsableFactory, type RequestConfiguration, type RequestInformation, type RequestsMetadata } from '@microsoft/kiota-abstractions';
 
 /**
@@ -28,6 +30,10 @@ export interface UsersItemRequestBuilder extends BaseRequestBuilder<UsersItemReq
      * The status property
      */
     get status(): StatusRequestBuilder;
+    /**
+     * The team property
+     */
+    get team(): TeamRequestBuilder;
     /**
      * Deletes a person's record; their sessions end at their next request.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
@@ -107,6 +113,9 @@ export const UsersItemRequestBuilderNavigationMetadata: Record<Exclude<keyof Use
     },
     status: {
         requestsMetadata: StatusRequestBuilderRequestsMetadata,
+    },
+    team: {
+        requestsMetadata: TeamRequestBuilderRequestsMetadata,
     },
 };
 /**

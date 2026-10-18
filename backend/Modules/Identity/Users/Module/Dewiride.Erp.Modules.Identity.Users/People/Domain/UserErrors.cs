@@ -38,6 +38,20 @@ internal static class UserErrors
 
     public static readonly Error ManagesPeople = Error.Conflict("user.manages-people", "People report to the person today or from a later date; record another manager for them first.");
 
+    public static readonly Error ActorInactive = Error.Conflict("user.actor-inactive", "The record of the person making the change is deactivated or deleted, so the change was not saved.");
+
+    public static readonly Error TeamHandoverRequired = Error.Failure("user.team-handover-required", "People report to the person today or from a later date; name who they report to from today, another active person or no one, to deactivate the person.");
+
+    public static readonly Error TeamManagerSamePerson = Error.Failure("user.team-manager-same-person", "The team cannot report to the person being deactivated.");
+
+    public static readonly Error TeamManagerNotFound = Error.Failure("user.team-manager-not-found", "No person has the id given as the team's new manager.");
+
+    public static readonly Error TeamManagerInactive = Error.Failure("user.team-manager-inactive", "The team's new manager is deactivated, so they cannot be anyone's manager today or later.");
+
+    public static readonly Error TeamManagerInTeam = Error.Failure("user.team-manager-in-team", "The team's new manager reports to the person being deactivated, today or from a later date, so they cannot take the team.");
+
+    public static readonly Error TeamReportingCycle = Error.Failure("user.team-reporting-cycle", "The team's new manager reports, through their own managers, to someone in the team, who would then report to themself.");
+
     private static Error Field(string code, string member, string message) =>
         Error.Validation(code, message, new Dictionary<string, string[]>(StringComparer.Ordinal) { [member] = [message] });
 }

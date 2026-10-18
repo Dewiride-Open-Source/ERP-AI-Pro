@@ -41,7 +41,8 @@ public static class EndToEndHost
             .WithConfiguration(ErpApiFactory.IdentityWebOriginKey, settings.WebOrigin)
             .WithConfiguration($"{RateLimitingOptions.SectionName}:{nameof(RateLimitingOptions.AnonymousPermitLimit)}", AnonymousPermitLimit)
             .WithTestEndpoints(PersonaSignIn.Map)
-            .WithTestEndpoints(DirectoryPeople.Map);
+            .WithTestEndpoints(DirectoryPeople.Map)
+            .WithTestEndpoints(DirectoryApplicationAccess.Map);
         factory.UseKestrel(settings.Port);
         factory.StartServer();
 

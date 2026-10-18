@@ -4,12 +4,18 @@
 // @ts-ignore
 import { createDirectorySearchResponseFromDiscriminatorValue, createHttpValidationProblemDetailsFromDiscriminatorValue, createProblemDetailsFromDiscriminatorValue, type DirectorySearchResponse, type HttpValidationProblemDetails, type ProblemDetails } from '../../../../models/index.js';
 // @ts-ignore
-import { type BaseRequestBuilder, type Parsable, type ParsableFactory, type RequestConfiguration, type RequestInformation, type RequestsMetadata } from '@microsoft/kiota-abstractions';
+import { AccountCheckRequestBuilderRequestsMetadata, type AccountCheckRequestBuilder } from './accountCheck/index.js';
+// @ts-ignore
+import { type BaseRequestBuilder, type KeysToExcludeForNavigationMetadata, type NavigationMetadata, type Parsable, type ParsableFactory, type RequestConfiguration, type RequestInformation, type RequestsMetadata } from '@microsoft/kiota-abstractions';
 
 /**
  * Builds and executes requests for operations under /api/identity/users/directory
  */
 export interface DirectoryRequestBuilder extends BaseRequestBuilder<DirectoryRequestBuilder> {
+    /**
+     * The accountCheck property
+     */
+    get accountCheck(): AccountCheckRequestBuilder;
     /**
      * Searches the company directory in Microsoft Entra on the administrator's behalf and names the people the ERP already holds.
      * @param requestConfiguration Configuration for the request such as headers, query parameters, and middleware options.
@@ -44,6 +50,14 @@ export interface DirectoryRequestBuilderGetQueryParameters {
  * Uri template for the request builder.
  */
 export const DirectoryRequestBuilderUriTemplate = "{+baseurl}/api/identity/users/directory?search={search}";
+/**
+ * Metadata for all the navigation properties in the request builder.
+ */
+export const DirectoryRequestBuilderNavigationMetadata: Record<Exclude<keyof DirectoryRequestBuilder, KeysToExcludeForNavigationMetadata>, NavigationMetadata> = {
+    accountCheck: {
+        requestsMetadata: AccountCheckRequestBuilderRequestsMetadata,
+    },
+};
 /**
  * Metadata for all the requests in the request builder.
  */

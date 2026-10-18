@@ -1,8 +1,10 @@
 using System.Net;
 using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
+using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 using Dewiride.Erp.Modules.Identity.Users.Departments.Endpoints.Responses;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.People.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.IntegrationTests.Shared;
+using Dewiride.Erp.Modules.Identity.Users.People.Endpoints.Responses;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Endpoints.Responses;
 using Dewiride.Erp.Testing;
@@ -23,7 +25,9 @@ public sealed class OrganisationLockTests(ErpApiFactory factory) : IClassFixture
         var designation = await OrganisationApi.CreateDesignationAsync(client, OrganisationApi.UniqueName("Unused"));
         var person = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
         var leaving = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
+        var deactivating = await PeopleApi.RegisterAsync(client, PeopleApi.Person(PeopleApi.UniqueWorkEmail()));
         var position = await OrganisationApi.RecordPositionAsync(client, person.Id, OrganisationApi.Today.AddDays(-10));
+        await AccountCheckApi.LinkAsync(factory, person.Id);
         var name = OrganisationApi.UniqueName("Audit");
 
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -39,7 +43,9 @@ public sealed class OrganisationLockTests(ErpApiFactory factory) : IClassFixture
                 client.DeleteAsync(OrganisationApi.Designations($"/{designation.Id}"), cancellationToken),
                 OrganisationApi.RecordAsync(client, person.Id, OrganisationApi.Today),
                 client.DeleteAsync(OrganisationApi.Positions(person.Id, $"/{position.Id}"), cancellationToken),
-                client.DeleteAsync(PeopleApi.Path($"/{leaving.Id}"), cancellationToken));
+                client.DeleteAsync(PeopleApi.Path($"/{leaving.Id}"), cancellationToken),
+                client.PutAsJsonAsync(PeopleApi.Path($"/{deactivating.Id}/status"), new { status = "deactivated", version = deactivating.Version }, PeopleApi.Json, cancellationToken),
+                AccountCheckApi.PostAsync(client));
 
             foreach (var response in responses)
             {
@@ -57,6 +63,7 @@ public sealed class OrganisationLockTests(ErpApiFactory factory) : IClassFixture
         Assert.Equal(HttpStatusCode.OK, await StatusOfAsync(client, OrganisationApi.Departments($"/{unused.Id}")));
         Assert.Equal(HttpStatusCode.OK, await StatusOfAsync(client, OrganisationApi.Designations($"/{designation.Id}")));
         Assert.Equal(HttpStatusCode.OK, await StatusOfAsync(client, PeopleApi.Path($"/{leaving.Id}")));
+        Assert.Equal(PersonStatus.Active, (await ReadAsync<PersonResponse>(client, PeopleApi.Path($"/{deactivating.Id}"))).Status);
         Assert.Equal([position.Id], (await OrganisationApi.ReadPageAsync<PositionResponse>(client, OrganisationApi.Positions(person.Id))).Items.Select(p => p.Id));
         using var created = await OrganisationApi.PostAsync(client, OrganisationApi.Departments(), new { name });
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);

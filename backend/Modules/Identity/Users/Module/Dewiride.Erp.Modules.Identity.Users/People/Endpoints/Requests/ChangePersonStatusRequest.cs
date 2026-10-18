@@ -12,4 +12,17 @@ public sealed record ChangePersonStatusRequest(
     [property: Description("Version of the record the change was made from, as the API last returned it.")]
     [property: Required]
     [property: StringLength(PersonLimits.VersionMaxLength)]
-    string? Version);
+    string? Version,
+    [property: Description("Who the person's team reports to from today, given with a deactivation only: the team is everyone whose position names the person as manager today or from a later date, and deactivating a person with a team needs it. Giving it also needs the permissions identity.users.positions.record and identity.users.positions.withdraw.")]
+    TeamHandoverRequest? Team = null) : IValidatableObject
+{
+    public const string TeamWithActiveMessage = "A team is handed over only when the person is deactivated.";
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Team is not null && Status == PersonStatus.Active)
+        {
+            yield return new ValidationResult(TeamWithActiveMessage, [nameof(Team)]);
+        }
+    }
+}

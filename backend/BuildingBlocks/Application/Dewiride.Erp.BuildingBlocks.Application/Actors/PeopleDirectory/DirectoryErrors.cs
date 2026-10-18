@@ -10,5 +10,7 @@ public static class DirectoryErrors
 
     public static readonly Error AccessDenied = Error.Forbidden("directory.access-denied", "Microsoft Entra does not let the ERP read the company directory on your behalf; signing in again, or consent for the whole organisation, may be needed.");
 
+    public static readonly Error AccountsAccessDenied = Error.Forbidden("directory.access-denied", "Microsoft Entra does not let the ERP read the accounts of the company directory with its own permission; an administrator of the organisation must grant it User.Read.All.");
+
     public static readonly Error Unavailable = Error.Unavailable("directory.unavailable", "The company directory cannot be read right now; try again in a moment.");
 }

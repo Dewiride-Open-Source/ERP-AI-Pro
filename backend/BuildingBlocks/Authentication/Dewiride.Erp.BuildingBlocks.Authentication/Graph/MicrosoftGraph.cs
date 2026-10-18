@@ -15,5 +15,7 @@ public static class MicrosoftGraph
 
     public const string ReadOwnProfileScope = "https://graph.microsoft.com/User.Read";
 
+    public const string ApplicationScope = "https://graph.microsoft.com/.default";
+
     public static Uri BaseAddress { get; } = new("https://graph.microsoft.com/v1.0/");
 }

@@ -182,6 +182,7 @@ Every route that is not anonymous requires one permission, except the routes any
   ```
 
 - `OpenApiSchemaShapeTests` rejects composed or conditional schemas (`oneOf`, `anyOf`, `allOf`, `not`, `discriminator`, `patternProperties`, `if`/`then`/`else`) and schema ids that are not PascalCase identifiers, because the TypeScript generator mishandles them. Two response types with the same class name in different modules fail the document build; rename one.
+- A nullable property whose type is a record or an enum (`TeamHandoverRequest? Team`, `PersonDeactivationReason? DeactivatedBecause`) is generated as `oneOf` a `null` schema and the reference, and the enum with `null` among its values. `NullableReferenceTransformer` (`BuildingBlocks.Endpoints/OpenApi`, after `ErpDocumentTransformer`) describes such a property by the reference alone and drops `null` from every enum's values, because the generator types every property it writes as possibly null anyway and would turn the `null` value into an enum member of its own. A request property's `Description`, and a response record's documentation, therefore say when it is null. Every other `oneOf` reaches the shape test unchanged ([ADR-0047](../adr/0047-user-lifecycle-the-account-check-and-the-team-handover.md)).
 
 ## The generated client
 

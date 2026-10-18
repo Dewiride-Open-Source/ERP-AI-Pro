@@ -87,7 +87,7 @@ export async function searchManagers(id: string, text: string): Promise<PersonSe
   if (parsed.data.text.trim().length > displayNameMaxLength) return { options: [] };
 
   try {
-    return { options: await searchActivePeople(parsed.data.text, { excluding: parsed.data.id }) };
+    return { options: await searchActivePeople(parsed.data.text, { excluding: [parsed.data.id] }) };
   } catch (error) {
     unstable_rethrow(error);
     return { error: refusedOutcome(problemToFormState(error)).message };

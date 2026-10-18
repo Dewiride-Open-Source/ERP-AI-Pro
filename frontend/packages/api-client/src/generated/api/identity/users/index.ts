@@ -8,7 +8,7 @@ import { DepartmentsRequestBuilderNavigationMetadata, DepartmentsRequestBuilderR
 // @ts-ignore
 import { DesignationsRequestBuilderNavigationMetadata, DesignationsRequestBuilderRequestsMetadata, type DesignationsRequestBuilder } from './designations/index.js';
 // @ts-ignore
-import { DirectoryRequestBuilderRequestsMetadata, type DirectoryRequestBuilder } from './directory/index.js';
+import { DirectoryRequestBuilderNavigationMetadata, DirectoryRequestBuilderRequestsMetadata, type DirectoryRequestBuilder } from './directory/index.js';
 // @ts-ignore
 import { InvitationsRequestBuilderRequestsMetadata, type InvitationsRequestBuilder } from './invitations/index.js';
 // @ts-ignore
@@ -147,6 +147,7 @@ export const UsersRequestBuilderNavigationMetadata: Record<Exclude<keyof UsersRe
     },
     directory: {
         requestsMetadata: DirectoryRequestBuilderRequestsMetadata,
+        navigationMetadata: DirectoryRequestBuilderNavigationMetadata,
     },
     invitations: {
         requestsMetadata: InvitationsRequestBuilderRequestsMetadata,

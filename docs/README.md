@@ -62,5 +62,6 @@
 | [0044](adr/0044-npm-advisory-gate-and-eslint-10.md) | The npm advisory gate and ESLint 10 through @eslint/compat |
 | [0045](adr/0045-people-pages-and-the-permission-catalogue.md) | People pages and the permission catalogue |
 | [0046](adr/0046-organisation-pages-my-profile-and-the-saved-theme.md) | Organisation pages, My profile and the saved theme |
+| [0047](adr/0047-user-lifecycle-the-account-check-and-the-team-handover.md) | User lifecycle: the account check, the team handover and two administrators at once |
 
 New decisions use [0000-template.md](adr/0000-template.md).

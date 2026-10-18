@@ -3,4 +3,4 @@ using Dewiride.Erp.Modules.Identity.Users.Contracts.People;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.ChangePersonStatus;
 
-internal sealed record ChangePersonStatusCommand(Guid Id, PersonStatus Status, string Version) : ICommand<Guid>;
+internal sealed record ChangePersonStatusCommand(Guid Id, PersonStatus Status, string Version, TeamHandover? Team) : ICommand<Guid>;

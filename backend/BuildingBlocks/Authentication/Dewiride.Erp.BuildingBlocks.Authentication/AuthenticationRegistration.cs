@@ -68,6 +68,7 @@ public static class AuthenticationRegistration
         authentication.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, static _ => { });
         builder.Services.AddErpTokenCache();
         builder.Services.AddHttpClient<IPeopleDirectory, GraphPeopleDirectory>(MicrosoftGraph.HttpClientName, static client => client.BaseAddress = MicrosoftGraph.BaseAddress);
+        builder.Services.AddHttpClient<IDirectoryAccounts, GraphDirectoryAccounts>(MicrosoftGraph.HttpClientName, static client => client.BaseAddress = MicrosoftGraph.BaseAddress);
         builder.AddErpDataProtection();
 
         // With Cookie.SecurePolicy Always, DefaultAntiforgery refuses every call, validation included, on a request it does not

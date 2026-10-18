@@ -66,8 +66,44 @@ test("personOptions_PeopleAndAnExcludedPerson_ListsTheOthersWithTheirWorkEmail",
         { id: "p-asha", displayName: "Asha Rao", workEmail: "asha@example.com" },
         { id: "p-vikram", displayName: "Vikram Iyer", workEmail: undefined },
       ],
-      "p-asha",
+      ["p-asha"],
     ),
     [{ value: "p-vikram", label: "Vikram Iyer", description: undefined }],
   );
+});
+
+test("personOptions_SeveralExcludedPeople_LeavesEachOfThemOut", () => {
+  assert.deepEqual(
+    personOptions(
+      [
+        { id: "p-asha", displayName: "Asha Rao", workEmail: "asha@example.com" },
+        { id: "p-kiran", displayName: "Kiran Das", workEmail: "kiran@example.com" },
+        { id: "p-vikram", displayName: "Vikram Iyer", workEmail: "vikram@example.com" },
+      ],
+      ["p-vikram", "p-asha"],
+    ),
+    [{ value: "p-kiran", label: "Kiran Das", description: "kiran@example.com" }],
+  );
+});
+
+test("personOptions_ExcludedPeopleAmongTheFirst_LeavesThemOutBeforeKeepingTheLimit", () => {
+  assert.deepEqual(
+    personOptions(
+      [
+        { id: "p-asha", displayName: "Asha Rao", workEmail: undefined },
+        { id: "p-kiran", displayName: "Kiran Das", workEmail: undefined },
+        { id: "p-meera", displayName: "Meera Nair", workEmail: undefined },
+        { id: "p-vikram", displayName: "Vikram Iyer", workEmail: undefined },
+      ],
+      ["p-asha", "p-kiran"],
+      1,
+    ),
+    [{ value: "p-meera", label: "Meera Nair", description: undefined }],
+  );
+});
+
+test("personOptions_NobodyExcluded_ListsEveryone", () => {
+  assert.deepEqual(personOptions([{ id: "p-asha", displayName: "Asha Rao", workEmail: undefined }]), [
+    { value: "p-asha", label: "Asha Rao", description: undefined },
+  ]);
 });

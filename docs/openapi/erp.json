@@ -2308,7 +2308,7 @@
         "tags": [
           "Identity.Users"
         ],
-        "summary": "Deactivates or reactivates a person; a deactivated person cannot sign in, and their sessions end at their next request.",
+        "summary": "Deactivates or reactivates a person; a deactivated person cannot sign in, their sessions end at their next request, and their team reports from today to the manager the deactivation names.",
         "operationId": "Identity.Users.ChangeStatus",
         "parameters": [
           {
@@ -2833,6 +2833,233 @@
           {
             "SessionCookie": [],
             "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/identity/users/directory/account-check": {
+      "post": {
+        "tags": [
+          "Identity.Users"
+        ],
+        "summary": "Reads the Entra accounts of the active people with the ERP's own permission and deactivates everyone whose account is disabled or deleted; their sessions end at their next request.",
+        "operationId": "Identity.Users.CheckDirectoryAccounts",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectoryAccountCheckResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/identity/users/{id}/team": {
+      "get": {
+        "tags": [
+          "Identity.Users"
+        ],
+        "summary": "Lists the people whose position names a person as their manager today or from a later date, the team a deactivation of that person hands over, by display name.",
+        "operationId": "Identity.Users.ListTeam",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamMemberResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
           }
         ]
       }
@@ -5355,6 +5582,10 @@
               "string"
             ],
             "description": "Version of the record the change was made from, as the API last returned it."
+          },
+          "team": {
+            "description": "Who the person's team reports to from today, given with a deactivation only: the team is everyone whose position names the person as manager today or from a later date, and deactivating a person with a team needs it. Giving it also needs the permissions identity.users.positions.record and identity.users.positions.withdraw.",
+            "$ref": "#/components/schemas/TeamHandoverRequest"
           }
         }
       },
@@ -5544,6 +5775,26 @@
           }
         }
       },
+      "DeactivatedPersonResponse": {
+        "required": [
+          "id",
+          "displayName",
+          "deactivatedBecause"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "deactivatedBecause": {
+            "$ref": "#/components/schemas/PersonDeactivationReason"
+          }
+        }
+      },
       "DepartmentResponse": {
         "required": [
           "id",
@@ -5589,6 +5840,25 @@
           },
           "version": {
             "type": "string"
+          }
+        }
+      },
+      "DirectoryAccountCheckResponse": {
+        "required": [
+          "checkedCount",
+          "deactivated"
+        ],
+        "type": "object",
+        "properties": {
+          "checkedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deactivated": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeactivatedPersonResponse"
+            }
           }
         }
       },
@@ -6185,6 +6455,13 @@
           }
         }
       },
+      "PersonDeactivationReason": {
+        "enum": [
+          "administrator",
+          "accountDisabled",
+          "accountDeleted"
+        ]
+      },
       "PersonResponse": {
         "required": [
           "id",
@@ -6200,7 +6477,9 @@
           "designationName",
           "managerId",
           "managerDisplayName",
+          "managerActive",
           "status",
+          "deactivatedBecause",
           "roles",
           "lastSignedInAt",
           "createdAt",
@@ -6283,8 +6562,17 @@
               "string"
             ]
           },
+          "managerActive": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
           "status": {
             "$ref": "#/components/schemas/PersonStatus"
+          },
+          "deactivatedBecause": {
+            "$ref": "#/components/schemas/PersonDeactivationReason"
           },
           "roles": {
             "type": "array",
@@ -6723,6 +7011,38 @@
           "uptimeSeconds": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "TeamHandoverRequest": {
+        "required": [
+          "managerId"
+        ],
+        "type": "object",
+        "properties": {
+          "managerId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Person the team reports to from today: an active person outside the team, never the person deactivated; null makes the team report to no one.",
+            "format": "uuid"
+          }
+        }
+      },
+      "TeamMemberResponse": {
+        "required": [
+          "id",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
           }
         }
       },

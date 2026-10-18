@@ -25,13 +25,16 @@ using Microsoft.AspNetCore.Routing;
 namespace Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
 
 // Naming roles for a record that is being created also needs the permission to assign roles, so holding the permission to
-// register people is not enough to hand out roles. A change answers the record as it was saved, read again, so its version
-// is the one to edit next.
+// register people is not enough to hand out roles; naming who a deactivated person's team reports to records and withdraws
+// the team's positions, so it needs both permissions over positions. A change answers the record as it was saved, read
+// again, so its version is the one to edit next.
 internal static class PeopleEndpoints
 {
     public const string GetRouteName = "Identity.Users.Get";
 
     public static readonly Error AssigningRolesForbidden = Error.Forbidden("request.forbidden", $"Naming roles for a person needs the permission {UsersPermissions.AssignRoles}.");
+
+    public static readonly Error HandingOverTeamForbidden = Error.Forbidden("request.forbidden", $"Naming who a deactivated person's team reports to needs the permissions {UsersPermissions.RecordPositions} and {UsersPermissions.WithdrawPositions}.");
 
     public static void Map(RouteGroupBuilder group)
     {
@@ -60,7 +63,7 @@ internal static class PeopleEndpoints
 
         group.MapPut("/{id:guid}/status", ChangeStatusAsync)
             .WithName("Identity.Users.ChangeStatus")
-            .WithSummary("Deactivates or reactivates a person; a deactivated person cannot sign in, and their sessions end at their next request.")
+            .WithSummary("Deactivates or reactivates a person; a deactivated person cannot sign in, their sessions end at their next request, and their team reports from today to the manager the deactivation names.")
             .RequirePermission(UsersPermissions.ChangeStatus)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
@@ -79,6 +82,7 @@ internal static class PeopleEndpoints
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         InvitationEndpoints.Map(group);
+        AccountCheckEndpoints.Map(group);
     }
 
     public static async Task<Results<Created<PersonResponse>, ProblemHttpResult>> CreatedAsync(
@@ -115,7 +119,9 @@ internal static class PeopleEndpoints
             details.DesignationName,
             details.ManagerId,
             details.ManagerDisplayName,
+            details.ManagerActive,
             details.Status,
+            details.DeactivatedBecause,
             details.Roles,
             details.LastSignedInAt,
             details.CreatedAt,
@@ -192,9 +198,16 @@ internal static class PeopleEndpoints
         ChangePersonStatusRequest request,
         ICommandHandler<ChangePersonStatusCommand, Guid> handler,
         IQueryHandler<GetPersonQuery, PersonDetails> people,
+        ICallerPermissions permissions,
         CancellationToken cancellationToken)
     {
-        var changed = await handler.HandleAsync(new ChangePersonStatusCommand(id, request.Status, request.Version!), cancellationToken);
+        if (request.Team is not null && !(permissions.Holds(UsersPermissions.RecordPositions) && permissions.Holds(UsersPermissions.WithdrawPositions)))
+        {
+            return HandingOverTeamForbidden.ToProblem();
+        }
+
+        var team = request.Team is { } handover ? new TeamHandover(handover.ManagerId) : null;
+        var changed = await handler.HandleAsync(new ChangePersonStatusCommand(id, request.Status, request.Version!, team), cancellationToken);
 
         return changed.IsFailure ? changed.Error!.ToProblem() : await ReadAsync(people, changed.Value, cancellationToken);
     }

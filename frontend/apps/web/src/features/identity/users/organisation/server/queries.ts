@@ -70,7 +70,7 @@ export async function listDesignationOptions(): Promise<OrganisationOption[]> {
 
 export async function searchActivePeople(
   text: string,
-  { excluding }: { readonly excluding?: string } = {},
+  { excluding = [] }: { readonly excluding?: readonly string[] } = {},
 ): Promise<OrganisationOption[]> {
   const terms = [
     "status:eq:active",
@@ -80,7 +80,7 @@ export async function searchActivePeople(
     client.api.identity.users.get({
       queryParameters: {
         page: 1,
-        pageSize: searchResultLimit,
+        pageSize: Math.min(searchResultLimit + excluding.length, lookupPageSize),
         sort: "displayName:asc",
         filter: terms.join(";"),
       },
@@ -93,5 +93,6 @@ export async function searchActivePeople(
         : [],
     ),
     excluding,
+    searchResultLimit,
   );
 }

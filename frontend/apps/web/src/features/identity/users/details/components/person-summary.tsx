@@ -13,6 +13,7 @@ import type { ReactNode } from "react";
 
 import { isoDateOf } from "@/shared/api/dates/date-only";
 
+import { NeedsNewManagerBadge } from "../../people/components/needs-new-manager-badge";
 import { lastSignInText } from "../../people/components/person-text";
 
 const notGiven = "Not given";
@@ -55,15 +56,23 @@ export function PersonSummary({ person }: { person: PersonResponse }) {
 }
 
 function Manager({ person }: { person: PersonResponse }) {
-  const { managerId, managerDisplayName } = person;
+  const { managerId, managerDisplayName, managerActive } = person;
   if (managerId === null || managerId === undefined) return noneHeld;
   return (
-    <Link
-      href={`/identity/users/${managerId}`}
-      className="rounded-sm wrap-anywhere text-primary underline-offset-4 focus-ring hover:underline"
-    >
-      {managerDisplayName ?? "Their manager"}
-    </Link>
+    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+      <Link
+        href={`/identity/users/${managerId}`}
+        className="rounded-sm wrap-anywhere text-primary underline-offset-4 focus-ring hover:underline"
+      >
+        {managerDisplayName ?? "Their manager"}
+      </Link>
+      {managerActive === false ? (
+        <>
+          {" "}
+          <NeedsNewManagerBadge />
+        </>
+      ) : null}
+    </span>
   );
 }
 

@@ -21,6 +21,7 @@ import {
   workEmailMaxLength,
 } from "../lists/people.list";
 
+import { NeedsNewManagerBadge } from "./needs-new-manager-badge";
 import { filterNote, filterOptions, type OrganisationLookup, type PersonRow } from "./person-rows";
 import { PersonStatusBadge } from "./person-status-badge";
 import {
@@ -90,7 +91,20 @@ const personColumns: readonly DataTableColumn<PersonRow>[] = [
   {
     id: "manager",
     header: "Manager",
-    cell: (person) => person.managerDisplayName ?? notRecorded,
+    cell: (person) =>
+      person.managerDisplayName === undefined ? (
+        notRecorded
+      ) : (
+        <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+          {person.managerDisplayName}
+          {person.needsNewManager ? (
+            <>
+              {" "}
+              <NeedsNewManagerBadge />
+            </>
+          ) : null}
+        </span>
+      ),
     sort: "text",
   },
   {

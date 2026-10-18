@@ -21,4 +21,6 @@ internal sealed record PersonRow
     public UserId? ManagerId { get; init; }
 
     public string? ManagerDisplayName { get; init; }
+
+    public bool? ManagerActive { get; init; }
 }
