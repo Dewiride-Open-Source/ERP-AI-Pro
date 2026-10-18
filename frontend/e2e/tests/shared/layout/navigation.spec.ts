@@ -694,8 +694,10 @@ test.describe("app shell navigation", () => {
       - menu "Account":
         - text: /.+/
         - separator
+        - menuitem "My profile"
         - menuitem "Sign out"
     `);
+    await expect(shell.profileItem).toHaveAttribute("href", "/profile");
     await expect(shell.signOutItem).toBeEnabled();
     await capture("user-menu-open", shell.userMenu);
     await page.keyboard.press("Escape");
@@ -731,6 +733,8 @@ test.describe("app shell navigation", () => {
       await shell.userMenuButton.focus();
       await page.keyboard.press(key);
       await expect(shell.userMenu, `the menu opened with ${key}`).toBeVisible();
+      await expect(shell.profileItem).toBeFocused();
+      await page.keyboard.press("ArrowDown");
       await expect(shell.signOutItem).toBeFocused();
       await expect(shell.userMenu).toContainText(name);
       await expect(shell.userMenu).toContainText(person?.userName ?? "");

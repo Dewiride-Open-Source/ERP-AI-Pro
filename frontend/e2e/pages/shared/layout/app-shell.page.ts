@@ -39,6 +39,7 @@ export class AppShell {
   readonly account: Locator;
   readonly userMenuButton: Locator;
   readonly userMenu: Locator;
+  readonly profileItem: Locator;
   readonly signOutItem: Locator;
 
   constructor(private readonly page: Page) {
@@ -68,6 +69,7 @@ export class AppShell {
     this.account = page.getByTestId("account-area");
     this.userMenuButton = this.account.getByRole("button", { includeHidden: true });
     this.userMenu = page.getByRole("menu", { name: "Account" });
+    this.profileItem = this.userMenu.getByRole("menuitem", { name: "My profile" });
     this.signOutItem = this.userMenu.getByRole("menuitem", { name: "Sign out" });
   }
 
