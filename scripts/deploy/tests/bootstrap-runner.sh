@@ -67,9 +67,9 @@ run_bootstrap() {
   sudo bash scripts/deploy/bootstrap.sh "${arguments[@]}"
 
   log_step "The second run changes nothing"
-  sudo bash scripts/deploy/bootstrap.sh "${arguments[@]}" > "$WORK_DIR/second-run.txt"
-  grep -qxF 'nothing to change: the host already matches' "$WORK_DIR/second-run.txt" \
-    || die "the second run changed something: $(cat "$WORK_DIR/second-run.txt")"
+  local summary
+  summary="$(sudo bash scripts/deploy/bootstrap.sh "${arguments[@]}")"
+  [[ "$summary" == 'nothing to change: the host already matches' ]] || die "the second run changed something: $summary"
   passed "the second run found nothing to change"
 }
 

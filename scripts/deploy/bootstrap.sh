@@ -267,7 +267,7 @@ ensure_docker_group() {
 
 ensure_deploy_account() {
   log_step "Deploy account $DEPLOY_USER"
-  local entry
+  local entry created=0
   if entry="$(getent passwd "$DEPLOY_USER")"; then
     local home
     home="$(cut -d: -f6 <<< "$entry")"
@@ -278,6 +278,7 @@ ensure_deploy_account() {
     record_change "create the account $DEPLOY_USER with the home $DEPLOY_HOME and no password"
     run useradd --create-home --home-dir "$DEPLOY_HOME" --shell /bin/bash --user-group --password '*' \
       --comment 'ERP-AI-Pro deployments' "$DEPLOY_USER"
+    created=1
   fi
   if is_root && getent passwd "$DEPLOY_USER" > /dev/null; then
     local password
@@ -287,7 +288,9 @@ ensure_deploy_account() {
       run usermod --password '*' "$DEPLOY_USER"
     fi
   fi
-  ensure_directory "$DEPLOY_HOME" 750 "$DEPLOY_USER:$DEPLOY_USER" "the home of $DEPLOY_USER"
+  if (( ! (created && DRY_RUN) )); then
+    ensure_directory "$DEPLOY_HOME" 750 "$DEPLOY_USER:$DEPLOY_USER" "the home of $DEPLOY_USER"
+  fi
   ensure_directory "$DEPLOY_HOME/.ssh" 700 "$DEPLOY_USER:$DEPLOY_USER" "the SSH folder of $DEPLOY_USER"
   install_config "$AUTHORIZED_KEYS_FILE" "$DEPLOY_HOME/.ssh/authorized_keys" 600 "$DEPLOY_USER:$DEPLOY_USER" \
     "the keys that sign in as $DEPLOY_USER" || true
