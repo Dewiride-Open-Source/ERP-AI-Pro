@@ -9,6 +9,7 @@ export class PeoplePage {
   readonly listCard: Locator;
   readonly list: DataTableRegion;
   readonly registerLink: Locator;
+  readonly inviteButton: Locator;
   readonly permissionsLink: Locator;
   readonly unavailable: Locator;
 
@@ -17,6 +18,9 @@ export class PeoplePage {
     this.listCard = page.getByTestId("people-list-card");
     this.list = new DataTableRegion(page, this.listCard);
     this.registerLink = page.getByRole("main").getByRole("link", { name: "Register a person", exact: true });
+    this.inviteButton = page
+      .getByRole("main")
+      .getByRole("button", { name: "Invite from the directory", exact: true });
     this.permissionsLink = page
       .getByRole("main")
       .getByRole("link", { name: "Roles and permissions", exact: true });

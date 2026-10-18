@@ -16,6 +16,7 @@ import { requireSession } from "@/shared/auth/session";
 import { listApiParameters } from "@/shared/lists/list-api";
 import { listHref, readListQuery, withPage, type SearchParameters } from "@/shared/lists/list-query";
 
+import { InvitePersonDialog } from "../../invitations/components/invite-person-dialog";
 import { peopleNavigation } from "../../nav";
 import type { OrganisationOption } from "../../organisation/components/organisation-options";
 import { listDepartmentOptions, listDesignationOptions } from "../../organisation/server/queries";
@@ -35,6 +36,7 @@ export async function PeopleOverview({ searchParameters }: { searchParameters: S
 
   const session = await requireSession();
   const canRegister = mayShow(session, "identity.users.people.register");
+  const canAssignRoles = mayShow(session, "identity.users.people.assign-roles");
 
   const [people, departments, designations] = await Promise.allSettled([
     getPeople(listApiParameters(query, peopleList)),
@@ -60,12 +62,15 @@ export async function PeopleOverview({ searchParameters }: { searchParameters: S
         </div>
         <div className="flex flex-wrap gap-2">
           {canRegister ? (
-            <Button asChild>
-              <Link href="/identity/users/new">
-                <UserPlusIcon aria-hidden />
-                Register a person
-              </Link>
-            </Button>
+            <>
+              <Button asChild>
+                <Link href="/identity/users/new">
+                  <UserPlusIcon aria-hidden />
+                  Register a person
+                </Link>
+              </Button>
+              <InvitePersonDialog canAssignRoles={canAssignRoles} />
+            </>
           ) : null}
           <Button asChild variant="outline">
             <Link href="/identity/users/permissions">
