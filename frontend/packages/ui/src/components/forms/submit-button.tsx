@@ -18,6 +18,7 @@ export function SubmitButton({
   disabled = false,
   className,
   onClick,
+  onMouseDown,
   children,
   ...buttonProps
 }: SubmitButtonProps) {
@@ -28,6 +29,10 @@ export function SubmitButton({
       return;
     }
     onClick?.(event);
+  };
+  const handleMouseDown = (event: MouseEvent<HTMLButtonElement>) => {
+    onMouseDown?.(event);
+    event.preventDefault();
   };
 
   return (
@@ -41,6 +46,7 @@ export function SubmitButton({
       data-hydrating={hydrated ? undefined : ""}
       className={cn("aria-disabled:opacity-50", className)}
       onClick={handleClick}
+      onMouseDown={handleMouseDown}
     >
       {pending ? <Spinner data-icon="inline-start" aria-hidden="true" /> : null}
       {children}
