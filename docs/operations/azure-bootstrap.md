@@ -160,6 +160,8 @@ az ad app permission admin-consent --id <application id>
 
 The script still finishes every other step for every registration, then exits 1 so the refusal is not missed. Run the printed command, then run `entra.sh` again; it will find the grant in place and report it unchanged.
 
+Each sign-in registration also requests one application permission, `User.Read.All` ("Read all users' full profiles"), which the API uses only without a signed-in person, for the account check of [ADR-0047](../adr/0047-user-lifecycle-the-account-check-and-the-team-handover.md): with an application token made from the registration's certificate, it reads `id` and `accountEnabled` of the accounts linked to people's records, to deactivate those disabled or deleted in Entra. `requiredResourceAccess` lists it as a `Role` beside the five delegated scopes, and `entra.sh` grants it with an app role assignment of the registration's service principal to Microsoft Graph's service principal (`POST /servicePrincipals/{id}/appRoleAssignments`), found again by its resource and app role id on the next run. Granting a Microsoft Graph application permission needs a Privileged Role Administrator or a Global Administrator; when Graph refuses the assignment, the script prints the same `admin-consent` command, which grants every permission the registration lists. Both registrations gained it on 2026-10-18, after a dry run that listed only those four changes. `verify.sh --entra` checks that each registration requests it and holds the assignment.
+
 ### Certificates
 
 | Registration | Vault | Certificate and secret name | Content type | Subject |
