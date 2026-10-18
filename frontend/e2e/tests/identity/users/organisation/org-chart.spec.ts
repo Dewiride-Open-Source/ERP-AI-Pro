@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import {
   createDepartmentRecord,
   createDesignationRecord,
@@ -430,6 +432,21 @@ test.describe("organisation chart", () => {
     await page.goto(`${orgChartPath}?on=${todayInIndia()}`);
     await expect(page).toHaveURL((url) => url.pathname === orgChartPath && url.search === "");
     await expect(chart.chartHeading).toHaveText("Today's chart");
+  });
+
+  test("keeps a department the list no longer holds as the one chosen, named as unknown, with nobody under it", async ({
+    page,
+  }) => {
+    const chart = new OrgChartPage(page);
+    const gone = randomUUID();
+
+    await chart.goto(`${orgChartPath}?department=${gone}`);
+    await chart.waitUntilInteractive();
+
+    await expect(page).toHaveURL((url) => url.searchParams.get("department") === gone);
+    await expect(chart.department).toHaveValue("Unknown department");
+    await expect(chart.empty).toHaveText("Nobody on this chart is in the chosen department.");
+    await expect(chart.everyDepartment).toBeVisible();
   });
 
   test("keeps Organisation chart marked in the navigation and ends the breadcrumb there", async ({

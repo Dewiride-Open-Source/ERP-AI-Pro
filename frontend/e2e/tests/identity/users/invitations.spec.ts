@@ -88,6 +88,33 @@ test.describe("inviting a person from the directory", () => {
     });
   });
 
+  test("says when nobody in the directory matches, and when more people match than it shows", async ({
+    page,
+    request,
+  }) => {
+    const people = new PeoplePage(page);
+    const invitation = new InvitationDialog(page);
+    const prefix = uniquePrefix("invite-many");
+    for (let index = 1; index <= 26; index += 1) {
+      const number = String(index).padStart(2, "0");
+      await addDirectoryPerson(request, {
+        objectId: randomUUID(),
+        displayName: `${prefix} Person ${number}`,
+        userPrincipalName: `${prefix}-person-${number}@example.com`,
+      });
+    }
+    await people.goto();
+    await invitation.open();
+
+    await invitation.find(uniquePrefix("invite-nobody"), "Nobody in the directory matches.");
+    await expect(invitation.results).toHaveCount(0);
+
+    await invitation.find(prefix, "25 people found. More people match; type more of the name.");
+    await expect(invitation.results.getByRole("listitem")).toHaveCount(25);
+    await expect(invitation.choice(`${prefix} Person 01`)).toBeVisible();
+    await expect(invitation.choice(`${prefix} Person 26`)).toHaveCount(0);
+  });
+
   for (const theme of themes) {
     test.describe(theme, () => {
       test.use({ theme });

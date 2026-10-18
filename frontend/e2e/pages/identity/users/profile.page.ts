@@ -6,6 +6,8 @@ export const profilePath = "/profile";
 
 export const ownProfileApi = "/api/identity/users/me";
 
+export const ownPhotoApi = "/api/identity/users/me/photo";
+
 export type ThemeName = "system" | "light" | "dark";
 
 export type OwnProfile = {

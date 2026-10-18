@@ -2,7 +2,7 @@ import { addUnverifiedSessionCookie } from "../../../fixtures/sign-in";
 import { offlineBaseURL } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { sessionRenewed } from "../../../pages/identity/auth/session.page";
-import { ProfilePage } from "../../../pages/identity/users/profile.page";
+import { ownPhotoApi, ProfilePage } from "../../../pages/identity/users/profile.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 test.describe("My profile without the API", () => {
@@ -24,6 +24,10 @@ test.describe("My profile without the API", () => {
     async ({ page, capture }) => {
       const profile = new ProfilePage(page);
       const shell = new AppShell(page);
+      const photoRequests: string[] = [];
+      page.on("request", (request) => {
+        if (new URL(request.url()).pathname === ownPhotoApi) photoRequests.push(request.url());
+      });
       const renewal = sessionRenewed(page);
       await profile.goto();
       expect((await renewal).status(), "the renewal the page sends without its API").toBe(500);
@@ -38,6 +42,7 @@ test.describe("My profile without the API", () => {
       await expect(profile.theme).toHaveCount(0);
       await expect(shell.userMenuButton).toHaveAccessibleName("Account");
       await expect(shell.userMenuButton.locator("[data-slot='avatar-image']")).toHaveCount(0);
+      expect(photoRequests, "requests for the photo").toEqual([]);
 
       await capture("profile-unavailable");
     },

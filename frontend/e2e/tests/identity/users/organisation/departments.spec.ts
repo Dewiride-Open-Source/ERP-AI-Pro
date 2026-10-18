@@ -78,6 +78,32 @@ test.describe("departments page", () => {
     test.describe(theme, () => {
       test.use({ theme });
 
+      test("keeps the name of a department three levels down readable beside its actions", async ({
+        page,
+        api,
+        capture,
+      }) => {
+        const tree = await seedTree(api, "departments-deep");
+        const east = await createDepartmentRecord(api, `${tree.prefix} East coast`, tree.north.id);
+        try {
+          const departments = new DepartmentsPage(page);
+          await departments.goto();
+          await departments.waitUntilInteractive();
+
+          await departments.expandAll.click();
+          await expect(departments.row(east.name)).toBeVisible();
+          const name = departments.row(east.name).getByText(east.name, { exact: true });
+          const box = await name.boundingBox();
+          expect(box?.width ?? 0, "the width of the name of a department three levels down").toBeGreaterThan(
+            140,
+          );
+          await expect(departments.edit(east.name)).toBeVisible();
+          await capture("departments-deep", departments.item(tree.sales.name));
+        } finally {
+          await removeDepartmentsNamed(api, tree.prefix);
+        }
+      });
+
       test("shows the departments as a tree, each folded until it is opened, with a link to its changes", async ({
         page,
         api,

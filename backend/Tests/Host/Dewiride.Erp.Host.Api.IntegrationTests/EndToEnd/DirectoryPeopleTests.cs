@@ -12,9 +12,9 @@ public sealed class DirectoryPeopleTests(DirectoryPeopleTests.Fixture fixture) :
     private static readonly byte[] Png = Convert.FromHexString("89504E470D0A1A0A0000000D49484452");
 
     [Fact]
-    public async Task Post_PersonWithAPhotoSentWithTheirSession_AddsThemSoTheirSignInShowsThePhoto()
+    public async Task Post_PersonWithAPhotoSentWithTheirSessionAndNoRequestToken_AddsThemSoTheirSignInShowsThePhoto()
     {
-        using var client = TestSignIn.CreateClient(fixture.Factory);
+        using var client = TestSignIn.CreateClientWithoutRequestToken(fixture.Factory);
         var person = await SignInAsync(client);
 
         using var added = await client.PostAsJsonAsync(new Uri(DirectoryPeople.Path, UriKind.Relative), Seed(person.Id, Photo("image/png", Convert.ToBase64String(Png))), TestContext.Current.CancellationToken);

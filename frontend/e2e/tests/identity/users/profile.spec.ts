@@ -1,6 +1,18 @@
-import type { Browser, BrowserContext } from "@playwright/test";
+import type { Browser, BrowserContext, Page, Route } from "@playwright/test";
+import { randomUUID } from "node:crypto";
 
 import { addDirectoryPerson } from "../../../fixtures/directory";
+import {
+  createDepartmentRecord,
+  createDesignationRecord,
+  ownPersonRecordId,
+  peopleApi,
+  personRecord,
+  recordMoveRecord,
+  registerPersonRecord,
+  removeRecords,
+  uniquePrefix,
+} from "../../../fixtures/person-records";
 import { expect, pressArrowUntilChecked, test, themes, type SignedInApi } from "../../../fixtures/test";
 import {
   ownPhoto,
@@ -14,6 +26,50 @@ import {
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
 const darkClass = /(^|\s)dark(\s|$)/;
+
+// The keeper saves through a Server Function, a POST to the page's own path carrying the next-action header.
+function isThemeSave(route: Route, pathname: string): boolean {
+  const request = route.request();
+  return (
+    new URL(request.url()).pathname === pathname &&
+    request.method() === "POST" &&
+    request.headers()["next-action"] !== undefined
+  );
+}
+
+// Holds the first theme save until the test lets it go, and then cuts it, so that save never reaches the account.
+async function holdFirstThemeSave(
+  page: Page,
+  pathname: string,
+): Promise<{ readonly held: Promise<void>; readonly cut: () => void; readonly saves: () => number }> {
+  let saves = 0;
+  let isHeld: () => void = () => undefined;
+  let cut: () => void = () => undefined;
+  const held = new Promise<void>((resolve) => {
+    isHeld = resolve;
+  });
+  const released = new Promise<void>((resolve) => {
+    cut = resolve;
+  });
+  await page.route(
+    (url) => url.pathname === pathname,
+    async (route) => {
+      if (!isThemeSave(route, pathname)) {
+        await route.fallback();
+        return;
+      }
+      saves += 1;
+      if (saves > 1) {
+        await route.fallback();
+        return;
+      }
+      isHeld();
+      await released;
+      await route.abort("connectionreset").catch(() => undefined);
+    },
+  );
+  return { held, cut, saves: () => saves };
+}
 
 async function ownProfile(api: SignedInApi): Promise<OwnProfile> {
   const response = await api.get(ownProfileApi);
@@ -86,10 +142,7 @@ test.describe("My profile", () => {
           - term: Manager
           - definition: Not recorded
         `);
-        await expect(profile.roleList).toMatchAriaSnapshot(`
-          - list "Your roles":
-            - listitem: Employee
-        `);
+        await expect(profile.roleList.getByRole("listitem")).toHaveText(["Employee"]);
         await expect(profile.rolesLink).toHaveCount(0);
         await expect(profile.initials).toHaveText(initialsOf(name));
         await expect(profile.photoImage).toHaveCount(0);
@@ -182,7 +235,13 @@ test.describe("My profile", () => {
       otherPage.on("console", (message) => {
         if (message.type() === "error") errors.push(message.text());
       });
+      const otherShell = new AppShell(otherPage);
       const otherProfile = new ProfilePage(otherPage);
+
+      await otherPage.goto("/");
+      await otherShell.waitUntilInteractive();
+      await expect(otherPage.locator("html")).toHaveClass(darkClass);
+      await expect(otherShell.theme("dark")).toHaveAttribute("aria-checked", "true");
 
       await otherProfile.goto();
       await otherProfile.waitUntilInteractive();
@@ -195,22 +254,25 @@ test.describe("My profile", () => {
     }
   });
 
-  test("saves the theme chosen with the theme button at the top of the page", async ({ page, api }) => {
-    const profile = new ProfilePage(page);
+  test("saves the theme chosen with the theme button at the top of any page", async ({ page, api }) => {
     const shell = new AppShell(page);
-    await profile.goto();
-    await profile.waitUntilInteractive();
+    await page.goto("/");
+    await shell.waitUntilInteractive();
 
     await shell.theme("light").click();
 
     await expect(shell.theme("light")).toHaveAttribute("aria-checked", "true");
-    await expect(profile.themeOption("light")).toBeChecked();
     await expect.poll(savedTheme(api), { message: "the theme the person's account holds" }).toBe("light");
 
     await shell.theme("system").click();
 
-    await expect(profile.themeOption("system")).toBeChecked();
+    await expect(shell.theme("system")).toHaveAttribute("aria-checked", "true");
     await expect.poll(savedTheme(api), { message: "the theme the person's account holds" }).toBe("system");
+
+    const profile = new ProfilePage(page);
+    await profile.goto();
+    await profile.waitUntilInteractive();
+    await expect(profile.themeOption("system")).toBeChecked();
   });
 
   test("moves and saves the theme from the keyboard", async ({ page, api }) => {
@@ -230,18 +292,71 @@ test.describe("My profile", () => {
     await expect(page.locator("html")).toHaveClass(darkClass);
   });
 
-  test("keeps the theme chosen just before the page reloads", async ({ page, api }) => {
-    const profile = new ProfilePage(page);
-    await profile.goto();
-    await profile.waitUntilInteractive();
+  test.describe("when a theme save does not reach the web server", () => {
+    // Chromium logs the provoked reset; WebKit and Firefox log nothing for it.
+    test.use({ expectedConsoleError: /^Failed to load resource: net::ERR_CONNECTION_RESET$/ });
 
-    await profile.themeOption("dark").click();
-    await page.reload();
-    await profile.waitUntilInteractive();
+    test("keeps the theme chosen just before the page reloads, while its save was still on its way", async ({
+      page,
+      api,
+    }) => {
+      const profile = new ProfilePage(page);
+      await profile.goto();
+      await profile.waitUntilInteractive();
+      const save = await holdFirstThemeSave(page, profilePath);
 
-    await expect(profile.themeOption("dark")).toBeChecked();
-    await expect(page.locator("html")).toHaveClass(darkClass);
-    await expect.poll(savedTheme(api), { message: "the theme the person's account holds" }).toBe("dark");
+      await profile.themeOption("dark").click();
+      await save.held;
+      expect(await savedTheme(api)(), "the theme the account holds while the save is on its way").toBe(
+        "system",
+      );
+      await page.reload();
+      save.cut();
+      await profile.waitUntilInteractive();
+
+      await expect(profile.themeOption("dark")).toBeChecked();
+      await expect(page.locator("html")).toHaveClass(darkClass);
+      await expect.poll(savedTheme(api), { message: "the theme the person's account holds" }).toBe("dark");
+      expect(save.saves(), "the saves the pages sent").toBe(2);
+    });
+
+    test("keeps the theme on screen and saves the next choice", async ({ page, api }) => {
+      const profile = new ProfilePage(page);
+      await profile.goto();
+      await profile.waitUntilInteractive();
+      const save = await holdFirstThemeSave(page, profilePath);
+      save.cut();
+
+      await profile.themeOption("dark").click();
+      await expect.poll(save.saves, { message: "the saves the page sent" }).toBe(1);
+
+      await expect(page.locator("html")).toHaveClass(darkClass);
+      await expect(profile.themeOption("dark")).toBeChecked();
+      expect(await savedTheme(api)(), "the theme the account holds after the failed save").toBe("system");
+
+      await profile.themeOption("light").click();
+
+      await expect.poll(savedTheme(api), { message: "the theme the person's account holds" }).toBe("light");
+      await expect(page.locator("html")).not.toHaveClass(darkClass);
+      expect(save.saves(), "the saves the page sent").toBe(2);
+    });
+
+    test("saves the failed choice again from the next page this browser loads", async ({ page, api }) => {
+      const profile = new ProfilePage(page);
+      await profile.goto();
+      await profile.waitUntilInteractive();
+      const save = await holdFirstThemeSave(page, profilePath);
+      save.cut();
+
+      await profile.themeOption("dark").click();
+      await expect.poll(save.saves, { message: "the saves the page sent" }).toBe(1);
+      expect(await savedTheme(api)(), "the theme the account holds after the failed save").toBe("system");
+      await page.goto("/");
+      await new AppShell(page).waitUntilInteractive();
+
+      await expect.poll(savedTheme(api), { message: "the theme the person's account holds" }).toBe("dark");
+      await expect(page.locator("html")).toHaveClass(darkClass);
+    });
   });
 
   test.describe("for an administrator", () => {
@@ -260,11 +375,7 @@ test.describe("My profile", () => {
           await new AppShell(page).waitUntilInteractive();
           await profile.waitUntilInteractive();
 
-          await expect(profile.roleList).toMatchAriaSnapshot(`
-            - list "Your roles":
-              - listitem: Employee
-              - listitem: Administrator
-          `);
+          await expect(profile.roleList.getByRole("listitem")).toHaveText(["Employee", "Administrator"]);
           await expect(profile.rolesLink).toHaveAttribute("href", "/identity/users/permissions");
 
           await capture("profile-administrator");
@@ -281,6 +392,64 @@ test.describe("My profile", () => {
 
       await expect(page).toHaveURL((url) => url.pathname === "/identity/users/permissions");
       await expect(page.getByRole("heading", { name: "Roles and permissions", level: 1 })).toBeVisible();
+    });
+
+    // An administrator may record their own details, which no employee may, so their profile shows every recorded value.
+    test("shows the details recorded for them and the department, designation and manager of today", async ({
+      page,
+      api,
+      person,
+    }) => {
+      const prefix = uniquePrefix("profile");
+      const ownId = await ownPersonRecordId(api, person);
+      const employeeCode = `P-${randomUUID().slice(-12)}`;
+      const own = await personRecord(api, ownId);
+      const described = await api.put(`${peopleApi}/${ownId}`, {
+        data: { employeeCode, phoneNumber: "98765 43210", dateOfJoining: "2025-04-01", version: own.version },
+      });
+      expect(described.status(), "the details of the administrator's own record").toBe(200);
+      const department = await createDepartmentRecord(api, `${prefix} Treasury`);
+      const designation = await createDesignationRecord(api, `${prefix} Treasurer`);
+      const manager = await registerPersonRecord(api, {
+        displayName: `${prefix} Kavya Menon`,
+        workEmail: `${prefix}.kavya@dewiride.test`,
+      });
+      const moveId = await recordMoveRecord(api, ownId, {
+        effectiveFrom: "2025-04-01",
+        departmentId: department.id,
+        designationId: designation.id,
+        managerId: manager.id,
+      });
+      try {
+        const profile = new ProfilePage(page);
+        await profile.goto();
+        await new AppShell(page).waitUntilInteractive();
+
+        await expect(profile.details).toMatchAriaSnapshot(`
+          - heading "Your details" [level=2]
+          - text: The department, designation and manager are those of today. To change any of these, ask an administrator.
+          - term: Employee code
+          - definition: ${employeeCode}
+          - term: Phone number
+          - definition: "+919876543210"
+          - term: Date of joining
+          - definition: 01-04-2025
+          - term: Department
+          - definition: ${prefix} Treasury
+          - term: Designation
+          - definition: ${prefix} Treasurer
+          - term: Manager
+          - definition: ${prefix} Kavya Menon
+        `);
+      } finally {
+        const withdrawn = await api.delete(`${peopleApi}/${ownId}/positions/${moveId}`);
+        expect(withdrawn.status(), "the withdrawal of the administrator's move").toBe(204);
+        await removeRecords(api, {
+          people: [manager.id],
+          departments: [department.id],
+          designations: [designation.id],
+        });
+      }
     });
   });
 });

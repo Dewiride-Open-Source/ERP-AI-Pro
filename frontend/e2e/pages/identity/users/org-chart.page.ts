@@ -42,7 +42,6 @@ export class OrgChartPage {
   readonly pageLabel: Locator;
   readonly otherDateRefused: Locator;
   readonly unavailable: Locator;
-  readonly departmentsUnavailable: Locator;
 
   constructor(private readonly page: Page) {
     const main = page.getByRole("main");
@@ -66,7 +65,6 @@ export class OrgChartPage {
     this.pageLabel = page.getByTestId("org-chart-page");
     this.otherDateRefused = page.getByTestId("org-chart-other-date-refused");
     this.unavailable = page.getByTestId("org-chart-unavailable");
-    this.departmentsUnavailable = page.getByTestId("org-chart-departments-unavailable");
   }
 
   async goto(address = orgChartPath): Promise<void> {
