@@ -25,6 +25,7 @@ import { useSavingDialog } from "../../details/hooks/use-saving-dialog";
 import { DisclosureButton, DisclosureSpacer } from "../../organisation/components/disclosure-button";
 import { branchIds } from "../../organisation/components/disclosure-tree";
 import { useDisclosureTree, type DisclosureTree } from "../../organisation/hooks/use-disclosure-tree";
+import { useFocusAfterRefresh } from "../hooks/use-focus-after-refresh";
 
 import { DeleteDepartmentAction } from "./delete-department-action";
 import {
@@ -82,6 +83,7 @@ export function DepartmentsPanel({
   const { open, saving, setOpen, setSaving, onOpenChange } = useSavingDialog();
   const [target, setTarget] = useState<DepartmentDialogTarget>();
   const [opening, setOpening] = useState(0);
+  const keepFocusOn = useFocusAfterRefresh(records, !open);
 
   const show = useCallback(
     (next: DepartmentDialogTarget) => {
@@ -100,19 +102,21 @@ export function DepartmentsPanel({
   );
   const added = useCallback(
     (saved: DepartmentSaved) => {
+      if (target !== undefined) keepFocusOn(target.returnFocusTo);
       reveal(saved.parentId);
       setOpen(false);
       toast.success(addedMessage(saved.name));
     },
-    [reveal, setOpen],
+    [keepFocusOn, reveal, setOpen, target],
   );
   const edited = useCallback(
     (saved: DepartmentSaved) => {
+      if (target !== undefined) keepFocusOn(target.returnFocusTo);
       reveal(saved.parentId);
       setOpen(false);
       toast.success(savedMessage(saved.name));
     },
-    [reveal, setOpen],
+    [keepFocusOn, reveal, setOpen, target],
   );
 
   const actions: RowActions = {
