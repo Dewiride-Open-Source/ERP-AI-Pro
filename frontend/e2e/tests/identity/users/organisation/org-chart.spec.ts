@@ -220,12 +220,14 @@ test.describe("organisation chart", () => {
                 - paragraph: ${quoted(`No designation · ${organisation.north.name}`)}
           `);
 
-          await chart.collapseAll.click();
+          await chart.collapseAll.focus();
+          await page.keyboard.press("Enter");
           await expect(chart.reportsList(head.displayName)).toBeHidden();
           await expect(chart.row(clerk.displayName)).toBeHidden();
           await expect(chart.collapseAll).toBeFocused();
           await capture("org-chart-collapsed", chart.people);
-          await chart.expandAll.click();
+          await chart.expandAll.focus();
+          await page.keyboard.press("Enter");
           await expect(chart.row(analyst.displayName)).toBeVisible();
           await expect(chart.row(clerk.displayName)).toBeVisible();
           await expect(chart.expandAll).toBeFocused();
@@ -286,7 +288,8 @@ test.describe("organisation chart", () => {
           await capture("org-chart-filters", chart.filters);
 
           await chart.chooseDepartment(north.name, `${operations.name} › ${north.name}`);
-          await chart.show.click();
+          await chart.show.focus();
+          await page.keyboard.press("Enter");
           await expect(page).toHaveURL(
             (url) => url.pathname === orgChartPath && url.searchParams.get("department") === north.id,
           );
@@ -397,7 +400,8 @@ test.describe("organisation chart", () => {
       expect(await chart.rootNames()).toEqual(people.slice(0, 20).map((person) => person.displayName));
       await expect(chart.pageLink("Previous page")).toHaveAttribute("aria-disabled", "true");
 
-      await chart.pageLink("Next page").click();
+      await chart.pageLink("Next page").focus();
+      await page.keyboard.press("Enter");
       await expect(page).toHaveURL((url) => url.searchParams.get("page") === "2");
       await expect(chart.pageLabel).toHaveText("Page 2 of 2");
       expect(await chart.rootNames()).toEqual([people[20]?.displayName ?? ""]);

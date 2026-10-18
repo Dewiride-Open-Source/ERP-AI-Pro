@@ -121,10 +121,12 @@ test.describe("departments page", () => {
           await expect(departments.toggle(inside.name)).toHaveAttribute("aria-expanded", "false");
           await expect(departments.row(north.name)).toBeHidden();
 
-          await departments.collapseAll.click();
+          await departments.collapseAll.focus();
+          await page.keyboard.press("Enter");
           await expect(departments.childList(sales.name)).toBeHidden();
           await expect(departments.collapseAll).toBeFocused();
-          await departments.expandAll.click();
+          await departments.expandAll.focus();
+          await page.keyboard.press("Enter");
           await expect(departments.row(north.name)).toBeVisible();
           await expect(departments.toggle(sales.name)).toHaveAttribute("aria-expanded", "true");
           await expect(departments.toggle(inside.name)).toHaveAttribute("aria-expanded", "true");
