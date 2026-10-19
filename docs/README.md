@@ -67,5 +67,6 @@
 | [0049](adr/0049-the-production-host-a-deploy-account-keys-from-the-home-network-and-nightly-updates.md) | The production host: a deploy account, keys from the home network, nightly updates |
 | [0050](adr/0050-the-production-database-azure-sql-basic-with-microsoft-entra-only-users.md) | The production database: Azure SQL Basic with Microsoft Entra-only users |
 | [0051](adr/0051-the-production-attachments-storage-geo-redundant-and-reachable-from-the-homes-address-alone.md) | The production attachments storage: geo-redundant, reachable from the home's address alone |
+| [0052](adr/0052-the-edge-proxys-tls-policy-limits-timeouts-headers-and-access-log.md) | The edge proxy's TLS policy, limits, timeouts, headers and access log |
 
 New decisions use [0000-template.md](adr/0000-template.md).
