@@ -211,38 +211,47 @@ function seconds(nanoseconds: number | undefined): string {
   return `${(nanoseconds ?? 0) / nanosecondsPerSecond} s`;
 }
 
+function serverProblems(name: string, server: AdaptedServer): string[] {
+  const ceilings = (["read_timeout", "write_timeout"] as const)
+    .filter((key) => (server[key] ?? 0) <= apiLongestTimeoutSeconds * nanosecondsPerSecond)
+    .map((key) => `proxy configuration: ${name} ${key} is ${seconds(server[key])}, not above ${apiLongestTimeoutSeconds} s`);
+  const stalls = (["read_idle_timeout", "write_idle_timeout"] as const)
+    .filter((key) => server[key] !== stallSeconds * nanosecondsPerSecond)
+    .map((key) => `proxy configuration: ${name} ${key} is ${seconds(server[key])}, not ${stallSeconds} s`);
+  return [...ceilings, ...stalls];
+}
+
+function upstreamProblems(name: string, handler: AdaptedHandler): string[] {
+  return (["response_header_timeout", "read_timeout"] as const)
+    .filter((key) => (handler.transport?.[key] ?? 0) <= apiLongestTimeoutSeconds * nanosecondsPerSecond)
+    .map((key) => `proxy configuration: ${name} upstream ${key} is ${seconds(handler.transport?.[key])}, not above ${apiLongestTimeoutSeconds} s`);
+}
+
+function bodyLimitProblems(apiLimits: readonly number[], otherLimits: readonly number[]): string[] {
+  return [
+    ...(apiLimits.length === 0 ? ["proxy configuration: no request body limit on /api/*"] : []),
+    ...apiLimits.filter((limit) => limit <= largestApiBodyBytes).map((limit) => `proxy configuration: the request body limit on /api/* is ${limit} bytes, not above ${largestApiBodyBytes}`),
+    ...(otherLimits.length === 0 ? ["proxy configuration: no request body limit outside /api/*"] : []),
+    ...otherLimits
+      .filter((limit) => limit <= serverFunctionBodyLimitBytes || limit >= webServerBodyBufferBytes)
+      .map((limit) => `proxy configuration: the request body limit outside /api/* is ${limit} bytes, not between ${serverFunctionBodyLimitBytes} and ${webServerBodyBufferBytes}`),
+  ];
+}
+
 export function adaptedConfigProblems(config: AdaptedConfig): string[] {
   const servers = Object.entries(config.apps?.http?.servers ?? {});
   if (servers.length === 0) return ["proxy configuration: holds no server"];
   const problems: string[] = [];
   const apiLimits: number[] = [];
   const otherLimits: number[] = [];
-  const longest = apiLongestTimeoutSeconds * nanosecondsPerSecond;
   for (const [name, server] of servers) {
-    for (const key of ["read_timeout", "write_timeout"] as const) {
-      if ((server[key] ?? 0) <= longest) problems.push(`proxy configuration: ${name} ${key} is ${seconds(server[key])}, not above ${apiLongestTimeoutSeconds} s`);
-    }
-    for (const key of ["read_idle_timeout", "write_idle_timeout"] as const) {
-      if (server[key] !== stallSeconds * nanosecondsPerSecond) problems.push(`proxy configuration: ${name} ${key} is ${seconds(server[key])}, not ${stallSeconds} s`);
-    }
+    problems.push(...serverProblems(name, server));
     walkHandlers(server.routes, [], (handler, paths) => {
-      if (handler.handler === "reverse_proxy") {
-        for (const key of ["response_header_timeout", "read_timeout"] as const) {
-          if ((handler.transport?.[key] ?? 0) <= longest) problems.push(`proxy configuration: ${name} upstream ${key} is ${seconds(handler.transport?.[key])}, not above ${apiLongestTimeoutSeconds} s`);
-        }
-      }
+      if (handler.handler === "reverse_proxy") problems.push(...upstreamProblems(name, handler));
       if (handler.handler === "request_body") (paths.includes("/api/*") ? apiLimits : otherLimits).push(handler.max_size ?? 0);
     });
   }
-  if (apiLimits.length === 0) problems.push("proxy configuration: no request body limit on /api/*");
-  for (const limit of apiLimits) {
-    if (limit <= largestApiBodyBytes) problems.push(`proxy configuration: the request body limit on /api/* is ${limit} bytes, not above ${largestApiBodyBytes}`);
-  }
-  if (otherLimits.length === 0) problems.push("proxy configuration: no request body limit outside /api/*");
-  for (const limit of otherLimits) {
-    if (limit <= serverFunctionBodyLimitBytes || limit >= webServerBodyBufferBytes) problems.push(`proxy configuration: the request body limit outside /api/* is ${limit} bytes, not between ${serverFunctionBodyLimitBytes} and ${webServerBodyBufferBytes}`);
-  }
-  return problems;
+  return [...problems, ...bodyLimitProblems(apiLimits, otherLimits)];
 }
 
 function compose(...args: string[]): void {
@@ -360,30 +369,38 @@ function handshake(root: string, options: ConnectionOptions): Promise<Handshake 
   });
 }
 
-async function tlsOutcomes(root: string): Promise<(string | undefined)[]> {
-  const outcomes: (string | undefined)[] = [];
-  for (const version of ["TLSv1", "TLSv1.1"] as const) {
-    const answer = await handshake(root, { minVersion: version, maxVersion: version, ciphers: "DEFAULT@SECLEVEL=0" });
-    const refused = answer instanceof Error && (answer as NodeJS.ErrnoException).code === "ERR_SSL_TLSV1_ALERT_PROTOCOL_VERSION";
-    outcomes.push(refused ? undefined : `proxy TLS: expected ${version} to be refused, got ${answer instanceof Error ? answer.message : answer.protocol}`);
-  }
-  const modern = await handshake(root, { minVersion: "TLSv1.3", maxVersion: "TLSv1.3" });
-  outcomes.push(modern instanceof Error ? `proxy TLS: TLS 1.3 was refused: ${modern.message}` : undefined);
+async function refusedVersionOutcome(root: string, version: "TLSv1" | "TLSv1.1"): Promise<string | undefined> {
+  const answer = await handshake(root, { minVersion: version, maxVersion: version, ciphers: "DEFAULT@SECLEVEL=0" });
+  if (answer instanceof Error && (answer as NodeJS.ErrnoException).code === "ERR_SSL_TLSV1_ALERT_PROTOCOL_VERSION") return undefined;
+  const outcome = answer instanceof Error ? answer.message : answer.protocol;
+  return `proxy TLS: expected ${version} to be refused, got ${outcome}`;
+}
+
+async function acceptedTls12Suites(root: string): Promise<string[]> {
   const accepted: string[] = [];
   for (const suite of getCiphers().map((name) => name.toUpperCase()).filter((name) => !name.startsWith("TLS_"))) {
     const answer = await handshake(root, { minVersion: "TLSv1.2", maxVersion: "TLSv1.2", ciphers: `${suite}:@SECLEVEL=0` });
     if (!(answer instanceof Error)) accepted.push(answer.cipher);
   }
-  outcomes.push(tls12SuiteProblem(accepted));
-  for (const [offered, expected] of [
-    [["h2", "http/1.1"], "h2"],
-    [["http/1.1"], "http/1.1"],
-  ] as const) {
-    const answer = await handshake(root, { ALPNProtocols: [...offered] });
-    const negotiated = answer instanceof Error ? answer.message : answer.alpn;
-    outcomes.push(negotiated === expected ? undefined : `proxy TLS: offered ${offered.join(" and ")}, expected ${expected}, got ${negotiated}`);
-  }
-  return outcomes;
+  return accepted;
+}
+
+async function alpnOutcome(root: string, offered: readonly string[], expected: string): Promise<string | undefined> {
+  const answer = await handshake(root, { ALPNProtocols: [...offered] });
+  const negotiated = answer instanceof Error ? answer.message : answer.alpn;
+  return negotiated === expected ? undefined : `proxy TLS: offered ${offered.join(" and ")}, expected ${expected}, got ${negotiated}`;
+}
+
+async function tlsOutcomes(root: string): Promise<(string | undefined)[]> {
+  const modern = await handshake(root, { minVersion: "TLSv1.3", maxVersion: "TLSv1.3" });
+  return [
+    await refusedVersionOutcome(root, "TLSv1"),
+    await refusedVersionOutcome(root, "TLSv1.1"),
+    modern instanceof Error ? `proxy TLS: TLS 1.3 was refused: ${modern.message}` : undefined,
+    tls12SuiteProblem(await acceptedTls12Suites(root)),
+    await alpnOutcome(root, ["h2", "http/1.1"], "h2"),
+    await alpnOutcome(root, ["http/1.1"], "http/1.1"),
+  ];
 }
 
 function proxyRoot(): string | undefined {
