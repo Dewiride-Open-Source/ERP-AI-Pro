@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-USAGE='Usage: bash scripts/azure/export-runtime-certificate.sh [--out <file>] [--params <file>]
+USAGE='Usage: bash scripts/azure/export-client-certificate.sh <runtime|migrator> [--out <file>] [--params <file>]
 
-Downloads the runtime client certificate (PEM with the private key) from the
-production Key Vault into a local file for a one-time copy to the server,
-validates it with openssl and prints the placement command. Refuses to
-overwrite an existing file and never prints the content.
+Downloads the client certificate (PEM with the private key) of the runtime or
+the migrator service principal from the production Key Vault into a local file
+for a one-time copy to the server, validates it with openssl and prints the
+placement command. Refuses to overwrite an existing file and never prints the
+content.
 
 Options:
-  --out <file>      Destination file, relative to the repository root (default: scripts/azure/out/erp-runtime-client.pem, gitignored).
+  --out <file>      Destination file, relative to the repository root (default: scripts/azure/out/erp-<runtime|migrator>-client.pem, gitignored).
   --params <file>   Parameter file (default: scripts/azure/params.env).
   --help            Show this help.'
 
@@ -19,11 +20,11 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 # shellcheck source=lib/graph.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
 
-readonly DEFAULT_OUT_FILE='scripts/azure/out/erp-runtime-client.pem'
 readonly SERVER_SECRETS_DIR='/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets'
 readonly API_CONTAINER_USER='1654'
 
-OUT_FILE="$DEFAULT_OUT_FILE"
+TARGET=''
+OUT_FILE=''
 
 parse_export_args() {
   local -a rest=()
@@ -45,7 +46,23 @@ parse_export_args() {
     shift
   done
   parse_args "${rest[@]}"
-  (( ${#ARGS[@]} == 0 )) || die "unexpected argument '${ARGS[0]}'"
+  (( ${#ARGS[@]} == 1 )) || die "name the certificate to export: runtime or migrator"
+  case "${ARGS[0]}" in
+    runtime | migrator) TARGET="${ARGS[0]}" ;;
+    *) die "the certificate to export is runtime or migrator; got '${ARGS[0]}'" ;;
+  esac
+  [[ -n "$OUT_FILE" ]] || OUT_FILE="scripts/azure/out/$(server_file_name)"
+}
+
+server_file_name() {
+  printf 'erp-%s-client.pem' "$TARGET"
+}
+
+certificate_name() {
+  case "$TARGET" in
+    runtime) printf '%s' "$RUNTIME_CERTIFICATE_NAME" ;;
+    migrator) printf '%s' "$MIGRATOR_CERTIFICATE_NAME" ;;
+  esac
 }
 
 DOWNLOAD_STARTED=0
@@ -76,12 +93,15 @@ main() {
   log_step "Checking the Azure CLI sign-in"
   ensure_login
 
-  log_step "Downloading $RUNTIME_CERTIFICATE_NAME from $ERP_AZURE_KEYVAULT_PROD_NAME"
+  local secret_name file_name
+  secret_name="$(certificate_name)"
+  file_name="$(server_file_name)"
+  log_step "Downloading $secret_name from $ERP_AZURE_KEYVAULT_PROD_NAME"
   umask 077
   mkdir -p -- "$(dirname -- "$OUT_FILE")"
   trap discard_partial_download EXIT
   DOWNLOAD_STARTED=1
-  az keyvault secret download --vault-name "$ERP_AZURE_KEYVAULT_PROD_NAME" --name "$RUNTIME_CERTIFICATE_NAME" \
+  az keyvault secret download --vault-name "$ERP_AZURE_KEYVAULT_PROD_NAME" --name "$secret_name" \
     --file "$OUT_FILE" --only-show-errors
   chmod 600 -- "$OUT_FILE"
   log_info "saved to $OUT_FILE (mode 600; on Windows the file inherits the folder's permissions instead, so keep it inside your user profile)"
@@ -93,13 +113,17 @@ main() {
   DOWNLOAD_STARTED=0
 
   log_step "Summary"
-  printf 'RUNTIME_CERTIFICATE_FILE=%s\n' "$OUT_FILE"
+  printf 'CERTIFICATE_FILE=%s\n' "$OUT_FILE"
   log_info "next steps:"
-  log_info "  1. copy the file to the server's administrator over an encrypted channel, for example: scp $OUT_FILE <administrator>@<server>:~/erp-runtime-client.pem"
+  log_info "  1. copy the file to the server's administrator over an encrypted channel, for example: scp $OUT_FILE <administrator>@<server>:~/$file_name"
   log_info "  2. on the server, as the administrator (the host bootstrap made the folder, docs/operations/runbooks/host-setup.md):"
-  log_info "     sudo install -o $API_CONTAINER_USER -g $API_CONTAINER_USER -m 0400 ~/erp-runtime-client.pem $SERVER_SECRETS_DIR/erp-runtime-client.pem"
-  log_info "     shred -u ~/erp-runtime-client.pem"
-  log_info "     ($API_CONTAINER_USER is the uid and gid of the app user in the chiseled aspnet image the api container runs as)"
+  log_info "     sudo install -o $API_CONTAINER_USER -g $API_CONTAINER_USER -m 0400 ~/$file_name $SERVER_SECRETS_DIR/$file_name"
+  log_info "     shred -u ~/$file_name"
+  log_info "     ($API_CONTAINER_USER is the uid and gid of the app user in the chiseled aspnet image the api and migrator containers run as)"
+  if [[ "$TARGET" == migrator ]]; then
+    log_info "     then set MIGRATOR_AZURE_CLIENT_ID in /srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env to the MIGRATOR_CLIENT_ID entra.sh prints;"
+    log_info "     from then on erp-ai-pro-retain.timer runs retain every night, so place it only once the deployment's images are on the server"
+  fi
   log_info "  3. shred the local copy: shred -u $OUT_FILE   (rm -P on macOS; on Windows delete it from a volume without shadow copies)"
   log_info "  4. bash scripts/azure/verify.sh --entra"
 }

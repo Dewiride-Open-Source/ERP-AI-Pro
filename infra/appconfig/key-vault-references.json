@@ -5,8 +5,12 @@
   },
   {
     "key": "Erp:Platform:Database:ConnectionString",
-    "secret": "Erp--Platform--Database--ConnectionString",
-    "labels": ["local-dev"]
+    "secret": "Erp--Platform--Database--ConnectionString"
+  },
+  {
+    "key": "Erp:Platform:Database:MigratorConnectionString",
+    "secret": "Erp--Platform--Database--MigratorConnectionString",
+    "labels": ["production"]
   },
   {
     "key": "Erp:Platform:Attachments:EncryptionKey",

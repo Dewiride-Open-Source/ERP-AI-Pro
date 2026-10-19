@@ -31,13 +31,26 @@ param attachmentsContainerName string = 'attachments'
 @maxValue(365)
 param developmentStorageDeleteRetentionDays int = 7
 
+@minLength(1)
+@maxLength(63)
+param productionSqlServerName string
+
+@minLength(1)
+@maxLength(128)
+param productionSqlDatabaseName string
+
 @minLength(36)
 @maxLength(36)
 param operatorPrincipalId string
 
+@minLength(1)
+param operatorLogin string
+
 param developersGroupPrincipalId string = ''
 
 param runtimePrincipalId string = ''
+
+param migratorPrincipalId string = ''
 
 param tags object = {
   project: 'erp-ai-pro'
@@ -77,6 +90,15 @@ var configurationStoreRoleAssignments RoleAssignment[] = concat(
     : [
         {
           principalId: runtimePrincipalId
+          principalType: 'ServicePrincipal'
+          roleDefinitionId: roleDefinitionIds.appConfigurationDataReader
+        }
+      ],
+  empty(migratorPrincipalId)
+    ? []
+    : [
+        {
+          principalId: migratorPrincipalId
           principalType: 'ServicePrincipal'
           roleDefinitionId: roleDefinitionIds.appConfigurationDataReader
         }
@@ -135,6 +157,17 @@ var productionKeyVaultRoleAssignments RoleAssignment[] = concat(
           principalId: runtimePrincipalId
           principalType: 'ServicePrincipal'
           roleDefinitionId: roleDefinitionIds.keyVaultCryptoServiceEncryptionUser
+        }
+      ],
+  // The migrator reads its connection string and nothing else from the vault; it never
+  // touches the key ring, so it holds no crypto role.
+  empty(migratorPrincipalId)
+    ? []
+    : [
+        {
+          principalId: migratorPrincipalId
+          principalType: 'ServicePrincipal'
+          roleDefinitionId: roleDefinitionIds.keyVaultSecretsUser
         }
       ]
 )
@@ -202,6 +235,18 @@ module developmentStorageAccount 'modules/storage-account.bicep' = {
   }
 }
 
+module productionSqlDatabase 'modules/sql-database.bicep' = {
+  name: 'sql-database-production'
+  params: {
+    serverName: productionSqlServerName
+    databaseName: productionSqlDatabaseName
+    location: location
+    tags: tags
+    administratorObjectId: operatorPrincipalId
+    administratorLogin: operatorLogin
+  }
+}
+
 output configurationStoreEndpoint string = configurationStore.outputs.endpoint
 output configurationStoreId string = configurationStore.outputs.id
 output developmentKeyVaultUri string = developmentKeyVault.outputs.uri
@@ -211,3 +256,4 @@ output productionDataProtectionKeyUri string = productionKeyVault.outputs.dataPr
 output developmentAttachmentsBlobEndpoint string = developmentStorageAccount.outputs.blobEndpoint
 output developmentStorageAccountId string = developmentStorageAccount.outputs.id
 output developmentAttachmentsContainerId string = developmentStorageAccount.outputs.containerId
+output productionSqlServerFqdn string = productionSqlDatabase.outputs.fullyQualifiedDomainName

@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
 
-USAGE='Usage: bash scripts/azure/verify.sh [--entra] [--labels] [--params <file>]
+USAGE='Usage: bash scripts/azure/verify.sh [--entra] [--labels] [--database] [--params <file>]
 
 Reads the provisioned Azure resources back and asserts the documented state:
 the App Configuration store, both Key Vaults, the data-protection keys, the
 development storage account (properties, blob service, private attachments
 container, delete lock and a read-only blob listing signed in with Entra ID),
 every row of the role matrix, the absence of Key Vault Crypto User for the
-developers group and the runtime service principal, and the labelled
-Erp:Sentinel keys. Never writes.
+developers group and the runtime and migrator service principals, and the
+labelled Erp:Sentinel keys. Never writes.
 
 Options:
+  --database        Check the production database instead: the server
+                    (Microsoft Entra-only, the operator as its Microsoft Entra
+                    admin, TLS 1.2, IPv6 off, delete lock), its one firewall
+                    rule, the Basic database and its 7-day restore, the two
+                    connection-string secrets, and, through the Go sqlcmd as
+                    the Microsoft Entra admin, the users and rights
+                    database.sh converges, with nothing left for it to change.
   --entra           Check the Entra app registrations (with their optional
                     claims and front-channel logout URLs), service principals,
                     certificates, role assignments and identity keys written
@@ -35,6 +42,8 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/appconfig.sh"
 # shellcheck source=lib/graph.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
+# shellcheck source=lib/sql.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib/sql.sh"
 
 readonly SENTINEL_KEY='Erp:Sentinel'
 readonly LABELS=(local-dev production)
@@ -58,15 +67,23 @@ readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
 readonly BLOB_SERVICE_URI_LABEL='local-dev'
 readonly DATA_PROTECTION_KEY_IDENTIFIER_KEY='Erp:Platform:DataProtection:KeyIdentifier'
 
+readonly SQL_DATABASE_SKU='Basic'
+readonly SQL_DATABASE_CAPACITY='5'
+readonly SQL_DATABASE_MAX_SIZE_BYTES='2147483648'
+readonly SQL_BACKUP_STORAGE_REDUNDANCY='Geo'
+readonly SQL_RESTORE_DAYS='7'
+
 readonly ENTRA_HINT='run: bash scripts/azure/entra.sh'
 readonly PROVISION_HINT='run: bash scripts/azure/provision.sh'
 readonly SEED_HINT='run: bash scripts/azure/seed.sh'
+readonly DATABASE_HINT='run: bash scripts/azure/database.sh'
 readonly SEED_DIRECTORY='infra/appconfig'
 readonly SEED_FILES_CLI='scripts/azure/lib/seed-files.ts'
 readonly LABEL_PRECEDENCE_KEY='Erp:Platform:Host:ApplicationName'
 
 ENTRA_MODE=0
 LABELS_MODE=0
+DATABASE_MODE=0
 FAILURES=0
 OPERATOR_ID=''
 
@@ -238,7 +255,7 @@ verify_storage_account() {
 }
 
 verify_roles() {
-  local operator_id="$1" developers_group_id="$2" runtime_id="$3"
+  local operator_id="$1" developers_group_id="$2" runtime_id="$3" migrator_id="$4"
   local store_id development_vault_id production_vault_id attachments_container_id attachments_container
   store_id="$(store_resource_id)"
   development_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_DEV_NAME")"
@@ -276,6 +293,16 @@ verify_roles() {
     assert_no_role "runtime service principal is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$runtime_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
   else
     skip "runtime service principal roles: skipped: not configured"
+  fi
+
+  log_step "Role assignments: migrator service principal"
+  if [[ -n "$migrator_id" ]]; then
+    assert_role "migrator service principal is App Configuration Data Reader on the store" "$store_id" "$migrator_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
+    assert_role "migrator service principal is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$migrator_id" "$ROLE_KEY_VAULT_SECRETS_USER"
+    assert_no_role "migrator service principal is not Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$migrator_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
+    assert_no_role "migrator service principal is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$migrator_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
+  else
+    skip "migrator service principal roles: skipped: not configured"
   fi
 }
 
@@ -572,7 +599,7 @@ verify_signin_registration() {
   fi
 }
 
-assert_runtime_role() {
+assert_server_role() {
   local description="$1" scope="$2" principal_id="$3" role_id="$4"
   local output
   if ! output="$(az_read role assignment list --scope "$scope" --assignee-object-id "$principal_id" --role "$role_id" \
@@ -585,9 +612,9 @@ assert_runtime_role() {
   fi
 }
 
-verify_runtime_registration() {
-  local display_name="$ERP_AZURE_APP_RUNTIME_NAME"
-  log_step "Runtime registration '$display_name'"
+verify_server_registration() {
+  local target="$1" display_name="$2" certificate_name="$3"
+  log_step "Server registration '$display_name' ($target)"
   local registration_json app_id principal_json principal_id
   load_registration "$display_name" registration_json || return 0
   app_id="$(json_eval "$registration_json" 'value.appId')"
@@ -595,8 +622,8 @@ verify_runtime_registration() {
   verify_registration_shape "$registration_json" "$display_name"
   assert_equals "'$display_name' has no redirect URI" '0' "$(json_eval "$registration_json" '((value.web && value.web.redirectUris) || []).length')"
 
-  verify_certificate_credential "$app_id" "$display_name" "$ERP_AZURE_KEYVAULT_PROD_NAME" "$RUNTIME_CERTIFICATE_NAME" \
-    "rotate with: bash scripts/azure/entra.sh --rotate-runtime-certificate"
+  verify_certificate_credential "$app_id" "$display_name" "$ERP_AZURE_KEYVAULT_PROD_NAME" "$certificate_name" \
+    "rotate with: bash scripts/azure/entra.sh --rotate-server-certificate $target"
 
   load_service_principal "$app_id" "$display_name" principal_json || return 0
   principal_id="$(json_eval "$principal_json" 'value.id')"
@@ -604,10 +631,14 @@ verify_runtime_registration() {
   local store_id production_vault_id
   store_id="$(store_resource_id)"
   production_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_PROD_NAME")"
-  assert_runtime_role "runtime service principal is App Configuration Data Reader on the store" "$store_id" "$principal_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
-  assert_runtime_role "runtime service principal is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_SECRETS_USER"
-  assert_runtime_role "runtime service principal is Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
-  assert_no_role "runtime service principal is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
+  assert_server_role "$target service principal is App Configuration Data Reader on the store" "$store_id" "$principal_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
+  assert_server_role "$target service principal is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_SECRETS_USER"
+  if [[ "$target" == runtime ]]; then
+    assert_server_role "$target service principal is Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
+  else
+    assert_no_role "$target service principal is not Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
+  fi
+  assert_no_role "$target service principal is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
 }
 
 verify_entra() {
@@ -620,7 +651,8 @@ verify_entra() {
   for label in "${SIGNIN_LABELS[@]}"; do
     verify_signin_registration "$label" "$operator_id"
   done
-  verify_runtime_registration
+  verify_server_registration runtime "$ERP_AZURE_APP_RUNTIME_NAME" "$RUNTIME_CERTIFICATE_NAME"
+  verify_server_registration migrator "$ERP_AZURE_APP_MIGRATOR_NAME" "$MIGRATOR_CERTIFICATE_NAME"
 }
 
 seed_rows() {
@@ -804,17 +836,156 @@ verify_labels() {
   verify_sentinels
 }
 
+verify_sql_server() {
+  local operator_id="$1"
+  local -n found_fqdn="$2"
+  found_fqdn=''
+  log_step "SQL server $ERP_AZURE_SQL_SERVER_NAME"
+  local server_json
+  if ! server_json="$(az_read sql server show --name "$ERP_AZURE_SQL_SERVER_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
+    fail "server $ERP_AZURE_SQL_SERVER_NAME exists in resource group $ERP_AZURE_RESOURCE_GROUP ($(query_error_summary "$server_json")); $PROVISION_HINT"
+    return 1
+  fi
+  pass "server $ERP_AZURE_SQL_SERVER_NAME exists in resource group $ERP_AZURE_RESOURCE_GROUP"
+  found_fqdn="$(json_field "$server_json" fullyQualifiedDomainName)"
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME is in $ERP_AZURE_LOCATION" "$ERP_AZURE_LOCATION" "$(json_field "$server_json" location)"
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME minimum TLS version is 1.2" '1.2' "$(json_field "$server_json" minimalTlsVersion)"
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME accepts connections over its public endpoint" 'Enabled' "$(json_field "$server_json" publicNetworkAccess)"
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME has IPv6 off" 'Disabled' "$(json_field "$server_json" isIPv6Enabled)"
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME Microsoft Entra admin is the operator" "$operator_id" "$(json_field "$server_json" administrators.sid)"
+  assert_query "$ERP_AZURE_SQL_SERVER_NAME accepts Microsoft Entra authentication only" 'True' sql server ad-only-auth get \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" --query azureAdOnlyAuthentication
+  assert_query "$ERP_AZURE_SQL_SERVER_NAME carries the CanNotDelete lock $SQL_SERVER_LOCK_NAME" 'CanNotDelete' lock show --name "$SQL_SERVER_LOCK_NAME" \
+    --resource "$(sql_server_resource_id)" --query level
+}
+
+verify_sql_firewall() {
+  log_step "Firewall of $ERP_AZURE_SQL_SERVER_NAME"
+  local rules
+  if ! rules="$(az_read sql server firewall-rule list --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" \
+    --query '[].[name, startIpAddress, endIpAddress]' --output tsv 2>&1)"; then
+    fail "firewall rules of $ERP_AZURE_SQL_SERVER_NAME readable ($(query_error_summary "$rules"))"
+    return 0
+  fi
+  local name start end found=0
+  while IFS=$'\t' read -r name start end; do
+    [[ -n "$name" ]] || continue
+    if [[ "$name" == "$SQL_FIREWALL_RULE_NAME" ]]; then
+      found=1
+      if [[ "$start" == "$end" ]] && is_public_ipv4 "$start"; then
+        pass "rule $name admits the one public address $start"
+      else
+        fail "rule $name admits one public IPv4 address (it admits $start to $end); $DATABASE_HINT --allow-current-address"
+      fi
+    else
+      fail "no rule besides $SQL_FIREWALL_RULE_NAME admits an address ($name admits $start to $end); remove it by hand (docs/operations/runbooks/database.md)"
+    fi
+  done <<< "$rules"
+  (( found )) || fail "rule $SQL_FIREWALL_RULE_NAME admits the home's public address; $DATABASE_HINT --allow-current-address"
+}
+
+verify_sql_database() {
+  log_step "Database $ERP_AZURE_SQL_DATABASE_NAME"
+  local database_json
+  if ! database_json="$(az_read sql db show --name "$ERP_AZURE_SQL_DATABASE_NAME" --server "$ERP_AZURE_SQL_SERVER_NAME" \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
+    fail "database $ERP_AZURE_SQL_DATABASE_NAME exists on $ERP_AZURE_SQL_SERVER_NAME ($(query_error_summary "$database_json")); $PROVISION_HINT"
+    return 0
+  fi
+  pass "database $ERP_AZURE_SQL_DATABASE_NAME exists on $ERP_AZURE_SQL_SERVER_NAME"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME tier is $SQL_DATABASE_SKU" "$SQL_DATABASE_SKU" "$(json_field "$database_json" sku.name)"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME has $SQL_DATABASE_CAPACITY DTU" "$SQL_DATABASE_CAPACITY" "$(json_field "$database_json" sku.capacity)"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME holds at most 2 GB" "$SQL_DATABASE_MAX_SIZE_BYTES" "$(json_field "$database_json" maxSizeBytes)"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME backups are geo-redundant, to the paired region in India" "$SQL_BACKUP_STORAGE_REDUNDANCY" \
+    "$(json_field "$database_json" requestedBackupStorageRedundancy)"
+  assert_query "$ERP_AZURE_SQL_DATABASE_NAME restores to any point of the last $SQL_RESTORE_DAYS days" "$SQL_RESTORE_DAYS" sql db str-policy show \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" --name "$ERP_AZURE_SQL_DATABASE_NAME" --query retentionDays
+}
+
+verify_connection_string_secrets() {
+  local server_fqdn="$1"
+  log_step "Connection strings in $ERP_AZURE_KEYVAULT_PROD_NAME"
+  local expected secret_name value
+  expected="$(database_connection_string "$server_fqdn")"
+  for secret_name in "${SQL_CONNECTION_STRING_SECRETS[@]}"; do
+    if ! value="$(az_read keyvault secret show --vault-name "$ERP_AZURE_KEYVAULT_PROD_NAME" --name "$secret_name" --query value --output tsv 2>&1)"; then
+      fail "$secret_name exists in $ERP_AZURE_KEYVAULT_PROD_NAME ($(query_error_summary "$value")); $PROVISION_HINT"
+    elif [[ "$value" == "$expected" ]]; then
+      pass "$secret_name is the production database's connection string"
+    else
+      fail "$secret_name is the production database's connection string (the stored value differs and is not shown); $PROVISION_HINT"
+    fi
+  done
+}
+
+verify_sql_users() {
+  log_step "Users of $ERP_AZURE_SQL_DATABASE_NAME"
+  local runtime_app_id migrator_app_id
+  runtime_app_id="$(service_principal_app_id "$ERP_AZURE_APP_RUNTIME_NAME")"
+  migrator_app_id="$(service_principal_app_id "$ERP_AZURE_APP_MIGRATOR_NAME")"
+  if [[ -z "$runtime_app_id" || -z "$migrator_app_id" ]]; then
+    fail "the runtime and migrator service principals exist; $ENTRA_HINT"
+    return 0
+  fi
+  resolve_sqlcmd
+  local result status
+  result="$(probe_sql_access)" && status=0 || status=$?
+  case "$status" in
+    0) pass "this computer reaches the database as the operator" ;;
+    1)
+      fail "this computer reaches the database (the firewall refuses $result); $DATABASE_HINT --allow-current-address"
+      return 0
+      ;;
+    *)
+      fail "this computer reaches the database ($result)"
+      return 0
+      ;;
+  esac
+  local output
+  if ! output="$(run_users_script 1 "$runtime_app_id" "$migrator_app_id")"; then
+    fail "the users and rights hold ($(query_error_summary "$output")); $DATABASE_HINT"
+    return 0
+  fi
+  local line pending=0
+  while IFS= read -r line; do
+    case "$line" in
+      change:*)
+        fail "nothing is left for database.sh to change (it would ${line#change: }); $DATABASE_HINT"
+        pending=1
+        ;;
+      pending:*)
+        fail "${line#pending: }"
+        pending=1
+        ;;
+      ok:*) pass "${line#ok: }" ;;
+    esac
+  done <<< "$output"
+  (( pending )) || pass "users [$ERP_AZURE_APP_RUNTIME_NAME] and [$ERP_AZURE_APP_MIGRATOR_NAME] are the service principals, with exactly their roles"
+}
+
+verify_database() {
+  local operator_id="$1"
+  local server_fqdn
+  verify_sql_server "$operator_id" server_fqdn || return 0
+  SQL_SERVER_HOST="$server_fqdn"
+  verify_sql_firewall
+  verify_sql_database
+  verify_connection_string_secrets "$server_fqdn"
+  verify_sql_users
+}
+
 verify_provisioning() {
   local operator_id="$1"
-  local developers_group_id runtime_id
+  local developers_group_id runtime_id migrator_id
   developers_group_id="$(developers_group_object_id)"
-  runtime_id="$(runtime_service_principal_object_id)"
+  runtime_id="$(service_principal_object_id "$ERP_AZURE_APP_RUNTIME_NAME")"
+  migrator_id="$(service_principal_object_id "$ERP_AZURE_APP_MIGRATOR_NAME")"
 
   verify_store
   verify_vault "$ERP_AZURE_KEYVAULT_DEV_NAME"
   verify_vault "$ERP_AZURE_KEYVAULT_PROD_NAME"
   verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME"
-  verify_roles "$operator_id" "$developers_group_id" "$runtime_id"
+  verify_roles "$operator_id" "$developers_group_id" "$runtime_id" "$migrator_id"
   verify_sentinels
 }
 
@@ -825,10 +996,11 @@ main() {
     case "$argument" in
       --entra) ENTRA_MODE=1 ;;
       --labels) LABELS_MODE=1 ;;
+      --database) DATABASE_MODE=1 ;;
       *) arguments+=("$argument") ;;
     esac
   done
-  (( ENTRA_MODE + LABELS_MODE <= 1 )) || die "--entra and --labels are separate runs; pass one of them"
+  (( ENTRA_MODE + LABELS_MODE + DATABASE_MODE <= 1 )) || die "--entra, --labels and --database are separate runs; pass one of them"
   parse_args "${arguments[@]}"
   (( ${#ARGS[@]} == 0 )) || die "unexpected argument '${ARGS[0]}'"
   load_params
@@ -846,6 +1018,8 @@ main() {
     verify_entra "$operator_id"
   elif (( LABELS_MODE )); then
     verify_labels
+  elif (( DATABASE_MODE )); then
+    verify_database "$operator_id"
   else
     verify_provisioning "$operator_id"
   fi

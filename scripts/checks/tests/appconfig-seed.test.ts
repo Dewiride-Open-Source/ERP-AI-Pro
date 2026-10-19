@@ -296,7 +296,8 @@ test('the command line prints tab-separated rows and validates a directory', () 
   assert.equal(references.status, 0);
   assert.deepEqual(references.stdout.trim().split('\n'), [
     'Erp:Platform:Identity:ClientCertificate\tErp--Platform--Identity--ClientCertificate\tlocal-dev,production',
-    'Erp:Platform:Database:ConnectionString\tErp--Platform--Database--ConnectionString\tlocal-dev',
+    'Erp:Platform:Database:ConnectionString\tErp--Platform--Database--ConnectionString\tlocal-dev,production',
+    'Erp:Platform:Database:MigratorConnectionString\tErp--Platform--Database--MigratorConnectionString\tproduction',
     'Erp:Platform:Attachments:EncryptionKey\tErp--Platform--Attachments--EncryptionKey\tlocal-dev',
   ]);
   assert.equal(run('validate', seedDirectory).status, 0);

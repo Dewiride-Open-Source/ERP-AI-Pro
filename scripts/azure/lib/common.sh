@@ -136,16 +136,30 @@ load_params() {
   : "${ERP_AZURE_APP_WEB_LOCAL_DEV_NAME:=ERP-AI-Pro Web (local-dev)}"
   : "${ERP_AZURE_APP_WEB_PRODUCTION_NAME:=ERP-AI-Pro Web (production)}"
   : "${ERP_AZURE_APP_RUNTIME_NAME:=ERP-AI-Pro Runtime (production)}"
+  : "${ERP_AZURE_APP_MIGRATOR_NAME:=ERP-AI-Pro Migrator (production)}"
   : "${ERP_AZURE_STORAGE_DEV_NAME:=sterpaiprodev}"
+  : "${ERP_AZURE_SQL_SERVER_NAME:=sql-erp-ai-pro}"
+  : "${ERP_AZURE_SQL_DATABASE_NAME:=ErpAiPro}"
+  : "${ERP_AZURE_SQLCMD:=}"
   export ERP_AZURE_APPCONFIG_SKU ERP_AZURE_DEVELOPERS_GROUP ERP_AZURE_PRODUCTION_WEB_ORIGIN \
     ERP_AZURE_LOCAL_WEB_ORIGIN ERP_AZURE_APP_WEB_LOCAL_DEV_NAME \
-    ERP_AZURE_APP_WEB_PRODUCTION_NAME ERP_AZURE_APP_RUNTIME_NAME ERP_AZURE_STORAGE_DEV_NAME
+    ERP_AZURE_APP_WEB_PRODUCTION_NAME ERP_AZURE_APP_RUNTIME_NAME ERP_AZURE_APP_MIGRATOR_NAME \
+    ERP_AZURE_STORAGE_DEV_NAME ERP_AZURE_SQL_SERVER_NAME ERP_AZURE_SQL_DATABASE_NAME ERP_AZURE_SQLCMD
 
   require_var "${ERP_AZURE_REQUIRED_PARAMS[@]}"
   is_guid "$ERP_AZURE_TENANT_ID" || die "ERP_AZURE_TENANT_ID must be a GUID"
   is_guid "$ERP_AZURE_SUBSCRIPTION_ID" || die "ERP_AZURE_SUBSCRIPTION_ID must be a GUID"
   [[ "$ERP_AZURE_STORAGE_DEV_NAME" =~ ^[a-z0-9]{3,24}$ ]] \
     || die "ERP_AZURE_STORAGE_DEV_NAME must be 3 to 24 lowercase letters or digits; '$ERP_AZURE_STORAGE_DEV_NAME' was rejected"
+  [[ "$ERP_AZURE_SQL_SERVER_NAME" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]] \
+    || die "ERP_AZURE_SQL_SERVER_NAME must be 1 to 63 lowercase letters, digits or hyphens, starting and ending with a letter or digit; '$ERP_AZURE_SQL_SERVER_NAME' was rejected"
+  [[ "$ERP_AZURE_SQL_DATABASE_NAME" =~ ^[A-Za-z0-9_]{1,128}$ ]] \
+    || die "ERP_AZURE_SQL_DATABASE_NAME must be 1 to 128 letters, digits or underscores; '$ERP_AZURE_SQL_DATABASE_NAME' was rejected"
+  local app_name_parameter
+  for app_name_parameter in ERP_AZURE_APP_RUNTIME_NAME ERP_AZURE_APP_MIGRATOR_NAME; do
+    [[ "${!app_name_parameter}" != *[\]\'\"]* ]] \
+      || die "$app_name_parameter names a database user, so it cannot contain ], ' or \"; '${!app_name_parameter}' was rejected"
+  done
 
   local sku
   for sku in "${ERP_AZURE_APPCONFIG_SKUS[@]}"; do
@@ -202,12 +216,24 @@ developers_group_object_id() {
   printf '%s' "$ids"
 }
 
-runtime_service_principal_object_id() {
+service_principal_object_id() {
+  local display_name="$1"
   local ids
-  ids="$(az_read ad sp list --filter "displayName eq $(odata_string_literal "$ERP_AZURE_APP_RUNTIME_NAME")" --query '[].id' --output tsv)" \
-    || die "cannot list service principals named '$ERP_AZURE_APP_RUNTIME_NAME'"
+  ids="$(az_read ad sp list --filter "displayName eq $(odata_string_literal "$display_name")" --query '[].id' --output tsv)" \
+    || die "cannot list service principals named '$display_name'"
   if [[ -n "$ids" ]] && (( $(printf '%s\n' "$ids" | wc -l) > 1 )); then
-    die "more than one service principal is named '$ERP_AZURE_APP_RUNTIME_NAME'; rename or delete the duplicates before granting roles"
+    die "more than one service principal is named '$display_name'; rename or delete the duplicates before granting roles"
+  fi
+  printf '%s' "$ids"
+}
+
+service_principal_app_id() {
+  local display_name="$1"
+  local ids
+  ids="$(az_read ad sp list --filter "displayName eq $(odata_string_literal "$display_name")" --query '[].appId' --output tsv)" \
+    || die "cannot list service principals named '$display_name'"
+  if [[ -n "$ids" ]] && (( $(printf '%s\n' "$ids" | wc -l) > 1 )); then
+    die "more than one service principal is named '$display_name'; rename or delete the duplicates"
   fi
   printf '%s' "$ids"
 }
