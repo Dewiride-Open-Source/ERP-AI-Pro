@@ -108,8 +108,8 @@ const checks: Check[] = [
   { name: "sign-in refuses a return address on another site through the web origin", url: `${webBaseUrl}/api/auth/login?returnUrl=https%3A%2F%2Fexample.com`, status: 400, header: ["content-type", "application/problem+json"], body: '"request.invalid"' },
 ];
 
-// Each runs to the proxy's local address without a server name, as a browser that opens an IP address does, and trusts only
-// the proxy's own root.
+// Each runs to the proxy's local address without a server name, as a browser that opens an IP address does, and over https
+// trusts only the proxy's own root.
 const proxyChecks: ProxyCheck[] = [
   { name: "login page through the proxy", path: "/login", status: 200, header: ["content-security-policy", "'nonce-"] },
   { name: "anonymous api through the proxy", path: "/api/platform/system-info", status: 401, header: ["x-content-type-options", "nosniff"], body: '"request.unauthenticated"' },
