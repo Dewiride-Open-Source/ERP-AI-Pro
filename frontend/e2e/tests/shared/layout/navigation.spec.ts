@@ -194,47 +194,53 @@ test.describe("app shell navigation", () => {
       },
     );
 
-    forEachTheme(
-      "the Navigation button and Ctrl+B collapse the sidebar to icons named by tooltips, and a reload keeps it so",
-      async ({ page, capture }) => {
-        const shell = new AppShell(page);
-        const tooltip = page.getByRole("tooltip");
-        await new SystemInfoPage(page).goto();
-        await shell.waitUntilInteractive();
-        await expect(shell.menuButton).toHaveAttribute("aria-keyshortcuts", "Control+B Meta+B");
-        await expect(shell.menuButton).not.toHaveAttribute("aria-haspopup");
-        await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
-        await expect(shell.menuButton).toHaveAttribute("aria-expanded", "true");
+    test.describe("while the sidebar resizes the links its tooltips observe", () => {
+      // WebKit reports a ResizeObserver callback that leaves observations for the next frame, which the browser then
+      // still delivers, so the notice changes nothing this test checks.
+      test.use({ expectedConsoleError: /^ResizeObserver loop completed with undelivered notifications\.$/ });
 
-        await shell.menuButton.click();
-        await expectSidebarState(page, shell, "collapsed");
-        await shell.navigationLink("Attachments").hover();
-        await expect(tooltip).toHaveText("Attachments");
-        await page.keyboard.press("Escape");
-        await expect(tooltip).toHaveCount(0);
-        await shell.navigationLink("System").focus();
-        await expect(tooltip).toHaveText("System");
-        await page.keyboard.press("Escape");
-        await expect(tooltip).toHaveCount(0);
-        await shell.main.hover();
-        await capture("sidebar-collapsed", shell.sidebarPanel);
+      forEachTheme(
+        "the Navigation button and Ctrl+B collapse the sidebar to icons named by tooltips, and a reload keeps it so",
+        async ({ page, capture }) => {
+          const shell = new AppShell(page);
+          const tooltip = page.getByRole("tooltip");
+          await new SystemInfoPage(page).goto();
+          await shell.waitUntilInteractive();
+          await expect(shell.menuButton).toHaveAttribute("aria-keyshortcuts", "Control+B Meta+B");
+          await expect(shell.menuButton).not.toHaveAttribute("aria-haspopup");
+          await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
+          await expect(shell.menuButton).toHaveAttribute("aria-expanded", "true");
 
-        await page.reload();
-        await shell.waitUntilInteractive();
-        await expect(shell.sidebar).toHaveAttribute("data-state", "collapsed");
-        await expect(shell.menuButton).toHaveAttribute("aria-expanded", "false");
+          await shell.menuButton.click();
+          await expectSidebarState(page, shell, "collapsed");
+          await shell.navigationLink("Attachments").hover();
+          await expect(tooltip).toHaveText("Attachments");
+          await page.keyboard.press("Escape");
+          await expect(tooltip).toHaveCount(0);
+          await shell.navigationLink("System").focus();
+          await expect(tooltip).toHaveText("System");
+          await page.keyboard.press("Escape");
+          await expect(tooltip).toHaveCount(0);
+          await shell.main.hover();
+          await capture("sidebar-collapsed", shell.sidebarPanel);
 
-        await page.keyboard.press("ControlOrMeta+b");
-        await expectSidebarState(page, shell, "expanded");
-        await shell.navigationLink("Attachments").hover();
-        await expect(shell.navigationLink("Attachments")).toHaveAttribute("data-state", /open$/);
-        await expect(tooltip, "a tooltip beside a label that already shows").toHaveCount(0);
-        await page.keyboard.press("ControlOrMeta+b");
-        await expectSidebarState(page, shell, "collapsed");
-        await shell.menuButton.click();
-        await expectSidebarState(page, shell, "expanded");
-      },
-    );
+          await page.reload();
+          await shell.waitUntilInteractive();
+          await expect(shell.sidebar).toHaveAttribute("data-state", "collapsed");
+          await expect(shell.menuButton).toHaveAttribute("aria-expanded", "false");
+
+          await page.keyboard.press("ControlOrMeta+b");
+          await expectSidebarState(page, shell, "expanded");
+          await shell.navigationLink("Attachments").hover();
+          await expect(shell.navigationLink("Attachments")).toHaveAttribute("data-state", /open$/);
+          await expect(tooltip, "a tooltip beside a label that already shows").toHaveCount(0);
+          await page.keyboard.press("ControlOrMeta+b");
+          await expectSidebarState(page, shell, "collapsed");
+          await shell.menuButton.click();
+          await expectSidebarState(page, shell, "expanded");
+        },
+      );
+    });
 
     test("holding Ctrl+B toggles the sidebar once", async ({ page }) => {
       const shell = new AppShell(page);
