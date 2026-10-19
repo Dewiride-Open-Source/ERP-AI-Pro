@@ -6,17 +6,91 @@
 	skip_install_trust
 	# A browser that opens an IP address sends no server name, and inside the container Caddy cannot tell which address it opened.
 	default_sni {$ERP_SITE_ADDRESS}
+	# The site http:// below redirects every plain-HTTP request itself, with the same headers as the rest.
+	auto_https disable_redirects
 	servers {
 		# HTTP/3 would need UDP port 443, which the stack does not publish.
 		protocols h1 h2
+		# Above the API's longest permitted request and transfer timeouts (10 minutes), so a slow upload, download or export ends with the API's own 504 problem; a connection that stalls for a minute is cut.
+		timeouts {
+			read_body 11m
+			read_body_idle 1m
+			write 11m
+			write_idle 1m
+		}
+	}
+	# Error entries and requests for another host name their request too, and a query string can carry a download link's token or a search for a person.
+	log {
+		format filter {
+			wrap json
+			fields {
+				request>uri regexp [?].* ""
+				request>headers delete
+				resp_headers delete
+			}
+		}
 	}
 }
 
+(edge) {
+	log {
+		format filter {
+			wrap json
+			fields {
+				request>uri regexp [?].* ""
+				request>headers delete
+				resp_headers delete
+			}
+		}
+	}
+	# The API and the web app name no server software either.
+	header {
+		-Server
+		-Via
+	}
+	# Caddy's own error answers, such as 413 and 502, bypass the header rule above.
+	handle_errors {
+		header -Server
+		respond "" {err.status_code}
+	}
+}
+
+(upstream) {
+	reverse_proxy {args[0]} {
+		# The same ceiling as the server's timeouts, for an api or web container that stops answering.
+		transport http {
+			response_header_timeout 11m
+			read_timeout 11m
+		}
+	}
+}
+
+# Whatever host a plain-HTTP request names, it goes to the site's own HTTPS address.
+http:// {
+	import edge
+	redir https://{$ERP_SITE_ADDRESS}{uri} 308
+}
+
+# A request over HTTPS that names another host reaches neither container.
+https:// {
+	import edge
+	respond 421
+}
+
 {$ERP_SITE_ADDRESS} {
+	import edge
 	handle /api/* {
-		reverse_proxy api:8080
+		# Above the largest body an API route can be configured to accept, an upload of 100 MiB plus its multipart framing, so the API answers every body it refuses with its own problem.
+		request_body {
+			max_size 101MiB
+		}
+		import upstream api:8080
 	}
 	handle {
-		reverse_proxy web:3000
+		# Above the web app's 1 MB Server Function limit, and below the 10 MB its standalone server holds in memory and cuts off silently.
+		request_body {
+			max_size 2MiB
+		}
+		import upstream web:3000
 	}
 }

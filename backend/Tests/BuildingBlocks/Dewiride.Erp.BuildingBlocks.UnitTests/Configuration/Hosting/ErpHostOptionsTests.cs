@@ -21,7 +21,7 @@ public sealed class ErpHostOptionsTests
 
     [Theory]
     [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "1024")]
-    [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "1073741824")]
+    [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "104857600")]
     [InlineData(nameof(ErpHostOptions.RequestTimeout), "00:00:01")]
     [InlineData(nameof(ErpHostOptions.RequestTimeout), "00:10:00")]
     public void Validate_ValueOnTheBound_Passes(string property, string value)
@@ -31,7 +31,8 @@ public sealed class ErpHostOptionsTests
 
     [Theory]
     [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "1023")]
-    [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "1073741825")]
+    [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "104857601")]
+    [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "1073741824")]
     [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "2147483648")]
     [InlineData(nameof(ErpHostOptions.MaxRequestBodyBytes), "4294967296")]
     [InlineData(nameof(ErpHostOptions.RequestTimeout), "00:00:00.999")]

@@ -7,7 +7,7 @@ This repository is the Community edition, licensed LGPL-3.0-only. The Enterprise
 ```
 ┌──────────────┐   https    ┌─────────────┐   /api/*   ┌──────────────────────────────────┐
 │   Browser    │ ─────────▶ │ Edge proxy  │ ─────────▶ │ Dewiride.Erp.Host.Api             │
-│ (cookie only)│            │ TLS + HSTS  │            │  BuildingBlocks + Modules         │
+│ (cookie only)│            │ TLS, limits │            │  BuildingBlocks + Modules         │
 └──────────────┘            │             │   /*       │  Entra ID OIDC (BFF)              │
                             │             │ ─────────▶ │  EF Core → SQL Server / Azure SQL │
                             └─────────────┘            └──────────────────────────────────┘

@@ -1,6 +1,6 @@
 # Runbook: the edge proxy and its root certificate
 
-The proxy is the only container that publishes ports (80 and 443, on IPv4 only, so the server's global IPv6 address reaches none of them): it serves the ERP over HTTPS at `ERP_SITE_ADDRESS`, sends `/api/*` to the api container and everything else to the web container. Design: [ADR-0048](../../adr/0048-the-edge-proxy-caddy-on-the-servers-local-address.md); the server itself: [host setup runbook](host-setup.md) ([ADR-0049](../../adr/0049-the-production-host-a-deploy-account-keys-from-the-home-network-and-nightly-updates.md)).
+The proxy is the only container that publishes ports (80 and 443, on IPv4 only, so the server's global IPv6 address reaches none of them): it serves the ERP over HTTPS at `ERP_SITE_ADDRESS`, sends `/api/*` to the api container and everything else to the web container. Design: [ADR-0048](../../adr/0048-the-edge-proxy-caddy-on-the-servers-local-address.md), and for its TLS policy, limits, timeouts, headers and log [ADR-0052](../../adr/0052-the-edge-proxys-tls-policy-limits-timeouts-headers-and-access-log.md); the server itself: [host setup runbook](host-setup.md) ([ADR-0049](../../adr/0049-the-production-host-a-deploy-account-keys-from-the-home-network-and-nightly-updates.md)).
 
 ## The address
 
@@ -31,6 +31,40 @@ The subject is `Caddy Local Authority - <year> ECC Root` and the root is valid f
 
 Each computer and phone that opens the ERP trusts this certificate once, as a trusted root certification authority; the [host setup runbook](host-setup.md), section "Trusting the proxy's root on each device", has the steps for Windows, macOS, iPhone and iPad, Android and Firefox. Until it does, the browser refuses the connection, and with it the session cookie, so sign-in fails.
 
+## What the proxy enforces
+
+`infra/proxy/Caddyfile` holds all of it, and the compose smoke test checks each point through the proxy on every build:
+
+- **TLS.** TLS 1.3, and TLS 1.2 with ECDHE and AES-GCM or ChaCha20-Poly1305 only: Caddy's own defaults, which the Caddyfile leaves unchanged and the smoke test measures. A device that cannot speak TLS 1.2 cannot open the ERP.
+- **Bodies.** Up to 101 MiB on `/api/*`, the largest upload plus room to spare, so the API answers every body it refuses itself. Up to 2 MiB on pages, and a larger one answers 413 with an empty body. Nothing is held back: uploads, downloads and the change history export stream through.
+- **Time.** Reading a request's body and writing its answer may each take 11 minutes from the request's start, more than the API's own limits of at most 10 minutes. A connection that stalls for a minute is cut.
+- **Other hosts.** A plain-HTTP request goes to `https://<ERP_SITE_ADDRESS>` with 308, whatever host it names, and an HTTPS request naming another host answers 421.
+- **Headers.** No answer names the proxy (`Server`, `Via`), and HSTS is not sent while people open an IP address, because browsers ignore it there.
+
+## Reading its log
+
+As `erp-ai-pro` from `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose` on the host:
+
+```bash
+docker compose -f compose.yaml -f compose.production.yaml logs --no-color --since 1h proxy
+```
+
+Each line is JSON:
+
+- An entry whose `logger` begins with `http.log.access` is one request. It holds the device's address (`request.remote_ip`), `request.method`, `request.host`, the path (`request.uri`), the TLS version (`request.tls.version`, 771 for TLS 1.2 and 772 for TLS 1.3), `status`, `size`, `bytes_read` and `duration` in seconds.
+- An entry whose `logger` begins with `http.log.error` names a failure, such as `dial tcp: lookup api` with status 502 while the api container is down.
+
+Query strings and headers are never written, so a search for a person, a download link, a cookie or a token cannot be read from the log. `compose.production.yaml` keeps five files of 20 MiB. Keeping the logs of every system for 180 days, as CERT-In's direction (iv) of 28 April 2022 requires, is part of the go-live checklist.
+
 ## Moving to a public name
 
 When the ERP gets a public name, set `ERP_AZURE_PRODUCTION_WEB_ORIGIN` to `https://<name>` and run `scripts/azure/entra.sh`, which registers the new redirect URIs and writes `Erp:Platform:Identity:WebOrigin`; change `Erp:Platform:Host:AllowedHosts` and `ERP_SITE_ADDRESS` to the name, let ports 80 and 443 reach the server, and roll the stack. The proxy obtains a Let's Encrypt certificate for the name, and the devices may remove the old root.
+
+Then turn HSTS on in steps, each a change to the snippet `edge` of `infra/proxy/Caddyfile` shipped as a release:
+
+1. `header Strict-Transport-Security "max-age=300"`.
+2. A week (`max-age=604800`), once the first step has run without a certificate problem.
+3. A month (`max-age=2592000`).
+4. A year (`max-age=31536000`).
+
+Add `includeSubDomains` only when every name under the domain serves HTTPS, and never `preload` without the owner's decision, because neither can be taken back quickly. A browser keeps the rule for its whole `max-age`, so for that long it refuses the name over plain HTTP.

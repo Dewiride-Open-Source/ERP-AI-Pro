@@ -6,7 +6,7 @@
 |---|---|---|---|
 | `ghcr.io/dewiride-open-source/erp-ai-pro/api` | `docker/api.Dockerfile` | `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra` | non-root `app` user, port 8080, health probe console under `/app/probe` because the chiseled image has no shell |
 | `ghcr.io/dewiride-open-source/erp-ai-pro/web` | `docker/web.Dockerfile` | `node:24-slim` | Next.js standalone output, non-root `node` user, port 3000 |
-| `ghcr.io/dewiride-open-source/erp-ai-pro/proxy` | `docker/proxy.Dockerfile` | `caddy:2.11.7-alpine` | the edge proxy, `proxy/Caddyfile`, non-root `caddy` user, ports 80 and 443 ([ADR-0048](../docs/adr/0048-the-edge-proxy-caddy-on-the-servers-local-address.md)) |
+| `ghcr.io/dewiride-open-source/erp-ai-pro/proxy` | `docker/proxy.Dockerfile` | `caddy:2.11.7-alpine` | the edge proxy, `proxy/Caddyfile`, non-root `caddy` user, ports 80 and 443 ([ADR-0048](../docs/adr/0048-the-edge-proxy-caddy-on-the-servers-local-address.md)); its TLS policy, body limits, timeouts, headers and access log ([ADR-0052](../docs/adr/0052-the-edge-proxys-tls-policy-limits-timeouts-headers-and-access-log.md)) |
 
 The Dockerfiles use the repository root as build context and pin their base images by digest; Dependabot keeps the digests current.
 
