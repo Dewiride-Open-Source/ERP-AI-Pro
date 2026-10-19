@@ -4,9 +4,14 @@ using Microsoft.Data.SqlClient;
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Sql;
 
 // A user without a login, impersonated on a connection that is never pooled, so the impersonation ends with the connection and
-// cannot reach a connection another test takes from the pool.
+// cannot reach a connection another test takes from the pool. A probe that SQL Server picks as a deadlock victim, which other
+// tests writing to the same table can cause, is not the refusal under test, so it runs again.
 internal sealed class DatabaseUser : IAsyncDisposable
 {
+    private const int DeadlockVictim = 1205;
+
+    private const int ProbeAttempts = 5;
+
     private readonly string _connectionString;
 
     private readonly string _name;
@@ -40,24 +45,12 @@ internal sealed class DatabaseUser : IAsyncDisposable
 
     public async Task<int?> RefusalOfAsync(string statement, Guid id)
     {
-        await using var transaction = (SqlTransaction)await Connection.BeginTransactionAsync(TestContext.Current.CancellationToken);
-        try
+        for (var attempt = 1; ; attempt++)
         {
-            await using var command = new SqlCommand(statement, Connection, transaction);
-            command.Parameters.AddWithValue("@id", id);
-            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
-
-            return null;
-        }
-        catch (SqlException refusal)
-        {
-            return refusal.Number;
-        }
-        finally
-        {
-            if (transaction.Connection is not null)
+            var refusal = await ProbeAsync(statement, id);
+            if (refusal != DeadlockVictim || attempt == ProbeAttempts)
             {
-                await transaction.RollbackAsync(TestContext.Current.CancellationToken);
+                return refusal;
             }
         }
     }
@@ -93,5 +86,29 @@ internal sealed class DatabaseUser : IAsyncDisposable
     {
         await using var command = new SqlCommand(statement, connection);
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    private async Task<int?> ProbeAsync(string statement, Guid id)
+    {
+        await using var transaction = (SqlTransaction)await Connection.BeginTransactionAsync(TestContext.Current.CancellationToken);
+        try
+        {
+            await using var command = new SqlCommand(statement, Connection, transaction);
+            command.Parameters.AddWithValue("@id", id);
+            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+
+            return null;
+        }
+        catch (SqlException refusal)
+        {
+            return refusal.Number;
+        }
+        finally
+        {
+            if (transaction.Connection is not null)
+            {
+                await transaction.RollbackAsync(TestContext.Current.CancellationToken);
+            }
+        }
     }
 }
