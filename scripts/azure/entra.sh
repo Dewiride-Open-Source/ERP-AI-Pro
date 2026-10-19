@@ -215,11 +215,12 @@ run_converge() {
   log_info "AZURE_TENANT_ID, AZURE_CLIENT_ID (the runtime's) and MIGRATOR_AZURE_CLIENT_ID are the values the server puts in infra/compose/.env"
   log_info "next steps:"
   log_info "  1. bash scripts/azure/provision.sh   (grants the runtime and migrator service principals their roles)"
-  log_info "  2. bash scripts/azure/seed.sh        (configuration values and Key Vault references)"
-  log_info "  3. from a computer on the home network, without a VPN: bash scripts/azure/database.sh --allow-current-address,"
+  log_info "  2. create Erp--Platform--Attachments--EncryptionKey in $ERP_AZURE_KEYVAULT_DEV_NAME and in $ERP_AZURE_KEYVAULT_PROD_NAME once each (docs/operations/runbooks/secrets.md, section 5f)"
+  log_info "  3. bash scripts/azure/seed.sh        (configuration values and Key Vault references)"
+  log_info "  4. $HOME_ADDRESS_HINT   (docs/operations/runbooks/home-address.md),"
   log_info "     then bash scripts/azure/database.sh   (the database users; docs/operations/runbooks/database.md)"
-  log_info "  4. the first migration, with bash scripts/azure/export-client-certificate.sh migrator (docs/operations/runbooks/database.md)"
-  log_info "  5. bash scripts/azure/verify.sh --entra"
+  log_info "  5. the first migration, with bash scripts/azure/export-client-certificate.sh migrator (docs/operations/runbooks/database.md)"
+  log_info "  6. bash scripts/azure/verify.sh --entra"
 
   if (( ${#PERMISSION_GRANT_FAILURES[@]} > 0 )); then
     local app_id

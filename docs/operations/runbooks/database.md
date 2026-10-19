@@ -6,7 +6,7 @@ The production database is Azure SQL at the Basic tier in Central India, reached
 
 - The server `sql-erp-ai-pro` (`ERP_AZURE_SQL_SERVER_NAME`) with the database `ErpAiPro` (`ERP_AZURE_SQL_DATABASE_NAME`): Basic, 5 DTU, at most 2 GB, 7 days of point-in-time restore, backups geo-redundant to South India. A `CanNotDelete` lock, `do-not-delete`, keeps the server and its database from being deleted through Azure (not from `DROP DATABASE` in SQL, see "Restoring").
 - Microsoft Entra-only authentication, with the operator who ran `provision.sh` as the Microsoft Entra admin. No SQL login exists.
-- One firewall rule, `home`, for the home's current public IPv4 address. No other server rule, database rule, virtual network rule or private endpoint reaches the database.
+- One firewall rule, `home`, for the home's current public IPv4 address, which `home-address.sh` keeps together with the production storage account's rule ([home address runbook](home-address.md)). No other server rule, database rule, virtual network rule or private endpoint reaches the database.
 - Two contained users, named after the server identities' registrations:
   - `ERP-AI-Pro Runtime (production)`, the api's: `db_datareader`, `db_datawriter` and `erp_audit_append_only`, so it may only insert into `audit`;
   - `ERP-AI-Pro Migrator (production)`, the migrator's: `db_ddladmin`, `db_datareader`, `db_datawriter` and `CREATE ROLE`, owning the schemas its migrations create.
@@ -15,19 +15,20 @@ The production database is Azure SQL at the Basic tier in Central India, reached
 
 ## Setting it up
 
-From the repository root on the operator's computer, on the home connection without a VPN, signed in with `az login` as the operator. The [Go sqlcmd](https://learn.microsoft.com/sql/tools/sqlcmd/sqlcmd-download-install) must be installed (Windows: `winget install sqlcmd`, which installs into `C:\Program Files\SqlCmd`, where the scripts find it next to the ODBC sqlcmd that SQL Server installs). Run `entra.sh`, `provision.sh`, `seed.sh` and `database.sh` with `--dry-run` first; `verify.sh` and `export-client-certificate.sh` only read and take no `--dry-run`.
+From the repository root on the operator's computer, on the home connection without a VPN, signed in with `az login` as the operator. The [Go sqlcmd](https://learn.microsoft.com/sql/tools/sqlcmd/sqlcmd-download-install) must be installed (Windows: `winget install sqlcmd`, which installs into `C:\Program Files\SqlCmd`, where the scripts find it next to the ODBC sqlcmd that SQL Server installs). Run `entra.sh`, `provision.sh`, `seed.sh`, `home-address.sh` and `database.sh` with `--dry-run` first; `verify.sh` and `export-client-certificate.sh` only read and take no `--dry-run`.
 
 1. `bash scripts/azure/provision.sh` creates the server, the database, the lock and the operations vault and writes both connection strings.
 2. `bash scripts/azure/entra.sh` creates the migrator's registration and its certificate in the operations vault.
 3. `bash scripts/azure/provision.sh` again grants the migrator its role on the store and its roles on the two connection strings, now that both exist.
-4. `bash scripts/azure/database.sh --allow-current-address` creates the firewall rule for the address Azure sees this computer connect from. The rule takes up to five minutes to apply; step 6 waits for it.
-5. `bash scripts/azure/seed.sh --label production` writes the production references to both connection strings.
-6. `bash scripts/azure/database.sh` creates both users and the migrator's roles. It reports that the migrations have not run yet, and gives the runtime's user no role until they have.
-7. Run the first migration (next section).
-8. `bash scripts/azure/database.sh` again adds the runtime's user to `erp_audit_append_only`, then to the data roles, and proves the rights of both users.
-9. `bash scripts/azure/verify.sh --database`, `bash scripts/azure/verify.sh --entra` and `bash scripts/azure/verify.sh` read everything back.
+4. `bash scripts/azure/home-address.sh` creates the firewall rule for the address Azure sees this computer connect from and points the production storage account's rule at the same address ([home address runbook](home-address.md)). The database's rule takes up to five minutes to apply; step 7 waits for it.
+5. Create `Erp--Platform--Attachments--EncryptionKey` in `kv-erp-ai-pro-prod` once, with the block of the [secrets runbook](secrets.md) section 5f (`vault=kv-erp-ai-pro-prod`, `prefix=prod`, `user_secrets=false`), never from the development value: the next step stops while it is missing.
+6. `bash scripts/azure/seed.sh --label production` writes the production Key Vault references: the sign-in certificate, both connection strings and the attachments key.
+7. `bash scripts/azure/database.sh` creates both users and the migrator's roles. It reports that the migrations have not run yet, and gives the runtime's user no role until they have.
+8. Run the first migration (next section).
+9. `bash scripts/azure/database.sh` again adds the runtime's user to `erp_audit_append_only`, then to the data roles, and proves the rights of both users.
+10. `bash scripts/azure/verify.sh --database`, `bash scripts/azure/verify.sh --entra` and `bash scripts/azure/verify.sh` read everything back.
 
-The operator's computer and the server share the home's public address, so the rule admits both. A computer that reaches the internet another way (a VPN, a phone's hotspot, a remote or cloud desktop) is seen at another address, and `--allow-current-address` run there would move the rule away from the home. Once the api runs on the server, its readiness check (`/healthz/ready`, whose `database:*` entries open the database) proves the rule from the server's side.
+The operator's computer and the server share the home's public address, so the rule admits both. A computer that reaches the internet another way (a VPN, a phone's hotspot, a remote or cloud desktop) is seen at another address, and `home-address.sh` run there would move both rules away from the home. Once the api runs on the server, its readiness check (`/healthz/ready`, whose `database:*` entries open the database) proves the rule from the server's side.
 
 ## First migration
 
@@ -52,21 +53,7 @@ The parentheses keep the variables from reaching a later command. `status` lists
 
 ## When the home's address changes
 
-The internet provider changes the home's public address from time to time. The api then cannot reach the database: `/healthz/ready` fails, and its log shows error 40615 naming the new address (`Client with IP address '<address>' is not allowed to access the server`). From a computer on the home connection, without a VPN:
-
-```bash
-bash scripts/azure/database.sh --allow-current-address
-```
-
-It learns this computer's address from Azure and moves the rule `home` to it, saying so; the change applies within five minutes, and the api recovers on its own. When no computer on the home connection is at hand, take the address from the api's log line and run, from anywhere:
-
-```bash
-bash scripts/azure/database.sh --allow-address <the address in the 40615 line>
-```
-
-Without the script: in the Azure portal, open the SQL server `sql-erp-ai-pro`, then **Security** → **Networking**, set both the start and the end address of the rule `home` to the new address, and save. Never use **Add your client IPv4 address**, which adds a second rule, and never change the start address alone, which turns the rule into a range. The Azure CLI does the same with `az sql server firewall-rule update --resource-group rg-erp-ai-pro --server sql-erp-ai-pro --name home --start-ip-address <address> --end-ip-address <address>`.
-
-Never add a rule for a range or turn on **Allow Azure services and resources to access this server**: the first admits other customers of the provider, the second every Azure resource. Every mode of `database.sh`, and `verify.sh --database`, fails while another rule exists, and `--allow-current-address` narrows a `home` rule that became a range. The lock keeps another rule until it is removed by hand (`az lock delete --name do-not-delete --resource-group rg-erp-ai-pro --resource-type Microsoft.Sql/servers --resource-name sql-erp-ai-pro`, then `az sql server firewall-rule delete`, then `bash scripts/azure/provision.sh` to lock the server again).
+The internet provider changes the home's public address from time to time. The api then cannot reach the database: `/healthz/ready` fails, and its log shows error 40615 naming the new address (`Client with IP address '<address>' is not allowed to access the server`). The production storage account refuses the same address, so one command moves both rules: `bash scripts/azure/home-address.sh`, from a computer on the home network without a VPN, as the [home address runbook](home-address.md) describes, together with the way to do it without the script and the rules that must never be added.
 
 ## Size
 

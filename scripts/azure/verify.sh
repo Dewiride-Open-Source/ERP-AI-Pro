@@ -6,11 +6,15 @@ Reads the provisioned Azure resources back and asserts the documented state:
 the App Configuration store, the three Key Vaults, the data-protection keys,
 the development storage account (properties, blob service, private attachments
 container, delete lock and a read-only blob listing signed in with Entra ID),
-every row of the role matrix, the runtime and migrator service principals
-holding exactly their roles (the migrator only the production database'"'"'s two
-connection strings), the operations vault open to the operator alone, the
-absence of Key Vault Crypto User for the developers group, and the labelled
-Erp:Sentinel keys. Never writes.
+the production storage account (the same properties, geo-redundant, 90 days of
+soft delete, reachable only from the address of the database'"'"'s rule home, with
+no IPv6 rule, open private endpoint connection or network security perimeter,
+and no role on it or in it but the runtime service principal'"'"'s), Shared Key and
+data sharing off on both accounts, every row of the role matrix, the runtime and
+migrator service principals holding exactly their roles (the migrator only the
+production database'"'"'s two connection strings), the operations vault open to the
+operator alone, the absence of Key Vault Crypto User for the developers group,
+and the labelled Erp:Sentinel keys. Never writes.
 
 Options:
   --database        Check the production database instead: the server
@@ -32,11 +36,12 @@ Options:
                     references written by seed.sh: every value of
                     infra/appconfig is read back (a reference only under the
                     labels it lists), the local-dev label is proven to
-                    override the unlabelled default, the blob endpoint
-                    provision.sh writes under local-dev is compared with the
-                    storage account, and the data-protection key identifier
-                    it writes under local-dev and production is compared with
-                    the key in the matching vault.
+                    override the unlabelled default, the blob endpoints
+                    provision.sh writes under local-dev and production are
+                    compared with their storage accounts, and the
+                    data-protection key identifier it writes under local-dev
+                    and production is compared with the key in the matching
+                    vault.
   --params <file>   Parameter file (default: scripts/azure/params.env).
   --help            Show this help.'
 
@@ -50,6 +55,8 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/appconfig.sh"
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
 # shellcheck source=lib/sql.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/sql.sh"
+# shellcheck source=lib/storage.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib/storage.sh"
 
 readonly SENTINEL_KEY='Erp:Sentinel'
 readonly LABELS=(local-dev production)
@@ -66,11 +73,12 @@ readonly ROLE_KEY_VAULT_CERTIFICATES_OFFICER='a4417e6f-fecd-4de8-b567-7b04205569
 readonly ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR='ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
 readonly ATTACHMENTS_CONTAINER_NAME='attachments'
-readonly STORAGE_ACCOUNT_SKU='Standard_LRS'
-readonly STORAGE_DELETE_RETENTION_DAYS='7'
+readonly DEVELOPMENT_STORAGE_SKU='Standard_LRS'
+readonly DEVELOPMENT_STORAGE_RETENTION_DAYS='7'
+readonly PRODUCTION_STORAGE_SKU='Standard_GRS'
+readonly PRODUCTION_STORAGE_RETENTION_DAYS='90'
 readonly STORAGE_LOCK_NAME='do-not-delete'
 readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
-readonly BLOB_SERVICE_URI_LABEL='local-dev'
 readonly DATA_PROTECTION_KEY_IDENTIFIER_KEY='Erp:Platform:DataProtection:KeyIdentifier'
 
 readonly SQL_DATABASE_SKU='Basic'
@@ -109,11 +117,11 @@ query_error_summary() {
 }
 
 assert_equals() {
-  local description="$1" expected="$2" actual="$3"
+  local description="$1" expected="$2" actual="$3" hint="${4:-}"
   if [[ "${actual,,}" == "${expected,,}" ]]; then
     pass "$description"
   else
-    fail "$description (expected '$expected', got '${actual:-<none>}')"
+    fail "$description (expected '$expected', got '${actual:-<none>}')${hint:+; $hint}"
   fi
 }
 
@@ -206,7 +214,7 @@ verify_vault() {
 }
 
 verify_storage_account() {
-  local account_name="$1"
+  local account_name="$1" sku="$2" retention_days="$3"
   log_step "Storage account $account_name"
   local account_json
   if ! account_json="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
@@ -216,9 +224,15 @@ verify_storage_account() {
   pass "storage account $account_name exists in resource group $ERP_AZURE_RESOURCE_GROUP"
 
   assert_equals "$account_name kind is StorageV2" 'StorageV2' "$(json_field "$account_json" kind)"
-  assert_equals "$account_name sku is $STORAGE_ACCOUNT_SKU" "$STORAGE_ACCOUNT_SKU" "$(json_field "$account_json" sku.name)"
+  assert_equals "$account_name sku is $sku" "$sku" "$(json_field "$account_json" sku.name)"
   assert_equals "$account_name access tier is Hot" 'Hot' "$(json_field "$account_json" accessTier)"
   assert_equals "$account_name Shared Key authorization disabled" 'false' "$(json_field "$account_json" allowSharedKeyAccess)"
+  assert_equals "$account_name allows Shared Key for no service" 'false' \
+    "$(json_eval "$account_json" 'String(JSON.stringify(value.allowSharedKeyAccessForServices ?? null).includes("true"))')" \
+    "the template does not set it; turn it off as docs/operations/azure-bootstrap.md section 8 shows"
+  assert_equals "$account_name allows no data share" 'false' \
+    "$(json_eval "$account_json" 'String(Object.values(value.dataCollaborationPolicyProperties ?? {}).includes(true))')" \
+    "the template does not set it; turn it off as docs/operations/azure-bootstrap.md section 8 shows"
   assert_equals "$account_name defaults to Entra ID authorization" 'true' "$(json_field "$account_json" defaultToOAuthAuthentication)"
   assert_equals "$account_name public blob access disallowed" 'false' "$(json_field "$account_json" allowBlobPublicAccess)"
   assert_equals "$account_name cross-tenant replication disallowed" 'false' "$(json_field "$account_json" allowCrossTenantReplication)"
@@ -239,9 +253,9 @@ verify_storage_account() {
   local service_json
   if service_json="$(az_read storage account blob-service-properties show --account-name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
     assert_equals "$account_name blob soft delete enabled" 'true' "$(json_eval "$service_json" 'String((value.deleteRetentionPolicy || {}).enabled === true)')"
-    assert_equals "$account_name blob soft delete keeps $STORAGE_DELETE_RETENTION_DAYS days" "$STORAGE_DELETE_RETENTION_DAYS" "$(json_field "$service_json" deleteRetentionPolicy.days)"
+    assert_equals "$account_name blob soft delete keeps $retention_days days" "$retention_days" "$(json_field "$service_json" deleteRetentionPolicy.days)"
     assert_equals "$account_name container soft delete enabled" 'true' "$(json_eval "$service_json" 'String((value.containerDeleteRetentionPolicy || {}).enabled === true)')"
-    assert_equals "$account_name container soft delete keeps $STORAGE_DELETE_RETENTION_DAYS days" "$STORAGE_DELETE_RETENTION_DAYS" "$(json_field "$service_json" containerDeleteRetentionPolicy.days)"
+    assert_equals "$account_name container soft delete keeps $retention_days days" "$retention_days" "$(json_field "$service_json" containerDeleteRetentionPolicy.days)"
     assert_equals "$account_name blob versioning off" 'false' "$(json_eval "$service_json" 'String(value.isVersioningEnabled === true)')"
     assert_equals "$account_name change feed off" 'false' "$(json_eval "$service_json" 'String((value.changeFeed || {}).enabled === true)')"
   else
@@ -252,7 +266,10 @@ verify_storage_account() {
     --resource-group "$ERP_AZURE_RESOURCE_GROUP" --name "$ATTACHMENTS_CONTAINER_NAME" --query publicAccess
   assert_query "$account_name carries the CanNotDelete lock $STORAGE_LOCK_NAME" 'CanNotDelete' lock show --name "$STORAGE_LOCK_NAME" \
     --resource "$(storage_account_resource_id "$account_name")" --query level
+}
 
+verify_storage_listing() {
+  local account_name="$1"
   local listing
   if listing="$(az_read storage blob list --account-name "$account_name" --container-name "$ATTACHMENTS_CONTAINER_NAME" --auth-mode login \
     --num-results 1 --output none 2>&1)"; then
@@ -270,6 +287,8 @@ server_expected_roles() {
   if [[ "$target" == runtime ]]; then
     printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_SECRETS_USER" "Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME"
     printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER" "Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME"
+    printf '%s\t%s\t%s\n' "$(storage_container_resource_id "$ERP_AZURE_STORAGE_PROD_NAME" "$ATTACHMENTS_CONTAINER_NAME")" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
+      "Storage Blob Data Contributor on container $ERP_AZURE_STORAGE_PROD_NAME/$ATTACHMENTS_CONTAINER_NAME"
     return 0
   fi
   for secret_name in "${ERP_AZURE_MIGRATOR_SECRETS[@]}"; do
@@ -310,21 +329,28 @@ verify_server_roles() {
   (( others )) || pass "$target service principal holds no other role, directly or through a group"
 }
 
-grants_key_vault_data() {
-  local role_id="$1"
-  local data_actions
+grants_data_role() {
+  local role_id="$1" provider="$2"
+  local found data_actions
+  found="$(az_read role definition list --name "$role_id" --query 'length(@)' --output tsv)" || return 2
+  [[ "$found" =~ ^[1-9][0-9]*$ ]] || return 2
   data_actions="$(az_read role definition list --name "$role_id" --query '[].permissions[].dataActions[]' --output tsv)" || return 2
-  grep -qiE '^(\*|Microsoft\.KeyVault/)' <<< "$data_actions"
+  grep -qiE "^(\\*|${provider//./\\.}/)" <<< "$data_actions"
 }
 
-verify_operations_vault_access() {
-  local operator_id="$1"
-  local vault_id above inside
-  vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_OPS_NAME")"
-  vault_id="${vault_id,,}"
-  if ! above="$(az_read role assignment list --scope "$vault_id" --include-inherited --fill-principal-name false --fill-role-definition-name false \
+verify_resource_access() {
+  local resource_name="$1" resource_id="$2" provider="$3" holder="$4" exempt_principal="$5"
+  shift 5
+  local -A allowed=()
+  local entry
+  for entry in "$@"; do
+    allowed["${entry,,}"]=1
+  done
+  resource_id="${resource_id,,}"
+  local above inside
+  if ! above="$(az_read role assignment list --scope "$resource_id" --include-inherited --fill-principal-name false --fill-role-definition-name false \
     --query '[].[scope, principalId, roleDefinitionId]' --output tsv 2>&1)"; then
-    fail "the role assignments on and above $ERP_AZURE_KEYVAULT_OPS_NAME are readable (query failed: $(query_error_summary "$above"))"
+    fail "the role assignments on and above $resource_name are readable (query failed: $(query_error_summary "$above"))"
     return 0
   fi
   if ! inside="$(az_read role assignment list --all --fill-principal-name false --fill-role-definition-name false \
@@ -336,26 +362,95 @@ verify_operations_vault_access() {
   local -A seen=()
   while IFS=$'\t' read -r scope principal_id role_id; do
     scope="${scope,,}"
+    principal_id="${principal_id,,}"
     role_id="${role_id##*/}"
     role_id="${role_id,,}"
     [[ -n "$scope" && -z "${seen["$scope $principal_id $role_id"]:-}" ]] || continue
     seen["$scope $principal_id $role_id"]=1
-    [[ "${principal_id,,}" != "${operator_id,,}" ]] || continue
-    if [[ "$scope" == "$vault_id" || "$scope" == "$vault_id/"* ]]; then
+    [[ "$principal_id" != "${exempt_principal,,}" && -z "${allowed["$scope $principal_id $role_id"]:-}" ]] || continue
+    if [[ "$scope" == "$resource_id" || "$scope" == "$resource_id/"* ]]; then
       others=1
-      fail "only the operator holds a role on $ERP_AZURE_KEYVAULT_OPS_NAME (principal $principal_id holds the role $role_id on $scope)"
-    elif [[ "$vault_id" == "$scope/"* || "$scope" == / || "$scope" == /providers/microsoft.management/managementgroups/* ]]; then
-      grants_key_vault_data "$role_id" && status=0 || status=$?
+      fail "only $holder holds a role on $resource_name (principal $principal_id holds the role $role_id on $scope)"
+    elif [[ "$resource_id" == "$scope/"* || "$scope" == / || "$scope" == /providers/microsoft.management/managementgroups/* ]]; then
+      grants_data_role "$role_id" "$provider" && status=0 || status=$?
       if (( status == 0 )); then
         others=1
-        fail "only the operator reads $ERP_AZURE_KEYVAULT_OPS_NAME (principal $principal_id holds the Key Vault data role $role_id on $scope, above the vault)"
+        fail "only $holder reads $resource_name (principal $principal_id holds the data role $role_id on $scope, above it)"
       elif (( status == 2 )); then
         others=1
-        fail "only the operator reads $ERP_AZURE_KEYVAULT_OPS_NAME (the role $role_id that principal $principal_id holds on $scope cannot be read)"
+        fail "only $holder reads $resource_name (the role $role_id that principal $principal_id holds on $scope cannot be read)"
       fi
     fi
   done <<< "$above"$'\n'"$inside"
-  (( others )) || pass "only the operator holds a role on $ERP_AZURE_KEYVAULT_OPS_NAME or anything in it, and nobody else holds a Key Vault data role above it"
+  (( others )) || pass "only $holder holds a role on $resource_name or anything in it, and nobody else holds a $provider data role above it"
+}
+
+verify_production_storage_network() {
+  local account_name="$ERP_AZURE_STORAGE_PROD_NAME"
+  log_step "Network rules of $account_name"
+  local settings
+  if ! settings="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
+    --query '[publicNetworkAccess, networkRuleSet.defaultAction, networkRuleSet.bypass, length(networkRuleSet.virtualNetworkRules || `[]`), length(networkRuleSet.resourceAccessRules || `[]`), length(networkRuleSet.ipv6Rules || `[]`), dualStackEndpointPreference.publishIpv6Endpoint || `false`]' \
+    --output tsv 2>&1)"; then
+    fail "the network rules of $account_name are readable ($(query_error_summary "$settings")); $PROVISION_HINT"
+    return 0
+  fi
+  local public_access default_action bypass virtual_network_rules resource_rules ipv6_rules ipv6_endpoint
+  { read -r public_access; read -r default_action; read -r bypass; read -r virtual_network_rules; read -r resource_rules; read -r ipv6_rules; read -r ipv6_endpoint; } <<< "$settings"
+  assert_equals "$account_name keeps its public endpoint, behind its rules" 'Enabled' "$public_access" "$PROVISION_HINT"
+  assert_equals "$account_name refuses every address its rules do not admit" 'Deny' "$default_action" "$PROVISION_HINT"
+  assert_equals "$account_name lets no Azure service past its rules" 'None' "$bypass" "$PROVISION_HINT"
+  assert_equals "$account_name has no virtual network rule" '0' "$virtual_network_rules" "$PROVISION_HINT"
+  assert_equals "$account_name has no resource instance rule" '0' "$resource_rules" "$PROVISION_HINT"
+  assert_equals "$account_name has no IPv6 rule" '0' "$ipv6_rules" "$PROVISION_HINT"
+  assert_equals "$account_name publishes no IPv6 endpoint" 'false' "$ipv6_endpoint" \
+    "run: az storage account update --name $account_name --resource-group $ERP_AZURE_RESOURCE_GROUP --publish-ipv6-endpoint false"
+  local connections name status open_names=''
+  if connections="$(production_storage_private_endpoint_connections 2>&1)"; then
+    while IFS=$'\t' read -r name status; do
+      case "$status" in
+        Approved | Pending) open_names+="${open_names:+ }$name" ;;
+      esac
+    done <<< "$connections"
+    if [[ -z "$open_names" ]]; then
+      pass "$account_name has no private endpoint connection that is not rejected"
+    else
+      fail "$account_name has no private endpoint connection that is not rejected (it has $open_names); $(private_endpoint_reject_hint "$open_names")"
+    fi
+  else
+    fail "the private endpoint connections of $account_name are readable ($(query_error_summary "$connections"))"
+  fi
+  local perimeters
+  if perimeters="$(production_storage_perimeter_count 2>&1)"; then
+    assert_equals "$account_name belongs to no network security perimeter" '0' "$perimeters" \
+      "remove the account on the perimeter's Associated resources page in the Azure portal"
+  else
+    fail "the network security perimeters of $account_name are readable ($(query_error_summary "$perimeters"))"
+  fi
+  local rules home_address
+  if ! rules="$(production_storage_ip_rules 2>&1)"; then
+    fail "the IP rules of $account_name are readable ($(query_error_summary "$rules"))"
+    return 0
+  fi
+  if ! home_address="$(home_rule_address 2>&1)"; then
+    fail "the firewall rules of $ERP_AZURE_SQL_SERVER_NAME are readable ($(query_error_summary "$home_address"))"
+    return 0
+  fi
+  local rule count=0
+  while IFS= read -r rule; do
+    if [[ -n "$rule" ]]; then
+      count=$((count + 1))
+    fi
+  done <<< "$rules"
+  if (( count == 1 )) && [[ "$rules" == "$home_address" ]] && is_public_ipv4 "$rules"; then
+    pass "$account_name admits one public address, the one the database's rule $SQL_FIREWALL_RULE_NAME admits"
+  elif (( count == 0 )); then
+    fail "$account_name admits the home's address (it admits none); $HOME_ADDRESS_HINT"
+  elif (( count == 1 )) && is_public_ipv4 "$rules"; then
+    fail "$account_name admits the one address the database's rule $SQL_FIREWALL_RULE_NAME admits (it admits $rules, the rule ${home_address:-no single address}); $HOME_ADDRESS_HINT"
+  else
+    fail "$account_name admits one public IPv4 address (it admits $(printf '%s' "$rules" | tr '\n' ' ')); $PROVISION_HINT"
+  fi
 }
 
 verify_roles() {
@@ -403,7 +498,12 @@ verify_roles() {
   done
 
   log_step "Access to $ERP_AZURE_KEYVAULT_OPS_NAME"
-  verify_operations_vault_access "$operator_id"
+  verify_resource_access "$ERP_AZURE_KEYVAULT_OPS_NAME" "$(vault_resource_id "$ERP_AZURE_KEYVAULT_OPS_NAME")" Microsoft.KeyVault 'the operator' "$operator_id"
+
+  log_step "Access to $ERP_AZURE_STORAGE_PROD_NAME"
+  verify_resource_access "$ERP_AZURE_STORAGE_PROD_NAME" "$(storage_account_resource_id "$ERP_AZURE_STORAGE_PROD_NAME")" Microsoft.Storage \
+    'the runtime service principal' '' \
+    "$(storage_container_resource_id "$ERP_AZURE_STORAGE_PROD_NAME" "$ATTACHMENTS_CONTAINER_NAME") $runtime_id $ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
 }
 
 verify_sentinels() {
@@ -871,14 +971,15 @@ verify_label_precedence() {
 }
 
 verify_blob_service_uri() {
-  local description="$BLOB_SERVICE_URI_KEY [$BLOB_SERVICE_URI_LABEL] is the blob endpoint of $ERP_AZURE_STORAGE_DEV_NAME"
+  local label="$1" account_name="$2"
+  local description="$BLOB_SERVICE_URI_KEY [$label] is the blob endpoint of $account_name"
   local endpoint value
-  if ! endpoint="$(az_read storage account show --name "$ERP_AZURE_STORAGE_DEV_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
+  if ! endpoint="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
     --query primaryEndpoints.blob --output tsv 2>&1)"; then
     fail "$description (query failed: $(query_error_summary "$endpoint")); $PROVISION_HINT"
     return 0
   fi
-  if ! value="$(appconfig_kv_get "$BLOB_SERVICE_URI_KEY" "$BLOB_SERVICE_URI_LABEL" 2>&1)"; then
+  if ! value="$(appconfig_kv_get "$BLOB_SERVICE_URI_KEY" "$label" 2>&1)"; then
     fail "$description (query failed: $(query_error_summary "$value"))"
   elif [[ -z "$value" ]]; then
     fail "$description (key absent from the store); $PROVISION_HINT"
@@ -910,7 +1011,8 @@ verify_data_protection_key_identifier() {
 
 verify_provisioned_endpoints() {
   log_step "Provisioned endpoints"
-  verify_blob_service_uri
+  verify_blob_service_uri local-dev "$ERP_AZURE_STORAGE_DEV_NAME"
+  verify_blob_service_uri production "$ERP_AZURE_STORAGE_PROD_NAME"
   verify_data_protection_key_identifier local-dev "$ERP_AZURE_KEYVAULT_DEV_NAME"
   verify_data_protection_key_identifier production "$ERP_AZURE_KEYVAULT_PROD_NAME"
 }
@@ -1019,13 +1121,13 @@ verify_sql_firewall() {
       if [[ "$start" == "$end" ]] && is_public_ipv4 "$start"; then
         pass "rule $name admits one public address"
       else
-        fail "rule $name admits one public IPv4 address (it admits $start to $end); $SQL_HOME_HINT"
+        fail "rule $name admits one public IPv4 address (it admits $start to $end); $HOME_ADDRESS_HINT"
       fi
     else
-      fail "no rule besides $SQL_FIREWALL_RULE_NAME admits an address ($name admits $start to $end); remove it by hand (docs/operations/runbooks/database.md)"
+      fail "no rule besides $SQL_FIREWALL_RULE_NAME admits an address ($name admits $start to $end); remove it by hand: $(lock_hint), az sql server firewall-rule delete --resource-group $ERP_AZURE_RESOURCE_GROUP --server $ERP_AZURE_SQL_SERVER_NAME --name $name, then bash scripts/azure/provision.sh to lock the server again"
     fi
   done <<< "$rules"
-  (( found )) || fail "rule $SQL_FIREWALL_RULE_NAME admits the home's public address; $SQL_HOME_HINT"
+  (( found )) || fail "rule $SQL_FIREWALL_RULE_NAME admits the home's public address; $HOME_ADDRESS_HINT"
 }
 
 verify_sql_database() {
@@ -1077,7 +1179,7 @@ verify_sql_users() {
   case "$result" in
     answered*) pass "this computer reaches the database as the operator" ;;
     refused*)
-      fail "this computer reaches the database (the firewall refuses this computer's address); $SQL_HOME_HINT"
+      fail "this computer reaches the database (the firewall refuses this computer's address); $HOME_ADDRESS_HINT"
       return 0
       ;;
     signin-refused*)
@@ -1133,7 +1235,10 @@ verify_provisioning() {
   verify_vault "$ERP_AZURE_KEYVAULT_DEV_NAME" true
   verify_vault "$ERP_AZURE_KEYVAULT_PROD_NAME" true
   verify_vault "$ERP_AZURE_KEYVAULT_OPS_NAME" false
-  verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME"
+  verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME" "$DEVELOPMENT_STORAGE_SKU" "$DEVELOPMENT_STORAGE_RETENTION_DAYS"
+  verify_storage_listing "$ERP_AZURE_STORAGE_DEV_NAME"
+  verify_storage_account "$ERP_AZURE_STORAGE_PROD_NAME" "$PRODUCTION_STORAGE_SKU" "$PRODUCTION_STORAGE_RETENTION_DAYS"
+  verify_production_storage_network
   verify_roles "$operator_id" "$developers_group_id" "$runtime_id" "$migrator_id"
   verify_sentinels
 }

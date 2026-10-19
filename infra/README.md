@@ -21,7 +21,7 @@ The Dockerfiles use the repository root as build context and pin their base imag
 
 There is no SQL Server container: local development uses the owner's SQL Server instance and production uses Azure SQL.
 
-The local stack keeps attachments in the `azurite` service, Microsoft's Blob Storage emulator (`mcr.microsoft.com/azure-storage/azurite`, pinned by digest and bumped by Dependabot): blob service only, data in the named volume `azurite-data`, telemetry off, no port published to the host, healthy once port 10000 accepts connections. The api service reaches it as `azurite` through `Erp__Platform__Attachments__EmulatorHost` and starts only once it is healthy. Production keeps attachments in an Entra-only Azure Storage account (created in the first-deployment phase), and `compose.production.yaml` has no emulator.
+The local stack keeps attachments in the `azurite` service, Microsoft's Blob Storage emulator (`mcr.microsoft.com/azure-storage/azurite`, pinned by digest and bumped by Dependabot): blob service only, data in the named volume `azurite-data`, telemetry off, no port published to the host, healthy once port 10000 accepts connections. The api service reaches it as `azurite` through `Erp__Platform__Attachments__EmulatorHost` and starts only once it is healthy. Production keeps attachments in the Entra-only Azure Storage account `sterpaiproprod`, which answers only the home's public address ([ADR-0051](../docs/adr/0051-the-production-attachments-storage-geo-redundant-and-reachable-from-the-homes-address-alone.md)) and whose endpoint and key reach the api through App Configuration, and `compose.production.yaml` has no emulator.
 
 ```bash
 # local: build and run both images with the Aspire dashboard

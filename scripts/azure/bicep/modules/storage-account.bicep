@@ -21,6 +21,17 @@ param deleteRetentionDays int
 
 param roleAssignments RoleAssignment[]
 
+param restrictToAllowedAddresses bool = false
+
+param allowedAddresses string[] = []
+
+var allowedAddressRules = [
+  for address in allowedAddresses: {
+    value: address
+    action: 'Allow'
+  }
+]
+
 resource account 'Microsoft.Storage/storageAccounts@2026-04-01' = {
   name: name
   location: location
@@ -44,10 +55,19 @@ resource account 'Microsoft.Storage/storageAccounts@2026-04-01' = {
     // Developer machines and the on-premises server reach the account over the public
     // endpoint; there is no virtual network or private endpoint to restrict to.
     publicNetworkAccess: 'Enabled'
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
-    }
+    networkAcls: restrictToAllowedAddresses
+      ? {
+          bypass: 'None'
+          defaultAction: 'Deny'
+          ipRules: allowedAddressRules
+          ipv6Rules: []
+          virtualNetworkRules: []
+          resourceAccessRules: []
+        }
+      : {
+          bypass: 'AzureServices'
+          defaultAction: 'Allow'
+        }
   }
 
   resource blobService 'blobServices' = {
