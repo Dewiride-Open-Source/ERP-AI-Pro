@@ -18,10 +18,11 @@ The connection string reaches the process differently in each situation; nothing
 
 | Process | Where the connection string comes from |
 |---|---|
-| `dotnet run` with the store (`APPCONFIG_ENDPOINT` set) | the Key Vault reference `Erp:Platform:Database:ConnectionString` → secret `Erp--Platform--Database--ConnectionString` in the environment's vault (labelled `local-dev`; the `production` reference is added by the first-deployment phase) |
+| `dotnet run` with the store (`APPCONFIG_ENDPOINT` set) | the Key Vault reference `Erp:Platform:Database:ConnectionString` → secret `Erp--Platform--Database--ConnectionString` in the environment's vault (labelled `local-dev` and `production`) |
 | `dotnet run` without the store, and every `dotnet ef` command | `dotnet user-secrets` of `Hosts/Api/Dewiride.Erp.Host.Api` (key `Erp:Platform:Database:ConnectionString`) on a developer machine, the environment variable `Erp__Platform__Database__ConnectionString` in CI |
 | tests | `ERP_TEST_SQL_CONNECTION` through `SqlTestDatabase`, which injects the per-process test database into every `ErpApiFactory` (section "Test databases") |
-| containers | the key-per-file secret `/run/secrets/Erp__Platform__Database__ConnectionString`, mounted by `compose.override.yaml` from the git-ignored file `infra/compose/secrets/Erp__Platform__Database__ConnectionString` |
+| local containers | the key-per-file secret `/run/secrets/Erp__Platform__Database__ConnectionString`, mounted by `compose.override.yaml` from the git-ignored file `infra/compose/secrets/Erp__Platform__Database__ConnectionString` |
+| production containers | the `production` reference; the migrator resolves its own `Erp:Platform:Database:MigratorConnectionString` the same way and may read no other secret of the vault ([ADR-0050](../adr/0050-the-production-database-azure-sql-basic-with-microsoft-entra-only-users.md)) |
 | CI | the outputs of `.github/actions/start-sql-server` (section "CI") |
 
 ## `ModuleDbContext` and `AddModuleDbContext<TContext>(schema)`

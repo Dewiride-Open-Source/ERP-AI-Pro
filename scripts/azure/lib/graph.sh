@@ -16,15 +16,13 @@ readonly PENDING_ID='<pending>'
 readonly APP_ROLES_FILE='scripts/azure/entra/app-roles.json'
 readonly OPTIONAL_CLAIMS_FILE='scripts/azure/entra/optional-claims.json'
 readonly CERTIFICATE_POLICY_TEMPLATE='scripts/azure/entra/certificate-policy.json'
-readonly ENTRA_TEMP_DIR='scripts/azure/out'
 readonly APP_ROLE_ADMIN_VALUE='Erp.Admin'
 readonly APP_ROLE_USER_VALUE='Erp.User'
 readonly SIGNIN_LABELS=(local-dev production)
 readonly SIGNIN_CERTIFICATE_NAME='Erp--Platform--Identity--ClientCertificate'
 readonly SIGNIN_CERTIFICATE_CONTENT_TYPE='application/x-pkcs12'
-readonly RUNTIME_CERTIFICATE_NAME='Erp--Platform--Identity--RuntimeClientCertificate'
-readonly RUNTIME_CERTIFICATE_CONTENT_TYPE='application/x-pem-file'
-readonly RUNTIME_CERTIFICATE_COMMON_NAME='erp-ai-pro-runtime-production'
+readonly SERVER_TARGETS=(runtime migrator)
+readonly CLIENT_CERTIFICATE_CONTENT_TYPE='application/x-pem-file'
 readonly IDENTITY_TENANT_ID_KEY='Erp:Platform:Identity:TenantId'
 readonly IDENTITY_CLIENT_ID_KEY='Erp:Platform:Identity:ClientId'
 readonly IDENTITY_WEB_ORIGIN_KEY='Erp:Platform:Identity:WebOrigin'
@@ -61,17 +59,6 @@ log_change() {
 
 require_repo_root_cwd() {
   [[ "$PWD" == "$REPO_ROOT" ]] || die "the current directory must be the repository root ($REPO_ROOT) so that az can open @file arguments"
-}
-
-# Graph returns customKeyIdentifier either as the SHA-1 thumbprint text (credentials
-# uploaded through the Azure CLI) or as the base64-encoded thumbprint bytes.
-key_identifier_to_hex() {
-  [[ -n "$1" ]] || return 0
-  if [[ "$1" =~ ^[0-9A-Fa-f]{40}$ ]]; then
-    printf '%s' "$1"
-    return 0
-  fi
-  { printf '%s' "$1" | base64 -d 2> /dev/null | od -An -tx1 | tr -d ' \n'; } || true
 }
 
 require_origin() {
@@ -112,6 +99,41 @@ signin_vault() {
 signin_certificate_common_name() {
   require_signin_label "$1"
   printf 'erp-ai-pro-web-%s' "$1"
+}
+
+is_server_target() {
+  local candidate
+  for candidate in "${SERVER_TARGETS[@]}"; do
+    [[ "$1" == "$candidate" ]] && return 0
+  done
+  return 1
+}
+
+require_server_target() {
+  is_server_target "$1" || die "server identity must be one of: ${SERVER_TARGETS[*]}; got '$1'"
+}
+
+server_app_name() {
+  require_server_target "$1"
+  case "$1" in
+    runtime) printf '%s' "$ERP_AZURE_APP_RUNTIME_NAME" ;;
+    migrator) printf '%s' "$ERP_AZURE_APP_MIGRATOR_NAME" ;;
+  esac
+}
+
+client_certificate_name() {
+  require_server_target "$1"
+  printf 'Erp--Platform--Identity--%sClientCertificate' "${1^}"
+}
+
+client_certificate_common_name() {
+  require_server_target "$1"
+  printf 'erp-ai-pro-%s-production' "$1"
+}
+
+client_certificate_file() {
+  require_server_target "$1"
+  printf 'erp-%s-client.pem' "$1"
 }
 
 signin_web_origin() {
@@ -647,8 +669,7 @@ render_certificate_policy() {
   local common_name="$1" content_type="$2"
   require_repo_root_cwd
   [[ -f "$CERTIFICATE_POLICY_TEMPLATE" ]] || die "certificate policy template '$CERTIFICATE_POLICY_TEMPLATE' not found"
-  mkdir -p -- "$ENTRA_TEMP_DIR"
-  CERTIFICATE_POLICY_FILE="$(mktemp "$ENTRA_TEMP_DIR/certificate-policy.XXXXXX")" || die "cannot create a temporary file under $ENTRA_TEMP_DIR"
+  CERTIFICATE_POLICY_FILE="$(azure_temp_file certificate-policy)"
   trap remove_certificate_policy_file EXIT
   sed -e "s|__SUBJECT__|$common_name|" -e "s|__CONTENT_TYPE__|$content_type|" "$CERTIFICATE_POLICY_TEMPLATE" > "$CERTIFICATE_POLICY_FILE"
 }
@@ -712,14 +733,9 @@ rotate_certificate() {
 
 key_credential_thumbprints() {
   local app_id="$1"
-  local rows
-  rows="$(graph_get "applications(appId='$app_id')?\$select=keyCredentials" 'keyCredentials[].[keyId, customKeyIdentifier]')" || return 1
-  [[ -n "$rows" ]] || return 0
-  local key_id identifier
-  while IFS=$'\t' read -r key_id identifier; do
-    [[ -n "$key_id" ]] || continue
-    printf '%s\t%s\n' "$key_id" "$(key_identifier_to_hex "$identifier")"
-  done <<< "$rows"
+  local credentials_json
+  credentials_json="$(graph_get "applications(appId='$app_id')?\$select=keyCredentials")" || return 1
+  node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const credentials = JSON.parse(raw).keyCredentials ?? []; const withoutKey = credentials.filter((credential) => !credential.key).map((credential) => credential.keyId); if (withoutKey.length > 0) { process.stderr.write("Microsoft Graph returned no certificate for the key credential(s) " + withoutKey.join(", ") + "\n"); process.exit(1); } const { createHash } = require("node:crypto"); process.stdout.write(credentials.map((credential) => credential.keyId + "\t" + createHash("sha1").update(Buffer.from(credential.key, "base64")).digest("hex")).join("\n")); });' <<< "$credentials_json"
 }
 
 key_credential_id_for_thumbprint() {

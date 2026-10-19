@@ -19,6 +19,16 @@ internal sealed class FakeConfigurationClient : ConfigurationClient
         return this;
     }
 
+    public FakeConfigurationClient WithReference(string key, Uri secret, string? label = null)
+    {
+        _settings.Add(new ConfigurationSetting(key, $$"""{"uri":"{{secret}}"}""", label, new ETag($"\"{Guid.CreateVersion7():N}\""))
+        {
+            ContentType = "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8",
+        });
+
+        return this;
+    }
+
     public override AsyncPageable<ConfigurationSetting> GetConfigurationSettingsAsync(SettingSelector selector, CancellationToken cancellationToken = default)
     {
         Selections.Add((selector.KeyFilter, selector.LabelFilter));

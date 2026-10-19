@@ -2,24 +2,26 @@
 
 USAGE='Usage: bash scripts/azure/entra.sh [--dry-run] [--params <file>]
        bash scripts/azure/entra.sh --rotate-signin-certificate <local-dev|production> [--dry-run] [--params <file>]
-       bash scripts/azure/entra.sh --rotate-runtime-certificate [--dry-run] [--params <file>]
-       bash scripts/azure/entra.sh --prune-old-credentials <local-dev|production|runtime> [--dry-run] [--params <file>]
+       bash scripts/azure/entra.sh --rotate-client-certificate <runtime|migrator> [--dry-run] [--params <file>]
+       bash scripts/azure/entra.sh --prune-old-credentials <local-dev|production|runtime|migrator> [--dry-run] [--params <file>]
 
-Creates or converges the three single-tenant app registrations (sign-in for
-local-dev, sign-in for production, runtime for the server), their service
-principals, app roles, the login_hint optional claim and the front-channel
-logout URL of the sign-in registrations (for an https web origin only),
-Microsoft Graph consent, Key Vault certificates, key credentials, the Erp.Admin
-assignment of the operator and the App Configuration identity ids and web
-origins. Safe to run repeatedly; never deletes a registration.
+Creates or converges the four single-tenant app registrations (sign-in for
+local-dev, sign-in for production, and runtime and migrator for the server),
+their service principals, app roles, the login_hint optional claim and the
+front-channel logout URL of the sign-in registrations (for an https web origin
+only), Microsoft Graph consent, Key Vault certificates (the client certificates
+of runtime and migrator in the operations vault, which no application reads),
+key credentials, the Erp.Admin assignment of the operator and the App
+Configuration identity ids and web origins. Safe to run repeatedly; never
+deletes a registration.
 
 Options:
   --dry-run                              Print every write that would run; write nothing.
   --clear-production-redirect-uris       Allow the run to remove the production redirect URIs when ERP_AZURE_PRODUCTION_WEB_ORIGIN is empty.
   --params <file>                        Parameter file (default: scripts/azure/params.env).
   --rotate-signin-certificate <label>    Create a new version of the sign-in certificate of local-dev or production and register it.
-  --rotate-runtime-certificate           Create a new version of the runtime certificate and register it.
-  --prune-old-credentials <target>       Delete every key credential of local-dev, production or runtime that is not the current certificate.
+  --rotate-client-certificate <target>   Create a new version of the runtime or migrator client certificate and register it.
+  --prune-old-credentials <target>       Delete every key credential of local-dev, production, runtime or migrator that is not the current certificate.
   --help                                 Show this help.'
 
 # shellcheck source=lib/common.sh
@@ -29,35 +31,35 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/appconfig.sh"
 # shellcheck source=lib/graph.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
 
-readonly RUNTIME_TARGET='runtime'
-
 MODE=converge
 TARGET=''
 
 set_mode() {
-  [[ "$MODE" == converge ]] || die "only one of --rotate-signin-certificate, --rotate-runtime-certificate and --prune-old-credentials can be given"
+  [[ "$MODE" == converge ]] || die "only one of --rotate-signin-certificate, --rotate-client-certificate and --prune-old-credentials can be given"
   MODE="$1"
 }
 
 require_target() {
-  local option="$1" value="$2" allow_runtime="$3"
+  local option="$1" value="$2" accepted="$3"
   [[ -n "$value" ]] || die "$option requires a value"
-  if [[ "$value" == "$RUNTIME_TARGET" ]]; then
-    (( allow_runtime )) || die "$option accepts local-dev or production; got '$value'"
+  local label
+  if [[ "$accepted" != server ]]; then
+    for label in "${SIGNIN_LABELS[@]}"; do
+      if [[ "$value" == "$label" ]]; then
+        printf '%s' "$value"
+        return 0
+      fi
+    done
+  fi
+  if [[ "$accepted" != signin ]] && is_server_target "$value"; then
     printf '%s' "$value"
     return 0
   fi
-  local label
-  for label in "${SIGNIN_LABELS[@]}"; do
-    if [[ "$value" == "$label" ]]; then
-      printf '%s' "$value"
-      return 0
-    fi
-  done
-  if (( allow_runtime )); then
-    die "$option accepts local-dev, production or runtime; got '$value'"
-  fi
-  die "$option accepts local-dev or production; got '$value'"
+  case "$accepted" in
+    signin) die "$option accepts local-dev or production; got '$value'" ;;
+    server) die "$option accepts runtime or migrator; got '$value'" ;;
+    *) die "$option accepts local-dev, production, runtime or migrator; got '$value'" ;;
+  esac
 }
 
 parse_entra_args() {
@@ -66,28 +68,33 @@ parse_entra_args() {
     case "$1" in
       --rotate-signin-certificate)
         set_mode rotate-signin
-        TARGET="$(require_target "$1" "${2:-}" 0)"
+        TARGET="$(require_target "$1" "${2:-}" signin)"
         shift
         ;;
       --rotate-signin-certificate=*)
         set_mode rotate-signin
-        TARGET="$(require_target "--rotate-signin-certificate" "${1#--rotate-signin-certificate=}" 0)"
+        TARGET="$(require_target "--rotate-signin-certificate" "${1#--rotate-signin-certificate=}" signin)"
         ;;
-      --rotate-runtime-certificate)
-        set_mode rotate-runtime
-        TARGET="$RUNTIME_TARGET"
+      --rotate-client-certificate)
+        set_mode rotate-client
+        TARGET="$(require_target "$1" "${2:-}" server)"
+        shift
+        ;;
+      --rotate-client-certificate=*)
+        set_mode rotate-client
+        TARGET="$(require_target "--rotate-client-certificate" "${1#--rotate-client-certificate=}" server)"
         ;;
       --clear-production-redirect-uris)
         CLEAR_REDIRECT_URIS_ALLOWED=1
         ;;
       --prune-old-credentials)
         set_mode prune
-        TARGET="$(require_target "$1" "${2:-}" 1)"
+        TARGET="$(require_target "$1" "${2:-}" any)"
         shift
         ;;
       --prune-old-credentials=*)
         set_mode prune
-        TARGET="$(require_target "--prune-old-credentials" "${1#--prune-old-credentials=}" 1)"
+        TARGET="$(require_target "--prune-old-credentials" "${1#--prune-old-credentials=}" any)"
         ;;
       *)
         rest+=("$1")
@@ -161,16 +168,19 @@ converge_signin_app() {
   printf -v "$app_id_variable" '%s' "$app_id"
 }
 
-converge_runtime_app() {
-  local app_id_variable="$1"
-  log_step "Runtime registration '$ERP_AZURE_APP_RUNTIME_NAME'"
+converge_server_app() {
+  local target="$1" app_id_variable="$2"
+  local display_name certificate_name
+  display_name="$(server_app_name "$target")"
+  certificate_name="$(client_certificate_name "$target")"
+  log_step "Server registration '$display_name' ($target)"
   local ids object_id app_id
-  ids="$(ensure_app "$ERP_AZURE_APP_RUNTIME_NAME" none '')"
+  ids="$(ensure_app "$display_name" none '')"
   split_ids object_id app_id "$ids"
   ensure_service_principal "$app_id" > /dev/null
   local thumbprint
-  thumbprint="$(ensure_certificate "$ERP_AZURE_KEYVAULT_PROD_NAME" "$RUNTIME_CERTIFICATE_NAME" "$RUNTIME_CERTIFICATE_COMMON_NAME" "$RUNTIME_CERTIFICATE_CONTENT_TYPE")"
-  ensure_key_credential "$app_id" "$ERP_AZURE_KEYVAULT_PROD_NAME" "$RUNTIME_CERTIFICATE_NAME" "$thumbprint"
+  thumbprint="$(ensure_certificate "$ERP_AZURE_KEYVAULT_OPS_NAME" "$certificate_name" "$(client_certificate_common_name "$target")" "$CLIENT_CERTIFICATE_CONTENT_TYPE")"
+  ensure_key_credential "$app_id" "$ERP_AZURE_KEYVAULT_OPS_NAME" "$certificate_name" "$thumbprint"
   printf -v "$app_id_variable" '%s' "$app_id"
 }
 
@@ -185,26 +195,31 @@ run_converge() {
   log_info "Microsoft Graph service principal: $GRAPH_SP_OBJECT_ID"
   admin_role_id="$(app_role_id "$APP_ROLE_ADMIN_VALUE")"
 
-  local local_dev_app_id='' production_app_id='' runtime_app_id=''
+  local local_dev_app_id='' production_app_id='' runtime_app_id='' migrator_app_id=''
   converge_signin_app local-dev "$operator_id" "$admin_role_id" local_dev_app_id
   converge_signin_app production "$operator_id" "$admin_role_id" production_app_id
-  converge_runtime_app runtime_app_id
+  converge_server_app runtime runtime_app_id
+  converge_server_app migrator migrator_app_id
 
   log_step "Summary"
   printf 'LOCAL_DEV_CLIENT_ID=%s\n' "$local_dev_app_id"
   printf 'PRODUCTION_CLIENT_ID=%s\n' "$production_app_id"
   printf 'RUNTIME_CLIENT_ID=%s\n' "$runtime_app_id"
+  printf 'MIGRATOR_CLIENT_ID=%s\n' "$migrator_app_id"
   printf 'AZURE_TENANT_ID=%s\n' "$ERP_AZURE_TENANT_ID"
   printf 'AZURE_CLIENT_ID=%s\n' "$runtime_app_id"
+  printf 'MIGRATOR_AZURE_CLIENT_ID=%s\n' "$migrator_app_id"
   if (( DRY_RUN )); then
     log_info "dry run: nothing was created or changed; ids shown as $PENDING_ID are assigned by the real run"
   fi
-  log_info "AZURE_TENANT_ID and AZURE_CLIENT_ID are the values the server puts in infra/compose/.env"
+  log_info "AZURE_TENANT_ID, AZURE_CLIENT_ID (the runtime's) and MIGRATOR_AZURE_CLIENT_ID are the values the server puts in infra/compose/.env"
   log_info "next steps:"
-  log_info "  1. bash scripts/azure/provision.sh                   (grants the runtime service principal its roles)"
-  log_info "  2. bash scripts/azure/seed.sh                        (arrives with sub-phase azure-configuration-configuration-conventions-and-seed-data)"
-  log_info "  3. bash scripts/azure/export-runtime-certificate.sh  (when the server exists)"
-  log_info "  4. bash scripts/azure/verify.sh --entra"
+  log_info "  1. bash scripts/azure/provision.sh   (grants the runtime and migrator service principals their roles)"
+  log_info "  2. bash scripts/azure/seed.sh        (configuration values and Key Vault references)"
+  log_info "  3. from a computer on the home network, without a VPN: bash scripts/azure/database.sh --allow-current-address,"
+  log_info "     then bash scripts/azure/database.sh   (the database users; docs/operations/runbooks/database.md)"
+  log_info "  4. the first migration, with bash scripts/azure/export-client-certificate.sh migrator (docs/operations/runbooks/database.md)"
+  log_info "  5. bash scripts/azure/verify.sh --entra"
 
   if (( ${#PERMISSION_GRANT_FAILURES[@]} > 0 )); then
     local app_id
@@ -247,33 +262,40 @@ run_rotate_signin() {
   log_info "  3. bash scripts/azure/entra.sh --prune-old-credentials $label"
 }
 
-run_rotate_runtime() {
-  log_step "Rotating the runtime certificate of '$ERP_AZURE_APP_RUNTIME_NAME'"
+run_rotate_client() {
+  local display_name certificate_name
+  display_name="$(server_app_name "$TARGET")"
+  certificate_name="$(client_certificate_name "$TARGET")"
+  log_step "Rotating the $TARGET client certificate of '$display_name'"
   local ids object_id app_id
-  ids="$(require_existing_app "$ERP_AZURE_APP_RUNTIME_NAME")"
+  ids="$(require_existing_app "$display_name")"
   split_ids object_id app_id "$ids"
   local thumbprint
-  thumbprint="$(rotate_certificate "$ERP_AZURE_KEYVAULT_PROD_NAME" "$RUNTIME_CERTIFICATE_NAME" "$RUNTIME_CERTIFICATE_COMMON_NAME" "$RUNTIME_CERTIFICATE_CONTENT_TYPE")"
-  ensure_key_credential "$app_id" "$ERP_AZURE_KEYVAULT_PROD_NAME" "$RUNTIME_CERTIFICATE_NAME" "$thumbprint"
+  thumbprint="$(rotate_certificate "$ERP_AZURE_KEYVAULT_OPS_NAME" "$certificate_name" "$(client_certificate_common_name "$TARGET")" "$CLIENT_CERTIFICATE_CONTENT_TYPE")"
+  ensure_key_credential "$app_id" "$ERP_AZURE_KEYVAULT_OPS_NAME" "$certificate_name" "$thumbprint"
 
   log_step "Summary"
-  printf 'AZURE_CLIENT_ID=%s\n' "$app_id"
+  printf 'CLIENT_ID=%s\n' "$app_id"
   if (( DRY_RUN )); then
     log_info "dry run: nothing was created or changed"
   fi
   log_info "next steps:"
-  log_info "  1. bash scripts/azure/export-runtime-certificate.sh   (downloads the new version and prints the placement command for the server)"
-  log_info "  2. on the server: docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api   (a plain up -d keeps the running container with the old certificate file)"
-  log_info "  3. bash scripts/azure/verify.sh --entra"
-  log_info "  4. bash scripts/azure/entra.sh --prune-old-credentials $RUNTIME_TARGET"
+  log_info "  1. bash scripts/azure/export-client-certificate.sh $TARGET   (downloads the new version and prints the placement command for the server)"
+  if [[ "$TARGET" == runtime ]]; then
+    log_info "  2. on the server: docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api   (a plain up -d keeps the running container with the old certificate file)"
+  else
+    log_info "  2. nothing to restart: every migrator run, the nightly retain included, starts a new container that reads the new file"
+  fi
+  log_info "  3. bash scripts/azure/entra.sh --prune-old-credentials $TARGET"
+  log_info "  4. bash scripts/azure/verify.sh --entra"
 }
 
 run_prune() {
   local display_name vault certificate_name
-  if [[ "$TARGET" == "$RUNTIME_TARGET" ]]; then
-    display_name="$ERP_AZURE_APP_RUNTIME_NAME"
-    vault="$ERP_AZURE_KEYVAULT_PROD_NAME"
-    certificate_name="$RUNTIME_CERTIFICATE_NAME"
+  if is_server_target "$TARGET"; then
+    display_name="$(server_app_name "$TARGET")"
+    vault="$ERP_AZURE_KEYVAULT_OPS_NAME"
+    certificate_name="$(client_certificate_name "$TARGET")"
   else
     display_name="$(signin_app_name "$TARGET")"
     vault="$(signin_vault "$TARGET")"
@@ -301,7 +323,7 @@ main() {
   parse_entra_args "$@"
   load_params
   cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
-  require_command az node base64 od mktemp
+  require_command az node mktemp
 
   log_step "Checking the Azure CLI sign-in"
   ensure_login
@@ -309,7 +331,7 @@ main() {
   case "$MODE" in
     converge) run_converge ;;
     rotate-signin) run_rotate_signin ;;
-    rotate-runtime) run_rotate_runtime ;;
+    rotate-client) run_rotate_client ;;
     prune) run_prune ;;
     *) die "unknown mode '$MODE'" ;;
   esac

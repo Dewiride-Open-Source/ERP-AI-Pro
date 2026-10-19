@@ -14,13 +14,16 @@ namespace Dewiride.Erp.Host.Composition;
 
 public static class ErpHostComposition
 {
-    public static IHostApplicationBuilder AddErpPlatform(this IHostApplicationBuilder builder, Assembly hostAssembly)
+    public static IHostApplicationBuilder AddErpPlatform(
+        this IHostApplicationBuilder builder,
+        Assembly hostAssembly,
+        IReadOnlySet<string>? keyVaultReferences = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(hostAssembly);
 
         builder.UseOfflineConfigurationAtDesignTime();
-        builder.AddErpConfiguration(hostAssembly);
+        builder.AddErpConfiguration(hostAssembly, keyVaultReferences);
         builder.AddErpCaching();
         builder.AddErpHttpClientDefaults();
         builder.AddErpPersistence();

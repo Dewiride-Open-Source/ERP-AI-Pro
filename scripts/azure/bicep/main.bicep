@@ -1,6 +1,6 @@
 targetScope = 'resourceGroup'
 
-import { RoleAssignment } from './modules/types.bicep'
+import { RoleAssignment, SecretRoleAssignment } from './modules/types.bicep'
 
 param location string = resourceGroup().location
 
@@ -21,6 +21,10 @@ param productionKeyVaultName string
 
 @minLength(3)
 @maxLength(24)
+param operationsKeyVaultName string
+
+@minLength(3)
+@maxLength(24)
 param developmentStorageAccountName string
 
 @minLength(3)
@@ -31,13 +35,28 @@ param attachmentsContainerName string = 'attachments'
 @maxValue(365)
 param developmentStorageDeleteRetentionDays int = 7
 
+@minLength(1)
+@maxLength(63)
+param productionSqlServerName string
+
+@minLength(1)
+@maxLength(128)
+param productionSqlDatabaseName string
+
 @minLength(36)
 @maxLength(36)
 param operatorPrincipalId string
 
+@minLength(1)
+param operatorLogin string
+
 param developersGroupPrincipalId string = ''
 
 param runtimePrincipalId string = ''
+
+param migratorPrincipalId string = ''
+
+param migratorSecretNames string = ''
 
 param tags object = {
   project: 'erp-ai-pro'
@@ -77,6 +96,15 @@ var configurationStoreRoleAssignments RoleAssignment[] = concat(
     : [
         {
           principalId: runtimePrincipalId
+          principalType: 'ServicePrincipal'
+          roleDefinitionId: roleDefinitionIds.appConfigurationDataReader
+        }
+      ],
+  empty(migratorPrincipalId)
+    ? []
+    : [
+        {
+          principalId: migratorPrincipalId
           principalType: 'ServicePrincipal'
           roleDefinitionId: roleDefinitionIds.appConfigurationDataReader
         }
@@ -139,6 +167,28 @@ var productionKeyVaultRoleAssignments RoleAssignment[] = concat(
       ]
 )
 
+var productionKeyVaultSecretRoleAssignments SecretRoleAssignment[] = [
+  for secretName in (empty(migratorPrincipalId) || empty(migratorSecretNames) ? [] : split(migratorSecretNames, ',')): {
+    secretName: secretName
+    principalId: migratorPrincipalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.keyVaultSecretsUser
+  }
+]
+
+var operationsKeyVaultRoleAssignments RoleAssignment[] = [
+  {
+    principalId: operatorPrincipalId
+    principalType: 'User'
+    roleDefinitionId: roleDefinitionIds.keyVaultSecretsOfficer
+  }
+  {
+    principalId: operatorPrincipalId
+    principalType: 'User'
+    roleDefinitionId: roleDefinitionIds.keyVaultCertificatesOfficer
+  }
+]
+
 var developmentStorageRoleAssignments RoleAssignment[] = concat(
   [
     {
@@ -186,6 +236,18 @@ module productionKeyVault 'modules/key-vault.bicep' = {
     location: location
     tags: tags
     roleAssignments: productionKeyVaultRoleAssignments
+    secretRoleAssignments: productionKeyVaultSecretRoleAssignments
+  }
+}
+
+module operationsKeyVault 'modules/key-vault.bicep' = {
+  name: 'key-vault-operations'
+  params: {
+    name: operationsKeyVaultName
+    location: location
+    tags: tags
+    roleAssignments: operationsKeyVaultRoleAssignments
+    createDataProtectionKey: false
   }
 }
 
@@ -202,12 +264,26 @@ module developmentStorageAccount 'modules/storage-account.bicep' = {
   }
 }
 
+module productionSqlDatabase 'modules/sql-database.bicep' = {
+  name: 'sql-database-production'
+  params: {
+    serverName: productionSqlServerName
+    databaseName: productionSqlDatabaseName
+    location: location
+    tags: tags
+    administratorObjectId: operatorPrincipalId
+    administratorLogin: operatorLogin
+  }
+}
+
 output configurationStoreEndpoint string = configurationStore.outputs.endpoint
 output configurationStoreId string = configurationStore.outputs.id
 output developmentKeyVaultUri string = developmentKeyVault.outputs.uri
 output productionKeyVaultUri string = productionKeyVault.outputs.uri
+output operationsKeyVaultUri string = operationsKeyVault.outputs.uri
 output developmentDataProtectionKeyUri string = developmentKeyVault.outputs.dataProtectionKeyUri
 output productionDataProtectionKeyUri string = productionKeyVault.outputs.dataProtectionKeyUri
 output developmentAttachmentsBlobEndpoint string = developmentStorageAccount.outputs.blobEndpoint
 output developmentStorageAccountId string = developmentStorageAccount.outputs.id
 output developmentAttachmentsContainerId string = developmentStorageAccount.outputs.containerId
+output productionSqlServerFqdn string = productionSqlDatabase.outputs.fullyQualifiedDomainName

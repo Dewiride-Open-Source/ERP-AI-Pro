@@ -1,20 +1,33 @@
 #!/usr/bin/env bash
 
-USAGE='Usage: bash scripts/azure/verify.sh [--entra] [--labels] [--params <file>]
+USAGE='Usage: bash scripts/azure/verify.sh [--entra] [--labels] [--database] [--params <file>]
 
 Reads the provisioned Azure resources back and asserts the documented state:
-the App Configuration store, both Key Vaults, the data-protection keys, the
-development storage account (properties, blob service, private attachments
+the App Configuration store, the three Key Vaults, the data-protection keys,
+the development storage account (properties, blob service, private attachments
 container, delete lock and a read-only blob listing signed in with Entra ID),
-every row of the role matrix, the absence of Key Vault Crypto User for the
-developers group and the runtime service principal, and the labelled
+every row of the role matrix, the runtime and migrator service principals
+holding exactly their roles (the migrator only the production database'"'"'s two
+connection strings), the operations vault open to the operator alone, the
+absence of Key Vault Crypto User for the developers group, and the labelled
 Erp:Sentinel keys. Never writes.
 
 Options:
+  --database        Check the production database instead: the server
+                    (Microsoft Entra-only, the operator as its Microsoft Entra
+                    admin, TLS 1.2, IPv6 off, no virtual network rule or
+                    private endpoint, delete lock), its one firewall rule, the
+                    Basic database and its 7-day restore, the two
+                    connection-string secrets, and, through the Go sqlcmd as
+                    the Microsoft Entra admin, the users and rights
+                    database.sh converges, with nothing left for it to change.
   --entra           Check the Entra app registrations (with their optional
                     claims and front-channel logout URLs), service principals,
-                    certificates, role assignments and identity keys written
-                    by entra.sh instead of the provisioned resources.
+                    certificates (each registration signing in with its
+                    current certificate alone, the client certificates of the
+                    runtime and the migrator only in the operations vault),
+                    role assignments and identity keys written by entra.sh
+                    instead of the provisioned resources.
   --labels          Check the seeded settings, feature flags and Key Vault
                     references written by seed.sh: every value of
                     infra/appconfig is read back (a reference only under the
@@ -35,6 +48,8 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/appconfig.sh"
 # shellcheck source=lib/graph.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
+# shellcheck source=lib/sql.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib/sql.sh"
 
 readonly SENTINEL_KEY='Erp:Sentinel'
 readonly LABELS=(local-dev production)
@@ -58,15 +73,23 @@ readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
 readonly BLOB_SERVICE_URI_LABEL='local-dev'
 readonly DATA_PROTECTION_KEY_IDENTIFIER_KEY='Erp:Platform:DataProtection:KeyIdentifier'
 
+readonly SQL_DATABASE_SKU='Basic'
+readonly SQL_DATABASE_CAPACITY='5'
+readonly SQL_DATABASE_MAX_SIZE_BYTES='2147483648'
+readonly SQL_BACKUP_STORAGE_REDUNDANCY='Geo'
+readonly SQL_RESTORE_DAYS='7'
+
 readonly ENTRA_HINT='run: bash scripts/azure/entra.sh'
 readonly PROVISION_HINT='run: bash scripts/azure/provision.sh'
 readonly SEED_HINT='run: bash scripts/azure/seed.sh'
+readonly DATABASE_HINT='run: bash scripts/azure/database.sh'
 readonly SEED_DIRECTORY='infra/appconfig'
 readonly SEED_FILES_CLI='scripts/azure/lib/seed-files.ts'
 readonly LABEL_PRECEDENCE_KEY='Erp:Platform:Host:ApplicationName'
 
 ENTRA_MODE=0
 LABELS_MODE=0
+DATABASE_MODE=0
 FAILURES=0
 OPERATOR_ID=''
 
@@ -172,12 +195,14 @@ verify_store() {
 }
 
 verify_vault() {
-  local vault_name="$1"
+  local vault_name="$1" holds_data_protection_key="$2"
   log_step "Key Vault $vault_name"
   assert_query "$vault_name uses RBAC authorization" 'true' keyvault show --name "$vault_name" --query properties.enableRbacAuthorization
   assert_query "$vault_name soft delete enabled" 'true' keyvault show --name "$vault_name" --query properties.enableSoftDelete
   assert_query "$vault_name purge protection enabled" 'true' keyvault show --name "$vault_name" --query properties.enablePurgeProtection
-  assert_query "$vault_name holds RSA key $DATA_PROTECTION_KEY_NAME" 'RSA' keyvault key show --vault-name "$vault_name" --name "$DATA_PROTECTION_KEY_NAME" --query key.kty
+  if [[ "$holds_data_protection_key" == true ]]; then
+    assert_query "$vault_name holds RSA key $DATA_PROTECTION_KEY_NAME" 'RSA' keyvault key show --vault-name "$vault_name" --name "$DATA_PROTECTION_KEY_NAME" --query key.kty
+  fi
 }
 
 verify_storage_account() {
@@ -237,23 +262,120 @@ verify_storage_account() {
   fi
 }
 
+server_expected_roles() {
+  local target="$1"
+  local production_vault_id secret_name
+  production_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_PROD_NAME")"
+  printf '%s\t%s\t%s\n' "$(store_resource_id)" "$ROLE_APP_CONFIGURATION_DATA_READER" 'App Configuration Data Reader on the store'
+  if [[ "$target" == runtime ]]; then
+    printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_SECRETS_USER" "Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME"
+    printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER" "Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME"
+    return 0
+  fi
+  for secret_name in "${ERP_AZURE_MIGRATOR_SECRETS[@]}"; do
+    printf '%s\t%s\t%s\n' "$production_vault_id/secrets/$secret_name" "$ROLE_KEY_VAULT_SECRETS_USER" "Key Vault Secrets User on the secret $secret_name of $ERP_AZURE_KEYVAULT_PROD_NAME"
+  done
+}
+
+verify_server_roles() {
+  local target="$1" principal_id="$2"
+  local assignments
+  if ! assignments="$(az_read role assignment list --all --assignee-object-id "$principal_id" --include-groups \
+    --fill-principal-name false --fill-role-definition-name false --query '[].[scope, roleDefinitionId]' --output tsv 2>&1)"; then
+    fail "the role assignments of the $target service principal are readable (query failed: $(query_error_summary "$assignments"))"
+    return 0
+  fi
+  local -A held=() expected=()
+  local scope role_id description key
+  while IFS=$'\t' read -r scope role_id; do
+    [[ -n "$scope" ]] || continue
+    role_id="${role_id##*/}"
+    held["${scope,,} ${role_id,,}"]=1
+  done <<< "$assignments"
+  while IFS=$'\t' read -r scope role_id description; do
+    key="${scope,,} ${role_id,,}"
+    expected["$key"]=1
+    if [[ -n "${held[$key]:-}" ]]; then
+      pass "$target service principal is $description"
+    else
+      fail "$target service principal is $description (assignment missing); $PROVISION_HINT again"
+    fi
+  done < <(server_expected_roles "$target")
+  local others=0
+  for key in "${!held[@]}"; do
+    [[ -z "${expected[$key]:-}" ]] || continue
+    others=1
+    fail "$target service principal holds no other role (it holds the role ${key#* } on ${key%% *}, which provision.sh never grants); remove that assignment"
+  done
+  (( others )) || pass "$target service principal holds no other role, directly or through a group"
+}
+
+grants_key_vault_data() {
+  local role_id="$1"
+  local data_actions
+  data_actions="$(az_read role definition list --name "$role_id" --query '[].permissions[].dataActions[]' --output tsv)" || return 2
+  grep -qiE '^(\*|Microsoft\.KeyVault/)' <<< "$data_actions"
+}
+
+verify_operations_vault_access() {
+  local operator_id="$1"
+  local vault_id above inside
+  vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_OPS_NAME")"
+  vault_id="${vault_id,,}"
+  if ! above="$(az_read role assignment list --scope "$vault_id" --include-inherited --fill-principal-name false --fill-role-definition-name false \
+    --query '[].[scope, principalId, roleDefinitionId]' --output tsv 2>&1)"; then
+    fail "the role assignments on and above $ERP_AZURE_KEYVAULT_OPS_NAME are readable (query failed: $(query_error_summary "$above"))"
+    return 0
+  fi
+  if ! inside="$(az_read role assignment list --all --fill-principal-name false --fill-role-definition-name false \
+    --query '[].[scope, principalId, roleDefinitionId]' --output tsv 2>&1)"; then
+    fail "the role assignments of the subscription are readable (query failed: $(query_error_summary "$inside"))"
+    return 0
+  fi
+  local scope principal_id role_id status others=0
+  local -A seen=()
+  while IFS=$'\t' read -r scope principal_id role_id; do
+    scope="${scope,,}"
+    role_id="${role_id##*/}"
+    role_id="${role_id,,}"
+    [[ -n "$scope" && -z "${seen["$scope $principal_id $role_id"]:-}" ]] || continue
+    seen["$scope $principal_id $role_id"]=1
+    [[ "${principal_id,,}" != "${operator_id,,}" ]] || continue
+    if [[ "$scope" == "$vault_id" || "$scope" == "$vault_id/"* ]]; then
+      others=1
+      fail "only the operator holds a role on $ERP_AZURE_KEYVAULT_OPS_NAME (principal $principal_id holds the role $role_id on $scope)"
+    elif [[ "$vault_id" == "$scope/"* || "$scope" == / || "$scope" == /providers/microsoft.management/managementgroups/* ]]; then
+      grants_key_vault_data "$role_id" && status=0 || status=$?
+      if (( status == 0 )); then
+        others=1
+        fail "only the operator reads $ERP_AZURE_KEYVAULT_OPS_NAME (principal $principal_id holds the Key Vault data role $role_id on $scope, above the vault)"
+      elif (( status == 2 )); then
+        others=1
+        fail "only the operator reads $ERP_AZURE_KEYVAULT_OPS_NAME (the role $role_id that principal $principal_id holds on $scope cannot be read)"
+      fi
+    fi
+  done <<< "$above"$'\n'"$inside"
+  (( others )) || pass "only the operator holds a role on $ERP_AZURE_KEYVAULT_OPS_NAME or anything in it, and nobody else holds a Key Vault data role above it"
+}
+
 verify_roles() {
-  local operator_id="$1" developers_group_id="$2" runtime_id="$3"
-  local store_id development_vault_id production_vault_id attachments_container_id attachments_container
+  local operator_id="$1" developers_group_id="$2" runtime_id="$3" migrator_id="$4"
+  local store_id development_vault_id attachments_container_id attachments_container
   store_id="$(store_resource_id)"
   development_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_DEV_NAME")"
-  production_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_PROD_NAME")"
   attachments_container_id="$(storage_container_resource_id "$ERP_AZURE_STORAGE_DEV_NAME" "$ATTACHMENTS_CONTAINER_NAME")"
   attachments_container="$ERP_AZURE_STORAGE_DEV_NAME/$ATTACHMENTS_CONTAINER_NAME"
 
   log_step "Role assignments: operator"
   assert_role "operator is App Configuration Data Owner on the store" "$store_id" "$operator_id" "$ROLE_APP_CONFIGURATION_DATA_OWNER"
   local vault_id vault_name
-  for vault_name in "$ERP_AZURE_KEYVAULT_DEV_NAME" "$ERP_AZURE_KEYVAULT_PROD_NAME"; do
+  for vault_name in "$ERP_AZURE_KEYVAULT_DEV_NAME" "$ERP_AZURE_KEYVAULT_PROD_NAME" "$ERP_AZURE_KEYVAULT_OPS_NAME"; do
     vault_id="$(vault_resource_id "$vault_name")"
     assert_role "operator is Key Vault Secrets Officer on $vault_name" "$vault_id" "$operator_id" "$ROLE_KEY_VAULT_SECRETS_OFFICER"
     assert_role "operator is Key Vault Certificates Officer on $vault_name" "$vault_id" "$operator_id" "$ROLE_KEY_VAULT_CERTIFICATES_OFFICER"
-    assert_role "operator is Key Vault Crypto Officer on $vault_name" "$vault_id" "$operator_id" "$ROLE_KEY_VAULT_CRYPTO_OFFICER"
+    if [[ "$vault_name" != "$ERP_AZURE_KEYVAULT_OPS_NAME" ]]; then
+      assert_role "operator is Key Vault Crypto Officer on $vault_name" "$vault_id" "$operator_id" "$ROLE_KEY_VAULT_CRYPTO_OFFICER"
+    fi
   done
   assert_role "operator is Storage Blob Data Contributor on container $attachments_container" "$attachments_container_id" "$operator_id" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
 
@@ -268,15 +390,20 @@ verify_roles() {
     skip "developers group roles: skipped: not configured"
   fi
 
-  log_step "Role assignments: runtime service principal"
-  if [[ -n "$runtime_id" ]]; then
-    assert_role "runtime service principal is App Configuration Data Reader on the store" "$store_id" "$runtime_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
-    assert_role "runtime service principal is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$runtime_id" "$ROLE_KEY_VAULT_SECRETS_USER"
-    assert_role "runtime service principal is Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$runtime_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
-    assert_no_role "runtime service principal is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$runtime_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
-  else
-    skip "runtime service principal roles: skipped: not configured"
-  fi
+  local target principal_id
+  for target in "${SERVER_TARGETS[@]}"; do
+    log_step "Role assignments: $target service principal"
+    principal_id="$runtime_id"
+    [[ "$target" == runtime ]] || principal_id="$migrator_id"
+    if [[ -n "$principal_id" ]]; then
+      verify_server_roles "$target" "$principal_id"
+    else
+      skip "$target service principal roles: skipped: not configured"
+    fi
+  done
+
+  log_step "Access to $ERP_AZURE_KEYVAULT_OPS_NAME"
+  verify_operations_vault_access "$operator_id"
 }
 
 verify_sentinels() {
@@ -336,6 +463,8 @@ verify_registration_shape() {
   local registration_json="$1" display_name="$2"
   assert_equals "'$display_name' is single tenant" 'AzureADMyOrg' "$(json_eval "$registration_json" 'value.signInAudience')"
   assert_equals "'$display_name' has no client secret" '0' "$(json_eval "$registration_json" '(value.passwordCredentials || []).length')"
+  assert_query "'$display_name' has no federated credential" '0' ad app federated-credential list --id "$(json_eval "$registration_json" 'value.appId')" \
+    --query 'length(@)'
   assert_equals "'$display_name' has no single-page, mobile or fallback public client platform" '0' \
     "$(json_eval "$registration_json" '((value.spa && value.spa.redirectUris) || []).length + ((value.publicClient && value.publicClient.redirectUris) || []).length + (value.isFallbackPublicClient === true ? 1 : 0)')"
   local owners
@@ -353,6 +482,7 @@ verify_registration_shape() {
 verify_service_principal_shape() {
   local principal_json="$1" display_name="$2"
   assert_equals "'$display_name' service principal has no client secret" '0' "$(json_eval "$principal_json" '(value.passwordCredentials || []).length')"
+  assert_equals "'$display_name' service principal has no certificate of its own" '0' "$(json_eval "$principal_json" '(value.keyCredentials || []).length')"
 }
 
 verify_signin_registration_shape() {
@@ -498,7 +628,11 @@ verify_certificate_expiry() {
 }
 
 verify_certificate_credential() {
-  local app_id="$1" display_name="$2" vault_name="$3" certificate_name="$4" rotate_hint="$5"
+  local app_id="$1" display_name="$2" vault_name="$3" certificate_name="$4" target="$5"
+  local rotate_hint="rotate with: bash scripts/azure/entra.sh --rotate-signin-certificate $target"
+  if is_server_target "$target"; then
+    rotate_hint="rotate with: bash scripts/azure/entra.sh --rotate-client-certificate $target"
+  fi
   local thumbprint credentials thumbprints
   if ! thumbprint="$(certificate_thumbprint "$vault_name" "$certificate_name" 2>&1)"; then
     fail "certificate $certificate_name exists in $vault_name ($(query_error_summary "$thumbprint"))"
@@ -521,6 +655,17 @@ verify_certificate_credential() {
     pass "'$display_name' holds the key credential for $certificate_name"
   else
     fail "'$display_name' holds the key credential for $certificate_name (no key credential matches thumbprint $thumbprint); $ENTRA_HINT"
+  fi
+  local candidate others=0
+  while IFS= read -r candidate; do
+    if [[ -n "$candidate" && "${candidate,,}" != "${thumbprint,,}" ]]; then
+      others=$((others + 1))
+    fi
+  done <<< "$thumbprints"
+  if (( others == 0 )); then
+    pass "'$display_name' signs in with no other key credential"
+  else
+    fail "'$display_name' signs in with no other key credential ($others other(s)); once the current certificate is in use, run: bash scripts/azure/entra.sh --prune-old-credentials $target"
   fi
 }
 
@@ -558,8 +703,7 @@ verify_signin_registration() {
     verify_app_role_assignment "$principal_id" "$operator_id" "$display_name"
   fi
 
-  verify_certificate_credential "$app_id" "$display_name" "$vault_name" "$SIGNIN_CERTIFICATE_NAME" \
-    "rotate with: bash scripts/azure/entra.sh --rotate-signin-certificate $label"
+  verify_certificate_credential "$app_id" "$display_name" "$vault_name" "$SIGNIN_CERTIFICATE_NAME" "$label"
 
   assert_appconfig_value "$IDENTITY_TENANT_ID_KEY [$label] is the tenant id" "$IDENTITY_TENANT_ID_KEY" "$label" "$ERP_AZURE_TENANT_ID"
   assert_appconfig_value "$IDENTITY_CLIENT_ID_KEY [$label] is the application id of '$display_name'" "$IDENTITY_CLIENT_ID_KEY" "$label" "$app_id"
@@ -572,22 +716,12 @@ verify_signin_registration() {
   fi
 }
 
-assert_runtime_role() {
-  local description="$1" scope="$2" principal_id="$3" role_id="$4"
-  local output
-  if ! output="$(az_read role assignment list --scope "$scope" --assignee-object-id "$principal_id" --role "$role_id" \
-    --fill-principal-name false --query 'length(@)' --output tsv 2>&1)"; then
-    fail "$description (query failed: $(query_error_summary "$output"))"
-  elif [[ "$output" == '1' ]]; then
-    pass "$description"
-  else
-    fail "$description (assignment missing); $PROVISION_HINT again"
-  fi
-}
-
-verify_runtime_registration() {
-  local display_name="$ERP_AZURE_APP_RUNTIME_NAME"
-  log_step "Runtime registration '$display_name'"
+verify_server_registration() {
+  local target="$1"
+  local display_name certificate_name
+  display_name="$(server_app_name "$target")"
+  certificate_name="$(client_certificate_name "$target")"
+  log_step "Server registration '$display_name' ($target)"
   local registration_json app_id principal_json principal_id
   load_registration "$display_name" registration_json || return 0
   app_id="$(json_eval "$registration_json" 'value.appId')"
@@ -595,19 +729,20 @@ verify_runtime_registration() {
   verify_registration_shape "$registration_json" "$display_name"
   assert_equals "'$display_name' has no redirect URI" '0' "$(json_eval "$registration_json" '((value.web && value.web.redirectUris) || []).length')"
 
-  verify_certificate_credential "$app_id" "$display_name" "$ERP_AZURE_KEYVAULT_PROD_NAME" "$RUNTIME_CERTIFICATE_NAME" \
-    "rotate with: bash scripts/azure/entra.sh --rotate-runtime-certificate"
+  verify_certificate_credential "$app_id" "$display_name" "$ERP_AZURE_KEYVAULT_OPS_NAME" "$certificate_name" "$target"
+  local stale
+  if ! stale="$(certificate_thumbprint "$ERP_AZURE_KEYVAULT_PROD_NAME" "$certificate_name" 2>&1)"; then
+    fail "$ERP_AZURE_KEYVAULT_PROD_NAME, which the runtime reads, holds no $certificate_name (query failed: $(query_error_summary "$stale"))"
+  elif [[ -n "$stale" ]]; then
+    fail "$ERP_AZURE_KEYVAULT_PROD_NAME, which the runtime reads, holds no $certificate_name (thumbprint $stale is there); once '$display_name' signs in with the certificate in $ERP_AZURE_KEYVAULT_OPS_NAME alone, delete it with: az keyvault certificate delete --vault-name $ERP_AZURE_KEYVAULT_PROD_NAME --name $certificate_name"
+  else
+    pass "$ERP_AZURE_KEYVAULT_PROD_NAME, which the runtime reads, holds no $certificate_name"
+  fi
 
   load_service_principal "$app_id" "$display_name" principal_json || return 0
   principal_id="$(json_eval "$principal_json" 'value.id')"
   verify_service_principal_shape "$principal_json" "$display_name"
-  local store_id production_vault_id
-  store_id="$(store_resource_id)"
-  production_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_PROD_NAME")"
-  assert_runtime_role "runtime service principal is App Configuration Data Reader on the store" "$store_id" "$principal_id" "$ROLE_APP_CONFIGURATION_DATA_READER"
-  assert_runtime_role "runtime service principal is Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_SECRETS_USER"
-  assert_runtime_role "runtime service principal is Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER"
-  assert_no_role "runtime service principal is not Key Vault Crypto User on $ERP_AZURE_KEYVAULT_PROD_NAME" "$production_vault_id" "$principal_id" "$ROLE_KEY_VAULT_CRYPTO_USER"
+  verify_server_roles "$target" "$principal_id"
 }
 
 verify_entra() {
@@ -620,7 +755,10 @@ verify_entra() {
   for label in "${SIGNIN_LABELS[@]}"; do
     verify_signin_registration "$label" "$operator_id"
   done
-  verify_runtime_registration
+  local target
+  for target in "${SERVER_TARGETS[@]}"; do
+    verify_server_registration "$target"
+  done
 }
 
 seed_rows() {
@@ -804,17 +942,199 @@ verify_labels() {
   verify_sentinels
 }
 
+verify_sql_ipv6_off() {
+  local server_url enabled rule_count
+  server_url="$(sql_server_resource_id)?api-version=$SQL_API_VERSION"
+  if enabled="$(az_read rest --method get --url "$server_url" --query properties.isIPv6Enabled --output tsv 2>&1)"; then
+    if [[ "${enabled,,}" == enabled ]]; then
+      fail "$ERP_AZURE_SQL_SERVER_NAME has IPv6 off (it is on); $PROVISION_HINT"
+    else
+      pass "$ERP_AZURE_SQL_SERVER_NAME has IPv6 off"
+    fi
+  else
+    fail "$ERP_AZURE_SQL_SERVER_NAME has IPv6 off (query failed: $(query_error_summary "$enabled"))"
+  fi
+  if rule_count="$(az_read rest --method get --url "$(sql_server_resource_id)/ipv6FirewallRules?api-version=$SQL_API_VERSION" \
+    --query 'length(value)' --output tsv 2>&1)"; then
+    assert_equals "$ERP_AZURE_SQL_SERVER_NAME has no IPv6 firewall rule" '0' "$rule_count"
+  else
+    fail "$ERP_AZURE_SQL_SERVER_NAME has no IPv6 firewall rule (query failed: $(query_error_summary "$rule_count"))"
+  fi
+}
+
+verify_sql_admin() {
+  local operator_id="$1"
+  local admins
+  if ! admins="$(az_read sql server ad-admin list --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" \
+    --query '[].[sid, tenantId]' --output tsv 2>&1)"; then
+    fail "$ERP_AZURE_SQL_SERVER_NAME Microsoft Entra admin is the operator (query failed: $(query_error_summary "$admins"))"
+    return 0
+  fi
+  local sid tenant_id
+  IFS=$'\t' read -r sid tenant_id <<< "$admins"
+  if [[ "$(grep -c . <<< "$admins" || true)" == 1 && "${sid,,}" == "${operator_id,,}" && "${tenant_id,,}" == "${ERP_AZURE_TENANT_ID,,}" ]]; then
+    pass "$ERP_AZURE_SQL_SERVER_NAME Microsoft Entra admin is the operator"
+  else
+    fail "$ERP_AZURE_SQL_SERVER_NAME Microsoft Entra admin is the operator $operator_id of tenant $ERP_AZURE_TENANT_ID (got '${admins:-<none>}')"
+  fi
+}
+
+verify_sql_server() {
+  local operator_id="$1" fqdn_variable="$2"
+  printf -v "$fqdn_variable" '%s' ''
+  log_step "SQL server $ERP_AZURE_SQL_SERVER_NAME"
+  local server_json
+  if ! server_json="$(az_read sql server show --name "$ERP_AZURE_SQL_SERVER_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
+    fail "server $ERP_AZURE_SQL_SERVER_NAME exists in resource group $ERP_AZURE_RESOURCE_GROUP ($(query_error_summary "$server_json")); $PROVISION_HINT"
+    return 1
+  fi
+  pass "server $ERP_AZURE_SQL_SERVER_NAME exists in resource group $ERP_AZURE_RESOURCE_GROUP"
+  printf -v "$fqdn_variable" '%s' "$(json_field "$server_json" fullyQualifiedDomainName)"
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME is in $ERP_AZURE_LOCATION" "$ERP_AZURE_LOCATION" "$(json_field "$server_json" location)"
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME minimum TLS version is 1.2" '1.2' "$(json_field "$server_json" minimalTlsVersion)"
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME accepts connections over its public endpoint" 'Enabled' "$(json_field "$server_json" publicNetworkAccess)"
+  verify_sql_ipv6_off
+  assert_equals "$ERP_AZURE_SQL_SERVER_NAME has no private endpoint" '0' "$(json_eval "$server_json" '(value.privateEndpointConnections || []).length')"
+  assert_query "$ERP_AZURE_SQL_SERVER_NAME has no virtual network rule" '0' sql server vnet-rule list --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
+    --server "$ERP_AZURE_SQL_SERVER_NAME" --query 'length(@)'
+  verify_sql_admin "$operator_id"
+  assert_query "$ERP_AZURE_SQL_SERVER_NAME accepts Microsoft Entra authentication only" 'True' sql server ad-only-auth get \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --name "$ERP_AZURE_SQL_SERVER_NAME" --query azureAdOnlyAuthentication
+  assert_query "$ERP_AZURE_SQL_SERVER_NAME carries the CanNotDelete lock $SQL_SERVER_LOCK_NAME" 'CanNotDelete' lock show --name "$SQL_SERVER_LOCK_NAME" \
+    --resource "$(sql_server_resource_id)" --query level
+}
+
+verify_sql_firewall() {
+  log_step "Firewall of $ERP_AZURE_SQL_SERVER_NAME"
+  local rules
+  if ! rules="$(firewall_rules_tsv 2>&1)"; then
+    fail "firewall rules of $ERP_AZURE_SQL_SERVER_NAME readable ($(query_error_summary "$rules"))"
+    return 0
+  fi
+  local name start end found=0
+  while IFS=$'\t' read -r name start end; do
+    [[ -n "$name" ]] || continue
+    if [[ "$name" == "$SQL_FIREWALL_RULE_NAME" ]]; then
+      found=1
+      if [[ "$start" == "$end" ]] && is_public_ipv4 "$start"; then
+        pass "rule $name admits one public address"
+      else
+        fail "rule $name admits one public IPv4 address (it admits $start to $end); $SQL_HOME_HINT"
+      fi
+    else
+      fail "no rule besides $SQL_FIREWALL_RULE_NAME admits an address ($name admits $start to $end); remove it by hand (docs/operations/runbooks/database.md)"
+    fi
+  done <<< "$rules"
+  (( found )) || fail "rule $SQL_FIREWALL_RULE_NAME admits the home's public address; $SQL_HOME_HINT"
+}
+
+verify_sql_database() {
+  log_step "Database $ERP_AZURE_SQL_DATABASE_NAME"
+  local database_json
+  if ! database_json="$(az_read sql db show --name "$ERP_AZURE_SQL_DATABASE_NAME" --server "$ERP_AZURE_SQL_SERVER_NAME" \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
+    fail "database $ERP_AZURE_SQL_DATABASE_NAME exists on $ERP_AZURE_SQL_SERVER_NAME ($(query_error_summary "$database_json")); $PROVISION_HINT"
+    return 0
+  fi
+  pass "database $ERP_AZURE_SQL_DATABASE_NAME exists on $ERP_AZURE_SQL_SERVER_NAME"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME tier is $SQL_DATABASE_SKU" "$SQL_DATABASE_SKU" "$(json_field "$database_json" sku.name)"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME has $SQL_DATABASE_CAPACITY DTU" "$SQL_DATABASE_CAPACITY" "$(json_field "$database_json" sku.capacity)"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME holds at most 2 GB" "$SQL_DATABASE_MAX_SIZE_BYTES" "$(json_field "$database_json" maxSizeBytes)"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME backups are geo-redundant, to the paired region in India" "$SQL_BACKUP_STORAGE_REDUNDANCY" \
+    "$(json_field "$database_json" requestedBackupStorageRedundancy)"
+  assert_query "$ERP_AZURE_SQL_DATABASE_NAME restores to any point of the last $SQL_RESTORE_DAYS days" "$SQL_RESTORE_DAYS" sql db str-policy show \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" --name "$ERP_AZURE_SQL_DATABASE_NAME" --query retentionDays
+}
+
+verify_connection_string_secrets() {
+  local server_fqdn="$1"
+  log_step "Connection strings in $ERP_AZURE_KEYVAULT_PROD_NAME"
+  local expected secret_name value
+  expected="$(database_connection_string "$server_fqdn")"
+  for secret_name in "${SQL_CONNECTION_STRING_SECRETS[@]}"; do
+    if ! value="$(az_read keyvault secret show --vault-name "$ERP_AZURE_KEYVAULT_PROD_NAME" --name "$secret_name" --query value --output tsv 2>&1)"; then
+      fail "$secret_name exists in $ERP_AZURE_KEYVAULT_PROD_NAME ($(query_error_summary "$value")); $PROVISION_HINT"
+    elif [[ "$value" == "$expected" ]]; then
+      pass "$secret_name is the production database's connection string"
+    else
+      fail "$secret_name is the production database's connection string (the stored value differs and is not shown); $PROVISION_HINT"
+    fi
+  done
+}
+
+verify_sql_users() {
+  log_step "Users of $ERP_AZURE_SQL_DATABASE_NAME"
+  local runtime_app_id migrator_app_id
+  runtime_app_id="$(service_principal_lookup "$ERP_AZURE_APP_RUNTIME_NAME" appId)"
+  migrator_app_id="$(service_principal_lookup "$ERP_AZURE_APP_MIGRATOR_NAME" appId)"
+  if [[ -z "$runtime_app_id" || -z "$migrator_app_id" ]]; then
+    fail "the runtime and migrator service principals exist; $ENTRA_HINT"
+    return 0
+  fi
+  resolve_sqlcmd
+  local result
+  result="$(probe_sql_access)"
+  case "$result" in
+    answered*) pass "this computer reaches the database as the operator" ;;
+    refused*)
+      fail "this computer reaches the database (the firewall refuses this computer's address); $SQL_HOME_HINT"
+      return 0
+      ;;
+    signin-refused*)
+      fail "this computer reaches the database (the server refused the operator's sign-in: ${result#signin-refused })"
+      return 0
+      ;;
+    *)
+      fail "this computer reaches the database (${result#unreachable })"
+      return 0
+      ;;
+  esac
+  local output
+  if ! output="$(run_users_script 1 "$runtime_app_id" "$migrator_app_id")"; then
+    fail "the users and rights hold ($(query_error_summary "$output")); $DATABASE_HINT"
+    return 0
+  fi
+  local line outstanding=0
+  while IFS= read -r line; do
+    case "$line" in
+      change:*)
+        fail "nothing is left for database.sh to change (it would ${line#change: }); $DATABASE_HINT"
+        outstanding=1
+        ;;
+      pending:*)
+        fail "${line#pending: }"
+        outstanding=1
+        ;;
+      ok:*) pass "${line#ok: }" ;;
+    esac
+  done <<< "$output"
+  (( outstanding )) || pass "users [$ERP_AZURE_APP_RUNTIME_NAME] and [$ERP_AZURE_APP_MIGRATOR_NAME] are the service principals, with exactly their roles"
+}
+
+verify_database() {
+  local operator_id="$1"
+  local server_fqdn
+  verify_sql_server "$operator_id" server_fqdn || return 0
+  SQL_SERVER_HOST="$server_fqdn"
+  verify_sql_firewall
+  verify_sql_database
+  verify_connection_string_secrets "$server_fqdn"
+  verify_sql_users
+}
+
 verify_provisioning() {
   local operator_id="$1"
-  local developers_group_id runtime_id
+  local developers_group_id runtime_id migrator_id
   developers_group_id="$(developers_group_object_id)"
-  runtime_id="$(runtime_service_principal_object_id)"
+  runtime_id="$(service_principal_lookup "$ERP_AZURE_APP_RUNTIME_NAME" id)"
+  migrator_id="$(service_principal_lookup "$ERP_AZURE_APP_MIGRATOR_NAME" id)"
 
   verify_store
-  verify_vault "$ERP_AZURE_KEYVAULT_DEV_NAME"
-  verify_vault "$ERP_AZURE_KEYVAULT_PROD_NAME"
+  verify_vault "$ERP_AZURE_KEYVAULT_DEV_NAME" true
+  verify_vault "$ERP_AZURE_KEYVAULT_PROD_NAME" true
+  verify_vault "$ERP_AZURE_KEYVAULT_OPS_NAME" false
   verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME"
-  verify_roles "$operator_id" "$developers_group_id" "$runtime_id"
+  verify_roles "$operator_id" "$developers_group_id" "$runtime_id" "$migrator_id"
   verify_sentinels
 }
 
@@ -825,15 +1145,16 @@ main() {
     case "$argument" in
       --entra) ENTRA_MODE=1 ;;
       --labels) LABELS_MODE=1 ;;
+      --database) DATABASE_MODE=1 ;;
       *) arguments+=("$argument") ;;
     esac
   done
-  (( ENTRA_MODE + LABELS_MODE <= 1 )) || die "--entra and --labels are separate runs; pass one of them"
+  (( ENTRA_MODE + LABELS_MODE + DATABASE_MODE <= 1 )) || die "--entra, --labels and --database are separate runs; pass one of them"
   parse_args "${arguments[@]}"
   (( ${#ARGS[@]} == 0 )) || die "unexpected argument '${ARGS[0]}'"
   load_params
   cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
-  require_command az node base64 od
+  require_command az node
 
   log_step "Checking the Azure CLI sign-in"
   ensure_login
@@ -846,6 +1167,8 @@ main() {
     verify_entra "$operator_id"
   elif (( LABELS_MODE )); then
     verify_labels
+  elif (( DATABASE_MODE )); then
+    verify_database "$operator_id"
   else
     verify_provisioning "$operator_id"
   fi

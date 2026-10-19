@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using Dewiride.Erp.BuildingBlocks.Persistence.Migrations;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Dewiride.Erp.BuildingBlocks.Persistence.Retention;
@@ -14,9 +15,16 @@ namespace Dewiride.Erp.Host.Migrator;
 // The host is built but never started: starting it would run the modules' hosted services, which belong to the API. The
 // retention sweeps run here alone, under the migrator's principal, because the API's database user may not delete what they
 // delete. migrate only logs a sweep that failed, because a deletion that can wait never stops a deployment; retain does nothing
-// else, so it fails with the sweep and whatever schedules it sees the failure.
+// else, so it fails with the sweep and whatever schedules it sees the failure. Of the store's Key Vault references the host opens
+// only the two connection strings, so the migrator's principal is granted no other secret of the vault (ADR-0050).
 internal static partial class MigratorApplication
 {
+    public static readonly FrozenSet<string> KeyVaultReferences = new[]
+    {
+        $"{DatabaseOptions.SectionName}:{nameof(DatabaseOptions.ConnectionString)}",
+        $"{MigratorDatabaseOptions.SectionName}:{nameof(MigratorDatabaseOptions.MigratorConnectionString)}",
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
     public const string MigrateCommand = "migrate";
 
     public const string RetainCommand = "retain";
@@ -79,7 +87,7 @@ internal static partial class MigratorApplication
     {
         var builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = [.. args.Skip(1)], ContentRootPath = AppContext.BaseDirectory });
         configure?.Invoke(builder);
-        builder.AddErpPlatform(typeof(MigratorApplication).Assembly);
+        builder.AddErpPlatform(typeof(MigratorApplication).Assembly, KeyVaultReferences);
         builder.Services.TryAddSingleton<RetentionRunner>();
         builder.Services.AddOptions<MigratorDatabaseOptions>().BindConfiguration(MigratorDatabaseOptions.SectionName);
         builder.Services.AddSingleton<IPostConfigureOptions<DatabaseOptions>, MigratorConnectionStringSetup>();
