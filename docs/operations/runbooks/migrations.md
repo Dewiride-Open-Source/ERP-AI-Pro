@@ -15,7 +15,12 @@ The compose `migrator` service runs the API image with `dotnet /app/migrator/Dew
 
 ## Deploying
 
-With `IMAGE_TAG` in `.env` set to the new release, from `infra/compose` on the host (`-f compose.yaml -f compose.production.yaml` on every command):
+As the deploy account `erp-ai-pro` on the host ([host setup runbook](host-setup.md)):
+
+1. Move the deployment checkout to the release, so the compose files match its images: `git -C /srv/erp-ai-pro/ERP-AI-Pro fetch --tags` and `git -C /srv/erp-ai-pro/ERP-AI-Pro checkout --detach <tag>`. When the release changes `infra/host` or `scripts/deploy`, the administrator also runs the bootstrap again from a clone of that tag (host setup runbook, "Re-running the bootstrap").
+2. Set `IMAGE_TAG` in `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env` to the release.
+
+Then, from `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose` (`-f compose.yaml -f compose.production.yaml` on every command):
 
 1. `docker compose ... pull api web proxy` fetches the new images; the migrator runs from the api image.
 2. Optionally `docker compose ... run --rm migrator status` lists what will run (exit code 3 means migrations are pending).
@@ -32,7 +37,7 @@ The migrator's output names every schema it brought up to date, every seeder it 
 docker compose -f compose.yaml -f compose.production.yaml run --rm migrator retain
 ```
 
-It exits 0 when every sweep completed, 1 when a sweep failed (after running the others) or on cancellation, and 2 when its configuration is invalid, so a daily run notices a failed sweep; `migrate` only logs it. `first-deployment-host-bootstrap-runbook-and-scripts` schedules it once a day; until then, run it by hand after a long gap between deployments. A sweep that fails is logged at `Error` and the others still run; the next run deletes what the failed one left.
+It exits 0 when every sweep completed, 1 when a sweep failed (after running the others) or on cancellation, and 2 when its configuration is invalid, so a daily run notices a failed sweep; `migrate` only logs it. On the host, `erp-ai-pro-retain.timer` runs it every night at 01:00 India time through `erp-ai-pro-retain.service`, which keeps its output and exit code in the journal and is skipped until `.env` and the migrator's certificate are in place ([host setup runbook](host-setup.md), "At boot and every night"); until then, run it by hand after a long gap between deployments. A sweep that fails is logged at `Error` and the others still run; the next run deletes what the failed one left.
 
 ## When the migrator fails
 

@@ -34,6 +34,7 @@ The ruleset is named `main` and targets the default branch.
   - `Lint, typecheck and build` (ci-frontend)
   - `Playwright` (e2e: the job that merges the shards' blob reports into one HTML report and fails unless every shard passed; a pull request shards chromium and mobile-android, `main` all six projects, [ADR-0028](../adr/0028-playwright-matrix-navigation-crawl-and-sharded-reports.md))
   - `Build images and smoke test the compose stack` (docker-build)
+  - `Bootstrap a fresh Ubuntu host (ubuntu-22.04)`, `(ubuntu-24.04)` and `(ubuntu-26.04)` (docker-build: `scripts/deploy/bootstrap.sh` on a GitHub-hosted runner of each supported release, [ADR-0049](../adr/0049-the-production-host-a-deploy-account-keys-from-the-home-network-and-nightly-updates.md); owner decision of 2026-10-18)
   - `Review dependency changes` (dependency-review)
   - `Validate roadmap and rendered Markdown` (roadmap)
   - `Contributor licence agreement` (cla; it runs on `pull_request_target`, so the workflow, the checker and the exemptions always come from `main`, and it reports from the first pull request after the workflow reaches `main`, [ADR-0030](../adr/0030-community-and-enterprise-editions.md))

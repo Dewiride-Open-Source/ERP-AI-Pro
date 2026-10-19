@@ -1,0 +1,28 @@
+[Unit]
+Description=ERP-AI-Pro production stack
+Documentation=https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/operations/runbooks/host-setup.md
+# Wants, not Requires: restarting docker.service for an update must not stop the stack, which live restore keeps running.
+Wants=docker.service network-online.target
+After=docker.service network-online.target
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets/erp-runtime-client.pem
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets/erp-migrator-client.pem
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=erp-ai-pro
+Group=erp-ai-pro
+WorkingDirectory=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose
+# A boot brings back the containers of the last deployment as they are; only a deployment runs the migrator or replaces a container.
+ExecStart=/usr/bin/docker compose -f compose.yaml -f compose.production.yaml up --detach --wait --no-build --no-recreate --pull never --no-deps api web proxy
+ExecStop=/usr/bin/docker compose -f compose.yaml -f compose.production.yaml stop
+# After a clean shutdown nothing else starts the containers ExecStop stopped, so a start that fails, such as one before the
+# internet link returns, tries again.
+Restart=on-failure
+RestartSec=1min
+TimeoutStartSec=10min
+TimeoutStopSec=3min
+
+[Install]
+WantedBy=multi-user.target

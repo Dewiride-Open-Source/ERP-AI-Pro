@@ -63,6 +63,7 @@ steps.push(
   { name: "secret patterns", cwd: repoRoot, command: "node", args: ["scripts/checks/secret-patterns.ts"] },
   { name: "cla signatures", cwd: repoRoot, command: "node", args: ["scripts/checks/cla.ts"] },
   { name: "azure scripts check", cwd: repoRoot, command: bash, args: ["scripts/azure/check.sh"], shell: false },
+  { name: "deploy scripts check", cwd: repoRoot, command: bash, args: ["scripts/deploy/check.sh"], shell: false },
   { name: "roadmap tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/roadmap/tests/*.test.ts"] },
   { name: "check tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/checks/tests/*.test.ts"] },
   { name: "api client tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/api-client/tests/*.test.ts"] },

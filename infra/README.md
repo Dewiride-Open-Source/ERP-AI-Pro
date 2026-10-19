@@ -6,16 +6,17 @@
 |---|---|---|---|
 | `ghcr.io/dewiride-open-source/erp-ai-pro/api` | `docker/api.Dockerfile` | `mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra` | non-root `app` user, port 8080, health probe console under `/app/probe` because the chiseled image has no shell |
 | `ghcr.io/dewiride-open-source/erp-ai-pro/web` | `docker/web.Dockerfile` | `node:24-slim` | Next.js standalone output, non-root `node` user, port 3000 |
+| `ghcr.io/dewiride-open-source/erp-ai-pro/proxy` | `docker/proxy.Dockerfile` | `caddy:2.11.7-alpine` | the edge proxy, `proxy/Caddyfile`, non-root `caddy` user, ports 80 and 443 ([ADR-0048](../docs/adr/0048-the-edge-proxy-caddy-on-the-servers-local-address.md)) |
 
-Both Dockerfiles use the repository root as build context and pin their base images by digest; Dependabot keeps the digests current.
+The Dockerfiles use the repository root as build context and pin their base images by digest; Dependabot keeps the digests current.
 
 ## Compose
 
 | File | Purpose |
 |---|---|
-| `compose/compose.yaml` | base stack: the one-shot `migrator` (the api image running `Hosts/Migrator`), `api` (starts only after the migrator exits with 0) and `web` on an internal network; nothing publishes ports |
-| `compose/compose.override.yaml` | local development additions (merged automatically): ports 5080/3000 published on loopback only, `host.docker.internal` for the owner's SQL Server, the data-only and migrator connection secrets, the attachments encryption-key secret, the `azurite` storage emulator the api keeps attachments in, Aspire dashboard under the `observability` profile |
-| `compose/compose.production.yaml` | on-premises hardening: read-only root filesystem, dropped capabilities, `no-new-privileges`, resource limits, log rotation; the external volume `erp-ai-pro-data-protection-keys` on the api, which holds the Data Protection key ring that keeps people signed in across restarts ([ADR-0032](../docs/adr/0032-token-cache-in-sql-server-and-the-data-protection-key-ring.md)) |
+| `compose/compose.yaml` | base stack: the one-shot `migrator` (the api image running `Hosts/Migrator`), `api` (starts only after the migrator exits with 0), `web` and `proxy` (starts once api and web are healthy) on an internal network; the overlays below publish the ports, and in production only the proxy's |
+| `compose/compose.override.yaml` | local development additions (merged automatically): the proxy on `127.0.0.1:8080` and `127.0.0.1:8443`, ports 5080/3000 published on loopback only, `host.docker.internal` for the owner's SQL Server, the data-only and migrator connection secrets, the attachments encryption-key secret, the `azurite` storage emulator the api keeps attachments in, Aspire dashboard under the `observability` profile |
+| `compose/compose.production.yaml` | on-premises hardening: read-only root filesystem, dropped capabilities, `no-new-privileges`, resource limits, log rotation; the proxy's 80 and 443 on IPv4 only; the external volume `erp-ai-pro-data-protection-keys` on the api, which holds the Data Protection key ring that keeps people signed in across restarts ([ADR-0032](../docs/adr/0032-token-cache-in-sql-server-and-the-data-protection-key-ring.md)), and `erp-ai-pro-proxy-data` on the proxy, which holds its certificate authority |
 | `compose/.env.example` | non-secret interpolation values; copy to `.env` (git-ignored) |
 
 There is no SQL Server container: local development uses the owner's SQL Server instance and production uses Azure SQL.
@@ -26,18 +27,26 @@ The local stack keeps attachments in the `azurite` service, Microsoft's Blob Sto
 # local: build and run both images with the Aspire dashboard
 docker compose -f infra/compose/compose.yaml -f infra/compose/compose.override.yaml --profile observability up -d --build --wait
 
-# production (owner, on the Ubuntu host): pull, migrate on its own, then roll the stack (docs/operations/runbooks/migrations.md)
-# once, before the first up: the key ring volume, which no compose command creates or removes
-docker volume create erp-ai-pro-data-protection-keys
-docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml pull api web
+# production (as erp-ai-pro in /srv/erp-ai-pro/ERP-AI-Pro on the host, which scripts/deploy/bootstrap.sh prepares):
+# pull, migrate on its own, then roll the stack (docs/operations/runbooks/migrations.md)
+docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml pull api web proxy
 docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml run --rm migrator
 docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --remove-orphans --wait
-
-# production, once a day between deployments: delete what is past its retention without applying any migration
-docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml run --rm migrator retain
 ```
 
-The migrator runs on its own first because `up` replaces a changed `api` container before it waits for the migrator; running it separately keeps the previous API serving when a migration fails ([ADR-0021](../docs/adr/0021-migrator-program-and-seeding.md)). Its `migrate` also deletes the security events and change records past their retention, and `retain` does only that, so the daily run moves no schema ahead of the running API ([ADR-0043](../docs/adr/0043-change-records-and-the-append-only-audit-schema.md)). The key ring volume is declared `external`, so `up` refuses to start until it exists and `docker compose down -v` can never delete it; the api image creates its mount point owned by `app` with mode 0700, which an empty volume takes on at its first mount, and losing the volume signs everyone out ([secrets runbook](../docs/operations/runbooks/secrets.md), section 5e). The edge reverse proxy and TLS arrive with the first-deployment phase.
+The migrator runs on its own first because `up` replaces a changed `api` container before it waits for the migrator; running it separately keeps the previous API serving when a migration fails ([ADR-0021](../docs/adr/0021-migrator-program-and-seeding.md)). Its `migrate` also deletes the security events and change records past their retention, and `retain` does only that, so the nightly run that `erp-ai-pro-retain.timer` starts on the host moves no schema ahead of the running API ([ADR-0043](../docs/adr/0043-change-records-and-the-append-only-audit-schema.md)). Both volumes are declared `external`, so `up` refuses to start until they exist and `docker compose down -v` can never delete them; the host bootstrap creates them. The api image creates the key ring's mount point owned by `app` with mode 0700, which an empty volume takes on at its first mount, and losing that volume signs everyone out ([secrets runbook](../docs/operations/runbooks/secrets.md), section 5e).
+
+## Host
+
+`host/` holds what `scripts/deploy/bootstrap.sh` installs on the production server ([ADR-0049](../docs/adr/0049-the-production-host-a-deploy-account-keys-from-the-home-network-and-nightly-updates.md), [host setup runbook](../docs/operations/runbooks/host-setup.md)):
+
+| File | Installed as | Does |
+|---|---|---|
+| `host/systemd/erp-ai-pro.service` | `/etc/systemd/system/` | brings the last deployment's api, web and proxy containers back at boot, never running the migrator, recreating a container or pulling, and tries a failed start again every minute |
+| `host/systemd/erp-ai-pro-retain.service`, `.timer` | `/etc/systemd/system/` | `run --rm -T migrator retain` every night at 01:00 India time, its result in the journal |
+| `host/ssh/10-erp-ai-pro.conf` | `/etc/ssh/sshd_config.d/` | public keys only, no root sign-in, no X11 forwarding |
+| `host/apt/52erp-ai-pro-unattended-upgrades.conf` | `/etc/apt/apt.conf.d/` | daily security updates, restarting the server at 03:00 India time when one needs it |
+| `host/docker/daemon.json` | `/etc/docker/daemon.json` | live restore, and rotated logs for containers without logging of their own |
 
 ### Local secret files
 

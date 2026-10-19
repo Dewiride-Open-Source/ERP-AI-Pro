@@ -20,7 +20,7 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
 
 readonly DEFAULT_OUT_FILE='scripts/azure/out/erp-runtime-client.pem'
-readonly SERVER_SECRETS_DIR='infra/compose/secrets'
+readonly SERVER_SECRETS_DIR='/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets'
 readonly API_CONTAINER_USER='1654'
 
 OUT_FILE="$DEFAULT_OUT_FILE"
@@ -95,10 +95,9 @@ main() {
   log_step "Summary"
   printf 'RUNTIME_CERTIFICATE_FILE=%s\n' "$OUT_FILE"
   log_info "next steps:"
-  log_info "  1. copy the file to the server over an encrypted channel, for example: scp $OUT_FILE <user>@<server>:~/erp-runtime-client.pem"
-  log_info "  2. on the server, from the repository root:"
-  log_info "     install -d -m 0700 $SERVER_SECRETS_DIR"
-  log_info "     install -o $API_CONTAINER_USER -g $API_CONTAINER_USER -m 0400 ~/erp-runtime-client.pem $SERVER_SECRETS_DIR/erp-runtime-client.pem"
+  log_info "  1. copy the file to the server's administrator over an encrypted channel, for example: scp $OUT_FILE <administrator>@<server>:~/erp-runtime-client.pem"
+  log_info "  2. on the server, as the administrator (the host bootstrap made the folder, docs/operations/runbooks/host-setup.md):"
+  log_info "     sudo install -o $API_CONTAINER_USER -g $API_CONTAINER_USER -m 0400 ~/erp-runtime-client.pem $SERVER_SECRETS_DIR/erp-runtime-client.pem"
   log_info "     shred -u ~/erp-runtime-client.pem"
   log_info "     ($API_CONTAINER_USER is the uid and gid of the app user in the chiseled aspnet image the api container runs as)"
   log_info "  3. shred the local copy: shred -u $OUT_FILE   (rm -P on macOS; on Windows delete it from a volume without shadow copies)"

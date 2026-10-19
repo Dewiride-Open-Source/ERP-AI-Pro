@@ -1,6 +1,6 @@
 # Runbook: the edge proxy and its root certificate
 
-The proxy is the only container that publishes ports (80 and 443): it serves the ERP over HTTPS at `ERP_SITE_ADDRESS`, sends `/api/*` to the api container and everything else to the web container. Design: [ADR-0048](../../adr/0048-the-edge-proxy-caddy-on-the-servers-local-address.md).
+The proxy is the only container that publishes ports (80 and 443, on IPv4 only, so the server's global IPv6 address reaches none of them): it serves the ERP over HTTPS at `ERP_SITE_ADDRESS`, sends `/api/*` to the api container and everything else to the web container. Design: [ADR-0048](../../adr/0048-the-edge-proxy-caddy-on-the-servers-local-address.md); the server itself: [host setup runbook](host-setup.md) ([ADR-0049](../../adr/0049-the-production-host-a-deploy-account-keys-from-the-home-network-and-nightly-updates.md)).
 
 ## The address
 
@@ -10,17 +10,17 @@ For an IP address the proxy issues the certificate from a certificate authority 
 
 ## Before the first start
 
-Create the proxy's volume once, from any directory on the host:
+The host bootstrap creates the proxy's volume once ([host setup runbook](host-setup.md)); by hand it is:
 
 ```bash
 docker volume create erp-ai-pro-proxy-data
 ```
 
-It holds the authority's root and intermediate with their keys and every certificate the proxy issued or obtained. It is external, so `docker compose down -v` keeps it. Never remove it: the proxy would create a new root, and every device would have to trust that one instead.
+It holds the authority's root and intermediate with their keys and every certificate the proxy issued or obtained. Only root and the `docker` group, whose only member is the deploy account `erp-ai-pro`, can read it; the host bootstrap also keeps the `lxd` group, which would be root as well, empty. It is external, so `docker compose down -v` keeps it. Never remove it: the proxy would create a new root, and every device would have to trust that one instead.
 
 ## Exporting the root certificate
 
-With the stack running, from `infra/compose` on the host:
+With the stack running, as `erp-ai-pro` from `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose` on the host:
 
 ```bash
 docker compose -f compose.yaml -f compose.production.yaml exec -T proxy cat /data/caddy/pki/authorities/local/root.crt > erp-proxy-root.crt
@@ -29,7 +29,7 @@ openssl x509 -in erp-proxy-root.crt -noout -subject -enddate -fingerprint -sha25
 
 The subject is `Caddy Local Authority - <year> ECC Root` and the root is valid for ten years. `erp-proxy-root.crt` holds only the public certificate, so it may be copied to each device; compare the SHA-256 fingerprint shown on the device with the one printed here before trusting it. Never copy `root.key` or `intermediate.key` out of the volume: whoever holds the root key can make a certificate for any name that every trusting device accepts.
 
-Each computer and phone that opens the ERP trusts this certificate once, as a trusted root certification authority. Until it does, the browser refuses the connection, and with it the session cookie, so sign-in fails.
+Each computer and phone that opens the ERP trusts this certificate once, as a trusted root certification authority; the [host setup runbook](host-setup.md), section "Trusting the proxy's root on each device", has the steps for Windows, macOS, iPhone and iPad, Android and Firefox. Until it does, the browser refuses the connection, and with it the session cookie, so sign-in fails.
 
 ## Moving to a public name
 

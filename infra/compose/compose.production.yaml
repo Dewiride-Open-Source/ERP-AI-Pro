@@ -80,8 +80,8 @@ services:
     environment:
       ERP_SITE_ADDRESS: ${ERP_SITE_ADDRESS:?set ERP_SITE_ADDRESS in .env to the address people open the ERP at}
     ports:
-      - "80:80"
-      - "443:443"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
     volumes:
       - type: volume
         source: proxy-data

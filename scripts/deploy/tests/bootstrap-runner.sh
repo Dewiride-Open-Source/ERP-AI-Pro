@@ -1,0 +1,266 @@
+#!/usr/bin/env bash
+
+USAGE='Usage: bash scripts/deploy/tests/bootstrap-runner.sh
+
+Runs scripts/deploy/bootstrap.sh on the GitHub-hosted Ubuntu runner it runs on, after taking Docker off
+it so the bootstrap installs Docker Engine from Docker'"'"'s repository: it proves that a deploy key shared
+with the administrator is refused, that a dry run without root and one with sudo change nothing, that
+the second of two runs with sudo and a dry run after it find nothing to change, and then that the deploy
+account signs in with its own key and reaches Docker with live restore and rotated logs, that a password
+sign-in is refused, and that sshd, the firewall on IPv4 and IPv6, the docker and lxd groups, the units,
+the update services and settings, the checkout with its secrets folder and .env, the volumes and the
+production stack'"'"'s IPv4-only ports are what ADR-0049 decides. It hardens the machine it runs on, so it
+refuses to run anywhere but on a GitHub-hosted runner, as the runner user.
+
+Options:
+  --help            Show this help.'
+
+ACCEPTS_DRY_RUN=0
+
+# shellcheck source=../lib/common.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/../lib/common.sh"
+
+readonly RUNNER_DOCKER_PACKAGES=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras moby-engine moby-cli moby-containerd moby-runc moby-buildx moby-compose)
+readonly UPDATE_SERVICES=(apt-daily.service apt-daily-upgrade.service)
+
+WORK_DIR=''
+SITE_ADDRESS=''
+HOME_NETWORK=''
+
+remove_work_dir() {
+  if [[ -n "$WORK_DIR" ]]; then
+    rm -rf -- "$WORK_DIR"
+  fi
+}
+
+passed() {
+  log_info "ok: $*"
+}
+
+remove_runner_docker() {
+  local -a installed=()
+  mapfile -t installed < <(dpkg-query -W -f='${Package} ${Status}\n' "${RUNNER_DOCKER_PACKAGES[@]}" 2> /dev/null | awk '$NF == "installed" { print $1 }')
+  if (( ${#installed[@]} > 0 )); then
+    sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq purge -y "${installed[@]}" > /dev/null
+  fi
+  sudo rm -rf /usr/libexec/docker/cli-plugins /usr/local/lib/docker/cli-plugins /etc/docker/daemon.json
+  sudo rm -f /etc/apt/sources.list.d/docker.list /etc/apt/sources.list.d/docker.sources /etc/apt/keyrings/docker.asc /etc/apt/keyrings/docker.gpg
+  if command -v docker > /dev/null 2>&1; then
+    die "Docker is still on the runner ($(command -v docker)), so the bootstrap's install would not run"
+  fi
+  log_info "Docker is off the runner, so the bootstrap installs it"
+}
+
+prepare_runner() {
+  log_step "Preparing the runner"
+  ssh-keygen -q -t ed25519 -N '' -C bootstrap-test-admin -f "$WORK_DIR/admin"
+  ssh-keygen -q -t ed25519 -N '' -C bootstrap-test-deploy -f "$WORK_DIR/deploy"
+  chmod go-w "$HOME"
+  install -d -m 700 "$HOME/.ssh"
+  cat "$WORK_DIR/admin.pub" >> "$HOME/.ssh/authorized_keys"
+  chmod 600 "$HOME/.ssh/authorized_keys"
+  remove_runner_docker
+  # The runner must not upgrade or restart itself during the test, and masking the services proves that the bootstrap unmasks them.
+  local unit
+  for unit in "${UPDATE_SERVICES[@]}"; do
+    sudo install -d "/etc/systemd/system/$unit.d"
+    printf '[Service]\nExecStartPre=\nExecStart=\nExecStart=/bin/true\n' | sudo tee "/etc/systemd/system/$unit.d/zz-bootstrap-test.conf" > /dev/null
+    sudo systemctl mask --quiet "$unit"
+  done
+  sudo systemctl daemon-reload
+  SITE_ADDRESS="$(ip -4 route get 1.1.1.1 | sed -n 's/.* src \([0-9.]*\).*/\1/p')"
+  is_ipv4 "$SITE_ADDRESS" || die "cannot find the runner's IPv4 address"
+  local prefix
+  prefix="$(ip -4 -o address show | awk -v address="$SITE_ADDRESS" '{ split($4, parts, "/") } parts[1] == address && !found { print parts[2]; found = 1 }')"
+  HOME_NETWORK="$(ipv4_network_of "$SITE_ADDRESS" "$prefix")"
+  log_info "the runner's address $SITE_ADDRESS stands for the site address, $HOME_NETWORK for the home network"
+}
+
+assert_untouched() {
+  local after="$1"
+  if getent passwd "$DEPLOY_USER" > /dev/null || [[ -e "$DEPLOY_HOME" ]]; then
+    die "$after created the account $DEPLOY_USER or $DEPLOY_HOME"
+  fi
+  local path
+  for path in /etc/docker/daemon.json /etc/ssh/sshd_config.d/10-erp-ai-pro.conf /etc/systemd/system/erp-ai-pro.service /etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf; do
+    [[ ! -e "$path" ]] || die "$after wrote $path"
+  done
+  if command -v docker > /dev/null 2>&1; then
+    die "$after installed Docker"
+  fi
+  [[ "$(sudo env LC_ALL=C ufw status)" == 'Status: inactive'* ]] || die "$after turned the firewall on"
+  [[ "$(systemctl is-enabled apt-daily-upgrade.service 2> /dev/null || true)" == masked ]] || die "$after unmasked the update services"
+}
+
+run_bootstrap() {
+  local -a arguments=(--site-address "$SITE_ADDRESS" --authorized-keys "$WORK_DIR/deploy.pub")
+  local summary
+
+  log_step "A deploy key shared with the administrator is refused"
+  if summary="$(sudo bash scripts/deploy/bootstrap.sh --dry-run --site-address "$SITE_ADDRESS" --authorized-keys "$HOME/.ssh/authorized_keys" 2>&1)"; then
+    die "the bootstrap accepted the administrator's own keys for $DEPLOY_USER"
+  fi
+  [[ "$summary" == *'needs a key of its own'* ]] || die "the bootstrap refused the shared key for another reason: $summary"
+  passed "a deploy key that also signs in as the administrator is refused"
+
+  log_step "A dry run without root changes nothing"
+  summary="$(bash scripts/deploy/bootstrap.sh --dry-run "${arguments[@]}")"
+  [[ "$summary" =~ ^a\ run\ would\ make\ [0-9]+\ change\(s\): ]] || die "the dry run without root listed no changes: $summary"
+  assert_untouched "the dry run without root"
+  passed "the dry run without root listed $(grep -c '^  - ' <<< "$summary") changes and made none"
+
+  log_step "A dry run with sudo changes nothing"
+  summary="$(sudo bash scripts/deploy/bootstrap.sh --dry-run "${arguments[@]}")"
+  [[ "$summary" =~ ^a\ run\ would\ make\ [0-9]+\ change\(s\): ]] || die "the dry run with sudo listed no changes: $summary"
+  grep -qF 'unmask apt-daily-upgrade.service' <<< "$summary" || die "the dry run with sudo did not notice the masked update service: $summary"
+  assert_untouched "the dry run with sudo"
+  passed "the dry run with sudo listed $(grep -c '^  - ' <<< "$summary") changes, the masked update services among them, and made none"
+
+  log_step "The first run"
+  sudo bash scripts/deploy/bootstrap.sh "${arguments[@]}"
+
+  log_step "The second run and a dry run after it change nothing"
+  summary="$(sudo bash scripts/deploy/bootstrap.sh "${arguments[@]}")"
+  [[ "$summary" == 'nothing to change: the host already matches' ]] || die "the second run changed something: $summary"
+  summary="$(sudo bash scripts/deploy/bootstrap.sh --dry-run "${arguments[@]}")"
+  [[ "$summary" == 'nothing to change: the host already matches' ]] || die "the dry run after the second run lists changes: $summary"
+  passed "the second run and the dry run after it found nothing to change"
+}
+
+prove_sign_in() {
+  log_step "Sign-in"
+  local -a options=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o "UserKnownHostsFile=$WORK_DIR/known_hosts" -o ConnectTimeout=10)
+  [[ "$(ssh "${options[@]}" -i "$WORK_DIR/deploy" "$DEPLOY_USER@127.0.0.1" "docker info --format '{{.LiveRestoreEnabled}}'")" == true ]] \
+    || die "$DEPLOY_USER cannot sign in with its key and reach Docker with live restore"
+  passed "$DEPLOY_USER signs in with its own key and reaches Docker, which keeps containers running across its own restarts"
+  local refusal
+  refusal="$(ssh "${options[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive "$USER@127.0.0.1" true 2>&1 || true)"
+  [[ "$refusal" == *'Permission denied (publickey).'* ]] || die "a password sign-in was not refused with public keys as the only method: $refusal"
+  passed "a password sign-in is refused, and sshd offers public keys only"
+}
+
+prove_docker() {
+  log_step "Docker Engine from Docker's repository"
+  local policy
+  policy="$(apt-cache policy docker-ce)"
+  grep -qF 'download.docker.com' <<< "$policy" || die "docker-ce does not come from Docker's repository: $policy"
+  [[ "$(dpkg-query -W -f='${Status}' docker-compose-plugin 2> /dev/null || true)" == 'install ok installed' ]] || die "docker-compose-plugin is not installed"
+  printf 'FROM scratch\nCMD ["none"]\n' | sudo docker build --quiet --tag erp-ai-pro-log-check - > /dev/null
+  sudo docker create --name erp-ai-pro-log-check erp-ai-pro-log-check > /dev/null
+  local logging
+  logging="$(sudo docker inspect --format '{{.HostConfig.LogConfig.Type}} {{index .HostConfig.LogConfig.Config "max-size"}} {{index .HostConfig.LogConfig.Config "max-file"}}' erp-ai-pro-log-check)"
+  sudo docker rm erp-ai-pro-log-check > /dev/null
+  [[ "$logging" == 'json-file 20m 5' ]] || die "a new container logs with '$logging' instead of json-file, 20m, 5"
+  passed "Docker Engine and Compose come from Docker's repository, and a container without logging of its own rotates its log at 20 MB, 5 files"
+}
+
+prove_access_rules() {
+  log_step "Groups, sshd and the firewall"
+  local members
+  members="$(getent group docker | cut -d: -f4)"
+  [[ "$members" == "$DEPLOY_USER" ]] || die "the docker group holds '$members', not $DEPLOY_USER alone"
+  if getent group lxd > /dev/null; then
+    [[ -z "$(getent group lxd | cut -d: -f4)" ]] || die "the lxd group still has members: $(getent group lxd)"
+  fi
+  local socket
+  socket="$(systemctl is-enabled lxd-installer.socket 2> /dev/null || true)"
+  [[ -z "$socket" || "$socket" == not-found || "$socket" == masked ]] || die "lxd-installer.socket is $socket, not masked"
+  passed "$DEPLOY_USER is the only member of docker, lxd has no member and LXD cannot be installed on demand"
+
+  local effective setting
+  effective="$(sudo sshd -T)"
+  for setting in 'passwordauthentication no' 'kbdinteractiveauthentication no' 'authenticationmethods publickey' 'permitrootlogin no' 'x11forwarding no'; do
+    grep -qxF -- "$setting" <<< "$effective" || die "sshd does not apply '$setting'"
+  done
+  passed "sshd applies public keys only and no root sign-in"
+
+  local firewall rules
+  firewall="$(sudo env LC_ALL=C ufw status verbose)"
+  grep -qx 'Status: active' <<< "$firewall" || die "the firewall is not on: $firewall"
+  grep -q '^Default: deny (incoming), allow (outgoing)' <<< "$firewall" || die "the firewall's defaults differ: $firewall"
+  rules="$(sudo env LC_ALL=C ufw show added | sed -n 's/^ufw //p')"
+  [[ "$rules" == "allow from $HOME_NETWORK to any port 22 proto tcp comment 'SSH from the home network'" ]] \
+    || die "the firewall holds other rules than SSH from $HOME_NETWORK: $rules"
+  local family
+  for family in iptables ip6tables; do
+    [[ "$(sudo "$family" -S INPUT | sed -n 1p)" == '-P INPUT DROP' ]] || die "$family does not drop new incoming connections"
+  done
+  passed "the firewall holds one rule, SSH from $HOME_NETWORK, and drops every other new connection over IPv4 and IPv6"
+}
+
+prove_units_and_updates() {
+  log_step "The units and the nightly updates"
+  local unit
+  for unit in erp-ai-pro.service erp-ai-pro-retain.timer; do
+    [[ "$(systemctl is-enabled "$unit")" == enabled ]] || die "$unit is not enabled"
+  done
+  systemctl is-active --quiet erp-ai-pro-retain.timer || die "erp-ai-pro-retain.timer is not running"
+  for unit in erp-ai-pro.service erp-ai-pro-retain.service; do
+    sudo systemctl start "$unit"
+    [[ "$(systemctl show --property=ConditionResult --value "$unit")" == no ]] || die "$unit did not wait for .env and the client certificates"
+  done
+  passed "the boot unit and the daily timer are enabled, and both services wait for the client certificates"
+
+  for unit in "${UPDATE_SERVICES[@]}" apt-daily.timer apt-daily-upgrade.timer; do
+    [[ "$(systemctl is-enabled "$unit" 2> /dev/null || true)" != masked ]] || die "$unit is still masked"
+  done
+  local effective setting
+  effective="$(apt-config dump)"
+  while IFS= read -r setting; do
+    grep -qxF -- "$setting" <<< "$effective" || die "APT does not apply '$setting'"
+  done < <(grep -vE '^[[:space:]]*(//|#|$)' infra/host/apt/52erp-ai-pro-unattended-upgrades.conf)
+  passed "the update services and timers run, and unattended upgrades restart the host at 21:30 UTC when an update needs it"
+}
+
+prove_deployment_folder() {
+  log_step "The deployment checkout and the volumes"
+  [[ "$(sudo git -c safe.directory="$DEPLOY_CHECKOUT" -C "$DEPLOY_CHECKOUT" rev-parse HEAD)" == "$(git rev-parse HEAD)" ]] \
+    || die "$DEPLOY_CHECKOUT is not at the commit the bootstrap ran from"
+  [[ "$(sudo stat -c '%U:%G' "$DEPLOY_CHECKOUT" "$DEPLOY_CHECKOUT/.git" "$DEPLOY_CHECKOUT/README.md" | sort -u)" == "$DEPLOY_USER:$DEPLOY_USER" ]] \
+    || die "$DEPLOY_CHECKOUT does not belong to $DEPLOY_USER"
+  [[ ! -e "$DEPLOY_HOME/.ERP-AI-Pro.partial" ]] || die "the partial checkout was left behind"
+  [[ "$(sudo stat -c '%a %U:%G' "$DEPLOY_COMPOSE_DIR/secrets")" == "700 $DEPLOY_USER:$DEPLOY_USER" ]] || die "the secrets folder is not private to $DEPLOY_USER"
+  [[ "$(sudo stat -c '%a %U:%G' "$DEPLOY_COMPOSE_DIR/.env")" == "600 $DEPLOY_USER:$DEPLOY_USER" ]] || die ".env is not private to $DEPLOY_USER"
+  sudo grep -qxF "ERP_SITE_ADDRESS=$SITE_ADDRESS" "$DEPLOY_COMPOSE_DIR/.env" || die ".env does not name ERP_SITE_ADDRESS=$SITE_ADDRESS"
+  passed "$DEPLOY_CHECKOUT is at this commit and belongs to $DEPLOY_USER, with a private secrets folder and .env"
+  local volume
+  for volume in "${STACK_VOLUMES[@]}"; do
+    sudo docker volume inspect "$volume" > /dev/null || die "the volume $volume is missing"
+  done
+  passed "the volumes ${STACK_VOLUMES[*]} exist"
+}
+
+prove_ipv4_ports() {
+  log_step "The production stack publishes its ports on IPv4 only"
+  local ports
+  ports="$(cd infra/compose && ERP_SITE_ADDRESS="$SITE_ADDRESS" docker compose -f compose.yaml -f compose.production.yaml config --format json \
+    | jq -r '.services | to_entries[] | .key as $service | (.value.ports // [])[] | "\($service) \(.host_ip // "*") \(.published) \(.target)"')"
+  [[ "$ports" == $'proxy 0.0.0.0 80 80\nproxy 0.0.0.0 443 443' ]] || die "the production stack publishes: $ports"
+  passed "only the proxy publishes ports, 80 and 443 on 0.0.0.0"
+}
+
+main() {
+  parse_args "$@"
+  (( ${#ARGS[@]} == 0 )) || die "unexpected argument '${ARGS[0]}'"
+  [[ "${GITHUB_ACTIONS:-}" == true && "${RUNNER_ENVIRONMENT:-}" == github-hosted ]] \
+    || die "this test hardens the machine it runs on, so it runs only on a GitHub-hosted runner"
+  if is_root; then
+    die "run it as the runner user; it calls sudo where it needs root"
+  fi
+  require_command sudo ssh ssh-keygen jq git apt-cache
+  cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
+  WORK_DIR="$(mktemp -d)"
+  trap remove_work_dir EXIT
+
+  prepare_runner
+  run_bootstrap
+  prove_sign_in
+  prove_docker
+  prove_access_rules
+  prove_units_and_updates
+  prove_deployment_folder
+  prove_ipv4_ports
+  printf 'host bootstrap test ok\n'
+}
+
+main "$@"
