@@ -17,14 +17,15 @@ The production database is Azure SQL at the Basic tier in Central India, reached
 
 From the repository root on the operator's computer, on the home connection without a VPN, signed in with `az login` as the operator. The [Go sqlcmd](https://learn.microsoft.com/sql/tools/sqlcmd/sqlcmd-download-install) must be installed (Windows: `winget install sqlcmd`, which installs into `C:\Program Files\SqlCmd`, where the scripts find it next to the ODBC sqlcmd that SQL Server installs). Run `entra.sh`, `provision.sh`, `seed.sh` and `database.sh` with `--dry-run` first; `verify.sh` and `export-client-certificate.sh` only read and take no `--dry-run`.
 
-1. `bash scripts/azure/entra.sh` creates the migrator's registration and its certificate in the operations vault.
-2. `bash scripts/azure/provision.sh` creates the server, the database, the lock and the operations vault, grants the migrator its role on the store and writes both connection strings. Run it a second time: the migrator's roles on the two secrets are granted once the secrets exist.
-3. `bash scripts/azure/database.sh --allow-current-address` creates the firewall rule for the address Azure sees this computer connect from. The rule takes up to five minutes to apply; step 5 waits for it.
-4. `bash scripts/azure/seed.sh --label production` writes the production references to both connection strings.
-5. `bash scripts/azure/database.sh` creates both users and the migrator's roles. It reports that the migrations have not run yet, and gives the runtime's user no role until they have.
-6. Run the first migration (next section).
-7. `bash scripts/azure/database.sh` again adds the runtime's user to `erp_audit_append_only`, then to the data roles, and proves the rights of both users.
-8. `bash scripts/azure/verify.sh --database`, `bash scripts/azure/verify.sh --entra` and `bash scripts/azure/verify.sh` read everything back.
+1. `bash scripts/azure/provision.sh` creates the server, the database, the lock and the operations vault and writes both connection strings.
+2. `bash scripts/azure/entra.sh` creates the migrator's registration and its certificate in the operations vault.
+3. `bash scripts/azure/provision.sh` again grants the migrator its role on the store and its roles on the two connection strings, now that both exist.
+4. `bash scripts/azure/database.sh --allow-current-address` creates the firewall rule for the address Azure sees this computer connect from. The rule takes up to five minutes to apply; step 6 waits for it.
+5. `bash scripts/azure/seed.sh --label production` writes the production references to both connection strings.
+6. `bash scripts/azure/database.sh` creates both users and the migrator's roles. It reports that the migrations have not run yet, and gives the runtime's user no role until they have.
+7. Run the first migration (next section).
+8. `bash scripts/azure/database.sh` again adds the runtime's user to `erp_audit_append_only`, then to the data roles, and proves the rights of both users.
+9. `bash scripts/azure/verify.sh --database`, `bash scripts/azure/verify.sh --entra` and `bash scripts/azure/verify.sh` read everything back.
 
 The operator's computer and the server share the home's public address, so the rule admits both. A computer that reaches the internet another way (a VPN, a phone's hotspot, a remote or cloud desktop) is seen at another address, and `--allow-current-address` run there would move the rule away from the home. Once the api runs on the server, its readiness check (`/healthz/ready`, whose `database:*` entries open the database) proves the rule from the server's side.
 

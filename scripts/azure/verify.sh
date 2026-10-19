@@ -272,7 +272,7 @@ server_expected_roles() {
     printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER" "Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME"
     return 0
   fi
-  for secret_name in "${SQL_CONNECTION_STRING_SECRETS[@]}"; do
+  for secret_name in "${ERP_AZURE_MIGRATOR_SECRETS[@]}"; do
     printf '%s\t%s\t%s\n' "$production_vault_id/secrets/$secret_name" "$ROLE_KEY_VAULT_SECRETS_USER" "Key Vault Secrets User on the secret $secret_name of $ERP_AZURE_KEYVAULT_PROD_NAME"
   done
 }
@@ -1154,7 +1154,7 @@ main() {
   (( ${#ARGS[@]} == 0 )) || die "unexpected argument '${ARGS[0]}'"
   load_params
   cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
-  require_command az node base64 od
+  require_command az node
 
   log_step "Checking the Azure CLI sign-in"
   ensure_login

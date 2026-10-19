@@ -111,44 +111,47 @@ ensure_firewall_rule() {
       --name "$SQL_FIREWALL_RULE_NAME" --start-ip-address "$address" --end-ip-address "$address" --output none --only-show-errors
     (( DRY_RUN )) || log_info "a new rule takes up to five minutes to apply"
   fi
-  check_firewall_rules
 }
 
 run_address() {
   sql_server_exists || die "the server $ERP_AZURE_SQL_SERVER_NAME does not exist; run: bash scripts/azure/provision.sh"
+  check_firewall_rules
   ensure_firewall_rule "$ALLOW_ADDRESS"
 }
 
 run_current_address() {
   sql_server_exists || die "the server $ERP_AZURE_SQL_SERVER_NAME does not exist; run: bash scripts/azure/provision.sh"
+  check_firewall_rules
   resolve_sqlcmd
   resolve_sql_server_host
   log_step "This computer's address as Azure sees it"
-  local result address
+  local result address home_address
   result="$(probe_sql_access)"
+  home_address="$(home_rule_address)"
   case "$result" in
     answered*)
       address="${result#answered }"
-      if [[ -n "$address" && "$(home_rule_address)" != "$address" ]]; then
-        log_info "the server answered this computer at $address through another rule or a range"
-        ensure_firewall_rule "$address"
+      [[ -n "$address" ]] || die "the server answered without naming this computer's address"
+      if [[ "$home_address" == "$address" ]]; then
+        log_info "the rule $SQL_FIREWALL_RULE_NAME already admits this computer at $address alone"
         return 0
       fi
-      log_info "the rule $SQL_FIREWALL_RULE_NAME already admits this computer${address:+ at $address}"
+      log_info "the server answered this computer at $address through the range of the rule $SQL_FIREWALL_RULE_NAME"
+      ensure_firewall_rule "$address"
       ;;
     refused*)
       log_info "refused from ${result#refused }"
       ensure_firewall_rule "${result#refused }"
-      return 0
       ;;
     signin-refused*)
-      log_info "the server refused the sign-in, which happens only after its firewall has admitted this computer"
+      [[ -n "$home_address" ]] \
+        || die "the server refused the sign-in after the range of the rule $SQL_FIREWALL_RULE_NAME admitted this computer, so this computer's address is unknown; run as the Microsoft Entra admin, or name the home's address with --allow-address <IPv4>"
+      log_info "the server refused the sign-in, which happens only after its firewall has admitted this computer: the rule $SQL_FIREWALL_RULE_NAME admits $home_address alone"
       ;;
     *)
       die "cannot reach $SQL_SERVER_HOST: ${result#unreachable }"
       ;;
   esac
-  check_firewall_rules
 }
 
 app_client_id() {

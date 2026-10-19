@@ -61,17 +61,6 @@ require_repo_root_cwd() {
   [[ "$PWD" == "$REPO_ROOT" ]] || die "the current directory must be the repository root ($REPO_ROOT) so that az can open @file arguments"
 }
 
-# Graph returns customKeyIdentifier either as the SHA-1 thumbprint text (credentials
-# uploaded through the Azure CLI) or as the base64-encoded thumbprint bytes.
-key_identifier_to_hex() {
-  [[ -n "$1" ]] || return 0
-  if [[ "$1" =~ ^[0-9A-Fa-f]{40}$ ]]; then
-    printf '%s' "$1"
-    return 0
-  fi
-  { printf '%s' "$1" | base64 -d 2> /dev/null | od -An -tx1 | tr -d ' \n'; } || true
-}
-
 require_origin() {
   local name="$1" value="$2"
   local host='[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*'
@@ -744,14 +733,9 @@ rotate_certificate() {
 
 key_credential_thumbprints() {
   local app_id="$1"
-  local rows
-  rows="$(graph_get "applications(appId='$app_id')?\$select=keyCredentials" 'keyCredentials[].[keyId, customKeyIdentifier]')" || return 1
-  [[ -n "$rows" ]] || return 0
-  local key_id identifier
-  while IFS=$'\t' read -r key_id identifier; do
-    [[ -n "$key_id" ]] || continue
-    printf '%s\t%s\n' "$key_id" "$(key_identifier_to_hex "$identifier")"
-  done <<< "$rows"
+  local credentials_json
+  credentials_json="$(graph_get "applications(appId='$app_id')?\$select=keyCredentials")" || return 1
+  node -e 'let raw = ""; process.stdin.on("data", (chunk) => { raw += chunk; }).on("end", () => { const credentials = JSON.parse(raw).keyCredentials ?? []; const withoutKey = credentials.filter((credential) => !credential.key).map((credential) => credential.keyId); if (withoutKey.length > 0) { process.stderr.write("Microsoft Graph returned no certificate for the key credential(s) " + withoutKey.join(", ") + "\n"); process.exit(1); } const { createHash } = require("node:crypto"); process.stdout.write(credentials.map((credential) => credential.keyId + "\t" + createHash("sha1").update(Buffer.from(credential.key, "base64")).digest("hex")).join("\n")); });' <<< "$credentials_json"
 }
 
 key_credential_id_for_thumbprint() {

@@ -246,8 +246,8 @@ main() {
   log_step "The migrator's secrets in $ERP_AZURE_KEYVAULT_PROD_NAME"
   local migrator_secret_names=''
   if [[ -n "$migrator_id" ]]; then
-    migrator_secret_names="$(existing_secret_names "$ERP_AZURE_KEYVAULT_PROD_NAME" "${SQL_CONNECTION_STRING_SECRETS[@]}")"
-    log_info "Key Vault Secrets User on: ${migrator_secret_names:-none yet; the connection strings are granted on the run after the one that writes them}"
+    migrator_secret_names="$(existing_secret_names "$ERP_AZURE_KEYVAULT_PROD_NAME" "${ERP_AZURE_MIGRATOR_SECRETS[@]}")"
+    log_info "Key Vault Secrets User on: ${migrator_secret_names:-none yet; a secret is granted on the run after the one that writes it}"
   else
     log_info "skipped until entra.sh has created the migrator"
   fi

@@ -323,7 +323,7 @@ main() {
   parse_entra_args "$@"
   load_params
   cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
-  require_command az node base64 od mktemp
+  require_command az node mktemp
 
   log_step "Checking the Azure CLI sign-in"
   ensure_login

@@ -33,6 +33,7 @@ readonly ERP_AZURE_REQUIRED_PARAMS=(
 
 readonly ERP_AZURE_APPCONFIG_SKUS=(Free Developer Standard Premium)
 readonly ERP_AZURE_TEMP_DIR='scripts/azure/out'
+readonly ERP_AZURE_MIGRATOR_SECRETS=(Erp--Platform--Database--ConnectionString Erp--Platform--Database--MigratorConnectionString)
 
 log_step() { printf '\n==> %s\n' "$*" >&2; }
 log_info() { printf '    %s\n' "$*" >&2; }

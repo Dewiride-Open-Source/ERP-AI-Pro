@@ -4,7 +4,6 @@ SET XACT_ABORT ON;
 
 DECLARE @dryRun bit = $(DryRun);
 
--- Every statement below runs as dbo, so a database DDL trigger would run whatever it holds as dbo too.
 IF EXISTS (SELECT 1 FROM sys.triggers WHERE parent_class = 0)
     THROW 50001, N'A database DDL trigger exists, and this script''s statements would fire it as dbo; read sys.triggers and drop the trigger by hand first.', 1;
 
@@ -120,7 +119,6 @@ BEGIN
         IF @dryRun = 0 GRANT CONTROL ON SCHEMA::[audit] TO [$(MigratorUser)];
     END;
 
-    -- The append-only role comes before the data roles, so the runtime's user never holds UPDATE or DELETE on audit.
     IF ISNULL(IS_ROLEMEMBER(N'$(AuditRole)', N'$(RuntimeUser)'), 0) = 0
     BEGIN
         PRINT N'change: add [$(RuntimeUser)] to [$(AuditRole)]';
@@ -147,11 +145,20 @@ BEGIN
                 @runtimeUpdate int = HAS_PERMS_BY_NAME(N'audit', N'SCHEMA', N'UPDATE'),
                 @runtimeDelete int = HAS_PERMS_BY_NAME(N'audit', N'SCHEMA', N'DELETE'),
                 @runtimeAlter int = HAS_PERMS_BY_NAME(N'audit', N'SCHEMA', N'ALTER'),
-                @runtimeAlterAnyRole int = HAS_PERMS_BY_NAME(DB_NAME(), N'DATABASE', N'ALTER ANY ROLE');
+                @runtimeControlAudit int = HAS_PERMS_BY_NAME(N'audit', N'SCHEMA', N'CONTROL'),
+                @runtimeTakeOwnership int = HAS_PERMS_BY_NAME(N'audit', N'SCHEMA', N'TAKE OWNERSHIP'),
+                @runtimeAlterAuditRole int = HAS_PERMS_BY_NAME(N'$(AuditRole)', N'ROLE', N'ALTER'),
+                @runtimeAlterAnyRole int = HAS_PERMS_BY_NAME(DB_NAME(), N'DATABASE', N'ALTER ANY ROLE'),
+                @runtimeAlterAnyUser int = HAS_PERMS_BY_NAME(DB_NAME(), N'DATABASE', N'ALTER ANY USER'),
+                @runtimeControlDatabase int = HAS_PERMS_BY_NAME(DB_NAME(), N'DATABASE', N'CONTROL'),
+                @runtimeImpersonateMigrator int = HAS_PERMS_BY_NAME(N'$(MigratorUser)', N'USER', N'IMPERSONATE'),
+                @runtimeImpersonateOwner int = HAS_PERMS_BY_NAME(N'dbo', N'USER', N'IMPERSONATE');
         REVERT;
-        IF @runtimeInsert <> 1 OR @runtimeUpdate <> 0 OR @runtimeDelete <> 0 OR @runtimeAlter <> 0 OR @runtimeAlterAnyRole <> 0
-            THROW 50012, N'Under EXECUTE AS USER, [$(RuntimeUser)] must insert into audit and must not update, delete or alter there or alter any role.', 1;
-        PRINT N'ok: [$(RuntimeUser)] may insert into audit, may not update, delete or alter there, and alters no role';
+        IF @runtimeInsert <> 1 OR @runtimeUpdate <> 0 OR @runtimeDelete <> 0 OR @runtimeAlter <> 0
+           OR @runtimeControlAudit <> 0 OR @runtimeTakeOwnership <> 0 OR @runtimeAlterAuditRole <> 0 OR @runtimeAlterAnyRole <> 0
+           OR @runtimeAlterAnyUser <> 0 OR @runtimeControlDatabase <> 0 OR @runtimeImpersonateMigrator <> 0 OR @runtimeImpersonateOwner <> 0
+            THROW 50012, N'Under EXECUTE AS USER, [$(RuntimeUser)] must insert into audit and must not update, delete, alter, control or take ownership of it, alter [$(AuditRole)], any role or any user, control the database or impersonate [$(MigratorUser)] or dbo, whether the right is its own or reaches it through public or a role; revoke the grant by hand (sys.database_permissions).', 1;
+        PRINT N'ok: [$(RuntimeUser)] may insert into audit and may not update, delete, alter, control or take ownership of it, alter a role or a user, control the database or impersonate [$(MigratorUser)] or dbo';
     END;
 
     IF DATABASE_PRINCIPAL_ID(N'$(MigratorUser)') IS NOT NULL
