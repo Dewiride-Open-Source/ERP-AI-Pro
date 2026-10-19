@@ -103,10 +103,10 @@ The first prints `true`. The second fails with `Permission denied (publickey).`,
 
 The api and the migrator sign in to Azure with their own service principals, whose certificates (PEM, private key included) are compose file secrets in `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets`:
 
-- `erp-runtime-client.pem` comes from `bash scripts/azure/export-runtime-certificate.sh`;
-- `erp-migrator-client.pem` comes with `first-deployment-production-database-provisioning`.
+- `erp-runtime-client.pem` comes from `bash scripts/azure/export-client-certificate.sh runtime`;
+- `erp-migrator-client.pem` comes from `bash scripts/azure/export-client-certificate.sh migrator`. Install it only together with the deployment's images: from then on `erp-ai-pro-retain.timer` runs the migrator every night, which needs the api image on the server.
 
-Copy each to the administrator's home over SSH only, then install it for the image user 1654, the user of the chiseled aspnet image that both containers run as:
+Copy each to the administrator's home over SSH only, then install it for the image user 1654, the user of the chiseled aspnet image that both containers run as (shown for the runtime's; the migrator's is the same with `erp-migrator-client.pem`):
 
 ```bash
 scp scripts/azure/out/erp-runtime-client.pem <administrator>@<address>:~/erp-runtime-client.pem
@@ -130,7 +130,7 @@ Shred the workstation's copy as well (`shred -u scripts/azure/out/erp-runtime-cl
 | `APPCONFIG_ENDPOINT` | `https://<store>.azconfig.io`, the one App Configuration store | the go-live |
 | `AZURE_TENANT_ID` | the Entra tenant id | the go-live |
 | `AZURE_CLIENT_ID` | the runtime service principal's application id | the go-live |
-| `MIGRATOR_AZURE_CLIENT_ID` | the migrator service principal's application id | `first-deployment-production-database-provisioning` |
+| `MIGRATOR_AZURE_CLIENT_ID` | the migrator service principal's application id, which `entra.sh` prints as `MIGRATOR_CLIENT_ID` | the go-live, together with `erp-migrator-client.pem` |
 | `COMPOSE_NETWORK_CIDR` | the compose network, `172.28.0.0/16` unless that range is taken on the home network | rarely |
 
 The ids are not secrets. No secret ever goes into `.env`.

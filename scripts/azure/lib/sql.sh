@@ -5,6 +5,7 @@ if [[ -n "${ERP_AZURE_SQL_SH_LOADED:-}" ]]; then
 fi
 readonly ERP_AZURE_SQL_SH_LOADED=1
 
+readonly SQL_API_VERSION='2025-01-01'
 readonly SQL_FIREWALL_RULE_NAME='home'
 readonly SQL_SERVER_LOCK_NAME='do-not-delete'
 readonly SQL_AUDIT_APPEND_ONLY_ROLE='erp_audit_append_only'

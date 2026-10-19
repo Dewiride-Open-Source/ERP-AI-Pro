@@ -6,6 +6,8 @@ The migrator applies schema changes and seeds reference data before a new API ve
 
 The compose `migrator` service runs the API image with `dotnet /app/migrator/Dewiride.Erp.Host.Migrator.dll migrate`, which applies every pending migration, runs the seeders and then deletes what is past its retention: security events older than `Erp:Platform:Auditing:SecurityEventRetention` and change records older than `Erp:Platform:Auditing:ChangeRecordRetentionYears` financial years ([ADR-0043](../../adr/0043-change-records-and-the-append-only-audit-schema.md)). It signs in to Azure as the migrator service principal (`MIGRATOR_AZURE_CLIENT_ID`, certificate secret `erp-migrator-client.pem`), reads App Configuration under the `production` label, and connects to Azure SQL with `Erp:Platform:Database:MigratorConnectionString`, the contained user that holds the schema rights, the database permission `CREATE ROLE` and `CONTROL` on the schema `audit`, never `db_owner`; the API's own user is a member of `erp_audit_append_only` and cannot delete from `audit`, so only the migrator does. The service never pulls (`pull_policy: never`): it uses whatever api image the host already has for `IMAGE_TAG`.
 
+An empty database is migrated once from the operator's computer instead, as the migrator's own identity, before the server runs any deployment ([database runbook](database.md), "First migration").
+
 `docker compose up` alone is not a safe deployment: it recreates a changed `api` container, stopping and removing the running one, before it waits for the migrator (`condition: service_completed_successfully` is checked only when containers start). So the migrator always runs on its own first, and the stack is rolled only after it succeeded.
 
 ## Before a deployment

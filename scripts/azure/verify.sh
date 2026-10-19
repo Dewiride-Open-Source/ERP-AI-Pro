@@ -836,6 +836,28 @@ verify_labels() {
   verify_sentinels
 }
 
+# The server reads back no isIPv6Enabled once the template has set it off, so the check is that it is not on and
+# that no IPv6 rule admits anyone.
+verify_sql_ipv6_off() {
+  local server_url enabled rule_count
+  server_url="$(sql_server_resource_id)?api-version=$SQL_API_VERSION"
+  if enabled="$(az_read rest --method get --url "$server_url" --query properties.isIPv6Enabled --output tsv 2>&1)"; then
+    if [[ "${enabled,,}" == enabled ]]; then
+      fail "$ERP_AZURE_SQL_SERVER_NAME has IPv6 off (it is on); $PROVISION_HINT"
+    else
+      pass "$ERP_AZURE_SQL_SERVER_NAME has IPv6 off"
+    fi
+  else
+    fail "$ERP_AZURE_SQL_SERVER_NAME has IPv6 off (query failed: $(query_error_summary "$enabled"))"
+  fi
+  if rule_count="$(az_read rest --method get --url "$(sql_server_resource_id)/ipv6FirewallRules?api-version=$SQL_API_VERSION" \
+    --query 'length(value)' --output tsv 2>&1)"; then
+    assert_equals "$ERP_AZURE_SQL_SERVER_NAME has no IPv6 firewall rule" '0' "$rule_count"
+  else
+    fail "$ERP_AZURE_SQL_SERVER_NAME has no IPv6 firewall rule (query failed: $(query_error_summary "$rule_count"))"
+  fi
+}
+
 verify_sql_server() {
   local operator_id="$1"
   local -n found_fqdn="$2"
@@ -851,10 +873,10 @@ verify_sql_server() {
   assert_equals "$ERP_AZURE_SQL_SERVER_NAME is in $ERP_AZURE_LOCATION" "$ERP_AZURE_LOCATION" "$(json_field "$server_json" location)"
   assert_equals "$ERP_AZURE_SQL_SERVER_NAME minimum TLS version is 1.2" '1.2' "$(json_field "$server_json" minimalTlsVersion)"
   assert_equals "$ERP_AZURE_SQL_SERVER_NAME accepts connections over its public endpoint" 'Enabled' "$(json_field "$server_json" publicNetworkAccess)"
-  assert_equals "$ERP_AZURE_SQL_SERVER_NAME has IPv6 off" 'Disabled' "$(json_field "$server_json" isIPv6Enabled)"
+  verify_sql_ipv6_off
   assert_equals "$ERP_AZURE_SQL_SERVER_NAME Microsoft Entra admin is the operator" "$operator_id" "$(json_field "$server_json" administrators.sid)"
   assert_query "$ERP_AZURE_SQL_SERVER_NAME accepts Microsoft Entra authentication only" 'True' sql server ad-only-auth get \
-    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" --query azureAdOnlyAuthentication
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --name "$ERP_AZURE_SQL_SERVER_NAME" --query azureAdOnlyAuthentication
   assert_query "$ERP_AZURE_SQL_SERVER_NAME carries the CanNotDelete lock $SQL_SERVER_LOCK_NAME" 'CanNotDelete' lock show --name "$SQL_SERVER_LOCK_NAME" \
     --resource "$(sql_server_resource_id)" --query level
 }

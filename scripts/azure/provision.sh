@@ -35,7 +35,6 @@ readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
 readonly BLOB_SERVICE_URI_LABEL='local-dev'
 readonly DATA_PROTECTION_KEY_NAME='Erp--Platform--DataProtection--Key'
 readonly DATA_PROTECTION_KEY_IDENTIFIER_KEY='Erp:Platform:DataProtection:KeyIdentifier'
-readonly SQL_API_VERSION='2025-01-01'
 readonly TEMP_DIR='scripts/azure/out'
 
 deployment_output() {
