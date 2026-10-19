@@ -14,7 +14,6 @@
   },
   {
     "key": "Erp:Platform:Attachments:EncryptionKey",
-    "secret": "Erp--Platform--Attachments--EncryptionKey",
-    "labels": ["local-dev"]
+    "secret": "Erp--Platform--Attachments--EncryptionKey"
   }
 ]

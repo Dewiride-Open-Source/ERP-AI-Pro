@@ -34,6 +34,7 @@ readonly ERP_AZURE_REQUIRED_PARAMS=(
 readonly ERP_AZURE_APPCONFIG_SKUS=(Free Developer Standard Premium)
 readonly ERP_AZURE_TEMP_DIR='scripts/azure/out'
 readonly ERP_AZURE_MIGRATOR_SECRETS=(Erp--Platform--Database--ConnectionString Erp--Platform--Database--MigratorConnectionString)
+readonly HOME_ADDRESS_HINT='from a computer on the home network, without a VPN: bash scripts/azure/home-address.sh'
 
 log_step() { printf '\n==> %s\n' "$*" >&2; }
 log_info() { printf '    %s\n' "$*" >&2; }
@@ -61,6 +62,32 @@ require_var() {
 
 is_guid() {
   [[ "$1" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]
+}
+
+ipv4_octets_valid() {
+  local address="$1"
+  [[ "$address" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+  local octet
+  for octet in "${BASH_REMATCH[@]:1}"; do
+    [[ "$octet" == 0 || "$octet" != 0* ]] || return 1
+    (( octet <= 255 )) || return 1
+  done
+}
+
+is_public_ipv4() {
+  local address="$1"
+  ipv4_octets_valid "$address" || return 1
+  local a b
+  IFS=. read -r a b _ _ <<< "$address"
+  (( a != 0 && a != 10 && a != 127 && a < 224 )) || return 1
+  (( !(a == 100 && b >= 64 && b <= 127) )) || return 1
+  (( !(a == 169 && b == 254) )) || return 1
+  (( !(a == 172 && b >= 16 && b <= 31) )) || return 1
+  (( !(a == 192 && b == 168) )) || return 1
+  (( !(a == 198 && (b == 18 || b == 19)) )) || return 1
+  case "$address" in
+    192.0.0.* | 192.0.2.* | 198.51.100.* | 203.0.113.*) return 1 ;;
+  esac
 }
 
 quote_command() {
@@ -140,6 +167,7 @@ load_params() {
   : "${ERP_AZURE_APP_RUNTIME_NAME:=ERP-AI-Pro Runtime (production)}"
   : "${ERP_AZURE_APP_MIGRATOR_NAME:=ERP-AI-Pro Migrator (production)}"
   : "${ERP_AZURE_STORAGE_DEV_NAME:=sterpaiprodev}"
+  : "${ERP_AZURE_STORAGE_PROD_NAME:=sterpaiproprod}"
   : "${ERP_AZURE_KEYVAULT_OPS_NAME:=kv-erp-ai-pro-ops}"
   : "${ERP_AZURE_SQL_SERVER_NAME:=sql-erp-ai-pro}"
   : "${ERP_AZURE_SQL_DATABASE_NAME:=ErpAiPro}"
@@ -147,13 +175,18 @@ load_params() {
   export ERP_AZURE_APPCONFIG_SKU ERP_AZURE_DEVELOPERS_GROUP ERP_AZURE_PRODUCTION_WEB_ORIGIN \
     ERP_AZURE_LOCAL_WEB_ORIGIN ERP_AZURE_APP_WEB_LOCAL_DEV_NAME \
     ERP_AZURE_APP_WEB_PRODUCTION_NAME ERP_AZURE_APP_RUNTIME_NAME ERP_AZURE_APP_MIGRATOR_NAME \
-    ERP_AZURE_STORAGE_DEV_NAME ERP_AZURE_KEYVAULT_OPS_NAME ERP_AZURE_SQL_SERVER_NAME ERP_AZURE_SQL_DATABASE_NAME ERP_AZURE_SQLCMD
+    ERP_AZURE_STORAGE_DEV_NAME ERP_AZURE_STORAGE_PROD_NAME ERP_AZURE_KEYVAULT_OPS_NAME ERP_AZURE_SQL_SERVER_NAME ERP_AZURE_SQL_DATABASE_NAME \
+    ERP_AZURE_SQLCMD
 
   require_var "${ERP_AZURE_REQUIRED_PARAMS[@]}"
   is_guid "$ERP_AZURE_TENANT_ID" || die "ERP_AZURE_TENANT_ID must be a GUID"
   is_guid "$ERP_AZURE_SUBSCRIPTION_ID" || die "ERP_AZURE_SUBSCRIPTION_ID must be a GUID"
   [[ "$ERP_AZURE_STORAGE_DEV_NAME" =~ ^[a-z0-9]{3,24}$ ]] \
     || die "ERP_AZURE_STORAGE_DEV_NAME must be 3 to 24 lowercase letters or digits; '$ERP_AZURE_STORAGE_DEV_NAME' was rejected"
+  [[ "$ERP_AZURE_STORAGE_PROD_NAME" =~ ^[a-z0-9]{3,24}$ ]] \
+    || die "ERP_AZURE_STORAGE_PROD_NAME must be 3 to 24 lowercase letters or digits; '$ERP_AZURE_STORAGE_PROD_NAME' was rejected"
+  [[ "$ERP_AZURE_STORAGE_PROD_NAME" != "$ERP_AZURE_STORAGE_DEV_NAME" ]] \
+    || die "ERP_AZURE_STORAGE_PROD_NAME and ERP_AZURE_STORAGE_DEV_NAME must name two accounts; both are '$ERP_AZURE_STORAGE_DEV_NAME'"
   [[ "$ERP_AZURE_KEYVAULT_OPS_NAME" =~ ^[a-zA-Z][a-zA-Z0-9-]{1,22}[a-zA-Z0-9]$ ]] \
     || die "ERP_AZURE_KEYVAULT_OPS_NAME must be 3 to 24 letters, digits or hyphens, starting with a letter; '$ERP_AZURE_KEYVAULT_OPS_NAME' was rejected"
   [[ "$ERP_AZURE_SQL_SERVER_NAME" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]] \

@@ -35,6 +35,16 @@ param attachmentsContainerName string = 'attachments'
 @maxValue(365)
 param developmentStorageDeleteRetentionDays int = 7
 
+@minLength(3)
+@maxLength(24)
+param productionStorageAccountName string
+
+@minValue(7)
+@maxValue(365)
+param productionStorageDeleteRetentionDays int = 90
+
+param productionStorageHomeAddress string = ''
+
 @minLength(1)
 @maxLength(63)
 param productionSqlServerName string
@@ -208,6 +218,16 @@ var developmentStorageRoleAssignments RoleAssignment[] = concat(
       ]
 )
 
+var productionStorageRoleAssignments RoleAssignment[] = empty(runtimePrincipalId)
+  ? []
+  : [
+      {
+        principalId: runtimePrincipalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionId: roleDefinitionIds.storageBlobDataContributor
+      }
+    ]
+
 module configurationStore 'modules/configuration-store.bicep' = {
   name: 'configuration-store'
   params: {
@@ -264,6 +284,21 @@ module developmentStorageAccount 'modules/storage-account.bicep' = {
   }
 }
 
+module productionStorageAccount 'modules/storage-account.bicep' = {
+  name: 'storage-account-production'
+  params: {
+    name: productionStorageAccountName
+    location: location
+    sku: 'Standard_GRS'
+    tags: tags
+    containerName: attachmentsContainerName
+    deleteRetentionDays: productionStorageDeleteRetentionDays
+    roleAssignments: productionStorageRoleAssignments
+    restrictToAllowedAddresses: true
+    allowedAddresses: empty(productionStorageHomeAddress) ? [] : [productionStorageHomeAddress]
+  }
+}
+
 module productionSqlDatabase 'modules/sql-database.bicep' = {
   name: 'sql-database-production'
   params: {
@@ -286,4 +321,7 @@ output productionDataProtectionKeyUri string = productionKeyVault.outputs.dataPr
 output developmentAttachmentsBlobEndpoint string = developmentStorageAccount.outputs.blobEndpoint
 output developmentStorageAccountId string = developmentStorageAccount.outputs.id
 output developmentAttachmentsContainerId string = developmentStorageAccount.outputs.containerId
+output productionAttachmentsBlobEndpoint string = productionStorageAccount.outputs.blobEndpoint
+output productionStorageAccountId string = productionStorageAccount.outputs.id
+output productionAttachmentsContainerId string = productionStorageAccount.outputs.containerId
 output productionSqlServerFqdn string = productionSqlDatabase.outputs.fullyQualifiedDomainName

@@ -17,7 +17,6 @@ readonly SQL_CONNECTION_STRING_SECRETS=(Erp--Platform--Database--ConnectionStrin
 readonly SQL_WINDOWS_GO_SQLCMD='/c/Program Files/SqlCmd/sqlcmd.exe'
 readonly SQL_ACCESS_ATTEMPTS=10
 readonly SQL_ACCESS_DELAY_SECONDS=30
-readonly SQL_HOME_HINT='from a computer on the home network, without a VPN: bash scripts/azure/database.sh --allow-current-address'
 
 SQLCMD_BIN=''
 SQL_SERVER_HOST=''
@@ -92,6 +91,51 @@ home_rule_address() {
   done <<< "$rules"
 }
 
+lock_hint() {
+  printf 'az lock delete --name %s --resource-group %s --resource-type Microsoft.Sql/servers --resource-name %s' \
+    "$SQL_SERVER_LOCK_NAME" "$ERP_AZURE_RESOURCE_GROUP" "$ERP_AZURE_SQL_SERVER_NAME"
+}
+
+check_firewall_rules() {
+  local rules name start end others=0
+  rules="$(firewall_rules_tsv)" || die "cannot list the firewall rules of $ERP_AZURE_SQL_SERVER_NAME"
+  while IFS=$'\t' read -r name start end; do
+    if [[ -z "$name" || "$name" == "$SQL_FIREWALL_RULE_NAME" ]]; then
+      continue
+    fi
+    log_warn "the rule $name ($start to $end) is not the home's; the server's lock keeps it until removed by hand: $(lock_hint), az sql server firewall-rule delete --resource-group $ERP_AZURE_RESOURCE_GROUP --server $ERP_AZURE_SQL_SERVER_NAME --name $name, then bash scripts/azure/provision.sh to lock the server again"
+    others=$((others + 1))
+  done <<< "$rules"
+  (( others == 0 )) || die "$others firewall rule(s) besides $SQL_FIREWALL_RULE_NAME admit other addresses; remove them as shown above"
+}
+
+ensure_firewall_rule() {
+  local address="$1"
+  log_step "Firewall rule $SQL_FIREWALL_RULE_NAME of $ERP_AZURE_SQL_SERVER_NAME"
+  local rules name start end current_start='' current_end=''
+  rules="$(firewall_rules_tsv)" || die "cannot list the firewall rules of $ERP_AZURE_SQL_SERVER_NAME"
+  while IFS=$'\t' read -r name start end; do
+    if [[ "$name" == "$SQL_FIREWALL_RULE_NAME" ]]; then
+      current_start="$start"
+      current_end="$end"
+    fi
+  done <<< "$rules"
+
+  if [[ "$current_start" == "$address" && "$current_end" == "$address" ]]; then
+    log_info "already admits $address alone"
+  elif [[ -n "$current_start" ]]; then
+    log_warn "moving the rule from $current_start to $current_end onto $address alone: the server at home reaches the database only when $address is the home's address"
+    run az sql server firewall-rule update --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" \
+      --name "$SQL_FIREWALL_RULE_NAME" --start-ip-address "$address" --end-ip-address "$address" --output none --only-show-errors
+    (( DRY_RUN )) || log_info "a changed rule takes up to five minutes to apply"
+  else
+    log_info "admitting $address"
+    run az sql server firewall-rule create --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" \
+      --name "$SQL_FIREWALL_RULE_NAME" --start-ip-address "$address" --end-ip-address "$address" --output none --only-show-errors
+    (( DRY_RUN )) || log_info "a new rule takes up to five minutes to apply"
+  fi
+}
+
 sql_run() {
   local database="$1"
   shift
@@ -151,7 +195,7 @@ wait_for_sql_access() {
     esac
     home_address="$(home_rule_address)"
     if [[ "${result#refused }" != "$home_address" ]]; then
-      die "the firewall refuses this computer's address ${result#refused }, and its rule $SQL_FIREWALL_RULE_NAME admits ${home_address:-no single address}; run $SQL_HOME_HINT"
+      die "the firewall refuses this computer's address ${result#refused }, and its rule $SQL_FIREWALL_RULE_NAME admits ${home_address:-no single address}; run $HOME_ADDRESS_HINT"
     fi
     if (( attempt >= attempts )); then
       die "the firewall of $ERP_AZURE_SQL_SERVER_NAME still refuses ${result#refused } after $attempts attempts"
@@ -160,31 +204,4 @@ wait_for_sql_access() {
     sleep "$SQL_ACCESS_DELAY_SECONDS"
     attempt=$((attempt + 1))
   done
-}
-
-ipv4_octets_valid() {
-  local address="$1"
-  [[ "$address" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
-  local octet
-  for octet in "${BASH_REMATCH[@]:1}"; do
-    [[ "$octet" == 0 || "$octet" != 0* ]] || return 1
-    (( octet <= 255 )) || return 1
-  done
-}
-
-# Azure sees the home's public address only, so a private, shared or reserved one is a typing error.
-is_public_ipv4() {
-  local address="$1"
-  ipv4_octets_valid "$address" || return 1
-  local a b
-  IFS=. read -r a b _ _ <<< "$address"
-  (( a != 0 && a != 10 && a != 127 && a < 224 )) || return 1
-  (( !(a == 100 && b >= 64 && b <= 127) )) || return 1
-  (( !(a == 169 && b == 254) )) || return 1
-  (( !(a == 172 && b >= 16 && b <= 31) )) || return 1
-  (( !(a == 192 && b == 168) )) || return 1
-  (( !(a == 198 && (b == 18 || b == 19)) )) || return 1
-  case "$address" in
-    192.0.0.* | 192.0.2.* | 198.51.100.* | 203.0.113.*) return 1 ;;
-  esac
 }

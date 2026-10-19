@@ -5,18 +5,24 @@ USAGE='Usage: bash scripts/azure/provision.sh [--dry-run] [--params <file>]
 Creates or converges the ERP-AI-Pro resource group, the App Configuration store,
 both Key Vaults with their data-protection keys, the operations Key Vault (the
 client certificates of the server identities, which no application reads), the
-development storage account with its attachments container and delete lock, the
-production Azure SQL server (Microsoft Entra-only, the operator as its Microsoft
-Entra admin, delete lock) and its Basic database, the role assignments (the
-migrator reads only the production database'"'"'s connection strings), the labelled
-Erp:Sentinel keys, Erp:Platform:Attachments:BlobServiceUri under the local-dev
-label (bumping the local-dev sentinel only when that endpoint changed),
-Erp:Platform:DataProtection:KeyIdentifier under the local-dev and production
-labels (the versionless identifier of the data-protection key in the matching
-vault; no sentinel bump, because the API reads it only when it starts) and the
-connection-string secrets of the production database in the production vault.
-The server'"'"'s firewall rule is database.sh'"'"'s. Safe to run repeatedly; deletes
-or purges nothing but a role of the migrator on the whole production vault.
+development and production storage accounts with their attachments containers
+and delete locks (the production one geo-redundant and reachable only from the
+address the database'"'"'s firewall rule home admits), the production Azure SQL
+server (Microsoft Entra-only, the operator as its Microsoft Entra admin, delete
+lock) and its Basic database, the role assignments (the migrator reads only the
+production database'"'"'s connection strings), the labelled Erp:Sentinel keys,
+Erp:Platform:Attachments:BlobServiceUri under each label (bumping that label'"'"'s
+sentinel only when its endpoint changed), Erp:Platform:DataProtection:KeyIdentifier
+under the local-dev and production labels (the versionless identifier of the
+data-protection key in the matching vault; no sentinel bump, because the API
+reads it only when it starts) and the connection-string secrets of the production
+database in the production vault. The home'"'"'s address is home-address.sh'"'"'s: a
+deployment sets the production storage account'"'"'s rule to the address of the
+database'"'"'s rule home, keeps the account'"'"'s own single public address while that
+rule admits none, and stops before it changes anything while the rule admits an
+address that is not public, or none while the account admits more than one
+public address. Safe to run repeatedly; deletes or purges nothing but a role of
+the migrator on the whole production vault.
 
 Options:
   --dry-run         Print the what-if result and every command that would run; write nothing.
@@ -29,12 +35,13 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/appconfig.sh"
 # shellcheck source=lib/sql.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/sql.sh"
+# shellcheck source=lib/storage.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib/storage.sh"
 
 readonly SENTINEL_KEY='Erp:Sentinel'
 readonly LABELS=(local-dev production)
 readonly TEMPLATE_FILE='scripts/azure/bicep/main.bicep'
 readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
-readonly BLOB_SERVICE_URI_LABEL='local-dev'
 readonly DATA_PROTECTION_KEY_NAME='Erp--Platform--DataProtection--Key'
 readonly DATA_PROTECTION_KEY_IDENTIFIER_KEY='Erp:Platform:DataProtection:KeyIdentifier'
 readonly ROLE_KEY_VAULT_SECRETS_USER='4633458b-17de-408a-b874-0445c86b69e6'
@@ -239,9 +246,37 @@ main() {
   log_step "Storage account $ERP_AZURE_STORAGE_DEV_NAME"
   ensure_storage_account_name ERP_AZURE_STORAGE_DEV_NAME "$group_exists"
 
+  log_step "Storage account $ERP_AZURE_STORAGE_PROD_NAME"
+  ensure_storage_account_name ERP_AZURE_STORAGE_PROD_NAME "$group_exists"
+
   log_step "SQL server $ERP_AZURE_SQL_SERVER_NAME"
   ensure_sql_server_name "$group_exists"
   require_unchanged_sql_admin "$operator_id" "$group_exists"
+
+  log_step "The home's address"
+  local home_address='' storage_rules='' storage_address=''
+  if [[ "$group_exists" == "true" ]]; then
+    if sql_server_exists; then
+      home_address="$(home_rule_address)"
+    fi
+    if production_storage_exists; then
+      storage_rules="$(production_storage_ip_rules)"
+    fi
+  fi
+  if [[ -n "$home_address" ]]; then
+    is_public_ipv4 "$home_address" \
+      || die "the database's rule $SQL_FIREWALL_RULE_NAME admits $home_address, which is not a public IPv4 address, so the storage account $ERP_AZURE_STORAGE_PROD_NAME could not take it; run first: $HOME_ADDRESS_HINT"
+    storage_address="$home_address"
+    if [[ -n "$storage_rules" && "$storage_rules" != "$home_address" ]]; then
+      log_warn "$ERP_AZURE_STORAGE_PROD_NAME admits $(printf '%s' "$storage_rules" | tr '\n' ' '); the deployment sets its rule to $home_address alone, the address of the database's rule $SQL_FIREWALL_RULE_NAME"
+    fi
+  elif [[ -n "$storage_rules" && "$storage_rules" != *$'\n'* ]] && is_public_ipv4 "$storage_rules"; then
+    storage_address="$storage_rules"
+    log_warn "the database's rule $SQL_FIREWALL_RULE_NAME admits no single address, so the deployment keeps $ERP_AZURE_STORAGE_PROD_NAME on $storage_address; then run: $HOME_ADDRESS_HINT"
+  elif [[ -n "$storage_rules" ]]; then
+    die "the database's rule $SQL_FIREWALL_RULE_NAME admits no single address and $ERP_AZURE_STORAGE_PROD_NAME admits $(printf '%s' "$storage_rules" | tr '\n' ' '), so the deployment would leave the account admitting none; remove every rule but the home's by hand (az storage account network-rule remove --resource-group $ERP_AZURE_RESOURCE_GROUP --account-name $ERP_AZURE_STORAGE_PROD_NAME --ip-address <address>), then run this script again"
+  fi
+  log_info "$ERP_AZURE_STORAGE_PROD_NAME admits ${storage_address:-no address until bash scripts/azure/home-address.sh points the rule $SQL_FIREWALL_RULE_NAME of the database at one}"
 
   log_step "The migrator's secrets in $ERP_AZURE_KEYVAULT_PROD_NAME"
   local migrator_secret_names=''
@@ -260,6 +295,8 @@ main() {
     "productionKeyVaultName=$ERP_AZURE_KEYVAULT_PROD_NAME"
     "operationsKeyVaultName=$ERP_AZURE_KEYVAULT_OPS_NAME"
     "developmentStorageAccountName=$ERP_AZURE_STORAGE_DEV_NAME"
+    "productionStorageAccountName=$ERP_AZURE_STORAGE_PROD_NAME"
+    "productionStorageHomeAddress=$storage_address"
     "productionSqlServerName=$ERP_AZURE_SQL_SERVER_NAME"
     "productionSqlDatabaseName=$ERP_AZURE_SQL_DATABASE_NAME"
     "operatorPrincipalId=$operator_id"
@@ -284,7 +321,10 @@ main() {
   local development_vault_uri="https://$ERP_AZURE_KEYVAULT_DEV_NAME.vault.azure.net/"
   local production_vault_uri="https://$ERP_AZURE_KEYVAULT_PROD_NAME.vault.azure.net/"
   local operations_vault_uri="https://$ERP_AZURE_KEYVAULT_OPS_NAME.vault.azure.net/"
-  local attachments_blob_endpoint="https://$ERP_AZURE_STORAGE_DEV_NAME.blob.core.windows.net/"
+  local -A attachments_blob_endpoints=(
+    [local-dev]="https://$ERP_AZURE_STORAGE_DEV_NAME.blob.core.windows.net/"
+    [production]="https://$ERP_AZURE_STORAGE_PROD_NAME.blob.core.windows.net/"
+  )
   local development_data_protection_key_uri="${development_vault_uri}keys/$DATA_PROTECTION_KEY_NAME"
   local production_data_protection_key_uri="${production_vault_uri}keys/$DATA_PROTECTION_KEY_NAME"
   local sql_server_fqdn="$ERP_AZURE_SQL_SERVER_NAME.database.windows.net"
@@ -296,8 +336,10 @@ main() {
       --mode Incremental --template-file "$TEMPLATE_FILE" --parameters "${template_parameters[@]}" \
       --query properties.outputs --output json --only-show-errors
     log_step "Data plane"
-    run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$BLOB_SERVICE_URI_KEY" \
-      --label "$BLOB_SERVICE_URI_LABEL" --value "$attachments_blob_endpoint" --yes --output none --only-show-errors
+    for label in "${LABELS[@]}"; do
+      run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$BLOB_SERVICE_URI_KEY" \
+        --label "$label" --value "${attachments_blob_endpoints[$label]}" --yes --output none --only-show-errors
+    done
     run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$DATA_PROTECTION_KEY_IDENTIFIER_KEY" \
       --label local-dev --value "$development_data_protection_key_uri" --yes --output none --only-show-errors
     run az appconfig kv set --name "$ERP_AZURE_APPCONFIG_NAME" --auth-mode login --key "$DATA_PROTECTION_KEY_IDENTIFIER_KEY" \
@@ -310,9 +352,9 @@ main() {
       run az keyvault secret set --vault-name "$ERP_AZURE_KEYVAULT_PROD_NAME" --name "$secret_name" --file '<file holding the connection string>' \
         --encoding utf-8 --content-type text/plain --output none --only-show-errors
     done
-    log_info "$BLOB_SERVICE_URI_KEY is written only when it differs from the deployment output"
+    log_info "$BLOB_SERVICE_URI_KEY is written under each label only when it differs from the deployment output"
     log_info "$DATA_PROTECTION_KEY_IDENTIFIER_KEY is written under each label only when it differs from the deployment output, without a sentinel bump: the API reads it only when it starts"
-    log_info "each sentinel is written when absent; the $BLOB_SERVICE_URI_LABEL sentinel is also bumped when $BLOB_SERVICE_URI_KEY changed"
+    log_info "each sentinel is written when absent, and bumped when the label's $BLOB_SERVICE_URI_KEY changed"
     log_info "each connection-string secret is written only when it differs from: $(database_connection_string "$sql_server_fqdn")"
   else
     local outputs_json
@@ -323,7 +365,8 @@ main() {
     development_vault_uri="$(deployment_output "$outputs_json" developmentKeyVaultUri)"
     production_vault_uri="$(deployment_output "$outputs_json" productionKeyVaultUri)"
     operations_vault_uri="$(deployment_output "$outputs_json" operationsKeyVaultUri)"
-    attachments_blob_endpoint="$(deployment_output "$outputs_json" developmentAttachmentsBlobEndpoint)"
+    attachments_blob_endpoints[local-dev]="$(deployment_output "$outputs_json" developmentAttachmentsBlobEndpoint)"
+    attachments_blob_endpoints[production]="$(deployment_output "$outputs_json" productionAttachmentsBlobEndpoint)"
     development_data_protection_key_uri="$(deployment_output_uri "$outputs_json" developmentDataProtectionKeyUri)"
     production_data_protection_key_uri="$(deployment_output_uri "$outputs_json" productionDataProtectionKeyUri)"
     sql_server_fqdn="$(deployment_output "$outputs_json" productionSqlServerFqdn)"
@@ -331,13 +374,13 @@ main() {
 
     log_step "Data plane"
     local previous_blob_service_uri
-    previous_blob_service_uri="$(retry -- appconfig_kv_get "$BLOB_SERVICE_URI_KEY" "$BLOB_SERVICE_URI_LABEL")"
-    ensure_kv "$BLOB_SERVICE_URI_KEY" "$BLOB_SERVICE_URI_LABEL" "$attachments_blob_endpoint"
     ensure_data_protection_key_identifier local-dev "$development_data_protection_key_uri"
     ensure_data_protection_key_identifier production "$production_data_protection_key_uri"
     for label in "${LABELS[@]}"; do
-      if [[ "$label" == "$BLOB_SERVICE_URI_LABEL" && "$previous_blob_service_uri" != "$attachments_blob_endpoint" ]]; then
-        log_info "$BLOB_SERVICE_URI_KEY [$label] changed; bumping $SENTINEL_KEY [$label] so a running API reloads it"
+      previous_blob_service_uri="$(retry -- appconfig_kv_get "$BLOB_SERVICE_URI_KEY" "$label")"
+      ensure_kv "$BLOB_SERVICE_URI_KEY" "$label" "${attachments_blob_endpoints[$label]}"
+      if [[ "$previous_blob_service_uri" != "${attachments_blob_endpoints[$label]}" ]]; then
+        log_info "$BLOB_SERVICE_URI_KEY [$label] changed; bumping $SENTINEL_KEY [$label]; an API builds its storage clients when it starts, so restart a running one to use the new endpoint"
         ensure_kv "$SENTINEL_KEY" "$label" "$(utc_timestamp)"
       else
         ensure_sentinel "$label"
@@ -358,18 +401,19 @@ main() {
   printf 'KEYVAULT_OPS_URI=%s\n' "$operations_vault_uri"
   printf 'DATA_PROTECTION_KEY_URI_DEV=%s\n' "$development_data_protection_key_uri"
   printf 'DATA_PROTECTION_KEY_URI_PROD=%s\n' "$production_data_protection_key_uri"
-  printf 'ATTACHMENTS_BLOB_ENDPOINT_DEV=%s\n' "$attachments_blob_endpoint"
+  printf 'ATTACHMENTS_BLOB_ENDPOINT_DEV=%s\n' "${attachments_blob_endpoints[local-dev]}"
+  printf 'ATTACHMENTS_BLOB_ENDPOINT_PROD=%s\n' "${attachments_blob_endpoints[production]}"
   printf 'SQL_SERVER_PROD=%s\n' "$sql_server_fqdn"
   if (( DRY_RUN )); then
     log_info "dry run: nothing was created or changed"
   fi
-  log_info "a new Storage Blob Data Contributor assignment on the attachments container can take up to 10 minutes to take effect; a 403 from blob storage inside that window is expected"
+  log_info "a new Storage Blob Data Contributor assignment on an attachments container can take up to 10 minutes to take effect; a 403 from blob storage inside that window is expected"
   log_info "next steps:"
   log_info "  1. bash scripts/azure/entra.sh          (app registrations, the runtime and migrator service principals and their client certificates)"
   log_info "  2. bash scripts/azure/provision.sh      (grants both service principals their roles)"
-  log_info "  3. create Erp--Platform--Attachments--EncryptionKey in $ERP_AZURE_KEYVAULT_DEV_NAME once (docs/operations/runbooks/secrets.md, section 5f)"
+  log_info "  3. create Erp--Platform--Attachments--EncryptionKey in $ERP_AZURE_KEYVAULT_DEV_NAME and in $ERP_AZURE_KEYVAULT_PROD_NAME once each (docs/operations/runbooks/secrets.md, section 5f)"
   log_info "  4. bash scripts/azure/seed.sh           (configuration values and Key Vault references)"
-  log_info "  5. $SQL_HOME_HINT, then bash scripts/azure/database.sh   (docs/operations/runbooks/database.md)"
+  log_info "  5. $HOME_ADDRESS_HINT   (docs/operations/runbooks/home-address.md), then bash scripts/azure/database.sh   (docs/operations/runbooks/database.md)"
   log_info "  6. bash scripts/azure/verify.sh, then bash scripts/azure/verify.sh --entra and bash scripts/azure/verify.sh --database"
 }
 

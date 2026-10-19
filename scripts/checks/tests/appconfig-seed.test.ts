@@ -298,7 +298,7 @@ test('the command line prints tab-separated rows and validates a directory', () 
     'Erp:Platform:Identity:ClientCertificate\tErp--Platform--Identity--ClientCertificate\tlocal-dev,production',
     'Erp:Platform:Database:ConnectionString\tErp--Platform--Database--ConnectionString\tlocal-dev,production',
     'Erp:Platform:Database:MigratorConnectionString\tErp--Platform--Database--MigratorConnectionString\tproduction',
-    'Erp:Platform:Attachments:EncryptionKey\tErp--Platform--Attachments--EncryptionKey\tlocal-dev',
+    'Erp:Platform:Attachments:EncryptionKey\tErp--Platform--Attachments--EncryptionKey\tlocal-dev,production',
   ]);
   assert.equal(run('validate', seedDirectory).status, 0);
 

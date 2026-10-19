@@ -32,7 +32,7 @@ resource server 'Microsoft.Sql/servers@2025-01-01' = {
     }
     minimalTlsVersion: '1.2'
     // The home server reaches the database over the internet. Its one firewall rule is kept by
-    // scripts/azure/database.sh, never by this template, so a deployment leaves the address as the
+    // scripts/azure/home-address.sh, never by this template, so a deployment leaves the address as the
     // operator last set it; IPv6 stays off so that IPv4 rule is the only way in.
     publicNetworkAccess: 'Enabled'
     isIPv6Enabled: 'Disabled'
