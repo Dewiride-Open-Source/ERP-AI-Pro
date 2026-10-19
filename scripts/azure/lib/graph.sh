@@ -16,18 +16,13 @@ readonly PENDING_ID='<pending>'
 readonly APP_ROLES_FILE='scripts/azure/entra/app-roles.json'
 readonly OPTIONAL_CLAIMS_FILE='scripts/azure/entra/optional-claims.json'
 readonly CERTIFICATE_POLICY_TEMPLATE='scripts/azure/entra/certificate-policy.json'
-readonly ENTRA_TEMP_DIR='scripts/azure/out'
 readonly APP_ROLE_ADMIN_VALUE='Erp.Admin'
 readonly APP_ROLE_USER_VALUE='Erp.User'
 readonly SIGNIN_LABELS=(local-dev production)
 readonly SIGNIN_CERTIFICATE_NAME='Erp--Platform--Identity--ClientCertificate'
 readonly SIGNIN_CERTIFICATE_CONTENT_TYPE='application/x-pkcs12'
-readonly RUNTIME_CERTIFICATE_NAME='Erp--Platform--Identity--RuntimeClientCertificate'
-readonly RUNTIME_CERTIFICATE_CONTENT_TYPE='application/x-pem-file'
-readonly RUNTIME_CERTIFICATE_COMMON_NAME='erp-ai-pro-runtime-production'
-readonly MIGRATOR_CERTIFICATE_NAME='Erp--Platform--Identity--MigratorClientCertificate'
-readonly MIGRATOR_CERTIFICATE_CONTENT_TYPE='application/x-pem-file'
-readonly MIGRATOR_CERTIFICATE_COMMON_NAME='erp-ai-pro-migrator-production'
+readonly SERVER_TARGETS=(runtime migrator)
+readonly CLIENT_CERTIFICATE_CONTENT_TYPE='application/x-pem-file'
 readonly IDENTITY_TENANT_ID_KEY='Erp:Platform:Identity:TenantId'
 readonly IDENTITY_CLIENT_ID_KEY='Erp:Platform:Identity:ClientId'
 readonly IDENTITY_WEB_ORIGIN_KEY='Erp:Platform:Identity:WebOrigin'
@@ -115,6 +110,41 @@ signin_vault() {
 signin_certificate_common_name() {
   require_signin_label "$1"
   printf 'erp-ai-pro-web-%s' "$1"
+}
+
+is_server_target() {
+  local candidate
+  for candidate in "${SERVER_TARGETS[@]}"; do
+    [[ "$1" == "$candidate" ]] && return 0
+  done
+  return 1
+}
+
+require_server_target() {
+  is_server_target "$1" || die "server identity must be one of: ${SERVER_TARGETS[*]}; got '$1'"
+}
+
+server_app_name() {
+  require_server_target "$1"
+  case "$1" in
+    runtime) printf '%s' "$ERP_AZURE_APP_RUNTIME_NAME" ;;
+    migrator) printf '%s' "$ERP_AZURE_APP_MIGRATOR_NAME" ;;
+  esac
+}
+
+client_certificate_name() {
+  require_server_target "$1"
+  printf 'Erp--Platform--Identity--%sClientCertificate' "${1^}"
+}
+
+client_certificate_common_name() {
+  require_server_target "$1"
+  printf 'erp-ai-pro-%s-production' "$1"
+}
+
+client_certificate_file() {
+  require_server_target "$1"
+  printf 'erp-%s-client.pem' "$1"
 }
 
 signin_web_origin() {
@@ -650,8 +680,7 @@ render_certificate_policy() {
   local common_name="$1" content_type="$2"
   require_repo_root_cwd
   [[ -f "$CERTIFICATE_POLICY_TEMPLATE" ]] || die "certificate policy template '$CERTIFICATE_POLICY_TEMPLATE' not found"
-  mkdir -p -- "$ENTRA_TEMP_DIR"
-  CERTIFICATE_POLICY_FILE="$(mktemp "$ENTRA_TEMP_DIR/certificate-policy.XXXXXX")" || die "cannot create a temporary file under $ENTRA_TEMP_DIR"
+  CERTIFICATE_POLICY_FILE="$(azure_temp_file certificate-policy)"
   trap remove_certificate_policy_file EXIT
   sed -e "s|__SUBJECT__|$common_name|" -e "s|__CONTENT_TYPE__|$content_type|" "$CERTIFICATE_POLICY_TEMPLATE" > "$CERTIFICATE_POLICY_FILE"
 }

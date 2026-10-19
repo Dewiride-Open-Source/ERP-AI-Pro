@@ -1,6 +1,6 @@
 targetScope = 'resourceGroup'
 
-import { RoleAssignment } from './modules/types.bicep'
+import { RoleAssignment, SecretRoleAssignment } from './modules/types.bicep'
 
 param location string = resourceGroup().location
 
@@ -18,6 +18,10 @@ param developmentKeyVaultName string
 @minLength(3)
 @maxLength(24)
 param productionKeyVaultName string
+
+@minLength(3)
+@maxLength(24)
+param operationsKeyVaultName string
 
 @minLength(3)
 @maxLength(24)
@@ -51,6 +55,8 @@ param developersGroupPrincipalId string = ''
 param runtimePrincipalId string = ''
 
 param migratorPrincipalId string = ''
+
+param migratorSecretNames string = ''
 
 param tags object = {
   project: 'erp-ai-pro'
@@ -158,19 +164,30 @@ var productionKeyVaultRoleAssignments RoleAssignment[] = concat(
           principalType: 'ServicePrincipal'
           roleDefinitionId: roleDefinitionIds.keyVaultCryptoServiceEncryptionUser
         }
-      ],
-  // The migrator reads its connection string and nothing else from the vault; it never
-  // touches the key ring, so it holds no crypto role.
-  empty(migratorPrincipalId)
-    ? []
-    : [
-        {
-          principalId: migratorPrincipalId
-          principalType: 'ServicePrincipal'
-          roleDefinitionId: roleDefinitionIds.keyVaultSecretsUser
-        }
       ]
 )
+
+var productionKeyVaultSecretRoleAssignments SecretRoleAssignment[] = [
+  for secretName in (empty(migratorPrincipalId) || empty(migratorSecretNames) ? [] : split(migratorSecretNames, ',')): {
+    secretName: secretName
+    principalId: migratorPrincipalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: roleDefinitionIds.keyVaultSecretsUser
+  }
+]
+
+var operationsKeyVaultRoleAssignments RoleAssignment[] = [
+  {
+    principalId: operatorPrincipalId
+    principalType: 'User'
+    roleDefinitionId: roleDefinitionIds.keyVaultSecretsOfficer
+  }
+  {
+    principalId: operatorPrincipalId
+    principalType: 'User'
+    roleDefinitionId: roleDefinitionIds.keyVaultCertificatesOfficer
+  }
+]
 
 var developmentStorageRoleAssignments RoleAssignment[] = concat(
   [
@@ -219,6 +236,18 @@ module productionKeyVault 'modules/key-vault.bicep' = {
     location: location
     tags: tags
     roleAssignments: productionKeyVaultRoleAssignments
+    secretRoleAssignments: productionKeyVaultSecretRoleAssignments
+  }
+}
+
+module operationsKeyVault 'modules/key-vault.bicep' = {
+  name: 'key-vault-operations'
+  params: {
+    name: operationsKeyVaultName
+    location: location
+    tags: tags
+    roleAssignments: operationsKeyVaultRoleAssignments
+    createDataProtectionKey: false
   }
 }
 
@@ -251,6 +280,7 @@ output configurationStoreEndpoint string = configurationStore.outputs.endpoint
 output configurationStoreId string = configurationStore.outputs.id
 output developmentKeyVaultUri string = developmentKeyVault.outputs.uri
 output productionKeyVaultUri string = productionKeyVault.outputs.uri
+output operationsKeyVaultUri string = operationsKeyVault.outputs.uri
 output developmentDataProtectionKeyUri string = developmentKeyVault.outputs.dataProtectionKeyUri
 output productionDataProtectionKeyUri string = productionKeyVault.outputs.dataProtectionKeyUri
 output developmentAttachmentsBlobEndpoint string = developmentStorageAccount.outputs.blobEndpoint

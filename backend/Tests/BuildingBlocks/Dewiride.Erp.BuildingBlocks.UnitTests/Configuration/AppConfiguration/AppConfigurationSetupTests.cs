@@ -1,4 +1,5 @@
 using Azure.Core;
+using Azure.Data.AppConfiguration;
 using Dewiride.Erp.BuildingBlocks.Configuration.AppConfiguration;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.BuildingBlocks.UnitTests.Configuration.AppConfiguration.Fakes;
@@ -10,7 +11,12 @@ namespace Dewiride.Erp.BuildingBlocks.UnitTests.Configuration.AppConfiguration;
 public sealed class AppConfigurationSetupTests
 {
     private const string ApplicationNameKey = "Erp:Platform:Host:ApplicationName";
+    private const string ConnectionStringKey = "Erp:Platform:Database:ConnectionString";
+    private const string ClientCertificateKey = "Erp:Platform:Identity:ClientCertificate";
     private const string FeatureFlagKeyFilter = ".appconfig.featureflag/*";
+    private const string SecretName = "Erp--Platform--Example";
+    private static readonly Uri Vault = new("https://kv-example.vault.azure.net/");
+    private static readonly Uri Secret = new(Vault, $"secrets/{SecretName}");
 
     [Fact]
     public void Configure_LoadsUnlabelledThenLabelledKeysAndFeatureFlags()
@@ -52,12 +58,70 @@ public sealed class AppConfigurationSetupTests
         Assert.Equal([(AppConfigurationSetup.SentinelKey, ErpEnvironmentNames.Production)], client.WatchedKeys);
     }
 
-    private static IConfiguration Load(FakeConfigurationClient client, string label) =>
+    [Fact]
+    public void Configure_NamedReferences_LoadsAnUnnamedReferenceEmptyWithoutOpeningKeyVault()
+    {
+        var client = new FakeConfigurationClient().WithReference(ClientCertificateKey, Secret, ErpEnvironmentNames.Production);
+        var secrets = new FakeSecretClient(Vault);
+
+        var configuration = Load(client, ErpEnvironmentNames.Production, new HashSet<string> { ConnectionStringKey }, secrets);
+
+        Assert.Equal(string.Empty, configuration[ClientCertificateKey]);
+        Assert.Empty(secrets.Requested);
+    }
+
+    [Fact]
+    public void Configure_NamedReferences_OpensTheNamedReference()
+    {
+        var client = new FakeConfigurationClient().WithReference(ConnectionStringKey, Secret, ErpEnvironmentNames.Production);
+        var secrets = new FakeSecretClient(Vault);
+
+        var configuration = Load(client, ErpEnvironmentNames.Production, new HashSet<string> { ConnectionStringKey }, secrets);
+
+        Assert.Equal(FakeSecretClient.ValueOf(SecretName), configuration[ConnectionStringKey]);
+        Assert.Equal([SecretName], secrets.Requested);
+    }
+
+    [Fact]
+    public void Configure_NoNamedReferences_OpensEveryReference()
+    {
+        var client = new FakeConfigurationClient().WithReference(ClientCertificateKey, Secret, ErpEnvironmentNames.Production);
+        var secrets = new FakeSecretClient(Vault);
+
+        var configuration = Load(client, ErpEnvironmentNames.Production, keyVaultReferences: null, secrets);
+
+        Assert.Equal(FakeSecretClient.ValueOf(SecretName), configuration[ClientCertificateKey]);
+        Assert.Equal([SecretName], secrets.Requested);
+    }
+
+    [Fact]
+    public void WithoutUnnamedReference_PlainSetting_ReturnsTheSettingUnchanged()
+    {
+        var setting = new ConfigurationSetting(ApplicationNameKey, "ERP-AI-Pro");
+
+        Assert.Same(setting, AppConfigurationSetup.WithoutUnnamedReference(setting, new HashSet<string>()));
+    }
+
+    private static IConfiguration Load(
+        FakeConfigurationClient client,
+        string label,
+        IReadOnlySet<string>? keyVaultReferences = null,
+        FakeSecretClient? secrets = null) =>
         new ConfigurationBuilder()
             .AddAzureAppConfiguration(options =>
             {
-                AppConfigurationSetup.Configure(options, new Uri("https://example.azconfig.io"), label, new FakeTokenCredential(), new AppConfigurationRefreshOptions());
+                AppConfigurationSetup.Configure(
+                    options,
+                    new Uri("https://example.azconfig.io"),
+                    label,
+                    new FakeTokenCredential(),
+                    new AppConfigurationRefreshOptions(),
+                    keyVaultReferences);
                 options.SetClientFactory(new FakeConfigurationClientFactory(client));
+                if (secrets is not null)
+                {
+                    options.ConfigureKeyVault(keyVault => keyVault.Register(secrets));
+                }
             })
             .Build();
 

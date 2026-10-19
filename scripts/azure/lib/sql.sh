@@ -5,6 +5,9 @@ if [[ -n "${ERP_AZURE_SQL_SH_LOADED:-}" ]]; then
 fi
 readonly ERP_AZURE_SQL_SH_LOADED=1
 
+# shellcheck source=common.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
+
 readonly SQL_API_VERSION='2025-01-01'
 readonly SQL_FIREWALL_RULE_NAME='home'
 readonly SQL_SERVER_LOCK_NAME='do-not-delete'
@@ -14,6 +17,7 @@ readonly SQL_CONNECTION_STRING_SECRETS=(Erp--Platform--Database--ConnectionStrin
 readonly SQL_WINDOWS_GO_SQLCMD='/c/Program Files/SqlCmd/sqlcmd.exe'
 readonly SQL_ACCESS_ATTEMPTS=10
 readonly SQL_ACCESS_DELAY_SECONDS=30
+readonly SQL_HOME_HINT='from a computer on the home network, without a VPN: bash scripts/azure/database.sh --allow-current-address'
 
 SQLCMD_BIN=''
 SQL_SERVER_HOST=''
@@ -58,13 +62,34 @@ database_connection_string() {
 }
 
 sql_server_exists() {
-  az_read sql server show --name "$ERP_AZURE_SQL_SERVER_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --query name --output tsv > /dev/null 2>&1
+  local output
+  if output="$(az_read sql server show --name "$ERP_AZURE_SQL_SERVER_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --query name --output tsv 2>&1)"; then
+    return 0
+  fi
+  [[ "$output" == *ResourceNotFound* || "$output" == *'was not found'* ]] \
+    || die "cannot read the server $ERP_AZURE_SQL_SERVER_NAME: $output"
+  return 1
 }
 
 resolve_sql_server_host() {
   SQL_SERVER_HOST="$(az_read sql server show --name "$ERP_AZURE_SQL_SERVER_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
     --query fullyQualifiedDomainName --output tsv)" || die "cannot read the server $ERP_AZURE_SQL_SERVER_NAME; run: bash scripts/azure/provision.sh"
   [[ -n "$SQL_SERVER_HOST" ]] || die "the server $ERP_AZURE_SQL_SERVER_NAME has no host name"
+}
+
+firewall_rules_tsv() {
+  az_read sql server firewall-rule list --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" \
+    --query '[].[name, startIpAddress, endIpAddress]' --output tsv
+}
+
+home_rule_address() {
+  local rules name start end
+  rules="$(firewall_rules_tsv)" || die "cannot list the firewall rules of $ERP_AZURE_SQL_SERVER_NAME"
+  while IFS=$'\t' read -r name start end; do
+    if [[ "$name" == "$SQL_FIREWALL_RULE_NAME" && "$start" == "$end" ]]; then
+      printf '%s' "$start"
+    fi
+  done <<< "$rules"
 }
 
 sql_run() {
@@ -88,35 +113,50 @@ refused_client_address() {
   printf '%s' "${BASH_REMATCH[1]}"
 }
 
-# Prints the address the firewall refused, or the error; exits 0 when the server answered, 1 when its firewall
-# refused this computer and 2 when it could not be reached.
-probe_sql_access() {
-  local output address
-  if output="$(sql_run master -h -1 -Q 'SET NOCOUNT ON; SELECT 1;')"; then
-    return 0
-  fi
-  if address="$(refused_client_address "$output")"; then
-    printf '%s' "$address"
-    return 1
-  fi
-  printf '%s' "$output"
-  return 2
+first_value() {
+  local line
+  while IFS= read -r line; do
+    if [[ -n "${line//[[:space:]]/}" ]]; then
+      printf '%s' "${line//[[:space:]]/}"
+      return 0
+    fi
+  done <<< "$1"
 }
 
-# A firewall rule takes up to five minutes to apply, so a refusal of a newly allowed address is waited out.
+probe_sql_access() {
+  local output address
+  if output="$(sql_run master -h -1 -W -Q 'SET NOCOUNT ON; SELECT client_net_address FROM sys.dm_exec_connections WHERE session_id = @@SPID;')"; then
+    printf 'answered %s' "$(first_value "$output")"
+  elif address="$(refused_client_address "$output")"; then
+    printf 'refused %s' "$address"
+  elif [[ "$output" == *'Login failed'* ]]; then
+    printf 'signin-refused %s' "$(printf '%s' "$output" | tr '\n' ' ')"
+  else
+    printf 'unreachable %s' "$(printf '%s' "$output" | tr '\n' ' ')"
+  fi
+}
+
+# A firewall rule takes up to five minutes to apply, so a refusal of the address the rule already names is waited out;
+# any other refusal is a changed home address, which no wait can fix.
 wait_for_sql_access() {
   local attempts="$1"
-  local attempt=1 result status
+  local attempt=1 result home_address
   while true; do
-    result="$(probe_sql_access)" && status=0 || status=$?
-    case "$status" in
-      0) return 0 ;;
-      2) die "cannot reach $SQL_SERVER_HOST: $result" ;;
+    result="$(probe_sql_access)"
+    case "$result" in
+      answered*) return 0 ;;
+      refused*) ;;
+      signin-refused*) die "the server refused the sign-in of $(az_read account show --query user.name --output tsv): ${result#signin-refused }" ;;
+      *) die "cannot reach $SQL_SERVER_HOST: ${result#unreachable }" ;;
     esac
-    if (( attempt >= attempts )); then
-      die "the firewall of $ERP_AZURE_SQL_SERVER_NAME refuses this computer's address $result; run: bash scripts/azure/database.sh --allow-current-address"
+    home_address="$(home_rule_address)"
+    if [[ "${result#refused }" != "$home_address" ]]; then
+      die "the firewall refuses this computer's address ${result#refused }, and its rule $SQL_FIREWALL_RULE_NAME admits ${home_address:-no single address}; run $SQL_HOME_HINT"
     fi
-    log_warn "the firewall refuses $result (attempt $attempt of $attempts; a rule changed within five minutes is still applying); retrying in ${SQL_ACCESS_DELAY_SECONDS}s"
+    if (( attempt >= attempts )); then
+      die "the firewall of $ERP_AZURE_SQL_SERVER_NAME still refuses ${result#refused } after $attempts attempts"
+    fi
+    log_warn "the firewall refuses ${result#refused } (attempt $attempt of $attempts; the rule changed within the last five minutes and is still applying); retrying in ${SQL_ACCESS_DELAY_SECONDS}s"
     sleep "$SQL_ACCESS_DELAY_SECONDS"
     attempt=$((attempt + 1))
   done

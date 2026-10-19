@@ -17,14 +17,18 @@ namespace Dewiride.Erp.BuildingBlocks.Configuration;
 
 public static class ErpConfigurationExtensions
 {
-    public static IHostApplicationBuilder AddErpConfiguration(this IHostApplicationBuilder builder, Assembly hostAssembly) =>
-        builder.AddErpConfiguration(hostAssembly, Environment.GetEnvironmentVariable, configureProvider: null);
+    public static IHostApplicationBuilder AddErpConfiguration(
+        this IHostApplicationBuilder builder,
+        Assembly hostAssembly,
+        IReadOnlySet<string>? keyVaultReferences = null) =>
+        builder.AddErpConfiguration(hostAssembly, Environment.GetEnvironmentVariable, configureProvider: null, keyVaultReferences);
 
     internal static IHostApplicationBuilder AddErpConfiguration(
         this IHostApplicationBuilder builder,
         Assembly hostAssembly,
         Func<string, string?> environmentVariable,
-        Action<AzureAppConfigurationOptions>? configureProvider)
+        Action<AzureAppConfigurationOptions>? configureProvider,
+        IReadOnlySet<string>? keyVaultReferences = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(hostAssembly);
@@ -44,7 +48,7 @@ public static class ErpConfigurationExtensions
             builder.Configuration.AddAzureAppConfiguration(
                 options =>
                 {
-                    AppConfigurationSetup.Configure(options, info.Endpoint!, info.Label!, credential, refresh);
+                    AppConfigurationSetup.Configure(options, info.Endpoint!, info.Label!, credential, refresh, keyVaultReferences);
                     configureProvider?.Invoke(options);
                 },
                 optional: false);

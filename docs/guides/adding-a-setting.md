@@ -62,11 +62,11 @@ A key that must differ per environment gets its unlabelled default in `defaults.
    The same key must not appear as a plain value in any seed file. When only one environment holds the secret, the optional `labels` array restricts the reference to those labels: `seed.sh` writes it and `verify.sh --labels` checks it only under the listed labels, and a label that is not listed gets no reference at all. Omit `labels` when both environments hold the secret.
 
    ```json
-   { "key": "Erp:Platform:Database:ConnectionString", "secret": "Erp--Platform--Database--ConnectionString", "labels": ["local-dev"] }
+   { "key": "Erp:Platform:Database:MigratorConnectionString", "secret": "Erp--Platform--Database--MigratorConnectionString", "labels": ["production"] }
    ```
 3. Register the secret name in [docs/configuration.md](../configuration.md) under Secrets and the key under Configuration keys.
 4. `bash scripts/azure/seed.sh` composes the vault URI from `params.env` (`kv-erp-ai-pro-dev` for `local-dev`, `kv-erp-ai-pro-prod` for `production`) for each label the reference applies to, confirms the secret exists in that vault and only then writes the reference; a missing secret stops the run. There are no placeholder secrets: an unresolvable reference fails API startup, and a placeholder would later be read as the real value.
-5. Bind the key like any other setting; the API resolves the reference with its own identity (the developer's `az login` locally, the runtime service principal in the container) and caches the value for `Erp:Platform:Configuration:SecretRefreshInterval` (one hour).
+5. Bind the key like any other setting; the API resolves the reference with its own identity (the developer's `az login` locally, the runtime service principal in the container) and caches the value for `Erp:Platform:Configuration:SecretRefreshInterval` (one hour). The migrator opens only the references `MigratorApplication.KeyVaultReferences` names, with the migrator service principal's roles on those secrets alone, and loads every other reference empty, so a secret the migrator must read needs an entry there and a role on that secret, which `provision.sh` grants through the template parameter `migratorSecretNames`, today the two connection strings ([ADR-0050](../adr/0050-the-production-database-azure-sql-basic-with-microsoft-entra-only-users.md)).
 
 ## Bump the sentinel by hand
 

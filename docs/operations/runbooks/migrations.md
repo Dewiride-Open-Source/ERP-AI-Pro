@@ -48,7 +48,8 @@ It exits 0 when every sweep completed, 1 when a sweep failed (after running the 
 | 2, "The migrator configuration is invalid" | a setting, credential or configuration source the migrator could not load: a missing or invalid value, an unresolvable Key Vault reference, a missing or expired certificate, an unreachable App Configuration store | fix the setting, reference or certificate named in the message, then repeat step 3 |
 | 1 with a SQL error | a migration or a seeder failed; EF Core rolls back the migration in progress, earlier migrations stay applied | fix the migration or seeder in a new release; never edit an applied migration |
 | 1, "cancelled" | the container was stopped mid-run; the migration in progress rolled back | repeat step 3 |
-| 1 with a login or permission error | the migrator user lost its schema rights, or lacks `CREATE ROLE` or `CONTROL` on the schema `audit` (the migration `AddChangeRecords` creates the role `erp_audit_append_only` and denies it on that schema) | restore the rights (first-deployment database runbook), then repeat step 3 |
+| 1 with error 40615, `Client with IP address '<address>' is not allowed to access the server` | the home's public address changed and the firewall rule still names the old one | move the rule ([database runbook](database.md), section "When the home's address changes"), then repeat step 3 |
+| 1 with another login or permission error | the migrator user lost its schema rights, or lacks `CREATE ROLE` or `CONTROL` on the schema `audit` (the migration `AddChangeRecords` creates the role `erp_audit_append_only` and denies it on that schema), or the database no longer knows the migrator's identity | run `bash scripts/azure/database.sh` from the operator's computer, which restores the rights or names what it refuses ([database runbook](database.md), sections "Setting it up" and "Recovery"), then repeat step 3 |
 | 0 with an `Error` log of a retention sweep | a deletion past retention failed; the migrations and seeders are done | continue the deployment; fix the cause named in the log, and the next `migrate` or `retain` deletes what is due |
 | 1 from `retain`, with an `Error` log of a retention sweep | a deletion past retention failed; the other sweeps ran | fix the cause named in the log; the next `retain` deletes what is due |
 
@@ -57,5 +58,5 @@ A second migrator that starts while one is running waits for EF Core's database 
 ## Recovering from a bad migration
 
 1. Stop traffic to the API if the schema change broke it.
-2. Restore the database to the point in time before the deployment (Azure SQL point-in-time restore to a new database, then swap the connection string reference), or ship a new migration that reverses the change.
+2. Restore the database to the point in time before the deployment (Azure SQL point-in-time restore to a new database, which then takes the live one's place: `provision.sh` writes both connection strings from `ERP_AZURE_SQL_DATABASE_NAME`, `first-deployment-backups-and-restore-drill`), or ship a new migration that reverses the change.
 3. Deploy the previous image digest only together with a database that matches it; an older API against a newer schema is not supported.

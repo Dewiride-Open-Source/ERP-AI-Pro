@@ -130,7 +130,7 @@ Shred the workstation's copy as well (`shred -u scripts/azure/out/erp-runtime-cl
 | `APPCONFIG_ENDPOINT` | `https://<store>.azconfig.io`, the one App Configuration store | the go-live |
 | `AZURE_TENANT_ID` | the Entra tenant id | the go-live |
 | `AZURE_CLIENT_ID` | the runtime service principal's application id | the go-live |
-| `MIGRATOR_AZURE_CLIENT_ID` | the migrator service principal's application id, which `entra.sh` prints as `MIGRATOR_CLIENT_ID` | the go-live, together with `erp-migrator-client.pem` |
+| `MIGRATOR_AZURE_CLIENT_ID` | the migrator service principal's application id, which `entra.sh` prints as `MIGRATOR_AZURE_CLIENT_ID` | the go-live, together with `erp-migrator-client.pem` |
 | `COMPOSE_NETWORK_CIDR` | the compose network, `172.28.0.0/16` unless that range is taken on the home network | rarely |
 
 The ids are not secrets. No secret ever goes into `.env`.

@@ -32,6 +32,7 @@ readonly ERP_AZURE_REQUIRED_PARAMS=(
 )
 
 readonly ERP_AZURE_APPCONFIG_SKUS=(Free Developer Standard Premium)
+readonly ERP_AZURE_TEMP_DIR='scripts/azure/out'
 
 log_step() { printf '\n==> %s\n' "$*" >&2; }
 log_info() { printf '    %s\n' "$*" >&2; }
@@ -138,19 +139,22 @@ load_params() {
   : "${ERP_AZURE_APP_RUNTIME_NAME:=ERP-AI-Pro Runtime (production)}"
   : "${ERP_AZURE_APP_MIGRATOR_NAME:=ERP-AI-Pro Migrator (production)}"
   : "${ERP_AZURE_STORAGE_DEV_NAME:=sterpaiprodev}"
+  : "${ERP_AZURE_KEYVAULT_OPS_NAME:=kv-erp-ai-pro-ops}"
   : "${ERP_AZURE_SQL_SERVER_NAME:=sql-erp-ai-pro}"
   : "${ERP_AZURE_SQL_DATABASE_NAME:=ErpAiPro}"
   : "${ERP_AZURE_SQLCMD:=}"
   export ERP_AZURE_APPCONFIG_SKU ERP_AZURE_DEVELOPERS_GROUP ERP_AZURE_PRODUCTION_WEB_ORIGIN \
     ERP_AZURE_LOCAL_WEB_ORIGIN ERP_AZURE_APP_WEB_LOCAL_DEV_NAME \
     ERP_AZURE_APP_WEB_PRODUCTION_NAME ERP_AZURE_APP_RUNTIME_NAME ERP_AZURE_APP_MIGRATOR_NAME \
-    ERP_AZURE_STORAGE_DEV_NAME ERP_AZURE_SQL_SERVER_NAME ERP_AZURE_SQL_DATABASE_NAME ERP_AZURE_SQLCMD
+    ERP_AZURE_STORAGE_DEV_NAME ERP_AZURE_KEYVAULT_OPS_NAME ERP_AZURE_SQL_SERVER_NAME ERP_AZURE_SQL_DATABASE_NAME ERP_AZURE_SQLCMD
 
   require_var "${ERP_AZURE_REQUIRED_PARAMS[@]}"
   is_guid "$ERP_AZURE_TENANT_ID" || die "ERP_AZURE_TENANT_ID must be a GUID"
   is_guid "$ERP_AZURE_SUBSCRIPTION_ID" || die "ERP_AZURE_SUBSCRIPTION_ID must be a GUID"
   [[ "$ERP_AZURE_STORAGE_DEV_NAME" =~ ^[a-z0-9]{3,24}$ ]] \
     || die "ERP_AZURE_STORAGE_DEV_NAME must be 3 to 24 lowercase letters or digits; '$ERP_AZURE_STORAGE_DEV_NAME' was rejected"
+  [[ "$ERP_AZURE_KEYVAULT_OPS_NAME" =~ ^[a-zA-Z][a-zA-Z0-9-]{1,22}[a-zA-Z0-9]$ ]] \
+    || die "ERP_AZURE_KEYVAULT_OPS_NAME must be 3 to 24 letters, digits or hyphens, starting with a letter; '$ERP_AZURE_KEYVAULT_OPS_NAME' was rejected"
   [[ "$ERP_AZURE_SQL_SERVER_NAME" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]] \
     || die "ERP_AZURE_SQL_SERVER_NAME must be 1 to 63 lowercase letters, digits or hyphens, starting and ending with a letter or digit; '$ERP_AZURE_SQL_SERVER_NAME' was rejected"
   [[ "$ERP_AZURE_SQL_DATABASE_NAME" =~ ^[A-Za-z0-9_]{1,128}$ ]] \
@@ -216,26 +220,15 @@ developers_group_object_id() {
   printf '%s' "$ids"
 }
 
-service_principal_object_id() {
-  local display_name="$1"
-  local ids
-  ids="$(az_read ad sp list --filter "displayName eq $(odata_string_literal "$display_name")" --query '[].id' --output tsv)" \
+service_principal_lookup() {
+  local display_name="$1" field="$2"
+  local values
+  values="$(az_read ad sp list --filter "displayName eq $(odata_string_literal "$display_name")" --query "[].$field" --output tsv)" \
     || die "cannot list service principals named '$display_name'"
-  if [[ -n "$ids" ]] && (( $(printf '%s\n' "$ids" | wc -l) > 1 )); then
-    die "more than one service principal is named '$display_name'; rename or delete the duplicates before granting roles"
-  fi
-  printf '%s' "$ids"
-}
-
-service_principal_app_id() {
-  local display_name="$1"
-  local ids
-  ids="$(az_read ad sp list --filter "displayName eq $(odata_string_literal "$display_name")" --query '[].appId' --output tsv)" \
-    || die "cannot list service principals named '$display_name'"
-  if [[ -n "$ids" ]] && (( $(printf '%s\n' "$ids" | wc -l) > 1 )); then
+  if [[ -n "$values" ]] && (( $(printf '%s\n' "$values" | wc -l) > 1 )); then
     die "more than one service principal is named '$display_name'; rename or delete the duplicates"
   fi
-  printf '%s' "$ids"
+  printf '%s' "$values"
 }
 
 run() {
@@ -270,6 +263,12 @@ retry() {
     sleep "$delay"
     attempt=$((attempt + 1))
   done
+}
+
+azure_temp_file() {
+  local purpose="$1"
+  mkdir -p -- "$ERP_AZURE_TEMP_DIR"
+  mktemp "$ERP_AZURE_TEMP_DIR/$purpose.XXXXXX" || die "cannot create a temporary file under $ERP_AZURE_TEMP_DIR"
 }
 
 store_resource_id() {

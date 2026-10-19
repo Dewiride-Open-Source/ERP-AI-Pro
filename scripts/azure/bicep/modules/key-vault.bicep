@@ -1,4 +1,4 @@
-import { RoleAssignment } from './types.bicep'
+import { RoleAssignment, SecretRoleAssignment } from './types.bicep'
 
 @minLength(3)
 @maxLength(24)
@@ -9,6 +9,10 @@ param location string
 param tags object
 
 param roleAssignments RoleAssignment[]
+
+param secretRoleAssignments SecretRoleAssignment[] = []
+
+param createDataProtectionKey bool = true
 
 param dataProtectionKeyName string = 'Erp--Platform--DataProtection--Key'
 
@@ -35,7 +39,7 @@ resource vault 'Microsoft.KeyVault/vaults@2025-05-01' = {
     }
   }
 
-  resource dataProtectionKey 'keys' = {
+  resource dataProtectionKey 'keys' = if (createDataProtectionKey) {
     name: dataProtectionKeyName
     properties: {
       kty: 'RSA'
@@ -47,6 +51,13 @@ resource vault 'Microsoft.KeyVault/vaults@2025-05-01' = {
     }
   }
 }
+
+resource assignedSecrets 'Microsoft.KeyVault/vaults/secrets@2025-05-01' existing = [
+  for assignment in secretRoleAssignments: {
+    parent: vault
+    name: assignment.secretName
+  }
+]
 
 resource vaultRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [
   for assignment in roleAssignments: {
@@ -63,6 +74,21 @@ resource vaultRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-0
   }
 ]
 
+resource secretRoleAssignmentResources 'Microsoft.Authorization/roleAssignments@2022-04-01' = [
+  for (assignment, index) in secretRoleAssignments: {
+    name: guid(assignedSecrets[index].id, assignment.principalId, assignment.roleDefinitionId)
+    scope: assignedSecrets[index]
+    properties: {
+      principalId: assignment.principalId
+      principalType: assignment.principalType
+      roleDefinitionId: subscriptionResourceId(
+        'Microsoft.Authorization/roleDefinitions',
+        assignment.roleDefinitionId
+      )
+    }
+  }
+]
+
 output uri string = vault.properties.vaultUri
 output id string = vault.id
-output dataProtectionKeyUri string = vault::dataProtectionKey.properties.keyUri
+output dataProtectionKeyUri string = createDataProtectionKey ? vault::dataProtectionKey!.properties.keyUri : ''
