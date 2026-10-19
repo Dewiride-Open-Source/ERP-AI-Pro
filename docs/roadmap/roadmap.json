@@ -1170,12 +1170,19 @@
           "id": "first-deployment-production-attachments-storage",
           "title": "Production attachments storage",
           "scope": "Provision the production storage account for attachments with the existing storage-account Bicep module (Entra only, private attachments container, blob and container soft delete, CanNotDelete lock) after asking the owner for its redundancy (locally redundant, zone-redundant across three Central India zones, or geo-redundant) and its soft-delete retention; grant Storage Blob Data Contributor on the container to the runtime service principal only; create Erp--Platform--Attachments--EncryptionKey in kv-erp-ai-pro-prod with its own value; write Erp:Platform:Attachments:BlobServiceUri and the EncryptionKey reference under the production label; optionally restrict the account to the server's fixed address; extend verify.sh to production; and prove a production upload and download round trip.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-10-18",
-          "acceptance": [],
+          "acceptance": [
+            "`scripts/azure/provision.sh` converges the production storage account in Central India with geo-redundant storage (`Standard_GRS`, replicated to South India), Shared Key authorization off, a private `attachments` container, blob and container soft delete of 90 days and a CanNotDelete lock, reachable only from the home's public IPv4 address (default action Deny, no trusted-service bypass, one IP rule); `--dry-run` prints the what-if and writes nothing.",
+            "Only the runtime service principal holds a data role on the production account, Storage Blob Data Contributor on its container, and `scripts/azure/verify.sh` checks the account, its blob service, its lock, its one IP rule (the address of the database's rule `home`) and that no other principal holds a Storage data role on or above it.",
+            "`scripts/azure/home-address.sh` moves the database's firewall rule `home` and the storage account's IP rule to the home's public address in one run, learning this computer's address from Azure or taking one given with `--address`, and refuses stray rules on either; `database.sh` converges only the users.",
+            "`Erp--Platform--Attachments--EncryptionKey` exists in `kv-erp-ai-pro-prod` with a value of its own that was never displayed, and `Erp:Platform:Attachments:BlobServiceUri` and the `Erp:Platform:Attachments:EncryptionKey` reference are written under `production`, which `verify.sh --labels` reads back.",
+            "The runtime service principal, signed in with its own certificate from the home's address, uploads a test file to the production container and reads it back unchanged."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-10-19"
         },
         {
           "id": "first-deployment-host-bootstrap-runbook-and-scripts",
