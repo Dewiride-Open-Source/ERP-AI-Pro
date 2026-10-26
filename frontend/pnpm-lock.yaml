@@ -171,14 +171,14 @@ catalogs:
       specifier: 2.1.1
       version: 2.1.1
     '@microsoft/kiota-abstractions':
-      specifier: 1.0.0-preview.110
-      version: 1.0.0-preview.110
+      specifier: 1.0.0-preview.111
+      version: 1.0.0-preview.111
     '@microsoft/kiota-http-fetchlibrary':
-      specifier: 1.0.0-preview.110
-      version: 1.0.0-preview.110
+      specifier: 1.0.0-preview.111
+      version: 1.0.0-preview.111
     '@microsoft/kiota-serialization-json':
-      specifier: 1.0.0-preview.110
-      version: 1.0.0-preview.110
+      specifier: 1.0.0-preview.111
+      version: 1.0.0-preview.111
     '@opentelemetry/api':
       specifier: 1.9.1
       version: 1.9.1
@@ -412,13 +412,13 @@ importers:
     dependencies:
       '@microsoft/kiota-abstractions':
         specifier: 'catalog:'
-        version: 1.0.0-preview.110
+        version: 1.0.0-preview.111
       '@microsoft/kiota-http-fetchlibrary':
         specifier: 'catalog:'
-        version: 1.0.0-preview.110
+        version: 1.0.0-preview.111
       '@microsoft/kiota-serialization-json':
         specifier: 'catalog:'
-        version: 1.0.0-preview.110
+        version: 1.0.0-preview.111
     devDependencies:
       '@dewiride/erp-config':
         specifier: workspace:*
@@ -968,14 +968,14 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@microsoft/kiota-abstractions@1.0.0-preview.110':
-    resolution: {integrity: sha512-O/GKSnI8AntXuH8+DmMcQffSKGbyKEZ0NmGxfOzES37LdETzr1b5SzGa6AgQ2jb/efJ80rATGFh3BNbO8vJ+uQ==}
+  '@microsoft/kiota-abstractions@1.0.0-preview.111':
+    resolution: {integrity: sha512-30YL4sR3qkbvZfrmHmVNHhUQLb1gRJFzFq6ozVL0VrvbB6EsQy/TIbQPTZIJyXT2i2Kenm6qKwuGlOuhN6gK6g==}
 
-  '@microsoft/kiota-http-fetchlibrary@1.0.0-preview.110':
-    resolution: {integrity: sha512-rt7eYXuL1+Iy0q5coKluePc3QqJNtlUyTooOpwKAPFk1+WXbNFev7q9AM4UwMAqBoA1MdxA+b6guB2xW1CDp7Q==}
+  '@microsoft/kiota-http-fetchlibrary@1.0.0-preview.111':
+    resolution: {integrity: sha512-3yrwMvIzVwcFBFAGXx47XZzXe9Z5U2BY4Mi00hj3uGoWDZ1WY+1rsHsz4vwKGzp5VflFLyL/JSbAgb5Af5Chcg==}
 
-  '@microsoft/kiota-serialization-json@1.0.0-preview.110':
-    resolution: {integrity: sha512-07YgD06Bhf5L2GuYj8lBH/3xf8nCh4Teq8PRPcAIcs5lY69a8kuvU57yq8/gmDCYDzpgndVgkK49qe/IXG+r2w==}
+  '@microsoft/kiota-serialization-json@1.0.0-preview.111':
+    resolution: {integrity: sha512-tXl3f1Ic7XAJcExz7CtYrVokYa6A7Uiv7NOWKOvEllN+xYvPnQp6Z6OK/LF2ZIs06bM0SgegRXNXoahZGzzlaQ==}
 
   '@modelcontextprotocol/sdk@1.32.1':
     resolution: {integrity: sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw==}
@@ -1109,6 +1109,7 @@ packages:
   '@opentelemetry/sdk-trace-base@2.12.0':
     resolution: {integrity: sha512-JOERgZCxRM06FEJ5kEWxlSRChah6MmXDx3KwCruqEv/iEyLkTokCSemf2y1w8oIHtfrr8EVTpzebq/31vn2Cpg==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
@@ -4858,22 +4859,22 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@microsoft/kiota-abstractions@1.0.0-preview.110':
+  '@microsoft/kiota-abstractions@1.0.0-preview.111':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@std-uritemplate/std-uritemplate': 2.0.12
       tinyduration: 3.4.1
       tslib: 2.8.1
 
-  '@microsoft/kiota-http-fetchlibrary@1.0.0-preview.110':
+  '@microsoft/kiota-http-fetchlibrary@1.0.0-preview.111':
     dependencies:
-      '@microsoft/kiota-abstractions': 1.0.0-preview.110
+      '@microsoft/kiota-abstractions': 1.0.0-preview.111
       '@opentelemetry/api': 1.9.1
       tslib: 2.8.1
 
-  '@microsoft/kiota-serialization-json@1.0.0-preview.110':
+  '@microsoft/kiota-serialization-json@1.0.0-preview.111':
     dependencies:
-      '@microsoft/kiota-abstractions': 1.0.0-preview.110
+      '@microsoft/kiota-abstractions': 1.0.0-preview.111
       tslib: 2.8.1
 
   '@modelcontextprotocol/sdk@1.32.1(supports-color@7.2.0)(zod@3.25.76)':
