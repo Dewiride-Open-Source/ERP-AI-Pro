@@ -85,8 +85,10 @@ export class AppShell {
     return this.primaryNavigation.getByRole("link", { name, exact: true });
   }
 
-  paletteOption(name: string): Locator {
-    return this.paletteResults.getByRole("option", { name, exact: true });
+  paletteOption(label: string): Locator {
+    return this.paletteResults
+      .getByRole("option")
+      .filter({ has: this.page.getByText(label, { exact: true }) });
   }
 
   theme(value: ThemeOption): Locator {

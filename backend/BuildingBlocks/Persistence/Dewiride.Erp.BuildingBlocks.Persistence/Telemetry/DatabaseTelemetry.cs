@@ -6,7 +6,9 @@ namespace Dewiride.Erp.BuildingBlocks.Persistence.Telemetry;
 
 // SqlClient 7 and EF Core 10 start no activities of their own, so SQL spans and db.client.operation.duration come from the
 // OpenTelemetry SqlClient instrumentation. It records the parameterised query text and no parameter values unless
-// OTEL_DOTNET_EXPERIMENTAL_SQLCLIENT_ENABLE_TRACE_DB_QUERY_PARAMETERS is set, which docs/guides/observability.md forbids.
+// OTEL_DOTNET_EXPERIMENTAL_SQLCLIENT_ENABLE_TRACE_DB_QUERY_PARAMETERS is set, which docs/guides/observability.md forbids,
+// and names a failed command by error.type and db.response.status_code without SQL Server's message, which can quote a
+// value (a duplicate key, a truncated string) because RecordException stays off.
 public static class DatabaseTelemetry
 {
     public const string EntityFrameworkCoreMeter = "Microsoft.EntityFrameworkCore";
@@ -15,7 +17,7 @@ public static class DatabaseTelemetry
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddProcessor(new SqlErrorStatusProcessor()).AddSqlClientInstrumentation());
+        services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddSqlClientInstrumentation());
         services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddMeter(EntityFrameworkCoreMeter).AddSqlClientInstrumentation());
 
         return services;

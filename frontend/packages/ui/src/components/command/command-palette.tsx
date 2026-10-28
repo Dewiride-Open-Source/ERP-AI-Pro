@@ -240,8 +240,11 @@ function CommandSearch<T extends CommandPaletteItem>({
                   id={optionId(index)}
                   role="option"
                   aria-selected={index === active}
-                  aria-labelledby={`${optionId(index)}-label`}
-                  aria-describedby={item.description ? `${optionId(index)}-description` : undefined}
+                  aria-labelledby={
+                    item.description
+                      ? `${optionId(index)}-label ${optionId(index)}-description`
+                      : `${optionId(index)}-label`
+                  }
                   data-active={index === active || undefined}
                   onClick={() => choose(item)}
                   onMouseMove={(event) => {
@@ -257,12 +260,16 @@ function CommandSearch<T extends CommandPaletteItem>({
                       {item.label}
                     </span>
                     {item.description ? (
-                      <span
-                        id={`${optionId(index)}-description`}
-                        className="truncate text-caption text-muted-foreground"
-                      >
-                        {item.description}
-                      </span>
+                      <>
+                        {/* A grid renders no white space between its items, but the space keeps the label and the
+                            description two words apart in the option's text, which axe-core compares with its name. */}{" "}
+                        <span
+                          id={`${optionId(index)}-description`}
+                          className="truncate text-caption text-muted-foreground"
+                        >
+                          {item.description}
+                        </span>
+                      </>
                     ) : null}
                   </span>
                 </div>

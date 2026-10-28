@@ -1,4 +1,4 @@
-FROM docker.io/library/caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+FROM docker.io/library/caddy:2.11.7-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
 COPY COPYING COPYING.LESSER infra/docker/notices/proxy/THIRD-PARTY-NOTICES.txt infra/docker/notices/proxy/third-party-notices.json /usr/share/doc/erp-ai-pro/
 RUN { grep -q "\"pkg:github/caddyserver/caddy@${CADDY_VERSION}\"" /usr/share/doc/erp-ai-pro/third-party-notices.json \
       && test -s /usr/share/doc/erp-ai-pro/THIRD-PARTY-NOTICES.txt; } \

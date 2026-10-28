@@ -1,4 +1,4 @@
-FROM docker.io/library/node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS base
+FROM docker.io/library/node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS base
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
     NEXT_TELEMETRY_DISABLED=1
@@ -24,7 +24,7 @@ RUN pnpm --filter "@dewiride/erp-web..." build \
       -o -path '*/.pnpm/sharp@*' -o -path '*/.pnpm/@img+*' \) -print)" \
  && if [ -n "$forbidden" ]; then printf 'The standalone output holds sharp or libvips, which the web image keeps out:\n%s\n' "$forbidden" >&2; exit 1; fi
 
-FROM docker.io/library/node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS runtime
+FROM docker.io/library/node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS runtime
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \

@@ -11,15 +11,7 @@ export interface ReviewedAdvisory {
   readonly reason: string;
 }
 
-export const reviewedAdvisories: readonly ReviewedAdvisory[] = [
-  {
-    id: "GHSA-vfj7-8cjw-p6xm",
-    name: "braces",
-    through: ["eslint-config-next", "shadcn"],
-    reason:
-      "stack exhaustion through deeply nested patterns, and no braces release outside the vulnerable range <=3.0.3 is published; braces is reached only through fast-glob and micromatch of the Next.js ESLint plugin and the shadcn command line, which expand the repository's own file patterns on developer machines and in CI and never run in the web app, whose image copies the traced standalone output",
-  },
-];
+export const reviewedAdvisories: readonly ReviewedAdvisory[] = [];
 
 export interface Advisory {
   readonly id: string;

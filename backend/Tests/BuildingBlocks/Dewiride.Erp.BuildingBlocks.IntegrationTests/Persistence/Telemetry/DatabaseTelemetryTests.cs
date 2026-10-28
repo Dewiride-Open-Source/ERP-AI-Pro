@@ -14,6 +14,8 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
 {
     private const string Secret = "ABCDE1234F";
 
+    private const string SqlClientSourceName = "OpenTelemetry.Instrumentation.SqlClient";
+
     private static readonly ActivitySource Source = new("Dewiride.Erp.Tests.DatabaseTelemetry");
 
     [Fact]
@@ -30,7 +32,7 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
         });
 
         var span = Assert.Single(spans, candidate => candidate.ParentSpanId == parentSpanId);
-        Assert.Equal(SqlErrorStatusProcessor.SqlClientSourceName, span.SourceName);
+        Assert.Equal(SqlClientSourceName, span.SourceName);
         Assert.Equal(ActivityKind.Client, span.Kind);
         Assert.Equal("SELECT @value", span.Tag("db.query.text"));
         Assert.Equal("microsoft.sql_server", span.Tag("db.system.name"));
@@ -90,8 +92,6 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
         return parent.SpanId;
     }
 
-    // The database telemetry is registered before the recorder, as the host registers it before its exporter, so the
-    // recorder sees each span exactly as an exporter would.
     private static ServiceProvider BuildProvider(ExportedItemCollection<ExportedSpan> spans, ExportedItemCollection<Metric> metrics)
     {
         var services = new ServiceCollection();
@@ -109,7 +109,7 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
     private sealed class SpanRecorder(ExportedItemCollection<ExportedSpan> spans) : BaseProcessor<Activity>
     {
         public override void OnEnd(Activity data) =>
-            spans.Add(new ExportedSpan(data.ParentSpanId, data.Source.Name, data.Kind, data.Status, data.StatusDescription, [.. data.TagObjects]));
+            spans.Add(new ExportedSpan(data.ParentSpanId, data.Source.Name, data.Kind, data.Status, data.StatusDescription, [.. data.TagObjects], [.. data.Events]));
     }
 
     private sealed record ExportedSpan(
@@ -118,12 +118,16 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
         ActivityKind Kind,
         ActivityStatusCode Status,
         string? StatusDescription,
-        IReadOnlyList<KeyValuePair<string, object?>> Tags)
+        IReadOnlyList<KeyValuePair<string, object?>> Tags,
+        IReadOnlyList<ActivityEvent> Events)
     {
         public object? Tag(string key) => Tags.FirstOrDefault(tag => tag.Key == key).Value;
 
         public bool Mentions(string value) =>
             StatusDescription?.Contains(value, StringComparison.Ordinal) == true
-            || Tags.Any(tag => tag.Value?.ToString()?.Contains(value, StringComparison.Ordinal) == true);
+            || Tags.Any(tag => Carries(tag.Value, value))
+            || Events.Any(item => item.Name.Contains(value, StringComparison.Ordinal) || item.Tags.Any(tag => Carries(tag.Value, value)));
+
+        private static bool Carries(object? tagValue, string value) => tagValue?.ToString()?.Contains(value, StringComparison.Ordinal) == true;
     }
 }
