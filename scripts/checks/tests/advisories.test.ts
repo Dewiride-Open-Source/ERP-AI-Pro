@@ -194,9 +194,20 @@ test('the command line fails on every finding of a saved report and passes a cle
   const report = join(directory, 'pnpm-audit.json');
   const run = () => spawnSync(process.execPath, [cli, '--from', report], { encoding: 'utf8' });
 
+  const reviewed = reviewedAdvisories.map((review, index) =>
+    pnpmAdvisory({
+      id: 2000000 + index,
+      module_name: review.name,
+      github_advisory_id: review.id,
+      url: `https://github.com/advisories/${review.id}`,
+      title: `${review.name} issue`,
+      findings: [{ version: '1.0.0', paths: [`apps__web>${review.through[0]}>${review.name}`] }],
+    }),
+  );
   writeFileSync(
     report,
     pnpmReport(
+      ...reviewed,
       pnpmAdvisory({
         severity: 'moderate',
         module_name: 'postcss',
@@ -210,7 +221,11 @@ test('the command line fails on every finding of a saved report and passes a cle
   const clean = run();
   assert.equal(clean.status, 0, clean.stderr);
   assert.match(clean.stdout, /^ {2}below high, not blocking: postcss 8\.5\.28: GHSA-7fh5-64p2-3v2j \(moderate\) postcss issue$/m);
-  assert.match(clean.stdout, /advisories ok: 769 npm packages audited, \d+ reviewed advisor(?:y|ies) without a published fix/);
+  const unfixed = reviewedAdvisories.length;
+  assert.match(
+    clean.stdout,
+    new RegExp(`advisories ok: 769 npm packages audited, ${unfixed} reviewed ${unfixed === 1 ? 'advisory' : 'advisories'} without a published fix`),
+  );
 
   writeFileSync(
     report,

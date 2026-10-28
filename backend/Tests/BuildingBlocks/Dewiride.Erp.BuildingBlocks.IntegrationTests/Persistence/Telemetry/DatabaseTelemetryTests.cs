@@ -109,7 +109,7 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
     private sealed class SpanRecorder(ExportedItemCollection<ExportedSpan> spans) : BaseProcessor<Activity>
     {
         public override void OnEnd(Activity data) =>
-            spans.Add(new ExportedSpan(data.ParentSpanId, data.Source.Name, data.Kind, data.Status, data.StatusDescription, [.. data.TagObjects]));
+            spans.Add(new ExportedSpan(data.ParentSpanId, data.Source.Name, data.Kind, data.Status, data.StatusDescription, [.. data.TagObjects], [.. data.Events]));
     }
 
     private sealed record ExportedSpan(
@@ -118,12 +118,16 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
         ActivityKind Kind,
         ActivityStatusCode Status,
         string? StatusDescription,
-        IReadOnlyList<KeyValuePair<string, object?>> Tags)
+        IReadOnlyList<KeyValuePair<string, object?>> Tags,
+        IReadOnlyList<ActivityEvent> Events)
     {
         public object? Tag(string key) => Tags.FirstOrDefault(tag => tag.Key == key).Value;
 
         public bool Mentions(string value) =>
             StatusDescription?.Contains(value, StringComparison.Ordinal) == true
-            || Tags.Any(tag => tag.Value?.ToString()?.Contains(value, StringComparison.Ordinal) == true);
+            || Tags.Any(tag => Carries(tag.Value, value))
+            || Events.Any(item => item.Name.Contains(value, StringComparison.Ordinal) || item.Tags.Any(tag => Carries(tag.Value, value)));
+
+        private static bool Carries(object? tagValue, string value) => tagValue?.ToString()?.Contains(value, StringComparison.Ordinal) == true;
     }
 }
