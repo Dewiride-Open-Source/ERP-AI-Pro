@@ -14,8 +14,8 @@ const hintMinWidth = 640;
 
 const applePlatform = /Mac|iPhone|iPad|iPod/;
 
-async function expectActive(shell: AppShell, name: string): Promise<void> {
-  const option = shell.paletteOption(name);
+async function expectActive(shell: AppShell, label: string): Promise<void> {
+  const option = shell.paletteOption(label);
   await expect(option).toHaveAttribute("aria-selected", "true");
   await expect(shell.paletteResults.getByRole("option", { selected: true })).toHaveCount(1);
   await expect(shell.paletteSearch).toHaveAttribute(
@@ -72,41 +72,20 @@ test.describe("page search", () => {
             - option "Home" [selected]
             - group "Platform":
               - text: Platform
-              - option "System"
-              - option "Attachments"
-              - option "Audit trail"
+              - option "System See which version of the ERP is running, since when, and its recent starts."
+              - option "Attachments Upload and download the files kept with the ERP."
+              - option "Audit trail See who changed what in the ERP, and when."
             - group "Organisation":
               - text: Organisation
-              - option "People"
-              - option "Organisation chart"
-              - option "Departments"
-              - option "Designations"
+              - option "People Register people, assign their roles and record their moves."
+              - option "Organisation chart See who works in each department and who reports to whom."
+              - option "Departments See the company's departments and which department each one sits under."
+              - option "Designations See the designations people can hold in the company."
       `);
       await expect(shell.paletteResults.getByRole("option")).toHaveCount(8);
       await expectActive(shell, "Home");
       await expect(shell.paletteStatus).toHaveText("");
-      await expect(shell.paletteOption("Home")).not.toHaveAttribute("aria-describedby");
-      await expect(shell.paletteOption("System")).toHaveAccessibleDescription(
-        "See which version of the ERP is running, since when, and its recent starts.",
-      );
-      await expect(shell.paletteOption("Attachments")).toHaveAccessibleDescription(
-        "Upload and download the files kept with the ERP.",
-      );
-      await expect(shell.paletteOption("Audit trail")).toHaveAccessibleDescription(
-        "See who changed what in the ERP, and when.",
-      );
-      await expect(shell.paletteOption("People")).toHaveAccessibleDescription(
-        "Register people, assign their roles and record their moves.",
-      );
-      await expect(shell.paletteOption("Organisation chart")).toHaveAccessibleDescription(
-        "See who works in each department and who reports to whom.",
-      );
-      await expect(shell.paletteOption("Departments")).toHaveAccessibleDescription(
-        "See the company's departments and which department each one sits under.",
-      );
-      await expect(shell.paletteOption("Designations")).toHaveAccessibleDescription(
-        "See the designations people can hold in the company.",
-      );
+      await expect(shell.paletteResults.locator("[aria-describedby]")).toHaveCount(0);
       await expect(shell.palette).toHaveAccessibleDescription(keyboardHint);
       if ((page.viewportSize()?.width ?? 0) >= hintMinWidth) await expect(hint).toBeVisible();
       else await expect(hint).toBeHidden();
@@ -118,9 +97,9 @@ test.describe("page search", () => {
         - listbox "Pages":
           - group "Platform":
             - text: Platform
-            - option "System" [selected]
-            - option "Attachments"
-            - option "Audit trail"
+            - option "System See which version of the ERP is running, since when, and its recent starts." [selected]
+            - option "Attachments Upload and download the files kept with the ERP."
+            - option "Audit trail See who changed what in the ERP, and when."
       `);
       await expect(shell.paletteResults.getByRole("option")).toHaveCount(3);
       await shell.paletteSearch.fill("plat att");
@@ -138,10 +117,10 @@ test.describe("page search", () => {
         - listbox "Pages":
           - group "Organisation":
             - text: Organisation
-            - option "People" [selected]
-            - option "Organisation chart"
-            - option "Departments"
-            - option "Designations"
+            - option "People Register people, assign their roles and record their moves." [selected]
+            - option "Organisation chart See who works in each department and who reports to whom."
+            - option "Departments See the company's departments and which department each one sits under."
+            - option "Designations See the designations people can hold in the company."
       `);
       await shell.paletteSearch.fill("organisation chart");
       await expect(shell.paletteStatus).toHaveText("1 page");

@@ -68,5 +68,6 @@
 | [0050](adr/0050-the-production-database-azure-sql-basic-with-microsoft-entra-only-users.md) | The production database: Azure SQL Basic with Microsoft Entra-only users |
 | [0051](adr/0051-the-production-attachments-storage-geo-redundant-and-reachable-from-the-homes-address-alone.md) | The production attachments storage: geo-redundant, reachable from the home's address alone |
 | [0052](adr/0052-the-edge-proxys-tls-policy-limits-timeouts-headers-and-access-log.md) | The edge proxy's TLS policy, limits, timeouts, headers and access log |
+| [0054](adr/0054-failed-sql-spans-rely-on-the-sqlclient-instrumentation.md) | Failed SQL spans rely on the SqlClient instrumentation to keep SQL Server's message out |
 
 New decisions use [0000-template.md](adr/0000-template.md).
