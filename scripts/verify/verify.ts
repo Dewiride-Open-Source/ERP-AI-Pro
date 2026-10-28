@@ -66,6 +66,7 @@ steps.push(
   { name: "deploy scripts check", cwd: repoRoot, command: bash, args: ["scripts/deploy/check.sh"], shell: false },
   { name: "roadmap tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/roadmap/tests/*.test.ts"] },
   { name: "check tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/checks/tests/*.test.ts"] },
+  { name: "notices tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/notices/tests/*.test.ts"] },
   { name: "api client tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/api-client/tests/*.test.ts"] },
   { name: "ef script tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/ef/tests/*.test.ts"] },
   { name: "roadmap check", cwd: repoRoot, command: "node", args: ["scripts/roadmap/roadmap.ts", "check"] },
@@ -93,12 +94,20 @@ if (values.e2e) {
 
 if (values.docker) {
   const compose = join(repoRoot, "infra", "compose");
+  const placeholderDigest = `sha256:${"0".repeat(64)}`;
   steps.push(
+    { name: "notices drift", cwd: repoRoot, command: "node", args: ["scripts/notices/drift.ts"] },
     { name: "docker build api", cwd: repoRoot, command: "docker", args: ["build", "-f", "infra/docker/api.Dockerfile", "-t", "ghcr.io/dewiride-open-source/erp-ai-pro/api:verify", "."] },
     { name: "docker build web", cwd: repoRoot, command: "docker", args: ["build", "-f", "infra/docker/web.Dockerfile", "-t", "ghcr.io/dewiride-open-source/erp-ai-pro/web:verify", "."] },
     { name: "docker build proxy", cwd: repoRoot, command: "docker", args: ["build", "-f", "infra/docker/proxy.Dockerfile", "-t", "ghcr.io/dewiride-open-source/erp-ai-pro/proxy:verify", "."] },
     { name: "compose config (local)", cwd: compose, command: "docker", args: ["compose", "-f", "compose.yaml", "-f", "compose.override.yaml", "config", "--quiet"] },
-    { name: "compose config (production)", cwd: compose, command: "docker", args: ["compose", "-f", "compose.yaml", "-f", "compose.production.yaml", "config", "--quiet"], env: { IMAGE_TAG: "verify", ERP_SITE_ADDRESS: "192.0.2.10" } },
+    {
+      name: "compose config (production)",
+      cwd: compose,
+      command: "docker",
+      args: ["compose", "-f", "compose.yaml", "-f", "compose.production.yaml", "config", "--quiet"],
+      env: { IMAGE_TAG: "verify", ERP_SITE_ADDRESS: "192.0.2.10", API_IMAGE_DIGEST: placeholderDigest, WEB_IMAGE_DIGEST: placeholderDigest, PROXY_IMAGE_DIGEST: placeholderDigest },
+    },
     { name: "compose smoke", cwd: repoRoot, command: "node", args: ["scripts/checks/compose-smoke.ts"], env: { IMAGE_TAG: "verify" } },
   );
 }

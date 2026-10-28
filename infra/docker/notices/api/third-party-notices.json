@@ -1,0 +1,1842 @@
+{
+  "image": "api",
+  "repository": "ghcr.io/dewiride-open-source/erp-ai-pro/api",
+  "base": "mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:3ed6558056b54d5c9dfefb7ff473728e022ff2bf1d976cbf8ee07b05ec594374",
+  "system": "Ubuntu 24.04.5 LTS",
+  "source": "https://github.com/Dewiride-Open-Source/ERP-AI-Pro",
+  "copyright": "Copyright (c) 2026 Dewiride Technologies Private Limited.",
+  "components": {
+    "pkg:generic/dotnet-runtime@10.0.13": {
+      "kind": "runtime",
+      "name": ".NET Runtime",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) .NET Foundation and Contributors"
+      ],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/dotnet/LICENSE.txt",
+        "/usr/share/dotnet/ThirdPartyNotices.txt"
+      ],
+      "source": "https://github.com/dotnet/runtime/tree/v10.0.13",
+      "detail": "the shared framework Microsoft.NETCore.App of the .NET base image; /usr/share/dotnet/ThirdPartyNotices.txt holds the notices of the components it includes"
+    },
+    "pkg:generic/aspnetcore-runtime@10.0.13": {
+      "kind": "runtime",
+      "name": "ASP.NET Core Runtime",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) .NET Foundation and Contributors"
+      ],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/dotnet/LICENSE.txt",
+        "/usr/share/dotnet/ThirdPartyNotices.txt"
+      ],
+      "source": "https://github.com/dotnet/aspnetcore/tree/v10.0.13",
+      "detail": "the shared framework Microsoft.AspNetCore.App of the .NET base image; /usr/share/dotnet/ThirdPartyNotices.txt holds the notices of the components it includes"
+    },
+    "pkg:nuget/Apache.Arrow@22.1.0": {
+      "kind": "nuget",
+      "name": "Apache.Arrow",
+      "version": "22.1.0",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [
+        "Copyright 2016-2025 The Apache Software Foundation",
+        "Copyright: (C) 2014 Google Inc."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/apache.arrow/22.1.0/apache.arrow.22.1.0.nupkg",
+      "supplier": "Organization: The Apache Software Foundation",
+      "detail": "built from https://github.com/apache/arrow/tree/fcc16d879fe3618b2a6806851922c51beb1a3fd2"
+    },
+    "pkg:nuget/Azure.Core@1.60.0": {
+      "kind": "nuget",
+      "name": "Azure.Core",
+      "version": "1.60.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.core/1.60.0/azure.core.1.60.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/84e76f0ebc1bb8ce92b5c28b2eddfa6016cfdc4a"
+    },
+    "pkg:nuget/Azure.Core@1.61.0": {
+      "kind": "nuget",
+      "name": "Azure.Core",
+      "version": "1.61.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.core/1.61.0/azure.core.1.61.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/3830815f87881cce7af68dd9dd4126cbd90e197b"
+    },
+    "pkg:nuget/Azure.Data.AppConfiguration@1.11.0": {
+      "kind": "nuget",
+      "name": "Azure.Data.AppConfiguration",
+      "version": "1.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.data.appconfiguration/1.11.0/azure.data.appconfiguration.1.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/be06b6760216b4d80270db1998143edbc554ed7d"
+    },
+    "pkg:nuget/Azure.Extensions.AspNetCore.DataProtection.Keys@1.6.4": {
+      "kind": "nuget",
+      "name": "Azure.Extensions.AspNetCore.DataProtection.Keys",
+      "version": "1.6.4",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.extensions.aspnetcore.dataprotection.keys/1.6.4/azure.extensions.aspnetcore.dataprotection.keys.1.6.4.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/c88fa3e69af1cec1bcdf3302338fcd642ac0baa5"
+    },
+    "pkg:nuget/Azure.Identity@1.21.0": {
+      "kind": "nuget",
+      "name": "Azure.Identity",
+      "version": "1.21.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.identity/1.21.0/azure.identity.1.21.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/f7400e4471111bf7f2154834022786119acbdd77"
+    },
+    "pkg:nuget/Azure.Messaging.EventGrid@5.0.0": {
+      "kind": "nuget",
+      "name": "Azure.Messaging.EventGrid",
+      "version": "5.0.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.messaging.eventgrid/5.0.0/azure.messaging.eventgrid.5.0.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/5caa16f29e5953d7c2fcd5949168ed1bc1e48c91"
+    },
+    "pkg:nuget/Azure.Messaging.EventGrid.SystemEvents@1.0.0": {
+      "kind": "nuget",
+      "name": "Azure.Messaging.EventGrid.SystemEvents",
+      "version": "1.0.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.messaging.eventgrid.systemevents/1.0.0/azure.messaging.eventgrid.systemevents.1.0.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/7444b8e4fc000805ebcee37c70acb902e60ca901"
+    },
+    "pkg:nuget/Azure.Security.KeyVault.Certificates@4.6.0": {
+      "kind": "nuget",
+      "name": "Azure.Security.KeyVault.Certificates",
+      "version": "4.6.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.security.keyvault.certificates/4.6.0/azure.security.keyvault.certificates.4.6.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/2ba5db394f2d52a490f3e8fb58991dd27f94f3c8"
+    },
+    "pkg:nuget/Azure.Security.KeyVault.Keys@4.10.2": {
+      "kind": "nuget",
+      "name": "Azure.Security.KeyVault.Keys",
+      "version": "4.10.2",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.security.keyvault.keys/4.10.2/azure.security.keyvault.keys.4.10.2.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/94d96d1ca05657c51326df85d11ec829a89b85fd"
+    },
+    "pkg:nuget/Azure.Security.KeyVault.Secrets@4.8.0": {
+      "kind": "nuget",
+      "name": "Azure.Security.KeyVault.Secrets",
+      "version": "4.8.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.security.keyvault.secrets/4.8.0/azure.security.keyvault.secrets.4.8.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/444d6e6d437aaada932a630bfe1a881a7f0f306f"
+    },
+    "pkg:nuget/Azure.Storage.Blobs@12.30.1": {
+      "kind": "nuget",
+      "name": "Azure.Storage.Blobs",
+      "version": "12.30.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.storage.blobs/12.30.1/azure.storage.blobs.12.30.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/76757861573893283568dd0764eba22e014c066e"
+    },
+    "pkg:nuget/Azure.Storage.Common@12.29.0": {
+      "kind": "nuget",
+      "name": "Azure.Storage.Common",
+      "version": "12.29.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.storage.common/12.29.0/azure.storage.common.12.29.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/ee03a772f5ed0c3561ce7e66cbf9855a8ffbd98a"
+    },
+    "pkg:nuget/DnsClient@1.7.0": {
+      "kind": "nuget",
+      "name": "DnsClient",
+      "version": "1.7.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright (c) 2021 Michael Conrad"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/dnsclient/1.7.0/dnsclient.1.7.0.nupkg",
+      "supplier": "Organization: MichaCo",
+      "detail": "built from https://github.com/MichaCo/DnsClient.NET"
+    },
+    "pkg:nuget/Microsoft.AspNetCore.Authentication.JwtBearer@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.AspNetCore.Authentication.JwtBearer",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        4
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authentication.jwtbearer/10.0.13/microsoft.aspnetcore.authentication.jwtbearer.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.AspNetCore.Authentication.OpenIdConnect@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.AspNetCore.Authentication.OpenIdConnect",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        4
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authentication.openidconnect/10.0.13/microsoft.aspnetcore.authentication.openidconnect.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.AspNetCore.OpenApi@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.AspNetCore.OpenApi",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        4
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.openapi/10.0.13/microsoft.aspnetcore.openapi.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.Bcl.AsyncInterfaces@10.0.9": {
+      "kind": "nuget",
+      "name": "Microsoft.Bcl.AsyncInterfaces",
+      "version": "10.0.9",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        5
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.bcl.asyncinterfaces/10.0.9/microsoft.bcl.asyncinterfaces.10.0.9.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/901ca941248413c79832d2fdbd709da0c4386353"
+    },
+    "pkg:nuget/Microsoft.Bcl.Cryptography@10.0.2": {
+      "kind": "nuget",
+      "name": "Microsoft.Bcl.Cryptography",
+      "version": "10.0.2",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        5
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.bcl.cryptography/10.0.2/microsoft.bcl.cryptography.10.0.2.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/44525024595742ebe09023abe709df51de65009b"
+    },
+    "pkg:nuget/Microsoft.Bcl.HashCode@6.0.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Bcl.HashCode",
+      "version": "6.0.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.bcl.hashcode/6.0.0/microsoft.bcl.hashcode.6.0.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/maintenance-packages/tree/d0c2a5a83211e271826172a6b0510c25a52dbd53"
+    },
+    "pkg:nuget/Microsoft.Data.SqlClient@7.1.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Data.SqlClient",
+      "version": "7.1.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.data.sqlclient/7.1.1/microsoft.data.sqlclient.7.1.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/sqlclient/tree/29ce2d856cb5a9450f79ea62c0afc744fd337fde"
+    },
+    "pkg:nuget/Microsoft.Data.SqlClient.Extensions.Abstractions@7.1.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Data.SqlClient.Extensions.Abstractions",
+      "version": "7.1.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.data.sqlclient.extensions.abstractions/7.1.1/microsoft.data.sqlclient.extensions.abstractions.7.1.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/SqlClient/tree/29ce2d856cb5a9450f79ea62c0afc744fd337fde"
+    },
+    "pkg:nuget/Microsoft.Data.SqlClient.Extensions.Azure@7.1.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Data.SqlClient.Extensions.Azure",
+      "version": "7.1.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.data.sqlclient.extensions.azure/7.1.1/microsoft.data.sqlclient.extensions.azure.7.1.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/SqlClient/tree/29ce2d856cb5a9450f79ea62c0afc744fd337fde"
+    },
+    "pkg:nuget/Microsoft.Data.SqlClient.Internal.Logging@7.1.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Data.SqlClient.Internal.Logging",
+      "version": "7.1.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.data.sqlclient.internal.logging/7.1.1/microsoft.data.sqlclient.internal.logging.7.1.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/SqlClient/tree/29ce2d856cb5a9450f79ea62c0afc744fd337fde"
+    },
+    "pkg:nuget/Microsoft.Data.SqlClient.SNI.runtime@7.1.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Data.SqlClient.SNI.runtime",
+      "version": "7.1.0",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        6
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.data.sqlclient.sni.runtime/7.1.0/microsoft.data.sqlclient.sni.runtime.7.1.0.nupkg",
+      "supplier": "Organization: Microsoft"
+    },
+    "pkg:nuget/Microsoft.EntityFrameworkCore@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.EntityFrameworkCore",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore/10.0.13/microsoft.entityframeworkcore.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.EntityFrameworkCore.Abstractions@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.EntityFrameworkCore.Abstractions",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.abstractions/10.0.13/microsoft.entityframeworkcore.abstractions.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.EntityFrameworkCore.Relational@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.EntityFrameworkCore.Relational",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.relational/10.0.13/microsoft.entityframeworkcore.relational.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.EntityFrameworkCore.SqlServer@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.EntityFrameworkCore.SqlServer",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.sqlserver/10.0.13/microsoft.entityframeworkcore.sqlserver.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.Extensions.AmbientMetadata.Application@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.AmbientMetadata.Application",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.ambientmetadata.application/10.11.0/microsoft.extensions.ambientmetadata.application.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Azure@1.12.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Azure",
+      "version": "1.12.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.azure/1.12.0/microsoft.extensions.azure.1.12.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/1b81fe2bb74329560a6a9540a0e1756cd4fa904b"
+    },
+    "pkg:nuget/Microsoft.Extensions.Caching.Hybrid@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Caching.Hybrid",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.hybrid/10.11.0/microsoft.extensions.caching.hybrid.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Caching.SqlServer@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Caching.SqlServer",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        4
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.sqlserver/10.0.13/microsoft.extensions.caching.sqlserver.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.Extensions.Compliance.Abstractions@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Compliance.Abstractions",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.compliance.abstractions/10.11.0/microsoft.extensions.compliance.abstractions.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Configuration.AzureAppConfiguration@8.6.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Configuration.AzureAppConfiguration",
+      "version": "8.6.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.configuration.azureappconfiguration/8.6.0/microsoft.extensions.configuration.azureappconfiguration.8.6.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/Azconfig-DotnetProvider/tree/f7ed5e98253c3ffcf486450b0481ca3c82582007"
+    },
+    "pkg:nuget/Microsoft.Extensions.DependencyInjection.AutoActivation@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.DependencyInjection.AutoActivation",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.dependencyinjection.autoactivation/10.11.0/microsoft.extensions.dependencyinjection.autoactivation.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Diagnostics.ExceptionSummarization@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Diagnostics.ExceptionSummarization",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.diagnostics.exceptionsummarization/10.11.0/microsoft.extensions.diagnostics.exceptionsummarization.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore@10.0.13": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        4
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.diagnostics.healthchecks.entityframeworkcore/10.0.13/microsoft.extensions.diagnostics.healthchecks.entityframeworkcore.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:nuget/Microsoft.Extensions.Http.Diagnostics@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Http.Diagnostics",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.http.diagnostics/10.11.0/microsoft.extensions.http.diagnostics.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Http.Resilience@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Http.Resilience",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.http.resilience/10.11.0/microsoft.extensions.http.resilience.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Resilience@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Resilience",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.resilience/10.11.0/microsoft.extensions.resilience.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Telemetry@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Telemetry",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.telemetry/10.11.0/microsoft.extensions.telemetry.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.Extensions.Telemetry.Abstractions@10.11.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Extensions.Telemetry.Abstractions",
+      "version": "10.11.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.telemetry.abstractions/10.11.0/microsoft.extensions.telemetry.abstractions.10.11.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
+    },
+    "pkg:nuget/Microsoft.FeatureManagement@4.8.0": {
+      "kind": "nuget",
+      "name": "Microsoft.FeatureManagement",
+      "version": "4.8.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.featuremanagement/4.8.0/microsoft.featuremanagement.4.8.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/microsoft/FeatureManagement-Dotnet/tree/1d26b959f7dd6c84a5febb69109b040c522cb6be"
+    },
+    "pkg:nuget/Microsoft.Identity.Abstractions@12.7.0": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Abstractions",
+      "version": "12.7.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved.",
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        7
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.abstractions/12.7.0/microsoft.identity.abstractions.12.7.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-identity-abstractions-for-dotnet/tree/76944ea3aa506494c16f7b1a67ec83538f631ba6"
+    },
+    "pkg:nuget/Microsoft.Identity.Client@4.90.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Client",
+      "version": "4.90.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client/4.90.1/microsoft.identity.client.4.90.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2e5ecc708f00ff3db93d823cf3d802cba945090f"
+    },
+    "pkg:nuget/Microsoft.Identity.Client.Broker@4.90.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Client.Broker",
+      "version": "4.90.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.broker/4.90.1/microsoft.identity.client.broker.4.90.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2e5ecc708f00ff3db93d823cf3d802cba945090f"
+    },
+    "pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.90.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Client.Extensions.Msal",
+      "version": "4.90.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.extensions.msal/4.90.1/microsoft.identity.client.extensions.msal.4.90.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2e5ecc708f00ff3db93d823cf3d802cba945090f"
+    },
+    "pkg:nuget/Microsoft.Identity.Web@4.16.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Web",
+      "version": "4.16.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved.",
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        7
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.web/4.16.1/microsoft.identity.web.4.16.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-identity-web/tree/4de7d2613d0dad76c5b275bcb9c889928cf108da"
+    },
+    "pkg:nuget/Microsoft.Identity.Web.Certificate@4.16.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Web.Certificate",
+      "version": "4.16.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved.",
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        7
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.web.certificate/4.16.1/microsoft.identity.web.certificate.4.16.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-identity-web/tree/4de7d2613d0dad76c5b275bcb9c889928cf108da"
+    },
+    "pkg:nuget/Microsoft.Identity.Web.Certificateless@4.16.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Web.Certificateless",
+      "version": "4.16.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved.",
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        7
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.web.certificateless/4.16.1/microsoft.identity.web.certificateless.4.16.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-identity-web/tree/4de7d2613d0dad76c5b275bcb9c889928cf108da"
+    },
+    "pkg:nuget/Microsoft.Identity.Web.Diagnostics@4.16.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Web.Diagnostics",
+      "version": "4.16.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved.",
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        7
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.web.diagnostics/4.16.1/microsoft.identity.web.diagnostics.4.16.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-identity-web/tree/4de7d2613d0dad76c5b275bcb9c889928cf108da"
+    },
+    "pkg:nuget/Microsoft.Identity.Web.TokenAcquisition@4.16.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Web.TokenAcquisition",
+      "version": "4.16.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved.",
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        7
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.web.tokenacquisition/4.16.1/microsoft.identity.web.tokenacquisition.4.16.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-identity-web/tree/4de7d2613d0dad76c5b275bcb9c889928cf108da"
+    },
+    "pkg:nuget/Microsoft.Identity.Web.TokenCache@4.16.1": {
+      "kind": "nuget",
+      "name": "Microsoft.Identity.Web.TokenCache",
+      "version": "4.16.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved.",
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        7
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.web.tokencache/4.16.1/microsoft.identity.web.tokencache.4.16.1.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/microsoft-identity-web/tree/4de7d2613d0dad76c5b275bcb9c889928cf108da"
+    },
+    "pkg:nuget/Microsoft.IdentityModel.Abstractions@8.23.0": {
+      "kind": "nuget",
+      "name": "Microsoft.IdentityModel.Abstractions",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identitymodel.abstractions/8.23.0/microsoft.identitymodel.abstractions.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/Microsoft.IdentityModel.JsonWebTokens@8.23.0": {
+      "kind": "nuget",
+      "name": "Microsoft.IdentityModel.JsonWebTokens",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identitymodel.jsonwebtokens/8.23.0/microsoft.identitymodel.jsonwebtokens.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/Microsoft.IdentityModel.Logging@8.23.0": {
+      "kind": "nuget",
+      "name": "Microsoft.IdentityModel.Logging",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identitymodel.logging/8.23.0/microsoft.identitymodel.logging.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/Microsoft.IdentityModel.LoggingExtensions@8.23.0": {
+      "kind": "nuget",
+      "name": "Microsoft.IdentityModel.LoggingExtensions",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identitymodel.loggingextensions/8.23.0/microsoft.identitymodel.loggingextensions.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/Microsoft.IdentityModel.Protocols@8.23.0": {
+      "kind": "nuget",
+      "name": "Microsoft.IdentityModel.Protocols",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identitymodel.protocols/8.23.0/microsoft.identitymodel.protocols.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/Microsoft.IdentityModel.Protocols.OpenIdConnect@8.23.0": {
+      "kind": "nuget",
+      "name": "Microsoft.IdentityModel.Protocols.OpenIdConnect",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identitymodel.protocols.openidconnect/8.23.0/microsoft.identitymodel.protocols.openidconnect.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/Microsoft.IdentityModel.Tokens@8.23.0": {
+      "kind": "nuget",
+      "name": "Microsoft.IdentityModel.Tokens",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identitymodel.tokens/8.23.0/microsoft.identitymodel.tokens.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/Microsoft.IdentityModel.Validators@8.23.0": {
+      "kind": "nuget",
+      "name": "Microsoft.IdentityModel.Validators",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identitymodel.validators/8.23.0/microsoft.identitymodel.validators.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/Microsoft.OpenApi@2.12.2": {
+      "kind": "nuget",
+      "name": "Microsoft.OpenApi",
+      "version": "2.12.2",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.openapi/2.12.2/microsoft.openapi.2.12.2.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Microsoft/OpenAPI.NET/tree/a24aac560adbf013ff5aa63a873e5a7babce38d2"
+    },
+    "pkg:nuget/Microsoft.SqlServer.Server@1.0.0": {
+      "kind": "nuget",
+      "name": "Microsoft.SqlServer.Server",
+      "version": "1.0.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.sqlserver.server/1.0.0/microsoft.sqlserver.server.1.0.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/sqlclient"
+    },
+    "pkg:nuget/OpenTelemetry@1.19.1": {
+      "kind": "nuget",
+      "name": "OpenTelemetry",
+      "version": "1.19.1",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright The OpenTelemetry Authors"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [
+        8
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry/1.19.1/opentelemetry.1.19.1.nupkg",
+      "supplier": "Organization: OpenTelemetry Authors",
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+    },
+    "pkg:nuget/OpenTelemetry.Api@1.19.1": {
+      "kind": "nuget",
+      "name": "OpenTelemetry.Api",
+      "version": "1.19.1",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright The OpenTelemetry Authors"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [
+        8
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.api/1.19.1/opentelemetry.api.1.19.1.nupkg",
+      "supplier": "Organization: OpenTelemetry Authors",
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+    },
+    "pkg:nuget/OpenTelemetry.Api.ProviderBuilderExtensions@1.19.1": {
+      "kind": "nuget",
+      "name": "OpenTelemetry.Api.ProviderBuilderExtensions",
+      "version": "1.19.1",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright The OpenTelemetry Authors"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [
+        8
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.api.providerbuilderextensions/1.19.1/opentelemetry.api.providerbuilderextensions.1.19.1.nupkg",
+      "supplier": "Organization: OpenTelemetry Authors",
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+    },
+    "pkg:nuget/OpenTelemetry.Exporter.OpenTelemetryProtocol@1.19.1": {
+      "kind": "nuget",
+      "name": "OpenTelemetry.Exporter.OpenTelemetryProtocol",
+      "version": "1.19.1",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright The OpenTelemetry Authors"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [
+        8
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.exporter.opentelemetryprotocol/1.19.1/opentelemetry.exporter.opentelemetryprotocol.1.19.1.nupkg",
+      "supplier": "Organization: OpenTelemetry Authors",
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+    },
+    "pkg:nuget/OpenTelemetry.Extensions.Hosting@1.19.1": {
+      "kind": "nuget",
+      "name": "OpenTelemetry.Extensions.Hosting",
+      "version": "1.19.1",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright The OpenTelemetry Authors"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [
+        8
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.extensions.hosting/1.19.1/opentelemetry.extensions.hosting.1.19.1.nupkg",
+      "supplier": "Organization: OpenTelemetry Authors",
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+    },
+    "pkg:nuget/OpenTelemetry.Instrumentation.AspNetCore@1.19.0": {
+      "kind": "nuget",
+      "name": "OpenTelemetry.Instrumentation.AspNetCore",
+      "version": "1.19.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright The OpenTelemetry Authors"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.aspnetcore/1.19.0/opentelemetry.instrumentation.aspnetcore.1.19.0.nupkg",
+      "supplier": "Organization: OpenTelemetry Authors",
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/dda21df71c8ccd247ab1051760b13f1db9353cfa"
+    },
+    "pkg:nuget/OpenTelemetry.Instrumentation.Http@1.19.0": {
+      "kind": "nuget",
+      "name": "OpenTelemetry.Instrumentation.Http",
+      "version": "1.19.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright The OpenTelemetry Authors"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.http/1.19.0/opentelemetry.instrumentation.http.1.19.0.nupkg",
+      "supplier": "Organization: OpenTelemetry Authors",
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/295327c4352523fbc4f4c8b182f09ae8794cc65e"
+    },
+    "pkg:nuget/OpenTelemetry.Instrumentation.SqlClient@1.19.0": {
+      "kind": "nuget",
+      "name": "OpenTelemetry.Instrumentation.SqlClient",
+      "version": "1.19.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright The OpenTelemetry Authors"
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.sqlclient/1.19.0/opentelemetry.instrumentation.sqlclient.1.19.0.nupkg",
+      "supplier": "Organization: OpenTelemetry Authors",
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/ba9dff87f2750bd7b6ff65a3489552bc940e7255"
+    },
+    "pkg:nuget/Polly.Core@8.8.0": {
+      "kind": "nuget",
+      "name": "Polly.Core",
+      "version": "8.8.0",
+      "licence": "BSD-3-Clause",
+      "spdx": "BSD-3-Clause",
+      "copyright": [
+        "Copyright (c) 2015-2026, App vNext",
+        "Copyright (c) 2015-2025, App vNext"
+      ],
+      "texts": [
+        9
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/polly.core/8.8.0/polly.core.8.8.0.nupkg",
+      "supplier": "Organization: Michael Wolfenden, App vNext",
+      "detail": "built from https://github.com/App-vNext/Polly/tree/9ad5ae9b4ff9beb4321b0762249ce173b984f817"
+    },
+    "pkg:nuget/Polly.Extensions@8.8.0": {
+      "kind": "nuget",
+      "name": "Polly.Extensions",
+      "version": "8.8.0",
+      "licence": "BSD-3-Clause",
+      "spdx": "BSD-3-Clause",
+      "copyright": [
+        "Copyright (c) 2015-2026, App vNext",
+        "Copyright (c) 2015-2025, App vNext"
+      ],
+      "texts": [
+        9
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/polly.extensions/8.8.0/polly.extensions.8.8.0.nupkg",
+      "supplier": "Organization: Michael Wolfenden, App vNext",
+      "detail": "built from https://github.com/App-vNext/Polly/tree/9ad5ae9b4ff9beb4321b0762249ce173b984f817"
+    },
+    "pkg:nuget/Polly.RateLimiting@8.8.0": {
+      "kind": "nuget",
+      "name": "Polly.RateLimiting",
+      "version": "8.8.0",
+      "licence": "BSD-3-Clause",
+      "spdx": "BSD-3-Clause",
+      "copyright": [
+        "Copyright (c) 2015-2026, App vNext",
+        "Copyright (c) 2015-2025, App vNext"
+      ],
+      "texts": [
+        9
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/polly.ratelimiting/8.8.0/polly.ratelimiting.8.8.0.nupkg",
+      "supplier": "Organization: Michael Wolfenden, App vNext",
+      "detail": "built from https://github.com/App-vNext/Polly/tree/9ad5ae9b4ff9beb4321b0762249ce173b984f817"
+    },
+    "pkg:nuget/Scalar.AspNetCore@2.17.14": {
+      "kind": "nuget",
+      "name": "Scalar.AspNetCore",
+      "version": "2.17.14",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/scalar.aspnetcore/2.17.14/scalar.aspnetcore.2.17.14.nupkg",
+      "supplier": "Organization: Scalar",
+      "detail": "built from https://github.com/scalar/scalar/tree/df377038e7c1c6cd4f615ec6438ecf2571520226"
+    },
+    "pkg:nuget/System.ClientModel@1.14.0": {
+      "kind": "nuget",
+      "name": "System.ClientModel",
+      "version": "1.14.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.clientmodel/1.14.0/system.clientmodel.1.14.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/3a58372182875061915cffce64f9b9d978a4ed6f"
+    },
+    "pkg:nuget/System.ClientModel@1.15.0": {
+      "kind": "nuget",
+      "name": "System.ClientModel",
+      "version": "1.15.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.clientmodel/1.15.0/system.clientmodel.1.15.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/6366473d5584b140bda80ddd1120c2f67e5d2658"
+    },
+    "pkg:nuget/System.Configuration.ConfigurationManager@9.0.18": {
+      "kind": "nuget",
+      "name": "System.Configuration.ConfigurationManager",
+      "version": "9.0.18",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved.",
+        "Copyright (c) .NET Foundation and Contributors"
+      ],
+      "texts": [
+        10
+      ],
+      "notices": [
+        11
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.configuration.configurationmanager/9.0.18/system.configuration.configurationmanager.9.0.18.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/runtime/tree/d839c41c85988aadc213e8e42269ecd7883a1790"
+    },
+    "pkg:nuget/System.IO.Hashing@10.0.9": {
+      "kind": "nuget",
+      "name": "System.IO.Hashing",
+      "version": "10.0.9",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        5
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.io.hashing/10.0.9/system.io.hashing.10.0.9.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/901ca941248413c79832d2fdbd709da0c4386353"
+    },
+    "pkg:nuget/System.IdentityModel.Tokens.Jwt@8.23.0": {
+      "kind": "nuget",
+      "name": "System.IdentityModel.Tokens.Jwt",
+      "version": "8.23.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.identitymodel.tokens.jwt/8.23.0/system.identitymodel.tokens.jwt.8.23.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
+    },
+    "pkg:nuget/System.Memory.Data@10.0.9": {
+      "kind": "nuget",
+      "name": "System.Memory.Data",
+      "version": "10.0.9",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        5
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.memory.data/10.0.9/system.memory.data.10.0.9.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/901ca941248413c79832d2fdbd709da0c4386353"
+    },
+    "pkg:nuget/System.Security.Cryptography.ProtectedData@10.0.13": {
+      "kind": "nuget",
+      "name": "System.Security.Cryptography.ProtectedData",
+      "version": "10.0.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        5
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.protecteddata/10.0.13/system.security.cryptography.protecteddata.10.0.13.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+    },
+    "pkg:deb/ubuntu/base-files@13ubuntu10.5?arch=amd64&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "base-files",
+      "version": "13ubuntu10.5",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/base-files/copyright",
+        "/usr/share/doc/erp-ai-pro/COPYING"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/base-files/13ubuntu10.5",
+      "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package base-files 13ubuntu10.5; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/ubuntu/ca-certificates@20260601~24.04.1?arch=all&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "ca-certificates",
+      "version": "20260601~24.04.1",
+      "licence": "GPL-2.0-or-later AND MPL-2.0",
+      "spdx": "GPL-2.0-or-later AND MPL-2.0",
+      "copyright": [],
+      "texts": [
+        12
+      ],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/ca-certificates/copyright"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/ca-certificates/20260601~24.04.1",
+      "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package ca-certificates 20260601~24.04.1; the copyright file names GPL-2+; MPL-2.0"
+    },
+    "pkg:deb/ubuntu/gcc-14-base@14.2.0-4ubuntu2~24.04.1?arch=amd64&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "gcc-14-base",
+      "version": "14.2.0-4ubuntu2~24.04.1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [
+        13,
+        14
+      ],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/gcc-14-base/copyright",
+        "/usr/share/doc/erp-ai-pro/COPYING",
+        "/usr/share/doc/erp-ai-pro/COPYING.LESSER"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/gcc-14/14.2.0-4ubuntu2~24.04.1",
+      "supplier": "Organization: Ubuntu Core developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package gcc-14 14.2.0-4ubuntu2~24.04.1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/ubuntu/libc6@2.39-0ubuntu8.9?arch=amd64&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "libc6",
+      "version": "2.39-0ubuntu8.9",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [
+        15,
+        12,
+        16
+      ],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libc6/copyright"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/glibc/2.39-0ubuntu8.9",
+      "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package glibc 2.39-0ubuntu8.9; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/ubuntu/libgcc-s1@14.2.0-4ubuntu2~24.04.1?arch=amd64&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "libgcc-s1",
+      "version": "14.2.0-4ubuntu2~24.04.1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [
+        13,
+        14
+      ],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/gcc-14-base/copyright",
+        "/usr/share/doc/erp-ai-pro/COPYING",
+        "/usr/share/doc/erp-ai-pro/COPYING.LESSER"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/gcc-14/14.2.0-4ubuntu2~24.04.1",
+      "supplier": "Organization: Ubuntu Core developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package gcc-14 14.2.0-4ubuntu2~24.04.1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/ubuntu/libicu74@74.2-1ubuntu3.1?arch=amd64&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "libicu74",
+      "version": "74.2-1ubuntu3.1",
+      "licence": "GPL-3.0-only AND MIT",
+      "spdx": "GPL-3.0-only AND MIT",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libicu74/copyright",
+        "/usr/share/doc/erp-ai-pro/COPYING"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/icu/74.2-1ubuntu3.1",
+      "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package icu 74.2-1ubuntu3.1; the copyright file names GPL-3; MIT"
+    },
+    "pkg:deb/ubuntu/libssl3t64@3.0.13-0ubuntu3.16?arch=amd64&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "libssl3t64",
+      "version": "3.0.13-0ubuntu3.16",
+      "licence": "Apache-2.0 AND (Artistic-1.0-Perl OR GPL-1.0-or-later)",
+      "spdx": "Apache-2.0 AND (Artistic-1.0-Perl OR GPL-1.0-or-later)",
+      "copyright": [],
+      "texts": [
+        3,
+        13,
+        17
+      ],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libssl3t64/copyright"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/openssl/3.0.13-0ubuntu3.16",
+      "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package openssl 3.0.13-0ubuntu3.16; the copyright file names Apache-2.0; Artistic or GPL-1+"
+    },
+    "pkg:deb/ubuntu/libstdc%2B%2B6@14.2.0-4ubuntu2~24.04.1?arch=amd64&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "libstdc++6",
+      "version": "14.2.0-4ubuntu2~24.04.1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [
+        13,
+        14
+      ],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/gcc-14-base/copyright",
+        "/usr/share/doc/erp-ai-pro/COPYING",
+        "/usr/share/doc/erp-ai-pro/COPYING.LESSER"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/gcc-14/14.2.0-4ubuntu2~24.04.1",
+      "supplier": "Organization: Ubuntu Core developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package gcc-14 14.2.0-4ubuntu2~24.04.1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/ubuntu/openssl@3.0.13-0ubuntu3.16?arch=amd64&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "openssl",
+      "version": "3.0.13-0ubuntu3.16",
+      "licence": "Apache-2.0 AND (Artistic-1.0-Perl OR GPL-1.0-or-later)",
+      "spdx": "Apache-2.0 AND (Artistic-1.0-Perl OR GPL-1.0-or-later)",
+      "copyright": [],
+      "texts": [
+        3,
+        13,
+        17
+      ],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libssl3t64/copyright"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/openssl/3.0.13-0ubuntu3.16",
+      "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package openssl 3.0.13-0ubuntu3.16; the copyright file names Apache-2.0; Artistic or GPL-1+"
+    },
+    "pkg:deb/ubuntu/tzdata@2026c-0ubuntu0.24.04.1?arch=all&distro=ubuntu-24.04": {
+      "kind": "deb",
+      "name": "tzdata",
+      "version": "2026c-0ubuntu0.24.04.1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/tzdata/copyright"
+      ],
+      "source": "https://launchpad.net/ubuntu/+source/tzdata/2026c-0ubuntu0.24.04.1",
+      "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
+      "detail": "source package tzdata 2026c-0ubuntu0.24.04.1; the copyright file names ICU; public-domain"
+    }
+  },
+  "texts": {
+    "1": {
+      "title": "Apache License (LICENSE.txt of Apache.Arrow)",
+      "sha256": "d49a4c7238fef5350314821c72b0b2bd6ebd8d4732eabda1fda8e337ee1d025d"
+    },
+    "2": {
+      "title": "MIT",
+      "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5"
+    },
+    "3": {
+      "title": "Apache-2.0",
+      "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+    },
+    "4": {
+      "title": "THIRD-PARTY-NOTICES.TXT of Microsoft.AspNetCore.Authentication.JwtBearer 10.0.13",
+      "sha256": "9c0268c3085d693279c6e75e2509e4c67d976170dbd4f886aaccbb163e345b9e"
+    },
+    "5": {
+      "title": "THIRD-PARTY-NOTICES.TXT of Microsoft.Bcl.AsyncInterfaces 10.0.9",
+      "sha256": "b7d4569659507a00efeea90f15a0a95bb2f8b6ce33737d86090b8e22c74a8c98"
+    },
+    "6": {
+      "title": "MICROSOFT SOFTWARE LICENSE TERMS (LICENSE.txt of Microsoft.Data.SqlClient.SNI.runtime)",
+      "sha256": "581a363f21a2f1befe12f91ab0c72cd38d3da2509b1081a2e99c17428f84e642"
+    },
+    "7": {
+      "title": "MIT",
+      "sha256": "a3ca9032410067b7af6d65cd34332a7a8ed729cc0a6f37e55e5af71d3c5d652b"
+    },
+    "8": {
+      "title": "THIRD-PARTY-NOTICES.TXT of OpenTelemetry 1.19.1",
+      "sha256": "ce7e0afeb0d2b5c75b583ce259b9f7cfb8078ed43da6257bd01d5cde107d2722"
+    },
+    "9": {
+      "title": "BSD-3-Clause",
+      "sha256": "f174d0fcac9b8a8497cd861b340451d933e4b7171755ce8951bd53a522d0fa8a"
+    },
+    "10": {
+      "title": "MIT",
+      "sha256": "b93d19b98f5de24ba32fb62af5b7c98b8ea615867c1c936ba8d2f067ba07d94a"
+    },
+    "11": {
+      "title": "THIRD-PARTY-NOTICES.TXT of System.Configuration.ConfigurationManager 9.0.18",
+      "sha256": "5fa2ce57cf06a45321d685c309336865f5818479449633b9316a51346d4ec3b0"
+    },
+    "12": {
+      "title": "GPL-2.0",
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+    },
+    "13": {
+      "title": "Artistic-1.0-Perl",
+      "sha256": "9e18ef4d50faba562e3efa37d8961d6e9956d1c103bfc4fc1caeb07e8effe885"
+    },
+    "14": {
+      "title": "GFDL-1.2",
+      "sha256": "2652c22ba086f92e55ae4a9f9c890ad4766ffd7814a73d318e22a597edf857a4"
+    },
+    "15": {
+      "title": "GFDL-1.3",
+      "sha256": "110535522396708cea37c72a802c5e7e81391139f5f7985631c93ef242b206a4"
+    },
+    "16": {
+      "title": "LGPL-2.1",
+      "sha256": "5749785c8bdefafcb5d798270ed0a967036fe2ca63dcedade1627565dfef81d2"
+    },
+    "17": {
+      "title": "GPL-1.0",
+      "sha256": "49c007bafb5ad6dd9f9d4dae4d3ac0461975498150c05d684c551f0914ab486c"
+    }
+  }
+}

@@ -104,6 +104,24 @@ const apiClientDynamicImports = [
   `ImportExpression[source.type="TemplateLiteral"] TemplateElement[value.cooked="${apiClientValues.name}"]`,
 ].map((selector) => ({ selector, message: apiClientMessage }));
 
+const imageOptimizerMessage =
+  "The web image carries no image optimizer: next.config.ts keeps sharp and libvips out of the standalone output and turns optimisation off, so serve a static file or an SVG component instead of next/image.";
+
+const imageOptimizerModules = ["next/image", "next/legacy/image"];
+
+const imageOptimizerImports = imageOptimizerModules.map((name) => ({
+  name,
+  allowTypeImports: true,
+  message: imageOptimizerMessage,
+}));
+
+const imageOptimizerDynamicImports = imageOptimizerModules
+  .flatMap((name) => [
+    `ImportExpression[source.value="${name}"]`,
+    `ImportExpression[source.type="TemplateLiteral"] TemplateElement[value.cooked="${name}"]`,
+  ])
+  .map((selector) => ({ selector, message: imageOptimizerMessage }));
+
 const httpMessage =
   "Only shared/api sends HTTP requests: call the API through callApi or sendApi (shared/api/client.ts), uploadFile (shared/api/upload.ts), downloadFromApi (shared/api/download/download.ts), or readSessionTimes or renewSessionTimes (shared/api/session/session-watch.ts).";
 
@@ -255,7 +273,7 @@ const inlineServerFunction = {
 };
 
 function restrictedImports(patterns, { apiClient = true } = {}) {
-  return ["error", apiClient ? { paths: [apiClientValues], patterns } : { patterns }];
+  return ["error", { paths: [...(apiClient ? [apiClientValues] : []), ...imageOptimizerImports], patterns }];
 }
 
 function restrictedSyntax(
@@ -268,6 +286,7 @@ function restrictedSyntax(
     ...objectHrefs,
     ...serverFunctionRules,
     inlineServerFunction,
+    ...imageOptimizerDynamicImports,
     ...(moduleEffectsAllowed ? [] : moduleEffects),
     ...restrictions,
   ];

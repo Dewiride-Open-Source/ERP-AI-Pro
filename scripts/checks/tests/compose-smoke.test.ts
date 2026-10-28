@@ -7,49 +7,12 @@ import {
   keyRing,
   proxyData,
   proxyLogProblems,
-  readFirstTarEntry,
   tls12SuiteProblem,
   type AdaptedConfig,
-  type TarEntry,
 } from '../compose-smoke.ts';
-
-type HeaderFields = { name: string; type: string; mode: number; uid: number; gid: number; prefix?: string; magic?: string; modeField?: string };
-
-const ustarArchive = (fields: HeaderFields): Uint8Array => {
-  const archive = new Uint8Array(512 * 3);
-  const write = (offset: number, value: string) => archive.set(new TextEncoder().encode(value), offset);
-  const octal = (offset: number, length: number, value: number) => write(offset, `${value.toString(8).padStart(length - 1, '0')}\0`);
-  write(0, fields.name);
-  if (fields.modeField === undefined) octal(100, 8, fields.mode);
-  else write(100, fields.modeField);
-  octal(108, 8, fields.uid);
-  octal(116, 8, fields.gid);
-  octal(124, 12, 0);
-  octal(136, 12, 0);
-  write(156, fields.type);
-  write(257, fields.magic ?? 'ustar\u000000');
-  if (fields.prefix) write(345, fields.prefix);
-  return archive;
-};
+import type { TarEntry } from '../lib/image-contents.ts';
 
 const keyRingFolder: TarEntry = { name: 'DataProtection-Keys/', type: '5', mode: 0o700, uid: 1654, gid: 1654 };
-
-test('readFirstTarEntry reads the name, type, mode and owner of the first ustar header', () => {
-  assert.deepEqual(readFirstTarEntry(ustarArchive(keyRingFolder)), keyRingFolder);
-  assert.deepEqual(readFirstTarEntry(ustarArchive({ ...keyRingFolder, magic: 'ustar  \0' })), keyRingFolder);
-  assert.deepEqual(readFirstTarEntry(ustarArchive({ ...keyRingFolder, modeField: '   700 \0' })), keyRingFolder);
-});
-
-test('readFirstTarEntry joins the ustar prefix to the name', () => {
-  assert.equal(readFirstTarEntry(ustarArchive({ ...keyRingFolder, prefix: 'home/app/.local/share/ERP-AI-Pro' })).name, 'home/app/.local/share/ERP-AI-Pro/DataProtection-Keys/');
-});
-
-test('readFirstTarEntry refuses a stream that is shorter than a header, not ustar, or holds a non-octal number', () => {
-  assert.throws(() => readFirstTarEntry(new Uint8Array(100)), /holds 100 bytes, less than one tar header/);
-  assert.throws(() => readFirstTarEntry(ustarArchive({ ...keyRingFolder, magic: '\0\0\0\0\0\0' })), /does not start with a ustar header/);
-  assert.throws(() => readFirstTarEntry(ustarArchive({ ...keyRingFolder, modeField: '0000789\0' })), /field at byte 100 is not an octal number \("0000789"\)/);
-  assert.throws(() => readFirstTarEntry(ustarArchive({ ...keyRingFolder, modeField: '\0' })), /field at byte 100 is not an octal number \(""\)/);
-});
 
 test('the key ring directory passes only as a directory owned by 1654:1654 with mode 0700', () => {
   assert.equal(directoryProblem(keyRing, keyRingFolder), undefined);

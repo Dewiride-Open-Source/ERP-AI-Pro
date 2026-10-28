@@ -47,14 +47,14 @@ Every context maps `audit.ChangeRecords` for the change records it saves, and ev
 | CI | `ci-backend.yml`'s test databases and `e2e.yml`'s end-to-end API hosts are migrated and seeded by `SqlTestDatabase` through `TestDatabaseHost`; `docker-build.yml` runs the compose stack, whose migrator container migrates the CI SQL Server |
 | Production | `docker compose run --rm migrator` on its own, then `up` to roll the API only after it exited 0 ([runbook](../operations/runbooks/migrations.md)); the empty database's first migration runs once from the operator's computer as the migrator's identity ([database runbook](../operations/runbooks/database.md), section "First migration") |
 
-The migrator program (`Hosts/Migrator/Dewiride.Erp.Host.Migrator`) applies every context in catalogue order, then runs the seeders and then the retention sweeps. Commands and exit codes:
+The migrator program (`Hosts/Migrator/Dewiride.Erp.Host.Migrator`) applies every context in catalogue order, then runs the seeders and then the retention sweeps. Before any command does anything, it compares each catalogue context's applied migrations with the ones the release knows (`DatabaseMigrator.GetStatusAsync`, `MigrationStatus`, matching ids without regard to case as EF Core does). When a schema holds a migration the release does not know, the database is ahead of the release: every command logs `Schema <schema> holds <n> migration(s) this release does not know: <ids>` at `Error` and exits 4 without doing anything else ([ADR-0053](../adr/0053-the-release-public-images-a-dependabot-gate-attestations-verified-on-the-server-and-the-deployment-scripts.md)). A schema only a later release knows is not compared, because the older release never touches it. Commands and exit codes:
 
 | Command | Runs | Exit code |
 |---|---|---|
-| `migrate` | the migrations, the seeders, then the retention sweeps | 0 when every schema is migrated and every seeder ran, even when a retention sweep failed (logged at `Error`); 1 on a failure or cancellation; 2 when the configuration cannot be loaded or is invalid (for example no connection string, an unconvertible value, an unresolvable Key Vault reference) |
-| `retain` | the retention sweeps alone: no migration, no seeder, so it can run every day without moving the schema ahead of the running API | 0 when every sweep completed; 1 when one failed (after the others ran) or on cancellation; 2 as for `migrate` |
-| `status` | nothing; lists the pending migrations of each schema | 0 when nothing is pending; 3 when a schema has pending migrations |
-| anything else | nothing | 64 with the usage line |
+| `migrate` | the migrations, the seeders, then the retention sweeps | 0 when every schema is migrated and every seeder ran, even when a retention sweep failed (logged at `Error`); 1 on a failure or cancellation; 2 when the configuration cannot be loaded or is invalid (for example no connection string, an unconvertible value, an unresolvable Key Vault reference); 4 when the database is ahead, applying nothing and running no seeder or sweep |
+| `retain` | the retention sweeps alone: no migration, no seeder, so it can run every day without moving the schema ahead of the running API | 0 when every sweep completed; 1 when one failed (after the others ran) or on cancellation; 2 as for `migrate`; 4 when the database is ahead, deleting nothing |
+| `status` | nothing; lists the pending migrations of each schema | 0 when nothing is pending; 3 when a schema has pending migrations; 4 when the database is ahead, which comes before 3 |
+| anything else | nothing | 64 with the usage line, which lists every exit code |
 
 It uses `Erp:Platform:Database:MigratorConnectionString` when set, otherwise `Erp:Platform:Database:ConnectionString`. EF Core holds a database-wide lock while migrating, so two migrators never run at once, and each migration runs in its own transaction.
 

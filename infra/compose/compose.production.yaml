@@ -1,5 +1,6 @@
 services:
   migrator:
+    image: ghcr.io/dewiride-open-source/erp-ai-pro/api:${IMAGE_TAG:?set by deploy.sh}@${API_IMAGE_DIGEST:?set by deploy.sh}
     environment:
       DOTNET_ENVIRONMENT: Production
       ERP_ENVIRONMENT: production
@@ -27,6 +28,7 @@ services:
         max-file: "5"
 
   api:
+    image: ghcr.io/dewiride-open-source/erp-ai-pro/api:${IMAGE_TAG:?set by deploy.sh}@${API_IMAGE_DIGEST:?set by deploy.sh}
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ERP_ENVIRONMENT: production
@@ -58,6 +60,7 @@ services:
         max-file: "5"
 
   web:
+    image: ghcr.io/dewiride-open-source/erp-ai-pro/web:${IMAGE_TAG:?set by deploy.sh}@${WEB_IMAGE_DIGEST:?set by deploy.sh}
     read_only: true
     tmpfs:
       - /tmp
@@ -77,6 +80,7 @@ services:
         max-file: "5"
 
   proxy:
+    image: ghcr.io/dewiride-open-source/erp-ai-pro/proxy:${IMAGE_TAG:?set by deploy.sh}@${PROXY_IMAGE_DIGEST:?set by deploy.sh}
     environment:
       ERP_SITE_ADDRESS: ${ERP_SITE_ADDRESS:?set ERP_SITE_ADDRESS in .env to the address people open the ERP at}
     ports:

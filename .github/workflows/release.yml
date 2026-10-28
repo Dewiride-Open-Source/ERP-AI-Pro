@@ -1,0 +1,449 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  gate:
+    name: Check the tag, the checks of its commit and Dependabot
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: read
+      actions: read
+      pull-requests: read
+      vulnerability-alerts: read
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+      source-date-epoch: ${{ steps.tag.outputs.source-date-epoch }}
+      created: ${{ steps.tag.outputs.created }}
+    steps:
+      - name: Check out every branch and tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check the tag and its commit
+        id: tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ "$GITHUB_REF" != "refs/tags/$TAG" || ! "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::$GITHUB_REF is not a release tag, which reads v<major>.<minor>.<patch> without leading zeros."
+            exit 1
+          fi
+          if ! commit="$(git rev-parse --verify --quiet "refs/tags/${TAG}^{commit}")"; then
+            echo "::error::The tag $TAG names no commit."
+            exit 1
+          fi
+          if [[ "$commit" != "$GITHUB_SHA" ]]; then
+            echo "::error::The tag $TAG names commit $commit, but this run was started for $GITHUB_SHA."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main; then
+            echo "::error::Commit $GITHUB_SHA is not on main, and a release tag names a commit of main."
+            exit 1
+          fi
+          epoch="$(git show --no-patch --format=%ct "$GITHUB_SHA")"
+          {
+            echo "version=${TAG#v}"
+            echo "source-date-epoch=$epoch"
+            echo "created=$(date --utc --date="@$epoch" +%Y-%m-%dT%H:%M:%SZ)"
+          } >> "$GITHUB_OUTPUT"
+      # The required names are the check runs a push to main starts in ci-backend, ci-frontend, docker-build, e2e, CodeQL and
+      # roadmap, so a job renamed or added there is renamed or added here. Release runs of the commit are left out: they are not
+      # what main proved, and the jobs of this run are still running.
+      - name: Require every check of the commit to have passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          required=(
+            "Build, analyse and test"
+            "Lint, typecheck and build"
+            "Build images and smoke test the compose stack"
+            "Bootstrap a fresh Ubuntu host (ubuntu-22.04)"
+            "Bootstrap a fresh Ubuntu host (ubuntu-24.04)"
+            "Bootstrap a fresh Ubuntu host (ubuntu-26.04)"
+            "Playwright (chromium, shard 1 of 2)"
+            "Playwright (chromium, shard 2 of 2)"
+            "Playwright (firefox, shard 1 of 2)"
+            "Playwright (firefox, shard 2 of 2)"
+            "Playwright (webkit, shard 1 of 2)"
+            "Playwright (webkit, shard 2 of 2)"
+            "Playwright (mobile-android, shard 1 of 2)"
+            "Playwright (mobile-android, shard 2 of 2)"
+            "Playwright (mobile-ios, shard 1 of 2)"
+            "Playwright (mobile-ios, shard 2 of 2)"
+            "Playwright (tablet-ios, shard 1 of 2)"
+            "Playwright (tablet-ios, shard 2 of 2)"
+            "Playwright"
+            "Analyze (csharp)"
+            "Analyze (javascript-typescript)"
+            "Analyze (actions)"
+            "Validate roadmap and rendered Markdown"
+          )
+          release_suites="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .check_suite_id)"
+          release_suites+=$'\n'"$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" \
+            --jq '.workflow_runs[] | select(.path == ".github/workflows/release.yml") | .check_suite_id')"
+          check_runs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?filter=latest&per_page=100" \
+            --jq '.check_runs[] | [(.check_suite.id // 0 | tostring), .name, .status, (.conclusion // "none")] | @tsv')"
+          declare -A passed=()
+          problems=()
+          counted=0
+          while IFS=$'\t' read -r suite name status conclusion; do
+            [[ -n "$name" ]] || continue
+            if grep -qxF -- "$suite" <<< "$release_suites"; then
+              continue
+            fi
+            counted=$((counted + 1))
+            case "$status/$conclusion" in
+              completed/success) passed["$name"]=1 ;;
+              completed/skipped | completed/neutral) ;;
+              *) problems+=("$name: $status, $conclusion") ;;
+            esac
+          done <<< "$check_runs"
+          for name in "${required[@]}"; do
+            [[ -n "${passed["$name"]:-}" ]] || problems+=("$name: no successful check run of this commit")
+          done
+          echo "Checked $counted check runs of $GITHUB_SHA outside the release workflow."
+          if (( ${#problems[@]} > 0 )); then
+            printf '  %s\n' "${problems[@]}"
+            echo "::error::Not every check of $GITHUB_SHA has passed; release a commit of main once all its checks are green."
+            exit 1
+          fi
+      # Only counts and numbers reach the log: the logs of a public repository are public, and its Dependabot alerts are not.
+      - name: Require Dependabot to be clear
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          alerts="$(gh api --paginate "repos/$GITHUB_REPOSITORY/dependabot/alerts?state=open&per_page=100" --jq '.[].number')"
+          pulls="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" \
+            --jq '.[] | select(.user.login == "dependabot[bot]") | .number')"
+          alert_count="$(grep -c . <<< "$alerts" || true)"
+          pull_count="$(grep -c . <<< "$pulls" || true)"
+          echo "Open Dependabot alerts: $alert_count${alerts:+ (#${alerts//$'\n'/, #})}"
+          echo "Open Dependabot pull requests: $pull_count${pulls:+ (#${pulls//$'\n'/, #})}"
+          if (( alert_count > 0 || pull_count > 0 )); then
+            echo "::error::Dependabot is not clear: resolve every open alert and merge or close every Dependabot pull request, then run this workflow again."
+            exit 1
+          fi
+
+  build:
+    name: Build, check and push the ${{ matrix.image }} image
+    needs: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        image: [api, web, proxy]
+    env:
+      IMAGE: ${{ matrix.image }}
+      IMAGE_NAME: ghcr.io/dewiride-open-source/erp-ai-pro/${{ matrix.image }}
+      VERSION: ${{ needs.gate.outputs.version }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js for the image checks
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          driver-opts: image=moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea
+          cache-binary: false
+      # SOURCE_DATE_EPOCH fixes the timestamps of the image configuration, so the push below, served from this build's cache,
+      # carries exactly the configuration checked here.
+      - name: Build the image without any cache
+        id: load
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          SOURCE_DATE_EPOCH: ${{ needs.gate.outputs.source-date-epoch }}
+        with:
+          context: .
+          file: infra/docker/${{ matrix.image }}.Dockerfile
+          load: true
+          push: false
+          no-cache: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          build-args: |
+            ERP_VERSION=${{ env.VERSION }}
+            ERP_REVISION=${{ github.sha }}
+            ERP_CREATED=${{ needs.gate.outputs.created }}
+      - name: Check what the image holds
+        run: node scripts/checks/image-contents.ts "$IMAGE_NAME:$VERSION" --image "$IMAGE"
+      - name: Write the SBOM of the image
+        run: |
+          mkdir -p "$RUNNER_TEMP/release"
+          node scripts/notices/sbom.ts "$IMAGE_NAME:$VERSION" --image "$IMAGE" --version "$VERSION" --output "$RUNNER_TEMP/release/$IMAGE.spdx.json"
+      - name: Log in to the GitHub Container Registry
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$REGISTRY_USER" --password-stdin
+      - name: Push the checked image from the builder's cache
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        env:
+          SOURCE_DATE_EPOCH: ${{ needs.gate.outputs.source-date-epoch }}
+        with:
+          context: .
+          file: infra/docker/${{ matrix.image }}.Dockerfile
+          push: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          build-args: |
+            ERP_VERSION=${{ env.VERSION }}
+            ERP_REVISION=${{ github.sha }}
+            ERP_CREATED=${{ needs.gate.outputs.created }}
+      - name: Prove the pushed image is the checked one
+        env:
+          CHECKED_METADATA: ${{ steps.load.outputs.metadata }}
+          PUSHED_METADATA: ${{ steps.push.outputs.metadata }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          checked="$(jq -r '."containerimage.config.digest" // empty' <<< "$CHECKED_METADATA")"
+          pushed="$(jq -r '."containerimage.config.digest" // empty' <<< "$PUSHED_METADATA")"
+          if [[ ! "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ || ! "$checked" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::The builds of the $IMAGE image reported no manifest digest or no configuration digest."
+            exit 1
+          fi
+          registry="$(docker buildx imagetools inspect --raw "$IMAGE_NAME@$DIGEST" | jq -r '.config.digest // empty')"
+          if [[ "$pushed" != "$checked" || "$registry" != "$checked" ]]; then
+            echo "::error::$IMAGE_NAME@$DIGEST has the configuration ${registry:-none} (the push reported ${pushed:-none}), not the checked $checked."
+            exit 1
+          fi
+          echo "$IMAGE_NAME@$DIGEST has the checked configuration $checked."
+          printf '%s\n' "$DIGEST" > "$RUNNER_TEMP/release/$IMAGE.digest"
+      - name: Upload the SBOM and the digest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ matrix.image }}
+          path: |
+            ${{ runner.temp }}/release/${{ matrix.image }}.spdx.json
+            ${{ runner.temp }}/release/${{ matrix.image }}.digest
+          retention-days: 7
+          if-no-files-found: error
+          overwrite: true
+      - name: Log out of the GitHub Container Registry
+        if: always()
+        run: docker logout ghcr.io
+
+  attest:
+    name: Attest the ${{ matrix.image }} image
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    strategy:
+      matrix:
+        image: [api, web, proxy]
+    env:
+      IMAGE: ${{ matrix.image }}
+      IMAGE_NAME: ghcr.io/dewiride-open-source/erp-ai-pro/${{ matrix.image }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download the SBOM and the digest
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-${{ matrix.image }}
+          path: ${{ runner.temp }}/release
+      - name: Read the digest
+        id: digest
+        run: |
+          digest="$(< "$RUNNER_TEMP/release/$IMAGE.digest")"
+          if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::The digest the build recorded for the $IMAGE image is not sha256 and 64 lowercase hex digits."
+            exit 1
+          fi
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+      - name: Log in to the GitHub Container Registry
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ github.token }}
+        run: printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io --username "$REGISTRY_USER" --password-stdin
+      - name: Attest the build provenance
+        id: provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.digest.outputs.digest }}
+          push-to-registry: true
+          create-storage-record: false
+      - name: Attest the SBOM
+        id: sbom
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.digest.outputs.digest }}
+          sbom-path: ${{ runner.temp }}/release/${{ matrix.image }}.spdx.json
+          push-to-registry: true
+          create-storage-record: false
+      - name: Keep the bundles under their release names
+        env:
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM_BUNDLE: ${{ steps.sbom.outputs.bundle-path }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/attestations"
+          cp -- "$PROVENANCE_BUNDLE" "$RUNNER_TEMP/attestations/$IMAGE.provenance.sigstore.json"
+          cp -- "$SBOM_BUNDLE" "$RUNNER_TEMP/attestations/$IMAGE.sbom.sigstore.json"
+      - name: Verify both attestations as deploy.sh does
+        env:
+          DIGEST: ${{ steps.digest.outputs.digest }}
+        run: |
+          source scripts/deploy/lib/release.sh
+          verify_release_image "$IMAGE" "$DIGEST" "$RUNNER_TEMP/attestations/$IMAGE.provenance.sigstore.json" \
+            https://slsa.dev/provenance/v1 "$TAG" "$GITHUB_SHA"
+          verify_release_image "$IMAGE" "$DIGEST" "$RUNNER_TEMP/attestations/$IMAGE.sbom.sigstore.json" \
+            https://spdx.dev/Document/v2.3 "$TAG" "$GITHUB_SHA"
+      - name: Upload the bundles
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: attestation-${{ matrix.image }}
+          path: |
+            ${{ runner.temp }}/attestations/${{ matrix.image }}.provenance.sigstore.json
+            ${{ runner.temp }}/attestations/${{ matrix.image }}.sbom.sigstore.json
+          retention-days: 7
+          if-no-files-found: error
+          overwrite: true
+      - name: Log out of the GitHub Container Registry
+        if: always()
+        run: docker logout ghcr.io
+
+  release:
+    name: Publish the release
+    needs: [gate, attest]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.ref_name }}
+      VERSION: ${{ needs.gate.outputs.version }}
+    steps:
+      - name: Download the SBOMs and the digests
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/release
+      - name: Download the attestation bundles
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: attestation-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/release
+      - name: Write the image list and the release notes
+        run: |
+          cd "$RUNNER_TEMP/release"
+          declare -A digests=()
+          for image in api web proxy; do
+            digest="$(< "$image.digest")"
+            if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+              echo "::error::The digest recorded for the $image image is not sha256 and 64 lowercase hex digits."
+              exit 1
+            fi
+            digests["$image"]="$digest"
+            for asset in "$image.provenance.sigstore.json" "$image.sbom.sigstore.json" "$image.spdx.json"; do
+              if [[ ! -s "$asset" ]]; then
+                echo "::error::The asset $asset is missing or empty."
+                exit 1
+              fi
+            done
+          done
+          printf 'IMAGE_TAG=%s\nAPI_IMAGE_DIGEST=%s\nWEB_IMAGE_DIGEST=%s\nPROXY_IMAGE_DIGEST=%s\n' \
+            "$VERSION" "${digests[api]}" "${digests[web]}" "${digests[proxy]}" > release-images.env
+          repository="https://github.com/$GITHUB_REPOSITORY"
+          {
+            printf 'ERP-AI-Pro %s, built and attested by `.github/workflows/release.yml` from commit `%s`.\n\n' "$TAG" "$GITHUB_SHA"
+            printf '## Corresponding source\n\n'
+            printf 'The corresponding source of this release is the tag [%s](%s/tree/%s), commit [%s](%s/commit/%s).\n\n' \
+              "$TAG" "$repository" "$TAG" "$GITHUB_SHA" "$repository" "$GITHUB_SHA"
+            printf '## Images\n\n'
+            for image in api web proxy; do
+              printf -- '- `ghcr.io/dewiride-open-source/erp-ai-pro/%s:%s@%s`\n' "$image" "$VERSION" "${digests[$image]}"
+            done
+            printf '\nEvery image carries a SLSA build provenance attestation and an SPDX 2.3 SBOM attestation, signed for `.github/workflows/release.yml` at `refs/tags/%s`.\n\n' "$TAG"
+            printf '## Deploying\n\n'
+            printf 'On the server, `scripts/deploy/deploy.sh %s` verifies the six attestations of these digests before it changes anything; [the deployment runbook](%s/blob/%s/docs/operations/runbooks/deploy.md) describes the deployment, its dry run and the rollback.\n\n' \
+              "$TAG" "$repository" "$TAG"
+            printf '## Licence and notices\n\n'
+            printf 'ERP-AI-Pro is licensed under the GNU Lesser General Public License version 3 only ([COPYING](%s/blob/%s/COPYING), [COPYING.LESSER](%s/blob/%s/COPYING.LESSER)). Every image holds `COPYING`, `COPYING.LESSER` and `THIRD-PARTY-NOTICES.txt` in `/usr/share/doc/erp-ai-pro/`, and the notices of the three images are in [infra/docker/notices](%s/tree/%s/infra/docker/notices) at this tag.\n\n' \
+              "$repository" "$TAG" "$repository" "$TAG" "$repository" "$TAG"
+            printf '## Assets\n\n'
+            printf -- '- `release-images.env`: the image tag and the three digests, the four values `deploy.sh` writes into `.env`.\n'
+            printf -- '- `<image>.provenance.sigstore.json` and `<image>.sbom.sigstore.json`: the Sigstore bundles of the provenance and SBOM attestations of each image.\n'
+            printf -- '- `<image>.spdx.json`: the SPDX 2.3 SBOM of each image.\n'
+          } > "$RUNNER_TEMP/notes.md"
+          cat release-images.env
+      - name: Check that the tag still names the commit this run built
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          commit="$(gh api "repos/$GITHUB_REPOSITORY/commits/refs/tags/$TAG" --jq .sha)"
+          if [[ "$commit" != "$GITHUB_SHA" ]]; then
+            echo "::error::The tag $TAG names commit $commit now, but this run built $GITHUB_SHA."
+            exit 1
+          fi
+      # gh release edit finds a draft by its tag, so a draft that a failed attempt left would be the one it publishes.
+      - name: Remove the drafts a failed attempt left for the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          releases="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq '.[] | [.tag_name, (.id | tostring), (.draft | tostring), .author.login] | @tsv')"
+          while IFS=$'\t' read -r tag id draft author; do
+            [[ "$tag" == "$TAG" ]] || continue
+            if [[ "$draft" == true && "$author" == "github-actions[bot]" ]]; then
+              gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/$id" > /dev/null
+              echo "Removed the draft release $id of $TAG."
+            else
+              echo "::error::Release $id already uses the tag $TAG (draft: $draft, author: $author)."
+              exit 1
+            fi
+          done <<< "$releases"
+      # Immutable releases lock the assets of a published release, so every asset is uploaded to the draft before it is published.
+      - name: Create the draft release with every asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$RUNNER_TEMP/release"
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --verify-tag --draft \
+            --title "ERP-AI-Pro $TAG" --notes-file "$RUNNER_TEMP/notes.md" \
+            release-images.env \
+            api.provenance.sigstore.json api.sbom.sigstore.json api.spdx.json \
+            web.provenance.sigstore.json web.sbom.sigstore.json web.spdx.json \
+            proxy.provenance.sigstore.json proxy.sbom.sigstore.json proxy.spdx.json
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false

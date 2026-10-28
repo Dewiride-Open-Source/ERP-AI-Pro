@@ -7,7 +7,7 @@ public sealed class FirstSeeder(RunRecorder recorder, DatabaseMigrator migrator)
 {
     public async Task SeedAsync(CancellationToken cancellationToken)
     {
-        var pending = await migrator.GetPendingMigrationsAsync(cancellationToken);
-        recorder.Record($"{nameof(FirstSeeder)}:{pending.Sum(schema => schema.Migrations.Count)}");
+        var status = await migrator.GetStatusAsync(cancellationToken);
+        recorder.Record($"{nameof(FirstSeeder)}:{status.Sum(schema => schema.Pending.Count)}");
     }
 }

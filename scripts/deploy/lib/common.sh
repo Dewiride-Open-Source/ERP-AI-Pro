@@ -17,8 +17,12 @@ readonly DEPLOY_USER='erp-ai-pro'
 readonly DEPLOY_HOME='/srv/erp-ai-pro'
 readonly DEPLOY_CHECKOUT="$DEPLOY_HOME/ERP-AI-Pro"
 readonly DEPLOY_COMPOSE_DIR="$DEPLOY_CHECKOUT/infra/compose"
+readonly DEPLOY_LOCK="$DEPLOY_HOME/deploy.lock"
 readonly STACK_VOLUMES=(erp-ai-pro-data-protection-keys erp-ai-pro-proxy-data)
 readonly CLIENT_CERTIFICATES=(erp-runtime-client.pem erp-migrator-client.pem)
+# The first gh release that compares --source-ref with regard to case and --signer-workflow whole, never as a prefix, which
+# the release checks of deploy.sh rely on.
+readonly MINIMUM_GH_VERSION='2.102.0'
 
 DRY_RUN="${DRY_RUN:-0}"
 ACCEPTS_DRY_RUN="${ACCEPTS_DRY_RUN:-1}"

@@ -22,6 +22,9 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
  && dotnet publish Hosts/Migrator/Dewiride.Erp.Host.Migrator/Dewiride.Erp.Host.Migrator.csproj \
       --configuration "$BUILD_CONFIGURATION" --no-restore --output /app/migrator -p:ContinuousIntegrationBuild=true
 
+RUN forbidden="$(find /app -iname '*msalruntime*' -o -iname 'Microsoft.Identity.Client.NativeInterop.dll')" \
+ && if [ -n "$forbidden" ]; then printf 'The published hosts hold the MSAL native runtime, whose licence forbids distributing it:\n%s\n' "$forbidden" >&2; exit 1; fi
+
 RUN mkdir /data-protection-keys
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:3ed6558056b54d5c9dfefb7ff473728e022ff2bf1d976cbf8ee07b05ec594374 AS runtime
@@ -30,6 +33,7 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_EnableDiagnostics=0 \
     TZ=Asia/Kolkata \
     XDG_DATA_HOME=/home/app/.local/share
+COPY COPYING COPYING.LESSER infra/docker/notices/api/THIRD-PARTY-NOTICES.txt infra/docker/notices/api/third-party-notices.json /usr/share/doc/erp-ai-pro/
 COPY --from=build --chown=app:app /app/api/ ./
 COPY --from=build --chown=app:app /app/probe/ ./probe/
 COPY --from=build --chown=app:app /app/migrator/ ./migrator/
@@ -38,3 +42,16 @@ USER app
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["dotnet", "/app/probe/Dewiride.Erp.Host.HealthProbe.dll"]
 ENTRYPOINT ["dotnet", "Dewiride.Erp.Host.Api.dll"]
+ARG ERP_VERSION=local
+ARG ERP_REVISION=unknown
+ARG ERP_CREATED
+LABEL org.opencontainers.image.title="ERP-AI-Pro API" \
+      org.opencontainers.image.description="The ERP-AI-Pro API host, with its database migrator and health probe" \
+      org.opencontainers.image.version="$ERP_VERSION" \
+      org.opencontainers.image.revision="$ERP_REVISION" \
+      org.opencontainers.image.created="$ERP_CREATED" \
+      org.opencontainers.image.source="https://github.com/Dewiride-Open-Source/ERP-AI-Pro" \
+      org.opencontainers.image.url="https://github.com/Dewiride-Open-Source/ERP-AI-Pro" \
+      org.opencontainers.image.documentation="https://github.com/Dewiride-Open-Source/ERP-AI-Pro/tree/main/docs" \
+      org.opencontainers.image.vendor="Dewiride Technologies Private Limited" \
+      org.opencontainers.image.licenses="LGPL-3.0-only"

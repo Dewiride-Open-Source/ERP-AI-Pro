@@ -1,0 +1,148 @@
+{
+  "0BSD": {
+    "source": "https://spdx.org/licenses/0BSD.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "e3f18c71e10d673590eb9856c1d79dd3b4b0d65404efb5e8584dbede7edd608b"
+  },
+  "Apache-2.0": {
+    "source": "https://spdx.org/licenses/Apache-2.0.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
+  },
+  "Artistic-1.0-Perl": {
+    "source": "https://spdx.org/licenses/Artistic-1.0-Perl.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "9e18ef4d50faba562e3efa37d8961d6e9956d1c103bfc4fc1caeb07e8effe885"
+  },
+  "BlueOak-1.0.0": {
+    "source": "https://spdx.org/licenses/BlueOak-1.0.0.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "8a1af140fdfbf5afd3df27f7e662f989c5b963a300020dfafce42033cae9e004"
+  },
+  "BSD-2-Clause": {
+    "source": "https://spdx.org/licenses/BSD-2-Clause.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "f32fb3b417a194167cfad068223fc975ba96c5960513a10f66a3c28720aec1df"
+  },
+  "BSD-3-Clause": {
+    "source": "https://spdx.org/licenses/BSD-3-Clause.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "5a93d5831e1297ab10fe643e1a631e83be392896da14ee2951285a79012df69d"
+  },
+  "BSD-4-Clause": {
+    "source": "https://spdx.org/licenses/BSD-4-Clause.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "c80d927f03db7212ba43a869a383e249c19b40859ff0d9e2e2f968e4fdcf005f"
+  },
+  "CC-BY-4.0": {
+    "source": "https://spdx.org/licenses/CC-BY-4.0.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "d557539df68e771cc1eedcc91d13f70fca930e508d11eedcafa4b15db49e3744"
+  },
+  "CC0-1.0": {
+    "source": "https://spdx.org/licenses/CC0-1.0.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+  },
+  "curl": {
+    "source": "https://spdx.org/licenses/curl.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "272d1239bdcef73bb98bac206168ca1040bd4a31296755fadfb7515bcea18df3"
+  },
+  "GFDL-1.2": {
+    "source": "https://www.gnu.org/licenses/old-licenses/fdl-1.2.txt",
+    "sha256": "2652c22ba086f92e55ae4a9f9c890ad4766ffd7814a73d318e22a597edf857a4"
+  },
+  "GFDL-1.3": {
+    "source": "https://www.gnu.org/licenses/fdl-1.3.txt",
+    "sha256": "110535522396708cea37c72a802c5e7e81391139f5f7985631c93ef242b206a4"
+  },
+  "Go": {
+    "source": "https://raw.githubusercontent.com/golang/go/go1.26.8/LICENSE",
+    "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  "GPL-1.0": {
+    "source": "https://www.gnu.org/licenses/old-licenses/gpl-1.0.txt",
+    "sha256": "49c007bafb5ad6dd9f9d4dae4d3ac0461975498150c05d684c551f0914ab486c"
+  },
+  "GPL-2.0": {
+    "source": "https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt",
+    "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+  },
+  "ISC": {
+    "source": "https://spdx.org/licenses/ISC.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "521c6f0ed8e64736684f89843d16a4df6b4b7449acbcfc6ca6630a3037ca8c53"
+  },
+  "LGPL-2.0": {
+    "source": "https://spdx.org/licenses/LGPL-2.0-only.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "86dc99d7e5060915ab1dfc1378b7dd351c62088bfa74067e8aa1868c6fdba7d8"
+  },
+  "LGPL-2.1": {
+    "source": "https://spdx.org/licenses/LGPL-2.1-only.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "5749785c8bdefafcb5d798270ed0a967036fe2ca63dcedade1627565dfef81d2"
+  },
+  "MIT": {
+    "source": "https://spdx.org/licenses/MIT.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5"
+  },
+  "MIT-0": {
+    "source": "https://spdx.org/licenses/MIT-0.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "59746d6285ffa44bfc7ecada352aa5d6a20dc8eab418a60ce091cc739012c135"
+  },
+  "MPL-1.1": {
+    "source": "https://spdx.org/licenses/MPL-1.1.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "6214f8b1300bb9f37b16ebc146f8f61af0187e0025042ff95c8b3030744a8795"
+  },
+  "MPL-2.0": {
+    "source": "https://spdx.org/licenses/MPL-2.0.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172"
+  },
+  "OFL-1.1": {
+    "source": "https://spdx.org/licenses/OFL-1.1.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "8eea8287e5876b539670cadb82e99f9a7afddec6f6730811be1daf25d2e9bcfd"
+  },
+  "Unlicense": {
+    "source": "https://spdx.org/licenses/Unlicense.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "0bdebfeda07d45dada625ae1317c6f833186e798b171d0db640bcf32e92a8240"
+  },
+  "X11": {
+    "source": "https://spdx.org/licenses/X11.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "e1963c9958b93bc2578b34f8ae22cfe205e8c0e7d5be7235cfdbdefbf92a5423"
+  },
+  "Zlib": {
+    "source": "https://spdx.org/licenses/Zlib.json",
+    "field": "licenseText",
+    "licenseListVersion": "3.29.0",
+    "sha256": "bfb1112d49db5b1daecdfef24bd7e2f3ea0bafb33aa67aa0ab51e2bf8407c03d"
+  }
+}

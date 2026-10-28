@@ -34,6 +34,12 @@
           "Newtonsoft.Json": "13.0.4"
         }
       },
+      "Microsoft.Identity.Client.NativeInterop": {
+        "type": "Direct",
+        "requested": "[0.20.6, )",
+        "resolved": "0.20.6",
+        "contentHash": "noyfdMfVxyWpM6xUDmlW6gUvZ5ci24z7Qoy15JvynTQfZV5vTD2NEdsnT5Gy4ngViwgdIp5iRjRy10jAKXFAgw=="
+      },
       "Scalar.AspNetCore": {
         "type": "Direct",
         "requested": "[2.17.14, )",
@@ -317,11 +323,6 @@
         "type": "Transitive",
         "resolved": "12.7.0",
         "contentHash": "NU2nvct8vCnIxp9bbmp2sthVzvY+U1IvmEVUhaRN81WdwtYhCpQTBTlMR0h74LDdbvU267BR5x98pCR5o779Fg=="
-      },
-      "Microsoft.Identity.Client.NativeInterop": {
-        "type": "Transitive",
-        "resolved": "0.20.6",
-        "contentHash": "noyfdMfVxyWpM6xUDmlW6gUvZ5ci24z7Qoy15JvynTQfZV5vTD2NEdsnT5Gy4ngViwgdIp5iRjRy10jAKXFAgw=="
       },
       "Microsoft.Identity.Web.Certificate": {
         "type": "Transitive",

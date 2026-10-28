@@ -11,5 +11,5 @@ Type=oneshot
 User=erp-ai-pro
 Group=erp-ai-pro
 WorkingDirectory=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose
-ExecStart=/usr/bin/docker compose -f compose.yaml -f compose.production.yaml run --rm -T migrator retain
+ExecStart=/usr/bin/flock /srv/erp-ai-pro/deploy.lock /usr/bin/docker compose -f compose.yaml -f compose.production.yaml run --rm -T migrator retain
 TimeoutStartSec=30min

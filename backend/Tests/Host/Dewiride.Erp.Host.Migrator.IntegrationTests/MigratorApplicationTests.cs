@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Reflection;
 using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Auditing;
 using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
@@ -10,12 +12,16 @@ using Dewiride.Erp.Testing.Sql;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
 
 namespace Dewiride.Erp.Host.Migrator.IntegrationTests;
 
 public sealed class MigratorApplicationTests
 {
     private const string UnreachableServer = "Server=127.0.0.1,1;Database=ErpAiPro;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;Connect Timeout=1";
+
+    private const string LaterMigration = "29991231235959_FromALaterRelease";
 
     private const string FilesSchema = "files";
 
@@ -232,6 +238,69 @@ public sealed class MigratorApplicationTests
         Assert.Equal([false, true, false, true], kept);
     }
 
+    [Theory]
+    [InlineData(MigratorApplication.MigrateCommand)]
+    [InlineData(MigratorApplication.RetainCommand)]
+    [InlineData(MigratorApplication.StatusCommand)]
+    public async Task RunAsync_DatabaseHoldsAMigrationThisReleaseDoesNotKnow_ExitsWithDatabaseAheadNamingIt(string command)
+    {
+        await using var database = await EmptyTestDatabase.CreateAsync();
+        Assert.Equal(MigratorExitCodes.Succeeded, await RunAsync([MigratorApplication.MigrateCommand], database.ConnectionString));
+        await AddHistoryRowAsync(database.ConnectionString, FilesSchema, LaterMigration);
+        var logs = new FakeLogCollector();
+
+        var exitCode = await RunAsync([command], database.ConnectionString, configureServices: services =>
+            services.AddSingleton<ILoggerProvider>(new FakeLoggerProvider(logs)));
+
+        Assert.Equal(MigratorExitCodes.DatabaseAhead, exitCode);
+        var records = logs.GetSnapshot().Where(record => record.Category == typeof(MigratorApplication).FullName).ToList();
+        Assert.Equal([LogLevel.Error, LogLevel.Error], records.Select(record => record.Level));
+        Assert.Equal(FilesSchema, records[0].GetStructuredStateValue("Schema"));
+        Assert.Contains(LaterMigration, records[0].Message, StringComparison.Ordinal);
+        Assert.Equal(command, records[1].GetStructuredStateValue("Command"));
+    }
+
+    [Fact]
+    public async Task RunAsync_MigrateWhileTheDatabaseIsAhead_AppliesNoMigrationAndRunsNoSeederOrSweep()
+    {
+        await using var database = await EmptyTestDatabase.CreateAsync();
+        await CreateHistoryTableAsync(database.ConnectionString, FilesSchema);
+        await AddHistoryRowAsync(database.ConnectionString, FilesSchema, LaterMigration);
+        var recorder = new RunRecorder();
+
+        var exitCode = await RunAsync([MigratorApplication.MigrateCommand], database.ConnectionString, configureServices: services =>
+        {
+            services.AddSingleton(recorder);
+            services.AddSeeder<SecondSeeder>(order: 20);
+            services.AddRetentionSweep<RecordingSweep>();
+        });
+
+        Assert.Equal(MigratorExitCodes.DatabaseAhead, exitCode);
+        Assert.Empty(recorder.Runs);
+        Assert.Equal(1, await CountHistoryTablesAsync(database.ConnectionString));
+        Assert.Equal(1, await CountAppliedAsync(database.ConnectionString, FilesSchema));
+    }
+
+    [Fact]
+    public async Task RunAsync_RetainWhileTheDatabaseIsAhead_DeletesNothing()
+    {
+        await using var database = await EmptyTestDatabase.CreateAsync();
+        Assert.Equal(MigratorExitCodes.Succeeded, await RunAsync([MigratorApplication.MigrateCommand], database.ConnectionString));
+        var oldEvent = await AddSecurityEventAsync(database.ConnectionString, new DateTimeOffset(2001, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        await AddHistoryRowAsync(database.ConnectionString, FilesSchema, LaterMigration);
+        var recorder = new RunRecorder();
+
+        var exitCode = await RunAsync([MigratorApplication.RetainCommand], database.ConnectionString, configureServices: services =>
+        {
+            services.AddSingleton(recorder);
+            services.AddRetentionSweep<RecordingSweep>();
+        });
+
+        Assert.Equal(MigratorExitCodes.DatabaseAhead, exitCode);
+        Assert.Empty(recorder.Runs);
+        Assert.True(await ExistsAsync(database.ConnectionString, "SecurityEvents", oldEvent));
+    }
+
     [Fact]
     public async Task RunAsync_WithoutAConnectionString_ExitsWithInvalidConfiguration()
     {
@@ -312,6 +381,23 @@ public sealed class MigratorApplicationTests
         Assert.Equal(MigratorExitCodes.Usage, exitCode);
     }
 
+    [Fact]
+    public void Usage_NamesEveryExitCode()
+    {
+        var exitCodes = typeof(MigratorExitCodes).GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.IsLiteral)
+            .Select(field => (int)field.GetRawConstantValue()!)
+            .ToList();
+        var lines = MigratorApplication.Usage.Split(Environment.NewLine);
+
+        Assert.Contains(MigratorExitCodes.DatabaseAhead, exitCodes);
+        foreach (var exitCode in exitCodes)
+        {
+            var prefix = string.Create(CultureInfo.InvariantCulture, $"{exitCode} ");
+            Assert.Contains(lines, line => line.TrimStart().StartsWith(prefix, StringComparison.Ordinal));
+        }
+    }
+
     private static Task<int> RunAsync(
         string[] args,
         string? connectionString,
@@ -368,6 +454,25 @@ public sealed class MigratorApplicationTests
         }
 
         return [.. tables.Order(StringComparer.Ordinal)];
+    }
+
+    private static async Task CreateHistoryTableAsync(string connectionString, string schema)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new SqlCommand(
+            $"EXEC(N'CREATE SCHEMA [{schema}]'); CREATE TABLE [{schema}].[__EFMigrationsHistory] ([MigrationId] nvarchar(150) NOT NULL PRIMARY KEY, [ProductVersion] nvarchar(32) NOT NULL)",
+            connection);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    private static async Task AddHistoryRowAsync(string connectionString, string schema, string migrationId)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new SqlCommand($"INSERT INTO [{schema}].[__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES (@migrationId, N'10.0.13')", connection);
+        command.Parameters.AddWithValue("@migrationId", migrationId);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
     }
 
     private static Task<Guid> AddSecurityEventAsync(string connectionString, DateTimeOffset occurredAt) =>

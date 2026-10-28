@@ -1,0 +1,4400 @@
+{
+  "image": "web",
+  "repository": "ghcr.io/dewiride-open-source/erp-ai-pro/web",
+  "base": "docker.io/library/node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20",
+  "system": "Debian GNU/Linux 12 (bookworm)",
+  "source": "https://github.com/Dewiride-Open-Source/ERP-AI-Pro",
+  "copyright": "Copyright (c) 2026 Dewiride Technologies Private Limited.",
+  "components": {
+    "pkg:generic/node@24.21.0?download_url=https%3A%2F%2Fnodejs.org%2Fdist%2Fv24.21.0%2Fnode-v24.21.0-linux-x64.tar.xz": {
+      "kind": "runtime",
+      "name": "Node.js",
+      "version": "24.21.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright Node.js contributors. All rights reserved.",
+        "Copyright Joyent, Inc. and other Node contributors. All rights reserved."
+      ],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/local/LICENSE"
+      ],
+      "source": "https://github.com/nodejs/node/tree/v24.21.0",
+      "detail": "the runtime of the Node.js base image; /usr/local/LICENSE holds its licence and those of the libraries it bundles"
+    },
+    "pkg:npm/corepack@0.36.0": {
+      "kind": "runtime",
+      "name": "corepack",
+      "version": "0.36.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/local/lib/node_modules/corepack/LICENSE.md"
+      ],
+      "source": "https://github.com/nodejs/corepack/tree/v0.36.0",
+      "detail": "part of the Node.js base image; its licence is /usr/local/lib/node_modules/corepack/LICENSE.md"
+    },
+    "pkg:npm/npm@11.19.0": {
+      "kind": "runtime",
+      "name": "npm",
+      "version": "11.19.0",
+      "licence": "Artistic-2.0",
+      "spdx": "Artistic-2.0",
+      "copyright": [
+        "Copyright (c) npm, Inc. and Contributors",
+        "Copyright (c) their respective copyright owners",
+        "Copyright (c) Mathias Pettersson and Brian Hammond",
+        "Copyright (c) Tjarda Koster, https://jelloween.deviantart.com",
+        "Copyright (c) 2000-2006, The Perl Foundation."
+      ],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/local/lib/node_modules/npm/LICENSE",
+        "/usr/local/lib/node_modules/npm/node_modules"
+      ],
+      "source": "https://github.com/npm/cli/tree/v11.19.0",
+      "detail": "part of the Node.js base image; its licence is /usr/local/lib/node_modules/npm/LICENSE, and the packages it bundles keep their licence files in /usr/local/lib/node_modules/npm/node_modules"
+    },
+    "pkg:npm/yarn@1.22.22": {
+      "kind": "runtime",
+      "name": "yarn",
+      "version": "1.22.22",
+      "licence": "BSD-2-Clause",
+      "spdx": "BSD-2-Clause",
+      "copyright": [
+        "Copyright (c) 2016-present, Yarn Contributors. All rights reserved."
+      ],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/opt/yarn-v1.22.22/LICENSE"
+      ],
+      "source": "https://github.com/yarnpkg/yarn/tree/v1.22.22",
+      "detail": "part of the Node.js base image; its licence is /opt/yarn-v1.22.22/LICENSE"
+    },
+    "pkg:npm/%40date-fns/tz@1.5.0": {
+      "kind": "npm",
+      "name": "@date-fns/tz",
+      "version": "1.5.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright © 2024 Sasha Koss"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@date-fns/tz/-/tz-1.5.0.tgz",
+      "supplier": "Person: Sasha Koss (koss@nocorp.me)"
+    },
+    "pkg:npm/%40floating-ui/core@1.8.0": {
+      "kind": "npm",
+      "name": "@floating-ui/core",
+      "version": "1.8.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2021-present Floating UI contributors"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@floating-ui/core/-/core-1.8.0.tgz",
+      "supplier": "Person: atomiks"
+    },
+    "pkg:npm/%40floating-ui/dom@1.8.0": {
+      "kind": "npm",
+      "name": "@floating-ui/dom",
+      "version": "1.8.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2021-present Floating UI contributors"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@floating-ui/dom/-/dom-1.8.0.tgz",
+      "supplier": "Person: atomiks"
+    },
+    "pkg:npm/%40floating-ui/react-dom@2.1.9": {
+      "kind": "npm",
+      "name": "@floating-ui/react-dom",
+      "version": "2.1.9",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2021-present Floating UI contributors"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@floating-ui/react-dom/-/react-dom-2.1.9.tgz",
+      "supplier": "Person: atomiks"
+    },
+    "pkg:npm/%40floating-ui/utils@0.2.12": {
+      "kind": "npm",
+      "name": "@floating-ui/utils",
+      "version": "0.2.12",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2021-present Floating UI contributors"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@floating-ui/utils/-/utils-0.2.12.tgz",
+      "supplier": "Person: atomiks"
+    },
+    "pkg:npm/%40microsoft/kiota-abstractions@1.0.0-preview.110": {
+      "kind": "npm",
+      "name": "@microsoft/kiota-abstractions",
+      "version": "1.0.0-preview.110",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@microsoft/kiota-abstractions/-/kiota-abstractions-1.0.0-preview.110.tgz",
+      "supplier": "Person: Microsoft"
+    },
+    "pkg:npm/%40microsoft/kiota-http-fetchlibrary@1.0.0-preview.110": {
+      "kind": "npm",
+      "name": "@microsoft/kiota-http-fetchlibrary",
+      "version": "1.0.0-preview.110",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@microsoft/kiota-http-fetchlibrary/-/kiota-http-fetchlibrary-1.0.0-preview.110.tgz",
+      "supplier": "Person: Microsoft"
+    },
+    "pkg:npm/%40microsoft/kiota-serialization-json@1.0.0-preview.110": {
+      "kind": "npm",
+      "name": "@microsoft/kiota-serialization-json",
+      "version": "1.0.0-preview.110",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@microsoft/kiota-serialization-json/-/kiota-serialization-json-1.0.0-preview.110.tgz",
+      "supplier": "Person: Microsoft"
+    },
+    "pkg:npm/%40next/env@16.4.1": {
+      "kind": "npm",
+      "name": "@next/env",
+      "version": "16.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@next/env/-/env-16.4.1.tgz",
+      "supplier": "Person: Next.js Team (support@vercel.com)"
+    },
+    "pkg:npm/%40opentelemetry/api@1.9.1": {
+      "kind": "npm",
+      "name": "@opentelemetry/api",
+      "version": "1.9.1",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/api/-/api-1.9.1.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/api-logs@0.223.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/api-logs",
+      "version": "0.223.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/api-logs/-/api-logs-0.223.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/core@2.12.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/core",
+      "version": "2.12.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/core/-/core-2.12.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/instrumentation@0.223.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/instrumentation",
+      "version": "0.223.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/instrumentation/-/instrumentation-0.223.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/resources@2.12.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/resources",
+      "version": "2.12.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/resources/-/resources-2.12.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/sdk-logs@0.223.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/sdk-logs",
+      "version": "0.223.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/sdk-logs/-/sdk-logs-0.223.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/sdk-metrics@2.12.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/sdk-metrics",
+      "version": "2.12.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/sdk-metrics/-/sdk-metrics-2.12.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/sdk-trace@2.12.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/sdk-trace",
+      "version": "2.12.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/sdk-trace/-/sdk-trace-2.12.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/sdk-trace-base@2.12.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/sdk-trace-base",
+      "version": "2.12.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.12.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40opentelemetry/semantic-conventions@1.43.0": {
+      "kind": "npm",
+      "name": "@opentelemetry/semantic-conventions",
+      "version": "1.43.0",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@opentelemetry/semantic-conventions/-/semantic-conventions-1.43.0.tgz",
+      "supplier": "Person: OpenTelemetry Authors"
+    },
+    "pkg:npm/%40radix-ui/number@1.1.3": {
+      "kind": "npm",
+      "name": "@radix-ui/number",
+      "version": "1.1.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/number/-/number-1.1.3.tgz"
+    },
+    "pkg:npm/%40radix-ui/primitive@1.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/primitive",
+      "version": "1.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/primitive/-/primitive-1.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-accessible-icon@1.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-accessible-icon",
+      "version": "1.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-accessible-icon/-/react-accessible-icon-1.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-accordion@1.3.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-accordion",
+      "version": "1.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-accordion/-/react-accordion-1.3.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-alert-dialog@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-alert-dialog",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-alert-dialog/-/react-alert-dialog-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-arrow@1.1.17": {
+      "kind": "npm",
+      "name": "@radix-ui/react-arrow",
+      "version": "1.1.17",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-arrow/-/react-arrow-1.1.17.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-aspect-ratio@1.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-aspect-ratio",
+      "version": "1.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-aspect-ratio/-/react-aspect-ratio-1.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-avatar@1.3.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-avatar",
+      "version": "1.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-avatar/-/react-avatar-1.3.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-checkbox@1.4.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-checkbox",
+      "version": "1.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-checkbox/-/react-checkbox-1.4.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-collapsible@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-collapsible",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-collapsible/-/react-collapsible-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-collection@1.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-collection",
+      "version": "1.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-collection/-/react-collection-1.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-compose-refs@1.1.5": {
+      "kind": "npm",
+      "name": "@radix-ui/react-compose-refs",
+      "version": "1.1.5",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-compose-refs/-/react-compose-refs-1.1.5.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-context@1.3.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-context",
+      "version": "1.3.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-context/-/react-context-1.3.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-context-menu@2.4.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-context-menu",
+      "version": "2.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-context-menu/-/react-context-menu-2.4.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-dialog@1.3.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-dialog",
+      "version": "1.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-dialog/-/react-dialog-1.3.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-direction@1.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-direction",
+      "version": "1.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-direction/-/react-direction-1.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-dismissable-layer@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-dismissable-layer",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-dismissable-layer/-/react-dismissable-layer-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-dropdown-menu@2.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-dropdown-menu",
+      "version": "2.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-dropdown-menu/-/react-dropdown-menu-2.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-focus-guards@1.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-focus-guards",
+      "version": "1.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-focus-guards/-/react-focus-guards-1.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-focus-scope@1.3.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-focus-scope",
+      "version": "1.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-focus-scope/-/react-focus-scope-1.3.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-form@0.3.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-form",
+      "version": "0.3.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-form/-/react-form-0.3.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-hover-card@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-hover-card",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-hover-card/-/react-hover-card-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-id@1.1.4": {
+      "kind": "npm",
+      "name": "@radix-ui/react-id",
+      "version": "1.1.4",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-id/-/react-id-1.1.4.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-label@2.1.17": {
+      "kind": "npm",
+      "name": "@radix-ui/react-label",
+      "version": "2.1.17",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-label/-/react-label-2.1.17.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-menu@2.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-menu",
+      "version": "2.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-menu/-/react-menu-2.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-menubar@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-menubar",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-menubar/-/react-menubar-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-navigation-menu@1.4.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-navigation-menu",
+      "version": "1.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-navigation-menu/-/react-navigation-menu-1.4.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-one-time-password-field@0.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-one-time-password-field",
+      "version": "0.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-one-time-password-field/-/react-one-time-password-field-0.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-password-toggle-field@0.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-password-toggle-field",
+      "version": "0.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-password-toggle-field/-/react-password-toggle-field-0.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-popover@1.3.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-popover",
+      "version": "1.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-popover/-/react-popover-1.3.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-popper@1.4.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-popper",
+      "version": "1.4.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-popper/-/react-popper-1.4.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-portal@1.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-portal",
+      "version": "1.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-portal/-/react-portal-1.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-presence@1.1.11": {
+      "kind": "npm",
+      "name": "@radix-ui/react-presence",
+      "version": "1.1.11",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-presence/-/react-presence-1.1.11.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-primitive@2.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-primitive",
+      "version": "2.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-primitive/-/react-primitive-2.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-progress@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-progress",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-progress/-/react-progress-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-radio-group@1.5.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-radio-group",
+      "version": "1.5.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-radio-group/-/react-radio-group-1.5.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-roving-focus@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-roving-focus",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-roving-focus/-/react-roving-focus-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-scroll-area@1.4.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-scroll-area",
+      "version": "1.4.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-scroll-area/-/react-scroll-area-1.4.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-select@2.4.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-select",
+      "version": "2.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-select/-/react-select-2.4.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-separator@1.2.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-separator",
+      "version": "1.2.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-separator/-/react-separator-1.2.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-slider@1.6.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-slider",
+      "version": "1.6.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-slider/-/react-slider-1.6.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-slot@1.5.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-slot",
+      "version": "1.5.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-slot/-/react-slot-1.5.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-switch@1.4.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-switch",
+      "version": "1.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-switch/-/react-switch-1.4.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-tabs@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-tabs",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-tabs/-/react-tabs-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-toast@1.3.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-toast",
+      "version": "1.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-toast/-/react-toast-1.3.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-toggle@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-toggle",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-toggle/-/react-toggle-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-toggle-group@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-toggle-group",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-toggle-group/-/react-toggle-group-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-toolbar@1.2.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-toolbar",
+      "version": "1.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-toolbar/-/react-toolbar-1.2.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-tooltip@1.4.1": {
+      "kind": "npm",
+      "name": "@radix-ui/react-tooltip",
+      "version": "1.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-tooltip/-/react-tooltip-1.4.1.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-callback-ref@1.1.5": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-callback-ref",
+      "version": "1.1.5",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-callback-ref/-/react-use-callback-ref-1.1.5.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-controllable-state@1.3.0": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-controllable-state",
+      "version": "1.3.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-controllable-state/-/react-use-controllable-state-1.3.0.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-effect-event@0.0.5": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-effect-event",
+      "version": "0.0.5",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-effect-event/-/react-use-effect-event-0.0.5.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-escape-keydown@1.1.6": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-escape-keydown",
+      "version": "1.1.6",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-escape-keydown/-/react-use-escape-keydown-1.1.6.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-is-hydrated@0.1.3": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-is-hydrated",
+      "version": "0.1.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-is-hydrated/-/react-use-is-hydrated-0.1.3.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-layout-effect@1.1.4": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-layout-effect",
+      "version": "1.1.4",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-layout-effect/-/react-use-layout-effect-1.1.4.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-previous@1.1.4": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-previous",
+      "version": "1.1.4",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-previous/-/react-use-previous-1.1.4.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-rect@1.1.4": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-rect",
+      "version": "1.1.4",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-rect/-/react-use-rect-1.1.4.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-use-size@1.1.5": {
+      "kind": "npm",
+      "name": "@radix-ui/react-use-size",
+      "version": "1.1.5",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-use-size/-/react-use-size-1.1.5.tgz"
+    },
+    "pkg:npm/%40radix-ui/react-visually-hidden@1.2.13": {
+      "kind": "npm",
+      "name": "@radix-ui/react-visually-hidden",
+      "version": "1.2.13",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/react-visually-hidden/-/react-visually-hidden-1.2.13.tgz"
+    },
+    "pkg:npm/%40radix-ui/rect@1.1.3": {
+      "kind": "npm",
+      "name": "@radix-ui/rect",
+      "version": "1.1.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@radix-ui/rect/-/rect-1.1.3.tgz"
+    },
+    "pkg:npm/%40std-uritemplate/std-uritemplate@2.0.12": {
+      "kind": "npm",
+      "name": "@std-uritemplate/std-uritemplate",
+      "version": "2.0.12",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@std-uritemplate/std-uritemplate/-/std-uritemplate-2.0.12.tgz",
+      "supplier": "Person: Andrea Peruffo (andrea.peruffo1982@gmail.com)"
+    },
+    "pkg:npm/%40swc/helpers@0.5.23": {
+      "kind": "npm",
+      "name": "@swc/helpers",
+      "version": "0.5.23",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright 2024 SWC contributors."
+      ],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@swc/helpers/-/helpers-0.5.23.tgz",
+      "supplier": "Person: 강동윤 (kdy1997.dev@gmail.com)"
+    },
+    "pkg:npm/%40tanstack/react-store@0.11.2": {
+      "kind": "npm",
+      "name": "@tanstack/react-store",
+      "version": "0.11.2",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2021 Tanner Linsley"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@tanstack/react-store/-/react-store-0.11.2.tgz",
+      "supplier": "Person: Tanner Linsley"
+    },
+    "pkg:npm/%40tanstack/react-table@9.3.1": {
+      "kind": "npm",
+      "name": "@tanstack/react-table",
+      "version": "9.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2016 Tanner Linsley"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@tanstack/react-table/-/react-table-9.3.1.tgz",
+      "supplier": "Person: Tanner Linsley"
+    },
+    "pkg:npm/%40tanstack/store@0.11.2": {
+      "kind": "npm",
+      "name": "@tanstack/store",
+      "version": "0.11.2",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2021 Tanner Linsley"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@tanstack/store/-/store-0.11.2.tgz",
+      "supplier": "Person: Tanner Linsley"
+    },
+    "pkg:npm/%40tanstack/table-core@9.3.1": {
+      "kind": "npm",
+      "name": "@tanstack/table-core",
+      "version": "9.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2016 Tanner Linsley"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@tanstack/table-core/-/table-core-9.3.1.tgz",
+      "supplier": "Person: Tanner Linsley"
+    },
+    "pkg:npm/%40vercel/otel@2.1.3": {
+      "kind": "npm",
+      "name": "@vercel/otel",
+      "version": "2.1.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2023 Vercel"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/@vercel/otel/-/otel-2.1.3.tgz",
+      "supplier": "Person: Vercel Inc"
+    },
+    "pkg:npm/aria-hidden@1.2.6": {
+      "kind": "npm",
+      "name": "aria-hidden",
+      "version": "1.2.6",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2017 Anton Korzunov"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/aria-hidden/-/aria-hidden-1.2.6.tgz",
+      "supplier": "Person: Anton Korzunov (thekashey@gmail.com)"
+    },
+    "pkg:npm/baseline-browser-mapping@2.11.25": {
+      "kind": "npm",
+      "name": "baseline-browser-mapping",
+      "version": "2.11.25",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.25.tgz"
+    },
+    "pkg:npm/caniuse-lite@1.0.30001810": {
+      "kind": "npm",
+      "name": "caniuse-lite",
+      "version": "1.0.30001810",
+      "licence": "CC-BY-4.0",
+      "spdx": "CC-BY-4.0",
+      "copyright": [
+        "copyright--then that use is not regulated by the license. Our"
+      ],
+      "texts": [
+        4
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001810.tgz",
+      "supplier": "Person: Ben Briggs (beneb.info@gmail.com)"
+    },
+    "pkg:npm/cjs-module-lexer@2.2.1": {
+      "kind": "npm",
+      "name": "cjs-module-lexer",
+      "version": "2.2.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (C) 2018-2020 Guy Bedford"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/cjs-module-lexer/-/cjs-module-lexer-2.2.1.tgz",
+      "supplier": "Person: Guy Bedford"
+    },
+    "pkg:npm/class-variance-authority@0.7.1": {
+      "kind": "npm",
+      "name": "class-variance-authority",
+      "version": "0.7.1",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [
+        "Copyright 2022 Joe Bell"
+      ],
+      "texts": [
+        5
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/class-variance-authority/-/class-variance-authority-0.7.1.tgz",
+      "supplier": "Person: Joe Bell"
+    },
+    "pkg:npm/client-only@0.0.1": {
+      "kind": "npm",
+      "name": "client-only",
+      "version": "0.0.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/client-only/-/client-only-0.0.1.tgz"
+    },
+    "pkg:npm/clsx@2.1.1": {
+      "kind": "npm",
+      "name": "clsx",
+      "version": "2.1.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com)"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/clsx/-/clsx-2.1.1.tgz",
+      "supplier": "Person: Luke Edwards (luke.edwards05@gmail.com)"
+    },
+    "pkg:npm/cn@0.4.0": {
+      "kind": "npm",
+      "name": "cn",
+      "version": "0.4.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2026 shadcn"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/cn/-/cn-0.4.0.tgz"
+    },
+    "pkg:npm/date-fns@4.4.0": {
+      "kind": "npm",
+      "name": "date-fns",
+      "version": "4.4.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2021 Sasha Koss and Lesha Koss https://kossnocorp.mit-license.org"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/date-fns/-/date-fns-4.4.0.tgz"
+    },
+    "pkg:npm/debug@4.4.3": {
+      "kind": "npm",
+      "name": "debug",
+      "version": "4.4.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2014-2017 TJ Holowaychuk <tj@vision-media.ca>",
+        "Copyright (c) 2018-2021 Josh Junon"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+      "supplier": "Person: Josh Junon"
+    },
+    "pkg:npm/detect-node-es@1.1.0": {
+      "kind": "npm",
+      "name": "detect-node-es",
+      "version": "1.1.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2017 Ilya Kantor"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/detect-node-es/-/detect-node-es-1.1.0.tgz",
+      "supplier": "Person: Ilya Kantor"
+    },
+    "pkg:npm/es-module-lexer@3.0.2": {
+      "kind": "npm",
+      "name": "es-module-lexer",
+      "version": "3.0.2",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (C) 2018-2022 Guy Bedford"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz",
+      "supplier": "Person: Guy Bedford"
+    },
+    "pkg:npm/framer-motion@14.0.0": {
+      "kind": "npm",
+      "name": "framer-motion",
+      "version": "14.0.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2018 Framer B.V."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/framer-motion/-/framer-motion-14.0.0.tgz",
+      "supplier": "Person: Matt Perry"
+    },
+    "pkg:npm/geist@1.7.2": {
+      "kind": "npm",
+      "name": "geist",
+      "version": "1.7.2",
+      "licence": "SIL OPEN FONT LICENSE",
+      "spdx": "NOASSERTION",
+      "copyright": [
+        "Copyright (c) 2023 Vercel, in collaboration with basement.studio"
+      ],
+      "texts": [
+        6
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/geist/-/geist-1.7.2.tgz"
+    },
+    "pkg:npm/get-nonce@1.0.1": {
+      "kind": "npm",
+      "name": "get-nonce",
+      "version": "1.0.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2020 Anton Korzunov"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/get-nonce/-/get-nonce-1.0.1.tgz",
+      "supplier": "Person: Anton Korzunov (thekashey@gmail.com)"
+    },
+    "pkg:npm/import-in-the-middle@3.5.1": {
+      "kind": "npm",
+      "name": "import-in-the-middle",
+      "version": "3.5.1",
+      "licence": "Apache-2.0",
+      "spdx": "Apache-2.0",
+      "copyright": [],
+      "texts": [
+        3
+      ],
+      "notices": [
+        7,
+        8
+      ],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/import-in-the-middle/-/import-in-the-middle-3.5.1.tgz",
+      "supplier": "Person: Bryan English (bryan.english@datadoghq.com)"
+    },
+    "pkg:npm/lucide-react@1.57.0": {
+      "kind": "npm",
+      "name": "lucide-react",
+      "version": "1.57.0",
+      "licence": "ISC",
+      "spdx": "ISC",
+      "copyright": [
+        "Copyright (c) 2026 Lucide Icons and Contributors",
+        "Copyright (c) 2013-present Cole Bemis"
+      ],
+      "texts": [
+        9
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.57.0.tgz",
+      "supplier": "Person: Eric Fennis"
+    },
+    "pkg:npm/module-details-from-path@1.0.4": {
+      "kind": "npm",
+      "name": "module-details-from-path",
+      "version": "1.0.4",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2016-2025 Thomas Watson Steen"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/module-details-from-path/-/module-details-from-path-1.0.4.tgz",
+      "supplier": "Person: Thomas Watson (w@tson.dk)"
+    },
+    "pkg:npm/motion@14.0.0": {
+      "kind": "npm",
+      "name": "motion",
+      "version": "14.0.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2024 [Motion](https://motion.dev) B.V."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/motion/-/motion-14.0.0.tgz",
+      "supplier": "Person: Matt Perry"
+    },
+    "pkg:npm/motion-dom@14.0.0": {
+      "kind": "npm",
+      "name": "motion-dom",
+      "version": "14.0.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2024 [Motion](https://motion.dev) B.V."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/motion-dom/-/motion-dom-14.0.0.tgz",
+      "supplier": "Person: Matt Perry"
+    },
+    "pkg:npm/motion-utils@14.0.0": {
+      "kind": "npm",
+      "name": "motion-utils",
+      "version": "14.0.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2024 [Motion](https://motion.dev) B.V."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/motion-utils/-/motion-utils-14.0.0.tgz",
+      "supplier": "Person: Matt Perry"
+    },
+    "pkg:npm/ms@2.1.3": {
+      "kind": "npm",
+      "name": "ms",
+      "version": "2.1.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2020 Vercel, Inc."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz"
+    },
+    "pkg:npm/nanoid@3.3.19": {
+      "kind": "npm",
+      "name": "nanoid",
+      "version": "3.3.19",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright 2017 Andrey Sitnik <andrey@sitnik.ru>"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.19.tgz",
+      "supplier": "Person: Andrey Sitnik (andrey@sitnik.ru)"
+    },
+    "pkg:npm/next@16.4.1": {
+      "kind": "npm",
+      "name": "next",
+      "version": "16.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2025 Vercel, Inc."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [
+        10,
+        11,
+        12,
+        13,
+        3,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        1,
+        95,
+        96,
+        97,
+        98,
+        99
+      ],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/next/-/next-16.4.1.tgz"
+    },
+    "pkg:npm/next-themes@0.4.6": {
+      "kind": "npm",
+      "name": "next-themes",
+      "version": "0.4.6",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 Paco Coursey"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/next-themes/-/next-themes-0.4.6.tgz"
+    },
+    "pkg:npm/picocolors@1.1.1": {
+      "kind": "npm",
+      "name": "picocolors",
+      "version": "1.1.1",
+      "licence": "ISC",
+      "spdx": "ISC",
+      "copyright": [
+        "Copyright (c) 2021-2024 Oleksii Raspopov, Kostiantyn Denysov, Anton Verinov"
+      ],
+      "texts": [
+        100
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+      "supplier": "Person: Alexey Raspopov"
+    },
+    "pkg:npm/postcss@8.5.23": {
+      "kind": "npm",
+      "name": "postcss",
+      "version": "8.5.23",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright 2013 Andrey Sitnik <andrey@sitnik.es>"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/postcss/-/postcss-8.5.23.tgz",
+      "supplier": "Person: Andrey Sitnik (andrey@sitnik.es)"
+    },
+    "pkg:npm/radix-ui@1.8.1": {
+      "kind": "npm",
+      "name": "radix-ui",
+      "version": "1.8.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2022 WorkOS"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/radix-ui/-/radix-ui-1.8.1.tgz"
+    },
+    "pkg:npm/react@19.3.1": {
+      "kind": "npm",
+      "name": "react",
+      "version": "19.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) Meta Platforms, Inc. and affiliates."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/react/-/react-19.3.1.tgz"
+    },
+    "pkg:npm/react-day-picker@10.0.2": {
+      "kind": "npm",
+      "name": "react-day-picker",
+      "version": "10.0.2",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2014-2026 Giampaolo Bellavite <io@gpbl.dev> and contributors"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/react-day-picker/-/react-day-picker-10.0.2.tgz",
+      "supplier": "Person: Giampaolo Bellavite (io@gpbl.dev)"
+    },
+    "pkg:npm/react-dom@19.3.1": {
+      "kind": "npm",
+      "name": "react-dom",
+      "version": "19.3.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) Meta Platforms, Inc. and affiliates."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.1.tgz"
+    },
+    "pkg:npm/react-hook-form@7.90.0": {
+      "kind": "npm",
+      "name": "react-hook-form",
+      "version": "7.90.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2019-present Beier(Bill) Luo"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.90.0.tgz"
+    },
+    "pkg:npm/react-remove-scroll@2.7.2": {
+      "kind": "npm",
+      "name": "react-remove-scroll",
+      "version": "2.7.2",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2017 Anton Korzunov"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/react-remove-scroll/-/react-remove-scroll-2.7.2.tgz",
+      "supplier": "Person: Anton Korzunov (thekashey@gmail.com)"
+    },
+    "pkg:npm/react-remove-scroll-bar@2.3.8": {
+      "kind": "npm",
+      "name": "react-remove-scroll-bar",
+      "version": "2.3.8",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/react-remove-scroll-bar/-/react-remove-scroll-bar-2.3.8.tgz",
+      "supplier": "Person: Anton Korzunov (thekashey@gmail.com)"
+    },
+    "pkg:npm/react-style-singleton@2.2.3": {
+      "kind": "npm",
+      "name": "react-style-singleton",
+      "version": "2.2.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2017 Anton Korzunov"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/react-style-singleton/-/react-style-singleton-2.2.3.tgz",
+      "supplier": "Person: Anton Korzunov"
+    },
+    "pkg:npm/require-in-the-middle@8.0.1": {
+      "kind": "npm",
+      "name": "require-in-the-middle",
+      "version": "8.0.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2016-2019, Thomas Watson Steen",
+        "Copyright (c) 2019-2025, Elasticsearch B.V.",
+        "Copyright (c) 2025+, require-in-the-middle contributors"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/require-in-the-middle/-/require-in-the-middle-8.0.1.tgz",
+      "supplier": "Person: Thomas Watson Steen (w@tson.dk)"
+    },
+    "pkg:npm/scheduler@0.28.0": {
+      "kind": "npm",
+      "name": "scheduler",
+      "version": "0.28.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) Meta Platforms, Inc. and affiliates."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/scheduler/-/scheduler-0.28.0.tgz"
+    },
+    "pkg:npm/server-only@0.0.1": {
+      "kind": "npm",
+      "name": "server-only",
+      "version": "0.0.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/server-only/-/server-only-0.0.1.tgz"
+    },
+    "pkg:npm/sonner@2.0.8": {
+      "kind": "npm",
+      "name": "sonner",
+      "version": "2.0.8",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2023 Emil Kowalski"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/sonner/-/sonner-2.0.8.tgz",
+      "supplier": "Person: Emil Kowalski (e@emilkowal.ski)"
+    },
+    "pkg:npm/source-map-js@1.2.2": {
+      "kind": "npm",
+      "name": "source-map-js",
+      "version": "1.2.2",
+      "licence": "BSD-3-Clause",
+      "spdx": "BSD-3-Clause",
+      "copyright": [
+        "Copyright (c) 2009-2011, Mozilla Foundation and contributors"
+      ],
+      "texts": [
+        101
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.2.tgz",
+      "supplier": "Person: Valentin 7rulnik Semirulnik (v7rulnik@gmail.com)"
+    },
+    "pkg:npm/styled-jsx@5.1.6": {
+      "kind": "npm",
+      "name": "styled-jsx",
+      "version": "5.1.6",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2016-present Vercel, Inc."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/styled-jsx/-/styled-jsx-5.1.6.tgz"
+    },
+    "pkg:npm/tinyduration@3.4.1": {
+      "kind": "npm",
+      "name": "tinyduration",
+      "version": "3.4.1",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright 2020 MelleB"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/tinyduration/-/tinyduration-3.4.1.tgz",
+      "supplier": "Person: MelleB (npm@melleboersma.nl)"
+    },
+    "pkg:npm/tslib@2.8.1": {
+      "kind": "npm",
+      "name": "tslib",
+      "version": "2.8.1",
+      "licence": "0BSD",
+      "spdx": "0BSD",
+      "copyright": [
+        "Copyright (c) Microsoft Corporation."
+      ],
+      "texts": [
+        102
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+      "supplier": "Person: Microsoft Corp."
+    },
+    "pkg:npm/tw-animate-css@1.4.0": {
+      "kind": "npm",
+      "name": "tw-animate-css",
+      "version": "1.4.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2025 Wombosvideo"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/tw-animate-css/-/tw-animate-css-1.4.0.tgz",
+      "supplier": "Person: Luca Bosin"
+    },
+    "pkg:npm/use-callback-ref@1.3.3": {
+      "kind": "npm",
+      "name": "use-callback-ref",
+      "version": "1.3.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2017 Anton Korzunov"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/use-callback-ref/-/use-callback-ref-1.3.3.tgz",
+      "supplier": "Person: theKashey (thekashey@gmail.com)"
+    },
+    "pkg:npm/use-sidecar@1.1.3": {
+      "kind": "npm",
+      "name": "use-sidecar",
+      "version": "1.1.3",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2017 Anton Korzunov"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/use-sidecar/-/use-sidecar-1.1.3.tgz",
+      "supplier": "Person: theKashey (thekashey@gmail.com)"
+    },
+    "pkg:npm/use-sync-external-store@1.7.0": {
+      "kind": "npm",
+      "name": "use-sync-external-store",
+      "version": "1.7.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) Meta Platforms, Inc. and affiliates."
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.7.0.tgz"
+    },
+    "pkg:npm/zod@4.6.7": {
+      "kind": "npm",
+      "name": "zod",
+      "version": "4.6.7",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "Copyright (c) 2025 Colin McDonnell"
+      ],
+      "texts": [
+        1
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://registry.npmjs.org/zod/-/zod-4.6.7.tgz",
+      "supplier": "Person: Colin McDonnell (zod@colinhacks.com)"
+    },
+    "pkg:deb/debian/adduser@3.134?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "adduser",
+      "version": "3.134",
+      "licence": "GPL-2.0-or-later",
+      "spdx": "GPL-2.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/adduser/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/adduser/3.134/",
+      "supplier": "Organization: Debian Adduser Developers (adduser@packages.debian.org)",
+      "detail": "source package adduser 3.134; the copyright file names GPL-2+"
+    },
+    "pkg:deb/debian/apt@2.6.1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "apt",
+      "version": "2.6.1",
+      "licence": "BSD-3-Clause AND MIT AND GPL-2.0-only AND GPL-2.0-or-later",
+      "spdx": "BSD-3-Clause AND MIT AND GPL-2.0-only AND GPL-2.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/apt/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/apt/2.6.1/",
+      "supplier": "Organization: APT Development Team (deity@lists.debian.org)",
+      "detail": "source package apt 2.6.1; the copyright file names BSD-3-clause; Expat; GPL-2; GPL-2+"
+    },
+    "pkg:deb/debian/base-files@12.4%2Bdeb12u15?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "base-files",
+      "version": "12.4+deb12u15",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/base-files/copyright",
+        "/usr/share/common-licenses/GPL"
+      ],
+      "source": "https://snapshot.debian.org/package/base-files/12.4%2Bdeb12u15/",
+      "supplier": "Organization: Santiago Vila (sanvila@debian.org)",
+      "detail": "source package base-files 12.4+deb12u15; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/base-passwd@3.6.1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "base-passwd",
+      "version": "3.6.1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/base-passwd/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/base-passwd/3.6.1/",
+      "supplier": "Organization: Colin Watson (cjwatson@debian.org)",
+      "detail": "source package base-passwd 3.6.1; the copyright file names GPL-2; public-domain"
+    },
+    "pkg:deb/debian/bash@5.2.15-2%2Bb13?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "bash",
+      "version": "5.2.15-2+b13",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/bash/copyright",
+        "/usr/share/common-licenses/GFDL-1.3",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/bash/5.2.15-2/",
+      "supplier": "Organization: Matthias Klose (doko@debian.org)",
+      "detail": "source package bash 5.2.15-2; the copyright file names BSD-4-clause-UC and MIT-like; GFDL-NIV-1.3; GPL-2+; GPL-3+; GPL-3+ with Bison exception; Latex2e; permissive"
+    },
+    "pkg:deb/debian/bsdutils@1%3A2.38.1-5%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "bsdutils",
+      "version": "1:2.38.1-5+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/bsdutils/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/util-linux/2.38.1-5%2Bdeb12u3/",
+      "supplier": "Organization: util-linux packagers (util-linux@packages.debian.org)",
+      "detail": "source package util-linux 2.38.1-5+deb12u3; the copyright file names BSD-3-clause; BSD-4-clause; BSLA; GPL-2; GPL-2+; GPL-3+; LGPL; LGPL-2+; LGPL-2.1+; LGPL-3+; MIT; public-domain"
+    },
+    "pkg:deb/debian/coreutils@9.1-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "coreutils",
+      "version": "9.1-1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/coreutils/copyright",
+        "/usr/share/common-licenses/GFDL-1.3",
+        "/usr/share/common-licenses/GPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/coreutils/9.1-1/",
+      "supplier": "Organization: Michael Stone (mstone@debian.org)",
+      "detail": "source package coreutils 9.1-1; the copyright file names FSFULLR; GFDL-NIV-1.3; GPL-3+; GPL-3+ and BSD-4-clause-UC; GPL-3+ and ISC"
+    },
+    "pkg:deb/debian/dash@0.5.12-2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "dash",
+      "version": "0.5.12-2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/dash/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/dash/0.5.12-2/",
+      "supplier": "Organization: Andrej Shadura (andrewsh@debian.org)",
+      "detail": "source package dash 0.5.12-2; the copyright file names BSD-3-Clause; BSD-3-clause; GPL-2+; public-domain"
+    },
+    "pkg:deb/debian/debconf@1.5.82?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "debconf",
+      "version": "1.5.82",
+      "licence": "BSD-2-Clause",
+      "spdx": "BSD-2-Clause",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/debconf/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/debconf/1.5.82/",
+      "supplier": "Organization: Debconf Developers (debconf-devel@lists.alioth.debian.org)",
+      "detail": "source package debconf 1.5.82; the copyright file names BSD-2-clause"
+    },
+    "pkg:deb/debian/debian-archive-keyring@2023.3%2Bdeb12u2?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "debian-archive-keyring",
+      "version": "2023.3+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/debian-archive-keyring/copyright",
+        "/usr/share/common-licenses/GPL"
+      ],
+      "source": "https://snapshot.debian.org/package/debian-archive-keyring/2023.3%2Bdeb12u2/",
+      "supplier": "Organization: Debian Release Team (packages@release.debian.org)",
+      "detail": "source package debian-archive-keyring 2023.3+deb12u2; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/debianutils@5.7-0.5~deb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "debianutils",
+      "version": "5.7-0.5~deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/debianutils/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/debianutils/5.7-0.5~deb12u1/",
+      "supplier": "Organization: Clint Adams (clint@debian.org)",
+      "detail": "source package debianutils 5.7-0.5~deb12u1; the copyright file names GPL-2+; SMAIL-GPL; public-domain"
+    },
+    "pkg:deb/debian/diffutils@1%3A3.8-4?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "diffutils",
+      "version": "1:3.8-4",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/diffutils/copyright",
+        "/usr/share/common-licenses/GFDL-1.3",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/diffutils/1%3A3.8-4/",
+      "supplier": "Organization: Santiago Vila (sanvila@debian.org)",
+      "detail": "source package diffutils 1:3.8-4; the copyright file names FSFAP; FSFULLR; GFDL-NIV-1.3; GPL-2+; GPL-3+; GPL-3+ and FSFULLR; GPL-3+ with autoconf exception; GPL-3+ with texinfo exception; LGPL-2.0+; LGPL-2.1+; LGPL-3.0+; LGPL-3.0+ or GPL-2+; X11; public-domain"
+    },
+    "pkg:deb/debian/dpkg@1.21.23?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "dpkg",
+      "version": "1.21.23",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/dpkg/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/dpkg/1.21.23/",
+      "supplier": "Organization: Dpkg Developers (debian-dpkg@lists.debian.org)",
+      "detail": "source package dpkg 1.21.23; the copyright file names BSD-2-clause; GPL-2; GPL-2+; public-domain-s-s-d"
+    },
+    "pkg:deb/debian/e2fsprogs@1.47.0-2%2Bb2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "e2fsprogs",
+      "version": "1.47.0-2+b2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/e2fsprogs/copyright",
+        "/usr/share/common-licenses/Apache-2.0",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/e2fsprogs/1.47.0-2/",
+      "supplier": "Organization: Theodore Y. Ts'o (tytso@mit.edu)",
+      "detail": "source package e2fsprogs 1.47.0-2; the copyright file names Apache-2; BSD-3-Clause; GPL or MIT-US-export; GPL-2; GPL-2+ with Texinfo exception; ISC; Kazlib; LGPL-2; Latex2e"
+    },
+    "pkg:deb/debian/findutils@4.9.0-4?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "findutils",
+      "version": "4.9.0-4",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/findutils/copyright",
+        "/usr/share/common-licenses/GFDL-1.3",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/findutils/4.9.0-4/",
+      "supplier": "Organization: Andreas Metzler (ametzler@debian.org)",
+      "detail": "source package findutils 4.9.0-4; the copyright file names BSD-3-clause and/or GPL-3+; FSFAP; FSFULLR; GFDL-NIV-1.3+; GPL with automake exception; GPL-2+; GPL-2+ with Autoconf-data exception; GPL-3+; GPL-3+ with Autoconf-data exception; GPL-3+ with Bison-2.2 exception; ISC and/or LGPL-2.1+; LGPL-2+; LGPL-2.1+; LGPL-3; LGPL-3+; X11; public-domain"
+    },
+    "pkg:deb/debian/gcc-12-base@12.2.0-14%2Bdeb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "gcc-12-base",
+      "version": "12.2.0-14+deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/gcc-12-base/copyright",
+        "/usr/share/common-licenses/Artistic",
+        "/usr/share/common-licenses/GFDL-1.2",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL"
+      ],
+      "source": "https://snapshot.debian.org/package/gcc-12/12.2.0-14%2Bdeb12u1/",
+      "supplier": "Organization: Debian GCC Maintainers (debian-gcc@lists.debian.org)",
+      "detail": "source package gcc-12 12.2.0-14+deb12u1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/gpgv@2.2.40-1.1%2Bdeb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "gpgv",
+      "version": "2.2.40-1.1+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/gpgv/copyright",
+        "/usr/share/common-licenses/CC0-1.0",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/gnupg2/2.2.40-1.1%2Bdeb12u2/",
+      "supplier": "Organization: Debian GnuPG Maintainers (pkg-gnupg-maint@lists.alioth.debian.org)",
+      "detail": "source package gnupg2 2.2.40-1.1+deb12u2; the copyright file names CC0-1.0; Expat; GPL-3+; GPL-3+ or BSD-3-clause; LGPL-2.1+; LGPL-3+; RFC-Reference; TinySCHEME; permissive"
+    },
+    "pkg:deb/debian/grep@3.8-5?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "grep",
+      "version": "3.8-5",
+      "licence": "GPL-3.0-or-later",
+      "spdx": "GPL-3.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/grep/copyright",
+        "/usr/share/common-licenses/GPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/grep/3.8-5/",
+      "supplier": "Organization: Anibal Monsalve Salazar (anibal@debian.org)",
+      "detail": "source package grep 3.8-5; the copyright file names GPL-3+"
+    },
+    "pkg:deb/debian/gzip@1.12-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "gzip",
+      "version": "1.12-1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/gzip/copyright",
+        "/usr/share/common-licenses/GFDL-3",
+        "/usr/share/common-licenses/GPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/gzip/1.12-1/",
+      "supplier": "Organization: Milan Kupcevic (milan@debian.org)",
+      "detail": "source package gzip 1.12-1; the copyright file names FSF-manpages; GFDL-1.3+-no-invariant; GPL-3+"
+    },
+    "pkg:deb/debian/hostname@3.23%2Bnmu1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "hostname",
+      "version": "3.23+nmu1",
+      "licence": "GPL-2.0-only",
+      "spdx": "GPL-2.0-only",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/hostname/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/hostname/3.23%2Bnmu1/",
+      "supplier": "Organization: Michael Meskes (meskes@debian.org)",
+      "detail": "source package hostname 3.23+nmu1; the copyright file names GPL-2"
+    },
+    "pkg:deb/debian/init-system-helpers@1.65.2%2Bdeb12u1?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "init-system-helpers",
+      "version": "1.65.2+deb12u1",
+      "licence": "BSD-3-Clause AND GPL-2.0-or-later",
+      "spdx": "BSD-3-Clause AND GPL-2.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/init-system-helpers/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/init-system-helpers/1.65.2%2Bdeb12u1/",
+      "supplier": "Organization: Debian systemd Maintainers (pkg-systemd-maintainers@lists.alioth.debian.org)",
+      "detail": "source package init-system-helpers 1.65.2+deb12u1; the copyright file names BSD-3-clause; GPL-2+"
+    },
+    "pkg:deb/debian/libacl1@2.3.1-3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libacl1",
+      "version": "2.3.1-3",
+      "licence": "GPL-2.0-or-later AND LGPL-2.0-or-later",
+      "spdx": "GPL-2.0-or-later AND LGPL-2.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libacl1/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/acl/2.3.1-3/",
+      "supplier": "Organization: Guillem Jover (guillem@debian.org)",
+      "detail": "source package acl 2.3.1-3; the copyright file names GPL-2+; LGPL-2+"
+    },
+    "pkg:deb/debian/libapt-pkg6.0@2.6.1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libapt-pkg6.0",
+      "version": "2.6.1",
+      "licence": "BSD-3-Clause AND MIT AND GPL-2.0-only AND GPL-2.0-or-later",
+      "spdx": "BSD-3-Clause AND MIT AND GPL-2.0-only AND GPL-2.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libapt-pkg6.0/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/apt/2.6.1/",
+      "supplier": "Organization: APT Development Team (deity@lists.debian.org)",
+      "detail": "source package apt 2.6.1; the copyright file names BSD-3-clause; Expat; GPL-2; GPL-2+"
+    },
+    "pkg:deb/debian/libattr1@1%3A2.5.1-4?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libattr1",
+      "version": "1:2.5.1-4",
+      "licence": "GPL-2.0-or-later AND LGPL-2.0-or-later",
+      "spdx": "GPL-2.0-or-later AND LGPL-2.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libattr1/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/attr/1%3A2.5.1-4/",
+      "supplier": "Organization: Guillem Jover (guillem@debian.org)",
+      "detail": "source package attr 1:2.5.1-4; the copyright file names GPL-2+; LGPL-2+"
+    },
+    "pkg:deb/debian/libaudit-common@1%3A3.0.9-1?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "libaudit-common",
+      "version": "1:3.0.9-1",
+      "licence": "GPL-2.0-only AND LGPL-2.1-only",
+      "spdx": "GPL-2.0-only AND LGPL-2.1-only",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libaudit-common/copyright",
+        "/usr/share/common-licenses/GPL-1",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/audit/1%3A3.0.9-1/",
+      "supplier": "Organization: Laurent Bigonville (bigon@debian.org)",
+      "detail": "source package audit 1:3.0.9-1; the copyright file names GPL-2; LGPL-2.1"
+    },
+    "pkg:deb/debian/libaudit1@1%3A3.0.9-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libaudit1",
+      "version": "1:3.0.9-1",
+      "licence": "GPL-2.0-only AND LGPL-2.1-only",
+      "spdx": "GPL-2.0-only AND LGPL-2.1-only",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libaudit1/copyright",
+        "/usr/share/common-licenses/GPL-1",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/audit/1%3A3.0.9-1/",
+      "supplier": "Organization: Laurent Bigonville (bigon@debian.org)",
+      "detail": "source package audit 1:3.0.9-1; the copyright file names GPL-2; LGPL-2.1"
+    },
+    "pkg:deb/debian/libblkid1@2.38.1-5%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libblkid1",
+      "version": "2.38.1-5+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libblkid1/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/util-linux/2.38.1-5%2Bdeb12u3/",
+      "supplier": "Organization: util-linux packagers (util-linux@packages.debian.org)",
+      "detail": "source package util-linux 2.38.1-5+deb12u3; the copyright file names BSD-3-clause; BSD-4-clause; BSLA; GPL-2; GPL-2+; GPL-3+; LGPL; LGPL-2+; LGPL-2.1+; LGPL-3+; MIT; public-domain"
+    },
+    "pkg:deb/debian/libbz2-1.0@1.0.8-5%2Bb1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libbz2-1.0",
+      "version": "1.0.8-5+b1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libbz2-1.0/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/bzip2/1.0.8-5/",
+      "supplier": "Organization: Anibal Monsalve Salazar (anibal@debian.org)",
+      "detail": "source package bzip2 1.0.8-5; the copyright file names BSD-variant; GPL-2"
+    },
+    "pkg:deb/debian/libc-bin@2.36-9%2Bdeb12u14?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libc-bin",
+      "version": "2.36-9+deb12u14",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libc-bin/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/glibc/2.36-9%2Bdeb12u14/",
+      "supplier": "Organization: GNU Libc Maintainers (debian-glibc@lists.debian.org)",
+      "detail": "source package glibc 2.36-9+deb12u14; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libc6@2.36-9%2Bdeb12u14?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libc6",
+      "version": "2.36-9+deb12u14",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libc6/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/glibc/2.36-9%2Bdeb12u14/",
+      "supplier": "Organization: GNU Libc Maintainers (debian-glibc@lists.debian.org)",
+      "detail": "source package glibc 2.36-9+deb12u14; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libcap-ng0@0.8.3-1%2Bb3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libcap-ng0",
+      "version": "0.8.3-1+b3",
+      "licence": "GPL-2.0-or-later AND GPL-3.0-only AND LGPL-2.1-or-later",
+      "spdx": "GPL-2.0-or-later AND GPL-3.0-only AND LGPL-2.1-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libcap-ng0/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/libcap-ng/0.8.3-1/",
+      "supplier": "Organization: Håvard F. Aasen (havard.f.aasen@pfft.no)",
+      "detail": "source package libcap-ng 0.8.3-1; the copyright file names GPL-2+; GPL-3; LGPL-2.1+"
+    },
+    "pkg:deb/debian/libcap2@1%3A2.66-4%2Bdeb12u3%2Bb1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libcap2",
+      "version": "1:2.66-4+deb12u3+b1",
+      "licence": "(BSD-3-Clause OR GPL-2.0-only) AND (BSD-3-Clause OR GPL-2.0-or-later)",
+      "spdx": "(BSD-3-Clause OR GPL-2.0-only) AND (BSD-3-Clause OR GPL-2.0-or-later)",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libcap2/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/libcap2/1%3A2.66-4%2Bdeb12u3/",
+      "supplier": "Organization: Christian Kastner (ckk@debian.org)",
+      "detail": "source package libcap2 1:2.66-4+deb12u3; the copyright file names BSD-3-clause or GPL-2; BSD-3-clause or GPL-2+"
+    },
+    "pkg:deb/debian/libcom-err2@1.47.0-2%2Bb2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libcom-err2",
+      "version": "1.47.0-2+b2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libcom-err2/copyright",
+        "/usr/share/common-licenses/Apache-2.0",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/e2fsprogs/1.47.0-2/",
+      "supplier": "Organization: Theodore Y. Ts'o (tytso@mit.edu)",
+      "detail": "source package e2fsprogs 1.47.0-2; the copyright file names Apache-2; BSD-3-Clause; GPL or MIT-US-export; GPL-2; GPL-2+ with Texinfo exception; ISC; Kazlib; LGPL-2; Latex2e"
+    },
+    "pkg:deb/debian/libcrypt1@1%3A4.4.33-2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libcrypt1",
+      "version": "1:4.4.33-2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libcrypt1/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/libxcrypt/1%3A4.4.33-2/",
+      "supplier": "Organization: Marco d'Itri (md@linux.it)",
+      "detail": "source package libxcrypt 1:4.4.33-2; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libdb5.3@5.3.28%2Bdfsg2-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libdb5.3",
+      "version": "5.3.28+dfsg2-1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libdb5.3/copyright",
+        "/usr/share/common-licenses/Artistic",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/db5.3/5.3.28%2Bdfsg2-1/",
+      "supplier": "Organization: Bastian Germann (bage@debian.org)",
+      "detail": "source package db5.3 5.3.28+dfsg2-1; the copyright file names Artistic or BSD-3-clause; BSD-3-clause; BSD-3-clause-fjord; GPL; GPL or Artistic; GPL-3; MIT-old; Ms-PL; Sleepycat and BSD-3-clause; TCL-like; X11; zlib"
+    },
+    "pkg:deb/debian/libdebconfclient0@0.270?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libdebconfclient0",
+      "version": "0.270",
+      "licence": "BSD-2-Clause AND GPL-2.0-or-later",
+      "spdx": "BSD-2-Clause AND GPL-2.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libdebconfclient0/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/cdebconf/0.270/",
+      "supplier": "Organization: Debian Install System Team (debian-boot@lists.debian.org)",
+      "detail": "source package cdebconf 0.270; the copyright file names BSD-2-Clause; GPL-2+"
+    },
+    "pkg:deb/debian/libext2fs2@1.47.0-2%2Bb2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libext2fs2",
+      "version": "1.47.0-2+b2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libext2fs2/copyright",
+        "/usr/share/common-licenses/Apache-2.0",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/e2fsprogs/1.47.0-2/",
+      "supplier": "Organization: Theodore Y. Ts'o (tytso@mit.edu)",
+      "detail": "source package e2fsprogs 1.47.0-2; the copyright file names Apache-2; BSD-3-Clause; GPL or MIT-US-export; GPL-2; GPL-2+ with Texinfo exception; ISC; Kazlib; LGPL-2; Latex2e"
+    },
+    "pkg:deb/debian/libffi8@3.4.4-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libffi8",
+      "version": "3.4.4-1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libffi8/copyright",
+        "/usr/share/common-licenses/GPL"
+      ],
+      "source": "https://snapshot.debian.org/package/libffi/3.4.4-1/",
+      "supplier": "Organization: Debian GCC Maintainers (debian-gcc@lists.debian.org)",
+      "detail": "source package libffi 3.4.4-1; the copyright file names Expat; GPL; GPL-2+; GPL-3+; MPL-1.1 or GPL-2+ or LGPL-2.1+; X11; public-domain"
+    },
+    "pkg:deb/debian/libgcc-s1@12.2.0-14%2Bdeb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libgcc-s1",
+      "version": "12.2.0-14+deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/gcc-12-base/copyright",
+        "/usr/share/common-licenses/Artistic",
+        "/usr/share/common-licenses/GFDL-1.2",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL"
+      ],
+      "source": "https://snapshot.debian.org/package/gcc-12/12.2.0-14%2Bdeb12u1/",
+      "supplier": "Organization: Debian GCC Maintainers (debian-gcc@lists.debian.org)",
+      "detail": "source package gcc-12 12.2.0-14+deb12u1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libgcrypt20@1.10.1-3%2Bdeb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libgcrypt20",
+      "version": "1.10.1-3+deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libgcrypt20/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL"
+      ],
+      "source": "https://snapshot.debian.org/package/libgcrypt20/1.10.1-3%2Bdeb12u1/",
+      "supplier": "Organization: Debian GnuTLS Maintainers (pkg-gnutls-maint@lists.alioth.debian.org)",
+      "detail": "source package libgcrypt20 1.10.1-3+deb12u1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libgmp10@2%3A6.2.1%2Bdfsg1-1.1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libgmp10",
+      "version": "2:6.2.1+dfsg1-1.1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libgmp10/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/gmp/2%3A6.2.1%2Bdfsg1-1.1/",
+      "supplier": "Organization: Debian Science Team (debian-science-maintainers@lists.alioth.debian.org)",
+      "detail": "source package gmp 2:6.2.1+dfsg1-1.1; the copyright file names GPL-2+ or LGPL-3+; GPL-3+; GPL-3+ with Bison exception"
+    },
+    "pkg:deb/debian/libgnutls30@3.7.9-2%2Bdeb12u7?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libgnutls30",
+      "version": "3.7.9-2+deb12u7",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libgnutls30/copyright",
+        "/usr/share/common-licenses/Apache-2.0",
+        "/usr/share/common-licenses/GFDL-1.3",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/gnutls28/3.7.9-2%2Bdeb12u7/",
+      "supplier": "Organization: Debian GnuTLS Maintainers (pkg-gnutls-maint@lists.alioth.debian.org)",
+      "detail": "source package gnutls28 3.7.9-2+deb12u7; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libgpg-error0@1.46-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libgpg-error0",
+      "version": "1.46-1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libgpg-error0/copyright",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/libgpg-error/1.46-1/",
+      "supplier": "Organization: Debian GnuPG Maintainers (pkg-gnupg-maint@lists.alioth.debian.org)",
+      "detail": "source package libgpg-error 1.46-1; the copyright file names GPL-3+; LGPL-2.1+; LGPL-2.1+ or BSD-3-clause; g10-permissive"
+    },
+    "pkg:deb/debian/libhogweed6@3.8.1-2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libhogweed6",
+      "version": "3.8.1-2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libhogweed6/copyright",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/nettle/3.8.1-2/",
+      "supplier": "Organization: Magnus Holmgren (holmgren@debian.org)",
+      "detail": "source package nettle 3.8.1-2; the copyright file names Expat; GAP; GPL-2; GPL-2+; GPL-3+; GPL-3+ with Autoconf exception; LGPL-2+; LGPL-3+ or GPL-2+; public-domain"
+    },
+    "pkg:deb/debian/libidn2-0@2.3.3-1%2Bb1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libidn2-0",
+      "version": "2.3.3-1+b1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libidn2-0/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/libidn2/2.3.3-1/",
+      "supplier": "Organization: Debian Libidn team (help-libidn@gnu.org)",
+      "detail": "source package libidn2 2.3.3-1; the copyright file names GPL-3+; LGPL-3+ or GPL-2+; Unicode"
+    },
+    "pkg:deb/debian/liblz4-1@1.9.4-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "liblz4-1",
+      "version": "1.9.4-1",
+      "licence": "BSD-2-Clause AND GPL-2.0-or-later AND (GPL-2.0-or-later OR BSD-2-Clause)",
+      "spdx": "BSD-2-Clause AND GPL-2.0-or-later AND (GPL-2.0-or-later OR BSD-2-Clause)",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/liblz4-1/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/lz4/1.9.4-1/",
+      "supplier": "Organization: Nobuhiro Iwamatsu (iwamatsu@debian.org)",
+      "detail": "source package lz4 1.9.4-1; the copyright file names BSD-2-clause; GPL-2+; GPL-2+ or BSD-2-clause"
+    },
+    "pkg:deb/debian/liblzma5@5.4.1-1%2Bdeb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "liblzma5",
+      "version": "5.4.1-1+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/liblzma5/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/xz-utils/5.4.1-1%2Bdeb12u2/",
+      "supplier": "Organization: Sebastian Andrzej Siewior (sebastian@breakpoint.cc)",
+      "detail": "source package xz-utils 5.4.1-1+deb12u2; the copyright file names Autoconf; GPL-2; GPL-2+; LGPL-2.1+; PD; PD-debian; config-h; noderivs; none; permissive-fsf; permissive-nowarranty; probably-PD"
+    },
+    "pkg:deb/debian/libmd0@1.0.4-2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libmd0",
+      "version": "1.0.4-2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libmd0/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/libmd/1.0.4-2/",
+      "supplier": "Organization: Guillem Jover (guillem@debian.org)",
+      "detail": "source package libmd 1.0.4-2; the copyright file names BSD-2-clause; BSD-2-clause-NetBSD; BSD-3-clause; BSD-3-clause-Aaron-D-Gifford; Beerware; ISC; public-domain-md4; public-domain-md5; public-domain-sha1"
+    },
+    "pkg:deb/debian/libmount1@2.38.1-5%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libmount1",
+      "version": "2.38.1-5+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libmount1/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/util-linux/2.38.1-5%2Bdeb12u3/",
+      "supplier": "Organization: util-linux packagers (util-linux@packages.debian.org)",
+      "detail": "source package util-linux 2.38.1-5+deb12u3; the copyright file names BSD-3-clause; BSD-4-clause; BSLA; GPL-2; GPL-2+; GPL-3+; LGPL; LGPL-2+; LGPL-2.1+; LGPL-3+; MIT; public-domain"
+    },
+    "pkg:deb/debian/libnettle8@3.8.1-2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libnettle8",
+      "version": "3.8.1-2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libnettle8/copyright",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/nettle/3.8.1-2/",
+      "supplier": "Organization: Magnus Holmgren (holmgren@debian.org)",
+      "detail": "source package nettle 3.8.1-2; the copyright file names Expat; GAP; GPL-2; GPL-2+; GPL-3+; GPL-3+ with Autoconf exception; LGPL-2+; LGPL-3+ or GPL-2+; public-domain"
+    },
+    "pkg:deb/debian/libp11-kit0@0.24.1-2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libp11-kit0",
+      "version": "0.24.1-2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libp11-kit0/copyright",
+        "/usr/share/common-licenses/Apache-2.0",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/p11-kit/0.24.1-2/",
+      "supplier": "Organization: Debian GnuTLS Maintainers (pkg-gnutls-maint@lists.alioth.debian.org)",
+      "detail": "source package p11-kit 0.24.1-2; the copyright file names Apache-2.0; BSD-3-Clause; ISC; ISC+IBM; LGPL-2.1+; permissive-like-automake-output; same-as-rest-of-p11kit"
+    },
+    "pkg:deb/debian/libpam-modules@1.5.2-6%2Bdeb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libpam-modules",
+      "version": "1.5.2-6+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libpam-modules/copyright",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/pam/1.5.2-6%2Bdeb12u2/",
+      "supplier": "Organization: Sam Hartman (hartmans@debian.org)",
+      "detail": "source package pam 1.5.2-6+deb12u2; the copyright file names BSD-3-clause or GPL; BSD-tcp_wrappers; Beerware; GPL-2; GPL-2+; GPL-3; GPL-3+ with Bison exception; LGPL-2+; public-domain"
+    },
+    "pkg:deb/debian/libpam-modules-bin@1.5.2-6%2Bdeb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libpam-modules-bin",
+      "version": "1.5.2-6+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libpam-modules-bin/copyright",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/pam/1.5.2-6%2Bdeb12u2/",
+      "supplier": "Organization: Sam Hartman (hartmans@debian.org)",
+      "detail": "source package pam 1.5.2-6+deb12u2; the copyright file names BSD-3-clause or GPL; BSD-tcp_wrappers; Beerware; GPL-2; GPL-2+; GPL-3; GPL-3+ with Bison exception; LGPL-2+; public-domain"
+    },
+    "pkg:deb/debian/libpam-runtime@1.5.2-6%2Bdeb12u2?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "libpam-runtime",
+      "version": "1.5.2-6+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libpam-runtime/copyright",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/pam/1.5.2-6%2Bdeb12u2/",
+      "supplier": "Organization: Sam Hartman (hartmans@debian.org)",
+      "detail": "source package pam 1.5.2-6+deb12u2; the copyright file names BSD-3-clause or GPL; BSD-tcp_wrappers; Beerware; GPL-2; GPL-2+; GPL-3; GPL-3+ with Bison exception; LGPL-2+; public-domain"
+    },
+    "pkg:deb/debian/libpam0g@1.5.2-6%2Bdeb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libpam0g",
+      "version": "1.5.2-6+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libpam0g/copyright",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/pam/1.5.2-6%2Bdeb12u2/",
+      "supplier": "Organization: Sam Hartman (hartmans@debian.org)",
+      "detail": "source package pam 1.5.2-6+deb12u2; the copyright file names BSD-3-clause or GPL; BSD-tcp_wrappers; Beerware; GPL-2; GPL-2+; GPL-3; GPL-3+ with Bison exception; LGPL-2+; public-domain"
+    },
+    "pkg:deb/debian/libpcre2-8-0@10.42-1%2Bdeb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libpcre2-8-0",
+      "version": "10.42-1+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libpcre2-8-0/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/pcre2/10.42-1%2Bdeb12u2/",
+      "supplier": "Organization: Matthew Vernon (matthew@debian.org)",
+      "detail": "source package pcre2 10.42-1+deb12u2; the copyright file names BSD-2-clause; BSD-3-clause; BSD-3-clause-Cambridge with BINARY LIBRARY-LIKE PACKAGES exception; X11; public-domain"
+    },
+    "pkg:deb/debian/libseccomp2@2.5.4-1%2Bdeb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libseccomp2",
+      "version": "2.5.4-1+deb12u1",
+      "licence": "LGPL-2.1-only",
+      "spdx": "LGPL-2.1-only",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libseccomp2/copyright",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/libseccomp/2.5.4-1%2Bdeb12u1/",
+      "supplier": "Organization: Kees Cook (kees@debian.org)",
+      "detail": "source package libseccomp 2.5.4-1+deb12u1; the copyright file names LGPL-2.1"
+    },
+    "pkg:deb/debian/libselinux1@3.4-1%2Bb6?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libselinux1",
+      "version": "3.4-1+b6",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libselinux1/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/libselinux/3.4-1/",
+      "supplier": "Organization: Debian SELinux maintainers (selinux-devel@lists.alioth.debian.org)",
+      "detail": "source package libselinux 3.4-1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libsemanage-common@3.4-1?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "libsemanage-common",
+      "version": "3.4-1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libsemanage-common/copyright",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/LGPL"
+      ],
+      "source": "https://snapshot.debian.org/package/libsemanage/3.4-1/",
+      "supplier": "Organization: Debian SELinux maintainers (selinux-devel@lists.alioth.debian.org)",
+      "detail": "source package libsemanage 3.4-1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libsemanage2@3.4-1%2Bb5?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libsemanage2",
+      "version": "3.4-1+b5",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libsemanage2/copyright",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/LGPL"
+      ],
+      "source": "https://snapshot.debian.org/package/libsemanage/3.4-1/",
+      "supplier": "Organization: Debian SELinux maintainers (selinux-devel@lists.alioth.debian.org)",
+      "detail": "source package libsemanage 3.4-1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libsepol2@3.4-2.1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libsepol2",
+      "version": "3.4-2.1",
+      "licence": "GPL-2.0-only AND GPL-2.0-or-later AND LGPL-2.1-or-later AND Zlib",
+      "spdx": "GPL-2.0-only AND GPL-2.0-or-later AND LGPL-2.1-or-later AND Zlib",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libsepol2/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/libsepol/3.4-2.1/",
+      "supplier": "Organization: Debian SELinux maintainers (selinux-devel@lists.alioth.debian.org)",
+      "detail": "source package libsepol 3.4-2.1; the copyright file names GPL-2; GPL-2+; LGPL-2.1+; Zlib"
+    },
+    "pkg:deb/debian/libsmartcols1@2.38.1-5%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libsmartcols1",
+      "version": "2.38.1-5+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libsmartcols1/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/util-linux/2.38.1-5%2Bdeb12u3/",
+      "supplier": "Organization: util-linux packagers (util-linux@packages.debian.org)",
+      "detail": "source package util-linux 2.38.1-5+deb12u3; the copyright file names BSD-3-clause; BSD-4-clause; BSLA; GPL-2; GPL-2+; GPL-3+; LGPL; LGPL-2+; LGPL-2.1+; LGPL-3+; MIT; public-domain"
+    },
+    "pkg:deb/debian/libss2@1.47.0-2%2Bb2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libss2",
+      "version": "1.47.0-2+b2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libss2/copyright",
+        "/usr/share/common-licenses/Apache-2.0",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/e2fsprogs/1.47.0-2/",
+      "supplier": "Organization: Theodore Y. Ts'o (tytso@mit.edu)",
+      "detail": "source package e2fsprogs 1.47.0-2; the copyright file names Apache-2; BSD-3-Clause; GPL or MIT-US-export; GPL-2; GPL-2+ with Texinfo exception; ISC; Kazlib; LGPL-2; Latex2e"
+    },
+    "pkg:deb/debian/libstdc%2B%2B6@12.2.0-14%2Bdeb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libstdc++6",
+      "version": "12.2.0-14+deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/gcc-12-base/copyright",
+        "/usr/share/common-licenses/Artistic",
+        "/usr/share/common-licenses/GFDL-1.2",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL"
+      ],
+      "source": "https://snapshot.debian.org/package/gcc-12/12.2.0-14%2Bdeb12u1/",
+      "supplier": "Organization: Debian GCC Maintainers (debian-gcc@lists.debian.org)",
+      "detail": "source package gcc-12 12.2.0-14+deb12u1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libsystemd0@252.39-1~deb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libsystemd0",
+      "version": "252.39-1~deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libsystemd0/copyright",
+        "/usr/share/common-licenses/CC0-1.0",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/systemd/252.39-1~deb12u2/",
+      "supplier": "Organization: Debian systemd Maintainers (pkg-systemd-maintainers@lists.alioth.debian.org)",
+      "detail": "source package systemd 252.39-1~deb12u2; the copyright file names CC0-1.0; Expat; GPL-2 with Linux-syscall-note exception; GPL-2+; LGPL-2.1+; public-domain"
+    },
+    "pkg:deb/debian/libtasn1-6@4.19.0-2%2Bdeb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libtasn1-6",
+      "version": "4.19.0-2+deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libtasn1-6/copyright",
+        "/usr/share/common-licenses/GFDL-1.3",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/libtasn1-6/4.19.0-2%2Bdeb12u1/",
+      "supplier": "Organization: Debian GnuTLS Maintainers (pkg-gnutls-maint@lists.alioth.debian.org)",
+      "detail": "source package libtasn1-6 4.19.0-2+deb12u1; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
+    },
+    "pkg:deb/debian/libtinfo6@6.4-4?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libtinfo6",
+      "version": "6.4-4",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libtinfo6/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/ncurses/6.4-4/",
+      "supplier": "Organization: Craig Small (csmall@debian.org)",
+      "detail": "source package ncurses 6.4-4; the copyright file names BSD-3-clause; MIT/X11; X11"
+    },
+    "pkg:deb/debian/libudev1@252.39-1~deb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libudev1",
+      "version": "252.39-1~deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libudev1/copyright",
+        "/usr/share/common-licenses/CC0-1.0",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/systemd/252.39-1~deb12u2/",
+      "supplier": "Organization: Debian systemd Maintainers (pkg-systemd-maintainers@lists.alioth.debian.org)",
+      "detail": "source package systemd 252.39-1~deb12u2; the copyright file names CC0-1.0; Expat; GPL-2 with Linux-syscall-note exception; GPL-2+; LGPL-2.1+; public-domain"
+    },
+    "pkg:deb/debian/libunistring2@1.0-2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libunistring2",
+      "version": "1.0-2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libunistring2/copyright",
+        "/usr/share/common-licenses/GFDL-1.2",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/libunistring/1.0-2/",
+      "supplier": "Organization: Jörg Frings-Fürst (debian@jff.email)",
+      "detail": "source package libunistring 1.0-2; the copyright file names FreeSoftware; GPL-2+; GPL-2+ with distribution exception; GPL-3+; GPL-3+ or GFDL-1.2+; LGPL-3+ or GPL-2+; MIT"
+    },
+    "pkg:deb/debian/libuuid1@2.38.1-5%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libuuid1",
+      "version": "2.38.1-5+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libuuid1/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/util-linux/2.38.1-5%2Bdeb12u3/",
+      "supplier": "Organization: util-linux packagers (util-linux@packages.debian.org)",
+      "detail": "source package util-linux 2.38.1-5+deb12u3; the copyright file names BSD-3-clause; BSD-4-clause; BSLA; GPL-2; GPL-2+; GPL-3+; LGPL; LGPL-2+; LGPL-2.1+; LGPL-3+; MIT; public-domain"
+    },
+    "pkg:deb/debian/libxxhash0@0.8.1-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libxxhash0",
+      "version": "0.8.1-1",
+      "licence": "BSD-2-Clause AND GPL-2.0-only",
+      "spdx": "BSD-2-Clause AND GPL-2.0-only",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libxxhash0/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/xxhash/0.8.1-1/",
+      "supplier": "Organization: Josue Ortega (josue@debian.org)",
+      "detail": "source package xxhash 0.8.1-1; the copyright file names BSD-2-clause; GPL-2"
+    },
+    "pkg:deb/debian/libzstd1@1.5.4%2Bdfsg2-5?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "libzstd1",
+      "version": "1.5.4+dfsg2-5",
+      "licence": "(BSD-3-Clause OR GPL-2.0-only) AND MIT AND Zlib",
+      "spdx": "(BSD-3-Clause OR GPL-2.0-only) AND MIT AND Zlib",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/libzstd1/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/libzstd/1.5.4%2Bdfsg2-5/",
+      "supplier": "Organization: RPM packaging team (team+pkg-rpm@tracker.debian.org)",
+      "detail": "source package libzstd 1.5.4+dfsg2-5; the copyright file names BSD-3-clause or GPL-2; Expat; zlib"
+    },
+    "pkg:deb/debian/login@1%3A4.13%2Bdfsg1-1%2Bdeb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "login",
+      "version": "1:4.13+dfsg1-1+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/login/copyright",
+        "/usr/share/common-licenses/GPL-1",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/shadow/1%3A4.13%2Bdfsg1-1%2Bdeb12u2/",
+      "supplier": "Organization: Shadow package maintainers (pkg-shadow-devel@lists.alioth.debian.org)",
+      "detail": "source package shadow 1:4.13+dfsg1-1+deb12u2; the copyright file names BSD-3-clause; GPL-1; GPL-2+; public-domain"
+    },
+    "pkg:deb/debian/logsave@1.47.0-2%2Bb2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "logsave",
+      "version": "1.47.0-2+b2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/logsave/copyright",
+        "/usr/share/common-licenses/Apache-2.0",
+        "/usr/share/common-licenses/GPL",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/e2fsprogs/1.47.0-2/",
+      "supplier": "Organization: Theodore Y. Ts'o (tytso@mit.edu)",
+      "detail": "source package e2fsprogs 1.47.0-2; the copyright file names Apache-2; BSD-3-Clause; GPL or MIT-US-export; GPL-2; GPL-2+ with Texinfo exception; ISC; Kazlib; LGPL-2; Latex2e"
+    },
+    "pkg:deb/debian/mawk@1.3.4.20200120-3.1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "mawk",
+      "version": "1.3.4.20200120-3.1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/mawk/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/mawk/1.3.4.20200120-3.1/",
+      "supplier": "Organization: Boyuan Yang (byang@debian.org)",
+      "detail": "source package mawk 1.3.4.20200120-3.1; the copyright file names CC-BY-3.0; GPL-2; X11"
+    },
+    "pkg:deb/debian/mount@2.38.1-5%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "mount",
+      "version": "2.38.1-5+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/mount/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/util-linux/2.38.1-5%2Bdeb12u3/",
+      "supplier": "Organization: util-linux packagers (util-linux@packages.debian.org)",
+      "detail": "source package util-linux 2.38.1-5+deb12u3; the copyright file names BSD-3-clause; BSD-4-clause; BSLA; GPL-2; GPL-2+; GPL-3+; LGPL; LGPL-2+; LGPL-2.1+; LGPL-3+; MIT; public-domain"
+    },
+    "pkg:deb/debian/ncurses-base@6.4-4?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "ncurses-base",
+      "version": "6.4-4",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/ncurses-base/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/ncurses/6.4-4/",
+      "supplier": "Organization: Craig Small (csmall@debian.org)",
+      "detail": "source package ncurses 6.4-4; the copyright file names BSD-3-clause; MIT/X11; X11"
+    },
+    "pkg:deb/debian/ncurses-bin@6.4-4?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "ncurses-bin",
+      "version": "6.4-4",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/ncurses-bin/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/ncurses/6.4-4/",
+      "supplier": "Organization: Craig Small (csmall@debian.org)",
+      "detail": "source package ncurses 6.4-4; the copyright file names BSD-3-clause; MIT/X11; X11"
+    },
+    "pkg:deb/debian/passwd@1%3A4.13%2Bdfsg1-1%2Bdeb12u2?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "passwd",
+      "version": "1:4.13+dfsg1-1+deb12u2",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/passwd/copyright",
+        "/usr/share/common-licenses/GPL-1",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/shadow/1%3A4.13%2Bdfsg1-1%2Bdeb12u2/",
+      "supplier": "Organization: Shadow package maintainers (pkg-shadow-devel@lists.alioth.debian.org)",
+      "detail": "source package shadow 1:4.13+dfsg1-1+deb12u2; the copyright file names BSD-3-clause; GPL-1; GPL-2+; public-domain"
+    },
+    "pkg:deb/debian/perl-base@5.36.0-7%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "perl-base",
+      "version": "5.36.0-7+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/perl-base/copyright",
+        "/usr/share/common-licenses/Artistic",
+        "/usr/share/common-licenses/GPL-1",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/LGPL-2.1"
+      ],
+      "source": "https://snapshot.debian.org/package/perl/5.36.0-7%2Bdeb12u3/",
+      "supplier": "Organization: Niko Tyni (ntyni@debian.org)",
+      "detail": "source package perl 5.36.0-7+deb12u3; the copyright file names Artistic; Artistic or GPL-1+ or Artistic-dist; Artistic-dist; BSD-3-clause; BSD-3-clause-with-weird-numbering; BZIP; CC0-1.0; DONT-CHANGE-THE-GPL; Expat; Expat or GPL-1+ or Artistic; GPL-1+ or Artistic; GPL-1+ or Artistic or Artistic-dist; GPL-1+ or Artistic, and BSD-3-clause-GENERIC; GPL-1+ or Artistic, and BSD-4-clause-POWERDOG; GPL-1+ or Artistic, and Expat; GPL-1+ or Artistic, and Unicode; GPL-2+ or Artistic; GPL-3+-WITH-BISON-EXCEPTION; REGCOMP, and GPL-1+ or Artistic; RRA-KEEP-THIS-NOTICE; SDBM-PUBLIC-DOMAIN; TEXT-TABS; Unicode; ZLIB"
+    },
+    "pkg:deb/debian/sed@4.9-1%2Bdeb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "sed",
+      "version": "4.9-1+deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/sed/copyright",
+        "/usr/share/common-licenses/GFDL-1.3",
+        "/usr/share/common-licenses/GPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/sed/4.9-1%2Bdeb12u1/",
+      "supplier": "Organization: Clint Adams (clint@debian.org)",
+      "detail": "source package sed 4.9-1+deb12u1; the copyright file names BSD-4-clause-UC; BSL-1; GFDL-NIV-1.3+; GPL-3+; GPL-3+ and ISC; X11; pcre"
+    },
+    "pkg:deb/debian/sysvinit-utils@3.06-4?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "sysvinit-utils",
+      "version": "3.06-4",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/sysvinit-utils/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/sysvinit/3.06-4/",
+      "supplier": "Organization: Debian sysvinit maintainers (debian-init-diversity@chiark.greenend.org.uk)",
+      "detail": "source package sysvinit 3.06-4; the copyright file names GPL-2.0; GPL-2.0+; GPL-3.0"
+    },
+    "pkg:deb/debian/tar@1.34%2Bdfsg-1.2%2Bdeb12u1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "tar",
+      "version": "1.34+dfsg-1.2+deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/tar/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/tar/1.34%2Bdfsg-1.2%2Bdeb12u1/",
+      "supplier": "Organization: Janos Lenart (ocsi@debian.org)",
+      "detail": "source package tar 1.34+dfsg-1.2+deb12u1; the copyright file names GPL-2+; GPL-3+; GPL-3+ with Bison exception; LGPL-3+"
+    },
+    "pkg:deb/debian/tzdata@2026c-0%2Bdeb12u1?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "tzdata",
+      "version": "2026c-0+deb12u1",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/tzdata/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/tzdata/2026c-0%2Bdeb12u1/",
+      "supplier": "Organization: GNU Libc Maintainers (debian-glibc@lists.debian.org)",
+      "detail": "source package tzdata 2026c-0+deb12u1; the copyright file names public-domain"
+    },
+    "pkg:deb/debian/usr-is-merged@37~deb12u1?arch=all&distro=debian-12": {
+      "kind": "deb",
+      "name": "usr-is-merged",
+      "version": "37~deb12u1",
+      "licence": "GPL-2.0-or-later",
+      "spdx": "GPL-2.0-or-later",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/usr-is-merged/copyright",
+        "/usr/share/common-licenses/GPL-2"
+      ],
+      "source": "https://snapshot.debian.org/package/usrmerge/37~deb12u1/",
+      "supplier": "Organization: Marco d'Itri (md@linux.it)",
+      "detail": "source package usrmerge 37~deb12u1; the copyright file names GPL-2+"
+    },
+    "pkg:deb/debian/util-linux@2.38.1-5%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "util-linux",
+      "version": "2.38.1-5+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/util-linux/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/util-linux/2.38.1-5%2Bdeb12u3/",
+      "supplier": "Organization: util-linux packagers (util-linux@packages.debian.org)",
+      "detail": "source package util-linux 2.38.1-5+deb12u3; the copyright file names BSD-3-clause; BSD-4-clause; BSLA; GPL-2; GPL-2+; GPL-3+; LGPL; LGPL-2+; LGPL-2.1+; LGPL-3+; MIT; public-domain"
+    },
+    "pkg:deb/debian/util-linux-extra@2.38.1-5%2Bdeb12u3?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "util-linux-extra",
+      "version": "2.38.1-5+deb12u3",
+      "licence": "NOASSERTION",
+      "spdx": "NOASSERTION",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/util-linux-extra/copyright",
+        "/usr/share/common-licenses/GPL-2",
+        "/usr/share/common-licenses/GPL-3",
+        "/usr/share/common-licenses/LGPL",
+        "/usr/share/common-licenses/LGPL-2",
+        "/usr/share/common-licenses/LGPL-2.1",
+        "/usr/share/common-licenses/LGPL-3"
+      ],
+      "source": "https://snapshot.debian.org/package/util-linux/2.38.1-5%2Bdeb12u3/",
+      "supplier": "Organization: util-linux packagers (util-linux@packages.debian.org)",
+      "detail": "source package util-linux 2.38.1-5+deb12u3; the copyright file names BSD-3-clause; BSD-4-clause; BSLA; GPL-2; GPL-2+; GPL-3+; LGPL; LGPL-2+; LGPL-2.1+; LGPL-3+; MIT; public-domain"
+    },
+    "pkg:deb/debian/zlib1g@1%3A1.2.13.dfsg-1?arch=amd64&distro=debian-12": {
+      "kind": "deb",
+      "name": "zlib1g",
+      "version": "1:1.2.13.dfsg-1",
+      "licence": "Zlib",
+      "spdx": "Zlib",
+      "copyright": [],
+      "texts": [],
+      "notices": [],
+      "inImage": [
+        "/usr/share/doc/zlib1g/copyright"
+      ],
+      "source": "https://snapshot.debian.org/package/zlib/1%3A1.2.13.dfsg-1/",
+      "supplier": "Organization: Mark Brown (broonie@debian.org)",
+      "detail": "source package zlib 1:1.2.13.dfsg-1; the copyright file names Zlib"
+    }
+  },
+  "texts": {
+    "1": {
+      "title": "MIT",
+      "sha256": "c71c7630ad9726c4c367826f240eba85a901afefb3578861e10f889d1d9f7288"
+    },
+    "2": {
+      "title": "MIT",
+      "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5"
+    },
+    "3": {
+      "title": "Apache-2.0",
+      "sha256": "15e051ca3d9a2c8689118eda706fb2b0e1ff9aa37a1278a83702e92cb832b8c7"
+    },
+    "4": {
+      "title": "CC-BY-4.0",
+      "sha256": "8cd101d1f319138b175e279b86ef0e60846e9ac9824fc3b9fbe25b6631ec4446"
+    },
+    "5": {
+      "title": "Apache-2.0",
+      "sha256": "58b6def1dbd7655f9a01773aa7ecad5c7632b0af497448053e4413c507f086e3"
+    },
+    "6": {
+      "title": "SIL OPEN FONT LICENSE",
+      "sha256": "4e492e300c5eb2e3a96344bf77f46865d545f4f178131ac8fce54ab8be0edce7"
+    },
+    "7": {
+      "title": "NOTICE of import-in-the-middle 3.5.1",
+      "sha256": "333a321d670aa80db5d1f2ee86b416c463ebe34043fa1fcd1dfc145d67b7156e"
+    },
+    "8": {
+      "title": "NOTICE of import-in-the-middle 3.5.1",
+      "sha256": "79e98d102ededbd933d8f3f88879f9560519d0ede75ad184839b6e6e4aacd67f"
+    },
+    "9": {
+      "title": "ISC",
+      "sha256": "1170c4721b6cb47021b08bc65ac225a0a1a1e3921beddcbafe9e43bf34f1a17e"
+    },
+    "10": {
+      "title": "@babel/runtime 7.27.0, bundled in next",
+      "sha256": "8f08c824b2bb54eda2b6ee6053d2eeed46877b3b7b2ef3f60fc2b9fa580f54b2"
+    },
+    "11": {
+      "title": "@hapi/accept, bundled in next",
+      "sha256": "eb428e6bd2cb8578646c55e71a65628de80ab05cf804fd27a1112ed50c72b6e6"
+    },
+    "12": {
+      "title": "@mswjs/interceptors, bundled in next",
+      "sha256": "f79fab713411da806a4afaeab85be865bd17b72ed832a720bc50dc444e6939c8"
+    },
+    "13": {
+      "title": "@napi-rs/triples, bundled in next",
+      "sha256": "32b0f82459afcc6d3b2195da85815518cc6be02d3800a98a19b0cf8e9c27d2a6"
+    },
+    "14": {
+      "title": "@vercel/nft, bundled in next",
+      "sha256": "0b31f3a6ab66b272b7de451df39835f310a309a06b1a8aafb3a2fdab20adc166"
+    },
+    "15": {
+      "title": "@vercel/og 1.0.1, bundled in next",
+      "sha256": "4b89d4518bd135ab4ee154a7bce722246b57a98c3d7efc1a09409898160c2bd1"
+    },
+    "16": {
+      "title": "acorn, bundled in next",
+      "sha256": "cdf8603d8d39b5e609dc51127560b60d78d77fa34cd658b4f4d071098ab363ed"
+    },
+    "17": {
+      "title": "anser, bundled in next",
+      "sha256": "90523007e84c59ef7193a2db4eb46b94a5983ad926c81ae4d7b0f037714b4d66"
+    },
+    "18": {
+      "title": "assert, bundled in next",
+      "sha256": "1d0c8d5954184cfd2303d8462d002f414913bf7104689f4a47d52d7643c95754"
+    },
+    "19": {
+      "title": "async-retry, bundled in next",
+      "sha256": "d95c4fd55be8d5ad450d508d85b937924e725919983a6b258833f1c3d0f646a5"
+    },
+    "20": {
+      "title": "async-sema, bundled in next",
+      "sha256": "ee0082e65b8266431bc22a1e85b2422edad04d4ff9a2c704f200d593f03be3f7"
+    },
+    "21": {
+      "title": "browserify-zlib, bundled in next",
+      "sha256": "183421fd5b6b9b3c9355b509e9785b4cf18168aa7d5a60e140001ee78e36e0ed"
+    },
+    "22": {
+      "title": "browserslist, bundled in next",
+      "sha256": "563603cb6ef4d1d0d667fea4b7a016b7788b02ee299e020dd01782978c4e7ed8"
+    },
+    "23": {
+      "title": "buffer, bundled in next",
+      "sha256": "caf96060dc6de2af3adca29e7f50445b9ac26f860a8f646396a42e5d26cd9564"
+    },
+    "24": {
+      "title": "busboy, bundled in next",
+      "sha256": "d06b5d27bbbbe22c36b1fd88406b1208876e2d37d795f5b8eaed951a459a3111"
+    },
+    "25": {
+      "title": "bytes, bundled in next",
+      "sha256": "811223f2d33910a962de4d6dc12bcb545252992e9d004f78936b94afde443749"
+    },
+    "26": {
+      "title": "ci-info, bundled in next",
+      "sha256": "a34b140615e911665cf9cf2a5df1799cf55bc25096b4c5a715564e0330beca6a"
+    },
+    "27": {
+      "title": "cli-select, bundled in next",
+      "sha256": "34f670862f4a4e8145ce76855e6242167f2c418bd5fc8485eb16b9338b1e54fe"
+    },
+    "28": {
+      "title": "commander, bundled in next",
+      "sha256": "4cc9c2af4eb0056cd4d2297b7404819e3816b4c44b7f8012c42d5fd671d783d3"
+    },
+    "29": {
+      "title": "comment-json, bundled in next",
+      "sha256": "3c7e62b291a625cf647a8ff858cbad453f1d91abb3c1f587941bfaf66297bedb"
+    },
+    "30": {
+      "title": "compression, bundled in next",
+      "sha256": "7cb4d976f1c892a7c9dd32d4caf33d88c4d9f99447ba12f09ae295eae440cecb"
+    },
+    "31": {
+      "title": "conf, bundled in next",
+      "sha256": "c9808a775260db5602f6a0c29f5f8b78e81f9666a33623fedfa34a22208b1063"
+    },
+    "32": {
+      "title": "content-disposition, bundled in next",
+      "sha256": "0696190d4967590d31936e7278676d601ee1acf3a0bc53859751bcb2b093c088"
+    },
+    "33": {
+      "title": "content-type, bundled in next",
+      "sha256": "fb06d5b872e5eac1ab3d21198d91270a3073ff08ba87fab2a9f4e32ccf573884"
+    },
+    "34": {
+      "title": "cookie, bundled in next",
+      "sha256": "b970cfe4a7f34ca7455ca2dd6cc4fa3a229c34c67eb62e0e5f746131bead1e70"
+    },
+    "35": {
+      "title": "cross-spawn, bundled in next",
+      "sha256": "5e7b89989b946961a7f3a87fc689adf92798f4322e2a27f1852c94ff2f9fa7f6"
+    },
+    "36": {
+      "title": "crypto-browserify, bundled in next",
+      "sha256": "6134c69bc22c8289252e70de3af20bd67071233459055be74d83acfcc4865e7e"
+    },
+    "37": {
+      "title": "debug, bundled in next",
+      "sha256": "e670c0fae2fde30aed1308e1ad4b800fa419fa0cc7a83e69cb8045032c493bdd"
+    },
+    "38": {
+      "title": "devalue, bundled in next",
+      "sha256": "00bde6f2eced80eb0aa586076a43a1b1c249d1ae5b763e5370b90605fd467be1"
+    },
+    "39": {
+      "title": "domain-browser, bundled in next",
+      "sha256": "427f93872ff6683420e17a2d343d580073a54dbe3ed4b25f77ea5de46ac9d8e1"
+    },
+    "40": {
+      "title": "edge-runtime, bundled in next",
+      "sha256": "b833af2b059af65fc49f5f806605f69ab7807d9ec89f62ef13cb5e7ca01743dd"
+    },
+    "41": {
+      "title": "events, bundled in next",
+      "sha256": "cc1c988042c4f240b8475653c44480b428e806be8e16fbeedbe0cb52f4c5239e"
+    },
+    "42": {
+      "title": "fresh, bundled in next",
+      "sha256": "72bb6356e9efb4942c80e26ff54be9191267f62a8c2651d0b5fcd5f872737da0"
+    },
+    "43": {
+      "title": "glob, bundled in next",
+      "sha256": "a1da13118b4626cd54c3efa8f12c6a0e785ace2392cf9a70911ffe1539263b16"
+    },
+    "44": {
+      "title": "hash.js, bundled in next",
+      "sha256": "12cace26c5167502e17269607d6428928bd3a28b9ce70407d41ee464a9c78ff6"
+    },
+    "45": {
+      "title": "https-browserify, bundled in next",
+      "sha256": "23aa6cf56f96f0e58211f403b0d73ca22ac7b78ff0637a28f598262e83459dd5"
+    },
+    "46": {
+      "title": "httpxy, bundled in next",
+      "sha256": "ef18ec33f0d1d868a88623e8af50a29eb6f764e09b4212fbd48a261d02cc1d0f"
+    },
+    "47": {
+      "title": "icss-utils, bundled in next",
+      "sha256": "231c09ec518b071aec8202deabcc8319d26053d1679e9dcb89f4946559c9e5c0"
+    },
+    "48": {
+      "title": "ignore-loader, bundled in next",
+      "sha256": "19a9c7215dc95d3ddda8b40b92d3e61cedba74fb861d408006eabd3c0be7ae5d"
+    },
+    "49": {
+      "title": "image-size, bundled in next",
+      "sha256": "69fc4e74bce4a2823204da73e625b4eeed4812b2386f21164e8ddb0497619759"
+    },
+    "50": {
+      "title": "ipaddr.js, bundled in next",
+      "sha256": "ad66ea5b7919ff9ec5a234a131e09ca4ac761bacb9d2c840f2d2c5d1691ee5e1"
+    },
+    "51": {
+      "title": "is-animated, bundled in next",
+      "sha256": "4cc0cad8914fb1a88b091fbe460d118f5fe83d9a7ecf10d6b53a3f19866a86a5"
+    },
+    "52": {
+      "title": "jest-worker, bundled in next",
+      "sha256": "a80c79b8f80e824c8ea0612b7abadb9c92c48673cf0adc20b2a7f43e2b19faa0"
+    },
+    "53": {
+      "title": "json5, bundled in next",
+      "sha256": "5b43c9cb06b2f11a0a141c88a9f2852452240d208bfcd5d00d67c2e8e2e4f480"
+    },
+    "54": {
+      "title": "jsonwebtoken, bundled in next",
+      "sha256": "8c566c84d9c264d1596466fb0131e3d2c365ad531e6ffb47e4f047731b60999c"
+    },
+    "55": {
+      "title": "loader-runner, bundled in next",
+      "sha256": "e0c83c64e9965054867a99e8f9d88cb45e640dd74a1265a837c98d63ff336213"
+    },
+    "56": {
+      "title": "loader-utils, bundled in next",
+      "sha256": "2af12ca8b612a22e6659ae68e0e59ee7ac792718c45524a989b512c49c5f5879"
+    },
+    "57": {
+      "title": "lodash.curry, bundled in next",
+      "sha256": "95da58f9567fa87531d5516b69c1b369bc99a645c87b35c9d5ce339c91ff172a"
+    },
+    "58": {
+      "title": "lru-cache, bundled in next",
+      "sha256": "9647e3a9f36678c1344722f4d1f9804e127af21329586c477c0af12c087336d4"
+    },
+    "59": {
+      "title": "nanoid, bundled in next",
+      "sha256": "33dc6a453e22e1f848a633be48c178791c3b07c70910c646f460e0100882aebe"
+    },
+    "60": {
+      "title": "neo-async, bundled in next",
+      "sha256": "fe4e52022671eb1f5b2f2412d3f1d8f7334208cc47a3e58f7b40ffd189325943"
+    },
+    "61": {
+      "title": "node-html-parser, bundled in next",
+      "sha256": "ea75e9321945b7f0bc4644da1e404ad76ce55e9bc05cae3b2f5f2d973aede83b"
+    },
+    "62": {
+      "title": "ora, bundled in next",
+      "sha256": "1529f88b3675095087120854c6fa2cc1113ab2da2f88c4f6aa4ffe52e98ef81b"
+    },
+    "63": {
+      "title": "os-browserify, bundled in next",
+      "sha256": "2ffcb17596cad32cb1a3140abf505abedbc7f3278df6b532567c25eae160c1bc"
+    },
+    "64": {
+      "title": "path-browserify, bundled in next",
+      "sha256": "869fa90d87e49610b8b61e343ee31339383c85317ad9bfd95c88a213919da116"
+    },
+    "65": {
+      "title": "path-to-regexp, bundled in next",
+      "sha256": "e257f36bcf5eed0516fea6522eb52e185f044a035538240f9e504e9239de11c0"
+    },
+    "66": {
+      "title": "picomatch, bundled in next",
+      "sha256": "9219a3ebed1d1e1bc469cc605ca626c8433997a1a3013aba1338e03e381bbe11"
+    },
+    "67": {
+      "title": "postcss-flexbugs-fixes, bundled in next",
+      "sha256": "fd7f69f19b508caaa0994cceea72f53b256ef5f9a555f9990f2e9e8f155a41dd"
+    },
+    "68": {
+      "title": "postcss-modules-extract-imports, bundled in next",
+      "sha256": "3cb99eaa23b0103fa213a1d8443d103bba82b3b01554180b91f11458f1b3206e"
+    },
+    "69": {
+      "title": "postcss-modules-local-by-default, bundled in next",
+      "sha256": "01387efc86f06528c87f708ae3da537189d0f3443e9989ba87ea9170383e5749"
+    },
+    "70": {
+      "title": "postcss-modules-scope, bundled in next",
+      "sha256": "655287aefbf8e292057318c385d77767b1dd9819c87709fd26730b7090efe4d9"
+    },
+    "71": {
+      "title": "postcss-preset-env, bundled in next",
+      "sha256": "1fb919dfe5bbfd91e5e38642b1d593ec2a0dc918ead663a2cb72c0f4f6a8c60b"
+    },
+    "72": {
+      "title": "postcss-safe-parser, bundled in next",
+      "sha256": "b02d6103a91d0da4a4d44a92fa1a7ca74fec0a9793afd30c1dd019494fc1d52c"
+    },
+    "73": {
+      "title": "postcss-value-parser, bundled in next",
+      "sha256": "702bc24f203f1b03f95bed4e0c502ce7fd305949e1f419771e908980e457d365"
+    },
+    "74": {
+      "title": "process, bundled in next",
+      "sha256": "ec35edfcd130a68eebfc7a5c32ce1d3a7688f8771c14437916b2772640d2d0b0"
+    },
+    "75": {
+      "title": "querystring-es3, bundled in next",
+      "sha256": "e3cce126afea63a69c0e5d68dce4ff95905140038c3a6af94d7ecf0a5f8ea3a5"
+    },
+    "76": {
+      "title": "raw-body, bundled in next",
+      "sha256": "cb3a50ce5647a7cb87b3dedb59a006962ea13492a142695ca687921e4fd1638e"
+    },
+    "77": {
+      "title": "react-builtin, bundled in next",
+      "sha256": "cf9b17822d1fcd4ff32ccbe14183386fb3adf6f2ff92dc184130823f7fc28173"
+    },
+    "78": {
+      "title": "regenerator-runtime 0.13.4, bundled in next",
+      "sha256": "1bd3149b744f9c384c8972ad7f5d034073bc799031bbbe64b04ec95ef200b933"
+    },
+    "79": {
+      "title": "safe-stable-stringify, bundled in next",
+      "sha256": "8c8362dba0c958154b1fca50965c8449c5a16df4edb408113fc0458bfd80755c"
+    },
+    "80": {
+      "title": "semver, bundled in next",
+      "sha256": "0ae52fe329ccfd23fedbd688361bd0dedaf5cae3e3516eb2ad17831f2d8b347c"
+    },
+    "81": {
+      "title": "send, bundled in next",
+      "sha256": "f4b733956caae26264fe6f47264b7ac6b7392dd2ff14ff308bcd5cb2f21c6836"
+    },
+    "82": {
+      "title": "serve-handler, bundled in next",
+      "sha256": "d56708e6f263c29250fd0e648f56b02c311a4b9097c605d7b797b6baf268ed8f"
+    },
+    "83": {
+      "title": "shell-quote, bundled in next",
+      "sha256": "8bb16db1b047019e4395965f2cf3611b06c34bf86dc2d0210b3c3f91b53c21fe"
+    },
+    "84": {
+      "title": "source-map, bundled in next",
+      "sha256": "6ead954f967233375b98f6d8363bdb27ddc7d945a83f88c20952e7ca0fa8675d"
+    },
+    "85": {
+      "title": "stacktrace-parser, bundled in next",
+      "sha256": "df27f808e75066c55014a602ad2050a010d9ce8eb64a660c1d84d077800084e3"
+    },
+    "86": {
+      "title": "stream-browserify, bundled in next",
+      "sha256": "56eb2974d5128ca6650959428db56867bb02224ba9139c0d2dc7eeb41cdf8049"
+    },
+    "87": {
+      "title": "stream-http, bundled in next",
+      "sha256": "a0e6357a5e8ea65827addeb383e0948a1874d2f46bc7feaf6349b7a376ed6e98"
+    },
+    "88": {
+      "title": "string_decoder, bundled in next",
+      "sha256": "4f8ade273d406cf67b5a078d751d0b651e3f73b84f958b493e9254ab3ce47391"
+    },
+    "89": {
+      "title": "superstruct, bundled in next",
+      "sha256": "db3be1d72d32a99702a13779301d6f778a44fb7b68138d8f2807aa6765d08bae"
+    },
+    "90": {
+      "title": "tar, bundled in next",
+      "sha256": "1a9975c75cfc205b54615d0f0daad869a240f5e348eb1a3d431fc7644dd5fd67"
+    },
+    "91": {
+      "title": "terser, bundled in next",
+      "sha256": "95a8c7e6d6ec878b7211ab706a583e80f2ea9ecb7fd542db47f72022f689553e"
+    },
+    "92": {
+      "title": "text-table, bundled in next",
+      "sha256": "2cd23e64d69941c70a6a6a42ee2e4b3249bb9f071380a6e68709f5c6efd9d96a"
+    },
+    "93": {
+      "title": "timers-browserify, bundled in next",
+      "sha256": "94aaf0edaada306e4f16cd2e0786b3bba61d6e4f0a3d33afb5d1e19d4711025d"
+    },
+    "94": {
+      "title": "ua-parser-js, bundled in next",
+      "sha256": "78b7bce79e183bfba4fb5d7964662bcfeaa551ed3b2d3a6129ac5c8a3c31bd20"
+    },
+    "95": {
+      "title": "webpack-sources, bundled in next",
+      "sha256": "e6b53bdfbdd8678d7002ffdb7af422ae05c52cc89d63d0829ff24a0542037e56"
+    },
+    "96": {
+      "title": "write-file-atomic, bundled in next",
+      "sha256": "b6e179056c74bcb6f6d33bc308a2af1677fb688e1fb509c3dac0b14feaf8407f"
+    },
+    "97": {
+      "title": "ws, bundled in next",
+      "sha256": "7ffa44a82c55ead9fe765747ffd964dca67d7780dff544b9ca1e3f34132627cc"
+    },
+    "98": {
+      "title": "zod, bundled in next",
+      "sha256": "f61cacc2acb8b71aa79a128b3e732bf25e02aab40747bbbd5bf00c97c9cda28d"
+    },
+    "99": {
+      "title": "zod-validation-error, bundled in next",
+      "sha256": "2806ece4e2aaf462e6e569b40b709778c89620ad7a6bd0e132b0d92fb6360181"
+    },
+    "100": {
+      "title": "ISC",
+      "sha256": "f59b2d57323eb4d7538bc2444f49c159b7d04b84058fb481f3aa77ef981f127b"
+    },
+    "101": {
+      "title": "BSD-3-Clause",
+      "sha256": "3dee9ac3733ad692504f718b37f71da97e3c57e31f488e3ced8e985c9035575a"
+    },
+    "102": {
+      "title": "0BSD",
+      "sha256": "f19f3f2a9da20daecfd55f2a327fe42e2691e95acb7ba80393b52d00bc1d09b5"
+    }
+  }
+}
