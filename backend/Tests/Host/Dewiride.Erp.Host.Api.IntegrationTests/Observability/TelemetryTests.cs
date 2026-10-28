@@ -46,7 +46,8 @@ public sealed class TelemetryTests
         using var response = await client.GetAsync(new Uri(StartupsPath, UriKind.Relative), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var request = WaitFor(spans, span => span.Kind == ActivityKind.Server && Equals(span.GetTagItem("url.path"), StartupsPath));
+        var traceId = TraceIdOf(response);
+        var request = WaitFor(spans, span => span.Kind == ActivityKind.Server && span.TraceId.ToHexString() == traceId && Equals(span.GetTagItem("url.path"), StartupsPath));
         var sql = WaitFor(spans, span => span.Kind == ActivityKind.Client && span.TraceId == request.TraceId && span.GetTagItem("db.system.name") is not null);
         Assert.Contains("[platform_system_info].[Startups]", sql.GetTagItem("db.query.text") as string, StringComparison.Ordinal);
     }
@@ -70,9 +71,8 @@ public sealed class TelemetryTests
         using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var server = WaitFor(spans, span => span.Kind == ActivityKind.Server && Equals(span.GetTagItem("url.path"), StartupsPath));
-        var log = WaitFor(logs, record => record.TraceId == server.TraceId && record.CategoryName == SqlCommandLogCategory);
-        Assert.Equal(correlationId, CorrelationIdOf(log));
+        var log = WaitFor(logs, record => record.CategoryName == SqlCommandLogCategory && CorrelationIdOf(record) == correlationId);
+        WaitFor(spans, span => span.Kind == ActivityKind.Server && span.TraceId == log.TraceId && Equals(span.GetTagItem("url.path"), StartupsPath));
     }
 
     [Fact]
