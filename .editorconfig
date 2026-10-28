@@ -82,7 +82,10 @@ dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 dotnet_naming_style.camel_case_underscore.required_prefix = _
 dotnet_naming_style.camel_case_underscore.capitalization = camel_case
 
-[**/Migrations/*.cs]
+[**/Migrations/[0-9]*.cs]
+generated_code = true
+
+[**/Migrations/*ModelSnapshot.cs]
 generated_code = true
 
 [*.{csproj,props,targets,slnx,xml}]
