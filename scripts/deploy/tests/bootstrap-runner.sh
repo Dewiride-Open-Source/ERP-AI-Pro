@@ -195,7 +195,8 @@ prove_github_cli() {
     | grep -qF 'https://cli.github.com/packages stable/main' || die "the installed gh does not come from GitHub's repository: $(apt-cache policy gh)"
   version="$(dpkg-query -W -f='${Version}' gh)"
   dpkg --compare-versions "$version" ge "$MINIMUM_GH_VERSION" || die "gh $version is older than $MINIMUM_GH_VERSION"
-  output="$(ssh "${SSH_OPTIONS[@]}" -i "$WORK_DIR/deploy" "$DEPLOY_USER@127.0.0.1" 'gh --version')" || die "$DEPLOY_USER cannot run gh"
+  output="$(ssh "${SSH_OPTIONS[@]}" -i "$WORK_DIR/deploy" "$DEPLOY_USER@127.0.0.1" 'env -i HOME="$HOME" PATH="$PATH" gh --version')" \
+    || die "$DEPLOY_USER cannot run gh as deploy.sh runs it"
   [[ "${output%%$'\n'*}" == "gh version $version "* ]] || die "$DEPLOY_USER runs another gh than the packaged $version: $output"
   passed "$DEPLOY_USER runs gh $version from GitHub's repository, signed with GitHub's keys alone ($(paste -sd ' ' - <<< "$fingerprints"))"
 }

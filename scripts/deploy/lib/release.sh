@@ -245,6 +245,12 @@ host_docker() {
   env -i HOME="$HOME" PATH="$PATH" docker "$@"
 }
 
+# gh runs as bare: an XDG_CONFIG_HOME or GH_CONFIG_DIR of the caller's would point it at a configuration it may not read,
+# which stops it before it verifies anything, and GH_HOST or GH_TOKEN would change where and as whom it asks.
+host_gh() {
+  env -i HOME="$HOME" PATH="$PATH" GH_NO_UPDATE_NOTIFIER=1 gh "$@"
+}
+
 release_compose() {
   local release_file="$1"
   shift
@@ -400,7 +406,7 @@ require_gh_version() {
     return 0
   fi
   local output first version
-  if ! output="$(gh --version 2> /dev/null)"; then
+  if ! output="$(host_gh --version 2> /dev/null)"; then
     log_error "gh, the GitHub CLI, does not run here; bootstrap.sh installs it"
     return 1
   fi
@@ -442,7 +448,7 @@ verify_release_image() {
     return 1
   fi
   require_gh_version || return 1
-  if ! output="$(GH_NO_UPDATE_NOTIFIER=1 gh attestation verify "oci://$RELEASE_REGISTRY/$image@$digest" \
+  if ! output="$(host_gh attestation verify "oci://$RELEASE_REGISTRY/$image@$digest" \
     --repo "$RELEASE_REPOSITORY" \
     --bundle "$bundle" \
     --signer-workflow "github.com/$RELEASE_REPOSITORY/.github/workflows/release.yml@refs/tags/$tag" \

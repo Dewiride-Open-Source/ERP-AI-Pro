@@ -120,6 +120,7 @@ continue_with_release_script() {
   # Under errexit a failed exec ends the shell without its EXIT trap, which must move the checkout back.
   shopt -s execfail
   set +e
+  # shellcheck disable=SC2093 # execfail keeps this shell when the exec fails, so the lines below report it
   exec bash -- "$script" "$@"
   set -e
   die "cannot start $script"
