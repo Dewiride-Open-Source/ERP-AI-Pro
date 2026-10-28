@@ -1,15 +1,15 @@
 {
   "image": "api",
   "repository": "ghcr.io/dewiride-open-source/erp-ai-pro/api",
-  "base": "mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:3ed6558056b54d5c9dfefb7ff473728e022ff2bf1d976cbf8ee07b05ec594374",
+  "base": "mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:9b755ea799ae649141a073e30d8b62d8095a5465af2b7694d17866e8c05131d8",
   "system": "Ubuntu 24.04.5 LTS",
   "source": "https://github.com/Dewiride-Open-Source/ERP-AI-Pro",
   "copyright": "Copyright (c) 2026 Dewiride Technologies Private Limited.",
   "components": {
-    "pkg:generic/dotnet-runtime@10.0.13": {
+    "pkg:generic/dotnet-runtime@10.0.14": {
       "kind": "runtime",
       "name": ".NET Runtime",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -21,13 +21,13 @@
         "/usr/share/dotnet/LICENSE.txt",
         "/usr/share/dotnet/ThirdPartyNotices.txt"
       ],
-      "source": "https://github.com/dotnet/runtime/tree/v10.0.13",
+      "source": "https://github.com/dotnet/runtime/tree/v10.0.14",
       "detail": "the shared framework Microsoft.NETCore.App of the .NET base image; /usr/share/dotnet/ThirdPartyNotices.txt holds the notices of the components it includes"
     },
-    "pkg:generic/aspnetcore-runtime@10.0.13": {
+    "pkg:generic/aspnetcore-runtime@10.0.14": {
       "kind": "runtime",
       "name": "ASP.NET Core Runtime",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -39,7 +39,7 @@
         "/usr/share/dotnet/LICENSE.txt",
         "/usr/share/dotnet/ThirdPartyNotices.txt"
       ],
-      "source": "https://github.com/dotnet/aspnetcore/tree/v10.0.13",
+      "source": "https://github.com/dotnet/aspnetcore/tree/v10.0.14",
       "detail": "the shared framework Microsoft.AspNetCore.App of the .NET base image; /usr/share/dotnet/ThirdPartyNotices.txt holds the notices of the components it includes"
     },
     "pkg:nuget/Apache.Arrow@22.1.0": {
@@ -61,24 +61,6 @@
       "supplier": "Organization: The Apache Software Foundation",
       "detail": "built from https://github.com/apache/arrow/tree/fcc16d879fe3618b2a6806851922c51beb1a3fd2"
     },
-    "pkg:nuget/Azure.Core@1.60.0": {
-      "kind": "nuget",
-      "name": "Azure.Core",
-      "version": "1.60.0",
-      "licence": "MIT",
-      "spdx": "MIT",
-      "copyright": [
-        "© Microsoft Corporation. All rights reserved."
-      ],
-      "texts": [
-        2
-      ],
-      "notices": [],
-      "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/azure.core/1.60.0/azure.core.1.60.0.nupkg",
-      "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/84e76f0ebc1bb8ce92b5c28b2eddfa6016cfdc4a"
-    },
     "pkg:nuget/Azure.Core@1.61.0": {
       "kind": "nuget",
       "name": "Azure.Core",
@@ -96,6 +78,24 @@
       "source": "https://api.nuget.org/v3-flatcontainer/azure.core/1.61.0/azure.core.1.61.0.nupkg",
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/3830815f87881cce7af68dd9dd4126cbd90e197b"
+    },
+    "pkg:nuget/Azure.Core@1.63.0": {
+      "kind": "nuget",
+      "name": "Azure.Core",
+      "version": "1.63.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.core/1.63.0/azure.core.1.63.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/117f784c4102d93b65978d3b3d72de36c8824105"
     },
     "pkg:nuget/Azure.Data.AppConfiguration@1.11.0": {
       "kind": "nuget",
@@ -115,10 +115,10 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/be06b6760216b4d80270db1998143edbc554ed7d"
     },
-    "pkg:nuget/Azure.Extensions.AspNetCore.DataProtection.Keys@1.6.4": {
+    "pkg:nuget/Azure.Extensions.AspNetCore.DataProtection.Keys@1.6.5": {
       "kind": "nuget",
       "name": "Azure.Extensions.AspNetCore.DataProtection.Keys",
-      "version": "1.6.4",
+      "version": "1.6.5",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -129,9 +129,9 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/azure.extensions.aspnetcore.dataprotection.keys/1.6.4/azure.extensions.aspnetcore.dataprotection.keys.1.6.4.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/azure.extensions.aspnetcore.dataprotection.keys/1.6.5/azure.extensions.aspnetcore.dataprotection.keys.1.6.5.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/c88fa3e69af1cec1bcdf3302338fcd642ac0baa5"
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/2d2444f0380d8579a87f79c02826fe231b61d316"
     },
     "pkg:nuget/Azure.Identity@1.21.0": {
       "kind": "nuget",
@@ -295,10 +295,10 @@
       "supplier": "Organization: MichaCo",
       "detail": "built from https://github.com/MichaCo/DnsClient.NET"
     },
-    "pkg:nuget/Microsoft.AspNetCore.Authentication.JwtBearer@10.0.13": {
+    "pkg:nuget/Microsoft.AspNetCore.Authentication.JwtBearer@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.AspNetCore.Authentication.JwtBearer",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -311,14 +311,14 @@
         4
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authentication.jwtbearer/10.0.13/microsoft.aspnetcore.authentication.jwtbearer.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authentication.jwtbearer/10.0.14/microsoft.aspnetcore.authentication.jwtbearer.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
-    "pkg:nuget/Microsoft.AspNetCore.Authentication.OpenIdConnect@10.0.13": {
+    "pkg:nuget/Microsoft.AspNetCore.Authentication.OpenIdConnect@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.AspNetCore.Authentication.OpenIdConnect",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -331,14 +331,14 @@
         4
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authentication.openidconnect/10.0.13/microsoft.aspnetcore.authentication.openidconnect.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.authentication.openidconnect/10.0.14/microsoft.aspnetcore.authentication.openidconnect.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
-    "pkg:nuget/Microsoft.AspNetCore.OpenApi@10.0.13": {
+    "pkg:nuget/Microsoft.AspNetCore.OpenApi@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.AspNetCore.OpenApi",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -351,9 +351,29 @@
         4
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.openapi/10.0.13/microsoft.aspnetcore.openapi.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.aspnetcore.openapi/10.0.14/microsoft.aspnetcore.openapi.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
+    },
+    "pkg:nuget/Microsoft.Bcl.AsyncInterfaces@10.0.10": {
+      "kind": "nuget",
+      "name": "Microsoft.Bcl.AsyncInterfaces",
+      "version": "10.0.10",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        5
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.bcl.asyncinterfaces/10.0.10/microsoft.bcl.asyncinterfaces.10.0.10.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
     },
     "pkg:nuget/Microsoft.Bcl.AsyncInterfaces@10.0.9": {
       "kind": "nuget",
@@ -502,10 +522,10 @@
       "source": "https://api.nuget.org/v3-flatcontainer/microsoft.data.sqlclient.sni.runtime/7.1.0/microsoft.data.sqlclient.sni.runtime.7.1.0.nupkg",
       "supplier": "Organization: Microsoft"
     },
-    "pkg:nuget/Microsoft.EntityFrameworkCore@10.0.13": {
+    "pkg:nuget/Microsoft.EntityFrameworkCore@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.EntityFrameworkCore",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -516,14 +536,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore/10.0.13/microsoft.entityframeworkcore.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore/10.0.14/microsoft.entityframeworkcore.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
-    "pkg:nuget/Microsoft.EntityFrameworkCore.Abstractions@10.0.13": {
+    "pkg:nuget/Microsoft.EntityFrameworkCore.Abstractions@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.EntityFrameworkCore.Abstractions",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -534,14 +554,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.abstractions/10.0.13/microsoft.entityframeworkcore.abstractions.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.abstractions/10.0.14/microsoft.entityframeworkcore.abstractions.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
-    "pkg:nuget/Microsoft.EntityFrameworkCore.Relational@10.0.13": {
+    "pkg:nuget/Microsoft.EntityFrameworkCore.Relational@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.EntityFrameworkCore.Relational",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -552,14 +572,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.relational/10.0.13/microsoft.entityframeworkcore.relational.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.relational/10.0.14/microsoft.entityframeworkcore.relational.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
-    "pkg:nuget/Microsoft.EntityFrameworkCore.SqlServer@10.0.13": {
+    "pkg:nuget/Microsoft.EntityFrameworkCore.SqlServer@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.EntityFrameworkCore.SqlServer",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -570,9 +590,9 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.sqlserver/10.0.13/microsoft.entityframeworkcore.sqlserver.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore.sqlserver/10.0.14/microsoft.entityframeworkcore.sqlserver.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
     "pkg:nuget/Microsoft.Extensions.AmbientMetadata.Application@10.11.0": {
       "kind": "nuget",
@@ -592,10 +612,10 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
     },
-    "pkg:nuget/Microsoft.Extensions.Azure@1.12.0": {
+    "pkg:nuget/Microsoft.Extensions.Azure@1.14.1": {
       "kind": "nuget",
       "name": "Microsoft.Extensions.Azure",
-      "version": "1.12.0",
+      "version": "1.14.1",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -606,9 +626,9 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.azure/1.12.0/microsoft.extensions.azure.1.12.0.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.azure/1.14.1/microsoft.extensions.azure.1.14.1.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/1b81fe2bb74329560a6a9540a0e1756cd4fa904b"
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/90a5dba841af56346254e54ba5491b8836274c12"
     },
     "pkg:nuget/Microsoft.Extensions.Caching.Hybrid@10.11.0": {
       "kind": "nuget",
@@ -628,10 +648,10 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
     },
-    "pkg:nuget/Microsoft.Extensions.Caching.SqlServer@10.0.13": {
+    "pkg:nuget/Microsoft.Extensions.Caching.SqlServer@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.Extensions.Caching.SqlServer",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -644,9 +664,9 @@
         4
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.sqlserver/10.0.13/microsoft.extensions.caching.sqlserver.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.sqlserver/10.0.14/microsoft.extensions.caching.sqlserver.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
     "pkg:nuget/Microsoft.Extensions.Compliance.Abstractions@10.11.0": {
       "kind": "nuget",
@@ -666,10 +686,10 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
     },
-    "pkg:nuget/Microsoft.Extensions.Configuration.AzureAppConfiguration@8.6.0": {
+    "pkg:nuget/Microsoft.Extensions.Configuration.AzureAppConfiguration@8.6.1": {
       "kind": "nuget",
       "name": "Microsoft.Extensions.Configuration.AzureAppConfiguration",
-      "version": "8.6.0",
+      "version": "8.6.1",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -680,9 +700,9 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.configuration.azureappconfiguration/8.6.0/microsoft.extensions.configuration.azureappconfiguration.8.6.0.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.configuration.azureappconfiguration/8.6.1/microsoft.extensions.configuration.azureappconfiguration.8.6.1.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/Azure/Azconfig-DotnetProvider/tree/f7ed5e98253c3ffcf486450b0481ca3c82582007"
+      "detail": "built from https://github.com/Azure/AppConfiguration-DotnetProvider/tree/bb41f71820b574daddd1cabb90630f061b6a8c23"
     },
     "pkg:nuget/Microsoft.Extensions.DependencyInjection.AutoActivation@10.11.0": {
       "kind": "nuget",
@@ -720,10 +740,10 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/dotnet/extensions/tree/25f07afa51034e37b334210642d7dc5f191c142d"
     },
-    "pkg:nuget/Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore@10.0.13": {
+    "pkg:nuget/Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore@10.0.14": {
       "kind": "nuget",
       "name": "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -736,9 +756,9 @@
         4
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.diagnostics.healthchecks.entityframeworkcore/10.0.13/microsoft.extensions.diagnostics.healthchecks.entityframeworkcore.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.extensions.diagnostics.healthchecks.entityframeworkcore/10.0.14/microsoft.extensions.diagnostics.healthchecks.entityframeworkcore.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
     "pkg:nuget/Microsoft.Extensions.Http.Diagnostics@10.11.0": {
       "kind": "nuget",
@@ -867,10 +887,10 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/AzureAD/microsoft-identity-abstractions-for-dotnet/tree/76944ea3aa506494c16f7b1a67ec83538f631ba6"
     },
-    "pkg:nuget/Microsoft.Identity.Client@4.90.1": {
+    "pkg:nuget/Microsoft.Identity.Client@4.91.1": {
       "kind": "nuget",
       "name": "Microsoft.Identity.Client",
-      "version": "4.90.1",
+      "version": "4.91.1",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -881,14 +901,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client/4.90.1/microsoft.identity.client.4.90.1.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client/4.91.1/microsoft.identity.client.4.91.1.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2e5ecc708f00ff3db93d823cf3d802cba945090f"
+      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/5df0316152afd7fd28a51ff046c5ba7f7829be04"
     },
-    "pkg:nuget/Microsoft.Identity.Client.Broker@4.90.1": {
+    "pkg:nuget/Microsoft.Identity.Client.Broker@4.91.1": {
       "kind": "nuget",
       "name": "Microsoft.Identity.Client.Broker",
-      "version": "4.90.1",
+      "version": "4.91.1",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -899,14 +919,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.broker/4.90.1/microsoft.identity.client.broker.4.90.1.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.broker/4.91.1/microsoft.identity.client.broker.4.91.1.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2e5ecc708f00ff3db93d823cf3d802cba945090f"
+      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/5df0316152afd7fd28a51ff046c5ba7f7829be04"
     },
-    "pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.90.1": {
+    "pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.91.1": {
       "kind": "nuget",
       "name": "Microsoft.Identity.Client.Extensions.Msal",
-      "version": "4.90.1",
+      "version": "4.91.1",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -917,9 +937,9 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.extensions.msal/4.90.1/microsoft.identity.client.extensions.msal.4.90.1.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.extensions.msal/4.91.1/microsoft.identity.client.extensions.msal.4.91.1.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2e5ecc708f00ff3db93d823cf3d802cba945090f"
+      "detail": "built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/5df0316152afd7fd28a51ff046c5ba7f7829be04"
     },
     "pkg:nuget/Microsoft.Identity.Web@4.16.1": {
       "kind": "nuget",
@@ -1215,10 +1235,10 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/dotnet/sqlclient"
     },
-    "pkg:nuget/OpenTelemetry@1.19.1": {
+    "pkg:nuget/OpenTelemetry@1.20.1": {
       "kind": "nuget",
       "name": "OpenTelemetry",
-      "version": "1.19.1",
+      "version": "1.20.1",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [
@@ -1231,14 +1251,14 @@
         8
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry/1.19.1/opentelemetry.1.19.1.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry/1.20.1/opentelemetry.1.20.1.nupkg",
       "supplier": "Organization: OpenTelemetry Authors",
-      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/0bfd4c350f670dbc819b39bd57fac4c3ad5ba238"
     },
-    "pkg:nuget/OpenTelemetry.Api@1.19.1": {
+    "pkg:nuget/OpenTelemetry.Api@1.20.1": {
       "kind": "nuget",
       "name": "OpenTelemetry.Api",
-      "version": "1.19.1",
+      "version": "1.20.1",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [
@@ -1251,14 +1271,14 @@
         8
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.api/1.19.1/opentelemetry.api.1.19.1.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.api/1.20.1/opentelemetry.api.1.20.1.nupkg",
       "supplier": "Organization: OpenTelemetry Authors",
-      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/0bfd4c350f670dbc819b39bd57fac4c3ad5ba238"
     },
-    "pkg:nuget/OpenTelemetry.Api.ProviderBuilderExtensions@1.19.1": {
+    "pkg:nuget/OpenTelemetry.Api.ProviderBuilderExtensions@1.20.1": {
       "kind": "nuget",
       "name": "OpenTelemetry.Api.ProviderBuilderExtensions",
-      "version": "1.19.1",
+      "version": "1.20.1",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [
@@ -1271,14 +1291,14 @@
         8
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.api.providerbuilderextensions/1.19.1/opentelemetry.api.providerbuilderextensions.1.19.1.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.api.providerbuilderextensions/1.20.1/opentelemetry.api.providerbuilderextensions.1.20.1.nupkg",
       "supplier": "Organization: OpenTelemetry Authors",
-      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/0bfd4c350f670dbc819b39bd57fac4c3ad5ba238"
     },
-    "pkg:nuget/OpenTelemetry.Exporter.OpenTelemetryProtocol@1.19.1": {
+    "pkg:nuget/OpenTelemetry.Exporter.OpenTelemetryProtocol@1.20.1": {
       "kind": "nuget",
       "name": "OpenTelemetry.Exporter.OpenTelemetryProtocol",
-      "version": "1.19.1",
+      "version": "1.20.1",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [
@@ -1291,14 +1311,14 @@
         8
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.exporter.opentelemetryprotocol/1.19.1/opentelemetry.exporter.opentelemetryprotocol.1.19.1.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.exporter.opentelemetryprotocol/1.20.1/opentelemetry.exporter.opentelemetryprotocol.1.20.1.nupkg",
       "supplier": "Organization: OpenTelemetry Authors",
-      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/0bfd4c350f670dbc819b39bd57fac4c3ad5ba238"
     },
-    "pkg:nuget/OpenTelemetry.Extensions.Hosting@1.19.1": {
+    "pkg:nuget/OpenTelemetry.Extensions.Hosting@1.20.1": {
       "kind": "nuget",
       "name": "OpenTelemetry.Extensions.Hosting",
-      "version": "1.19.1",
+      "version": "1.20.1",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [
@@ -1311,14 +1331,14 @@
         8
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.extensions.hosting/1.19.1/opentelemetry.extensions.hosting.1.19.1.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.extensions.hosting/1.20.1/opentelemetry.extensions.hosting.1.20.1.nupkg",
       "supplier": "Organization: OpenTelemetry Authors",
-      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/5fbeba3a3d8bbd4f4235170ddeb6329fe0b8b86e"
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet/tree/0bfd4c350f670dbc819b39bd57fac4c3ad5ba238"
     },
-    "pkg:nuget/OpenTelemetry.Instrumentation.AspNetCore@1.19.0": {
+    "pkg:nuget/OpenTelemetry.Instrumentation.AspNetCore@1.20.1": {
       "kind": "nuget",
       "name": "OpenTelemetry.Instrumentation.AspNetCore",
-      "version": "1.19.0",
+      "version": "1.20.1",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [
@@ -1329,14 +1349,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.aspnetcore/1.19.0/opentelemetry.instrumentation.aspnetcore.1.19.0.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.aspnetcore/1.20.1/opentelemetry.instrumentation.aspnetcore.1.20.1.nupkg",
       "supplier": "Organization: OpenTelemetry Authors",
-      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/dda21df71c8ccd247ab1051760b13f1db9353cfa"
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/d27a61ee6c1916e8c84a97eb5ba3dc04a5dab735"
     },
-    "pkg:nuget/OpenTelemetry.Instrumentation.Http@1.19.0": {
+    "pkg:nuget/OpenTelemetry.Instrumentation.Http@1.20.1": {
       "kind": "nuget",
       "name": "OpenTelemetry.Instrumentation.Http",
-      "version": "1.19.0",
+      "version": "1.20.1",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [
@@ -1347,14 +1367,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.http/1.19.0/opentelemetry.instrumentation.http.1.19.0.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.http/1.20.1/opentelemetry.instrumentation.http.1.20.1.nupkg",
       "supplier": "Organization: OpenTelemetry Authors",
-      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/295327c4352523fbc4f4c8b182f09ae8794cc65e"
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/8e4f3de9f287fe6d42fb6bf6eb4604e853a18822"
     },
-    "pkg:nuget/OpenTelemetry.Instrumentation.SqlClient@1.19.0": {
+    "pkg:nuget/OpenTelemetry.Instrumentation.SqlClient@1.20.1": {
       "kind": "nuget",
       "name": "OpenTelemetry.Instrumentation.SqlClient",
-      "version": "1.19.0",
+      "version": "1.20.1",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [
@@ -1365,9 +1385,9 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.sqlclient/1.19.0/opentelemetry.instrumentation.sqlclient.1.19.0.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/opentelemetry.instrumentation.sqlclient/1.20.1/opentelemetry.instrumentation.sqlclient.1.20.1.nupkg",
       "supplier": "Organization: OpenTelemetry Authors",
-      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/ba9dff87f2750bd7b6ff65a3489552bc940e7255"
+      "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/07b29448c1dfb807121fc5ff202888e84b764c07"
     },
     "pkg:nuget/Polly.Core@8.8.0": {
       "kind": "nuget",
@@ -1426,10 +1446,10 @@
       "supplier": "Organization: Michael Wolfenden, App vNext",
       "detail": "built from https://github.com/App-vNext/Polly/tree/9ad5ae9b4ff9beb4321b0762249ce173b984f817"
     },
-    "pkg:nuget/Scalar.AspNetCore@2.17.14": {
+    "pkg:nuget/Scalar.AspNetCore@2.18.3": {
       "kind": "nuget",
       "name": "Scalar.AspNetCore",
-      "version": "2.17.14",
+      "version": "2.18.3",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [],
@@ -1438,27 +1458,9 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/scalar.aspnetcore/2.17.14/scalar.aspnetcore.2.17.14.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/scalar.aspnetcore/2.18.3/scalar.aspnetcore.2.18.3.nupkg",
       "supplier": "Organization: Scalar",
-      "detail": "built from https://github.com/scalar/scalar/tree/df377038e7c1c6cd4f615ec6438ecf2571520226"
-    },
-    "pkg:nuget/System.ClientModel@1.14.0": {
-      "kind": "nuget",
-      "name": "System.ClientModel",
-      "version": "1.14.0",
-      "licence": "MIT",
-      "spdx": "MIT",
-      "copyright": [
-        "© Microsoft Corporation. All rights reserved."
-      ],
-      "texts": [
-        2
-      ],
-      "notices": [],
-      "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/system.clientmodel/1.14.0/system.clientmodel.1.14.0.nupkg",
-      "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/3a58372182875061915cffce64f9b9d978a4ed6f"
+      "detail": "built from https://github.com/scalar/scalar/tree/74361961e3156ef7211395f01c20db733f87ad45"
     },
     "pkg:nuget/System.ClientModel@1.15.0": {
       "kind": "nuget",
@@ -1477,6 +1479,24 @@
       "source": "https://api.nuget.org/v3-flatcontainer/system.clientmodel/1.15.0/system.clientmodel.1.15.0.nupkg",
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/6366473d5584b140bda80ddd1120c2f67e5d2658"
+    },
+    "pkg:nuget/System.ClientModel@1.16.0": {
+      "kind": "nuget",
+      "name": "System.ClientModel",
+      "version": "1.16.0",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.clientmodel/1.16.0/system.clientmodel.1.16.0.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/Azure/azure-sdk-for-net/tree/dcd5b3aadd7fe3ebc73a22408cb514bd18ec3e6f"
     },
     "pkg:nuget/System.Configuration.ConfigurationManager@9.0.18": {
       "kind": "nuget",
@@ -1537,6 +1557,26 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tree/8b16f418b3d587416d293e9ba34c5d310781cdb3"
     },
+    "pkg:nuget/System.Memory.Data@10.0.10": {
+      "kind": "nuget",
+      "name": "System.Memory.Data",
+      "version": "10.0.10",
+      "licence": "MIT",
+      "spdx": "MIT",
+      "copyright": [
+        "© Microsoft Corporation. All rights reserved."
+      ],
+      "texts": [
+        2
+      ],
+      "notices": [
+        5
+      ],
+      "inImage": [],
+      "source": "https://api.nuget.org/v3-flatcontainer/system.memory.data/10.0.10/system.memory.data.10.0.10.nupkg",
+      "supplier": "Organization: Microsoft",
+      "detail": "built from https://github.com/dotnet/dotnet/tree/f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+    },
     "pkg:nuget/System.Memory.Data@10.0.9": {
       "kind": "nuget",
       "name": "System.Memory.Data",
@@ -1557,10 +1597,10 @@
       "supplier": "Organization: Microsoft",
       "detail": "built from https://github.com/dotnet/dotnet/tree/901ca941248413c79832d2fdbd709da0c4386353"
     },
-    "pkg:nuget/System.Security.Cryptography.ProtectedData@10.0.13": {
+    "pkg:nuget/System.Security.Cryptography.ProtectedData@10.0.14": {
       "kind": "nuget",
       "name": "System.Security.Cryptography.ProtectedData",
-      "version": "10.0.13",
+      "version": "10.0.14",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1573,9 +1613,9 @@
         5
       ],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.protecteddata/10.0.13/system.security.cryptography.protecteddata.10.0.13.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/system.security.cryptography.protecteddata/10.0.14/system.security.cryptography.protecteddata.10.0.14.nupkg",
       "supplier": "Organization: Microsoft",
-      "detail": "built from https://github.com/dotnet/dotnet/tree/4099f83977f4d29604a9aeb971fb0a7bc1d5f699"
+      "detail": "built from https://github.com/dotnet/dotnet/tree/0427b9abbead3fa64c6655eb4290c537397131fa"
     },
     "pkg:deb/ubuntu/base-files@13ubuntu10.5?arch=amd64&distro=ubuntu-24.04": {
       "kind": "deb",
@@ -1594,10 +1634,10 @@
       "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
       "detail": "source package base-files 13ubuntu10.5; its copyright file is not machine-readable; it holds the copyright notices and the licence terms"
     },
-    "pkg:deb/ubuntu/ca-certificates@20260601~24.04.1?arch=all&distro=ubuntu-24.04": {
+    "pkg:deb/ubuntu/ca-certificates@20260816ubuntu0.24.04.1?arch=all&distro=ubuntu-24.04": {
       "kind": "deb",
       "name": "ca-certificates",
-      "version": "20260601~24.04.1",
+      "version": "20260816ubuntu0.24.04.1",
       "licence": "GPL-2.0-or-later AND MPL-2.0",
       "spdx": "GPL-2.0-or-later AND MPL-2.0",
       "copyright": [],
@@ -1608,9 +1648,9 @@
       "inImage": [
         "/usr/share/doc/ca-certificates/copyright"
       ],
-      "source": "https://launchpad.net/ubuntu/+source/ca-certificates/20260601~24.04.1",
+      "source": "https://launchpad.net/ubuntu/+source/ca-certificates/20260816ubuntu0.24.04.1",
       "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
-      "detail": "source package ca-certificates 20260601~24.04.1; the copyright file names GPL-2+; MPL-2.0"
+      "detail": "source package ca-certificates 20260816ubuntu0.24.04.1; the copyright file names GPL-2+; MPL-2.0"
     },
     "pkg:deb/ubuntu/gcc-14-base@14.2.0-4ubuntu2~24.04.1?arch=amd64&distro=ubuntu-24.04": {
       "kind": "deb",
@@ -1752,10 +1792,10 @@
       "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
       "detail": "source package openssl 3.0.13-0ubuntu3.16; the copyright file names Apache-2.0; Artistic or GPL-1+"
     },
-    "pkg:deb/ubuntu/tzdata@2026c-0ubuntu0.24.04.1?arch=all&distro=ubuntu-24.04": {
+    "pkg:deb/ubuntu/tzdata@2026e-0ubuntu0.24.04.1?arch=all&distro=ubuntu-24.04": {
       "kind": "deb",
       "name": "tzdata",
-      "version": "2026c-0ubuntu0.24.04.1",
+      "version": "2026e-0ubuntu0.24.04.1",
       "licence": "NOASSERTION",
       "spdx": "NOASSERTION",
       "copyright": [],
@@ -1764,9 +1804,9 @@
       "inImage": [
         "/usr/share/doc/tzdata/copyright"
       ],
-      "source": "https://launchpad.net/ubuntu/+source/tzdata/2026c-0ubuntu0.24.04.1",
+      "source": "https://launchpad.net/ubuntu/+source/tzdata/2026e-0ubuntu0.24.04.1",
       "supplier": "Organization: Ubuntu Developers (ubuntu-devel-discuss@lists.ubuntu.com)",
-      "detail": "source package tzdata 2026c-0ubuntu0.24.04.1; the copyright file names ICU; public-domain"
+      "detail": "source package tzdata 2026e-0ubuntu0.24.04.1; the copyright file names ICU; public-domain"
     }
   },
   "texts": {
@@ -1783,11 +1823,11 @@
       "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff"
     },
     "4": {
-      "title": "THIRD-PARTY-NOTICES.TXT of Microsoft.AspNetCore.Authentication.JwtBearer 10.0.13",
+      "title": "THIRD-PARTY-NOTICES.TXT of Microsoft.AspNetCore.Authentication.JwtBearer 10.0.14",
       "sha256": "9c0268c3085d693279c6e75e2509e4c67d976170dbd4f886aaccbb163e345b9e"
     },
     "5": {
-      "title": "THIRD-PARTY-NOTICES.TXT of Microsoft.Bcl.AsyncInterfaces 10.0.9",
+      "title": "THIRD-PARTY-NOTICES.TXT of Microsoft.Bcl.AsyncInterfaces 10.0.10",
       "sha256": "b7d4569659507a00efeea90f15a0a95bb2f8b6ce33737d86090b8e22c74a8c98"
     },
     "6": {
@@ -1799,7 +1839,7 @@
       "sha256": "a3ca9032410067b7af6d65cd34332a7a8ed729cc0a6f37e55e5af71d3c5d652b"
     },
     "8": {
-      "title": "THIRD-PARTY-NOTICES.TXT of OpenTelemetry 1.19.1",
+      "title": "THIRD-PARTY-NOTICES.TXT of OpenTelemetry 1.20.1",
       "sha256": "ce7e0afeb0d2b5c75b583ce259b9f7cfb8078ed43da6257bd01d5cde107d2722"
     },
     "9": {

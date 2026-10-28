@@ -1,15 +1,15 @@
 {
   "image": "web",
   "repository": "ghcr.io/dewiride-open-source/erp-ai-pro/web",
-  "base": "docker.io/library/node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20",
+  "base": "docker.io/library/node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205",
   "system": "Debian GNU/Linux 12 (bookworm)",
   "source": "https://github.com/Dewiride-Open-Source/ERP-AI-Pro",
   "copyright": "Copyright (c) 2026 Dewiride Technologies Private Limited.",
   "components": {
-    "pkg:generic/node@24.21.0?download_url=https%3A%2F%2Fnodejs.org%2Fdist%2Fv24.21.0%2Fnode-v24.21.0-linux-x64.tar.xz": {
+    "pkg:generic/node@24.22.1?download_url=https%3A%2F%2Fnodejs.org%2Fdist%2Fv24.22.1%2Fnode-v24.22.1-linux-x64.tar.xz": {
       "kind": "runtime",
       "name": "Node.js",
-      "version": "24.21.0",
+      "version": "24.22.1",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -21,7 +21,7 @@
       "inImage": [
         "/usr/local/LICENSE"
       ],
-      "source": "https://github.com/nodejs/node/tree/v24.21.0",
+      "source": "https://github.com/nodejs/node/tree/v24.22.1",
       "detail": "the runtime of the Node.js base image; /usr/local/LICENSE holds its licence and those of the libraries it bundles"
     },
     "pkg:npm/corepack@0.36.0": {
@@ -39,10 +39,10 @@
       "source": "https://github.com/nodejs/corepack/tree/v0.36.0",
       "detail": "part of the Node.js base image; its licence is /usr/local/lib/node_modules/corepack/LICENSE.md"
     },
-    "pkg:npm/npm@11.19.0": {
+    "pkg:npm/npm@11.19.1": {
       "kind": "runtime",
       "name": "npm",
-      "version": "11.19.0",
+      "version": "11.19.1",
       "licence": "Artistic-2.0",
       "spdx": "Artistic-2.0",
       "copyright": [
@@ -58,7 +58,7 @@
         "/usr/local/lib/node_modules/npm/LICENSE",
         "/usr/local/lib/node_modules/npm/node_modules"
       ],
-      "source": "https://github.com/npm/cli/tree/v11.19.0",
+      "source": "https://github.com/npm/cli/tree/v11.19.1",
       "detail": "part of the Node.js base image; its licence is /usr/local/lib/node_modules/npm/LICENSE, and the packages it bundles keep their licence files in /usr/local/lib/node_modules/npm/node_modules"
     },
     "pkg:npm/yarn@1.22.22": {
@@ -163,10 +163,10 @@
       "source": "https://registry.npmjs.org/@floating-ui/utils/-/utils-0.2.12.tgz",
       "supplier": "Person: atomiks"
     },
-    "pkg:npm/%40microsoft/kiota-abstractions@1.0.0-preview.110": {
+    "pkg:npm/%40microsoft/kiota-abstractions@1.0.0-preview.111": {
       "kind": "npm",
       "name": "@microsoft/kiota-abstractions",
-      "version": "1.0.0-preview.110",
+      "version": "1.0.0-preview.111",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -177,13 +177,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/@microsoft/kiota-abstractions/-/kiota-abstractions-1.0.0-preview.110.tgz",
+      "source": "https://registry.npmjs.org/@microsoft/kiota-abstractions/-/kiota-abstractions-1.0.0-preview.111.tgz",
       "supplier": "Person: Microsoft"
     },
-    "pkg:npm/%40microsoft/kiota-http-fetchlibrary@1.0.0-preview.110": {
+    "pkg:npm/%40microsoft/kiota-http-fetchlibrary@1.0.0-preview.111": {
       "kind": "npm",
       "name": "@microsoft/kiota-http-fetchlibrary",
-      "version": "1.0.0-preview.110",
+      "version": "1.0.0-preview.111",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -194,13 +194,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/@microsoft/kiota-http-fetchlibrary/-/kiota-http-fetchlibrary-1.0.0-preview.110.tgz",
+      "source": "https://registry.npmjs.org/@microsoft/kiota-http-fetchlibrary/-/kiota-http-fetchlibrary-1.0.0-preview.111.tgz",
       "supplier": "Person: Microsoft"
     },
-    "pkg:npm/%40microsoft/kiota-serialization-json@1.0.0-preview.110": {
+    "pkg:npm/%40microsoft/kiota-serialization-json@1.0.0-preview.111": {
       "kind": "npm",
       "name": "@microsoft/kiota-serialization-json",
-      "version": "1.0.0-preview.110",
+      "version": "1.0.0-preview.111",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -211,13 +211,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/@microsoft/kiota-serialization-json/-/kiota-serialization-json-1.0.0-preview.110.tgz",
+      "source": "https://registry.npmjs.org/@microsoft/kiota-serialization-json/-/kiota-serialization-json-1.0.0-preview.111.tgz",
       "supplier": "Person: Microsoft"
     },
-    "pkg:npm/%40next/env@16.4.1": {
+    "pkg:npm/%40next/env@16.4.3": {
       "kind": "npm",
       "name": "@next/env",
-      "version": "16.4.1",
+      "version": "16.4.3",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [],
@@ -226,7 +226,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/@next/env/-/env-16.4.1.tgz",
+      "source": "https://registry.npmjs.org/@next/env/-/env-16.4.3.tgz",
       "supplier": "Person: Next.js Team (support@vercel.com)"
     },
     "pkg:npm/%40opentelemetry/api@1.9.1": {
@@ -1473,10 +1473,10 @@
       "source": "https://registry.npmjs.org/aria-hidden/-/aria-hidden-1.2.6.tgz",
       "supplier": "Person: Anton Korzunov (thekashey@gmail.com)"
     },
-    "pkg:npm/baseline-browser-mapping@2.11.25": {
+    "pkg:npm/baseline-browser-mapping@2.11.33": {
       "kind": "npm",
       "name": "baseline-browser-mapping",
-      "version": "2.11.25",
+      "version": "2.11.33",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [],
@@ -1485,12 +1485,12 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.25.tgz"
+      "source": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.33.tgz"
     },
-    "pkg:npm/caniuse-lite@1.0.30001810": {
+    "pkg:npm/caniuse-lite@1.0.30001819": {
       "kind": "npm",
       "name": "caniuse-lite",
-      "version": "1.0.30001810",
+      "version": "1.0.30001819",
       "licence": "CC-BY-4.0",
       "spdx": "CC-BY-4.0",
       "copyright": [
@@ -1501,7 +1501,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001810.tgz",
+      "source": "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001819.tgz",
       "supplier": "Person: Ben Briggs (beneb.info@gmail.com)"
     },
     "pkg:npm/cjs-module-lexer@2.2.1": {
@@ -1569,10 +1569,10 @@
       "source": "https://registry.npmjs.org/clsx/-/clsx-2.1.1.tgz",
       "supplier": "Person: Luke Edwards (luke.edwards05@gmail.com)"
     },
-    "pkg:npm/cn@0.4.0": {
+    "pkg:npm/cn@0.5.0": {
       "kind": "npm",
       "name": "cn",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1583,7 +1583,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/cn/-/cn-0.4.0.tgz"
+      "source": "https://registry.npmjs.org/cn/-/cn-0.5.0.tgz"
     },
     "pkg:npm/date-fns@4.4.0": {
       "kind": "npm",
@@ -1653,10 +1653,10 @@
       "source": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz",
       "supplier": "Person: Guy Bedford"
     },
-    "pkg:npm/framer-motion@14.0.0": {
+    "pkg:npm/framer-motion@14.6.0": {
       "kind": "npm",
       "name": "framer-motion",
-      "version": "14.0.0",
+      "version": "14.6.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1667,13 +1667,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/framer-motion/-/framer-motion-14.0.0.tgz",
+      "source": "https://registry.npmjs.org/framer-motion/-/framer-motion-14.6.0.tgz",
       "supplier": "Person: Matt Perry"
     },
-    "pkg:npm/geist@1.7.2": {
+    "pkg:npm/geist@1.8.2": {
       "kind": "npm",
       "name": "geist",
-      "version": "1.7.2",
+      "version": "1.8.2",
       "licence": "SIL OPEN FONT LICENSE",
       "spdx": "NOASSERTION",
       "copyright": [
@@ -1684,7 +1684,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/geist/-/geist-1.7.2.tgz"
+      "source": "https://registry.npmjs.org/geist/-/geist-1.8.2.tgz"
     },
     "pkg:npm/get-nonce@1.0.1": {
       "kind": "npm",
@@ -1721,10 +1721,10 @@
       "source": "https://registry.npmjs.org/import-in-the-middle/-/import-in-the-middle-3.5.1.tgz",
       "supplier": "Person: Bryan English (bryan.english@datadoghq.com)"
     },
-    "pkg:npm/lucide-react@1.57.0": {
+    "pkg:npm/lucide-react@1.61.0": {
       "kind": "npm",
       "name": "lucide-react",
-      "version": "1.57.0",
+      "version": "1.61.0",
       "licence": "ISC",
       "spdx": "ISC",
       "copyright": [
@@ -1736,7 +1736,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.57.0.tgz",
+      "source": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.61.0.tgz",
       "supplier": "Person: Eric Fennis"
     },
     "pkg:npm/module-details-from-path@1.0.4": {
@@ -1756,10 +1756,10 @@
       "source": "https://registry.npmjs.org/module-details-from-path/-/module-details-from-path-1.0.4.tgz",
       "supplier": "Person: Thomas Watson (w@tson.dk)"
     },
-    "pkg:npm/motion@14.0.0": {
+    "pkg:npm/motion@14.6.0": {
       "kind": "npm",
       "name": "motion",
-      "version": "14.0.0",
+      "version": "14.6.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1770,13 +1770,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/motion/-/motion-14.0.0.tgz",
+      "source": "https://registry.npmjs.org/motion/-/motion-14.6.0.tgz",
       "supplier": "Person: Matt Perry"
     },
-    "pkg:npm/motion-dom@14.0.0": {
+    "pkg:npm/motion-dom@14.6.0": {
       "kind": "npm",
       "name": "motion-dom",
-      "version": "14.0.0",
+      "version": "14.6.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1787,13 +1787,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/motion-dom/-/motion-dom-14.0.0.tgz",
+      "source": "https://registry.npmjs.org/motion-dom/-/motion-dom-14.6.0.tgz",
       "supplier": "Person: Matt Perry"
     },
-    "pkg:npm/motion-utils@14.0.0": {
+    "pkg:npm/motion-utils@14.6.0": {
       "kind": "npm",
       "name": "motion-utils",
-      "version": "14.0.0",
+      "version": "14.6.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1804,7 +1804,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/motion-utils/-/motion-utils-14.0.0.tgz",
+      "source": "https://registry.npmjs.org/motion-utils/-/motion-utils-14.6.0.tgz",
       "supplier": "Person: Matt Perry"
     },
     "pkg:npm/ms@2.1.3": {
@@ -1823,10 +1823,10 @@
       "inImage": [],
       "source": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz"
     },
-    "pkg:npm/nanoid@3.3.19": {
+    "pkg:npm/nanoid@3.3.20": {
       "kind": "npm",
       "name": "nanoid",
-      "version": "3.3.19",
+      "version": "3.3.20",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1837,13 +1837,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.19.tgz",
+      "source": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.20.tgz",
       "supplier": "Person: Andrey Sitnik (andrey@sitnik.ru)"
     },
-    "pkg:npm/next@16.4.1": {
+    "pkg:npm/next@16.4.3": {
       "kind": "npm",
       "name": "next",
-      "version": "16.4.1",
+      "version": "16.4.3",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1947,7 +1947,7 @@
         99
       ],
       "inImage": [],
-      "source": "https://registry.npmjs.org/next/-/next-16.4.1.tgz"
+      "source": "https://registry.npmjs.org/next/-/next-16.4.3.tgz"
     },
     "pkg:npm/next-themes@0.4.6": {
       "kind": "npm",
@@ -2064,10 +2064,10 @@
       "inImage": [],
       "source": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.1.tgz"
     },
-    "pkg:npm/react-hook-form@7.90.0": {
+    "pkg:npm/react-hook-form@7.91.0": {
       "kind": "npm",
       "name": "react-hook-form",
-      "version": "7.90.0",
+      "version": "7.91.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -2078,7 +2078,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.90.0.tgz"
+      "source": "https://registry.npmjs.org/react-hook-form/-/react-hook-form-7.91.0.tgz"
     },
     "pkg:npm/react-remove-scroll@2.7.2": {
       "kind": "npm",
@@ -3818,10 +3818,10 @@
       "supplier": "Organization: Shadow package maintainers (pkg-shadow-devel@lists.alioth.debian.org)",
       "detail": "source package shadow 1:4.13+dfsg1-1+deb12u2; the copyright file names BSD-3-clause; GPL-1; GPL-2+; public-domain"
     },
-    "pkg:deb/debian/perl-base@5.36.0-7%2Bdeb12u3?arch=amd64&distro=debian-12": {
+    "pkg:deb/debian/perl-base@5.36.0-7%2Bdeb12u4?arch=amd64&distro=debian-12": {
       "kind": "deb",
       "name": "perl-base",
-      "version": "5.36.0-7+deb12u3",
+      "version": "5.36.0-7+deb12u4",
       "licence": "NOASSERTION",
       "spdx": "NOASSERTION",
       "copyright": [],
@@ -3834,9 +3834,9 @@
         "/usr/share/common-licenses/GPL-2",
         "/usr/share/common-licenses/LGPL-2.1"
       ],
-      "source": "https://snapshot.debian.org/package/perl/5.36.0-7%2Bdeb12u3/",
+      "source": "https://snapshot.debian.org/package/perl/5.36.0-7%2Bdeb12u4/",
       "supplier": "Organization: Niko Tyni (ntyni@debian.org)",
-      "detail": "source package perl 5.36.0-7+deb12u3; the copyright file names Artistic; Artistic or GPL-1+ or Artistic-dist; Artistic-dist; BSD-3-clause; BSD-3-clause-with-weird-numbering; BZIP; CC0-1.0; DONT-CHANGE-THE-GPL; Expat; Expat or GPL-1+ or Artistic; GPL-1+ or Artistic; GPL-1+ or Artistic or Artistic-dist; GPL-1+ or Artistic, and BSD-3-clause-GENERIC; GPL-1+ or Artistic, and BSD-4-clause-POWERDOG; GPL-1+ or Artistic, and Expat; GPL-1+ or Artistic, and Unicode; GPL-2+ or Artistic; GPL-3+-WITH-BISON-EXCEPTION; REGCOMP, and GPL-1+ or Artistic; RRA-KEEP-THIS-NOTICE; SDBM-PUBLIC-DOMAIN; TEXT-TABS; Unicode; ZLIB"
+      "detail": "source package perl 5.36.0-7+deb12u4; the copyright file names Artistic; Artistic or GPL-1+ or Artistic-dist; Artistic-dist; BSD-3-clause; BSD-3-clause-with-weird-numbering; BZIP; CC0-1.0; DONT-CHANGE-THE-GPL; Expat; Expat or GPL-1+ or Artistic; GPL-1+ or Artistic; GPL-1+ or Artistic or Artistic-dist; GPL-1+ or Artistic, and BSD-3-clause-GENERIC; GPL-1+ or Artistic, and BSD-4-clause-POWERDOG; GPL-1+ or Artistic, and Expat; GPL-1+ or Artistic, and Unicode; GPL-2+ or Artistic; GPL-3+-WITH-BISON-EXCEPTION; REGCOMP, and GPL-1+ or Artistic; RRA-KEEP-THIS-NOTICE; SDBM-PUBLIC-DOMAIN; TEXT-TABS; Unicode; ZLIB"
     },
     "pkg:deb/debian/sed@4.9-1%2Bdeb12u1?arch=amd64&distro=debian-12": {
       "kind": "deb",

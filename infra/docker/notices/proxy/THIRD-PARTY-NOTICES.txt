@@ -2,7 +2,7 @@ Third-party notices of the ERP-AI-Pro proxy image
 =================================================
 
 This file describes ghcr.io/dewiride-open-source/erp-ai-pro/proxy,
-built on docker.io/library/caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+built on docker.io/library/caddy:2.11.7-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
 (Alpine Linux v3.23).
 
 ERP-AI-Pro is free software. Copyright (c) 2026 Dewiride Technologies Private Limited.
@@ -1230,140 +1230,140 @@ alpine-baselayout 3.7.2-r0
   Licence text: [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/15b3b78187b3808104f98f765e9632e0b09281a7/main/alpine-baselayout
   Note: origin alpine-baselayout; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/alpine-baselayout@3.7.2-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/alpine-baselayout@3.7.2-r0?arch=x86_64&distro=alpine-3.23.7
 
 alpine-baselayout-data 3.7.2-r0
   Licence: GPL-2.0-only
   Licence text: [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/15b3b78187b3808104f98f765e9632e0b09281a7/main/alpine-baselayout
   Note: origin alpine-baselayout; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/alpine-baselayout-data@3.7.2-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/alpine-baselayout-data@3.7.2-r0?arch=x86_64&distro=alpine-3.23.7
 
 alpine-keys 2.6-r0
   Licence: MIT
   Licence text: [33]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/b9f23becced4d7b3ccc0fa0f28530243ccd314a0/main/alpine-keys
   Note: origin alpine-keys; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/alpine-keys@2.6-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/alpine-keys@2.6-r0?arch=x86_64&distro=alpine-3.23.7
 
-alpine-release 3.23.6-r0
+alpine-release 3.23.7-r0
   Licence: MIT
   Licence text: [33]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/8608c79733409c3aa716f7985d1cb45aedba55bd/main/alpine-base
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/13bdc4d2587d70f0c94daf578deaafe046796112/main/alpine-base
   Note: origin alpine-base; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/alpine-release@3.23.6-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/alpine-release@3.23.7-r0?arch=x86_64&distro=alpine-3.23.7
 
 apk-tools 3.0.8-r0
   Licence: GPL-2.0-only
   Licence text: [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/286502dc74df00f907f93b0563867630dcc139e5/main/apk-tools
   Note: origin apk-tools; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/apk-tools@3.0.8-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/apk-tools@3.0.8-r0?arch=x86_64&distro=alpine-3.23.7
 
 brotli-libs 1.2.0-r0
   Licence: MIT
   Licence text: [33]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/e1a74d1bc0c4e0308990de2e9ec9d82529fcac8f/main/brotli
   Note: origin brotli; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/brotli-libs@1.2.0-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/brotli-libs@1.2.0-r0?arch=x86_64&distro=alpine-3.23.7
 
 busybox 1.37.0-r30
   Licence: GPL-2.0-only
   Licence text: [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/1e823a60eb85606954b3a5af5f8e5bbd1ea680cf/main/busybox
   Note: origin busybox; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/busybox@1.37.0-r30?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/busybox@1.37.0-r30?arch=x86_64&distro=alpine-3.23.7
 
 busybox-binsh 1.37.0-r30
   Licence: GPL-2.0-only
   Licence text: [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/1e823a60eb85606954b3a5af5f8e5bbd1ea680cf/main/busybox
   Note: origin busybox; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/busybox-binsh@1.37.0-r30?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/busybox-binsh@1.37.0-r30?arch=x86_64&distro=alpine-3.23.7
 
-c-ares 1.34.8-r0
+c-ares 1.34.9-r0
   Licence: MIT
   Licence text: [33]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/5d4c6f7c12416f51673a8364ae60a3046345f11f/main/c-ares
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/3ad686d491ca23a0182a59883595ca078960b958/main/c-ares
   Note: origin c-ares; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/c-ares@1.34.8-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/c-ares@1.34.9-r0?arch=x86_64&distro=alpine-3.23.7
 
-ca-certificates 20260909-r0
+ca-certificates 20261020-r0
   Licence: MPL-2.0 AND MIT
   Licence text: [33], [34]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/c733d58a9d16316e7fb6a49e65f28ecda365c56b/main/ca-certificates
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/ac857c298f6fd212498ce76bb87836d940cdba2d/main/ca-certificates
   Note: origin ca-certificates; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/ca-certificates@20260909-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/ca-certificates@20261020-r0?arch=x86_64&distro=alpine-3.23.7
 
-ca-certificates-bundle 20260909-r0
+ca-certificates-bundle 20261020-r0
   Licence: MPL-2.0 AND MIT
   Licence text: [33], [34]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/c733d58a9d16316e7fb6a49e65f28ecda365c56b/main/ca-certificates
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/ac857c298f6fd212498ce76bb87836d940cdba2d/main/ca-certificates
   Note: origin ca-certificates; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/ca-certificates-bundle@20260909-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/ca-certificates-bundle@20261020-r0?arch=x86_64&distro=alpine-3.23.7
 
 curl 8.22.0-r0
   Licence: curl
   Licence text: [35]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/ce63a8e353eacc32ad36fd49ae1f427f4306da87/main/curl
   Note: origin curl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/curl@8.22.0-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/curl@8.22.0-r0?arch=x86_64&distro=alpine-3.23.7
 
 libapk 3.0.8-r0
   Licence: GPL-2.0-only
   Licence text: [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/286502dc74df00f907f93b0563867630dcc139e5/main/apk-tools
   Note: origin apk-tools; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libapk@3.0.8-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libapk@3.0.8-r0?arch=x86_64&distro=alpine-3.23.7
 
 libcap 2.78-r0
   Licence: BSD-3-Clause OR GPL-2.0-only
   Licence text: [36], [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap
   Note: origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libcap@2.78-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libcap@2.78-r0?arch=x86_64&distro=alpine-3.23.7
 
 libcap-getcap 2.78-r0
   Licence: BSD-3-Clause OR GPL-2.0-only
   Licence text: [36], [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap
   Note: origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libcap-getcap@2.78-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libcap-getcap@2.78-r0?arch=x86_64&distro=alpine-3.23.7
 
 libcap-setcap 2.78-r0
   Licence: BSD-3-Clause OR GPL-2.0-only
   Licence text: [36], [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap
   Note: origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libcap-setcap@2.78-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libcap-setcap@2.78-r0?arch=x86_64&distro=alpine-3.23.7
 
 libcap-utils 2.78-r0
   Licence: BSD-3-Clause OR GPL-2.0-only
   Licence text: [36], [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap
   Note: origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libcap-utils@2.78-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libcap-utils@2.78-r0?arch=x86_64&distro=alpine-3.23.7
 
 libcap2 2.78-r0
   Licence: BSD-3-Clause OR GPL-2.0-only
   Licence text: [36], [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap
   Note: origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libcap2@2.78-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libcap2@2.78-r0?arch=x86_64&distro=alpine-3.23.7
 
-libcrypto3 3.5.8-r0
+libcrypto3 3.5.9-r0
   Licence: Apache-2.0
   Licence text: [1]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/2b4b2590f782b95276d31dcaaf41554b1a597a0b/main/openssl
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/adcf4978067013c3c0917e54542f3b762d7bfc48/main/openssl
   Note: origin openssl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libcrypto3@3.5.8-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libcrypto3@3.5.9-r0?arch=x86_64&distro=alpine-3.23.7
 
 libcurl 8.22.0-r0
   Licence: curl
   Licence text: [35]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/ce63a8e353eacc32ad36fd49ae1f427f4306da87/main/curl
   Note: origin curl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libcurl@8.22.0-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libcurl@8.22.0-r0?arch=x86_64&distro=alpine-3.23.7
 
 libidn2 2.3.8-r0
   Licence: GPL-2.0-or-later OR LGPL-3.0-or-later
@@ -1371,21 +1371,21 @@ libidn2 2.3.8-r0
   In this image: /usr/share/doc/erp-ai-pro/COPYING.LESSER, /usr/share/doc/erp-ai-pro/COPYING
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/8240e09aa2fdd8f9979b2016be082273965aff0c/main/libidn2
   Note: origin libidn2; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libidn2@2.3.8-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libidn2@2.3.8-r0?arch=x86_64&distro=alpine-3.23.7
 
 libpsl 0.21.5-r3
   Licence: MIT
   Licence text: [33]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/6bd45b53fb316dc01bda59f5feaf1e127eb64f22/main/libpsl
   Note: origin libpsl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libpsl@0.21.5-r3?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libpsl@0.21.5-r3?arch=x86_64&distro=alpine-3.23.7
 
-libssl3 3.5.8-r0
+libssl3 3.5.9-r0
   Licence: Apache-2.0
   Licence text: [1]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/2b4b2590f782b95276d31dcaaf41554b1a597a0b/main/openssl
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/adcf4978067013c3c0917e54542f3b762d7bfc48/main/openssl
   Note: origin openssl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libssl3@3.5.8-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libssl3@3.5.9-r0?arch=x86_64&distro=alpine-3.23.7
 
 libunistring 1.4.1-r0
   Licence: GPL-2.0-or-later OR LGPL-3.0-or-later
@@ -1393,62 +1393,62 @@ libunistring 1.4.1-r0
   In this image: /usr/share/doc/erp-ai-pro/COPYING.LESSER, /usr/share/doc/erp-ai-pro/COPYING
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/cd5407e1341869af38d836fe83f9dbc98799f43a/main/libunistring
   Note: origin libunistring; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/libunistring@1.4.1-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/libunistring@1.4.1-r0?arch=x86_64&distro=alpine-3.23.7
 
 mailcap 2.1.54-r0
   Licence: Public Domain
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/0c8e332694755cf1b57465c56ae1f3664d341ab6/main/mailcap
   Note: origin mailcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/mailcap@2.1.54-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/mailcap@2.1.54-r0?arch=x86_64&distro=alpine-3.23.7
 
-musl 1.2.5-r23
+musl 1.2.5-r24
   Licence: MIT
   Licence text: [33]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/8aef0c37b0ad23dc4137f0e4755b97a59dc698b8/main/musl
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/fd05fc094264bce4fb76efc6c7f61ba4abfcb609/main/musl
   Note: origin musl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/musl@1.2.5-r23?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/musl@1.2.5-r24?arch=x86_64&distro=alpine-3.23.7
 
-musl-utils 1.2.5-r23
+musl-utils 1.2.5-r24
   Licence: MIT AND BSD-2-Clause AND GPL-2.0-or-later
   Licence text: [37], [32], [33]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/8aef0c37b0ad23dc4137f0e4755b97a59dc698b8/main/musl
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/fd05fc094264bce4fb76efc6c7f61ba4abfcb609/main/musl
   Note: origin musl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/musl-utils@1.2.5-r23?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/musl-utils@1.2.5-r24?arch=x86_64&distro=alpine-3.23.7
 
 nghttp2-libs 1.69.0-r0
   Licence: MIT
   Licence text: [33]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/40d265063c14143f5ef8a35c216b9e6392d120a7/main/nghttp2
   Note: origin nghttp2; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/nghttp2-libs@1.69.0-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/nghttp2-libs@1.69.0-r0?arch=x86_64&distro=alpine-3.23.7
 
 scanelf 1.3.8-r2
   Licence: GPL-2.0-only
   Licence text: [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/3912b4fa83437852312ad3c37a00229ff59fab1c/main/pax-utils
   Note: origin pax-utils; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/scanelf@1.3.8-r2?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/scanelf@1.3.8-r2?arch=x86_64&distro=alpine-3.23.7
 
 ssl_client 1.37.0-r30
   Licence: GPL-2.0-only
   Licence text: [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/1e823a60eb85606954b3a5af5f8e5bbd1ea680cf/main/busybox
   Note: origin busybox; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/ssl_client@1.37.0-r30?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/ssl_client@1.37.0-r30?arch=x86_64&distro=alpine-3.23.7
 
-zlib 1.3.2-r0
+zlib 1.3.2-r1
   Licence: Zlib
   Licence text: [38]
-  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/f8c94d2e1d318ab29eb4ac5f00225341c877ed65/main/zlib
+  Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/b92621a82657b055485976b304462bddf9aa9183/main/zlib
   Note: origin zlib; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/zlib@1.3.2-r0?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/zlib@1.3.2-r1?arch=x86_64&distro=alpine-3.23.7
 
 zstd-libs 1.5.7-r2
   Licence: BSD-3-Clause OR GPL-2.0-or-later
   Licence text: [36], [32]
   Source: https://gitlab.alpinelinux.org/alpine/aports/-/tree/3c6e2ee2b16f403d53eab39c4426eb61f003c322/main/zstd
   Note: origin zstd; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit
-  Package URL: pkg:apk/alpine/zstd-libs@1.5.7-r2?arch=x86_64&distro=alpine-3.23.6
+  Package URL: pkg:apk/alpine/zstd-libs@1.5.7-r2?arch=x86_64&distro=alpine-3.23.7
 
 Licence and notice texts
 ========================
