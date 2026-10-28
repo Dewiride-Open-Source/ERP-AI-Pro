@@ -48,12 +48,12 @@ test.describe("navigation for an employee", () => {
           - option "Home" [selected]
           - group "Platform":
             - text: Platform
-            - option "Attachments"
+            - option "Attachments Upload and download the files kept with the ERP."
           - group "Organisation":
             - text: Organisation
-            - option "Organisation chart"
-            - option "Departments"
-            - option "Designations"
+            - option "Organisation chart See who works in each department and who reports to whom."
+            - option "Departments See the company's departments and which department each one sits under."
+            - option "Designations See the designations people can hold in the company."
       `);
       await expect(shell.paletteResults.getByRole("option")).toHaveCount(5);
       await shell.paletteSearch.fill("recent starts");

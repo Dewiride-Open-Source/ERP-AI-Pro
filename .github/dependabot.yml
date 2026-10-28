@@ -97,6 +97,16 @@ updates:
       # typescript-eslint supports TypeScript < 7; the TypeScript 7 (Go) compiler has no JS API
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
+      # @vercel/otel 2.1.3 accepts only the OpenTelemetry JS SDK 2 line: instrumentation, api-logs and sdk-logs below
+      # 0.300.0, whose packages in turn accept @opentelemetry/api below 1.10.0
+      - dependency-name: "@opentelemetry/api"
+        versions: [">=1.10.0"]
+      - dependency-name: "@opentelemetry/api-logs"
+        versions: [">=0.300.0"]
+      - dependency-name: "@opentelemetry/instrumentation"
+        versions: [">=0.300.0"]
+      - dependency-name: "@opentelemetry/sdk-logs"
+        versions: [">=0.300.0"]
     labels: [dependencies, frontend]
     commit-message:
       prefix: "build(deps)"

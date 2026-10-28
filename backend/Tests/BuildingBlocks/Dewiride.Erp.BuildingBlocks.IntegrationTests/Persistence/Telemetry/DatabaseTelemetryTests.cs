@@ -14,6 +14,8 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
 {
     private const string Secret = "ABCDE1234F";
 
+    private const string SqlClientSourceName = "OpenTelemetry.Instrumentation.SqlClient";
+
     private static readonly ActivitySource Source = new("Dewiride.Erp.Tests.DatabaseTelemetry");
 
     [Fact]
@@ -30,7 +32,7 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
         });
 
         var span = Assert.Single(spans, candidate => candidate.ParentSpanId == parentSpanId);
-        Assert.Equal(SqlErrorStatusProcessor.SqlClientSourceName, span.SourceName);
+        Assert.Equal(SqlClientSourceName, span.SourceName);
         Assert.Equal(ActivityKind.Client, span.Kind);
         Assert.Equal("SELECT @value", span.Tag("db.query.text"));
         Assert.Equal("microsoft.sql_server", span.Tag("db.system.name"));
@@ -90,8 +92,6 @@ public sealed class DatabaseTelemetryTests(SampleDatabase database) : IClassFixt
         return parent.SpanId;
     }
 
-    // The database telemetry is registered before the recorder, as the host registers it before its exporter, so the
-    // recorder sees each span exactly as an exporter would.
     private static ServiceProvider BuildProvider(ExportedItemCollection<ExportedSpan> spans, ExportedItemCollection<Metric> metrics)
     {
         var services = new ServiceCollection();

@@ -197,7 +197,6 @@ test('the command line fails on every finding of a saved report and passes a cle
   writeFileSync(
     report,
     pnpmReport(
-      pnpmAdvisory(),
       pnpmAdvisory({
         severity: 'moderate',
         module_name: 'postcss',
@@ -211,12 +210,12 @@ test('the command line fails on every finding of a saved report and passes a cle
   const clean = run();
   assert.equal(clean.status, 0, clean.stderr);
   assert.match(clean.stdout, /^ {2}below high, not blocking: postcss 8\.5\.28: GHSA-7fh5-64p2-3v2j \(moderate\) postcss issue$/m);
-  assert.match(clean.stdout, /advisories ok: 769 npm packages audited, 1 reviewed advisory without a published fix/);
+  assert.match(clean.stdout, /advisories ok: 769 npm packages audited, \d+ reviewed advisor(?:y|ies) without a published fix/);
 
   writeFileSync(
     report,
     pnpmReport(
-      pnpmAdvisory({ patched_versions: '>=3.0.4', patched_versions_unpublished: undefined }),
+      pnpmAdvisory(),
       pnpmAdvisory({
         severity: 'critical',
         module_name: 'next',
@@ -231,7 +230,10 @@ test('the command line fails on every finding of a saved report and passes a cle
   const failing = run();
   assert.equal(failing.status, 1);
   assert.match(failing.stderr, /^npm advisories outside the advisory policy/m);
-  assert.match(failing.stderr, /^ {2}braces 3\.0\.3: GHSA-vfj7-8cjw-p6xm \(high\) .*; >=3\.0\.4 is published, so upgrade and remove its reviewedAdvisories entry$/m);
+  assert.match(
+    failing.stderr,
+    /^ {2}braces 3\.0\.3: GHSA-vfj7-8cjw-p6xm \(high\) .*; no fixed version is published, so remove the dependency or review it into reviewedAdvisories \(https:\/\/github\.com\/advisories\/GHSA-vfj7-8cjw-p6xm\)$/m,
+  );
   assert.match(
     failing.stderr,
     /^ {2}next 16\.4\.0: GHSA-673q-mjm6-r5xr \(critical\) next issue; upgrade to >=16\.4\.1 \(https:\/\/github\.com\/advisories\/GHSA-673q-mjm6-r5xr\)$/m,

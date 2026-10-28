@@ -1919,14 +1919,14 @@ test.describe("design system kitchen sink", () => {
             - option "Home" [selected]
             - group "Finance":
               - text: Finance
-              - option "Invoices"
-              - option "Credit notes"
+              - option "Invoices Issue and track tax invoices."
+              - option "Credit notes Correct an invoice that was issued."
             - group "Clients":
               - text: Clients
-              - option "Customers"
+              - option "Customers Clients with their GSTINs and contacts."
             - group "Timesheets":
               - text: Timesheets
-              - option "Timesheets"
+              - option "Timesheets Hours worked this week."
       `);
       await expect(examples.getByRole("option")).toHaveCount(5);
       await expect(status).toHaveText("");
