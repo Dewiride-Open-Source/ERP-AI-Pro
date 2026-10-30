@@ -138,19 +138,21 @@ Shred the workstation's copy as well (`shred -u scripts/azure/out/erp-runtime-cl
 
 The ids are not secrets. No secret ever goes into `.env`. Beside it, `.env.previous` (0600) holds the four release values of the release before, which `deploy.sh` keeps and `rollback.sh` returns to ([deploy runbook](deploy.md)).
 
-## At boot and every night
+## At boot, every minute and every night
 
 - **`erp-ai-pro.service`** starts at boot, as `erp-ai-pro` in the compose folder. It runs `docker compose -f compose.yaml -f compose.production.yaml up --detach --wait --no-build --no-recreate --pull never --no-deps api web proxy` under `flock /srv/erp-ai-pro/deploy.lock`. That brings the last deployment's containers back as they are and waits until they are healthy. It never runs the migrator, never replaces a container and never pulls an image, because only a deployment does those ([deploy runbook](deploy.md)). At shutdown it stops the stack in order, so after a clean shutdown it is what starts the stack again: the containers' restart policy brings them back only after a crash or a power loss. A start that fails, such as one before the internet link returns, tries again every minute.
 - **`erp-ai-pro-retain.timer`** runs `erp-ai-pro-retain.service` at 01:00 India time, up to 15 minutes later, or at the next boot when the server was off. The service runs `docker compose -f compose.yaml -f compose.production.yaml run --rm -T migrator retain`, the retention sweeps without a migration, under the same lock.
+- **`erp-ai-pro-heal.timer`** runs `erp-ai-pro-heal.service` every minute. The service runs `scripts/deploy/heal.sh` of the deployment checkout, which restarts a running container that Docker reports unhealthy once it has run 30 minutes, so a part of the ERP that stops answering without exiting comes back by itself: the containers' restart policy acts only when one exits ([ADR-0055](../../adr/0055-the-production-host-restarts-an-unhealthy-container-and-alerts-nobody.md)). It never starts a stopped container. It takes the lock without waiting, so a minute in which a deployment, a rollback, the retention run or the start at boot holds it is skipped. Nothing tells anyone about an outage or a restart (owner decision of 2026-10-30): each restart, and each unhealthy container it leaves alone because it started less than 30 minutes ago, is a line of its journal.
 
-The lock is the one `deploy.sh` and `rollback.sh` hold while they run, so neither unit starts in the middle of a deployment: each waits for the lock until its start times out (10 minutes for the stack, 30 for the retention run). Stopping the stack takes no lock, so a shutdown never waits.
+The lock is the one `deploy.sh` and `rollback.sh` hold while they run, so neither the boot unit nor the nightly unit starts in the middle of a deployment: each waits for the lock until its start times out (10 minutes for the stack, 30 for the retention run). The heal service holds it for the seconds it takes to look at the stack. Stopping the stack takes no lock, so a shutdown never waits.
 
-Both services are skipped, not failed, until `.env` and their client certificates exist, and they fail until the first deployment has written the release into `.env`, because `compose.production.yaml` refuses to resolve without its digests. Their state and output stay in the journal:
+The boot and nightly services are skipped, not failed, until `.env` and their client certificates exist, and they fail until the first deployment has written the release into `.env`, because `compose.production.yaml` refuses to resolve without its digests. The heal service needs only `.env`, and before the first deployment it finds no container to look at. Their state and output stay in the journal:
 
 ```bash
 systemctl status erp-ai-pro.service
-systemctl list-timers erp-ai-pro-retain.timer
-journalctl -u erp-ai-pro.service -u erp-ai-pro-retain.service --since today
+systemctl list-timers erp-ai-pro-retain.timer erp-ai-pro-heal.timer
+journalctl -u erp-ai-pro.service -u erp-ai-pro-retain.service -u erp-ai-pro-heal.service --since today
+docker compose -f compose.yaml -f compose.production.yaml ps
 ```
 
 A failed `retain` exits 1 (a sweep failed, the others ran), 2 (its configuration is invalid) or 4 (the database holds migrations the release in `.env` does not know, so nothing was deleted; the journal shows `status=4/NOPERMISSION`, systemd's name for that code, not a permission problem), and the [migrations runbook](migrations.md) says what each means.

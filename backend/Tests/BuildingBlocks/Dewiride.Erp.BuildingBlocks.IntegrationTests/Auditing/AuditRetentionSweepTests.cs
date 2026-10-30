@@ -92,7 +92,7 @@ public sealed class AuditRetentionSweepTests(SampleDatabase database) : IClassFi
     }
 
     [Fact]
-    public async Task SweepAsync_MoreRowsThanABatch_DeletesThemAllInDeleteTopStatementsOfOneBatchEach()
+    public async Task SweepAsync_MoreRowsThanABatch_DeletesThemAllInStatementsOfOneOrderedBatchEach()
     {
         var now = new DateTimeOffset(2010, 6, 15, 0, 0, 0, TimeSpan.Zero);
         var cutoff = AuditRetentionSweep.ChangeRecordsBefore(now, RetentionYears);
@@ -106,7 +106,12 @@ public sealed class AuditRetentionSweepTests(SampleDatabase database) : IClassFi
         Assert.Equal(0, await CountMarkedChangeRecordsAsync(marker));
         var deletions = commands.Commands.Where(command => command.Contains("[audit].[ChangeRecords]", StringComparison.Ordinal)).ToList();
         Assert.Equal((due / AuditRetentionSweep.BatchSize) + 1, deletions.Count);
-        Assert.All(deletions, command => Assert.StartsWith("DELETE TOP(", command, StringComparison.Ordinal));
+        Assert.All(deletions, command =>
+        {
+            Assert.StartsWith("DELETE FROM [c]", command, StringComparison.Ordinal);
+            Assert.Contains("SELECT TOP(@p) [c0].[Id]", command, StringComparison.Ordinal);
+            Assert.Contains("ORDER BY [c0].[OccurredAt], [c0].[Id]", command, StringComparison.Ordinal);
+        });
         Assert.Equal(due.ToString(CultureInfo.InvariantCulture), DeletedCount(logger, "change records"));
     }
 
@@ -127,7 +132,7 @@ public sealed class AuditRetentionSweepTests(SampleDatabase database) : IClassFi
         var options = new DbContextOptionsBuilder<AuditingDbContext>();
         ModuleDbContextRegistration.Configure(options, new DatabaseOptions { ConnectionString = database.ConnectionString }, AuditingDbContext.SchemaName)
             .AddInterceptors([new AuditingSaveChangesInterceptor(database.Actor, database.Origin, database.Clock), new BulkWriteGuardInterceptor(), .. interceptors])
-            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning));
+            .ConfigureWarnings(warnings => warnings.Log(CoreEventId.ManyServiceProvidersCreatedWarning).Throw(CoreEventId.RowLimitingOperationWithoutOrderByWarning));
 
         return new AuditingDbContext(options.Options);
     }

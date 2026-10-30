@@ -238,15 +238,22 @@ prove_access_rules() {
 prove_units_and_updates() {
   log_step "The units and the nightly updates"
   local unit
-  for unit in erp-ai-pro.service erp-ai-pro-retain.timer; do
+  for unit in erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer; do
     [[ "$(systemctl is-enabled "$unit")" == enabled ]] || die "$unit is not enabled"
   done
-  systemctl is-active --quiet erp-ai-pro-retain.timer || die "erp-ai-pro-retain.timer is not running"
+  for unit in erp-ai-pro-retain.timer erp-ai-pro-heal.timer; do
+    systemctl is-active --quiet "$unit" || die "$unit is not running"
+  done
   for unit in erp-ai-pro.service erp-ai-pro-retain.service; do
     sudo systemctl start "$unit"
     [[ "$(systemctl show --property=ConditionResult --value "$unit")" == no ]] || die "$unit did not wait for .env and the client certificates"
   done
-  passed "the boot unit and the daily timer are enabled, and both services wait for the client certificates"
+  passed "the boot unit and both timers are enabled and running, and the boot and nightly services wait for the client certificates"
+
+  sudo systemctl start erp-ai-pro-heal.service
+  [[ "$(systemctl show --property=Result --value erp-ai-pro-heal.service)" == success ]] \
+    || die "erp-ai-pro-heal.service did not succeed on a server whose stack is not deployed: $(sudo journalctl -u erp-ai-pro-heal.service --no-pager -n 20)"
+  passed "erp-ai-pro-heal.service runs heal.sh as $DEPLOY_USER and finds nothing to restart before the first deployment"
 
   for unit in "${UPDATE_SERVICES[@]}" apt-daily.timer apt-daily-upgrade.timer; do
     [[ "$(systemctl is-enabled "$unit" 2> /dev/null || true)" != masked ]] || die "$unit is still masked"

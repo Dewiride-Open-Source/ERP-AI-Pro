@@ -306,16 +306,20 @@ acquire_release_lock() {
     flock --nonblock 9 || die "this run lost the lock on $RELEASE_LOCK that the deploy script it continues took"
     return 0
   fi
+  open_release_lock
+  if ! flock --nonblock 9; then
+    log_info "another deployment or rollback, the nightly retention run, the stack's start at boot or the minute's look for an unhealthy container holds $RELEASE_LOCK; waiting up to $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes for it (systemctl status erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-heal.service)"
+    flock --wait "$RELEASE_LOCK_WAIT_SECONDS" 9 \
+      || die "another deployment or rollback, the nightly retention run, the stack's start at boot or the minute's look for an unhealthy container still holds $RELEASE_LOCK after $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes; run this again once it ends (systemctl status erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-heal.service)"
+  fi
+  export ERP_DEPLOY_LOCK_PID="$$"
+}
+
+open_release_lock() {
   if [[ ! -e "$RELEASE_LOCK" ]]; then
     : >> "$RELEASE_LOCK" || die "cannot create $RELEASE_LOCK"
   fi
   exec 9< "$RELEASE_LOCK" || die "cannot open $RELEASE_LOCK"
-  if ! flock --nonblock 9; then
-    log_info "another deployment or rollback, the nightly retention run or the stack's start at boot holds $RELEASE_LOCK; waiting up to $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes for it (systemctl status erp-ai-pro.service erp-ai-pro-retain.service)"
-    flock --wait "$RELEASE_LOCK_WAIT_SECONDS" 9 \
-      || die "another deployment or rollback, the nightly retention run or the stack's start at boot still holds $RELEASE_LOCK after $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes; run this again once it ends (systemctl status erp-ai-pro.service erp-ai-pro-retain.service)"
-  fi
-  export ERP_DEPLOY_LOCK_PID="$$"
 }
 
 # unattended-upgrades reads Automatic-Reboot-Time on the host's clock, which bootstrap.sh keeps in UTC.
