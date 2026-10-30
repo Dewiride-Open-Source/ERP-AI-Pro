@@ -23,7 +23,7 @@ Date: 2026-10-19
 - **The release workflow** (`.github/workflows/release.yml`), on a pushed tag `vX.Y.Z`, every action pinned to a full SHA, every checkout without persisted credentials:
   - `gate`:
     - the tag is a semantic version naming `GITHUB_SHA`, and the commit is on `main`;
-    - the 23 check runs that run on a push to `main` are present and passed, no other check run of the commit is unfinished, and the newest run of every other check passed (the runs of one workflow ordered by run number, Dependabot's told apart by the ecosystem and directory their title names); runs of `release.yml` itself are left out;
+    - the 23 check runs that run on a push to `main` are present and passed, no other check run of the commit is unfinished, and the newest run of every other check passed (the runs of one workflow ordered by run number; Dependabot's told apart by their whole title less ` - Update #n`, which names the ecosystem and directories and, for a run that refreshes one pull request, that pull request's dependencies); runs of `release.yml` itself are left out;
     - the commit is main's newest commit when Dependabot is read, because Dependabot's alerts and pull requests describe that commit alone, so neither an older commit nor a re-run after an update was merged ships what the update replaced;
     - no Dependabot alert and no Dependabot pull request is open, printing only counts and numbers because a public repository's logs are public.
     The list of required names changes whenever a job of `ci-backend`, `ci-frontend`, `docker-build`, `e2e`, `codeql` or `roadmap` is renamed or added.
@@ -34,7 +34,8 @@ Date: 2026-10-19
   - `attest` (`id-token: write`, `attestations: write`, running no third-party container):
     - `actions/attest` twice per digest: SLSA provenance, and the SPDX 2.3 SBOM; both pushed to the registry;
     - then, signed out of the registry, a self-check with the very function `deploy.sh` uses (`verify_release_image`, `scripts/deploy/lib/release.sh`), which reads the image as the server does, so a package that is not public stops the release before it is published.
-  - `release` (`contents: write`):
+  - `release` (`contents: write`, `pull-requests: read`, `vulnerability-alerts: read`):
+    - main's newest commit and Dependabot are read again as the gate reads them, because a re-run of only the failed jobs keeps the gate's answers of the first attempt;
     - a draft release with `release-images.env` (the tag and the three digests), the six bundles and the three SBOMs, then published;
     - the notes name the tagged commit as the corresponding source.
 - **The images.**
@@ -94,7 +95,7 @@ Date: 2026-10-19
 ## Consequences
 
 - **A release waits for Dependabot.** Every Dependabot pull request, base image and BuildKit updates included, holds a release until it is merged or closed, and the release is then a tag on main's newest commit.
-- **Main's checks must be finished.** A release is cut only after main's full Playwright matrix finished; the gate refuses while any check run of the commit is unfinished, GitHub's own `submit-nuget` and Dependabot's runs included, or while the newest run of any check failed, and a re-run of the gate picks them up once they pass, as long as main has not moved.
+- **Main's checks must be finished.** A release is cut only after main's full Playwright matrix finished; the gate refuses while any check run of the commit is unfinished, GitHub's own `submit-nuget` and Dependabot's runs included, or while the newest run of any check failed, and a re-run of the gate picks them up once they pass, as long as main has not moved, except a failed refresh of one Dependabot pull request, which only a later passing run with its title on that commit clears.
 - **Notices follow every dependency.**
   - Every NuGet, npm or base image change regenerates them (`node scripts/notices/generate.ts`), or `docker-build` fails on the drift.
   - A Dependabot pull request that moves one is therefore never green on its own: it is adopted in an owner-authored pull request that carries the regenerated notices, as the code-owner review already requires.

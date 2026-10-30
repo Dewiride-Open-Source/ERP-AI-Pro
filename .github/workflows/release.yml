@@ -66,8 +66,9 @@ jobs:
       # The required names are the check runs a push to main starts in ci-backend, ci-frontend, docker-build, e2e, CodeQL and
       # roadmap, so a job renamed or added there is renamed or added here. Release runs of the commit are left out: they are not
       # what main proved, and the jobs of this run are still running. Of the runs of one check, the newest decides, so a run that
-      # passed after a failed one clears it; Dependabot's runs are told apart by the ecosystem and directory their title names,
-      # because they share one check name.
+      # passed after a failed one clears it. Dependabot's runs share one check name and are told apart by their whole title less
+      # " - Update #n": its ecosystem and directories and, for a run that refreshes one pull request, that pull request's
+      # dependencies, so neither a version-update run nor another pull request's refresh clears a failed one.
       - name: Require every check of the commit to have passed
         env:
           GH_TOKEN: ${{ github.token }}
@@ -150,8 +151,9 @@ jobs:
             exit 1
           fi
       # Dependabot's alerts and pull requests describe main's newest commit alone, so only that commit is released: an older one, or
-      # a re-run after an update was merged, would ship what the merged updates replaced. Only counts and numbers reach the log: the
-      # logs of a public repository are public, and its Dependabot alerts are not.
+      # a re-run after an update was merged, would ship what the merged updates replaced, and the release job reads both again
+      # before it publishes. Only counts and numbers reach the log: the logs of a public repository are public, and its
+      # Dependabot alerts are not.
       - name: Require Dependabot to be clear
         env:
           GH_TOKEN: ${{ github.token }}
@@ -389,6 +391,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+      pull-requests: read
+      vulnerability-alerts: read
     env:
       TAG: ${{ github.ref_name }}
       VERSION: ${{ needs.gate.outputs.version }}
@@ -455,6 +459,27 @@ jobs:
           commit="$(gh api "repos/$GITHUB_REPOSITORY/commits/refs/tags/$TAG" --jq .sha)"
           if [[ "$commit" != "$GITHUB_SHA" ]]; then
             echo "::error::The tag $TAG names commit $commit now, but this run built $GITHUB_SHA."
+            exit 1
+          fi
+      # A re-run of the failed jobs keeps the gate's answers of the first attempt, so the job that publishes reads them again.
+      - name: Require main and Dependabot to be as the gate found them
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          main="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)"
+          if [[ "$main" != "$GITHUB_SHA" ]]; then
+            echo "::error::Main's newest commit is $main now, not $GITHUB_SHA; tag main's newest commit with a new version."
+            exit 1
+          fi
+          alerts="$(gh api --paginate "repos/$GITHUB_REPOSITORY/dependabot/alerts?state=open&per_page=100" --jq '.[].number')"
+          pulls="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" \
+            --jq '.[] | select(.user.login == "dependabot[bot]") | .number')"
+          alert_count="$(grep -c . <<< "$alerts" || true)"
+          pull_count="$(grep -c . <<< "$pulls" || true)"
+          echo "Open Dependabot alerts: $alert_count${alerts:+ (#${alerts//$'\n'/, #})}"
+          echo "Open Dependabot pull requests: $pull_count${pulls:+ (#${pulls//$'\n'/, #})}"
+          if (( alert_count > 0 || pull_count > 0 )); then
+            echo "::error::Dependabot is not clear: resolve every open alert and merge or close every Dependabot pull request. Then re-run this run's failed jobs if main has not moved, or tag main's newest commit with a new version."
             exit 1
           fi
       # gh release edit finds a draft by its tag, so a draft that a failed attempt left would be the one it publishes.
