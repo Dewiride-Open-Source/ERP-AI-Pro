@@ -65,7 +65,9 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       # The required names are the check runs a push to main starts in ci-backend, ci-frontend, docker-build, e2e, CodeQL and
       # roadmap, so a job renamed or added there is renamed or added here. Release runs of the commit are left out: they are not
-      # what main proved, and the jobs of this run are still running.
+      # what main proved, and the jobs of this run are still running. Of the runs of one check, the newest decides, so a run that
+      # passed after a failed one clears it; Dependabot's runs are told apart by the ecosystem and directory their title names,
+      # because they share one check name.
       - name: Require every check of the commit to have passed
         env:
           GH_TOKEN: ${{ github.token }}
@@ -96,11 +98,20 @@ jobs:
             "Validate roadmap and rendered Markdown"
           )
           release_suites="$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .check_suite_id)"
-          release_suites+=$'\n'"$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" \
-            --jq '.workflow_runs[] | select(.path == ".github/workflows/release.yml") | .check_suite_id')"
+          workflow_runs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$GITHUB_SHA&per_page=100" \
+            --jq '.workflow_runs[] | [(.check_suite_id | tostring), (if (.path | startswith("dynamic/")) then .path + " " + (.display_title | sub(" - Update #[0-9]+$"; "")) else .path end), (.run_number | tostring)] | @tsv')"
+          declare -A workflow_of=() run_number_of=()
+          while IFS=$'\t' read -r suite workflow number; do
+            [[ -n "$suite" ]] || continue
+            if [[ "$workflow" == ".github/workflows/release.yml" ]]; then
+              release_suites+=$'\n'"$suite"
+            fi
+            workflow_of["$suite"]="$workflow"
+            run_number_of["$suite"]="$number"
+          done <<< "$workflow_runs"
           check_runs="$(gh api --paginate "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs?filter=latest&per_page=100" \
             --jq '.check_runs[] | [(.check_suite.id // 0 | tostring), .name, .status, (.conclusion // "none")] | @tsv')"
-          declare -A passed=()
+          declare -A passed=() newest=() verdict=()
           problems=()
           counted=0
           while IFS=$'\t' read -r suite name status conclusion; do
@@ -109,26 +120,47 @@ jobs:
               continue
             fi
             counted=$((counted + 1))
-            case "$status/$conclusion" in
-              completed/success) passed["$name"]=1 ;;
-              completed/skipped | completed/neutral) ;;
-              *) problems+=("$name: $status, $conclusion") ;;
-            esac
+            if [[ "$status" != completed ]]; then
+              problems+=("$name: $status, $conclusion")
+              continue
+            fi
+            check="${workflow_of["$suite"]:-check suite $suite}"$'\t'"$name"
+            number="${run_number_of["$suite"]:-0}"
+            current="${newest["$check"]:--1}"
+            if (( number > current )); then
+              newest["$check"]="$number"
+              verdict["$check"]="$conclusion"
+            fi
           done <<< "$check_runs"
+          for check in "${!verdict[@]}"; do
+            name="${check#*$'\t'}"
+            case "${verdict["$check"]}" in
+              success) passed["$name"]=1 ;;
+              skipped | neutral) ;;
+              *) problems+=("$name (${check%%$'\t'*}, run ${newest["$check"]}): completed, ${verdict["$check"]}") ;;
+            esac
+          done
           for name in "${required[@]}"; do
             [[ -n "${passed["$name"]:-}" ]] || problems+=("$name: no successful check run of this commit")
           done
           echo "Checked $counted check runs of $GITHUB_SHA outside the release workflow."
           if (( ${#problems[@]} > 0 )); then
             printf '  %s\n' "${problems[@]}"
-            echo "::error::Not every check of $GITHUB_SHA has passed; release a commit of main once all its checks are green."
+            echo "::error::Not every check of $GITHUB_SHA has passed; re-run this run once the newest run of each of them has passed."
             exit 1
           fi
-      # Only counts and numbers reach the log: the logs of a public repository are public, and its Dependabot alerts are not.
+      # Dependabot's alerts and pull requests describe main's newest commit alone, so only that commit is released: an older one, or
+      # a re-run after an update was merged, would ship what the merged updates replaced. Only counts and numbers reach the log: the
+      # logs of a public repository are public, and its Dependabot alerts are not.
       - name: Require Dependabot to be clear
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          main="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq .commit.sha)"
+          if [[ "$main" != "$GITHUB_SHA" ]]; then
+            echo "::error::Main's newest commit is $main, not $GITHUB_SHA; tag main's newest commit with a new version."
+            exit 1
+          fi
           alerts="$(gh api --paginate "repos/$GITHUB_REPOSITORY/dependabot/alerts?state=open&per_page=100" --jq '.[].number')"
           pulls="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" \
             --jq '.[] | select(.user.login == "dependabot[bot]") | .number')"
@@ -137,7 +169,7 @@ jobs:
           echo "Open Dependabot alerts: $alert_count${alerts:+ (#${alerts//$'\n'/, #})}"
           echo "Open Dependabot pull requests: $pull_count${pulls:+ (#${pulls//$'\n'/, #})}"
           if (( alert_count > 0 || pull_count > 0 )); then
-            echo "::error::Dependabot is not clear: resolve every open alert and merge or close every Dependabot pull request, then run this workflow again."
+            echo "::error::Dependabot is not clear: resolve every open alert and merge or close every Dependabot pull request. Then re-run this run if main has not moved, or tag main's newest commit with a new version."
             exit 1
           fi
 
@@ -165,10 +197,19 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
+      - name: Read the pinned BuildKit
+        id: buildkit
+        run: |
+          image="$(sed -n 's/^FROM //p' .github/buildkit/Dockerfile)"
+          if [[ ! "$image" =~ ^moby/buildkit:v[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::.github/buildkit/Dockerfile pins no BuildKit image by version and digest."
+            exit 1
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
       - name: Set up Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
-          driver-opts: image=moby/buildkit:v0.33.1@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea
+          driver-opts: image=${{ steps.buildkit.outputs.image }}
           cache-binary: false
       # SOURCE_DATE_EPOCH fixes the timestamps of the image configuration, so the push below, served from this build's cache,
       # carries exactly the configuration checked here.
@@ -316,6 +357,11 @@ jobs:
           mkdir -p "$RUNNER_TEMP/attestations"
           cp -- "$PROVENANCE_BUNDLE" "$RUNNER_TEMP/attestations/$IMAGE.provenance.sigstore.json"
           cp -- "$SBOM_BUNDLE" "$RUNNER_TEMP/attestations/$IMAGE.sbom.sigstore.json"
+      # The check reads the image from the registry as deploy.sh does, without credentials, so a package that is not public yet
+      # stops the release here, before it is published.
+      - name: Log out of the GitHub Container Registry
+        if: always()
+        run: docker logout ghcr.io
       - name: Verify both attestations as deploy.sh does
         env:
           DIGEST: ${{ steps.digest.outputs.digest }}
@@ -335,9 +381,6 @@ jobs:
           retention-days: 7
           if-no-files-found: error
           overwrite: true
-      - name: Log out of the GitHub Container Registry
-        if: always()
-        run: docker logout ghcr.io
 
   release:
     name: Publish the release

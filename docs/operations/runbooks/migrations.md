@@ -29,10 +29,10 @@ Only then does it roll the api, web and proxy containers with `up --detach --wai
 `migrate` deletes what is past its retention only when a deployment runs it, so between deployments a security event can outlive its year. The command `retain` runs the retention sweeps alone, applying no migration and running no seeder, so a daily run never moves the schema ahead of the running API (a daily `migrate` would, once a newer image had been pulled and before the stack was rolled):
 
 ```bash
-docker compose -f compose.yaml -f compose.production.yaml run --rm migrator retain
+flock /srv/erp-ai-pro/deploy.lock docker compose -f compose.yaml -f compose.production.yaml run --rm migrator retain
 ```
 
-It exits 0 when every sweep completed, 1 when a sweep failed (after running the others) or on cancellation, and 2 when its configuration is invalid, so a daily run notices a failed sweep; `migrate` only logs it. On the host, `erp-ai-pro-retain.timer` runs it every night at 01:00 India time through `erp-ai-pro-retain.service`, which keeps its output and exit code in the journal and is skipped until `.env` and the migrator's certificate are in place ([host setup runbook](host-setup.md), "At boot and every night"); until then, run it by hand after a long gap between deployments. A sweep that fails is logged at `Error` and the others still run; the next run deletes what the failed one left.
+It exits 0 when every sweep completed, 1 when a sweep failed (after running the others) or on cancellation, 2 when its configuration is invalid, and 4, deleting nothing, when the database holds migrations the installed release does not know ("When the migrator fails" below), so a daily run notices a failed sweep; `migrate` only logs it. On the host, `erp-ai-pro-retain.timer` runs it every night at 01:00 India time through `erp-ai-pro-retain.service`, under the deployment lock as the command above takes it. The service keeps its output and exit code in the journal, is skipped until `.env` and the migrator's certificate are in place, and fails until the first deployment has written the release into `.env` ([host setup runbook](host-setup.md), "At boot and every night"). A sweep that fails is logged at `Error` and the others still run; the next run deletes what the failed one left.
 
 ## When the migrator fails
 

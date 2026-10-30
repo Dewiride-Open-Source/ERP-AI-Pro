@@ -41,6 +41,7 @@ readonly ENV_FILE="$COMPOSE_DIR/.env"
 readonly PREVIOUS_ENV_FILE="$COMPOSE_DIR/.env.previous"
 readonly NIGHTLY_UPDATES_SETTINGS="$HOST_CONFIG_DIR/apt/52erp-ai-pro-unattended-upgrades.conf"
 readonly ROLLOUT_WAIT_SECONDS=300
+readonly RELEASE_LOCK_WAIT_SECONDS=840
 readonly READINESS_ATTEMPTS=24
 readonly READINESS_INTERVAL_SECONDS=5
 readonly RESTART_WINDOW_MINUTES=30
@@ -298,6 +299,8 @@ roll_out() {
 }
 
 # A flock(2) lock belongs to the open file, which exec keeps open, so the deploy script that deploy.sh continues with holds it.
+# erp-ai-pro.service holds the lock for each attempt to start the stack, at most TimeoutStartSec (10 minutes) and TimeoutStopSec
+# (3) together, and tries again RestartSec (1 minute) after a failed one, so a run that waits 14 minutes takes it between two.
 acquire_release_lock() {
   if [[ "${ERP_DEPLOY_LOCK_PID:-}" == "$$" ]]; then
     flock --nonblock 9 || die "this run lost the lock on $RELEASE_LOCK that the deploy script it continues took"
@@ -307,8 +310,11 @@ acquire_release_lock() {
     : >> "$RELEASE_LOCK" || die "cannot create $RELEASE_LOCK"
   fi
   exec 9< "$RELEASE_LOCK" || die "cannot open $RELEASE_LOCK"
-  flock --nonblock 9 \
-    || die "another deployment or rollback, the nightly retention run or the stack's start at boot holds $RELEASE_LOCK; run this again once it ends (systemctl status erp-ai-pro.service erp-ai-pro-retain.service)"
+  if ! flock --nonblock 9; then
+    log_info "another deployment or rollback, the nightly retention run or the stack's start at boot holds $RELEASE_LOCK; waiting up to $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes for it (systemctl status erp-ai-pro.service erp-ai-pro-retain.service)"
+    flock --wait "$RELEASE_LOCK_WAIT_SECONDS" 9 \
+      || die "another deployment or rollback, the nightly retention run or the stack's start at boot still holds $RELEASE_LOCK after $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes; run this again once it ends (systemctl status erp-ai-pro.service erp-ai-pro-retain.service)"
+  fi
   export ERP_DEPLOY_LOCK_PID="$$"
 }
 

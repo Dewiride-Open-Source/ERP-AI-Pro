@@ -8,6 +8,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { connect, getCiphers, type ConnectionOptions } from "node:tls";
 import { fileURLToPath } from "node:url";
 
+import { imageInventoryProblems, isInventoryEvidence } from "../notices/lib/spdx.ts";
 import { imageContentsProblems, imageNames, imageRepository, isRequiredFile, readFirstTarEntry, readSavedImage, repositoryCopies, type TarEntry } from "./lib/image-contents.ts";
 import { repoRoot } from "./lib/walk.ts";
 
@@ -271,8 +272,11 @@ async function imageContentsOutcomes(): Promise<string[]> {
   for (const image of imageNames) {
     const reference = `${imageRepository(image)}:${imageTag}`;
     try {
-      const archive = await readSavedImage(reference, isRequiredFile);
-      outcomes.push(...imageContentsProblems(image, archive, repositoryCopies(repoRoot, image)).map((problem) => `${image} image contents: ${problem}`));
+      const archive = await readSavedImage(reference, (path, size) => isRequiredFile(path, size) || isInventoryEvidence(path));
+      outcomes.push(
+        ...imageContentsProblems(image, archive, repositoryCopies(repoRoot, image)).map((problem) => `${image} image contents: ${problem}`),
+        ...imageInventoryProblems(image, archive).map((problem) => `${image} image inventory: ${problem}`),
+      );
     } catch (error) {
       outcomes.push(`${image} image contents: ${(error as Error).message}`);
     }
@@ -455,7 +459,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log(`compose smoke ok: the ${imageNames.join(", ")} images hold no forbidden file, the licence and notices files of this checkout and only their own labels, the api image holds ${keyRingDirectory} as ${describeTarEntry(keyRing.expected)}, the proxy image runs as ${proxyUser} and holds /data as ${describeTarEntry(proxyData.expected)}, the migrator completed, ${checks.length} checks passed against the api and the web container, and through the proxy its TLS policy, its configured limits and timeouts, ${proxyChecks.length + 1} requests and a log without query strings or headers`);
+  console.log(`compose smoke ok: the ${imageNames.join(", ")} images hold no forbidden file, the licence and notices files of this checkout and only their own labels, and notices that list exactly the packages they hold, the api image holds ${keyRingDirectory} as ${describeTarEntry(keyRing.expected)}, the proxy image runs as ${proxyUser} and holds /data as ${describeTarEntry(proxyData.expected)}, the migrator completed, ${checks.length} checks passed against the api and the web container, and through the proxy its TLS policy, its configured limits and timeouts, ${proxyChecks.length + 1} requests and a log without query strings or headers`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -58,11 +58,15 @@ A compose secret is a file, never an `.env` variable; the api container reads th
 | `erp-runtime-client.pem` | production (`compose.production.yaml`) | the runtime service principal's certificate, hidden from the key-per-file provider and read only through `AZURE_CLIENT_CERTIFICATE_PATH` |
 | `erp-migrator-client.pem` | production (`compose.production.yaml`) | the migrator service principal's certificate, opened at startup like the runtime certificate; the PEM of `Erp--Platform--Identity--MigratorClientCertificate`, exported with `scripts/azure/export-client-certificate.sh migrator` |
 
-### Image build arguments (`infra/docker/web.Dockerfile`)
+### Image build arguments (`infra/docker/*.Dockerfile`)
 
-| Argument | Default | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_APP_NAME` | `ERP-AI-Pro` | inlined display name; pass `--build-arg NEXT_PUBLIC_APP_NAME=...` to `docker build` (or `build.args` in a compose override) to rename the product in a custom image |
+| Argument | Images | Default | Purpose |
+|---|---|---|---|
+| `NEXT_PUBLIC_APP_NAME` | web | `ERP-AI-Pro` | inlined display name; pass `--build-arg NEXT_PUBLIC_APP_NAME=...` to `docker build` (or `build.args` in a compose override) to rename the product in a custom image |
+| `BUILD_CONFIGURATION` | api | `Release` | the `dotnet publish` configuration of the api, health probe and migrator hosts |
+| `ERP_VERSION` | api, web, proxy | `local` | the final stage's `org.opencontainers.image.version` label; `.github/workflows/release.yml` passes the tag's version without the `v` (such as `0.1.0`), while `verify.ts --docker`, `docker-build` and the compose files pass nothing; the image contents check (`scripts/checks/image-contents.ts`) accepts only `local` or such a version ([ADR-0053](adr/0053-the-release-public-images-a-dependabot-gate-attestations-verified-on-the-server-and-the-deployment-scripts.md)) |
+| `ERP_REVISION` | api, web, proxy | `unknown` | the `org.opencontainers.image.revision` label; the release passes the tagged commit's 40-character id, and the image contents check accepts only `unknown` or such an id |
+| `ERP_CREATED` | api, web, proxy | empty | the `org.opencontainers.image.created` label; the release passes the tagged commit's committer time in UTC (such as `2026-10-28T09:30:00Z`), the instant it also gives the build as `SOURCE_DATE_EPOCH`, and the image contents check accepts only an empty value or such a time |
 
 ## Configuration keys (`appsettings.json` / App Configuration)
 

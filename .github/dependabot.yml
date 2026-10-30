@@ -131,7 +131,7 @@ updates:
 
   # The SQL Server image in .github/actions/start-sql-server/action.yml and the Azurite image in .github/actions/start-azurite/action.yml run
   # through docker run, which no ecosystem scans, so their digests are bumped by hand; the Azurite reference follows the one the docker-compose
-  # ecosystem below bumps in infra/compose/compose.override.yaml, and scripts/checks/tests/azurite-pin.test.ts fails while the two differ
+  # ecosystem below bumps in infra/compose/compose.override.yaml, and scripts/checks/tests/image-pins.test.ts fails while the two differ
   - package-ecosystem: docker
     directory: /infra/docker
     schedule:
@@ -150,6 +150,19 @@ updates:
     labels: [dependencies, infra]
     commit-message:
       prefix: "build(images)"
+
+  # The BuildKit of release.yml and docker-build.yml is an input of their setup-buildx-action step, which no ecosystem reads, so
+  # .github/buildkit/Dockerfile, which nothing builds, pins it, and the release waits for its updates like any other; image-pins.test.ts keeps both workflows reading it
+  - package-ecosystem: docker
+    directory: /.github/buildkit
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    labels: [dependencies, ci]
+    commit-message:
+      prefix: "ci(deps)"
 
   - package-ecosystem: docker-compose
     directory: /infra/compose

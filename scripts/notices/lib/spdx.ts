@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { type FileSystemEntry, type ImageName, imageRepository, repositoryUrl, vendor } from "../../checks/lib/image-contents.ts";
+import { type FileSystemEntry, finalFileSystem, type ImageArchive, type ImageName, imageRepository, repositoryUrl, vendor } from "../../checks/lib/image-contents.ts";
 import { shippedPackages } from "./dotnet.ts";
 import { goBuildInfo } from "./go.ts";
 import { byCodeUnits, noAssertion } from "./inventory.ts";
@@ -90,6 +90,16 @@ export function inventoryProblems(image: ImageName, document: NoticesDocument, o
         return value === undefined || value.replace(/^v/, "") === entry.version.replace(/^v/, "") ? [] : [`the image sets ${variable}=${value}, but the notices list ${entry.name} ${entry.version}`];
       }),
   ];
+}
+
+export const imageEnvironment = (archive: ImageArchive): Record<string, string> =>
+  Object.fromEntries((archive.config.Env ?? []).map((entry) => [entry.slice(0, entry.indexOf("=")), entry.slice(entry.indexOf("=") + 1)]));
+
+export function imageInventoryProblems(image: ImageName, archive: ImageArchive): string[] {
+  const files = finalFileSystem(archive.layers);
+  const notices = files.get(noticesPath)?.content;
+  if (notices === undefined) return [`the image has no /${noticesPath}`];
+  return inventoryProblems(image, JSON.parse(new TextDecoder().decode(notices)) as NoticesDocument, observedImage(files, imageEnvironment(archive)));
 }
 
 export type SpdxInput = {

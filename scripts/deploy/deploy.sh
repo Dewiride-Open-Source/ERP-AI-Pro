@@ -12,7 +12,8 @@ to that commit and continues with the commit'"'"'s own deploy script, which chec
 digest, asks the release'"'"'s migrator about the database (it stops when the database belongs to a newer release), applies
 the migrations, writes the release into infra/compose/.env and the one it replaces into .env.previous, rolls the api, web
 and proxy containers and waits until the API answers ready. A rollout that fails before any migration of the release was
-applied goes back to the replaced release; after one, the server stays on the new release for a fix.
+applied goes back to the replaced release, and one that fails after them stays on the new release for a fix; a rollout of
+the release .env already names stays on it.
 Runbook: docs/operations/runbooks/deploy.md
 
 Options:
@@ -56,10 +57,10 @@ read_continuation() {
   if [[ "${ERP_DEPLOY_LOCK_PID:-}" != "$$" ]]; then
     return 0
   fi
-  [[ -n "$assets" && -d "$assets" ]] || die "the deploy script this run continues left no release files behind"
-  ASSETS="$assets"
   [[ "$return_commit" =~ $COMMIT_PATTERN ]] || die "the deploy script this run continues named no commit to go back to"
   RETURN_COMMIT="$return_commit"
+  [[ -n "$assets" && -d "$assets" ]] || die "the deploy script this run continues left no release files behind"
+  ASSETS="$assets"
   CONTINUED=1
 }
 
@@ -179,6 +180,22 @@ migrate_database() {
   die "$TAG was not deployed"
 }
 
+stop_recording() {
+  log_error "$1"
+  if (( MIGRATIONS_PENDING )) && [[ -n "$CURRENT" ]]; then
+    if [[ -n "$RETURN_COMMIT" ]]; then
+      move_checkout "$RETURN_COMMIT" \
+        || die "cannot move the checkout back to $RETURN_COMMIT; do it before the server restarts: git -C $REPO_ROOT checkout --detach $RETURN_COMMIT"
+      log_info "the checkout is back at ${RETURN_COMMIT:0:12}, the commit of the release .env names"
+    fi
+    report_running_release
+  fi
+  if (( MIGRATIONS_PENDING )); then
+    die "$TAG was not deployed, but its migrations were applied, which the running release may not know; free what stopped the write, such as disk space, and deploy $TAG again at once, or restore the database (docs/operations/runbooks/migrations.md, section Recovering from a bad migration)"
+  fi
+  die "$TAG was not deployed"
+}
+
 restore_previous_file() {
   if [[ -n "$PREVIOUS_BEFORE" ]]; then
     write_release_file "$PREVIOUS_ENV_FILE" "$PREVIOUS_BEFORE"
@@ -194,12 +211,12 @@ record_release() {
   else
     if [[ -n "$CURRENT" ]]; then
       write_release_file "$PREVIOUS_ENV_FILE" "$CURRENT" \
-        || die "cannot keep the running release in $PREVIOUS_ENV_FILE; .env and the containers were not changed"
+        || stop_recording "cannot keep the running release in $PREVIOUS_ENV_FILE; .env and the containers were not changed"
       log_info "kept the running release v${CURRENT%% *} in .env.previous for rollback.sh"
     fi
     if ! write_env_release "$ENV_FILE" "$TARGET"; then
       restore_previous_file || log_error "cannot put $PREVIOUS_ENV_FILE back as it was"
-      die "cannot write $TAG into $ENV_FILE; the containers were not changed"
+      stop_recording "cannot write $TAG into $ENV_FILE; the containers were not changed"
     fi
   fi
   ENV_WRITTEN=1
@@ -224,6 +241,9 @@ failed_rollout() {
   local previous status=0
   if (( MIGRATIONS_PENDING )); then
     die "$TAG did not become ready after its migrations were applied, which no earlier release knows, so the server stays on $TAG; fix forward with a new release or restore the database (docs/operations/runbooks/deploy.md, section When a rollout fails)"
+  fi
+  if [[ "$CURRENT" == "$TARGET" ]]; then
+    die "$TAG did not become ready, and .env named it before this run, so the server stays on $TAG with .env, .env.previous and the checkout as they were; its containers stay for diagnosis: docker compose -f compose.yaml -f compose.production.yaml logs api web proxy"
   fi
   previous="$(saved_release "$PREVIOUS_ENV_FILE")" || die "$TAG did not become ready, and $PREVIOUS_ENV_FILE cannot be read, so the server stays on $TAG"
   if [[ -z "$previous" || "$previous" == "$TARGET" ]]; then
@@ -255,6 +275,10 @@ succeeded() {
 }
 
 main() {
+  trap finish EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  read_continuation
   local -a arguments=("$@")
   parse_args "$@"
   (( ${#ARGS[@]} == 1 )) || die "name the one release tag to deploy, such as v0.1.0 (see --help)"
@@ -262,10 +286,6 @@ main() {
   VERSION="$(release_version_of_tag "$TAG")" || die "'$(printable "$TAG")' is not a release tag such as v0.1.0"
   require_command git docker gh curl flock mktemp
   require_release_host
-  trap finish EXIT
-  trap 'exit 130' INT
-  trap 'exit 143' TERM
-  read_continuation
   acquire_release_lock
   refuse_before_the_nightly_restart
   read_release_files

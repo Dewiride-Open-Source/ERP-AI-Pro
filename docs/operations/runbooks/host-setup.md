@@ -153,7 +153,7 @@ systemctl list-timers erp-ai-pro-retain.timer
 journalctl -u erp-ai-pro.service -u erp-ai-pro-retain.service --since today
 ```
 
-A failed `retain` exits 1 (a sweep failed, the others ran) or 2 (its configuration is invalid), and the [migrations runbook](migrations.md) says what each means.
+A failed `retain` exits 1 (a sweep failed, the others ran), 2 (its configuration is invalid) or 4 (the database holds migrations the release in `.env` does not know, so nothing was deleted; the journal shows `status=4/NOPERMISSION`, systemd's name for that code, not a permission problem), and the [migrations runbook](migrations.md) says what each means.
 
 ## Trusting the proxy's root on each device
 

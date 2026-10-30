@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# release-decisions.sh copies this file to bin/<command> for each command the deploy scripts run. It answers as that command
-# from the scenario's state folder next to bin, appends every call to the folder's calls file, and fails with 99 on a call
-# no deploy script makes.
-
 set -euo pipefail
 
 COMMAND="${0##*/}"
@@ -261,14 +257,25 @@ stand_in_git() {
   esac
 }
 
+stand_in_mv() {
+  setting mv-refuses ''
+  if [[ -n "$REPLY" && "${*: -1}" == *"$REPLY" ]]; then
+    record "mv refused ${*: -1}"
+    printf 'mv: cannot move to %s: No space left on device\n' "${*: -1}" >&2
+    return 1
+  fi
+  PATH="${PATH#"${0%/*}:"}" mv "$@"
+}
+
 case "$COMMAND" in
   docker) stand_in_docker "$@" ;;
   gh) stand_in_gh "$@" ;;
   curl) stand_in_curl "$@" ;;
   git) stand_in_git "$@" ;;
+  mv) stand_in_mv "$@" ;;
   flock)
     record "flock $*"
-    [[ ! -f "$STATE/flock-held" ]]
+    [[ ! -f "$STATE/flock-held" || ( "$1" == --wait && -f "$STATE/flock-released" ) ]]
     ;;
   id)
     [[ "$*" == -un ]] || unexpected "$@"

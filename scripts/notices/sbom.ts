@@ -4,7 +4,7 @@ import { parseArgs } from "node:util";
 
 import { finalFileSystem, imageNames, isImageName, readSavedImage } from "../checks/lib/image-contents.ts";
 import type { NoticesDocument } from "./lib/render.ts";
-import { inventoryProblems, isInventoryEvidence, noticesPath, observedImage, spdxDocument } from "./lib/spdx.ts";
+import { imageEnvironment, inventoryProblems, isInventoryEvidence, noticesPath, observedImage, spdxDocument } from "./lib/spdx.ts";
 
 const usage = `Usage: node scripts/notices/sbom.ts <image reference> --image <${imageNames.join("|")}> --version <version> --output <file>
 
@@ -36,7 +36,7 @@ try {
   const archive = await readSavedImage(reference, isInventoryEvidence);
   const files = finalFileSystem(archive.layers);
   const labels = archive.config.Labels ?? {};
-  const env = Object.fromEntries((archive.config.Env ?? []).map((entry) => [entry.slice(0, entry.indexOf("=")), entry.slice(entry.indexOf("=") + 1)]));
+  const env = imageEnvironment(archive);
   const notices = files.get(noticesPath)?.content;
   const problems: string[] = [];
   if (notices === undefined) problems.push(`the image has no /${noticesPath}`);
