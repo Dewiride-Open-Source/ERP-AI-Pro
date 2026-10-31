@@ -39,14 +39,15 @@ Not covered, and accepted: an outage of the Central India region keeps the ERP d
    ```
 
    It writes `scripts/azure/out/erp-backup-recipient-key.pem` (git-ignored) and prints the certificate's serial number. An archive sealed before the last rotation needs the version it was sealed to (`--version <version>`, [secrets runbook](secrets.md), section 5g); `restore.sh` names the serial number it needs when the key is another version's.
-2. Copy it into the deploy account's home on the server (`scp scripts/azure/out/erp-backup-recipient-key.pem erp-ai-pro@<server>:`), then shred the workstation's copy: `shred -u scripts/azure/out/erp-backup-recipient-key.pem` (`rm -P` on macOS).
-3. On the server, as `erp-ai-pro`, the dry run downloads, opens and checks the newest archive and changes nothing, so it may run while the stack runs:
+2. Copy it into the deploy account's home on the server with the deploy account's own key (`scp -i ~/.ssh/erp-ai-pro-deploy scripts/azure/out/erp-backup-recipient-key.pem erp-ai-pro@<server>:`), then shred the workstation's copy: `shred -u scripts/azure/out/erp-backup-recipient-key.pem` (`rm -P` on macOS).
+3. On the server, as `erp-ai-pro`, list the archives and check the one to restore. Neither changes anything, so both may run while the stack runs:
 
    ```bash
+   bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --list
    bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --latest --key ~/erp-backup-recipient-key.pem --dry-run
    ```
 
-   It names the archive and the time the storage service created it, the manifest's release, keys and proxy root fingerprint, what each volume holds now and what a restore would write. Keep the archive's name for the next step.
+   `--list` names each archive with the time the storage service created it, newest first, and marks a name whose time lies more than an hour from its creation. The dry run downloads, opens and checks the archive it would restore and names it, with its creation time, the manifest's release, keys and proxy root fingerprint, what each volume holds now and what a restore would write. It refuses an archive whose manifest names no release, no key and no proxy root: the backup of a server whose volumes were still empty, which restores nothing. Keep the archive's name for the next step.
 4. Stop the stack as the administrator (`sudo systemctl stop erp-ai-pro.service`). Then, as `erp-ai-pro`, restore that archive by its name, with `--replace` when a volume still holds files:
 
    ```bash
@@ -54,14 +55,16 @@ Not covered, and accepted: an outage of the Central India region keeps the ERP d
    ```
 
    It takes the deployment lock, refuses while a container of the stack runs, checks every file against the manifest before it changes anything, gives each volume's top folder the owner and mode its image gives it (1654:1654 for the key ring, 10001:10001 for the proxy data, both 0700), fills each volume as that owner, writes `.env` and `.env.previous` (0600) as the archive holds them, and shreds the key file.
-5. The restored `.env` names the release that ran when the archive was made. When the checkout is at that release, start the stack: `sudo systemctl start erp-ai-pro.service`, which returns once it is healthy; the API's key ring check stops the start when the restored keys cannot be unwrapped or their folder written, so a start proves the key ring, its owner and its mode. When the checkout is at another release, deploy the archive's release instead ([deploy runbook](deploy.md)).
+5. The restored `.env` names the release that ran when the archive was made, and `restore.sh` prints the release the replaced `.env` named.
+   - When no deployment or rollback ran after the archive was made, the checkout is at the archive's release: start the stack with `sudo systemctl start erp-ai-pro.service`, which returns once it is healthy. The API's key ring check stops the start when the restored keys cannot be unwrapped or their folder written, so a start proves the key ring, its owner and its mode.
+   - When one ran, the checkout is at the release it left running (`git -C /srv/erp-ai-pro/ERP-AI-Pro tag --points-at HEAD` names it): deploy that release ([deploy runbook](deploy.md)), which writes it into `.env`, keeps the archive's release in `.env.previous` and starts the stack. Deploying the archive's release instead stops at the migrator's exit 4 when the later release brought migrations, and otherwise undoes the later deployment or rollback.
 
 After a dry run or a failure the key stays where it was, and `restore.sh` prints the command that removes it: `shred -u ~/erp-backup-recipient-key.pem`. A failure after the first volume names what was restored before it; run the restore again with `--replace` once its cause is fixed.
 
 Choosing the archive:
 
-- `--latest` takes the archive the storage service created last, not the one whose name sorts last. Whoever holds the backup service principal's certificate can add an archive under any name, though under the write-once policy never replace or delete one, so `restore.sh` also warns when an archive's name gives a time more than an hour from its creation.
-- After a suspected compromise of the server, restore an archive made before it, by name, and compare the release its manifest names with the release page. An archive is sealed to a public certificate, so its seal shows only that whoever made it could write to the container.
+- `--latest` takes the archive the storage service created last, not the one whose name sorts last, and `--created-before <yyyy-mm-ddThh:mm:ssZ>` the newest one it created before that moment. Whoever holds the backup service principal's certificate can add an archive under any name, though under the write-once policy never replace or delete one, so `--list` and `restore.sh` also report a name whose time lies more than an hour from its creation.
+- After a suspected compromise of the server, never take `--latest`. List the archives, choose one created before the compromise could have begun (`--created-before <that moment>` or `--name`), check the creation time its dry run names and the release its manifest names against the release page, then restore it by its name. An archive is sealed to a public certificate, so its seal shows only that whoever made it could write to the container.
 
 What each part's loss costs when no archive can be restored:
 
@@ -134,12 +137,13 @@ Container soft delete keeps `attachments` with every blob in it for 90 days, but
 
 A new or reinstalled server with the old one's address, taking its place:
 
-1. Bootstrap it ([host setup runbook](host-setup.md)), which creates the two volumes empty and writes `.env` from `.env.example`. Place the runtime, migrator and backup certificates and the recipient certificate (`--backup-recipient`) as that runbook shows.
+1. Bootstrap it ([host setup runbook](host-setup.md)) without `--backup-recipient`: it creates the two volumes empty and writes `.env` from `.env.example`. Place the runtime, migrator and backup client certificates as that runbook shows, and not yet the recipient certificate: without it the nightly backup is skipped, so no backup of the empty volumes runs before the restore, by the timer, at boot or by hand. `restore.sh` does not need it.
 2. Put `AZURE_TENANT_ID`, `BACKUP_BLOB_ENDPOINT`, `BACKUP_CONTAINER` and `BACKUP_AZURE_CLIENT_ID` into the fresh `.env`; `restore.sh` reads them to reach the archives.
 3. When the server leaves through another public address than before, move the three rules first: `bash scripts/azure/home-address.sh` ([home address runbook](home-address.md)).
-4. Restore the server's own files before the stack first starts ("The server's own files", steps 1 to 4; the volumes are empty, so no `--replace` is needed), or the API makes a new key ring at its first start.
-5. Deploy the release the restored `.env` names, as the first deployment does ([deploy runbook](deploy.md), "The first deployment"): it pulls that release's images by digest and verifies them, finds no migration to apply, keeps `.env` and `.env.previous`, and starts the stack.
-6. Every device keeps trusting the proxy's root, which came back with its volume; compare the fingerprint the manifest names with the one the proxy now serves ([proxy runbook](proxy.md), "Exporting the root certificate").
+4. Restore the server's own files before the stack first starts ("The server's own files", steps 1 to 4; the volumes are empty, so no `--replace` is needed), or the API makes a new key ring at its first start. Choose an archive the storage service created before the old server failed, and after a suspected compromise one created before it began ("Choosing the archive").
+5. Deploy the release that ran last against the database as it is now, as the first deployment does ([deploy runbook](deploy.md), "The first deployment"): the release the restored `.env` names when no deployment or rollback ran after the archive was made, otherwise the one that did, from the record of that deployment (the release page shows what was published, not what ran). It pulls that release's images by digest and verifies them, finds no migration to apply and starts the stack. Deploying an older release stops at the migrator's exit 4 when a later one brought migrations.
+6. Place the recipient certificate with the bootstrap's `--backup-recipient` ([host setup runbook](host-setup.md), "The backup's certificates"); the restored `.env` already holds the backup settings, and the backup runs again from the next night.
+7. Every device keeps trusting the proxy's root, which came back with its volume; compare the fingerprint the manifest names with the one the proxy now serves ([proxy runbook](proxy.md), "Exporting the root certificate").
 
 ## The rehearsal
 
@@ -149,7 +153,7 @@ A full rehearsal on the production server, twice a year and after any change to 
 
 - Choose a quiet window away from 01:00 to 01:30 India time (the nightly retention run), 02:00 (the backup) and 03:00 (the update restart), and tell everyone the ERP is closed.
 - On the operator's computer: `bash scripts/azure/verify.sh --database` passes; note `az sql db show --resource-group rg-erp-ai-pro --server sql-erp-ai-pro --name ErpAiPro --query earliestRestoreDate --output tsv` (about 7 days back) and the long-term copies (`az sql db ltr-backup list`, [database runbook](database.md)).
-- Note the newest archive in the backup's journal (`journalctl -u erp-ai-pro-backup.service --since yesterday` on the server), the proxy root's fingerprint, one attachment uploaded days before, and upload a test attachment for the attachment step.
+- The archive to restore holds the files the stack runs on: no deployment or rollback ran since last night's backup, or a backup runs at once just before T0 (`sudo systemctl start erp-ai-pro-backup.service`). Note its name (`restore.sh --list` on the server), the proxy root's fingerprint, one attachment uploaded days before, and upload a test attachment for the attachment step.
 - Export the recipient key and copy it to the server ("The server's own files", steps 1 and 2).
 - Just before the start, make a marker change in the ERP, such as renaming a test department to "Restore rehearsal <date> <hh:mm>", and note its time on the change history page.
 
@@ -160,12 +164,12 @@ A full rehearsal on the production server, twice a year and after any change to 
 | 0:00 | On the server: `sudo systemctl stop erp-ai-pro.service`. | **T0** |
 | 0:05 | Restore the database to T0 under the name `ErpAiPro_drill_<yyyymmdd>` ("The database to a point in time", step 2); if T0 is refused as later than the newest log backup, take the latest time accepted. | the restore point **R**; the request **T1** and the database online **T2** |
 | 0:05, meanwhile | On the server: the dry run, then the restore of last night's archive by name with `--replace` ("The server's own files", steps 3 and 4). | done **T3** |
-| 0:35 | Swap the databases: `ErpAiPro` becomes `ErpAiPro_live_<yyyymmdd>` and `ErpAiPro_drill_<yyyymmdd>` becomes `ErpAiPro` (step 3); then `database.sh --dry-run` and `verify.sh --database`. Run no `provision.sh` during a rehearsal: the swap back follows within the hour. | **T4** |
+| 0:35 | Swap the databases: `ErpAiPro` becomes `ErpAiPro_live_<yyyymmdd>` and `ErpAiPro_drill_<yyyymmdd>` becomes `ErpAiPro` (step 3); then `database.sh --dry-run` and `verify.sh --database`. The rehearsal copy carries no long-term retention policy, so `verify.sh --database` reports exactly two failures, the weekly and the monthly copies (`got 'PT0S'`), and ends with `[FAIL] 2 check(s) failed`: record them as expected and do not follow their `provision.sh` hint; any other failing line is a real one. Run no `provision.sh` while the rehearsal copy carries the name `ErpAiPro`, until the swap back at 1:20: it would give the copy the template's tags and long-term retention, whose copies would outlive the copy's drop. | **T4** |
 | 0:45 | On the server: `sudo systemctl start erp-ai-pro.service`; it returns once the stack is healthy. Compare the proxy root's fingerprint with the noted one. | **T5** |
 | 0:50 | On a device that trusts the root, open the ERP without a warning, sign in in a private window, look for the marker on the change history page and download the old attachment. | **T6**, the end of the time until people work again |
-| 1:00 | The files, which do not count towards T6: grant the temporary role; delete the test attachment's blob, see the ERP refuse it, undelete it and download it again; create a container `restore-drill`, put a file in it, delete the container, restore it and delete it again; read the regional sync time, `az storage account show --name sterpaiproprod --resource-group rg-erp-ai-pro --expand geoReplicationStats --query geoReplicationStats.lastSyncTime`; remove the role with the lock lifted, then `provision.sh`. | each restore's duration; the regional sync |
-| 1:20 | Put production back: stop the stack; rename `ErpAiPro` to `ErpAiPro_drill_<yyyymmdd>` and `ErpAiPro_live_<yyyymmdd>` to `ErpAiPro`; start the stack and sign in once more; `earliestRestoreDate` is still about 7 days back. The restored volumes stay: they hold last night's files, which the stack used before T0. | **T7** |
-| 1:35 | Record (below); `verify.sh` and `verify.sh --database` pass. | |
+| 1:00 | The files, which do not count towards T6: grant the temporary role; delete the test attachment's blob, see the ERP refuse it, undelete it and download it again; create a container `restore-drill`, put a file in it, delete the container, restore it and delete it again; read the regional sync time, `az storage account show --name sterpaiproprod --resource-group rg-erp-ai-pro --expand geoReplicationStats --query geoReplicationStats.lastSyncTime`; remove the role with the lock lifted, and leave the lock off until 1:35. | each restore's duration; the regional sync |
+| 1:20 | Put production back: stop the stack; rename `ErpAiPro` to `ErpAiPro_drill_<yyyymmdd>` and `ErpAiPro_live_<yyyymmdd>` to `ErpAiPro`; start the stack and sign in once more; `earliestRestoreDate` is still about 7 days back. The restored volumes stay: they hold the files the stack used before T0 ("Before it"). | **T7** |
+| 1:35 | Record (below); `provision.sh`, which puts the production storage account's lock back now that `ErpAiPro` is the original again; then `verify.sh` and `verify.sh --database` pass. | |
 
 Swapping back returns production to the untouched original, so nothing written before T0 is lost; what the rehearsal itself wrote (its sign-ins, cached tokens) exists only in the rehearsal copy. A real incident stops after T6 and keeps the restored database. The rehearsal copy is dropped by the owner, naming it exactly, after a week at most (about ₹124 at Basic for the week).
 

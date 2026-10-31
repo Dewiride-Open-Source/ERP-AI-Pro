@@ -28,7 +28,8 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 # shellcheck source=lib/graph.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
 
-readonly SERVER_SECRETS_DIR='/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets'
+readonly SERVER_CHECKOUT='/srv/erp-ai-pro/ERP-AI-Pro'
+readonly SERVER_SECRETS_DIR="$SERVER_CHECKOUT/infra/compose/secrets"
 readonly CONTAINER_USER='1654'
 readonly EXPORT_TARGETS=("${SERVER_TARGETS[@]}" backup-recipient backup-recipient-key)
 readonly RECIPIENT_FILE='erp-backup-recipient.crt'
@@ -183,11 +184,11 @@ print_client_certificate_steps() {
   esac
   case "$TARGET" in
     migrator)
-      log_info "     then set MIGRATOR_AZURE_CLIENT_ID in /srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env to the MIGRATOR_AZURE_CLIENT_ID line entra.sh prints;"
+      log_info "     then set MIGRATOR_AZURE_CLIENT_ID in $SERVER_CHECKOUT/infra/compose/.env to the MIGRATOR_AZURE_CLIENT_ID line entra.sh prints;"
       log_info "     from then on erp-ai-pro-retain.timer runs retain every night, so place it only once the deployment's images are on the server"
       ;;
     backup)
-      log_info "     then set BACKUP_AZURE_CLIENT_ID in /srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env to the line entra.sh prints, and BACKUP_BLOB_ENDPOINT and"
+      log_info "     then set BACKUP_AZURE_CLIENT_ID in $SERVER_CHECKOUT/infra/compose/.env to the line entra.sh prints, and BACKUP_BLOB_ENDPOINT and"
       log_info "     BACKUP_CONTAINER to the lines provision.sh prints; the nightly backup also needs the public certificate of backup-recipient"
       ;;
   esac
@@ -201,7 +202,8 @@ print_recipient_steps() {
   log_info "  2. on the server, as the administrator, place it as $SERVER_SECRETS_DIR/$RECIPIENT_FILE with the host bootstrap's"
   log_info "     --backup-recipient ~/$RECIPIENT_FILE (docs/operations/runbooks/host-setup.md), then rm ~/$RECIPIENT_FILE"
   log_info "     (it holds no key: the server seals every archive to it, and only the private key in $ERP_AZURE_KEYVAULT_OPS_NAME opens one)"
-  log_info "  3. on the server, compare its SHA-256 fingerprint with the one printed above: openssl x509 -in $SERVER_SECRETS_DIR/$RECIPIENT_FILE -noout -fingerprint -sha256"
+  log_info "  3. on the server, as the administrator, compare its SHA-256 fingerprint with the one printed above:"
+  log_info "     sudo openssl x509 -in $SERVER_SECRETS_DIR/$RECIPIENT_FILE -noout -fingerprint -sha256"
   log_info "  4. delete the local copy: rm $OUT_FILE"
 }
 
@@ -209,8 +211,11 @@ print_recipient_key_steps() {
   log_info "next steps:"
   log_info "  1. for a restore only, copy it to the server as the deploy account over SSH, for example:"
   log_info "     scp -i ~/.ssh/erp-ai-pro-deploy $OUT_FILE erp-ai-pro@<server>:~/$RECIPIENT_KEY_FILE"
-  log_info "  2. on the server, as erp-ai-pro: bash scripts/deploy/restore.sh (--latest | --name <archive>) --key ~/$RECIPIENT_KEY_FILE"
-  log_info "     (docs/operations/runbooks/restore.md), which shreds the key once it is done; never leave it on the server"
+  log_info "  2. on the server, as erp-ai-pro, list the archives, then check the one to restore, which changes nothing:"
+  log_info "     bash $SERVER_CHECKOUT/scripts/deploy/restore.sh --list"
+  log_info "     bash $SERVER_CHECKOUT/scripts/deploy/restore.sh --name <archive> --key ~/$RECIPIENT_KEY_FILE --dry-run"
+  log_info "     then stop the stack and restore that archive by its name (docs/operations/runbooks/restore.md), which shreds the key once it"
+  log_info "     is done; never leave it on the server"
   log_info "  3. delete the local copy: shred -u $OUT_FILE   (rm -P on macOS; on Windows delete it from a volume without shadow copies)"
 }
 

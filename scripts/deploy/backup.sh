@@ -30,7 +30,7 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/backup.sh"
 
 # The write-once period counts from each blob's creation on the service's clock, so a day's margin keeps this server's clock
 # from asking for a delete the policy still refuses.
-readonly PRUNE_AGE_SECONDS=$(( (BACKUP_RETENTION_DAYS + 1) * 86400 ))
+readonly PRUNE_AGE_SECONDS=$(( (BACKUP_IMMUTABILITY_DAYS + 1) * 86400 ))
 
 STEP='start'
 REPORTED=0
@@ -54,7 +54,9 @@ finish() {
 
 report_failure() {
   local outcome='nothing was uploaded and no archive was deleted'
-  if [[ -n "$UPLOADED" ]]; then
+  if [[ -n "$UPLOADED" ]] && (( DELETED > 0 )); then
+    outcome="$UPLOADED is in the container, and $DELETED older archive(s) were deleted before it stopped"
+  elif [[ -n "$UPLOADED" ]]; then
     outcome="$UPLOADED is in the container, and no older archive was deleted"
   fi
   log_error "the backup stopped at the step '$STEP': $outcome"
@@ -223,17 +225,18 @@ prune_archives() {
       others=$(( others + 1 ))
       continue
     fi
-    since="$(date -u -d "$created" +%s)" \
+    since="$(creation_epoch "$created")" \
       || fail "the archive $(printable "$name") reports the creation time '$(printable "$created")', which is not a time"
     if (( since >= cutoff )); then
       kept=$(( kept + 1 ))
       continue
     fi
     backup_blob delete --name "$name" --output none \
-      || fail "cannot delete $name, older than $BACKUP_RETENTION_DAYS days (see the Azure CLI's error above)"
+      || fail "cannot delete $name, older than $BACKUP_IMMUTABILITY_DAYS days (see the Azure CLI's error above)"
     DELETED=$(( DELETED + 1 ))
+    log_info "prune: deleted $name, created $(printable "$created")"
   done <<< "$listing"
-  log_info "prune: deleted $DELETED archive(s) older than $BACKUP_RETENTION_DAYS days, kept $kept, left $others other blob(s) alone"
+  log_info "prune: deleted $DELETED archive(s) older than $BACKUP_IMMUTABILITY_DAYS days, kept $kept, left $others other blob(s) alone"
 }
 
 main() {
@@ -261,7 +264,7 @@ main() {
   upload_archive
   check_upload
   prune_archives
-  printf "backed up the server's files to %s; %s archive(s) older than %s days deleted\n" "$UPLOADED" "$DELETED" "$BACKUP_RETENTION_DAYS"
+  printf "backed up the server's files to %s; %s archive(s) older than %s days deleted\n" "$UPLOADED" "$DELETED" "$BACKUP_IMMUTABILITY_DAYS"
 }
 
 main "$@"

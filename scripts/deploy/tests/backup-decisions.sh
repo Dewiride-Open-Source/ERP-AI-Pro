@@ -80,8 +80,12 @@ fail() {
 
 make_certificate() {
   local name="$1" bits="$2"
+  local -a serial=()
+  if [[ -n "${3:-}" ]]; then
+    serial=(-set_serial "$3")
+  fi
   MSYS2_ARG_CONV_EXCL='/CN=' openssl req -x509 -newkey "rsa:$bits" -noenc -days 3650 -subj "/CN=erp-backup-decisions-$name" \
-    -keyout "$KEYS/$name-key.pem" -out "$KEYS/$name.crt" 2> /dev/null || die "cannot make the throwaway certificate $name"
+    "${serial[@]}" -keyout "$KEYS/$name-key.pem" -out "$KEYS/$name.crt" 2> /dev/null || die "cannot make the throwaway certificate $name"
   cat -- "$KEYS/$name-key.pem" "$KEYS/$name.crt" > "$KEYS/$name-bundle.pem"
 }
 
@@ -107,7 +111,7 @@ prepare_work() {
     mkdir -p -- "$CHECKOUT/${file%/*}"
     cp -- "$REPO_ROOT/$file" "$CHECKOUT/$file"
   done
-  make_certificate recipient 4096
+  make_certificate recipient 4096 0x5D2B0D0B6C524A0F9E4B9A6A8D8B7B3C
   make_certificate other 2048
 }
 
@@ -153,6 +157,14 @@ blob() {
   printf '%s\n' "$created" > "$STATE/blobs-created/$CONTAINER/$name"
 }
 
+copy_archive() {
+  local name="$1" created="$2" folder
+  folder="$(dirname -- "$name")"
+  mkdir -p -- "$STATE/blobs/$CONTAINER/$folder" "$STATE/blobs-created/$CONTAINER/$folder"
+  cp -- "$STATE/blobs/$CONTAINER/$ARCHIVE" "$STATE/blobs/$CONTAINER/$name"
+  printf '%s\n' "$created" > "$STATE/blobs-created/$CONTAINER/$name"
+}
+
 new_world() {
   SCENARIO="$1"
   OUTPUT=''
@@ -180,6 +192,7 @@ run_script() {
   local script="$1"
   shift
   : > "$STATE/calls"
+  : > "$STATE/lock-states"
   STATUS=0
   OUTPUT="$(cd -- "$WORK" && env -u DRY_RUN -u RUNTIME_DIRECTORY PATH="$BIN:$PATH" ERP_DEPLOY_TEST_ROOT="$ROOT" TMPDIR="$WORK/tmp" \
     bash "$CHECKOUT/scripts/deploy/$script" "$@" 2>&1)" || STATUS=$?
@@ -187,6 +200,7 @@ run_script() {
 
 run_backup() {
   : > "$STATE/calls"
+  : > "$STATE/lock-states"
   STATUS=0
   OUTPUT="$(cd -- "$WORK" && env -u DRY_RUN PATH="$BIN:$PATH" ERP_DEPLOY_TEST_ROOT="$ROOT" TMPDIR="$WORK/tmp" RUNTIME_DIRECTORY="$RUNTIME" \
     bash "$CHECKOUT/scripts/deploy/backup.sh" "$@" 2>&1)" || STATUS=$?
@@ -327,10 +341,13 @@ expect_sealed_archive() {
 }
 
 scenario_backup() {
-  new_world "a backup reads, seals, uploads, checks and deletes only the archives past 90 days and a day, in that order"
+  local action
+  new_world "a backup reads and copies the files under the lock, then seals, uploads, checks and deletes only the archives the storage service created more than 90 days and a day ago, in that order"
+  blob 2026/07/20260701T120000Z.tar.p7m 2026-10-29T12:00:00+00:00
   blob 2026/07/20260731T115959Z.tar.p7m 2026-07-31T11:59:59+00:00
   blob 2026/07/20260731T120000Z.tar.p7m 2026-07-31T12:00:00+00:00
   blob 2026/08/20260801T120000Z.tar.p7m 2026-08-01T12:00:00+00:00
+  blob 2026/10/20261029T120000Z.tar.p7m 2026-07-22T12:00:00+00:00
   blob notes.txt 2026-01-01T00:00:00+00:00
   run_backup
   expect_status 0
@@ -338,19 +355,34 @@ scenario_backup() {
     "$(reader_call key-ring tar -cf - -C /volume .)" "$(reader_call proxy-data tar -cf - -C /volume .)" \
     "$(blob_call upload --name "$ARCHIVE" --file /backup/archive.tar.p7m --overwrite false --validate-content --no-progress --output none)" \
     "$(blob_call show --name "$ARCHIVE" "$PROPERTIES")" "$LISTING" \
-    "$(blob_call delete --name 2026/07/20260731T115959Z.tar.p7m --output none)"
+    "$(blob_call delete --name 2026/07/20260731T115959Z.tar.p7m --output none)" \
+    "$(blob_call delete --name 2026/10/20261029T120000Z.tar.p7m --output none)"
+  expect_no_call "delete --name 2026/07/20260701T120000Z.tar.p7m"
   expect_no_call "delete --name 2026/07/20260731T120000Z.tar.p7m"
   expect_no_call "delete --name notes.txt"
   expect_no_call "-writer "
   expect_no_call "-owner "
-  expect_blobs 2026/07/20260731T120000Z.tar.p7m 2026/08/20260801T120000Z.tar.p7m "$ARCHIVE" notes.txt
+  expect_blobs 2026/07/20260701T120000Z.tar.p7m 2026/07/20260731T120000Z.tar.p7m 2026/08/20260801T120000Z.tar.p7m "$ARCHIVE" notes.txt
+  grep -qxF 'held key-ring-reader tar -cf - -C /volume .' "$STATE/lock-states" || fail "the key ring was read without the lock"
+  grep -qxF 'held proxy-data-reader tar -cf - -C /volume .' "$STATE/lock-states" || fail "the proxy data was read without the lock"
+  if grep -q '^held azure-cli' "$STATE/lock-states"; then
+    fail "the lock was still held for a call of the Azure CLI: $(grep '^held azure-cli' "$STATE/lock-states")"
+  fi
+  for action in upload show list delete; do
+    grep -q "^free azure-cli storage blob $action " "$STATE/lock-states" || fail "no $action ran once the lock was free"
+  done
+  [[ "$OUTPUT" == *"release files: "*"unlock: the files are copied"*"manifest: "*"seal: "*"upload: "* ]] \
+    || fail "the lock is not let go between copying the files and sealing them"
   expect_output "volume $KEY_RING_VOLUME: 2 entries"
   expect_output "volume $PROXY_VOLUME: 6 entries"
   expect_output "unlock: the files are copied, so $ROOT$DEPLOY_HOME/deploy.lock is free again"
   expect_output "manifest: release 0.3.0, 2 data protection key(s)"
   expect_output "check: $CONTAINER/$ARCHIVE holds the"
-  expect_output "prune: deleted 1 archive(s) older than 90 days, kept 3, left 1 other blob(s) alone"
-  expect_output "backed up the server's files to $CONTAINER/$ARCHIVE; 1 archive(s) older than 90 days deleted"
+  expect_output "prune: deleted 2026/07/20260731T115959Z.tar.p7m, created 2026-07-31T11:59:59+00:00"
+  expect_output "prune: deleted 2026/10/20261029T120000Z.tar.p7m, created 2026-07-22T12:00:00+00:00"
+  expect_output "prune: deleted 2 archive(s) older than 90 days, kept 4, left 1 other blob(s) alone"
+  expect_output "backed up the server's files to $CONTAINER/$ARCHIVE; 2 archive(s) older than 90 days deleted"
+  expect_no_output "expires within 30 days"
   expect_sealed_archive
   expect_unchanged_files
   passed
@@ -425,15 +457,77 @@ scenario_existing_blob() {
 }
 
 scenario_check_mismatch() {
-  new_world "an archive that reads back otherwise stops the backup before anything is deleted"
+  new_world "an archive that reads back with another MD5, or with another length, stops the backup before anything is deleted"
   blob 2026/07/20260701T120000Z.tar.p7m 2026-07-01T12:00:00+00:00
-  state az/show "$(printf '12\tc3RhbmQtaW4=')"
+  state az/show-md5 'AAAAAAAAAAAAAAAAAAAAAA=='
   run_backup
   expect_status 1
-  expect_output "$CONTAINER/$ARCHIVE reads back as 12 bytes with the MD5 c3RhbmQtaW4="
+  expect_output "with the MD5 AAAAAAAAAAAAAAAAAAAAAA==, not the"
   expect_output "the backup stopped at the step 'check': $CONTAINER/$ARCHIVE is in the container, and no older archive was deleted"
   expect_no_call "storage blob delete"
   expect_blobs 2026/07/20260701T120000Z.tar.p7m "$ARCHIVE"
+  rm -f -- "$STATE/az/show-md5" "$STATE/blobs/$CONTAINER/$ARCHIVE" "$STATE/blobs-created/$CONTAINER/$ARCHIVE"
+  state az/show-length 12
+  run_backup
+  expect_status 1
+  expect_output "$CONTAINER/$ARCHIVE reads back as 12 bytes"
+  expect_output "the backup stopped at the step 'check'"
+  expect_no_call "storage blob delete"
+  expect_blobs 2026/07/20260701T120000Z.tar.p7m "$ARCHIVE"
+  passed
+}
+
+scenario_prune_listing_fails() {
+  new_world "a listing that fails stops the backup at the step 'prune', its archive uploaded and nothing deleted"
+  blob 2026/07/20260701T120000Z.tar.p7m 2026-07-01T12:00:00+00:00
+  state az/list-exit 1
+  run_backup
+  expect_status 1
+  expect_output "cannot list the archives of $CONTAINER"
+  expect_output "the backup stopped at the step 'prune': $CONTAINER/$ARCHIVE is in the container, and no older archive was deleted"
+  expect_no_call "storage blob delete"
+  expect_blobs 2026/07/20260701T120000Z.tar.p7m "$ARCHIVE"
+  passed
+}
+
+scenario_prune_delete_refused() {
+  new_world "a delete refused after another one stops the backup, which names the archive it deleted and counts it"
+  blob 2026/07/20260720T120000Z.tar.p7m 2026-07-20T12:00:00+00:00
+  blob 2026/07/20260721T120000Z.tar.p7m 2026-07-21T12:00:00+00:00
+  state az/delete-refuses 2026/07/20260721T120000Z.tar.p7m
+  run_backup
+  expect_status 1
+  expect_output "prune: deleted 2026/07/20260720T120000Z.tar.p7m, created 2026-07-20T12:00:00+00:00"
+  expect_output "cannot delete 2026/07/20260721T120000Z.tar.p7m, older than 90 days"
+  expect_output "the backup stopped at the step 'prune': $CONTAINER/$ARCHIVE is in the container, and 1 older archive(s) were deleted before it stopped"
+  expect_blobs 2026/07/20260721T120000Z.tar.p7m "$ARCHIVE"
+  passed
+}
+
+scenario_prune_creation_unreadable() {
+  local created
+  for created in '' not-a-time; do
+    new_world "an archive whose creation time is '$created' stops the backup at the step 'prune' rather than being kept"
+    blob 2026/07/20260701T120000Z.tar.p7m "$created"
+    run_backup
+    expect_status 1
+    expect_output "the archive 2026/07/20260701T120000Z.tar.p7m reports the creation time '$created', which is not a time"
+    expect_output "the backup stopped at the step 'prune': $CONTAINER/$ARCHIVE is in the container, and no older archive was deleted"
+    expect_blobs 2026/07/20260701T120000Z.tar.p7m "$ARCHIVE"
+  done
+  passed
+}
+
+scenario_expiring_recipient() {
+  new_world "a recipient certificate within 30 days of its end warns, and the backup still seals to it and uploads"
+  MSYS2_ARG_CONV_EXCL='/CN=' openssl req -x509 -new -key "$KEYS/recipient-key.pem" -days 1 -subj '/CN=erp-backup-decisions-expiring' \
+    -out "$COMPOSE_FOLDER/secrets/erp-backup-recipient.crt" 2> /dev/null || fail "cannot make the expiring certificate"
+  run_backup
+  expect_status 0
+  expect_output "expires within 30 days or has expired"
+  expect_output "backed up the server's files to $CONTAINER/$ARCHIVE"
+  open_archive "$STATE/blobs/$CONTAINER/$ARCHIVE" "$WORK/opened"
+  rm -rf -- "$WORK/opened" "$WORK/opened.tar"
   passed
 }
 

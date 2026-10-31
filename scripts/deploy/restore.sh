@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-USAGE='Usage: bash scripts/deploy/restore.sh (--latest | --name <archive>) --key <file> [--replace] [--dry-run]
+USAGE='Usage: bash scripts/deploy/restore.sh (--latest | --name <archive> | --created-before <time>) --key <file> [--replace] [--dry-run]
+       bash scripts/deploy/restore.sh --list
 
 Restores an archive that backup.sh made into this server: the volumes erp-ai-pro-data-protection-keys and
 erp-ai-pro-proxy-data, infra/compose/.env, and .env.previous as the archive holds it. It runs as the deploy account erp-ai-pro
@@ -14,25 +15,35 @@ key of the certificate it was sealed to, which the operator exports for the rest
 before it changes anything. Then it gives each volume'"'"'s top folder the owner and mode its image gives it (1654:1654 for
 the key ring, 10001:10001 for the proxy data, both 0700), fills the volume as that owner, and writes .env and .env.previous
 (0600) as the archive holds them. The key never stays: a restore shreds the key file once it is done, and a dry run or a
-failure says to. Runbook: docs/operations/runbooks/restore.md
+failure says to. An archive whose manifest names no release, no key and no proxy root, the backup of a server whose
+volumes were still empty, is refused before anything changes. Runbook: docs/operations/runbooks/restore.md
 
 Options:
-  --latest           Restore the newest archive of the backup container.
-  --name <archive>   Restore this archive, such as 2026/10/20261030T203000Z.tar.p7m.
-  --key <file>       The exported private key with its certificate (PEM), on this server.
-  --replace          Replace the files of volumes that hold some; without it only empty volumes are filled.
-  --dry-run          Download, open and check the archive and list what a restore would change, changing nothing; it may
-                     run while the stack runs.
-  --help             Show this help.'
+  --list                      List every archive of the backup container with the time the storage service created it,
+                              newest first, marking a name whose time lies more than an hour from its creation; it needs
+                              no key, changes nothing and may run while the stack runs.
+  --latest                    Restore the archive the storage service created last.
+  --name <archive>            Restore this archive, such as 2026/10/20261030T203000Z.tar.p7m.
+  --created-before <time>     Restore the newest archive the storage service created before this UTC time, such as
+                              2026-10-30T00:00:00Z: after a suspected compromise, a time before it began.
+  --key <file>                The exported private key with its certificate (PEM), on this server.
+  --replace                   Replace the files of volumes that hold some; without it only empty volumes are filled.
+  --dry-run                   Download, open and check the archive and list what a restore would change, changing
+                              nothing; it may run while the stack runs.
+  --help                      Show this help.'
 
 # shellcheck source=lib/backup.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/backup.sh"
 
 readonly ARCHIVE_TIME_TOLERANCE_SECONDS=3600
+readonly UTC_TIME_PATTERN='^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z$'
 
+LIST=0
 LATEST=0
 REPLACE=0
 WANTED=''
+CREATED_BEFORE=''
+BEFORE_EPOCH=0
 KEY_FILE=''
 KEY_CHECKED=0
 KEY_SHREDDED=0
@@ -70,18 +81,21 @@ set_restore_option() {
   case "$1" in
     --key) KEY_FILE="$2" ;;
     --name) WANTED="$2" ;;
+    --created-before) CREATED_BEFORE="$2" ;;
   esac
 }
 
 parse_restore_args() {
   local -a rest=()
+  local choices=0
   while (( $# > 0 )); do
     case "$1" in
-      --key | --name)
+      --key | --name | --created-before)
         set_restore_option "$1" "${2:-}"
         shift
         ;;
-      --key=* | --name=*) set_restore_option "${1%%=*}" "${1#*=}" ;;
+      --key=* | --name=* | --created-before=*) set_restore_option "${1%%=*}" "${1#*=}" ;;
+      --list) LIST=1 ;;
       --latest) LATEST=1 ;;
       --replace) REPLACE=1 ;;
       *) rest+=("$1") ;;
@@ -90,14 +104,32 @@ parse_restore_args() {
   done
   parse_args "${rest[@]}"
   (( ${#ARGS[@]} == 0 )) || die "unexpected argument '$(printable "${ARGS[0]}")' (see --help)"
-  if (( LATEST )) && [[ -n "$WANTED" ]]; then
-    die "choose one archive: --latest or --name <archive>, not both"
+  if (( LIST )); then
+    if (( LATEST || REPLACE || DRY_RUN )) || [[ -n "$WANTED$CREATED_BEFORE$KEY_FILE" ]]; then
+      die "--list takes no other option: it lists the archives and changes nothing (see --help)"
+    fi
+    return 0
   fi
-  if (( ! LATEST )) && [[ -z "$WANTED" ]]; then
-    die "choose the archive to restore: --latest or --name <archive> (see --help)"
+  choices="$LATEST"
+  if [[ -n "$WANTED" ]]; then
+    choices=$(( choices + 1 ))
+  fi
+  if [[ -n "$CREATED_BEFORE" ]]; then
+    choices=$(( choices + 1 ))
+  fi
+  if (( choices > 1 )); then
+    die "choose one archive: --latest, --name <archive> or --created-before <time>, not two"
+  fi
+  if (( choices == 0 )); then
+    die "choose the archive to restore: --latest, --name <archive> or --created-before <time> (see --help)"
   fi
   if [[ -n "$WANTED" && ! "$WANTED" =~ $BACKUP_ARCHIVE_PATTERN ]]; then
     die "--name: '$(printable "$WANTED")' is not the name of an archive, such as 2026/10/20261030T203000Z.tar.p7m"
+  fi
+  if [[ -n "$CREATED_BEFORE" ]]; then
+    if [[ ! "$CREATED_BEFORE" =~ $UTC_TIME_PATTERN ]] || ! BEFORE_EPOCH="$(creation_epoch "$CREATED_BEFORE")"; then
+      die "--created-before: '$(printable "$CREATED_BEFORE")' is not a UTC time such as 2026-10-30T00:00:00Z"
+    fi
   fi
   [[ -n "$KEY_FILE" ]] || die "--key <file> is required: the private key that opens the archive (see --help)"
 }
@@ -124,10 +156,54 @@ running_stack() {
   STACK_RUNNING="${services[*]}"
 }
 
-choose_archive() {
-  local listing name created since newest=-1 chosen='' stamp named
-  listing="$(backup_blob list --num-results '*' --query '[].[name, properties.creationTime]' --output tsv)" \
+archive_listing() {
+  backup_blob list --num-results '*' --query '[].[name, properties.creationTime]' --output tsv \
     || die "cannot list the archives of $BACKUP_CONTAINER_NAME (see the Azure CLI's error above); nothing was changed"
+}
+
+archive_creation() {
+  local name="$1" created="$2" since
+  if ! since="$(creation_epoch "$created")"; then
+    die "the archive $(printable "$name") reports the creation time '$(printable "$created")', which is not a time; nothing was changed"
+  fi
+  printf '%s' "$since"
+}
+
+name_disagrees() {
+  local named
+  named="$(named_epoch "$1")" || return 0
+  (( named - $2 > ARCHIVE_TIME_TOLERANCE_SECONDS || $2 - named > ARCHIVE_TIME_TOLERANCE_SECONDS ))
+}
+
+list_archives() {
+  local listing name created since mark others=0
+  local -a rows=()
+  listing="$(archive_listing)"
+  while IFS=$'\t' read -r name created; do
+    created="${created%$'\r'}"
+    if [[ -z "$name" ]]; then
+      continue
+    fi
+    if [[ ! "$name" =~ $BACKUP_ARCHIVE_PATTERN ]]; then
+      others=$(( others + 1 ))
+      continue
+    fi
+    since="$(archive_creation "$name" "$created")"
+    mark=''
+    if name_disagrees "$name" "$since"; then
+      mark='   its name gives another time than its creation'
+    fi
+    rows+=("$since"$'\t'"$name   created $(printable "$created")$mark")
+  done <<< "$listing"
+  if (( ${#rows[@]} > 0 )); then
+    printf '%s\n' "${rows[@]}" | sort -t $'\t' -k1,1nr | cut -f2-
+  fi
+  printf '%s archive(s) in %s, the newest creation first; %s other blob(s) left out\n' "${#rows[@]}" "$BACKUP_CONTAINER_NAME" "$others"
+}
+
+choose_archive() {
+  local listing name created since newest=-1 chosen=''
+  listing="$(archive_listing)"
   # Whoever holds the backup principal's certificate chooses an archive's name, so the newest archive is the one the storage
   # service created last, and a name whose time lies far from that creation is reported.
   while IFS=$'\t' read -r name created; do
@@ -135,8 +211,9 @@ choose_archive() {
     if [[ ! "$name" =~ $BACKUP_ARCHIVE_PATTERN ]] || [[ -n "$WANTED" && "$name" != "$WANTED" ]]; then
       continue
     fi
-    if [[ -z "$created" ]] || ! since="$(date -u -d "$created" +%s)"; then
-      die "the archive $(printable "$name") reports the creation time '$(printable "$created")', which is not a time; nothing was changed"
+    since="$(archive_creation "$name" "$created")"
+    if [[ -n "$CREATED_BEFORE" ]] && (( since >= BEFORE_EPOCH )); then
+      continue
     fi
     if (( since > newest )); then
       ARCHIVE_NAME="$name"
@@ -147,12 +224,12 @@ choose_archive() {
   if [[ -z "$ARCHIVE_NAME" && -n "$WANTED" ]]; then
     die "$BACKUP_CONTAINER_NAME holds no archive $WANTED; nothing was changed"
   fi
+  if [[ -z "$ARCHIVE_NAME" && -n "$CREATED_BEFORE" ]]; then
+    die "$BACKUP_CONTAINER_NAME holds no archive created before $CREATED_BEFORE; nothing was changed"
+  fi
   [[ -n "$ARCHIVE_NAME" ]] || die "$BACKUP_CONTAINER_NAME holds no archive yet; nothing was changed"
   log_info "the archive $ARCHIVE_NAME of $BACKUP_CONTAINER_NAME, created by the storage service at $(printable "$chosen")"
-  stamp="${ARCHIVE_NAME##*/}"
-  named="$(date -u -d "${stamp:0:4}-${stamp:4:2}-${stamp:6:2}T${stamp:9:2}:${stamp:11:2}:${stamp:13:2}Z" +%s)" \
-    || die "the name $ARCHIVE_NAME holds no time; nothing was changed"
-  if (( named - newest > ARCHIVE_TIME_TOLERANCE_SECONDS || newest - named > ARCHIVE_TIME_TOLERANCE_SECONDS )); then
+  if name_disagrees "$ARCHIVE_NAME" "$newest"; then
     log_warn "the name of $ARCHIVE_NAME gives another time than its creation, more than an hour apart: backup.sh names an archive in the minute it uploads it, so make sure this one is a backup of this server's before it is restored (docs/operations/runbooks/restore.md)"
   fi
 }
@@ -171,11 +248,28 @@ download_archive() {
 }
 
 key_mismatch_hint() {
-  local sealed="$1" recipients key_serial
-  recipients="$(openssl cms -cmsout -print -inform DER -in "$sealed" 2> /dev/null | sed -n 's/^[[:space:]]*serialNumber: 0x0*//p' | paste -sd ' ' -)"
-  key_serial="$(openssl x509 -in "$KEY_FILE" -noout -serial 2> /dev/null | sed -n 's/^serial=0*//p')"
+  local sealed="$1" parsed='' line depth inside=0 serial key_serial=''
+  local -a recipients=()
+  parsed="$(openssl asn1parse -inform DER -in "$sealed" 2> /dev/null)" || parsed=''
+  # Inside the recipientInfos SET (depth 3), each IssuerAndSerialNumber's serial is the INTEGER at depth 6. asn1parse prints
+  # every INTEGER in hexadecimal, where cms -print shows one below 128 bits in decimal.
+  while IFS= read -r line; do
+    [[ "$line" =~ :d=([0-9]+) ]] || continue
+    depth="${BASH_REMATCH[1]}"
+    if (( depth == 3 )); then
+      inside=0
+      if [[ "$line" == *'cons: SET'* ]]; then
+        inside=1
+      fi
+    elif (( inside && depth == 6 )) && [[ "$line" == *'prim: INTEGER'* ]]; then
+      serial="${line##*:}"
+      serial="${serial#"${serial%%[!0]*}"}"
+      recipients+=("${serial:-0}")
+    fi
+  done <<< "$parsed"
+  key_serial="$(openssl x509 -in "$KEY_FILE" -noout -serial 2> /dev/null | sed -n 's/^serial=0*//p')" || key_serial=''
   printf 'the archive is sealed to the certificate with the serial number %s, and the key file holds %s; export the version with that serial number (export-client-certificate.sh backup-recipient-key --version <version>)' \
-    "$(printable "${recipients:-unreadable}")" "$(printable "${key_serial:-no certificate}")"
+    "$(printable "${recipients[*]:-unreadable}")" "$(printable "${key_serial:-no certificate}")"
 }
 
 open_archive() {
@@ -244,6 +338,12 @@ check_manifest() {
     fi
   done
   log_info "every file matches the manifest of $MANIFEST_CREATED from ${MANIFEST_HOST:-an unnamed host}: release ${MANIFEST_RELEASE%% *} (before it ${MANIFEST_PREVIOUS%% *}), $MANIFEST_KEYS data protection key(s), proxy root SHA-256 fingerprint ${MANIFEST_ROOT:-none}"
+}
+
+refuse_empty_archive() {
+  if [[ "${MANIFEST_RELEASE%% *}" == none && "${MANIFEST_ROOT:-none}" == none ]] && (( MANIFEST_KEYS == 0 )); then
+    die "$ARCHIVE_NAME names no release, no data protection key and no proxy root: it is the backup of a server whose volumes were still empty, made $MANIFEST_CREATED on ${MANIFEST_HOST:-an unnamed host}, which restores nothing; choose an archive made before (--list, then --name or --created-before); nothing was changed"
+  fi
 }
 
 read_volumes() {
@@ -329,9 +429,16 @@ shred_key() {
 
 main() {
   parse_restore_args "$@"
-  require_command docker flock openssl tar sha256sum base64 date mktemp shred paste
+  require_command docker flock openssl tar sha256sum base64 date mktemp shred sort cut
   require_release_host
   umask 077
+  if (( LIST )); then
+    read_backup_settings "$ENV_FILE" || die "nothing was listed"
+    require_backup_client_certificate || die "nothing was listed"
+    backup_compose pull --policy missing < /dev/null || die "cannot pull the images of $BACKUP_COMPOSE_FILE"
+    list_archives
+    exit 0
+  fi
   trap finish EXIT
   trap 'exit 129' HUP
   trap 'exit 130' INT
@@ -353,6 +460,7 @@ main() {
   download_archive
   open_archive
   check_manifest
+  refuse_empty_archive
   read_volumes
 
   local holding release_files='.env'
@@ -381,7 +489,7 @@ main() {
   done
   restore_release_files
   shred_key
-  printf 'restored %s (made %s): the key ring and the proxy data (root SHA-256 fingerprint %s) and .env, which names the release %s; start the stack once the checkout is at that release (docs/operations/runbooks/restore.md)\n' \
+  printf 'restored %s (made %s): the key ring and the proxy data (root SHA-256 fingerprint %s) and .env, which names the release %s; start the stack when the checkout is at that release, otherwise deploy the release that ran last (docs/operations/runbooks/restore.md)\n' \
     "$ARCHIVE_NAME" "$MANIFEST_CREATED" "${MANIFEST_ROOT:-none}" "${MANIFEST_RELEASE%% *}"
 }
 
