@@ -41,9 +41,16 @@ The steps that put the ERP into use on the production server for the first time,
 10. **Sign-in through the proxy** (the owner, with their own account, owner decision of 2026-10-19): open `https://<address>` in a private window on a device that trusts the root, sign in, see the start page, open a page, sign out. The browser shows no certificate warning, and the sign-out asks no account question.
 11. **Single sign-out**: signed in to the ERP, sign out of Outlook on the web in the same browser; the ERP's next request in that browser goes to the sign-in page, while a session on another device stays signed in (ADR-0036).
 12. **Attachments from the server**: upload a file on the attachments page, download it and delete it; the API's readiness, read through the proxy container, answers `Healthy` (`docker compose -f compose.yaml -f compose.production.yaml exec -T proxy wget -qO- -T 5 http://api:8080/healthz/ready`, as `deploy.sh` reads it).
-13. **The first backup**: `sudo systemctl start erp-ai-pro-backup.service` returns, `journalctl -u erp-ai-pro-backup.service --since today` shows every step and ends with `backed up the server's files to host-backups/…`.
-14. **The first restore rehearsal**, with its measured times in the record of the [restore runbook](restore.md), section "The rehearsal".
-15. **Lock the write-once policy** of `host-backups` once the rehearsal succeeded ([Azure bootstrap](../azure-bootstrap.md), section 5f); `bash scripts/azure/verify.sh` then reports it locked.
+13. **The production smoke** (operator's computer, which trusts the root as step 9 says, with the frontend installed and Playwright's browsers too, `pnpm e2e:install` in `frontend`): from `frontend/e2e`, naming the root's file of step 9,
+
+    ```bash
+    E2E_PRODUCTION_URL=https://<address> NODE_EXTRA_CA_CERTS=<path to erp-proxy-root.crt> pnpm exec playwright test --project=production
+    ```
+
+    passes its five tests: the sign-in page with no certificate warning, the web app's and the API's headers without the proxy's own, the API's refusal of a visitor, a Microsoft sign-in start that comes back to the address, and the redirect from HTTP. The browser trusts the root through the computer's store, while the runner's own requests go through Node, which trusts only its own list and the file `NODE_EXTRA_CA_CERTS` names: without it they fail with `unable to get local issuer certificate`.
+14. **The first backup**: `sudo systemctl start erp-ai-pro-backup.service` returns, `journalctl -u erp-ai-pro-backup.service --since today` shows every step and ends with `backed up the server's files to host-backups/…`.
+15. **The first restore rehearsal**, with its measured times in the record of the [restore runbook](restore.md), section "The rehearsal".
+16. **Lock the write-once policy** of `host-backups` once the rehearsal succeeded ([Azure bootstrap](../azure-bootstrap.md), section 5f); `bash scripts/azure/verify.sh` then reports it locked.
 
 ## Standing conditions
 
@@ -54,4 +61,4 @@ The steps that put the ERP into use on the production server for the first time,
 
 | Date | Release | Operator | Steps done | Issues and follow-ups |
 |---|---|---|---|---|
-| 2026-10-31 | v0.1.0 | The owner, with Claude | 1 to 10 and 12, without the backup's parts of 4 to 6, which v0.1.0 does not carry. The owner signed in on a Mac through the proxy, opened People and Attachments, uploaded, downloaded and deleted a file, and signed out. | The proxy's root was trusted on the Mac in the login keychain with **Always Trust**. Double-clicking the file adds it untrusted. Windows' `curl` (Schannel) also needs `--ssl-no-revoke`, because the proxy's authority publishes no revocation data. Steps 11 and 13 to 15 follow with the release that carries the backups, after the bootstrap runs again from it with `--backup-recipient`. |
+| 2026-10-31 | v0.1.0 | The owner, with Claude | 1 to 10 and 12, without the backup's parts of 4 to 6, which v0.1.0 does not carry. The owner signed in on a Mac through the proxy, opened People and Attachments, uploaded, downloaded and deleted a file, and signed out. On the server a request to the api naming another host answered 400 `request.host-not-allowed`, and one naming `api` 401 `request.unauthenticated`. Of step 13, the three tests that send requests passed from the operator's computer, a Windows computer whose store did not trust the root yet. | The proxy's root was trusted on the Mac in the login keychain with **Always Trust**. Double-clicking the file adds it untrusted. Windows' `curl` (Schannel) also needs `--ssl-no-revoke`, because the proxy's authority publishes no revocation data. Step 11 follows at the owner's next sign-out of Outlook on the web in a signed-in browser, the two browser tests of step 13 once the operator's computer trusts the root, and steps 14 to 16 with the release that carries the backups, after the bootstrap runs again from it with `--backup-recipient`. |
