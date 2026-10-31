@@ -21,6 +21,11 @@ resource server 'Microsoft.Sql/servers@2025-01-01' = {
   name: serverName
   location: location
   tags: tags
+  // The identity the server's auditing writes with: the logs storage account takes no key, and
+  // Azure SQL reaches an account behind a firewall only with its managed identity.
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     administrators: {
       administratorType: 'ActiveDirectory'
@@ -96,3 +101,4 @@ resource serverLock 'Microsoft.Authorization/locks@2020-05-01' = {
 output fullyQualifiedDomainName string = server.properties.fullyQualifiedDomainName
 output serverId string = server.id
 output databaseId string = server::database.id
+output principalId string = server.identity.principalId

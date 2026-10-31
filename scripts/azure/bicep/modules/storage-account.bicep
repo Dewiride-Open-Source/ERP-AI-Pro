@@ -1,4 +1,4 @@
-import { RoleAssignment } from './types.bicep'
+import { StorageContainer, recordsDiagnosticSettingName } from './types.bicep'
 
 @minLength(3)
 @maxLength(24)
@@ -11,25 +11,17 @@ param sku string
 
 param tags object
 
-@minLength(3)
-@maxLength(63)
-param containerName string
+param containers StorageContainer[]
 
 @minValue(7)
 @maxValue(365)
 param deleteRetentionDays int
 
-param roleAssignments RoleAssignment[]
-
 param restrictToAllowedAddresses bool = false
 
 param allowedAddresses string[] = []
 
-@minValue(0)
-@maxValue(146000)
-param immutabilityPeriodDays int = 0
-
-param immutabilityPolicyLocked bool = false
+param recordsStorageAccountId string
 
 var allowedAddressRules = [
   for address in allowedAddresses: {
@@ -37,6 +29,13 @@ var allowedAddressRules = [
     action: 'Allow'
   }
 ]
+
+var containerAssignments = flatten(map(range(0, length(containers)), index => map(containers[index].roleAssignments, assignment => {
+  containerIndex: index
+  principalId: assignment.principalId
+  principalType: assignment.principalType
+  roleDefinitionId: assignment.roleDefinitionId
+})))
 
 resource account 'Microsoft.Storage/storageAccounts@2026-04-01' = {
   name: name
@@ -92,24 +91,30 @@ resource account 'Microsoft.Storage/storageAccounts@2026-04-01' = {
         enabled: false
       }
     }
-
-    resource container 'containers' = {
-      name: containerName
-      properties: {
-        publicAccess: 'None'
-      }
-
-      resource immutabilityPolicy 'immutabilityPolicies' = if (immutabilityPeriodDays > 0 && !immutabilityPolicyLocked) {
-        name: 'default'
-        properties: {
-          immutabilityPeriodSinceCreationInDays: immutabilityPeriodDays
-          allowProtectedAppendWrites: false
-          allowProtectedAppendWritesAll: false
-        }
-      }
-    }
   }
 }
+
+resource blobContainers 'Microsoft.Storage/storageAccounts/blobServices/containers@2026-04-01' = [
+  for container in containers: {
+    parent: account::blobService
+    name: container.name
+    properties: {
+      publicAccess: 'None'
+    }
+  }
+]
+
+resource immutabilityPolicies 'Microsoft.Storage/storageAccounts/blobServices/containers/immutabilityPolicies@2026-04-01' = [
+  for (container, index) in containers: if (container.immutabilityPeriodDays > 0 && !container.immutabilityPolicyLocked) {
+    parent: blobContainers[index]
+    name: 'default'
+    properties: {
+      immutabilityPeriodSinceCreationInDays: container.immutabilityPeriodDays
+      allowProtectedAppendWrites: false
+      allowProtectedAppendWritesAll: false
+    }
+  }
+]
 
 resource accountLock 'Microsoft.Authorization/locks@2020-05-01' = {
   name: 'do-not-delete'
@@ -121,9 +126,9 @@ resource accountLock 'Microsoft.Authorization/locks@2020-05-01' = {
 }
 
 resource containerRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-01' = [
-  for assignment in roleAssignments: {
-    name: guid(account::blobService::container.id, assignment.principalId, assignment.roleDefinitionId)
-    scope: account::blobService::container
+  for assignment in containerAssignments: {
+    name: guid(blobContainers[assignment.containerIndex].id, assignment.principalId, assignment.roleDefinitionId)
+    scope: blobContainers[assignment.containerIndex]
     properties: {
       principalId: assignment.principalId
       principalType: assignment.principalType
@@ -135,6 +140,29 @@ resource containerRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-
   }
 ]
 
+#disable-next-line use-recent-api-versions // the newest version; 2016-09-01, the one stable version the rule accepts, allows a single setting, named service
+resource blobServiceRecords 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: recordsDiagnosticSettingName
+  scope: account::blobService
+  properties: {
+    storageAccountId: recordsStorageAccountId
+    logs: [
+      {
+        category: 'StorageRead'
+        enabled: true
+      }
+      {
+        category: 'StorageWrite'
+        enabled: true
+      }
+      {
+        category: 'StorageDelete'
+        enabled: true
+      }
+    ]
+  }
+}
+
 output blobEndpoint string = account.properties.primaryEndpoints.blob
 output id string = account.id
-output containerId string = account::blobService::container.id
+output containerIds object = toObject(containers, container => container.name, container => resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', name, 'default', container.name))

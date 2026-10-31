@@ -2,19 +2,22 @@
 
 USAGE='Usage: bash scripts/azure/home-address.sh [--address <IPv4>] [--dry-run] [--params <file>]
 
-Points the three rules that admit the home'"'"'s public IPv4 address at it: the
+Points the four rules that admit the home'"'"'s public IPv4 address at it: the
 firewall rule home of the production SQL server and the one IP rule of each of
-the production storage account and the backup storage account. Without
---address it takes the address Azure sees this computer connect from, so run it
-only from a computer on the home network, without a VPN: the server at home
-reaches all three only through that address. Fails, before it changes anything,
-while the server holds another firewall rule or either storage account admits
-more than one address (another rule, an approved private endpoint, a network
-security perimeter). Safe to run repeatedly; it moves each rule and never adds
-a second one.
+the production storage account, the backup storage account and the logs storage
+account. Without --address it takes the address Azure sees this computer
+connect from, so run it only from a computer on the home network, without a
+VPN: the server at home reaches the database and the first two accounts only
+through that address, and the operator reads the logs account through it. Fails,
+before it changes anything, while the server holds another firewall rule or any
+of the storage accounts admits more than one address (another rule, an approved
+private endpoint, a network security perimeter) or lets Azure services past its
+rules other than as the template does (the logs account alone lets trusted
+Microsoft services deliver its records). Safe to run repeatedly; it moves each
+rule and never adds a second one.
 
 Options:
-  --address <IPv4>  Point the three rules at this public IPv4 address instead.
+  --address <IPv4>  Point the four rules at this public IPv4 address instead.
   --dry-run         Print every change that would be made; change nothing.
   --params <file>   Parameter file (default: scripts/azure/params.env).
   --help            Show this help.'
@@ -97,14 +100,15 @@ main() {
   log_step "Rules besides the home's address"
   sql_server_exists || die "the server $ERP_AZURE_SQL_SERVER_NAME does not exist; run: bash scripts/azure/provision.sh"
   local account_name
-  for account_name in "$ERP_AZURE_STORAGE_PROD_NAME" "$ERP_AZURE_STORAGE_BACKUP_NAME"; do
+  local -a account_names=("$ERP_AZURE_STORAGE_PROD_NAME" "$ERP_AZURE_STORAGE_BACKUP_NAME" "$ERP_AZURE_STORAGE_LOGS_NAME")
+  for account_name in "${account_names[@]}"; do
     storage_account_exists "$account_name" || die "the storage account $account_name does not exist; run: bash scripts/azure/provision.sh"
   done
   check_firewall_rules
-  for account_name in "$ERP_AZURE_STORAGE_PROD_NAME" "$ERP_AZURE_STORAGE_BACKUP_NAME"; do
+  for account_name in "${account_names[@]}"; do
     check_storage_network_rules "$account_name"
   done
-  log_info "none on $ERP_AZURE_SQL_SERVER_NAME, $ERP_AZURE_STORAGE_PROD_NAME or $ERP_AZURE_STORAGE_BACKUP_NAME"
+  log_info "none on $ERP_AZURE_SQL_SERVER_NAME, $ERP_AZURE_STORAGE_PROD_NAME, $ERP_AZURE_STORAGE_BACKUP_NAME or $ERP_AZURE_STORAGE_LOGS_NAME"
 
   local address="$ADDRESS"
   if [[ -z "$address" ]]; then
@@ -112,7 +116,7 @@ main() {
   fi
   is_public_ipv4 "$address" || die "'$address' is not a public IPv4 address; Azure sees the home only by its public address"
   ensure_firewall_rule "$address"
-  for account_name in "$ERP_AZURE_STORAGE_PROD_NAME" "$ERP_AZURE_STORAGE_BACKUP_NAME"; do
+  for account_name in "${account_names[@]}"; do
     ensure_storage_home_address "$account_name" "$address"
   done
 
