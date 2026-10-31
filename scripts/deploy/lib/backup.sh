@@ -23,7 +23,7 @@ readonly BACKUP_MANIFEST_FORMAT='ERP-AI-Pro server backup 1'
 readonly BACKUP_ENV_PART='.env'
 readonly BACKUP_PREVIOUS_ENV_PART='.env.previous'
 readonly BACKUP_ARCHIVE_PATTERN='^[0-9]{4}/(0[1-9]|1[0-2])/[0-9]{8}T[0-9]{6}Z\.tar\.p7m$'
-readonly BACKUP_RETENTION_DAYS=90
+readonly BACKUP_IMMUTABILITY_DAYS=90
 readonly BACKUP_MINIMUM_KEY_BITS=4096
 readonly BACKUP_CERTIFICATE_WARNING_SECONDS=2592000
 readonly BACKUP_UPLOAD_PATH='/backup/archive.tar.p7m'
@@ -200,6 +200,16 @@ utc_time() {
 
 archive_name_of() {
   printf '%s.tar.p7m' "$(utc_time "$1" '%Y/%m/%Y%m%dT%H%M%SZ')"
+}
+
+creation_epoch() {
+  [[ -n "$1" ]] || return 1
+  date -u -d "$1" +%s 2> /dev/null
+}
+
+named_epoch() {
+  local stamp="${1##*/}"
+  date -u -d "${stamp:0:4}-${stamp:4:2}-${stamp:6:2}T${stamp:9:2}:${stamp:11:2}:${stamp:13:2}Z" +%s 2> /dev/null
 }
 
 tar_members() {

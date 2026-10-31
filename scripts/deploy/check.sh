@@ -35,6 +35,7 @@ readonly BACKUP_COMPOSE="infra/compose/$BACKUP_COMPOSE_FILE"
 readonly MICROSOFT_IMAGE_LINE='^    image: mcr\.microsoft\.com/[a-z0-9./-]+:[A-Za-z0-9._-]+@sha256:[0-9a-f]{64}$'
 SHELL_SCRIPT_COUNT=0
 declare -A SERVICE_BLOCKS=()
+declare -A VOLUME_KEYS=()
 
 check_shell_scripts() {
   log_step "bash -n"
@@ -178,11 +179,39 @@ service_has() {
   grep -qxF -- "$2" <<< "${SERVICE_BLOCKS[$1]}"
 }
 
+read_volume_keys() {
+  local file="$1" line key='' in_volumes=0 entry='^  ([a-z][a-z0-9-]*):$' named='^    name: (.+)$'
+  VOLUME_KEYS=()
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ ^[^[:space:]] ]]; then
+      in_volumes=0
+      key=''
+      if [[ "$line" == 'volumes:' ]]; then
+        in_volumes=1
+      fi
+      continue
+    fi
+    if (( ! in_volumes )); then
+      continue
+    fi
+    if [[ "$line" =~ $entry ]]; then
+      key="${BASH_REMATCH[1]}"
+    elif [[ -n "$key" && "$line" =~ $named ]]; then
+      VOLUME_KEYS[${BASH_REMATCH[1]}]="$key"
+    fi
+  done < "$file"
+}
+
+service_mounts() {
+  awk '/^    volumes:$/ { inside = 1; next } inside && /^    [a-z_]+:/ { inside = 0 } inside' <<< "${SERVICE_BLOCKS[$1]}"
+}
+
 check_backup_compose() {
-  log_step "$BACKUP_COMPOSE runs Microsoft images by digest, unprivileged, read-only and without capabilities"
-  local service index role user image setting volume expected_count
+  log_step "$BACKUP_COMPOSE runs Microsoft images by digest, unprivileged, read-only, without capabilities or a container log"
+  local service index role user image setting volume expected_count mounts
   local -a expected=(azure-cli)
   read_service_blocks "$BACKUP_COMPOSE"
+  read_volume_keys "$BACKUP_COMPOSE"
   for index in "${!BACKUP_VOLUME_SERVICES[@]}"; do
     for role in reader writer owner; do
       expected+=("${BACKUP_VOLUME_SERVICES[$index]}-$role")
@@ -195,7 +224,7 @@ check_backup_compose() {
     [[ -n "${SERVICE_BLOCKS[$service]+set}" ]] || die "$BACKUP_COMPOSE has no service $service"
     image="$(grep -E '^    image:' <<< "${SERVICE_BLOCKS[$service]}" || true)"
     [[ "$image" =~ $MICROSOFT_IMAGE_LINE ]] || die "the $service service of $BACKUP_COMPOSE does not run a Microsoft image by its digest: ${image:-no image}"
-    for setting in '    pull_policy: missing' '    read_only: true' '    cap_drop: [ALL]' '      - no-new-privileges:true'; do
+    for setting in '    pull_policy: missing' '    read_only: true' '    cap_drop: [ALL]' '      - no-new-privileges:true' '    logging:' '      driver: none'; do
       service_has "$service" "$setting" || die "the $service service of $BACKUP_COMPOSE lacks '${setting#"${setting%%[![:space:]]*}"}'"
     done
     if grep -qE '^    (privileged|ports|pid|ipc|devices|volumes_from):' <<< "${SERVICE_BLOCKS[$service]}"; then
@@ -207,7 +236,12 @@ check_backup_compose() {
     for role in reader writer owner; do
       service="${BACKUP_VOLUME_SERVICES[$index]}-$role"
       service_has "$service" '    network_mode: none' || die "the $service service of $BACKUP_COMPOSE has a network"
-      service_has "$service" "        target: /volume" || die "the $service service of $BACKUP_COMPOSE does not mount its volume at /volume"
+      mounts="$(service_mounts "$service")"
+      (( $(grep -c '^      - ' <<< "$mounts") == 1 )) && grep -qxF '      - type: volume' <<< "$mounts" \
+        || die "the $service service of $BACKUP_COMPOSE mounts other than its one volume"
+      grep -qxF "        source: ${VOLUME_KEYS[${BACKUP_VOLUMES[$index]}]:-}" <<< "$mounts" \
+        || die "the $service service of $BACKUP_COMPOSE does not mount ${BACKUP_VOLUMES[$index]}"
+      grep -qxF "        target: /volume" <<< "$mounts" || die "the $service service of $BACKUP_COMPOSE does not mount its volume at /volume"
       if [[ "$role" == owner ]]; then
         service_has "$service" '    user: "0:0"' || die "the $service service of $BACKUP_COMPOSE does not run as root, which alone may give the volume to $user"
         service_has "$service" '    cap_add: [CHOWN, FOWNER]' || die "the $service service of $BACKUP_COMPOSE adds other capabilities than CHOWN and FOWNER"
@@ -217,8 +251,11 @@ check_backup_compose() {
           die "the $service service of $BACKUP_COMPOSE adds a capability"
         fi
       fi
-      if [[ "$role" == reader ]] && ! service_has "$service" '        read_only: true'; then
+      if [[ "$role" == reader ]] && ! grep -qxF '        read_only: true' <<< "$mounts"; then
         die "the $service service of $BACKUP_COMPOSE mounts its volume writable"
+      fi
+      if [[ "$role" != reader ]] && grep -qxF '        read_only: true' <<< "$mounts"; then
+        die "the $service service of $BACKUP_COMPOSE mounts its volume read-only, so it cannot fill it"
       fi
     done
   done
@@ -228,6 +265,13 @@ check_backup_compose() {
   if grep -q '^    cap_add:' <<< "${SERVICE_BLOCKS[azure-cli]}"; then
     die "the azure-cli service of $BACKUP_COMPOSE adds a capability"
   fi
+  if grep -q '^    volumes:' <<< "${SERVICE_BLOCKS[azure-cli]}"; then
+    die "the azure-cli service of $BACKUP_COMPOSE mounts a volume; backup.sh mounts the sealed archive alone, read-only, for an upload"
+  fi
+  for setting in '--username "$$BACKUP_CLIENT_ID"' '--tenant "$$BACKUP_TENANT_ID"' "--certificate /run/secrets/$BACKUP_CLIENT_CERTIFICATE" 'exec az "$$@"'; do
+    grep -qF -- "$setting" <<< "${SERVICE_BLOCKS[azure-cli]}" \
+      || die "the azure-cli service of $BACKUP_COMPOSE does not sign in with $setting, which lib/backup.sh passes"
+  done
   grep -qxF "    file: ./secrets/$BACKUP_CLIENT_CERTIFICATE" "$BACKUP_COMPOSE" || die "$BACKUP_COMPOSE does not read $BACKUP_CLIENT_CERTIFICATE from ./secrets"
   for volume in "${BACKUP_VOLUMES[@]}"; do
     grep -qxF "    name: $volume" "$BACKUP_COMPOSE" || die "$BACKUP_COMPOSE does not name the external volume $volume"
@@ -235,7 +279,16 @@ check_backup_compose() {
   done
   (( $(grep -c '^    external: true$' "$BACKUP_COMPOSE") == ${#BACKUP_VOLUMES[@]} )) \
     || die "$BACKUP_COMPOSE declares other volumes than the stack's two external ones"
-  log_info "all $expected_count services run a Microsoft image by digest; each volume is read by its owner read-only, filled by its owner and given to its owner by root with CHOWN and FOWNER alone, without a network"
+  log_info "all $expected_count services run a Microsoft image by digest and keep no container log; each volume is mounted by its own three helpers alone, read by its owner read-only, filled by its owner and given to its owner by root with CHOWN and FOWNER alone, without a network"
+}
+
+check_backup_period() {
+  log_step "the backups' write-once period is the same everywhere"
+  grep -qxF "param backupImmutabilityPeriodDays int = $BACKUP_IMMUTABILITY_DAYS" scripts/azure/bicep/main.bicep \
+    || die "scripts/azure/bicep/main.bicep does not default backupImmutabilityPeriodDays to the $BACKUP_IMMUTABILITY_DAYS days by which backup.sh deletes archives"
+  grep -qxF "readonly BACKUP_IMMUTABILITY_DAYS='$BACKUP_IMMUTABILITY_DAYS'" scripts/azure/verify.sh \
+    || die "scripts/azure/verify.sh does not check the $BACKUP_IMMUTABILITY_DAYS days by which backup.sh deletes archives"
+  log_info "main.bicep, verify.sh and backup.sh agree on $BACKUP_IMMUTABILITY_DAYS days"
 }
 
 check_release_pins() {
@@ -324,6 +377,7 @@ main() {
   check_unit_commands
   check_release_pins
   check_backup_compose
+  check_backup_period
   check_daemon_config
   check_units_with_systemd
   check_apt_settings

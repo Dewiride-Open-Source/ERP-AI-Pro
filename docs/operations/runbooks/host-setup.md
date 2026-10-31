@@ -139,10 +139,10 @@ The nightly backup needs two more files in `/srv/erp-ai-pro/ERP-AI-Pro/infra/com
   ```bash
   sudo bash ERP-AI-Pro/scripts/deploy/bootstrap.sh --site-address <address> --authorized-keys /srv/erp-ai-pro/.ssh/authorized_keys --backup-recipient ~/erp-backup-recipient.crt
   rm ~/erp-backup-recipient.crt
-  openssl x509 -in /srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets/erp-backup-recipient.crt -noout -fingerprint -sha256
+  sudo openssl x509 -in /srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets/erp-backup-recipient.crt -noout -fingerprint -sha256
   ```
 
-  The fingerprint the last command prints is the one the export printed.
+  The fingerprint the last command prints is the one the export printed. It needs `sudo` because the folder is the deploy account's.
 
 The private key that opens the archives never stays on the server: the operator exports it for a restore alone (`export-client-certificate.sh backup-recipient-key`), and `restore.sh` shreds it once the restore is done ([restore runbook](restore.md)). A rotation follows `secrets.md` sections 5c (the client certificate) and 5g (the recipient).
 
@@ -171,7 +171,7 @@ The ids, the endpoint and the container name are not secrets. No secret ever goe
 - **`erp-ai-pro-retain.timer`** runs `erp-ai-pro-retain.service` at 01:00 India time, up to 15 minutes later, or at the next boot when the server was off. The service runs `docker compose -f compose.yaml -f compose.production.yaml run --rm -T migrator retain`, the retention sweeps without a migration, under the same lock.
 - **`erp-ai-pro-heal.timer`** runs `erp-ai-pro-heal.service` every minute. The service runs `scripts/deploy/heal.sh` of the deployment checkout, which restarts a running container that Docker reports unhealthy once it has run 30 minutes, so a part of the ERP that stops answering without exiting comes back by itself: the containers' restart policy acts only when one exits ([ADR-0055](../../adr/0055-the-production-host-restarts-an-unhealthy-container-and-alerts-nobody.md)). It never starts a stopped container. It takes the lock without waiting, so a minute in which a deployment, a rollback, a restore, the retention run, the backup or the start at boot holds it is skipped. Nothing tells anyone about an outage or a restart (owner decision of 2026-10-30): each restart, and each unhealthy container it leaves alone because it started less than 30 minutes ago, is a line of its journal.
 - **`erp-ai-pro-backup.timer`** runs `erp-ai-pro-backup.service` at 02:00 India time, after the retention run and before the update restart, or at the next boot when the server was off. The service runs `scripts/deploy/backup.sh` of the deployment checkout, which copies the server's own files off it every night ([restore runbook](restore.md)):
-  - it reads the volumes `erp-ai-pro-data-protection-keys` and `erp-ai-pro-proxy-data` through the BusyBox image of `infra/compose/compose.backup.yaml`, as each volume's owner (1654 and 10001), read-only, with no network and no capability, and adds `.env`, `.env.previous` and a manifest of their SHA-256 hashes, the releases they name, the proxy root's fingerprint and the key ring's keys with the Key Vault key versions that wrap them;
+  - it reads the volumes `erp-ai-pro-data-protection-keys` and `erp-ai-pro-proxy-data` through the BusyBox image of `infra/compose/compose.backup.yaml`, as each volume's owner (1654 and 10001), read-only, with no network, no capability and no container log, so the volumes' contents reach `backup.sh` alone and never Docker's log on disk, and adds `.env`, `.env.previous` and a manifest of their SHA-256 hashes, the releases they name, the proxy root's fingerprint and the key ring's keys with the Key Vault key versions that wrap them;
   - it keeps that plaintext copy in the service's runtime folder `/run/erp-ai-pro-backup`, in memory and private to `erp-ai-pro`, which systemd removes when the run ends;
   - it seals the archive with the host's OpenSSL (CMS, AES-256-GCM, its key wrapped with RSA-OAEP-SHA256) to `erp-backup-recipient.crt`, so only the private key in `kv-erp-ai-pro-ops` opens it;
   - through the Azure CLI image of the same file, signed in as the backup service principal, it uploads the archive into `BACKUP_CONTAINER` as `<yyyy>/<mm>/<yyyymmddThhmmssZ>.tar.p7m`, never over an existing blob, reads its length and MD5 back, and deletes the archives older than 90 days and a day, which the container's write-once policy keeps until then;
@@ -194,16 +194,17 @@ docker compose -f compose.yaml -f compose.production.yaml ps
 journalctl -u erp-ai-pro-backup.service --since yesterday
 ```
 
-A run prints one line per step, in this order: `settings` (the container, the service principal and the certificate the archives are sealed to, with its serial number and end date), `images`, `lock`, `volume erp-ai-pro-data-protection-keys`, `volume erp-ai-pro-proxy-data` (the entries and bytes read), `release files`, `unlock`, `manifest`, `seal`, `upload`, `check` and `prune` (the archives deleted and kept). A run that succeeded ends with `backed up the server's files to host-backups/<yyyy>/<mm>/<time>.tar.p7m; <n> archive(s) older than 90 days deleted`. A failed run ends with `[error] the backup stopped at the step '<step>': …`, which also says whether the night's archive reached the container, and the unit shows as failed in `systemctl --failed`. A warning that the certificate the archives are sealed to expires within 30 days asks for its rotation (`secrets.md` section 5g); the archives keep opening with its key after that date.
+A run prints one line per step, in this order: `settings` (the container, the service principal and the certificate the archives are sealed to, with its serial number and end date), `images`, `lock`, `volume erp-ai-pro-data-protection-keys`, `volume erp-ai-pro-proxy-data` (the entries and bytes read), `release files`, `unlock`, `manifest`, `seal`, `upload`, `check` and `prune` (a line for each archive it deletes, then the archives deleted and kept). A run that succeeded ends with `backed up the server's files to host-backups/<yyyy>/<mm>/<time>.tar.p7m; <n> archive(s) older than 90 days deleted`. A failed run ends with `[error] the backup stopped at the step '<step>': …`, which also says whether the night's archive reached the container and how many older archives it deleted before it stopped, and the unit shows as failed in `systemctl --failed`. A warning that the certificate the archives are sealed to expires within 30 days asks for its rotation (`secrets.md` section 5g); the archives keep opening with its key after that date.
 
 To run a backup at once, as the administrator, for instance after placing a new certificate: `sudo systemctl start erp-ai-pro-backup.service`, which returns when the run ends.
 
 ### Restoring the server's files
 
-`scripts/deploy/restore.sh` puts an archive back into the two volumes, `.env` and `.env.previous`, as `erp-ai-pro`, with the private key the operator exports for it. A dry run downloads, opens and checks the archive and lists what a restore would change, and may run while the stack runs:
+`scripts/deploy/restore.sh` puts an archive back into the two volumes, `.env` and `.env.previous`, as `erp-ai-pro`, with the private key the operator exports for it. `--list` names every archive with the time the storage service created it, newest first, and needs no key; a dry run downloads, opens and checks one archive and lists what a restore would change. Both may run while the stack runs:
 
 ```bash
-bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --latest --key <exported key> --dry-run
+bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --list
+bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --name <archive> --key <exported key> --dry-run
 ```
 
 A restore itself refuses while a container of the stack runs (`sudo systemctl stop erp-ai-pro.service` first), and replaces volumes that hold files only with `--replace`. It gives each volume's top folder the owner and mode its image gives it, fills it as that owner and shreds the key file once it is done. It reads the container and the service principal from `.env`, so on a rebuilt server the bootstrap's fresh `.env` first takes `AZURE_TENANT_ID`, `BACKUP_BLOB_ENDPOINT`, `BACKUP_CONTAINER` and `BACKUP_AZURE_CLIENT_ID`, and `erp-backup-client.pem` is placed; the restored `.env` then takes its place. The [restore runbook](restore.md) holds the procedure, the rebuilt server and the rehearsal.

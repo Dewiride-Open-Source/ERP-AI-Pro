@@ -114,12 +114,18 @@ volume_command() {
       fi
       if [[ "$1" == find ]]; then
         find "$folder" -mindepth 1 -delete
+      elif [[ -e "$STATE/docker/backup/$service-extracts-nothing" ]]; then
+        cat > /dev/null
       else
         real tar -xof - -C "$folder"
       fi
       ;;
     'owner chown '*' /volume') printf '%s %s\n' "$2" "${top#* }" > "$STATE/volumes/$volume.top" ;;
-    'owner chmod 700 /volume') printf '%s 700\n' "${top%% *}" > "$STATE/volumes/$volume.top" ;;
+    'owner chmod 700 /volume')
+      if [[ ! -e "$STATE/docker/backup/$service-chmod-changes-nothing" ]]; then
+        printf '%s 700\n' "${top%% *}" > "$STATE/volumes/$volume.top"
+      fi
+      ;;
     *) unexpected "$service" "$@" ;;
   esac
 }
@@ -166,7 +172,12 @@ blob_command() {
       if [[ -n "$REPLY" ]]; then
         printf '%s\n' "$REPLY"
       else
-        printf '%s\t%s\n' "$(wc -c < "$blob" | tr -d '[:space:]')" "$(openssl dgst -md5 -binary "$blob" | base64)"
+        local length md5
+        setting az/show-length "$(wc -c < "$blob" | tr -d '[:space:]')"
+        length="$REPLY"
+        setting az/show-md5 "$(openssl dgst -md5 -binary "$blob" | base64)"
+        md5="$REPLY"
+        printf '%s\t%s\n' "$length" "$md5"
       fi
       ;;
     list)
@@ -177,7 +188,14 @@ blob_command() {
         done < <(cd -- "$STATE/blobs/$container" && find . -type f | sort)
       fi
       ;;
-    delete) rm -f -- "$blob" "$created" ;;
+    delete)
+      setting az/delete-refuses ''
+      if [[ -n "$REPLY" && "$name" == "$REPLY" ]]; then
+        printf 'ERROR: the stand-in Azure CLI refuses to delete %s as the scenario says\n' "$name" >&2
+        return 1
+      fi
+      rm -f -- "$blob" "$created"
+      ;;
     download) cat -- "$blob" ;;
     *) unexpected azure-cli "$@" ;;
   esac
@@ -213,7 +231,7 @@ backup_compose() {
         source="${2%%:*}"
         target="${2#*:}"
         target="${target%:ro}"
-        recorded+=(-v "${source##*/}:$target:ro")
+        recorded+=(-v "${source##*/}:${2#*:}")
         shift 2
         ;;
       *) break ;;
@@ -222,6 +240,11 @@ backup_compose() {
   service="${1:-}"
   shift
   record "$shown ${recorded[*]} $service $*"
+  if [[ -e /dev/fd/9 ]]; then
+    printf 'held %s %s\n' "$service" "$*" >> "$STATE/lock-states"
+  else
+    printf 'free %s %s\n' "$service" "$*" >> "$STATE/lock-states"
+  fi
   case "$service" in
     azure-cli) blob_command "$source" "$target" "$client" "$tenant" "$@" ;;
     *) volume_command "$service" "$@" ;;
