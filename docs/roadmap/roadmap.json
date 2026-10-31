@@ -1327,12 +1327,13 @@
           "id": "first-deployment-upload-virus-scanning",
           "title": "Virus scanning of uploads",
           "scope": "Scan the plaintext of every upload with ClamAV in the production stack behind IAttachmentScanner while it streams (a digest-pinned image; owner approval of 2026-10-31): a file with a known virus is refused and never stored, a clean one records Clean, and uploads are refused with 503 while the scanner cannot answer; the scanner's signature updates, memory limit, hardening and health check, a test with the EICAR test file, and an ADR recording the GPL program reached over a socket and never distributed.",
-          "status": "planned",
+          "status": "deferred",
           "edition": "community",
           "editionConfirmedOn": "2026-10-31",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Owner decision of 2026-10-31: set aside until more people use the ERP. With the owner its only user, scanning mainly guards against files the owner uploads, and ClamAV needs 3 to 4 GB of the server's 7.1 GB of memory, against the stack's 0.4 GB; uploads keep recording `notScanned`. Research for its return: the image `clamav/clamav` (digest-pinned, non-root through `/init-unprivileged`, signatures on a volume of their own, freshclam updating them), clamd's `INSTREAM` over TCP 3310, clamd.conf with `StreamMaxLength` and `MaxFileSize` at or above `Erp:Platform:Attachments:MaxSizeBytes` and `AlertExceedsMax yes`, 3 GiB with `ConcurrentDatabaseReload no` (uploads wait during the daily reload) or 4 GiB, and the hook `IAttachmentScanner` in `BuildingBlocks.Attachments/Scanning`, which `AttachmentUploader` feeds the plaintext while it streams."
         }
       ]
     },
