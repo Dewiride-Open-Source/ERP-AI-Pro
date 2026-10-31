@@ -7,18 +7,21 @@ them), with tests/stand-in.sh on PATH as docker, flock, id and date, recording e
 coreutils. The stand-in docker plays the containers of compose.backup.yaml: the readers, writers and owners of two folders
 that stand for the volumes, and the Azure CLI on a folder that stands for the backup container. It checks each decision the
 scripts make:
-  - a backup reads both volumes, .env and .env.previous under the lock, seals them with their manifest to a throwaway RSA
-    4096 certificate with AES-256-GCM and RSA-OAEP-SHA256, uploads the archive under its time without writing over a blob,
-    reads it back and deletes only the archives older than 90 days and a day; the archive opens with the throwaway key and
-    every file matches the manifest;
-  - a held lock, a failed volume read, a failed upload, an archive that reads back otherwise, a missing certificate, a
-    recipient certificate that holds a private key or a smaller key, a malformed setting, another account and an argument
-    stop it, the failure naming its step, with no archive deleted;
+  - a backup reads both volumes, .env and .env.previous under the lock, lets it go before the Azure CLI runs, seals them
+    with their manifest to a throwaway RSA 4096 certificate with AES-256-GCM and RSA-OAEP-SHA256, uploads the archive under
+    its time without writing over a blob, reads it back and deletes, naming each, only the archives the storage service
+    created more than 90 days and a day ago; the archive opens with the throwaway key and every file matches the manifest;
+  - a held lock, a failed volume read, a failed upload, an archive that reads back otherwise, a failed listing, a refused
+    delete, a creation time that is not a time, a missing certificate, a recipient certificate that holds a private key or a
+    smaller key, a malformed setting, another account and an argument stop it, the failure naming its step and the archives
+    it deleted, and a recipient certificate near its end only warns;
   - a dry run of a restore opens and checks the archive and changes nothing, even while the stack runs; a restore refuses
-    while the stack runs, with a key that does not open the archive, with an archive whose files differ from its manifest,
-    and with volumes that hold files unless --replace, each before it changes anything; a restore onto fresh volumes gives
-    each top folder to its owner (1654:1654 and 10001:10001, mode 0700) before it fills it, writes .env and .env.previous as
-    the archive holds them and shreds the key.
+    while the stack runs, with a key that does not open the archive (naming the certificate it needs), with an archive that
+    is forged or whose files differ from its manifest, with the backup of a server whose volumes were still empty, and with
+    volumes that hold files unless --replace, each before it changes anything; --list, --latest, --name and --created-before
+    choose by the storage service'"'"'s creation time; a restore onto fresh volumes gives each top folder to its owner
+    (1654:1654 and 10001:10001, mode 0700) before it fills it, writes .env and .env.previous as the archive holds them and
+    shreds the key, and one that fails part-way names what it restored and keeps the key.
 It needs bash with the usual command-line tools (coreutils, grep, sed, find, tar) and OpenSSL 3; check.sh runs it.
 
 Options:
@@ -740,33 +743,131 @@ scenario_restore_wrong_key() {
   expect_no_call "-writer "
   expect_top "$KEY_RING_VOLUME" '0:0 755'
   [[ -f "$KEY_FILE" ]] || fail "the refused restore removed the key"
+  cp -- "$KEYS/other-key.pem" "$KEY_FILE"
+  run_script restore.sh --latest --key "$KEY_FILE"
+  expect_status 1
+  expect_output "and the key file holds no certificate"
+  expect_no_call "-writer "
   passed
 }
 
-scenario_restore_manifest_mismatch() {
-  restore_world "an archive whose files differ from its manifest changes nothing"
-  empty_volumes
-  local folder="$WORK/forged"
-  mkdir -p -- "$folder"
-  openssl cms -decrypt -binary -inform DER -in "$STATE/blobs/$CONTAINER/$ARCHIVE" -inkey "$KEYS/recipient-bundle.pem" -out "$folder.tar" \
-    || fail "cannot open the saved archive"
-  tar -xf "$folder.tar" -C "$folder"
-  printf 'BACKUP_CONTAINER=elsewhere\n' >> "$folder/.env"
-  tar -cf "$folder.tar" -C "$folder" manifest data-protection-keys.tar proxy-data.tar .env .env.previous
-  openssl cms -encrypt -binary -aes-256-gcm -in "$folder.tar" -outform DER -out "$STATE/blobs/$CONTAINER/$ARCHIVE" \
+seal_payload() {
+  openssl cms -encrypt -binary -aes-256-gcm -in "$1" -outform DER -out "$STATE/blobs/$CONTAINER/$ARCHIVE" \
     -recip "$KEYS/recipient.crt" -keyopt rsa_padding_mode:oaep -keyopt rsa_oaep_md:sha256 || fail "cannot seal the forged archive"
+}
+
+reseal() {
+  local folder="$1"
+  shift
+  tar -cf "$folder.tar" -C "$folder" "$@" || fail "cannot pack the forged archive"
+  seal_payload "$folder.tar"
   rm -rf -- "$folder" "$folder.tar"
+}
+
+scenario_restore_forged() {
+  local forgery folder="$WORK/forged"
+  local -A refusal=(
+    [changed-env]='.env does not match the manifest'
+    [extra-member]="the archive holds 'extra', which backup.sh never writes; nothing was changed"
+    [no-manifest]='the archive lacks manifest; nothing was changed'
+    [not-tar]='the opened archive is not a tar archive; nothing was changed'
+    [unknown-line]='of the manifest is not one backup.sh writes; nothing was changed'
+  )
+  for forgery in changed-env extra-member no-manifest not-tar unknown-line; do
+    restore_world "an archive sealed to the right key but forged ($forgery) is refused before anything changes"
+    empty_volumes
+    open_archive "$STATE/blobs/$CONTAINER/$ARCHIVE" "$folder"
+    case "$forgery" in
+      changed-env)
+        printf 'BACKUP_CONTAINER=elsewhere\n' >> "$folder/.env"
+        reseal "$folder" manifest data-protection-keys.tar proxy-data.tar .env .env.previous
+        ;;
+      extra-member)
+        printf 'stand-in\n' > "$folder/extra"
+        reseal "$folder" manifest data-protection-keys.tar proxy-data.tar .env .env.previous extra
+        ;;
+      no-manifest) reseal "$folder" data-protection-keys.tar proxy-data.tar .env .env.previous ;;
+      not-tar)
+        printf 'not a tar archive\n' > "$folder.tar"
+        seal_payload "$folder.tar"
+        rm -rf -- "$folder" "$folder.tar"
+        ;;
+      unknown-line)
+        printf 'surprise\n' >> "$folder/manifest"
+        reseal "$folder" manifest data-protection-keys.tar proxy-data.tar .env .env.previous
+        ;;
+    esac
+    run_script restore.sh --latest --key "$KEY_FILE"
+    expect_status 1
+    expect_output "${refusal[$forgery]}"
+    expect_no_call "-owner "
+    expect_no_call "-writer "
+    expect_top "$KEY_RING_VOLUME" '0:0 755'
+    expect_unchanged_files
+    [[ -f "$KEY_FILE" ]] || fail "the refused restore removed the key"
+  done
+  passed
+}
+
+scenario_restore_empty_archive() {
+  restore_world "the backup of a server whose volumes were still empty is refused, and --created-before reaches the archive before it"
+  empty_volumes
+  fresh_release_files
+  state epoch "$(date -u -d 2026-10-31T12:00:00Z +%s)"
+  run_backup
+  expect_status 0
   run_script restore.sh --latest --key "$KEY_FILE"
   expect_status 1
-  expect_output ".env does not match the manifest"
+  expect_output "2026/10/20261031T120000Z.tar.p7m names no release, no data protection key and no proxy root"
   expect_no_call "-owner "
   expect_no_call "-writer "
+  [[ -f "$KEY_FILE" ]] || fail "the refused restore removed the key"
+  run_script restore.sh --created-before 2026-10-31T00:00:00Z --key "$KEY_FILE"
+  expect_status 0
+  expect_output "restored $ARCHIVE (made $NOW)"
+  expect_top "$KEY_RING_VOLUME" '1654:1654 700'
+  expect_top "$PROXY_VOLUME" '10001:10001 700'
   expect_unchanged_files
+  expect_missing "$KEY_FILE"
+  passed
+}
+
+scenario_restore_partial() {
+  restore_world "a restore that cannot fill the proxy data names what it restored, keeps the key and .env, and --replace then finishes it"
+  empty_volumes
+  fresh_release_files
+  state docker/backup/proxy-data-writer-exit 1
+  run_script restore.sh --latest --key "$KEY_FILE"
+  expect_status 1
+  expect_output "cannot fill $PROXY_VOLUME"
+  expect_output "restored before the failure: $KEY_RING_VOLUME $PROXY_VOLUME (incomplete); run the restore again with --replace once its cause is fixed"
+  expect_output "the key stays at $KEY_FILE"
+  [[ "$(< "$COMPOSE_FOLDER/.env")" == ERP_SITE_ADDRESS=192.0.2.10* ]] || fail "the failed restore wrote .env"
+  rm -f -- "$STATE/docker/backup/proxy-data-writer-exit"
+  run_script restore.sh --latest --key "$KEY_FILE" --replace
+  expect_status 0
+  expect_top "$KEY_RING_VOLUME" '1654:1654 700'
+  expect_top "$PROXY_VOLUME" '10001:10001 700'
+  expect_unchanged_files
+  expect_missing "$KEY_FILE"
+  restore_world "a top folder whose mode the owner does not set stops the restore"
+  empty_volumes
+  state docker/backup/key-ring-owner-chmod-changes-nothing yes
+  run_script restore.sh --latest --key "$KEY_FILE"
+  expect_status 1
+  expect_output "after the restore the top folder of $KEY_RING_VOLUME is 1654:1654 755, not 1654:1654 700"
+  expect_output "restored before the failure: $KEY_RING_VOLUME (incomplete)"
+  restore_world "a volume the writer leaves short of the archive's entries stops the restore"
+  empty_volumes
+  state docker/backup/key-ring-writer-extracts-nothing yes
+  run_script restore.sh --latest --key "$KEY_FILE"
+  expect_status 1
+  expect_output "$KEY_RING_VOLUME holds 0 entries after the restore, not the 2 of the archive"
   passed
 }
 
 scenario_restore_choice() {
-  restore_world "--latest takes the archive the storage service created last whatever its name, --name the one it names, and one the container lacks is refused"
+  restore_world "--latest takes the archive the storage service created last whatever its name and warns when the name gives another time, --name the one it names, and one the container lacks is refused"
   blob 2026/09/20260930T203000Z.tar.p7m 2026-09-30T20:30:00+00:00
   blob 2026/12/20261231T235959Z.tar.p7m 2026-10-01T02:00:00+00:00
   run_script restore.sh --name 2026/09/20260930T203001Z.tar.p7m --key "$KEY_FILE" --dry-run
@@ -780,21 +881,70 @@ scenario_restore_choice() {
   expect_status 1
   expect_output "the archive 2026/12/20261231T235959Z.tar.p7m of $CONTAINER, created by the storage service at 2026-10-01T02:00:00+00:00"
   expect_output "the name of 2026/12/20261231T235959Z.tar.p7m gives another time than its creation, more than an hour apart"
+  copy_archive 2026/10/20261029T120000Z.tar.p7m 2026-10-30T13:00:00+00:00
+  run_script restore.sh --latest --key "$KEY_FILE" --dry-run
+  expect_status 0
+  expect_output "the archive 2026/10/20261029T120000Z.tar.p7m of $CONTAINER, created by the storage service at 2026-10-30T13:00:00+00:00"
+  expect_output "the name of 2026/10/20261029T120000Z.tar.p7m gives another time than its creation, more than an hour apart"
+  expect_output "dry run: 2026/10/20261029T120000Z.tar.p7m opens with this key and matches its manifest"
+  passed
+}
+
+scenario_restore_list() {
+  restore_world "--list shows the archives by their creation, the newest first, marks a name far from its creation and leaves other blobs out"
+  copy_archive 2026/10/20261029T120000Z.tar.p7m 2026-10-30T13:00:00+00:00
+  blob 2026/09/20260930T203000Z.tar.p7m 2026-09-30T20:30:00+00:00
+  blob notes.txt 2026-10-31T00:00:00+00:00
+  run_script restore.sh --list
+  expect_status 0
+  [[ "$OUTPUT" == *"2026/10/20261029T120000Z.tar.p7m   created 2026-10-30T13:00:00+00:00   its name gives another time than its creation"*"$ARCHIVE   created 2026-10-30T12:00:00+00:00"*"2026/09/20260930T203000Z.tar.p7m   created 2026-09-30T20:30:00+00:00"* ]] \
+    || fail "the archives are not listed by their creation, the newest first"
+  expect_output "3 archive(s) in $CONTAINER, the newest creation first; 1 other blob(s) left out"
+  expect_no_call "storage blob download"
+  expect_no_call "flock"
+  [[ -f "$KEY_FILE" ]] || fail "--list removed the key"
+  run_script restore.sh --list --latest
+  expect_status 1
+  expect_output "--list takes no other option: it lists the archives and changes nothing"
+  expect_only_calls
+  passed
+}
+
+scenario_restore_created_before() {
+  restore_world "--created-before takes the newest archive the storage service created before that time, and none created at it"
+  copy_archive 2026/09/20260930T203000Z.tar.p7m 2026-09-30T20:30:00+00:00
+  run_script restore.sh --created-before 2026-10-01T00:00:00Z --key "$KEY_FILE" --dry-run
+  expect_status 0
+  expect_output "the archive 2026/09/20260930T203000Z.tar.p7m of $CONTAINER, created by the storage service at 2026-09-30T20:30:00+00:00"
+  expect_output "dry run: 2026/09/20260930T203000Z.tar.p7m opens with this key and matches its manifest"
+  run_script restore.sh --created-before 2026-09-30T20:30:00Z --key "$KEY_FILE" --dry-run
+  expect_status 1
+  expect_output "$CONTAINER holds no archive created before 2026-09-30T20:30:00Z; nothing was changed"
   passed
 }
 
 scenario_restore_refusals() {
-  restore_world "a restore without a key or an archive, with both choices, a malformed name or a file that is no key stops at once"
+  restore_world "a restore without a key or an archive, with two choices, a malformed name or time or a file that is no key stops at once"
   run_script restore.sh --latest
   expect_status 1
   expect_output "--key <file> is required"
   expect_only_calls
   run_script restore.sh --key "$KEY_FILE"
   expect_status 1
-  expect_output "choose the archive to restore: --latest or --name <archive>"
+  expect_output "choose the archive to restore: --latest, --name <archive> or --created-before <time>"
   run_script restore.sh --latest --name "$ARCHIVE" --key "$KEY_FILE"
   expect_status 1
-  expect_output "choose one archive: --latest or --name <archive>, not both"
+  expect_output "choose one archive: --latest, --name <archive> or --created-before <time>, not two"
+  run_script restore.sh --name "$ARCHIVE" --created-before 2026-10-30T00:00:00Z --key "$KEY_FILE"
+  expect_status 1
+  expect_output "choose one archive: --latest, --name <archive> or --created-before <time>, not two"
+  run_script restore.sh --created-before 2026-10-30 --key "$KEY_FILE"
+  expect_status 1
+  expect_output "--created-before: '2026-10-30' is not a UTC time such as 2026-10-30T00:00:00Z"
+  run_script restore.sh --created-before 2026-02-30T00:00:00Z --key "$KEY_FILE"
+  expect_status 1
+  expect_output "--created-before: '2026-02-30T00:00:00Z' is not a UTC time"
+  expect_only_calls "date -u -d 2026-02-30T00:00:00Z +%s"
   run_script restore.sh --name ../escape.tar.p7m --key "$KEY_FILE"
   expect_status 1
   expect_output "is not the name of an archive"
@@ -823,6 +973,10 @@ main() {
   scenario_failed_upload
   scenario_existing_blob
   scenario_check_mismatch
+  scenario_prune_listing_fails
+  scenario_prune_delete_refused
+  scenario_prune_creation_unreadable
+  scenario_expiring_recipient
   scenario_certificates
   scenario_settings
   scenario_backup_refusals
@@ -833,8 +987,12 @@ main() {
   scenario_restore_replace
   scenario_restore_previous
   scenario_restore_wrong_key
-  scenario_restore_manifest_mismatch
+  scenario_restore_forged
   scenario_restore_choice
+  scenario_restore_list
+  scenario_restore_created_before
+  scenario_restore_empty_archive
+  scenario_restore_partial
   scenario_restore_refusals
   printf 'backup decisions ok: %s scenarios\n' "$PASSED"
 }
