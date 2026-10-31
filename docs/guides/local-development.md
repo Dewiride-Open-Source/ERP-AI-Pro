@@ -112,7 +112,7 @@ docker run --detach --name erp-azurite --restart unless-stopped --publish 127.0.
 setx ERP_TEST_BLOB_EMULATOR_HOST 127.0.0.1
 ```
 
-The image reference is the one in `infra/compose/compose.override.yaml`, which Dependabot keeps current; `scripts/checks/tests/azurite-pin.test.ts` fails while this guide or `.github/actions/start-azurite` names another. After a bump, `docker rm --force erp-azurite` and run the command again. Only the tests use this container; the compose stack runs its own (section "Containers").
+The image reference is the one in `infra/compose/compose.override.yaml`, which Dependabot keeps current; `scripts/checks/tests/image-pins.test.ts` fails while this guide or `.github/actions/start-azurite` names another. After a bump, `docker rm --force erp-azurite` and run the command again. Only the tests use this container; the compose stack runs its own (section "Containers").
 
 ## Sign-in
 

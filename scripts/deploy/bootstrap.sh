@@ -3,12 +3,13 @@
 USAGE='Usage: sudo bash scripts/deploy/bootstrap.sh --site-address <IPv4> --authorized-keys <file> [--home-network <CIDR>] [--dry-run]
 
 Prepares an Ubuntu 22.04, 24.04 or 26.04 LTS server for the ERP-AI-Pro production stack and keeps it so
-when run again: Docker Engine with live restore, the deploy account erp-ai-pro as the only member of the
-docker group and nobody in the lxd group, its checkout of this repository in /srv/erp-ai-pro/ERP-AI-Pro
-with the folder of the client certificates, .env and the two external volumes, the systemd units that
-start the stack at boot and run the retention sweeps every night, security updates that restart the
-server at 03:00 India time when one needs it, SSH with public keys only, and a firewall that admits SSH
-from the home network only. Every step changes only what differs, so a second run changes nothing.
+when run again: Docker Engine with live restore, the GitHub CLI from GitHub'"'"'s own repository, with which
+deploy.sh verifies a release, the deploy account erp-ai-pro as the only member of the docker group and
+nobody in the lxd group, its checkout of this repository in /srv/erp-ai-pro/ERP-AI-Pro with the folder of
+the client certificates, .env and the two external volumes, the systemd units that start the stack at
+boot and run the retention sweeps every night, security updates (the GitHub CLI'"'"'s included) that restart
+the server at 03:00 India time when one needs it, SSH with public keys only, and a firewall that admits
+SSH from the home network only. Every step changes only what differs, so a second run changes nothing.
 Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
@@ -23,7 +24,7 @@ Options:
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 
 readonly SUPPORTED_RELEASES=(jammy noble resolute)
-readonly BASE_PACKAGES=(openssh-server ufw unattended-upgrades git ca-certificates curl python3)
+readonly BASE_PACKAGES=(openssh-server ufw unattended-upgrades git ca-certificates curl python3 gpg)
 readonly APT_OPTIONS=(-qq -o DPkg::Lock::Timeout=600)
 readonly DOCKER_REPOSITORY='https://download.docker.com/linux/ubuntu'
 readonly DOCKER_KEYRING='/etc/apt/keyrings/docker.asc'
@@ -31,6 +32,13 @@ readonly DOCKER_SOURCE='/etc/apt/sources.list.d/docker.sources'
 readonly DOCKER_PACKAGES=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
 readonly DOCKER_CONFLICTS=(docker.io docker-compose docker-compose-v2 docker-doc docker-buildx podman-docker containerd runc)
 readonly DAEMON_CONFIG='/etc/docker/daemon.json'
+readonly GITHUB_CLI_REPOSITORY='https://cli.github.com/packages'
+readonly GITHUB_CLI_KEYRING='/etc/apt/keyrings/githubcli-archive-keyring.gpg'
+readonly GITHUB_CLI_SOURCE='/etc/apt/sources.list.d/github-cli.sources'
+readonly GITHUB_CLI_SIGNING_KEY='7F38BBB59D064DBCB3D84D725612B36462313325'
+# The fingerprints GitHub's install guide publishes for its packages (docs/install_linux.md in cli/cli); the first one has
+# expired and stays in GitHub's key file.
+readonly GITHUB_CLI_KEYS=(2C6106201985B60E6C7AC87323F3D4EA75716059 "$GITHUB_CLI_SIGNING_KEY")
 readonly LXD_INSTALLER_SOCKET='lxd-installer.socket'
 readonly SSH_RULES_FILE='/etc/ssh/sshd_config.d/10-erp-ai-pro.conf'
 readonly SSH_EFFECTIVE_SETTINGS=(
@@ -325,6 +333,100 @@ ensure_docker_daemon_config() {
   run systemctl restart docker.service
   if (( ! DRY_RUN )); then
     live_restore_enabled || die "Docker does not report live restore as enabled after its restart"
+  fi
+}
+
+is_github_cli_key() {
+  local key
+  for key in "${GITHUB_CLI_KEYS[@]}"; do
+    if [[ "$1" == "$key" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# apt trusts every key of a Signed-By file for its repository, so the file may hold only keys GitHub publishes, today's
+# signing key among them.
+github_cli_keyring_trusted() {
+  local file="$1" home fingerprints fingerprint
+  command -v gpg > /dev/null 2>&1 || return 1
+  home="$(mktemp -d)" || return 1
+  fingerprints="$(gpg --batch --quiet --homedir "$home" --with-colons --show-keys -- "$file" 2> /dev/null \
+    | awk -F: '$1 == "pub" { primary = 1; next } $1 == "fpr" && primary { print $10 } { primary = 0 }' || true)"
+  gpgconf --homedir "$home" --kill all > /dev/null 2>&1 || true
+  rm -rf -- "$home"
+  if [[ -z "$fingerprints" ]] || ! grep -qxF -- "$GITHUB_CLI_SIGNING_KEY" <<< "$fingerprints"; then
+    return 1
+  fi
+  while IFS= read -r fingerprint; do
+    is_github_cli_key "$fingerprint" || return 1
+  done <<< "$fingerprints"
+}
+
+install_github_cli_keyring() {
+  if [[ -f "$GITHUB_CLI_KEYRING" ]] && github_cli_keyring_trusted "$GITHUB_CLI_KEYRING" \
+    && [[ "$(mode_and_owner_of "$GITHUB_CLI_KEYRING")" == '644 root:root' ]]; then
+    log_info "in place: the GitHub CLI's signing keys ($GITHUB_CLI_KEYRING)"
+    return 1
+  fi
+  record_change "the GitHub CLI's signing keys, checked against the fingerprints GitHub publishes ($GITHUB_CLI_KEYRING)"
+  if (( DRY_RUN )); then
+    printf '[dry-run] download %s and check its keys\n' "$GITHUB_CLI_REPOSITORY/githubcli-archive-keyring.gpg" >&2
+    return 0
+  fi
+  require_command gpg gpgconf
+  local staged
+  staged="$(mktemp)"
+  if ! curl -fsSL --retry 3 --proto '=https' -o "$staged" "$GITHUB_CLI_REPOSITORY/githubcli-archive-keyring.gpg"; then
+    rm -f -- "$staged"
+    die "cannot download the GitHub CLI's signing keys"
+  fi
+  if ! github_cli_keyring_trusted "$staged"; then
+    rm -f -- "$staged"
+    die "the GitHub CLI's key file holds other keys than those GitHub publishes (${GITHUB_CLI_KEYS[*]}), or lacks $GITHUB_CLI_SIGNING_KEY; nothing was installed"
+  fi
+  install -D -m 644 -o root -g root -- "$staged" "$GITHUB_CLI_KEYRING" || die "cannot write $GITHUB_CLI_KEYRING"
+  rm -f -- "$staged"
+}
+
+ensure_github_cli() {
+  log_step "GitHub CLI"
+  local others staged installed lists_stale=0
+  others="$(grep -lsF -- "$GITHUB_CLI_REPOSITORY" /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources \
+    | grep -vxF -- "$GITHUB_CLI_SOURCE" || true)"
+  [[ -z "$others" ]] \
+    || die "$(paste -sd ' ' - <<< "$others") also name the GitHub CLI's repository, with keys this script did not check; remove them and run this script again"
+  if install_github_cli_keyring; then
+    lists_stale=1
+  fi
+  staged="$(mktemp)"
+  printf 'Types: deb\nURIs: %s\nSuites: stable\nComponents: main\nArchitectures: %s\nSigned-By: %s\n' \
+    "$GITHUB_CLI_REPOSITORY" "$(dpkg --print-architecture)" "$GITHUB_CLI_KEYRING" > "$staged"
+  if install_config "$staged" "$GITHUB_CLI_SOURCE" 644 root:root "the GitHub CLI's apt repository"; then
+    lists_stale=1
+  fi
+  rm -f -- "$staged"
+  if (( lists_stale )); then
+    apt_update
+  fi
+  installed="$(dpkg-query -W -f='${Version}' gh 2> /dev/null || true)"
+  if package_installed gh && dpkg --compare-versions "$installed" ge "$MINIMUM_GH_VERSION"; then
+    log_info "in place: gh $installed"
+  else
+    record_change "install gh $MINIMUM_GH_VERSION or later from the GitHub CLI's repository"
+    if (( ! lists_stale )); then
+      apt_update
+    fi
+    run env DEBIAN_FRONTEND=noninteractive apt-get "${APT_OPTIONS[@]}" install -y --no-install-recommends gh
+  fi
+  if (( ! DRY_RUN )); then
+    installed="$(dpkg-query -W -f='${Version}' gh 2> /dev/null || true)"
+    [[ -n "$installed" ]] || die "gh is not installed; see the apt errors above"
+    dpkg --compare-versions "$installed" ge "$MINIMUM_GH_VERSION" \
+      || die "gh $installed is installed, and deploy.sh needs $MINIMUM_GH_VERSION or later; see the apt errors above"
+    [[ "$(command -v gh)" == /usr/bin/gh ]] \
+      || die "$(command -v gh) runs before the packaged /usr/bin/gh, so deploy.sh would verify releases with it; remove it and run this script again"
   fi
 }
 
@@ -795,7 +897,7 @@ print_summary() {
     printf '  - %s\n' "${CHANGES[@]}"
   fi
   log_info "next, as docs/operations/runbooks/host-setup.md describes: the client certificates in $DEPLOY_COMPOSE_DIR/secrets,"
-  log_info "the remaining values of $DEPLOY_COMPOSE_DIR/.env, and deployments signed in as $DEPLOY_USER with its own key"
+  log_info "the remaining values of $DEPLOY_COMPOSE_DIR/.env, and deployments with scripts/deploy/deploy.sh <tag>, signed in as $DEPLOY_USER with its own key"
 }
 
 main() {
@@ -806,6 +908,7 @@ main() {
   ensure_packages
   ensure_docker_engine
   ensure_docker_daemon_config
+  ensure_github_cli
   ensure_deploy_account
   ensure_no_lxd_access
   ensure_deployment_folder

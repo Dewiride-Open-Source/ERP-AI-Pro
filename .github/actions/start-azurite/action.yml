@@ -6,7 +6,7 @@ description: >-
   service version the emulator does not support fails the run instead of passing silently. The image runs through
   docker run rather than a services container so the digest is pinned in this file; Dependabot cannot bump an image
   inside a docker run command, so the digest is bumped by hand to the reference Dependabot keeps current in
-  infra/compose/compose.override.yaml, and scripts/checks/tests/azurite-pin.test.ts fails while the two differ.
+  infra/compose/compose.override.yaml, and scripts/checks/tests/image-pins.test.ts fails while the two differ.
 inputs:
   container-name:
     description: Name of the Azurite container.

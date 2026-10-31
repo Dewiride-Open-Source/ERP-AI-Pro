@@ -36,7 +36,8 @@ Every configuration key, feature flag and secret **name** in the system. Values 
 
 | Variable | Purpose |
 |---|---|
-| `IMAGE_TAG` | image tag pulled from ghcr.io (`local` for locally built images) |
+| `IMAGE_TAG` | the tag of the images the stack runs: `local` for the images `compose.yaml` builds; in production the release's version without the `v` (such as `0.1.0`), written by `scripts/deploy/deploy.sh` and `rollback.sh`, never by hand ([deploy runbook](operations/runbooks/deploy.md)) |
+| `API_IMAGE_DIGEST`, `WEB_IMAGE_DIGEST`, `PROXY_IMAGE_DIGEST` | production stack only; the digest (`sha256:` and 64 hexadecimal digits) of each image of the release, which `compose.production.yaml` runs as `<image>:${IMAGE_TAG}@<digest>` and refuses to resolve without; written by `deploy.sh` and `rollback.sh` from the release's verified `release-images.env`, never by hand, and empty locally. `.env.previous` keeps the four values of the release before, for `rollback.sh` ([ADR-0053](adr/0053-the-release-public-images-a-dependabot-gate-attestations-verified-on-the-server-and-the-deployment-scripts.md)) |
 | `COMPOSE_NETWORK_CIDR` | subnet of the compose network; the API trusts forwarded headers only from this range |
 | `ERP_SITE_ADDRESS` | production stack only; the address people open the ERP at, a host name or an IP address without scheme or port (today the server's fixed local address), which the proxy serves over HTTPS with a certificate from its own authority for an IP address and from Let's Encrypt for a public name; the host of `Erp:Platform:Identity:WebOrigin` under the production label, and the stack refuses to start without it; the local stack sets `127.0.0.1` itself ([ADR-0048](adr/0048-the-edge-proxy-caddy-on-the-servers-local-address.md), [proxy runbook](operations/runbooks/proxy.md)) |
 | `APPCONFIG_ENDPOINT` | passed to the API as `APPCONFIG_ENDPOINT`; required by the production stack, which refuses to start without it; left empty on a developer machine because the local stack cannot sign in to Azure and runs on `appsettings.json`, the environment `compose.override.yaml` sets (including throwaway sign-in values) and its file secrets |
@@ -57,11 +58,15 @@ A compose secret is a file, never an `.env` variable; the api container reads th
 | `erp-runtime-client.pem` | production (`compose.production.yaml`) | the runtime service principal's certificate, hidden from the key-per-file provider and read only through `AZURE_CLIENT_CERTIFICATE_PATH` |
 | `erp-migrator-client.pem` | production (`compose.production.yaml`) | the migrator service principal's certificate, opened at startup like the runtime certificate; the PEM of `Erp--Platform--Identity--MigratorClientCertificate`, exported with `scripts/azure/export-client-certificate.sh migrator` |
 
-### Image build arguments (`infra/docker/web.Dockerfile`)
+### Image build arguments (`infra/docker/*.Dockerfile`)
 
-| Argument | Default | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_APP_NAME` | `ERP-AI-Pro` | inlined display name; pass `--build-arg NEXT_PUBLIC_APP_NAME=...` to `docker build` (or `build.args` in a compose override) to rename the product in a custom image |
+| Argument | Images | Default | Purpose |
+|---|---|---|---|
+| `NEXT_PUBLIC_APP_NAME` | web | `ERP-AI-Pro` | inlined display name; pass `--build-arg NEXT_PUBLIC_APP_NAME=...` to `docker build` (or `build.args` in a compose override) to rename the product in a custom image |
+| `BUILD_CONFIGURATION` | api | `Release` | the `dotnet publish` configuration of the api, health probe and migrator hosts |
+| `ERP_VERSION` | api, web, proxy | `local` | the final stage's `org.opencontainers.image.version` label; `.github/workflows/release.yml` passes the tag's version without the `v` (such as `0.1.0`), while `verify.ts --docker`, `docker-build` and the compose files pass nothing; the image contents check (`scripts/checks/image-contents.ts`) accepts only `local` or such a version ([ADR-0053](adr/0053-the-release-public-images-a-dependabot-gate-attestations-verified-on-the-server-and-the-deployment-scripts.md)) |
+| `ERP_REVISION` | api, web, proxy | `unknown` | the `org.opencontainers.image.revision` label; the release passes the tagged commit's 40-character id, and the image contents check accepts only `unknown` or such an id |
+| `ERP_CREATED` | api, web, proxy | empty | the `org.opencontainers.image.created` label; the release passes the tagged commit's committer time in UTC (such as `2026-10-28T09:30:00Z`), the instant it also gives the build as `SOURCE_DATE_EPOCH`, and the image contents check accepts only an empty value or such a time |
 
 ## Configuration keys (`appsettings.json` / App Configuration)
 

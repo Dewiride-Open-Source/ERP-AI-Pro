@@ -8,6 +8,8 @@ import { setTimeout as delay } from "node:timers/promises";
 import { connect, getCiphers, type ConnectionOptions } from "node:tls";
 import { fileURLToPath } from "node:url";
 
+import { imageInventoryProblems, isInventoryEvidence } from "../notices/lib/spdx.ts";
+import { imageContentsProblems, imageNames, imageRepository, isRequiredFile, readFirstTarEntry, readSavedImage, repositoryCopies, type TarEntry } from "./lib/image-contents.ts";
 import { repoRoot } from "./lib/walk.ts";
 
 const composeDirectory = join(repoRoot, "infra", "compose");
@@ -15,8 +17,8 @@ const composeFiles = ["-f", "compose.yaml", "-f", "compose.override.yaml"];
 const secretFiles = ["Erp__Platform__Database__ConnectionString", "Erp__Platform__Database__MigratorConnectionString", "Erp__Platform__Attachments__EncryptionKey", "Erp__Platform__Identity__ClientCertificate"];
 const projectName = "erp-ai-pro-smoke";
 const imageTag = process.env.IMAGE_TAG || "local";
-const apiImage = `ghcr.io/dewiride-open-source/erp-ai-pro/api:${imageTag}`;
-const proxyImage = `ghcr.io/dewiride-open-source/erp-ai-pro/proxy:${imageTag}`;
+const apiImage = `${imageRepository("api")}:${imageTag}`;
+const proxyImage = `${imageRepository("proxy")}:${imageTag}`;
 const apiBaseUrl = "http://127.0.0.1:5080";
 const webBaseUrl = "http://127.0.0.1:3000";
 const siteAddress = "127.0.0.1";
@@ -30,7 +32,6 @@ const useShell = process.platform === "win32";
 const keyRingDirectory = "/home/app/.local/share/ERP-AI-Pro/DataProtection-Keys";
 const appUserId = 1654;
 const proxyUserId = 10001;
-const tarHeaderSize = 512;
 const tarEntryKinds = new Map([
   ["5", "a directory"],
   ["0", "a file"],
@@ -66,8 +67,6 @@ type AdaptedRoute = { match?: { host?: string[]; path?: string[] }[]; handle?: A
 type AdaptedServer = { read_timeout?: number; write_timeout?: number; read_idle_timeout?: number; write_idle_timeout?: number; routes?: AdaptedRoute[] };
 
 export type AdaptedConfig = { apps?: { http?: { servers?: Record<string, AdaptedServer> } } };
-
-export type TarEntry = { name: string; type: string; mode: number; uid: number; gid: number };
 
 export type ImageDirectory = { label: string; path: string; expected: TarEntry };
 
@@ -126,33 +125,6 @@ const proxyChecks: ProxyCheck[] = [
 ];
 
 const stoppedApiCheck: ProxyCheck = { name: "the proxy answers for a stopped api", path: `/api/platform/system-info?probe=${queryMarkers.probe}`, status: 502 };
-
-function tarText(header: Uint8Array, offset: number, length: number): string {
-  const field = header.subarray(offset, offset + length);
-  const end = field.indexOf(0);
-  return new TextDecoder().decode(end === -1 ? field : field.subarray(0, end));
-}
-
-function tarOctal(header: Uint8Array, offset: number, length: number): number {
-  const digits = tarText(header, offset, length).trim();
-  if (!/^[0-7]+$/.test(digits)) throw new Error(`the tar header field at byte ${offset} is not an octal number ("${digits}")`);
-  return Number.parseInt(digits, 8);
-}
-
-export function readFirstTarEntry(archive: Uint8Array): TarEntry {
-  if (archive.length < tarHeaderSize) throw new Error(`the archive holds ${archive.length} bytes, less than one tar header`);
-  const header = archive.subarray(0, tarHeaderSize);
-  if (!tarText(header, 257, 6).startsWith("ustar")) throw new Error("the archive does not start with a ustar header");
-  const prefix = tarText(header, 345, 155);
-  const name = tarText(header, 0, 100);
-  return {
-    name: prefix === "" ? name : `${prefix}/${name}`,
-    type: String.fromCodePoint(header[156] ?? 0),
-    mode: tarOctal(header, 100, 8),
-    uid: tarOctal(header, 108, 8),
-    gid: tarOctal(header, 116, 8),
-  };
-}
 
 function describeTarEntry(entry: TarEntry): string {
   const kind = tarEntryKinds.get(entry.type) ?? `a tar entry of type '${entry.type}'`;
@@ -293,6 +265,23 @@ function directoryOutcome(image: string, directory: ImageDirectory): string | un
   } finally {
     spawnSync("docker", ["rm", container], { stdio: ["ignore", "ignore", "inherit"], shell: useShell });
   }
+}
+
+async function imageContentsOutcomes(): Promise<string[]> {
+  const outcomes: string[] = [];
+  for (const image of imageNames) {
+    const reference = `${imageRepository(image)}:${imageTag}`;
+    try {
+      const archive = await readSavedImage(reference, (path, size) => isRequiredFile(path, size) || isInventoryEvidence(path));
+      outcomes.push(
+        ...imageContentsProblems(image, archive, repositoryCopies(repoRoot, image)).map((problem) => `${image} image contents: ${problem}`),
+        ...imageInventoryProblems(image, archive).map((problem) => `${image} image inventory: ${problem}`),
+      );
+    } catch (error) {
+      outcomes.push(`${image} image contents: ${(error as Error).message}`);
+    }
+  }
+  return outcomes;
 }
 
 function imageUserOutcome(image: string, expected: string): string | undefined {
@@ -454,11 +443,11 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  let failures: string[] = [];
+  let failures: string[] = await imageContentsOutcomes();
   try {
     compose("up", "--detach", "--wait", "--wait-timeout", "180", "--no-build");
     const outcomes = [directoryOutcome(apiImage, keyRing), directoryOutcome(proxyImage, proxyData), imageUserOutcome(proxyImage, proxyUser), migratorOutcome(), ...(await Promise.all(checks.map(verify))), ...(await proxyOutcomes())];
-    failures = outcomes.filter((f): f is string => f !== undefined);
+    failures = [...failures, ...outcomes.filter((f): f is string => f !== undefined)];
   } finally {
     if (failures.length > 0) compose("logs", "--no-color", "--tail", "100");
     compose("down", "--remove-orphans", "--volumes", "--timeout", "10");
@@ -470,7 +459,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log(`compose smoke ok: the api image holds ${keyRingDirectory} as ${describeTarEntry(keyRing.expected)}, the proxy image runs as ${proxyUser} and holds /data as ${describeTarEntry(proxyData.expected)}, the migrator completed, ${checks.length} checks passed against the api and the web container, and through the proxy its TLS policy, its configured limits and timeouts, ${proxyChecks.length + 1} requests and a log without query strings or headers`);
+  console.log(`compose smoke ok: the ${imageNames.join(", ")} images hold no forbidden file, the licence and notices files of this checkout and only their own labels, and notices that list exactly the packages they hold, the api image holds ${keyRingDirectory} as ${describeTarEntry(keyRing.expected)}, the proxy image runs as ${proxyUser} and holds /data as ${describeTarEntry(proxyData.expected)}, the migrator completed, ${checks.length} checks passed against the api and the web container, and through the proxy its TLS policy, its configured limits and timeouts, ${proxyChecks.length + 1} requests and a log without query strings or headers`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

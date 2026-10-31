@@ -42,6 +42,8 @@ const apiClientDynamicImport = [
   "no-restricted-syntax",
   /import @dewiride\/erp-api-client types with `import type`/,
 ];
+const imageOptimizerImport = ["no-restricted-imports", /The web image carries no image optimizer/];
+const imageOptimizerDynamicImport = ["no-restricted-syntax", /The web image carries no image optimizer/];
 const httpGlobal = ["no-restricted-globals", /Only shared\/api sends HTTP requests/];
 const httpProperty = ["no-restricted-properties", /Only shared\/api sends HTTP requests/];
 const routeMarkup = ["no-restricted-syntax", /A route file only composes/];
@@ -418,6 +420,59 @@ const cases = [
       "export const bound = globalThis.fetch;",
     ].join("\n"),
     expected: [],
+  },
+  {
+    title: "nextConfig_TypeImportFromNextImageAndOtherNextModules_AreAllowed",
+    file: componentFile,
+    code: [
+      'import type { ImageProps } from "next/image";',
+      'import { type StaticImageData } from "next/legacy/image";',
+      'import Link from "next/link";',
+      "export type Picture = ImageProps | StaticImageData;",
+      "export { Link };",
+    ].join("\n"),
+    expected: [],
+  },
+  {
+    title: "nextConfig_NextImageInAModule_IsReported",
+    file: componentFile,
+    code: [
+      'import Image from "next/image";',
+      'import LegacyImage from "next/legacy/image";',
+      'export const load = () => import("next/image");',
+      "export const loadLegacy = () => import(`next/legacy/image`);",
+      "export { Image, LegacyImage };",
+    ].join("\n"),
+    expected: [
+      imageOptimizerImport,
+      imageOptimizerImport,
+      imageOptimizerDynamicImport,
+      imageOptimizerDynamicImport,
+    ],
+  },
+  {
+    title: "nextConfig_NextImageInShared_IsReported",
+    file: "src/shared/layout/app-shell.tsx",
+    code: 'import Image from "next/image";\nexport { Image };',
+    expected: [imageOptimizerImport],
+  },
+  {
+    title: "nextConfig_NextImageInSharedApi_IsReported",
+    file: "src/shared/api/client.ts",
+    code: 'export { default as Image } from "next/image";',
+    expected: [imageOptimizerImport],
+  },
+  {
+    title: "nextConfig_NextImageInARouteFile_IsReported",
+    file: pageFile,
+    code: 'import Image from "next/image";\nexport const load = () => import("next/image");\nexport { Image };',
+    expected: [imageOptimizerImport, imageOptimizerDynamicImport],
+  },
+  {
+    title: "nextConfig_NextImageInTheRootLayout_IsReported",
+    file: "src/app/layout.tsx",
+    code: 'import Image from "next/image";\nexport { Image };',
+    expected: [imageOptimizerImport],
   },
   {
     title: "nextConfig_HttpGlobalShadowedByAParameter_IsAllowed",

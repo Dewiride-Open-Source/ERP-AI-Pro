@@ -4,24 +4,27 @@ USAGE='Usage: bash scripts/deploy/check.sh
 
 Syntax-checks every shell script under scripts/deploy and runs shellcheck when it is on PATH; checks that
 the systemd units under infra/host/systemd run as the deploy account in the deployment checkout that
-bootstrap.sh creates and wait for exactly the files it names, that the boot unit never migrates,
-recreates or pulls and tries a failed start again, that the nightly unit runs retain alone, and that
-infra/host/docker/daemon.json is JSON; and, where the tools exist (an Ubuntu host or CI runner),
-verifies the units with systemd-analyze,
-the APT settings with apt-config and the Docker daemon configuration with dockerd --validate. Needs no
-root and changes nothing.
+bootstrap.sh creates and wait for exactly the files it names, that both services run compose under the
+lock deploy.sh and rollback.sh hold, that the boot unit never migrates, recreates or pulls and tries a
+failed start again, that the nightly unit runs retain alone, that infra/compose/compose.production.yaml
+runs every image by the digest deploy.sh writes into .env, and that infra/host/docker/daemon.json is JSON;
+runs the stand-in scenarios of deploy.sh and rollback.sh (tests/release-decisions.sh); and, where the
+tools exist (an Ubuntu host or CI runner), verifies the units with systemd-analyze, the APT settings with
+apt-config and the Docker daemon configuration with dockerd --validate. Needs no root and changes nothing.
 
 Options:
   --help            Show this help.'
 
 ACCEPTS_DRY_RUN=0
 
-# shellcheck source=lib/common.sh
-source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
+# shellcheck source=lib/release.sh
+source "$(dirname -- "${BASH_SOURCE[0]}")/lib/release.sh"
 
 readonly UNIT_DIR='infra/host/systemd'
 readonly APT_SETTINGS='infra/host/apt/52erp-ai-pro-unattended-upgrades.conf'
 readonly DAEMON_CONFIG='infra/host/docker/daemon.json'
+readonly BASE_COMPOSE='infra/compose/compose.yaml'
+readonly PRODUCTION_COMPOSE='infra/compose/compose.production.yaml'
 SHELL_SCRIPT_COUNT=0
 
 check_shell_scripts() {
@@ -99,9 +102,37 @@ check_unit_commands() {
     if grep -q '^Requires=' "$unit"; then
       die "$unit requires a unit, so restarting that unit would stop it"
     fi
+    [[ "$(sed -n 's/^ExecStart=//p' "$unit")" == "/usr/bin/flock $DEPLOY_LOCK /usr/bin/docker compose "* ]] \
+      || die "$unit does not run compose under the lock $DEPLOY_LOCK that deploy.sh and rollback.sh hold"
   done
   grep -q '^OnCalendar=.* Asia/Kolkata$' "$timer" || die "$timer does not keep its time in India time"
   log_info "the boot never migrates, recreates or pulls, retries a failed start, and the nightly run is retain alone"
+  log_info "both wait for the lock $DEPLOY_LOCK while a deployment or rollback holds it"
+}
+
+check_release_pins() {
+  log_step "$PRODUCTION_COMPOSE runs the images by the digests deploy.sh writes"
+  local image line setting base_count production_count
+  local -a pinned=()
+  for image in "${RELEASE_IMAGES[@]}"; do
+    line="image: $RELEASE_REGISTRY/$image:\${IMAGE_TAG:?set by deploy.sh}@\${${image^^}_IMAGE_DIGEST:?set by deploy.sh}"
+    grep -qF -- "$line" "$PRODUCTION_COMPOSE" || die "$PRODUCTION_COMPOSE does not run the $image image as '$line'"
+    pinned+=("$line")
+  done
+  while IFS= read -r line; do
+    setting="${line#"${line%%[![:space:]]*}"}"
+    is_one_of "$setting" "${pinned[@]}" || die "$PRODUCTION_COMPOSE names an image without the digest deploy.sh writes: $setting"
+  done < <(grep -E '^[[:space:]]+image:' "$PRODUCTION_COMPOSE")
+  base_count="$(grep -cE '^[[:space:]]+image:' "$BASE_COMPOSE")"
+  production_count="$(grep -cE '^[[:space:]]+image:' "$PRODUCTION_COMPOSE")"
+  (( base_count == production_count )) \
+    || die "$BASE_COMPOSE names $base_count image(s) and $PRODUCTION_COMPOSE pins $production_count, so a service would run an unpinned tag"
+  log_info "all $production_count services run their image by the digest deploy.sh writes"
+}
+
+check_release_decisions() {
+  log_step "deploy.sh and rollback.sh against stand-ins (tests/release-decisions.sh)"
+  bash scripts/deploy/tests/release-decisions.sh
 }
 
 check_daemon_config() {
@@ -153,10 +184,12 @@ main() {
   check_shell_scripts
   check_unit_paths
   check_unit_commands
+  check_release_pins
   check_daemon_config
   check_units_with_systemd
   check_apt_settings
-  printf 'deploy scripts check ok: %s shell script(s) parse and the host configuration is consistent\n' "$SHELL_SCRIPT_COUNT"
+  check_release_decisions
+  printf 'deploy scripts check ok: %s shell script(s) parse, the host configuration is consistent and the release decisions hold\n' "$SHELL_SCRIPT_COUNT"
 }
 
 main "$@"

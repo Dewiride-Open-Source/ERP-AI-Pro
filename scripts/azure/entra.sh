@@ -254,7 +254,7 @@ run_rotate_signin() {
   log_info "next steps:"
   if [[ "$label" == production ]]; then
     log_info "  1. restart the api so it loads the new certificate (it reads the certificate only when it starts), on the server:"
-    log_info "     docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api"
+    log_info "     flock /srv/erp-ai-pro/deploy.lock docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up --detach --wait --wait-timeout 300 --force-recreate --no-deps --no-build --pull never api"
   else
     log_info "  1. restart every API started with dotnet run so it loads the new certificate from the store (it reads the certificate only when it"
     log_info "     starts); the local containers and the store-less APIs of the browser tests use throwaway certificates and need nothing"
@@ -283,7 +283,7 @@ run_rotate_client() {
   log_info "next steps:"
   log_info "  1. bash scripts/azure/export-client-certificate.sh $TARGET   (downloads the new version and prints the placement command for the server)"
   if [[ "$TARGET" == runtime ]]; then
-    log_info "  2. on the server: docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --force-recreate api   (a plain up -d keeps the running container with the old certificate file)"
+    log_info "  2. on the server: flock /srv/erp-ai-pro/deploy.lock docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up --detach --wait --wait-timeout 300 --force-recreate --no-deps --no-build --pull never api   (a plain up -d keeps the running container with the old certificate file)"
   else
     log_info "  2. nothing to restart: every migrator run, the nightly retain included, starts a new container that reads the new file"
   fi

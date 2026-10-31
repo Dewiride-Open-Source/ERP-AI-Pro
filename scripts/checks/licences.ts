@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
@@ -13,6 +13,7 @@ import {
   type RestoredPackage,
   toolManifestPackages,
 } from "./lib/licence-policy.ts";
+import { globalPackagesFolder, packageDirectory, packageEntry } from "./lib/nuget-packages.ts";
 import { repoRoot } from "./lib/walk.ts";
 
 const usage = `Usage: node scripts/checks/licences.ts <npm|nuget> [options]
@@ -53,23 +54,13 @@ function npmLicences(): PackageLicence[] {
   return pnpmPackageLicences(result.stdout);
 }
 
-function globalPackagesFolder(): string {
+function nugetPackagesFolder(): string {
   if (values.packages !== undefined) return resolve(values.packages);
-  const result = spawnSync("dotnet", ["nuget", "locals", "global-packages", "--list"], { cwd: join(root, "backend"), encoding: "utf8" });
-  const folder = /global-packages:\s*(.+)/.exec(result.stdout ?? "")?.[1]?.trim();
-  if (result.status !== 0 || !folder) fail(`dotnet nuget locals global-packages --list failed\n${result.stderr ?? ""}`);
-  return folder;
-}
-
-function packageEntry(directory: string, relativePath: string): string | undefined {
-  let current = directory;
-  for (const segment of relativePath.split(/[\\/]/).filter((part) => part.length > 0)) {
-    if (!existsSync(current) || !statSync(current).isDirectory()) return undefined;
-    const entry = readdirSync(current).find((candidate) => candidate.toLowerCase() === segment.toLowerCase());
-    if (entry === undefined) return undefined;
-    current = join(current, entry);
+  try {
+    return globalPackagesFolder(join(root, "backend"));
+  } catch (error) {
+    fail((error as Error).message);
   }
-  return statSync(current).isFile() ? current : undefined;
 }
 
 function restoredPackages(): RestoredPackage[] {
@@ -87,13 +78,13 @@ function restoredPackages(): RestoredPackage[] {
 }
 
 function nugetLicences(): PackageLicence[] {
-  const folder = globalPackagesFolder();
+  const folder = nugetPackagesFolder();
   const packages = new Map<string, RestoredPackage>();
   for (const restored of restoredPackages()) packages.set(`${restored.name}@${restored.version}`.toLowerCase(), restored);
   const missing: string[] = [];
   const licences: PackageLicence[] = [];
   for (const { name, version } of packages.values()) {
-    const directory = join(folder, name.toLowerCase(), version.toLowerCase());
+    const directory = packageDirectory(folder, name, version);
     const nuspec = packageEntry(directory, `${name}.nuspec`);
     if (nuspec === undefined) {
       missing.push(`  ${name} ${version}`);

@@ -61,7 +61,7 @@ export const reviewedPackages: readonly ReviewedPackage[] = [
     name: "Microsoft.Identity.Client.NativeInterop",
     evidence: { kind: "file", sha256: "0fe665c2ada5962fd01190ab5b2947b9a9d2c625a9f8225577441eb3256e14e3" },
     reason:
-      "Microsoft Software License Terms for the MSAL native runtime that Microsoft.Data.SqlClient.Extensions.Azure brings in through Microsoft.Identity.Client.Broker; LICENSE read: section 3(e) forbids distributing it, so it runs only on Dewiride's own servers and first-deployment-release-and-deploy-pipeline keeps it out of every image that is conveyed",
+      "Microsoft Software License Terms for the MSAL native runtime that Microsoft.Data.SqlClient.Extensions.Azure brings in through Microsoft.Identity.Client.Broker; LICENSE read: section 3(e) forbids distributing it, so the published Api and Migrator hosts exclude it (ExcludeAssets all), no image holds it, which scripts/checks/image-contents.ts proves, and only local and CI test builds restore it",
   },
   {
     ecosystem: "nuget",

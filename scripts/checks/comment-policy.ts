@@ -1,44 +1,21 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { hasSegment, repoRoot, toRepoPath, walk } from "./lib/walk.ts";
-
-type Language = { extensions: string[]; line: RegExp[]; blockStart?: RegExp; blockEnd?: RegExp };
-
-const languages: Language[] = [
-  { extensions: [".cs"], line: [/^\s*\/\/\/?/], blockStart: /\/\*/, blockEnd: /\*\// },
-  { extensions: [".ts", ".tsx", ".mjs", ".js"], line: [/^\s*\/\//], blockStart: /\/\*/, blockEnd: /\*\// },
-  { extensions: [".bicep"], line: [/^\s*\/\//], blockStart: /\/\*/, blockEnd: /\*\// },
-  { extensions: [".yml", ".yaml", ".sh", ".editorconfig", ".dockerignore", ".gitignore"], line: [/^\s*#/] },
-  { extensions: ["Dockerfile", "Caddyfile", ".service", ".timer"], line: [/^\s*#/] },
-  { extensions: [".conf"], line: [/^\s*#/, /^\s*\/\//] },
-  { extensions: [".css"], line: [], blockStart: /\/\*/, blockEnd: /\*\// },
-];
-
-const bannedPatterns: { pattern: RegExp; reason: string }[] = [
-  { pattern: /\b(TODO|FIXME|HACK|XXX)\b/, reason: "use a roadmap note instead of a task marker" },
-  {
-    pattern: /\b(moved from|previously|no longer|used to be|replaces the old|updated to|legacy|deprecated)\b/i,
-    reason: "comments describe the current code, not its history",
-  },
-  { pattern: /#region\b/, reason: "regions are not used" },
-];
+import { isScanned, policyFindings } from "./lib/comment-policy.ts";
+import { repoRoot, toRepoPath, walk } from "./lib/walk.ts";
 
 const roots = ["backend", "frontend", "scripts", "infra", ".github"].map((r) => join(repoRoot, r));
-const generatedFolders = ["Migrations"];
+const efMigrationFile = /\/Migrations\/(\d{14}_[^/]*|[^/]*ModelSnapshot)\.cs$/;
 const generatedPaths = ["/components/ui/", "/packages/api-client/src/generated/"];
-const selfPath = "scripts/checks/comment-policy.ts";
 
 const findings: string[] = [];
 
 for (const root of roots) {
   for (const file of walk(root, () => true)) {
     const repoPath = toRepoPath(file);
-    const language = languages.find((l) => l.extensions.some((ext) => repoPath.endsWith(ext)));
-    if (!language) continue;
-    if (repoPath === selfPath) continue;
-    if (generatedFolders.some((folder) => hasSegment(repoPath, folder)) || generatedPaths.some((path) => repoPath.includes(path))) continue;
-    scan(repoPath, readFileSync(file, "utf8"), language);
+    if (!isScanned(repoPath)) continue;
+    if (efMigrationFile.test(repoPath) || generatedPaths.some((path) => repoPath.includes(path))) continue;
+    for (const { line, text, reason } of policyFindings(repoPath, readFileSync(file, "utf8"))) findings.push(`${repoPath}:${line}: ${reason} — ${text.trim()}`);
   }
 }
 
@@ -49,23 +26,3 @@ if (findings.length > 0) {
 }
 
 console.log("comment policy ok");
-
-function scan(repoPath: string, content: string, language: Language): void {
-  let inBlock = false;
-  content.split(/\r?\n/).forEach((line, index) => {
-    let commentText: string | undefined;
-    if (inBlock) {
-      commentText = line;
-      if (language.blockEnd?.test(line)) inBlock = false;
-    } else if (language.line.some((pattern) => pattern.test(line))) {
-      commentText = line;
-    } else if (language.blockStart?.test(line)) {
-      commentText = line.slice(line.search(language.blockStart));
-      inBlock = !language.blockEnd?.test(commentText);
-    }
-    if (commentText === undefined) return;
-    for (const { pattern, reason } of bannedPatterns) {
-      if (pattern.test(commentText)) findings.push(`${repoPath}:${index + 1}: ${reason} — ${commentText.trim()}`);
-    }
-  });
-}

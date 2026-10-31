@@ -2,13 +2,14 @@
 
 USAGE='Usage: bash scripts/deploy/tests/bootstrap-runner.sh
 
-Runs scripts/deploy/bootstrap.sh on the GitHub-hosted Ubuntu runner it runs on, after taking Docker off
-it so the bootstrap installs Docker Engine from Docker'"'"'s repository: it proves that a deploy key shared
-with the administrator is refused, that a dry run without root and one with sudo change nothing, that
-the second of two runs with sudo and a dry run after it find nothing to change, and then that the deploy
-account signs in with its own key and reaches Docker with live restore and rotated logs, that a password
-sign-in is refused, and that sshd, the firewall on IPv4 and IPv6, the docker and lxd groups, the units,
-the update services and settings, the checkout with its secrets folder and .env, the volumes and the
+Runs scripts/deploy/bootstrap.sh on the GitHub-hosted Ubuntu runner it runs on, after taking Docker and the
+GitHub CLI off it so the bootstrap installs Docker Engine from Docker'"'"'s repository and gh from GitHub'"'"'s:
+it proves that a deploy key shared with the administrator is refused, that a dry run without root and one
+with sudo change nothing, that the second of two runs with sudo and a dry run after it find nothing to
+change, and then that the deploy account signs in with its own key, reaches Docker with live restore and
+rotated logs and runs gh 2.102.0 or later from GitHub'"'"'s repository with GitHub'"'"'s keys alone, that a
+password sign-in is refused, and that sshd, the firewall on IPv4 and IPv6, the docker and lxd groups, the
+units, the update services and settings, the checkout with its secrets folder and .env, the volumes and the
 production stack'"'"'s IPv4-only ports are what ADR-0049 decides. It hardens the machine it runs on, so it
 refuses to run anywhere but on a GitHub-hosted runner, as the runner user.
 
@@ -22,10 +23,15 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/../lib/common.sh"
 
 readonly RUNNER_DOCKER_PACKAGES=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-ce-rootless-extras moby-engine moby-cli moby-containerd moby-runc moby-buildx moby-compose)
 readonly UPDATE_SERVICES=(apt-daily.service apt-daily-upgrade.service)
+readonly GITHUB_CLI_SOURCE='/etc/apt/sources.list.d/github-cli.sources'
+readonly GITHUB_CLI_KEYRING='/etc/apt/keyrings/githubcli-archive-keyring.gpg'
+readonly GITHUB_CLI_KEYS='2C6106201985B60E6C7AC87323F3D4EA75716059 7F38BBB59D064DBCB3D84D725612B36462313325'
+readonly PLACEHOLDER_DIGEST='sha256:0000000000000000000000000000000000000000000000000000000000000000'
 
 WORK_DIR=''
 SITE_ADDRESS=''
 HOME_NETWORK=''
+SSH_OPTIONS=()
 
 remove_work_dir() {
   if [[ -n "$WORK_DIR" ]]; then
@@ -51,6 +57,17 @@ remove_runner_docker() {
   log_info "Docker is off the runner, so the bootstrap installs it"
 }
 
+remove_runner_github_cli() {
+  if [[ "$(dpkg-query -W -f='${Status}' gh 2> /dev/null || true)" == 'install ok installed' ]]; then
+    sudo env DEBIAN_FRONTEND=noninteractive apt-get -qq purge -y gh > /dev/null
+  fi
+  sudo rm -f /etc/apt/sources.list.d/github-cli.list "$GITHUB_CLI_SOURCE" "$GITHUB_CLI_KEYRING" /usr/share/keyrings/githubcli-archive-keyring.gpg
+  if command -v gh > /dev/null 2>&1; then
+    die "the GitHub CLI is still on the runner ($(command -v gh)), so the bootstrap's install would not run"
+  fi
+  log_info "the GitHub CLI is off the runner, so the bootstrap installs it"
+}
+
 prepare_runner() {
   log_step "Preparing the runner"
   ssh-keygen -q -t ed25519 -N '' -C bootstrap-test-admin -f "$WORK_DIR/admin"
@@ -60,6 +77,7 @@ prepare_runner() {
   cat "$WORK_DIR/admin.pub" >> "$HOME/.ssh/authorized_keys"
   chmod 600 "$HOME/.ssh/authorized_keys"
   remove_runner_docker
+  remove_runner_github_cli
   # The runner must not upgrade or restart itself during the test, and masking the services proves that the bootstrap unmasks them.
   local unit
   for unit in "${UPDATE_SERVICES[@]}"; do
@@ -82,11 +100,15 @@ assert_untouched() {
     die "$after created the account $DEPLOY_USER or $DEPLOY_HOME"
   fi
   local path
-  for path in /etc/docker/daemon.json /etc/ssh/sshd_config.d/10-erp-ai-pro.conf /etc/systemd/system/erp-ai-pro.service /etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf; do
+  for path in /etc/docker/daemon.json /etc/ssh/sshd_config.d/10-erp-ai-pro.conf /etc/systemd/system/erp-ai-pro.service /etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf \
+    "$GITHUB_CLI_SOURCE" "$GITHUB_CLI_KEYRING"; do
     [[ ! -e "$path" ]] || die "$after wrote $path"
   done
   if command -v docker > /dev/null 2>&1; then
     die "$after installed Docker"
+  fi
+  if command -v gh > /dev/null 2>&1; then
+    die "$after installed the GitHub CLI"
   fi
   [[ "$(sudo env LC_ALL=C ufw status)" == 'Status: inactive'* ]] || die "$after turned the firewall on"
   [[ "$(systemctl is-enabled apt-daily-upgrade.service 2> /dev/null || true)" == masked ]] || die "$after unmasked the update services"
@@ -129,12 +151,11 @@ run_bootstrap() {
 
 prove_sign_in() {
   log_step "Sign-in"
-  local -a options=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o "UserKnownHostsFile=$WORK_DIR/known_hosts" -o ConnectTimeout=10)
-  [[ "$(ssh "${options[@]}" -i "$WORK_DIR/deploy" "$DEPLOY_USER@127.0.0.1" "docker info --format '{{.LiveRestoreEnabled}}'")" == true ]] \
+  [[ "$(ssh "${SSH_OPTIONS[@]}" -i "$WORK_DIR/deploy" "$DEPLOY_USER@127.0.0.1" "docker info --format '{{.LiveRestoreEnabled}}'")" == true ]] \
     || die "$DEPLOY_USER cannot sign in with its key and reach Docker with live restore"
   passed "$DEPLOY_USER signs in with its own key and reaches Docker, which keeps containers running across its own restarts"
   local refusal
-  refusal="$(ssh "${options[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive "$USER@127.0.0.1" true 2>&1 || true)"
+  refusal="$(ssh "${SSH_OPTIONS[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=password,keyboard-interactive "$USER@127.0.0.1" true 2>&1 || true)"
   [[ "$refusal" == *'Permission denied (publickey).'* ]] || die "a password sign-in was not refused with public keys as the only method: $refusal"
   passed "a password sign-in is refused, and sshd offers public keys only"
 }
@@ -152,6 +173,32 @@ prove_docker() {
   sudo docker rm erp-ai-pro-log-check > /dev/null
   [[ "$logging" == 'json-file 20m 5' ]] || die "a new container logs with '$logging' instead of json-file, 20m, 5"
   passed "Docker Engine and Compose come from Docker's repository, and a container without logging of its own rotates its log at 20 MB, 5 files"
+}
+
+prove_github_cli() {
+  log_step "The GitHub CLI from GitHub's repository"
+  local expected fingerprints fingerprint version output
+  printf -v expected 'Types: deb\nURIs: https://cli.github.com/packages\nSuites: stable\nComponents: main\nArchitectures: %s\nSigned-By: %s' \
+    "$(dpkg --print-architecture)" "$GITHUB_CLI_KEYRING"
+  [[ "$(< "$GITHUB_CLI_SOURCE")" == "$expected" ]] || die "$GITHUB_CLI_SOURCE holds: $(< "$GITHUB_CLI_SOURCE")"
+  [[ "$(stat -c '%a %U:%G' "$GITHUB_CLI_SOURCE" "$GITHUB_CLI_KEYRING" | sort -u)" == '644 root:root' ]] \
+    || die "$GITHUB_CLI_SOURCE and $GITHUB_CLI_KEYRING are not root's with mode 644"
+  install -d -m 700 "$WORK_DIR/gnupg"
+  fingerprints="$(gpg --batch --quiet --homedir "$WORK_DIR/gnupg" --with-colons --show-keys -- "$GITHUB_CLI_KEYRING" \
+    | awk -F: '$1 == "pub" { primary = 1; next } $1 == "fpr" && primary { print $10 } { primary = 0 }')"
+  gpgconf --homedir "$WORK_DIR/gnupg" --kill all > /dev/null 2>&1 || true
+  grep -qxF 7F38BBB59D064DBCB3D84D725612B36462313325 <<< "$fingerprints" || die "$GITHUB_CLI_KEYRING lacks GitHub's signing key: $fingerprints"
+  while IFS= read -r fingerprint; do
+    [[ " $GITHUB_CLI_KEYS " == *" $fingerprint "* ]] || die "$GITHUB_CLI_KEYRING holds the key $fingerprint, which GitHub does not publish"
+  done <<< "$fingerprints"
+  apt-cache policy gh | awk 'found && /^        / { print; next } found { exit } /^ \*\*\* / { found = 1 }' \
+    | grep -qF 'https://cli.github.com/packages stable/main' || die "the installed gh does not come from GitHub's repository: $(apt-cache policy gh)"
+  version="$(dpkg-query -W -f='${Version}' gh)"
+  dpkg --compare-versions "$version" ge "$MINIMUM_GH_VERSION" || die "gh $version is older than $MINIMUM_GH_VERSION"
+  output="$(ssh "${SSH_OPTIONS[@]}" -i "$WORK_DIR/deploy" "$DEPLOY_USER@127.0.0.1" 'env -i HOME="$HOME" PATH="$PATH" gh --version')" \
+    || die "$DEPLOY_USER cannot run gh as deploy.sh runs it"
+  [[ "${output%%$'\n'*}" == "gh version $version "* ]] || die "$DEPLOY_USER runs another gh than the packaged $version: $output"
+  passed "$DEPLOY_USER runs gh $version from GitHub's repository, signed with GitHub's keys alone ($(paste -sd ' ' - <<< "$fingerprints"))"
 }
 
 prove_access_rules() {
@@ -233,7 +280,9 @@ prove_deployment_folder() {
 prove_ipv4_ports() {
   log_step "The production stack publishes its ports on IPv4 only"
   local ports
-  ports="$(cd infra/compose && ERP_SITE_ADDRESS="$SITE_ADDRESS" docker compose -f compose.yaml -f compose.production.yaml config --format json \
+  ports="$(cd infra/compose && ERP_SITE_ADDRESS="$SITE_ADDRESS" IMAGE_TAG=0.0.0 API_IMAGE_DIGEST="$PLACEHOLDER_DIGEST" \
+    WEB_IMAGE_DIGEST="$PLACEHOLDER_DIGEST" PROXY_IMAGE_DIGEST="$PLACEHOLDER_DIGEST" \
+    docker compose -f compose.yaml -f compose.production.yaml config --format json \
     | jq -r '.services | to_entries[] | .key as $service | (.value.ports // [])[] | "\($service) \(.host_ip // "*") \(.published) \(.target)"')"
   [[ "$ports" == $'proxy 0.0.0.0 80 80\nproxy 0.0.0.0 443 443' ]] || die "the production stack publishes: $ports"
   passed "only the proxy publishes ports, 80 and 443 on 0.0.0.0"
@@ -247,15 +296,17 @@ main() {
   if is_root; then
     die "run it as the runner user; it calls sudo where it needs root"
   fi
-  require_command sudo ssh ssh-keygen jq git apt-cache
+  require_command sudo ssh ssh-keygen jq git apt-cache gpg gpgconf
   cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
   WORK_DIR="$(mktemp -d)"
   trap remove_work_dir EXIT
+  SSH_OPTIONS=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o "UserKnownHostsFile=$WORK_DIR/known_hosts" -o ConnectTimeout=10)
 
   prepare_runner
   run_bootstrap
   prove_sign_in
   prove_docker
+  prove_github_cli
   prove_access_rules
   prove_units_and_updates
   prove_deployment_folder

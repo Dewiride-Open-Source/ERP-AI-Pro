@@ -27,14 +27,12 @@ The local stack keeps attachments in the `azurite` service, Microsoft's Blob Sto
 # local: build and run both images with the Aspire dashboard
 docker compose -f infra/compose/compose.yaml -f infra/compose/compose.override.yaml --profile observability up -d --build --wait
 
-# production (as erp-ai-pro in /srv/erp-ai-pro/ERP-AI-Pro on the host, which scripts/deploy/bootstrap.sh prepares):
-# pull, migrate on its own, then roll the stack (docs/operations/runbooks/migrations.md)
-docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml pull api web proxy
-docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml run --rm migrator
-docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up -d --remove-orphans --wait
+# production (as erp-ai-pro on the host, which scripts/deploy/bootstrap.sh prepares): verify the release, pull its
+# images by digest, migrate on its own, then roll the stack (docs/operations/runbooks/deploy.md)
+bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/deploy.sh v0.1.0
 ```
 
-The migrator runs on its own first because `up` replaces a changed `api` container before it waits for the migrator; running it separately keeps the previous API serving when a migration fails ([ADR-0021](../docs/adr/0021-migrator-program-and-seeding.md)). Its `migrate` also deletes the security events and change records past their retention, and `retain` does only that, so the nightly run that `erp-ai-pro-retain.timer` starts on the host moves no schema ahead of the running API ([ADR-0043](../docs/adr/0043-change-records-and-the-append-only-audit-schema.md)). Both volumes are declared `external`, so `up` refuses to start until they exist and `docker compose down -v` can never delete them; the host bootstrap creates them. The api image creates the key ring's mount point owned by `app` with mode 0700, which an empty volume takes on at its first mount, and losing that volume signs everyone out ([secrets runbook](../docs/operations/runbooks/secrets.md), section 5e).
+In production `compose.production.yaml` runs every image as `<image>:${IMAGE_TAG}@<digest>`, from the four release values `deploy.sh` writes into `.env`, and refuses to resolve without them ([ADR-0053](../docs/adr/0053-the-release-public-images-a-dependabot-gate-attestations-verified-on-the-server-and-the-deployment-scripts.md)). The migrator runs on its own first because `up` replaces a changed `api` container before it waits for the migrator; running it separately keeps the previous API serving when a migration fails ([ADR-0021](../docs/adr/0021-migrator-program-and-seeding.md)). Its `migrate` also deletes the security events and change records past their retention, and `retain` does only that, so the nightly run that `erp-ai-pro-retain.timer` starts on the host moves no schema ahead of the running API ([ADR-0043](../docs/adr/0043-change-records-and-the-append-only-audit-schema.md)). Both volumes are declared `external`, so `up` refuses to start until they exist and `docker compose down -v` can never delete them; the host bootstrap creates them. The api image creates the key ring's mount point owned by `app` with mode 0700, which an empty volume takes on at its first mount, and losing that volume signs everyone out ([secrets runbook](../docs/operations/runbooks/secrets.md), section 5e).
 
 ## Host
 
@@ -42,10 +40,10 @@ The migrator runs on its own first because `up` replaces a changed `api` contain
 
 | File | Installed as | Does |
 |---|---|---|
-| `host/systemd/erp-ai-pro.service` | `/etc/systemd/system/` | brings the last deployment's api, web and proxy containers back at boot, never running the migrator, recreating a container or pulling, and tries a failed start again every minute |
-| `host/systemd/erp-ai-pro-retain.service`, `.timer` | `/etc/systemd/system/` | `run --rm -T migrator retain` every night at 01:00 India time, its result in the journal |
+| `host/systemd/erp-ai-pro.service` | `/etc/systemd/system/` | brings the last deployment's api, web and proxy containers back at boot, never running the migrator, recreating a container or pulling, and tries a failed start again every minute; it waits for the deployment lock `/srv/erp-ai-pro/deploy.lock` |
+| `host/systemd/erp-ai-pro-retain.service`, `.timer` | `/etc/systemd/system/` | `run --rm -T migrator retain` every night at 01:00 India time, under the same lock, its result in the journal |
 | `host/ssh/10-erp-ai-pro.conf` | `/etc/ssh/sshd_config.d/` | public keys only, no root sign-in, no X11 forwarding |
-| `host/apt/52erp-ai-pro-unattended-upgrades.conf` | `/etc/apt/apt.conf.d/` | daily security updates, restarting the server at 03:00 India time when one needs it |
+| `host/apt/52erp-ai-pro-unattended-upgrades.conf` | `/etc/apt/apt.conf.d/` | daily security updates, the GitHub CLI's repository included, restarting the server at 03:00 India time when one needs it |
 | `host/docker/daemon.json` | `/etc/docker/daemon.json` | live restore, and rotated logs for containers without logging of their own |
 
 ### Local secret files

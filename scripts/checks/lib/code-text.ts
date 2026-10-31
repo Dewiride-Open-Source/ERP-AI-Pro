@@ -1,21 +1,36 @@
 type ScanState = { braceDepth: number; readonly templateBraceDepths: number[] };
 
+export type TextRange = { readonly start: number; readonly end: number };
+
 const regexAfterPunctuation = new Set("(,=:[!&|?{};+-*%<>~^");
 const blockCommentAfterPunctuation = new Set("{([,;=!&|?");
 const regexAfterKeyword = /(?:^|[^\w$])(?:return|typeof|instanceof|in|of|new|delete|void|throw|case|do|else|yield|await)$/;
 
 export function withoutComments(source: string): string {
+  return scan(source).output;
+}
+
+export function commentRanges(source: string): TextRange[] {
+  return scan(source).comments;
+}
+
+function scan(source: string): { output: string; comments: TextRange[] } {
   const state: ScanState = { braceDepth: 0, templateBraceDepths: [] };
+  const comments: TextRange[] = [];
   let output = "";
   let index = 0;
   while (index < source.length) {
     const comment = endOfComment(source, index);
     const end = comment ?? endOfToken(source, index, output, state);
     const text = source.slice(index, end);
-    output += comment === undefined ? text : text.replace(/[^\r\n]/g, " ");
+    if (comment === undefined) output += text;
+    else {
+      output += text.replace(/[^\r\n]/g, " ");
+      comments.push({ start: index, end });
+    }
     index = end;
   }
-  return output;
+  return { output, comments };
 }
 
 function endOfComment(source: string, index: number): number | undefined {

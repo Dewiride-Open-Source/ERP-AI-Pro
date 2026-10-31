@@ -10,5 +10,7 @@ internal static class MigratorExitCodes
 
     public const int MigrationsPending = 3;
 
+    public const int DatabaseAhead = 4;
+
     public const int Usage = 64;
 }

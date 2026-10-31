@@ -18,4 +18,6 @@
 docs/roadmap/ROADMAP.md linguist-generated=true
 pnpm-lock.yaml linguist-generated=true
 **/packages.lock.json linguist-generated=true
-**/Migrations/** linguist-generated=true
+**/Migrations/[0-9]*.cs linguist-generated=true
+**/Migrations/*ModelSnapshot.cs linguist-generated=true
+infra/docker/notices/** linguist-generated=true

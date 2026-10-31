@@ -9,7 +9,7 @@ These settings live outside the repository, in **Settings** of `Dewiride-Open-So
 
 ## Code security
 
-- **Dependency graph** and **Dependabot alerts**: enabled (automatic for public repositories).
+- **Dependency graph** and **Dependabot alerts**: enabled (automatic for public repositories). Keep the alerts enabled: the `gate` job of `release.yml` reads them with the `vulnerability-alerts: read` permission and refuses every release while the alerts API answers 403.
   - Dependency review (the dependency-review workflow) reads `.github/dependency-review-config.yml`: it fails a pull request on a high-severity vulnerability or on a dependency whose licence is outside the allow list of `scripts/checks/lib/licence-policy.ts`, which `scripts/checks/tests/licences.test.ts` keeps equal to the configuration ([ADR-0030](../adr/0030-community-and-enterprise-editions.md)). The dependency graph does not see this workspace's transitive npm packages (it lists npm packages only as `pkg:npm/<name>@catalog:`, without licences), so `scripts/checks/licences.ts` is the gate for them: `node scripts/checks/licences.ts npm` checks every installed npm package (ci-frontend) and `node scripts/checks/licences.ts nuget` every NuGet package restored for any project of the solution (the `libraries` of every `backend/artifacts/obj/*/project.assets.json`) and every local tool of `backend/.config/dotnet-tools.json` (ci-backend); a reviewed package passes only while its pinned licence evidence (declared npm text, NuGet licence-file SHA-256 or NuGet licence URL) is unchanged.
   - Without versions, Dependabot alerts and dependency review match no npm advisory either, so `scripts/checks/advisories.ts` is the advisory gate for the frontend workspace ([ADR-0044](../adr/0044-npm-advisory-gate-and-eslint-10.md)).
     - **What it checks:** `node scripts/checks/advisories.ts` runs `pnpm audit --json` over `frontend/pnpm-lock.yaml`. It fails on a high or critical advisory that `reviewedAdvisories` of `scripts/checks/lib/advisory-policy.ts` does not list. A listed advisory fails once a fixed release is published, when it is reached through a dependency its review does not name, or when it is no longer reported.
@@ -51,7 +51,15 @@ The ruleset is named `main` and targets the default branch.
 
 - Default branch `main`; merge button: squash only, with the pull request title as the commit title and the commit messages as its body; automatically delete head branches.
 - Issues enabled with the templates in `.github/ISSUE_TEMPLATE/`; Discussions optional.
-- Packages: GitHub Container Registry visibility for `ghcr.io/dewiride-open-source/erp-ai-pro/*` is set when the first image is published.
+- Packages: see [Releases](#releases).
+
+## Releases
+
+`.github/workflows/release.yml` runs on a pushed tag `v*` and publishes the release `ERP-AI-Pro <tag>` from a draft ([ADR-0053](../adr/0053-the-release-public-images-a-dependabot-gate-attestations-verified-on-the-server-and-the-deployment-scripts.md), [deploy runbook](runbooks/deploy.md)). Its jobs hold only these permissions: `gate` reads `contents`, `checks`, `actions`, `pull-requests` and `vulnerability-alerts`; `build` reads `contents` and writes `packages`; `attest` reads `contents` and writes `packages`, `id-token` and `attestations`; `release` writes `contents` and reads `pull-requests` and `vulnerability-alerts`.
+
+- **Required checks of a release.** The gate requires the 23 check runs that run on a push to `main`, by job name. Renaming or adding a job of `ci-backend`, `ci-frontend`, `docker-build`, `e2e`, `codeql` or `roadmap` changes the `required` list of `release.yml` in the same commit, or every release is refused.
+- **Organisation → Packages → Package creation**: members may create public packages, so the first release's `GITHUB_TOKEN` creates `ghcr.io/dewiride-open-source/erp-ai-pro/api`, `web` and `proxy`, which the workflow links to this repository. GitHub creates a package private and has no REST endpoint for its visibility, so once the first release has pushed them, each is set to **Public** in its **Package settings → Danger Zone → Change visibility** (owner decision of 2026-10-19), and keeps that visibility: a public package can never be made private again. Until then the `attest` job's check, which reads the registry without credentials as `deploy.sh` does, stops the release before it is published ([deploy runbook](runbooks/deploy.md), "Cutting a release").
+- **Immutable releases** (Settings → General → Releases): enabled (owner decision of 2026-10-28), so a published release's tag and files can no longer change.
 
 ## Labels
 

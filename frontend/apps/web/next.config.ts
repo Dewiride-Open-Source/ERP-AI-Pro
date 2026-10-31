@@ -13,11 +13,26 @@ export default function nextConfig(phase: string): NextConfig {
   return {
     output: "standalone",
     outputFileTracingRoot: fileURLToPath(new URL("../../", import.meta.url)),
+    outputFileTracingExcludes: {
+      "*": [
+        "node_modules/sharp",
+        "node_modules/sharp/**",
+        "node_modules/@img/**",
+        "../../node_modules/.pnpm/sharp@*/**",
+        "../../node_modules/.pnpm/@img+*/**",
+        "../../node_modules/.pnpm/*/node_modules/sharp",
+        "../../node_modules/.pnpm/*/node_modules/sharp/**",
+        "../../node_modules/.pnpm/*/node_modules/@img/**",
+        "../../node_modules/.pnpm/node_modules/sharp",
+        "../../node_modules/.pnpm/node_modules/@img/**",
+      ],
+    },
     transpilePackages: ["@dewiride/erp-ui"],
     typedRoutes: true,
     poweredByHeader: false,
     reactStrictMode: true,
     cacheComponents: false,
+    images: { unoptimized: true },
     experimental: {
       // Above the API's longest permitted Erp:Platform:Host:RequestTimeout (10 minutes), so a slow /api call ends with the
       // API's own 504 problem rather than the rewrite proxy cutting it off at its 30-second default.
