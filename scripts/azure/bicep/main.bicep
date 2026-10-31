@@ -45,6 +45,26 @@ param productionStorageDeleteRetentionDays int = 90
 
 param productionStorageHomeAddress string = ''
 
+@minLength(3)
+@maxLength(24)
+param backupStorageAccountName string
+
+@minLength(3)
+@maxLength(63)
+param backupContainerName string = 'host-backups'
+
+@minValue(7)
+@maxValue(365)
+param backupStorageDeleteRetentionDays int = 7
+
+@minValue(1)
+@maxValue(146000)
+param backupImmutabilityPeriodDays int = 90
+
+param backupImmutabilityPolicyLocked bool = false
+
+param backupStorageHomeAddress string = ''
+
 @minLength(1)
 @maxLength(63)
 param productionSqlServerName string
@@ -67,6 +87,8 @@ param runtimePrincipalId string = ''
 param migratorPrincipalId string = ''
 
 param migratorSecretNames string = ''
+
+param backupPrincipalId string = ''
 
 param tags object = {
   project: 'erp-ai-pro'
@@ -228,6 +250,16 @@ var productionStorageRoleAssignments RoleAssignment[] = empty(runtimePrincipalId
       }
     ]
 
+var backupStorageRoleAssignments RoleAssignment[] = empty(backupPrincipalId)
+  ? []
+  : [
+      {
+        principalId: backupPrincipalId
+        principalType: 'ServicePrincipal'
+        roleDefinitionId: roleDefinitionIds.storageBlobDataContributor
+      }
+    ]
+
 module configurationStore 'modules/configuration-store.bicep' = {
   name: 'configuration-store'
   params: {
@@ -299,6 +331,23 @@ module productionStorageAccount 'modules/storage-account.bicep' = {
   }
 }
 
+module backupStorageAccount 'modules/storage-account.bicep' = {
+  name: 'storage-account-backup'
+  params: {
+    name: backupStorageAccountName
+    location: location
+    sku: 'Standard_GRS'
+    tags: tags
+    containerName: backupContainerName
+    deleteRetentionDays: backupStorageDeleteRetentionDays
+    roleAssignments: backupStorageRoleAssignments
+    restrictToAllowedAddresses: true
+    allowedAddresses: empty(backupStorageHomeAddress) ? [] : [backupStorageHomeAddress]
+    immutabilityPeriodDays: backupImmutabilityPeriodDays
+    immutabilityPolicyLocked: backupImmutabilityPolicyLocked
+  }
+}
+
 module productionSqlDatabase 'modules/sql-database.bicep' = {
   name: 'sql-database-production'
   params: {
@@ -324,4 +373,7 @@ output developmentAttachmentsContainerId string = developmentStorageAccount.outp
 output productionAttachmentsBlobEndpoint string = productionStorageAccount.outputs.blobEndpoint
 output productionStorageAccountId string = productionStorageAccount.outputs.id
 output productionAttachmentsContainerId string = productionStorageAccount.outputs.containerId
+output backupBlobEndpoint string = backupStorageAccount.outputs.blobEndpoint
+output backupStorageAccountId string = backupStorageAccount.outputs.id
+output backupContainerId string = backupStorageAccount.outputs.containerId
 output productionSqlServerFqdn string = productionSqlDatabase.outputs.fullyQualifiedDomainName

@@ -15,7 +15,7 @@ User=erp-ai-pro
 Group=erp-ai-pro
 WorkingDirectory=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose
 # A boot brings back the containers of the last deployment as they are; only a deployment runs the migrator or replaces a container.
-# A start waits while deploy.sh or rollback.sh holds the lock, so a start that tries again never rolls the stack beside one.
+# A start waits while deploy.sh, rollback.sh or restore.sh holds the lock, so a start that tries again never runs beside one.
 ExecStart=/usr/bin/flock /srv/erp-ai-pro/deploy.lock /usr/bin/docker compose -f compose.yaml -f compose.production.yaml up --detach --wait --no-build --no-recreate --pull never --no-deps api web proxy
 ExecStop=/usr/bin/docker compose -f compose.yaml -f compose.production.yaml stop
 # After a clean shutdown nothing else starts the containers ExecStop stopped, so a start that fails, such as one before the

@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up the ERP-AI-Pro server's own files once a day
+Documentation=https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/operations/runbooks/host-setup.md
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 Asia/Kolkata
+Persistent=true
+
+[Install]
+WantedBy=timers.target

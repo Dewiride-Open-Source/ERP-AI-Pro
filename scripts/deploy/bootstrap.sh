@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 
-USAGE='Usage: sudo bash scripts/deploy/bootstrap.sh --site-address <IPv4> --authorized-keys <file> [--home-network <CIDR>] [--dry-run]
+USAGE='Usage: sudo bash scripts/deploy/bootstrap.sh --site-address <IPv4> --authorized-keys <file> [--home-network <CIDR>]
+       [--backup-recipient <file>] [--dry-run]
 
 Prepares an Ubuntu 22.04, 24.04 or 26.04 LTS server for the ERP-AI-Pro production stack and keeps it so
 when run again: Docker Engine with live restore, the GitHub CLI from GitHub'"'"'s own repository, with which
 deploy.sh verifies a release, the deploy account erp-ai-pro as the only member of the docker group and
 nobody in the lxd group, its checkout of this repository in /srv/erp-ai-pro/ERP-AI-Pro with the folder of
 the client certificates, .env and the two external volumes, the systemd units that start the stack at
-boot, restart an unhealthy container every minute and run the retention sweeps every night, security
-updates (the GitHub CLI'"'"'s included) that restart the server at 03:00 India time when one needs it, SSH
-with public keys only, and a firewall that admits SSH from the home network only. Every step changes only
-what differs, so a second run changes nothing.
+boot, restart an unhealthy container every minute and run the retention sweeps and the backup of the
+server'"'"'s own files every night, security updates (the GitHub CLI'"'"'s included) that restart the server
+at 03:00 India time when one needs it, SSH with public keys only, and a firewall that admits SSH from the
+home network only. Every step changes only what differs, so a second run changes nothing.
 Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
@@ -18,6 +19,9 @@ Options:
   --authorized-keys <file>   The deploy account'"'"'s own public keys, in authorized_keys format; none may also sign in
                              as the administrator.
   --home-network <CIDR>      The network allowed to reach SSH (default: the network of --site-address).
+  --backup-recipient <file>  The public certificate the nightly backup seals its archives to (an RSA key of 4096 bits
+                             or more, no private key), placed as infra/compose/secrets/erp-backup-recipient.crt; without
+                             it a certificate already placed stays as it is.
   --dry-run                  List what a run would change and change nothing; without root it compares what it can read.
   --help                     Show this help.'
 
@@ -25,7 +29,7 @@ Options:
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/common.sh"
 
 readonly SUPPORTED_RELEASES=(jammy noble resolute)
-readonly BASE_PACKAGES=(openssh-server ufw unattended-upgrades git ca-certificates curl python3 gpg)
+readonly BASE_PACKAGES=(openssh-server ufw unattended-upgrades git ca-certificates curl python3 gpg openssl)
 readonly APT_OPTIONS=(-qq -o DPkg::Lock::Timeout=600)
 readonly DOCKER_REPOSITORY='https://download.docker.com/linux/ubuntu'
 readonly DOCKER_KEYRING='/etc/apt/keyrings/docker.asc'
@@ -53,14 +57,19 @@ readonly SSH_EFFECTIVE_SETTINGS=(
 readonly UPDATES_FILE='/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf'
 readonly UPDATE_SERVICES=(apt-daily.service apt-daily-upgrade.service)
 readonly UPDATE_TIMERS=(apt-daily.timer apt-daily-upgrade.timer)
-readonly UNIT_FILES=(erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-retain.timer erp-ai-pro-heal.service erp-ai-pro-heal.timer)
-readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer)
-readonly STACK_TIMERS=(erp-ai-pro-retain.timer erp-ai-pro-heal.timer)
+readonly UNIT_FILES=(erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-retain.timer erp-ai-pro-heal.service erp-ai-pro-heal.timer
+  erp-ai-pro-backup.service erp-ai-pro-backup.timer)
+readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer)
+readonly STACK_TIMERS=(erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer)
+readonly BACKUP_FILES=(erp-backup-client.pem erp-backup-recipient.crt)
+readonly BACKUP_RECIPIENT_TARGET="$DEPLOY_COMPOSE_DIR/secrets/erp-backup-recipient.crt"
+readonly BACKUP_RECIPIENT_MINIMUM_BITS=4096
 readonly SSH_RULE_COMMENT='SSH from the home network'
 
 SITE_ADDRESS=''
 AUTHORIZED_KEYS_FILE=''
 HOME_NETWORK=''
+BACKUP_RECIPIENT_FILE=''
 ADMIN_USER=''
 
 set_option() {
@@ -69,6 +78,7 @@ set_option() {
     --site-address) SITE_ADDRESS="$2" ;;
     --authorized-keys) AUTHORIZED_KEYS_FILE="$2" ;;
     --home-network) HOME_NETWORK="$2" ;;
+    --backup-recipient) BACKUP_RECIPIENT_FILE="$2" ;;
   esac
 }
 
@@ -76,11 +86,11 @@ parse_bootstrap_args() {
   local -a rest=()
   while (( $# > 0 )); do
     case "$1" in
-      --site-address | --authorized-keys | --home-network)
+      --site-address | --authorized-keys | --home-network | --backup-recipient)
         set_option "$1" "${2:-}"
         shift
         ;;
-      --site-address=* | --authorized-keys=* | --home-network=*)
+      --site-address=* | --authorized-keys=* | --home-network=* | --backup-recipient=*)
         set_option "${1%%=*}" "${1#*=}"
         ;;
       *)
@@ -195,6 +205,25 @@ check_arguments() {
       || die "--authorized-keys shares $shared with $admin_keys; the deploy account is root through Docker, so it needs a key of its own (docs/operations/runbooks/host-setup.md)"
   fi
   log_info "$count key(s) of its own for $DEPLOY_USER from $AUTHORIZED_KEYS_FILE"
+  if [[ -n "$BACKUP_RECIPIENT_FILE" ]]; then
+    check_backup_recipient
+  fi
+}
+
+check_backup_recipient() {
+  local file="$BACKUP_RECIPIENT_FILE" text size='Public-Key: \(([0-9]+) bit\)' fingerprint
+  [[ -f "$file" && -r "$file" ]] || die "--backup-recipient: cannot read '$file'"
+  command -v openssl > /dev/null 2>&1 \
+    || die "--backup-recipient: openssl, which checks the certificate, is not installed; run this script once without the option, which installs it"
+  if grep -q -- 'PRIVATE KEY' "$file"; then
+    die "--backup-recipient: '$file' holds a private key, which never belongs on the server; destroy it (shred -u) and pass the public certificate alone, from export-client-certificate.sh backup-recipient"
+  fi
+  text="$(openssl x509 -in "$file" -noout -text 2> /dev/null)" || die "--backup-recipient: '$file' is not a PEM certificate"
+  if [[ "$text" != *'Public Key Algorithm: rsaEncryption'* || ! "$text" =~ $size ]] || (( BASH_REMATCH[1] < BACKUP_RECIPIENT_MINIMUM_BITS )); then
+    die "--backup-recipient: '$file' does not hold an RSA key of $BACKUP_RECIPIENT_MINIMUM_BITS bits or more"
+  fi
+  fingerprint="$(openssl x509 -in "$file" -noout -fingerprint -sha256 | sed -n 's/^[^=]*=//p')"
+  log_info "the backup's public certificate from $file, SHA-256 fingerprint $fingerprint"
 }
 
 ensure_packages() {
@@ -599,17 +628,30 @@ ensure_checkout() {
   run mv -T -- "$partial" "$DEPLOY_CHECKOUT"
 }
 
+ensure_backup_recipient() {
+  if [[ -z "$BACKUP_RECIPIENT_FILE" ]]; then
+    return 0
+  fi
+  local staged
+  # install refuses to copy a file onto itself, which passing the certificate already placed would ask it to do.
+  staged="$(mktemp)"
+  cp -- "$BACKUP_RECIPIENT_FILE" "$staged" || die "cannot read $BACKUP_RECIPIENT_FILE"
+  install_config "$staged" "$BACKUP_RECIPIENT_TARGET" 644 root:root "the public certificate the nightly backup seals its archives to" || true
+  rm -f -- "$staged"
+}
+
 ensure_deployment_folder() {
   log_step "Deployment checkout $DEPLOY_CHECKOUT"
   require_command git
   if [[ -d "$DEPLOY_HOME" && ! -x "$DEPLOY_HOME" ]]; then
-    record_change "the checkout, its secrets folder and .env in $DEPLOY_CHECKOUT (they could not be read without root, so a run with sudo checks them)"
+    record_change "the checkout, its secrets folder${BACKUP_RECIPIENT_FILE:+, the public certificate of the backup} and .env in $DEPLOY_CHECKOUT (they could not be read without root, so a run with sudo checks them)"
     ensure_volumes
     return 0
   fi
   ensure_checkout
   ensure_directory "$DEPLOY_COMPOSE_DIR/secrets" 700 "$DEPLOY_USER:$DEPLOY_USER" "the folder of the client certificates"
   ensure_env_file
+  ensure_backup_recipient
   ensure_volumes
 }
 
@@ -642,14 +684,22 @@ ensure_units() {
   done
   if [[ -x "$DEPLOY_HOME" ]]; then
     local certificate
-    local -a missing=()
+    local -a missing=() missing_backup=()
     for certificate in "${CLIENT_CERTIFICATES[@]}"; do
       if [[ ! -f "$DEPLOY_COMPOSE_DIR/secrets/$certificate" ]]; then
         missing+=("$certificate")
       fi
     done
+    for certificate in "${BACKUP_FILES[@]}"; do
+      if [[ ! -f "$DEPLOY_COMPOSE_DIR/secrets/$certificate" ]]; then
+        missing_backup+=("$certificate")
+      fi
+    done
     if (( ${#missing[@]} > 0 )); then
       log_info "systemd skips erp-ai-pro.service and erp-ai-pro-retain.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing[*]}"
+    fi
+    if (( ${#missing_backup[@]} > 0 )); then
+      log_info "systemd skips erp-ai-pro-backup.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing_backup[*]}"
     fi
   fi
 }
@@ -899,6 +949,7 @@ print_summary() {
     printf '  - %s\n' "${CHANGES[@]}"
   fi
   log_info "next, as docs/operations/runbooks/host-setup.md describes: the client certificates in $DEPLOY_COMPOSE_DIR/secrets,"
+  log_info "the backup's certificates (erp-backup-client.pem, and erp-backup-recipient.crt through --backup-recipient),"
   log_info "the remaining values of $DEPLOY_COMPOSE_DIR/.env, and deployments with scripts/deploy/deploy.sh <tag>, signed in as $DEPLOY_USER with its own key"
 }
 

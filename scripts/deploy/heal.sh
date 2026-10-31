@@ -7,8 +7,8 @@ minutes ago. Docker restarts a container only when it exits, so a part of the ER
 would otherwise stay down; one that started less than 30 minutes ago is left alone, so a container is restarted at most
 every half hour. erp-ai-pro-heal.timer runs it every minute as the deploy account erp-ai-pro in the deployment checkout
 /srv/erp-ai-pro/ERP-AI-Pro. It holds the lock /srv/erp-ai-pro/deploy.lock while it works and checks nothing in a minute
-when a deployment, a rollback, the nightly retention run or the stack'"'"'s start at boot holds it; it never starts a
-stopped container. Each container it restarts or leaves alone is a line of its journal
+when a deployment, a rollback, a restore, the nightly retention run or backup or the stack'"'"'s start at boot holds it;
+it never starts a stopped container. Each container it restarts or leaves alone is a line of its journal
 (journalctl -u erp-ai-pro-heal.service). Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
@@ -52,7 +52,7 @@ main() {
   require_release_host
   open_release_lock
   if ! flock --nonblock 9; then
-    log_info "a deployment, a rollback, the nightly retention run or the stack's start at boot holds $RELEASE_LOCK, so the stack is not checked this minute"
+    log_info "a deployment, a rollback, a restore, the nightly retention run or backup or the stack's start at boot holds $RELEASE_LOCK, so the stack is not checked this minute"
     exit 0
   fi
   local unhealthy id service failed=0

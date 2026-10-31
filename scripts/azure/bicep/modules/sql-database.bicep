@@ -72,6 +72,15 @@ resource server 'Microsoft.Sql/servers@2025-01-01' = {
         retentionDays: 7
       }
     }
+
+    resource longTermRetention 'backupLongTermRetentionPolicies' = {
+      name: 'default'
+      properties: {
+        weeklyRetention: 'P5W'
+        monthlyRetention: 'P12M'
+        timeBasedImmutability: 'Disabled'
+      }
+    }
   }
 }
 

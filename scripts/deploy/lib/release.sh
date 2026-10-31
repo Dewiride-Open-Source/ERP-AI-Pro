@@ -308,9 +308,9 @@ acquire_release_lock() {
   fi
   open_release_lock
   if ! flock --nonblock 9; then
-    log_info "another deployment or rollback, the nightly retention run, the stack's start at boot or the minute's look for an unhealthy container holds $RELEASE_LOCK; waiting up to $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes for it (systemctl status erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-heal.service)"
+    log_info "a deployment, a rollback, a restore, the nightly retention run or backup, the stack's start at boot or the minute's look for an unhealthy container holds $RELEASE_LOCK; waiting up to $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes for it (systemctl status erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-backup.service erp-ai-pro-heal.service)"
     flock --wait "$RELEASE_LOCK_WAIT_SECONDS" 9 \
-      || die "another deployment or rollback, the nightly retention run, the stack's start at boot or the minute's look for an unhealthy container still holds $RELEASE_LOCK after $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes; run this again once it ends (systemctl status erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-heal.service)"
+      || die "a deployment, a rollback, a restore, the nightly retention run or backup, the stack's start at boot or the minute's look for an unhealthy container still holds $RELEASE_LOCK after $(( RELEASE_LOCK_WAIT_SECONDS / 60 )) minutes; run this again once it ends (systemctl status erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-backup.service erp-ai-pro-heal.service)"
   fi
   export ERP_DEPLOY_LOCK_PID="$$"
 }

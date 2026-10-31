@@ -4,14 +4,16 @@ USAGE='Usage: bash scripts/deploy/tests/bootstrap-runner.sh
 
 Runs scripts/deploy/bootstrap.sh on the GitHub-hosted Ubuntu runner it runs on, after taking Docker and the
 GitHub CLI off it so the bootstrap installs Docker Engine from Docker'"'"'s repository and gh from GitHub'"'"'s:
-it proves that a deploy key shared with the administrator is refused, that a dry run without root and one
-with sudo change nothing, that the second of two runs with sudo and a dry run after it find nothing to
-change, and then that the deploy account signs in with its own key, reaches Docker with live restore and
-rotated logs and runs gh 2.102.0 or later from GitHub'"'"'s repository with GitHub'"'"'s keys alone, that a
-password sign-in is refused, and that sshd, the firewall on IPv4 and IPv6, the docker and lxd groups, the
-units, the update services and settings, the checkout with its secrets folder and .env, the volumes and the
-production stack'"'"'s IPv4-only ports are what ADR-0049 decides. It hardens the machine it runs on, so it
-refuses to run anywhere but on a GitHub-hosted runner, as the runner user.
+it proves that a deploy key shared with the administrator and a backup certificate file that holds a private
+key are refused, that a dry run without root and one with sudo change nothing, that the second of two runs
+with sudo and a dry run after it find nothing to change, and then that the deploy account signs in with its
+own key, reaches Docker with live restore and rotated logs and runs gh 2.102.0 or later from GitHub'"'"'s
+repository with GitHub'"'"'s keys alone, that a password sign-in is refused, and that sshd, the firewall on
+IPv4 and IPv6, the docker and lxd groups, the units (the backup timer among them, its service skipped until
+the backup'"'"'s client certificate exists), the update services and settings, the checkout with its secrets
+folder, .env and the backup'"'"'s public certificate, the volumes and the production stack'"'"'s IPv4-only
+ports are what ADR-0049 decides. It hardens the machine it runs on, so it refuses to run anywhere but on a
+GitHub-hosted runner, as the runner user.
 
 Options:
   --help            Show this help.'
@@ -27,6 +29,7 @@ readonly GITHUB_CLI_SOURCE='/etc/apt/sources.list.d/github-cli.sources'
 readonly GITHUB_CLI_KEYRING='/etc/apt/keyrings/githubcli-archive-keyring.gpg'
 readonly GITHUB_CLI_KEYS='2C6106201985B60E6C7AC87323F3D4EA75716059 7F38BBB59D064DBCB3D84D725612B36462313325'
 readonly PLACEHOLDER_DIGEST='sha256:0000000000000000000000000000000000000000000000000000000000000000'
+readonly BACKUP_RECIPIENT="$DEPLOY_COMPOSE_DIR/secrets/erp-backup-recipient.crt"
 
 WORK_DIR=''
 SITE_ADDRESS=''
@@ -72,6 +75,9 @@ prepare_runner() {
   log_step "Preparing the runner"
   ssh-keygen -q -t ed25519 -N '' -C bootstrap-test-admin -f "$WORK_DIR/admin"
   ssh-keygen -q -t ed25519 -N '' -C bootstrap-test-deploy -f "$WORK_DIR/deploy"
+  openssl req -x509 -newkey rsa:4096 -noenc -days 2 -subj '/CN=bootstrap-test-backup-recipient' \
+    -keyout "$WORK_DIR/recipient-key.pem" -out "$WORK_DIR/recipient.crt" 2> /dev/null
+  cat "$WORK_DIR/recipient-key.pem" "$WORK_DIR/recipient.crt" > "$WORK_DIR/recipient-bundle.pem"
   chmod go-w "$HOME"
   install -d -m 700 "$HOME/.ssh"
   cat "$WORK_DIR/admin.pub" >> "$HOME/.ssh/authorized_keys"
@@ -115,7 +121,7 @@ assert_untouched() {
 }
 
 run_bootstrap() {
-  local -a arguments=(--site-address "$SITE_ADDRESS" --authorized-keys "$WORK_DIR/deploy.pub")
+  local -a arguments=(--site-address "$SITE_ADDRESS" --authorized-keys "$WORK_DIR/deploy.pub" --backup-recipient "$WORK_DIR/recipient.crt")
   local summary
 
   log_step "A deploy key shared with the administrator is refused"
@@ -124,6 +130,14 @@ run_bootstrap() {
   fi
   [[ "$summary" == *'needs a key of its own'* ]] || die "the bootstrap refused the shared key for another reason: $summary"
   passed "a deploy key that also signs in as the administrator is refused"
+
+  log_step "A backup certificate file that holds a private key is refused"
+  if summary="$(sudo bash scripts/deploy/bootstrap.sh --dry-run --site-address "$SITE_ADDRESS" --authorized-keys "$WORK_DIR/deploy.pub" \
+    --backup-recipient "$WORK_DIR/recipient-bundle.pem" 2>&1)"; then
+    die "the bootstrap accepted a backup certificate file that holds a private key"
+  fi
+  [[ "$summary" == *'holds a private key, which never belongs on the server'* ]] || die "the bootstrap refused the key file for another reason: $summary"
+  passed "a backup certificate file that holds a private key is refused"
 
   log_step "A dry run without root changes nothing"
   summary="$(bash scripts/deploy/bootstrap.sh --dry-run "${arguments[@]}")"
@@ -238,17 +252,17 @@ prove_access_rules() {
 prove_units_and_updates() {
   log_step "The units and the nightly updates"
   local unit
-  for unit in erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer; do
+  for unit in erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer; do
     [[ "$(systemctl is-enabled "$unit")" == enabled ]] || die "$unit is not enabled"
   done
-  for unit in erp-ai-pro-retain.timer erp-ai-pro-heal.timer; do
+  for unit in erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer; do
     systemctl is-active --quiet "$unit" || die "$unit is not running"
   done
-  for unit in erp-ai-pro.service erp-ai-pro-retain.service; do
+  for unit in erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-backup.service; do
     sudo systemctl start "$unit"
-    [[ "$(systemctl show --property=ConditionResult --value "$unit")" == no ]] || die "$unit did not wait for .env and the client certificates"
+    [[ "$(systemctl show --property=ConditionResult --value "$unit")" == no ]] || die "$unit did not wait for .env and its certificates"
   done
-  passed "the boot unit and both timers are enabled and running, and the boot and nightly services wait for the client certificates"
+  passed "the boot unit and the three timers are enabled and running, and the boot, retention and backup services wait for their certificates"
 
   sudo systemctl start erp-ai-pro-heal.service
   [[ "$(systemctl show --property=Result --value erp-ai-pro-heal.service)" == success ]] \
@@ -276,7 +290,9 @@ prove_deployment_folder() {
   [[ "$(sudo stat -c '%a %U:%G' "$DEPLOY_COMPOSE_DIR/secrets")" == "700 $DEPLOY_USER:$DEPLOY_USER" ]] || die "the secrets folder is not private to $DEPLOY_USER"
   [[ "$(sudo stat -c '%a %U:%G' "$DEPLOY_COMPOSE_DIR/.env")" == "600 $DEPLOY_USER:$DEPLOY_USER" ]] || die ".env is not private to $DEPLOY_USER"
   sudo grep -qxF "ERP_SITE_ADDRESS=$SITE_ADDRESS" "$DEPLOY_COMPOSE_DIR/.env" || die ".env does not name ERP_SITE_ADDRESS=$SITE_ADDRESS"
-  passed "$DEPLOY_CHECKOUT is at this commit and belongs to $DEPLOY_USER, with a private secrets folder and .env"
+  [[ "$(sudo stat -c '%a %U:%G' "$BACKUP_RECIPIENT")" == '644 root:root' ]] || die "$BACKUP_RECIPIENT is not root's with mode 644"
+  sudo cmp -s -- "$WORK_DIR/recipient.crt" "$BACKUP_RECIPIENT" || die "$BACKUP_RECIPIENT is not the certificate passed with --backup-recipient"
+  passed "$DEPLOY_CHECKOUT is at this commit and belongs to $DEPLOY_USER, with a private secrets folder, .env and the backup's public certificate"
   local volume
   for volume in "${STACK_VOLUMES[@]}"; do
     sudo docker volume inspect "$volume" > /dev/null || die "the volume $volume is missing"
@@ -303,7 +319,7 @@ main() {
   if is_root; then
     die "run it as the runner user; it calls sudo where it needs root"
   fi
-  require_command sudo ssh ssh-keygen jq git apt-cache gpg gpgconf
+  require_command sudo ssh ssh-keygen jq git apt-cache gpg gpgconf openssl
   cd -- "$REPO_ROOT" || die "cannot change to $REPO_ROOT"
   WORK_DIR="$(mktemp -d)"
   trap remove_work_dir EXIT

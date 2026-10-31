@@ -108,6 +108,7 @@ if (values.docker) {
       args: ["compose", "-f", "compose.yaml", "-f", "compose.production.yaml", "config", "--quiet"],
       env: { IMAGE_TAG: "verify", ERP_SITE_ADDRESS: "192.0.2.10", API_IMAGE_DIGEST: placeholderDigest, WEB_IMAGE_DIGEST: placeholderDigest, PROXY_IMAGE_DIGEST: placeholderDigest },
     },
+    { name: "compose config (backup)", cwd: compose, command: "docker", args: ["compose", "-f", "compose.backup.yaml", "config", "--quiet"] },
     { name: "compose smoke", cwd: repoRoot, command: "node", args: ["scripts/checks/compose-smoke.ts"], env: { IMAGE_TAG: "verify" } },
   );
 }

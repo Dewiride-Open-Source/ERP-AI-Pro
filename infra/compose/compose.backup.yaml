@@ -1,0 +1,136 @@
+name: erp-ai-pro-backup
+
+services:
+  key-ring-reader:
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    pull_policy: missing
+    entrypoint: ["/usr/sbin/busybox"]
+    user: "1654:1654"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: volume
+        source: data-protection-keys
+        target: /volume
+        read_only: true
+
+  key-ring-writer:
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    pull_policy: missing
+    entrypoint: ["/usr/sbin/busybox"]
+    user: "1654:1654"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: volume
+        source: data-protection-keys
+        target: /volume
+
+  key-ring-owner:
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    pull_policy: missing
+    entrypoint: ["/usr/sbin/busybox"]
+    user: "0:0"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: volume
+        source: data-protection-keys
+        target: /volume
+
+  proxy-data-reader:
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    pull_policy: missing
+    entrypoint: ["/usr/sbin/busybox"]
+    user: "10001:10001"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: volume
+        source: proxy-data
+        target: /volume
+        read_only: true
+
+  proxy-data-writer:
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    pull_policy: missing
+    entrypoint: ["/usr/sbin/busybox"]
+    user: "10001:10001"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: volume
+        source: proxy-data
+        target: /volume
+
+  proxy-data-owner:
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    pull_policy: missing
+    entrypoint: ["/usr/sbin/busybox"]
+    user: "0:0"
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - type: volume
+        source: proxy-data
+        target: /volume
+
+  azure-cli:
+    image: mcr.microsoft.com/azure-cli:2.91.0-azurelinux3.0@sha256:933eb8dcb81aecb6f77e03c5b8660f0a1dfa9e1d16525763a27f86ff3b83a044
+    pull_policy: missing
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >-
+        az login --service-principal --username "$$BACKUP_CLIENT_ID" --tenant "$$BACKUP_TENANT_ID"
+        --certificate /run/secrets/erp-backup-client.pem --skip-subscription-discovery --output none
+        && exec az "$$@"
+      - az
+    user: "1654:1654"
+    network_mode: bridge
+    read_only: true
+    tmpfs:
+      - /tmp
+    environment:
+      HOME: /tmp
+      AZURE_CONFIG_DIR: /tmp/.azure
+      AZURE_CORE_COLLECT_TELEMETRY: "false"
+      AZURE_CORE_ONLY_SHOW_ERRORS: "true"
+      AZURE_CORE_NO_COLOR: "true"
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    secrets:
+      - erp-backup-client.pem
+
+volumes:
+  data-protection-keys:
+    external: true
+    name: erp-ai-pro-data-protection-keys
+  proxy-data:
+    external: true
+    name: erp-ai-pro-proxy-data
+
+secrets:
+  erp-backup-client.pem:
+    file: ./secrets/erp-backup-client.pem
