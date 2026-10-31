@@ -44,9 +44,6 @@ REPLACE=0
 WANTED=''
 CREATED_BEFORE=''
 BEFORE_EPOCH=0
-KEY_FILE=''
-KEY_CHECKED=0
-KEY_SHREDDED=0
 STAGE=''
 CONTENT=''
 ARCHIVE_NAME=''
@@ -71,9 +68,7 @@ finish() {
   if (( status != 0 && ${#RESTORED[@]} > 0 )); then
     log_error "restored before the failure: ${RESTORED[*]}; run the restore again with --replace once its cause is fixed"
   fi
-  if (( KEY_CHECKED && ! KEY_SHREDDED )) && [[ -e "$KEY_FILE" ]]; then
-    log_warn "the key stays at $KEY_FILE; shred it once you are done (shred -u $KEY_FILE), because it never belongs on the server"
-  fi
+  warn_key_left
   exit "$status"
 }
 
@@ -133,15 +128,6 @@ parse_restore_args() {
     fi
   fi
   [[ -n "$KEY_FILE" ]] || die "--key <file> is required: the private key that opens the archive (see --help)"
-}
-
-check_key() {
-  if [[ ! -f "$KEY_FILE" || -L "$KEY_FILE" || ! -r "$KEY_FILE" ]]; then
-    die "--key: '$(printable "$KEY_FILE")' is not a regular file this account can read; nothing was changed"
-  fi
-  openssl pkey -in "$KEY_FILE" -noout 2> /dev/null \
-    || die "--key: $KEY_FILE holds no private key that OpenSSL reads without a password, as export-client-certificate.sh backup-recipient-key writes it; nothing was changed"
-  KEY_CHECKED=1
 }
 
 running_stack() {
@@ -246,14 +232,10 @@ choose_archive() {
 }
 
 download_archive() {
-  local answer length md5 created since sealed="$STAGE/archive.tar.p7m"
-  local -a values=()
-  answer="$(backup_blob show --name "$ARCHIVE_NAME" \
-    --query '[properties.contentLength, properties.contentSettings.contentMd5, properties.creationTime]' \
-    --output tsv)" || die "cannot read the properties of $ARCHIVE_NAME (see the Azure CLI's error above); nothing was changed"
-  # The Azure CLI's tsv output writes each value of a flat multiselect list on a line of its own.
-  mapfile -t values <<< "${answer//$'\r'/}"
-  length="${values[0]:-}" md5="${values[1]:-}" created="${values[2]:-}"
+  local length md5 created since sealed="$STAGE/archive.tar.p7m"
+  blob_properties "$ARCHIVE_NAME" '[properties.contentLength, properties.contentSettings.contentMd5, properties.creationTime]' \
+    || die "cannot read the properties of $ARCHIVE_NAME (see the Azure CLI's error above); nothing was changed"
+  length="${BLOB_PROPERTIES[0]:-}" md5="${BLOB_PROPERTIES[1]:-}" created="${BLOB_PROPERTIES[2]:-}"
   since="$(creation_epoch "$created")" || since=''
   if [[ "$since" != "$ARCHIVE_CREATED_EPOCH" ]]; then
     die "the storage service reports $ARCHIVE_NAME created at $(printable "$created"), not at the time its listing gave; nothing was changed"
@@ -266,35 +248,10 @@ download_archive() {
   log_info "downloaded $length bytes, MD5 $md5"
 }
 
-key_mismatch_hint() {
-  local sealed="$1" parsed='' line depth inside=0 serial key_serial=''
-  local -a recipients=()
-  parsed="$(openssl asn1parse -inform DER -in "$sealed" 2> /dev/null)" || parsed=''
-  # Inside the recipientInfos SET (depth 3), each IssuerAndSerialNumber's serial is the INTEGER at depth 6. asn1parse prints
-  # every INTEGER in hexadecimal, where cms -print shows one below 128 bits in decimal.
-  while IFS= read -r line; do
-    [[ "$line" =~ :d=([0-9]+) ]] || continue
-    depth="${BASH_REMATCH[1]}"
-    if (( depth == 3 )); then
-      inside=0
-      if [[ "$line" == *'cons: SET'* ]]; then
-        inside=1
-      fi
-    elif (( inside && depth == 6 )) && [[ "$line" == *'prim: INTEGER'* ]]; then
-      serial="${line##*:}"
-      serial="${serial#"${serial%%[!0]*}"}"
-      recipients+=("${serial:-0}")
-    fi
-  done <<< "$parsed"
-  key_serial="$(openssl x509 -in "$KEY_FILE" -noout -serial 2> /dev/null | sed -n 's/^serial=0*//p')" || key_serial=''
-  printf 'the archive is sealed to the certificate with the serial number %s, and the key file holds %s; export the version with that serial number (export-client-certificate.sh backup-recipient-key --version <version>)' \
-    "$(printable "${recipients[*]:-unreadable}")" "$(printable "${key_serial:-no certificate}")"
-}
-
 open_archive() {
   local sealed="$STAGE/archive.tar.p7m" plain="$STAGE/archive.tar" members member
   local -A seen=()
-  if ! openssl cms -decrypt -binary -inform DER -in "$sealed" -inkey "$KEY_FILE" -out "$plain"; then
+  if ! open_sealed "$sealed" "$plain"; then
     rm -f -- "$plain"
     die "the key does not open $ARCHIVE_NAME, or the archive was changed: $(key_mismatch_hint "$sealed"); nothing was changed"
   fi
@@ -435,15 +392,6 @@ restore_release_files() {
     RESTORED+=("no .env.previous")
   fi
   log_info ".env names the release ${MANIFEST_RELEASE%% *} of the archive; the replaced .env named $replaced"
-}
-
-shred_key() {
-  if shred -u -- "$KEY_FILE"; then
-    KEY_SHREDDED=1
-    log_info "shredded the key file $KEY_FILE"
-  else
-    log_warn "cannot shred $KEY_FILE (see the error above)"
-  fi
 }
 
 main() {

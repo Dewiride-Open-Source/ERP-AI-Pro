@@ -4,15 +4,16 @@ USAGE='Usage: sudo bash scripts/deploy/bootstrap.sh --site-address <IPv4> --auth
        [--backup-recipient <file>] [--dry-run]
 
 Prepares an Ubuntu 22.04, 24.04 or 26.04 LTS server for the ERP-AI-Pro production stack and keeps it so
-when run again: Docker Engine with live restore, the GitHub CLI from GitHub'"'"'s own repository, with which
-deploy.sh verifies a release, the deploy account erp-ai-pro as the only member of the docker group and
-nobody in the lxd group, its checkout of this repository in /srv/erp-ai-pro/ERP-AI-Pro with the folder of
-the client certificates, .env and the two external volumes, the systemd units that start the stack at
-boot, restart an unhealthy container every minute and run the retention sweeps and the backup of the
-server'"'"'s own files every night, Ubuntu'"'"'s security and regular updates (the GitHub CLI'"'"'s included)
-that restart the server at 03:00 India time when one needs it, SSH with public keys only, and a firewall
-that admits SSH from the home network only. Every step changes only what differs, so a second run changes
-nothing.
+when run again: the journal on disk, kept 400 days in at most 24 GB, Docker Engine with live restore and
+the journald log driver, its journal rate limit raised for the containers'"'"' logs, the GitHub CLI from
+GitHub'"'"'s own repository, with which deploy.sh verifies a release, the deploy account erp-ai-pro as the
+only member of the docker group and nobody in the lxd group, its checkout of this repository in
+/srv/erp-ai-pro/ERP-AI-Pro with the folder of the client certificates, .env and the two external volumes,
+the systemd units that start the stack at boot, restart an unhealthy container every minute and run the
+retention sweeps, the backup of the server'"'"'s own files and the copy of its journal every night,
+Ubuntu'"'"'s security and regular updates (the GitHub CLI'"'"'s included) that restart the server at 03:00
+India time when one needs it, SSH with public keys only, and a firewall that admits SSH from the home
+network only. Every step changes only what differs, so a second run changes nothing.
 Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
@@ -38,6 +39,11 @@ readonly DOCKER_SOURCE='/etc/apt/sources.list.d/docker.sources'
 readonly DOCKER_PACKAGES=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
 readonly DOCKER_CONFLICTS=(docker.io docker-compose docker-compose-v2 docker-doc docker-buildx podman-docker containerd runc)
 readonly DAEMON_CONFIG='/etc/docker/daemon.json'
+# The daemon.json of ADR-0049, which rotates json-file logs at 20 MB x 5: a run replaces it as one this script wrote, where
+# it refuses an operator's own.
+readonly JSON_FILE_DAEMON_CONFIG='{"live-restore": true, "log-driver": "json-file", "log-opts": {"max-size": "20m", "max-file": "5"}}'
+readonly DOCKER_LOG_LIMIT_FILE='/etc/systemd/system/docker.service.d/50-erp-ai-pro.conf'
+readonly JOURNAL_SETTINGS_FILE='/etc/systemd/journald.conf.d/50-erp-ai-pro.conf'
 readonly GITHUB_CLI_REPOSITORY='https://cli.github.com/packages'
 readonly GITHUB_CLI_KEYRING='/etc/apt/keyrings/githubcli-archive-keyring.gpg'
 readonly GITHUB_CLI_SOURCE='/etc/apt/sources.list.d/github-cli.sources'
@@ -59,9 +65,9 @@ readonly UPDATES_FILE='/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf
 readonly UPDATE_SERVICES=(apt-daily.service apt-daily-upgrade.service)
 readonly UPDATE_TIMERS=(apt-daily.timer apt-daily-upgrade.timer)
 readonly UNIT_FILES=(erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-retain.timer erp-ai-pro-heal.service erp-ai-pro-heal.timer
-  erp-ai-pro-backup.service erp-ai-pro-backup.timer)
-readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer)
-readonly STACK_TIMERS=(erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer)
+  erp-ai-pro-backup.service erp-ai-pro-backup.timer erp-ai-pro-journal.service erp-ai-pro-journal.timer)
+readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer erp-ai-pro-journal.timer)
+readonly STACK_TIMERS=(erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer erp-ai-pro-journal.timer)
 readonly BACKUP_FILES=(erp-backup-client.pem erp-backup-recipient.crt)
 readonly BACKUP_RECIPIENT_TARGET="$DEPLOY_COMPOSE_DIR/secrets/erp-backup-recipient.crt"
 readonly BACKUP_RECIPIENT_MINIMUM_BITS=4096
@@ -245,6 +251,44 @@ ensure_packages() {
   run env DEBIAN_FRONTEND=noninteractive apt-get "${APT_OPTIONS[@]}" install -y --no-install-recommends "${missing[@]}"
 }
 
+# journald applies the last assignment of a key, reading journald.conf and then its drop-ins in the order cat-config prints.
+journald_settings() {
+  systemd-analyze --no-pager cat-config systemd/journald.conf | awk '
+    /^[ \t]*\[/ { section = $0; gsub(/[ \t]/, "", section); next }
+    /^[ \t]*([#;]|$)/ || index($0, "=") == 0 || section != "[Journal]" { next }
+    {
+      key = substr($0, 1, index($0, "=") - 1)
+      value = substr($0, index($0, "=") + 1)
+      gsub(/^[ \t]+|[ \t]+$/, "", key)
+      gsub(/^[ \t]+|[ \t]+$/, "", value)
+      if (!(key in last)) order[++count] = key
+      last[key] = value
+    }
+    END { for (i = 1; i <= count; i++) print order[i] "=" last[order[i]] }'
+}
+
+ensure_journal() {
+  log_step "The journal: on disk, kept 400 days"
+  local source="$HOST_CONFIG_DIR/journald/50-erp-ai-pro.conf" effective setting
+  local -a settings=()
+  if install_config "$source" "$JOURNAL_SETTINGS_FILE" 644 root:root \
+    "the journal's settings: on disk, at most 24 GB with 20 GB of the disk left free, its files kept 400 days"; then
+    # journald keeps the services' log streams across a restart, in the service manager's file descriptor store.
+    run systemctl restart systemd-journald.service
+    run journalctl --flush
+  fi
+  if (( DRY_RUN )); then
+    return 0
+  fi
+  mapfile -t settings < <(grep -vE '^[[:space:]]*([#;[]|$)' "$source")
+  effective="$(journald_settings)"
+  for setting in "${settings[@]}"; do
+    grep -qxF -- "$setting" <<< "$effective" \
+      || die "journald does not apply '$setting'; a file that sorts after $(basename -- "$JOURNAL_SETTINGS_FILE") in a journald.conf.d folder sets it again"
+  done
+  log_info "journald applies: ${settings[*]}"
+}
+
 # apt lists the indexes of enabled sources only, so a commented or disabled entry does not count. The list is read whole first:
 # under pipefail, a grep that stops at the first match would fail apt-get with SIGPIPE.
 docker_repository_configured() {
@@ -311,12 +355,22 @@ ensure_docker_engine() {
   done
 }
 
-daemon_config_covers() {
-  python3 - "$1" "$2" << 'PYTHON'
+daemon_config_state() {
+  python3 - "$1" "$2" "$JSON_FILE_DAEMON_CONFIG" << 'PYTHON'
 import json, sys
-with open(sys.argv[1], encoding="utf-8") as required_file, open(sys.argv[2], encoding="utf-8") as present_file:
-    required, present = json.load(required_file), json.load(present_file)
-sys.exit(0 if isinstance(present, dict) and all(present.get(key) == value for key, value in required.items()) else 1)
+with open(sys.argv[1], encoding="utf-8") as required_file:
+    required = json.load(required_file)
+try:
+    with open(sys.argv[2], encoding="utf-8") as present_file:
+        present = json.load(present_file)
+except ValueError:
+    present = None
+if isinstance(present, dict) and all(present.get(key) == value for key, value in required.items()):
+    print("template")
+elif present == json.loads(sys.argv[3]):
+    print("json-file")
+else:
+    print("other")
 PYTHON
 }
 
@@ -324,46 +378,72 @@ live_restore_enabled() {
   [[ "$(docker info --format '{{.LiveRestoreEnabled}}' 2> /dev/null || true)" == true ]]
 }
 
+docker_logs_to_journal() {
+  [[ "$(docker info --format '{{.LoggingDriver}}' 2> /dev/null || true)" == journald ]]
+}
+
+check_docker_log_limit() {
+  local source="$HOST_CONFIG_DIR/systemd/docker.service.d/50-erp-ai-pro.conf" effective key value
+  effective="$(systemctl show --property=LogRateLimitIntervalUSec --property=LogRateLimitBurst docker.service)"
+  while IFS='=' read -r key value; do
+    grep -qxF -- "${key/%Sec/USec}=$value" <<< "$effective" \
+      || die "docker.service does not apply $key=$value; a drop-in that sorts after $(basename -- "$DOCKER_LOG_LIMIT_FILE") in $(dirname -- "$DOCKER_LOG_LIMIT_FILE") sets it again"
+  done < <(grep -E '^[A-Za-z]+=' "$source")
+  log_info "docker.service applies: $(paste -sd ' ' - <<< "$effective")"
+}
+
 ensure_docker_daemon_config() {
   log_step "Docker daemon configuration"
-  local source="$HOST_CONFIG_DIR/docker/daemon.json" apply=0
+  local source="$HOST_CONFIG_DIR/docker/daemon.json" apply=0 restart=0
   if [[ -f "$DAEMON_CONFIG" && ! -r "$DAEMON_CONFIG" ]]; then
     (( DRY_RUN )) || die "cannot read $DAEMON_CONFIG"
-    record_change "check $DAEMON_CONFIG for live restore and log rotation (it could not be read without root, so a run with sudo compares it)"
-    return 0
-  fi
-  if [[ -f "$DAEMON_CONFIG" ]]; then
-    daemon_config_covers "$source" "$DAEMON_CONFIG" \
-      || die "$DAEMON_CONFIG lacks live restore or log rotation; add these settings to it, keeping its own, and run this script again: $(tr -s '\n ' ' ' < "$source")"
-    log_info "in place: live restore and log rotation in $DAEMON_CONFIG"
-  else
-    if install_config "$source" "$DAEMON_CONFIG" 644 root:root "Docker daemon configuration: live restore and log rotation"; then
-      apply=1
-    fi
-  fi
-  if (( ! apply )) && is_root && command -v docker > /dev/null 2>&1 && ! live_restore_enabled; then
-    record_change "apply $DAEMON_CONFIG, which Docker has not read yet (it reports live restore off)"
+    record_change "check $DAEMON_CONFIG for live restore and the journald log driver (it could not be read without root, so a run with sudo compares it)"
+  elif [[ -f "$DAEMON_CONFIG" ]]; then
+    case "$(daemon_config_state "$source" "$DAEMON_CONFIG")" in
+      template) log_info "in place: live restore and the journald log driver in $DAEMON_CONFIG" ;;
+      json-file)
+        install_config "$source" "$DAEMON_CONFIG" 644 root:root \
+          "Docker daemon configuration: live restore and the journald log driver, in place of the json-file log rotation this script wrote" || true
+        apply=1
+        ;;
+      *) die "$DAEMON_CONFIG lacks live restore or the journald log driver; add these settings to it, keeping its own but the log-opts the journald driver refuses, such as max-size and max-file, and run this script again: $(tr -s '\n ' ' ' < "$source")" ;;
+    esac
+  elif install_config "$source" "$DAEMON_CONFIG" 644 root:root "Docker daemon configuration: live restore and the journald log driver"; then
     apply=1
   fi
-  if (( ! apply )); then
-    return 0
+  if install_config "$HOST_CONFIG_DIR/systemd/docker.service.d/50-erp-ai-pro.conf" "$DOCKER_LOG_LIMIT_FILE" 644 root:root \
+    "docker.service's journal rate limit, which the logs of every container share: 100000 messages in 30 seconds"; then
+    run systemctl daemon-reload
+    restart=1
   fi
-  run dockerd --validate --config-file "$DAEMON_CONFIG"
-  run systemctl reload docker.service
-  if (( ! DRY_RUN )); then
-    # Live restore applies on a reload, and only once it does may the restart that applies the log options run.
-    local attempt
-    for attempt in $(seq 1 30); do
-      if live_restore_enabled; then
-        break
-      fi
-      (( attempt < 30 )) || die "Docker did not turn live restore on after the reload, so it was not restarted"
-      sleep 1
-    done
+  if (( ! apply )) && is_root && command -v docker > /dev/null 2>&1 && ! { live_restore_enabled && docker_logs_to_journal; }; then
+    record_change "apply $DAEMON_CONFIG, which Docker has not read yet (it reports live restore off or another log driver than journald)"
+    apply=1
   fi
-  run systemctl restart docker.service
+  if (( apply )); then
+    run dockerd --validate --config-file "$DAEMON_CONFIG"
+    run systemctl reload docker.service
+  fi
+  if (( apply || restart )); then
+    if (( ! DRY_RUN )); then
+      # Live restore applies on a reload, and only once it does may the restart that applies the rest run.
+      local attempt
+      for attempt in $(seq 1 30); do
+        if live_restore_enabled; then
+          break
+        fi
+        (( attempt < 30 )) || die "Docker did not turn live restore on after the reload, so it was not restarted"
+        sleep 1
+      done
+    fi
+    run systemctl restart docker.service
+    if (( ! DRY_RUN )); then
+      live_restore_enabled || die "Docker does not report live restore as enabled after its restart"
+      docker_logs_to_journal || die "Docker does not report the journald log driver after its restart"
+    fi
+  fi
   if (( ! DRY_RUN )); then
-    live_restore_enabled || die "Docker does not report live restore as enabled after its restart"
+    check_docker_log_limit
   fi
 }
 
@@ -700,7 +780,7 @@ ensure_units() {
       log_info "systemd skips erp-ai-pro.service and erp-ai-pro-retain.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing[*]}"
     fi
     if (( ${#missing_backup[@]} > 0 )); then
-      log_info "systemd skips erp-ai-pro-backup.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing_backup[*]}"
+      log_info "systemd skips erp-ai-pro-backup.service and erp-ai-pro-journal.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing_backup[*]}"
     fi
   fi
 }
@@ -956,10 +1036,11 @@ print_summary() {
 
 main() {
   parse_bootstrap_args "$@"
-  require_command awk sed grep cmp comm sort stat install ip ssh-keygen systemctl timedatectl getent dpkg-query
+  require_command awk sed grep cmp comm sort stat install ip ssh-keygen systemctl systemd-analyze journalctl timedatectl getent dpkg-query
   check_platform
   check_arguments
   ensure_packages
+  ensure_journal
   ensure_docker_engine
   ensure_docker_daemon_config
   ensure_github_cli

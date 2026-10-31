@@ -22,10 +22,9 @@ services:
           cpus: "1.0"
           memory: 512m
     logging:
-      driver: json-file
+      driver: journald
       options:
-        max-size: 20m
-        max-file: "5"
+        tag: erp-ai-pro-migrator
 
   api:
     image: ghcr.io/dewiride-open-source/erp-ai-pro/api:${IMAGE_TAG:?set by deploy.sh}@${API_IMAGE_DIGEST:?set by deploy.sh}
@@ -54,10 +53,9 @@ services:
           cpus: "2.0"
           memory: 1g
     logging:
-      driver: json-file
+      driver: journald
       options:
-        max-size: 20m
-        max-file: "5"
+        tag: erp-ai-pro-api
 
   web:
     image: ghcr.io/dewiride-open-source/erp-ai-pro/web:${IMAGE_TAG:?set by deploy.sh}@${WEB_IMAGE_DIGEST:?set by deploy.sh}
@@ -74,10 +72,9 @@ services:
           cpus: "1.0"
           memory: 512m
     logging:
-      driver: json-file
+      driver: journald
       options:
-        max-size: 20m
-        max-file: "5"
+        tag: erp-ai-pro-web
 
   proxy:
     image: ghcr.io/dewiride-open-source/erp-ai-pro/proxy:${IMAGE_TAG:?set by deploy.sh}@${PROXY_IMAGE_DIGEST:?set by deploy.sh}
@@ -102,10 +99,9 @@ services:
           cpus: "0.5"
           memory: 256m
     logging:
-      driver: json-file
+      driver: journald
       options:
-        max-size: 20m
-        max-file: "5"
+        tag: erp-ai-pro-proxy
 
 volumes:
   data-protection-keys:

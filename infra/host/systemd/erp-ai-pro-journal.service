@@ -1,0 +1,23 @@
+[Unit]
+Description=Copy the ERP-AI-Pro server's journal of each past India day to Azure Blob Storage
+Documentation=https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/operations/runbooks/host-setup.md
+Wants=docker.service network-online.target
+After=docker.service network-online.target erp-ai-pro.service erp-ai-pro-backup.service
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets/erp-backup-client.pem
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets/erp-backup-recipient.crt
+
+[Service]
+Type=oneshot
+User=erp-ai-pro
+Group=erp-ai-pro
+# Members of systemd-journal read every journal file; without the group journalctl shows a user their own entries alone.
+SupplementaryGroups=systemd-journal
+WorkingDirectory=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose
+# Each day is staged in plaintext under /run, a tmpfs, in a folder systemd creates for the deploy account and removes when
+# the run ends.
+RuntimeDirectory=erp-ai-pro-journal
+RuntimeDirectoryMode=0700
+UMask=0077
+ExecStart=/usr/bin/bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/journal.sh
+TimeoutStartSec=1h
