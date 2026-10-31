@@ -872,6 +872,11 @@ verify_signin_registration() {
   else
     skip "$IDENTITY_WEB_ORIGIN_KEY [$label]: skipped: ERP_AZURE_PRODUCTION_WEB_ORIGIN is not set"
   fi
+  if [[ "$label" == production && -n "$web_origin" ]]; then
+    local allowed_hosts
+    allowed_hosts="$(production_allowed_hosts)"
+    assert_appconfig_value "$HOST_ALLOWED_HOSTS_KEY [$label] admits $allowed_hosts alone" "$HOST_ALLOWED_HOSTS_KEY" "$label" "$allowed_hosts"
+  fi
 }
 
 verify_server_registration() {

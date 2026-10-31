@@ -1,6 +1,7 @@
 export const baseURL = process.env.E2E_BASE_URL ?? "https://localhost:3200";
 export const apiBaseURL = process.env.E2E_API_BASE_URL ?? "http://127.0.0.1:5180";
-export const startServers = !process.env.E2E_BASE_URL;
+export const productionURL = process.env.E2E_PRODUCTION_URL;
+export const startServers = !process.env.E2E_BASE_URL && !productionURL;
 export const offlineBaseURL =
   process.env.E2E_OFFLINE_BASE_URL ?? (startServers ? "https://localhost:3201" : undefined);
 export const unreachableApiURL = "http://127.0.0.1:1";

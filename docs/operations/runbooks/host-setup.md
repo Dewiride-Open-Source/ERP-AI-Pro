@@ -69,7 +69,7 @@ Each step changes only what differs, and the run ends with the list of what it c
 | The deployment checkout | `/srv/erp-ai-pro/ERP-AI-Pro` at the commit the bootstrap ran from, with `infra/compose/secrets` (0700), `infra/compose/.env` (0600, from `.env.example`, `ERP_SITE_ADDRESS` filled in) and, with `--backup-recipient`, `infra/compose/secrets/erp-backup-recipient.crt` (root's, 0644); deployments move it afterwards |
 | Docker volumes | `erp-ai-pro-data-protection-keys` and `erp-ai-pro-proxy-data`, never removed |
 | systemd | `erp-ai-pro.service` (enabled), and `erp-ai-pro-retain.timer`, `erp-ai-pro-heal.timer` and `erp-ai-pro-backup.timer` (enabled, running) with their services (below) |
-| Security updates | `/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf`: daily updates, the GitHub CLI's repository included, and a restart at 21:30 UTC (03:00 India time) when one needs it; the update services and timers unmasked and enabled |
+| Ubuntu's updates | `/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf`: Ubuntu's security and regular updates every day, the GitHub CLI's repository included, and a restart at 21:30 UTC (03:00 India time) when one needs it; the update services and timers unmasked and enabled |
 | SSH | `/etc/ssh/sshd_config.d/10-erp-ai-pro.conf`: public keys only, no root sign-in, no X11 forwarding, proven with `sshd -T` after every run reloads sshd |
 | Firewall | ufw on IPv4 and IPv6, with one rule: SSH over IPv4 from the home network. Any other rule stops the run. The ERP's 80 and 443 are not ufw's: Docker admits them itself, on IPv4 only, and the router, with no port forwarded, keeps them inside the home network |
 
@@ -236,7 +236,7 @@ The root is valid for ten years and stays the same as long as the volume `erp-ai
 ## Upkeep
 
 - **Ubuntu's updates.**
-  - They install every day, and the server restarts at 03:00 India time when an update needs it. The ERP is then off for a few minutes and comes back through `erp-ai-pro.service`.
+  - Its security and regular updates install every day, and the server restarts at 03:00 India time when an update needs it. The ERP is then off for a few minutes and comes back through `erp-ai-pro.service`.
   - `cat /var/run/reboot-required.pkgs` names the packages that wait for a restart.
   - `/var/log/unattended-upgrades/` keeps what was installed.
   - After a restart night, `systemctl status erp-ai-pro.service` and `journalctl -u erp-ai-pro.service -b` show whether the stack came back.

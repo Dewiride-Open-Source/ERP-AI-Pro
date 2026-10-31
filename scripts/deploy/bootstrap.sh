@@ -9,9 +9,10 @@ deploy.sh verifies a release, the deploy account erp-ai-pro as the only member o
 nobody in the lxd group, its checkout of this repository in /srv/erp-ai-pro/ERP-AI-Pro with the folder of
 the client certificates, .env and the two external volumes, the systemd units that start the stack at
 boot, restart an unhealthy container every minute and run the retention sweeps and the backup of the
-server'"'"'s own files every night, security updates (the GitHub CLI'"'"'s included) that restart the server
-at 03:00 India time when one needs it, SSH with public keys only, and a firewall that admits SSH from the
-home network only. Every step changes only what differs, so a second run changes nothing.
+server'"'"'s own files every night, Ubuntu'"'"'s security and regular updates (the GitHub CLI'"'"'s included)
+that restart the server at 03:00 India time when one needs it, SSH with public keys only, and a firewall
+that admits SSH from the home network only. Every step changes only what differs, so a second run changes
+nothing.
 Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
@@ -705,7 +706,7 @@ ensure_units() {
 }
 
 ensure_nightly_updates() {
-  log_step "Security updates and the nightly restart"
+  log_step "Ubuntu's updates and the nightly restart"
   local source="$HOST_CONFIG_DIR/apt/52erp-ai-pro-unattended-upgrades.conf"
   install_config "$source" "$UPDATES_FILE" 644 root:root "unattended upgrades every day, restarting at 03:00 India time when an update needs it" || true
   local unit
