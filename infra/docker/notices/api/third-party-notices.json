@@ -1389,10 +1389,10 @@
       "supplier": "Organization: OpenTelemetry Authors",
       "detail": "built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/07b29448c1dfb807121fc5ff202888e84b764c07"
     },
-    "pkg:nuget/Polly.Core@8.8.0": {
+    "pkg:nuget/Polly.Core@8.8.1": {
       "kind": "nuget",
       "name": "Polly.Core",
-      "version": "8.8.0",
+      "version": "8.8.1",
       "licence": "BSD-3-Clause",
       "spdx": "BSD-3-Clause",
       "copyright": [
@@ -1404,14 +1404,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/polly.core/8.8.0/polly.core.8.8.0.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/polly.core/8.8.1/polly.core.8.8.1.nupkg",
       "supplier": "Organization: Michael Wolfenden, App vNext",
-      "detail": "built from https://github.com/App-vNext/Polly/tree/9ad5ae9b4ff9beb4321b0762249ce173b984f817"
+      "detail": "built from https://github.com/App-vNext/Polly/tree/97acd91b52541664f961888d7655ba9b92ba6252"
     },
-    "pkg:nuget/Polly.Extensions@8.8.0": {
+    "pkg:nuget/Polly.Extensions@8.8.1": {
       "kind": "nuget",
       "name": "Polly.Extensions",
-      "version": "8.8.0",
+      "version": "8.8.1",
       "licence": "BSD-3-Clause",
       "spdx": "BSD-3-Clause",
       "copyright": [
@@ -1423,14 +1423,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/polly.extensions/8.8.0/polly.extensions.8.8.0.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/polly.extensions/8.8.1/polly.extensions.8.8.1.nupkg",
       "supplier": "Organization: Michael Wolfenden, App vNext",
-      "detail": "built from https://github.com/App-vNext/Polly/tree/9ad5ae9b4ff9beb4321b0762249ce173b984f817"
+      "detail": "built from https://github.com/App-vNext/Polly/tree/97acd91b52541664f961888d7655ba9b92ba6252"
     },
-    "pkg:nuget/Polly.RateLimiting@8.8.0": {
+    "pkg:nuget/Polly.RateLimiting@8.8.1": {
       "kind": "nuget",
       "name": "Polly.RateLimiting",
-      "version": "8.8.0",
+      "version": "8.8.1",
       "licence": "BSD-3-Clause",
       "spdx": "BSD-3-Clause",
       "copyright": [
@@ -1442,9 +1442,9 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://api.nuget.org/v3-flatcontainer/polly.ratelimiting/8.8.0/polly.ratelimiting.8.8.0.nupkg",
+      "source": "https://api.nuget.org/v3-flatcontainer/polly.ratelimiting/8.8.1/polly.ratelimiting.8.8.1.nupkg",
       "supplier": "Organization: Michael Wolfenden, App vNext",
-      "detail": "built from https://github.com/App-vNext/Polly/tree/9ad5ae9b4ff9beb4321b0762249ce173b984f817"
+      "detail": "built from https://github.com/App-vNext/Polly/tree/97acd91b52541664f961888d7655ba9b92ba6252"
     },
     "pkg:nuget/Scalar.AspNetCore@2.18.3": {
       "kind": "nuget",
