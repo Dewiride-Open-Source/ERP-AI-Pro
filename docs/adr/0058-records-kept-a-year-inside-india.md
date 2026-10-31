@@ -1,0 +1,40 @@
+# ADR-0058: Records kept a year inside India
+
+Status: accepted
+Date: 2026-10-31
+
+## Context
+
+- The Digital Personal Data Protection Rules, 2025 (G.S.R. 846(E) of 13 November 2025), rules 6(1)(e) and 8(3), keep the logs of each processing for at least a year, and the CERT-In Directions of 28 April 2022, direction (iv), keep the logs of every ICT system securely for a rolling 180 days within Indian jurisdiction (both verified in [ADR-0043](0043-change-records-and-the-append-only-audit-schema.md) and [ADR-0038](0038-sign-in-limit-security-events-and-the-audit-schema.md)).
+- Until now the containers logged with `json-file`, 20 MB × 5 per container, so their lines rotated away within days. Azure kept its activity log 90 days and Entra its sign-in logs 30, the vaults, the storage accounts and the configuration store collected no resource logs, and the database's auditing was off.
+- The ERP serves the owner's own small company, the owner its only user, with no external user (owner reminder of 2026-10-31): what is kept must answer the law, not more.
+- Every storage account refuses Shared Key ([ADR-0051](0051-the-production-attachments-storage-geo-redundant-and-reachable-from-the-homes-address-alone.md)), and everything stays in India.
+
+## Decision
+
+- **The server's journal holds the stack's lines for a year.** The migrator, api, web and proxy log through Docker's `journald` driver, each under its own tag (`erp-ai-pro-<service>`), and Docker's default driver is `journald` too. A journald drop-in keeps the journal persistent and compressed, up to 24 GB in at most 400 files with 20 GB of the disk left free, and deletes a file 400 days after its first entry (`MaxRetentionSec=400d`), so every entry stays more than a year. The file count is set because journald on Ubuntu 24.04 caps a file at 128 MB and keeps 100, which would stop the journal near 12.8 GB. Reading it needs the administrator, since `erp-ai-pro` sees only its own entries. `docker.service`, through which every container logs, may write 100,000 lines per 30 seconds instead of journald's 10,000, so a busy minute drops nothing. Outside Development the API writes one JSON object per line with its scopes (`AddJsonConsole`, UTC timestamps), so a line can be filtered by its correlation id. The bootstrap installs all of it ([ADR-0049](0049-the-production-host-a-deploy-account-keys-from-the-home-network-and-nightly-updates.md)), recognising and replacing the `daemon.json` an earlier bootstrap wrote. This replaces ADR-0049's rotated `json-file` logs.
+- **A sealed copy of each India day leaves the server every night.** `erp-ai-pro-journal.timer` runs `scripts/deploy/journal.sh` at 02:30 India time, after the 02:00 backup, as `erp-ai-pro` with the group `systemd-journal`. For each India day of the last 30, up to yesterday, that holds entries and has no copy yet, it streams the journal as JSON lines into the compression, so the plaintext never lands on a disk, and seals them to the backup encryption certificate exactly as the backup does ([ADR-0056](0056-the-servers-own-files-backed-up-nightly-sealed-to-an-operator-key-and-the-restore-drill.md)), uploads the copy as the backup service principal to `host-journal` in `sterpaiprobackup` without overwriting, reads it back, and deletes the copies more than 366 days old. `host-journal` keeps every copy write-once for 365 days under a container policy the operator locks after the first copy is read back. `journal.sh --list` lists the copies, and `journal.sh --fetch <first day> --through <last day> --key <file>` opens up to 31 days with one copy of the operator's exported key, which it shreds afterwards.
+- **Azure's records go to a logs account in Central India.** `sterpaiprologs` keeps one copy (`Standard_LRS`, owner decision of 2026-10-31), Shared Key off, and admits the home's address and trusted Microsoft services alone: Azure Monitor and SQL auditing write as trusted services, the one reason this account keeps that exception. It was created with version-level immutability: every container it receives, including those Azure creates for itself, keeps its records write-once for 365 days, protected appends allowed, under a default policy the operator locks after the first proof. A lifecycle rule deletes the records once past 366 days, and the account carries the lock `do-not-delete`.
+  - The database server audits itself to the account through its system-assigned identity, the account's only writer with a role (Storage Blob Data Contributor). It records sign-ins and changes of structure, users and permissions only, never a statement (owner decision of 2026-10-31), and keeps them 366 days, one day more than the storage policy, as SQL auditing requires.
+  - Diagnostic settings `erp-ai-pro-records` send the vaults' `AuditEvent`, the three other accounts' blob reads, writes and deletes, and the configuration store's `Audit` and `HttpRequest`. The subscription's activity log and Entra ID's audit and sign-in logs go there too, from `provision.sh`, because neither has a resource group to deploy into.
+  - The operator holds Storage Blob Data Reader on the account, so the records can be read and handed over without a temporary role.
+- **Handing records over** to CERT-In or a data principal is the [records runbook](../operations/runbooks/records.md): which record holds what, where, for how long, and how a time range is read out.
+
+## Consequences
+
+- **The year is kept in three places.** The server's journal keeps up to about thirteen months. Its nightly sealed copies in `host-journal` survive the server's loss or compromise. Azure's own records sit in `sterpaiprologs`, outside the server's reach.
+- **The containers move to `journald` at the next deployment**, because a container keeps the driver it was created with.
+- **Costs**: one copy of the logs, and a few megabytes a day for one user. Exporting Key Vault's audit events, the activity log and Entra's logs is free. The storage accounts' and the configuration store's categories are billed per GB processed ("Platform Logs Data Processed").
+- **The first provisioning is the proof** that Azure Monitor delivers to an account without Shared Key. Microsoft documents the trusted service writing "resource logs, … Microsoft Entra sign-in and audit logs" to a secured account, but nowhere says it works without the key. Entra also chooses which of its sign-in categories it accepts. `verify.sh` reads both back.
+- **Failed database sign-ins** with an Entra account never reach the database's audit, because Entra refuses them first. Entra's sign-in logs hold them instead.
+- **Locking either policy is irreversible**: the operator's decision, after the first proof, as for `host-backups`.
+
+## Alternatives considered
+
+- **Data collection rules** with a managed identity, the keyless route: in preview, and supporting none of these sources.
+- **A Log Analytics workspace in Central India**: its records can be purged and are not write-once, and ingestion and retention are billed.
+- **Event Hubs with Capture**: the hub needs a shared access policy with a key, and it costs more.
+- **Shared Key on the logs account**: refused, every account stays keyless.
+- **Every statement in the database's audit** (`BATCH_COMPLETED_GROUP`): it would copy every value the ERP sends, people's names and emails among them, into a second place for a year. The owner declined it.
+- **Two copies of the logs** (`Standard_GRS`): the owner chose one.
+- **journald's Forward Secure Sealing**: it needs `journalctl --setup-keys`, a verification key kept off the server and a regular `journalctl --verify`. The nightly copy already fixes each day off the server, sealed and write-once, within hours.

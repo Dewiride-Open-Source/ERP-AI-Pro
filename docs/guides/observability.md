@@ -14,6 +14,8 @@ Everything goes through OpenTelemetry, set up once by `AddErpTelemetry` (`backen
 
 The health endpoints are left out of request traces and request metrics (`DisableHttpMetrics`), so probes do not drown real traffic.
 
+The console gets the same log entries. Outside Development, `AddErpTelemetry` writes them as one JSON object per line with their scopes and a UTC timestamp in ISO 8601 (`AddJsonConsole`), so a line can be filtered by its correlation id; Development keeps the readable simple console. On the production server Docker hands each line to the server's journal, which keeps it for a year ([records runbook](../operations/runbooks/records.md), [ADR-0058](../adr/0058-records-kept-a-year-inside-india.md)).
+
 Every signal carries the same resource: `service.name` (`Erp:Platform:Host:ApplicationName`), `service.version` (the host assembly's informational version), `service.instance.id` (the machine or container name) and `deployment.environment.name` (the App Configuration label, `local-dev` or `production`, or the host environment name when no store is connected).
 
 ## Rules for code
