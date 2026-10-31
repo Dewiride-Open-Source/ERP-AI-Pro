@@ -731,12 +731,12 @@ es-module-lexer 3.0.2
   Source: https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz
   Package URL: pkg:npm/es-module-lexer@3.0.2
 
-framer-motion 14.6.0
+framer-motion 14.7.1
   Licence: MIT
   Copyright (c) 2018 Framer B.V.
   Licence text: [1]
-  Source: https://registry.npmjs.org/framer-motion/-/framer-motion-14.6.0.tgz
-  Package URL: pkg:npm/framer-motion@14.6.0
+  Source: https://registry.npmjs.org/framer-motion/-/framer-motion-14.7.1.tgz
+  Package URL: pkg:npm/framer-motion@14.7.1
 
 geist 1.8.2
   Licence: SIL OPEN FONT LICENSE
@@ -759,13 +759,13 @@ import-in-the-middle 3.5.1
   Source: https://registry.npmjs.org/import-in-the-middle/-/import-in-the-middle-3.5.1.tgz
   Package URL: pkg:npm/import-in-the-middle@3.5.1
 
-lucide-react 1.61.0
+lucide-react 1.62.0
   Licence: ISC
   Copyright (c) 2026 Lucide Icons and Contributors
   Copyright (c) 2013-present Cole Bemis
   Licence text: [9]
-  Source: https://registry.npmjs.org/lucide-react/-/lucide-react-1.61.0.tgz
-  Package URL: pkg:npm/lucide-react@1.61.0
+  Source: https://registry.npmjs.org/lucide-react/-/lucide-react-1.62.0.tgz
+  Package URL: pkg:npm/lucide-react@1.62.0
 
 module-details-from-path 1.0.4
   Licence: MIT
@@ -774,26 +774,26 @@ module-details-from-path 1.0.4
   Source: https://registry.npmjs.org/module-details-from-path/-/module-details-from-path-1.0.4.tgz
   Package URL: pkg:npm/module-details-from-path@1.0.4
 
-motion 14.6.0
+motion 14.7.1
   Licence: MIT
   Copyright (c) 2024 [Motion](https://motion.dev) B.V.
   Licence text: [1]
-  Source: https://registry.npmjs.org/motion/-/motion-14.6.0.tgz
-  Package URL: pkg:npm/motion@14.6.0
+  Source: https://registry.npmjs.org/motion/-/motion-14.7.1.tgz
+  Package URL: pkg:npm/motion@14.7.1
 
-motion-dom 14.6.0
+motion-dom 14.7.1
   Licence: MIT
   Copyright (c) 2024 [Motion](https://motion.dev) B.V.
   Licence text: [1]
-  Source: https://registry.npmjs.org/motion-dom/-/motion-dom-14.6.0.tgz
-  Package URL: pkg:npm/motion-dom@14.6.0
+  Source: https://registry.npmjs.org/motion-dom/-/motion-dom-14.7.1.tgz
+  Package URL: pkg:npm/motion-dom@14.7.1
 
-motion-utils 14.6.0
+motion-utils 14.7.0
   Licence: MIT
   Copyright (c) 2024 [Motion](https://motion.dev) B.V.
   Licence text: [1]
-  Source: https://registry.npmjs.org/motion-utils/-/motion-utils-14.6.0.tgz
-  Package URL: pkg:npm/motion-utils@14.6.0
+  Source: https://registry.npmjs.org/motion-utils/-/motion-utils-14.7.0.tgz
+  Package URL: pkg:npm/motion-utils@14.7.0
 
 ms 2.1.3
   Licence: MIT
