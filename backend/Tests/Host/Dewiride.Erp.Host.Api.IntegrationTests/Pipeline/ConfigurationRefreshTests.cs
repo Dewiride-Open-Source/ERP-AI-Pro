@@ -5,6 +5,7 @@ using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Deployment;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
+using Microsoft.Extensions.Time.Testing;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Pipeline;
 
@@ -57,11 +58,13 @@ public sealed class ConfigurationRefreshTests
     }
 
     // A host that reads the store protects its key ring with Key Vault, so these hosts are deployments with a persisted ring.
+    // Their clock stands still, so the requests of a burst fall within one refresh interval however slowly the runner answers them.
     private static WebApplicationFactory<Program> ReadingTheStore(ErpApiFactory root, CountingRefresher refresher) =>
         root.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
         {
             services.AddSingleton(new ErpConfigurationInfo(ErpConfigurationSource.AppConfiguration, ErpEnvironmentNames.LocalDev, refresher.AppConfigurationEndpoint));
             services.AddSingleton<IConfigurationRefresherProvider>(new CountingRefresherProvider(refresher));
+            services.AddSingleton<TimeProvider>(new FakeTimeProvider(TimeProvider.System.GetUtcNow()));
         }));
 
     private sealed class CountingRefresherProvider(IConfigurationRefresher refresher) : IConfigurationRefresherProvider
