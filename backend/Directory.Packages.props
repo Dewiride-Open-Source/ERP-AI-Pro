@@ -46,7 +46,7 @@
     <PackageVersion Include="Microsoft.Identity.Client" Version="4.91.1" />
     <PackageVersion Include="Microsoft.Identity.Client.Broker" Version="4.91.1" />
     <PackageVersion Include="Microsoft.Identity.Client.Extensions.Msal" Version="4.91.1" />
-    <PackageVersion Include="Microsoft.Identity.Client.NativeInterop" Version="0.20.6" />
+    <PackageVersion Include="Microsoft.Identity.Client.NativeInterop" Version="0.20.7" />
     <PackageVersion Include="Microsoft.IdentityModel.Abstractions" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Logging" Version="8.23.0" />
@@ -79,7 +79,7 @@
   <ItemGroup Label="Testing">
     <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.2" />
     <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.2" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.5.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.14" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
