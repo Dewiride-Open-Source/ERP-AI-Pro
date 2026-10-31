@@ -1310,12 +1310,18 @@
           "id": "first-deployment-records-kept-a-year",
           "title": "Records kept a year inside India",
           "scope": "Keep every ICT system's records for a year inside India and hand them to CERT-In when asked (CERT-In Directions of 28.04.2022, direction (iv); DPDP rules 6(1)(e) and 8(3); owner decision of 2026-10-31): the containers and the migrator log to the server's journal, kept a year, with the API's console logger in JSON with its scopes; a nightly sealed copy of the day's journal goes to a write-once container of the backup account; SQL auditing, the subscription activity log and the logs of Key Vault, Storage and App Configuration, and Entra's where the licence allows, go to a logs account in Central India; and a runbook covers handing records over.",
-          "status": "planned",
+          "status": "blocked",
           "edition": "community",
           "editionConfirmedOn": "2026-10-31",
-          "acceptance": [],
+          "acceptance": [
+            "Every service of the production stack, the migrator included, logs to the server's journal under a tag of its own, the journal is persistent and kept at least a year with room for it, and `docker.service`'s log rate limit is raised so no record is dropped; outside Development the API's console log is one JSON object per line with its scopes; the bootstrap installs these settings and its runner proves them on fresh Ubuntu 22.04, 24.04 and 26.04.",
+            "`docs/operations/runbooks/records.md` names each record (the ERP's change history and security events, the server's journal, and Azure's activity log and Microsoft Entra ID's sign-in and audit logs where Azure keeps them), where it lives, how long it is kept and how a time range is handed to CERT-In; ADR-0058 records the design and the owner's decision of 2026-10-31 to keep no copy of the records and pay nothing for them."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-10-31",
+          "blockedReason": "The release that carries the journal settings is installed on the production server with `deploy.sh`, which recreates the containers on the `journald` driver, and the bootstrap runs again from it to install the journald and `docker.service` drop-ins and the new `daemon.json`; then the API's and the proxy's lines are read back from the journal (`docs/operations/runbooks/records.md`, section Checks).",
+          "notes": "Owner decisions of 2026-10-31: the ERP serves the owner's own small company with one user, so the records are kept where they cost nothing. The owner declined the logs account in Central India with SQL auditing and the diagnostic settings of the vaults, the storage accounts, the configuration store, the activity log and Entra ID (estimated at well under ₹100 a month), and the nightly sealed copy of the journal: \"i do not want any backups of these. I already told you about this deployment. 100 is far too costly.\" The scope's nightly copy and logs account are therefore not built. Azure's activity log stays 90 days and Entra ID's sign-in and audit logs 30, short of the 180 days of CERT-In's direction (iv), which the owner accepted; the records runbook exports them while Azure holds them."
         },
         {
           "id": "first-deployment-upload-virus-scanning",

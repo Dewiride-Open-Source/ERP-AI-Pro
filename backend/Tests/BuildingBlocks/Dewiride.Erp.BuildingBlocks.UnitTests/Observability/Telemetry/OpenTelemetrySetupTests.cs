@@ -5,6 +5,8 @@ using Dewiride.Erp.BuildingBlocks.Observability.Telemetry;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
@@ -82,9 +84,29 @@ public sealed class OpenTelemetrySetupTests
         Assert.Equal(Environments.Production, attributes[ErpResourceDetector.DeploymentEnvironmentAttribute]);
     }
 
-    private static HostApplicationBuilder CreateBuilder(Dictionary<string, string?> settings, string? label = null)
+    [Theory]
+    [InlineData("Production", ConsoleFormatterNames.Json)]
+    [InlineData("Testing", ConsoleFormatterNames.Json)]
+    [InlineData("Development", null)]
+    public void AddErpTelemetry_Environment_WritesTheConsoleAsJsonLinesWithScopesOutsideDevelopment(string environment, string? formatter)
     {
-        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true, EnvironmentName = Environments.Production });
+        var builder = CreateBuilder([], environment: environment);
+        builder.AddErpTelemetry();
+        using var provider = builder.Services.BuildServiceProvider();
+
+        var console = provider.GetRequiredService<IOptionsMonitor<ConsoleLoggerOptions>>().CurrentValue;
+        var json = provider.GetRequiredService<IOptionsMonitor<JsonConsoleFormatterOptions>>().CurrentValue;
+
+        Assert.Equal(formatter, console.FormatterName);
+        Assert.Equal(formatter is not null, json.IncludeScopes);
+        Assert.Equal(formatter is not null, json.UseUtcTimestamp);
+        Assert.Equal(formatter is null ? null : "O", json.TimestampFormat);
+        Assert.False(json.JsonWriterOptions.Indented);
+    }
+
+    private static HostApplicationBuilder CreateBuilder(Dictionary<string, string?> settings, string? label = null, string environment = "Production")
+    {
+        var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { DisableDefaults = true, EnvironmentName = environment });
         builder.Configuration.AddInMemoryCollection(settings);
         builder.Services.AddSingleton(Application);
         builder.Services.AddSingleton(new ErpConfigurationInfo(label is null ? ErpConfigurationSource.InMemory : ErpConfigurationSource.AppConfiguration, label, null));

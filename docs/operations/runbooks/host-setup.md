@@ -61,9 +61,11 @@ Each step changes only what differs, and the run ends with the list of what it c
 | Area | What the bootstrap leaves |
 |---|---|
 | Packages | `openssh-server`, `ufw`, `unattended-upgrades`, `git`, `ca-certificates`, `curl`, `python3`, `gpg`, `openssl` (which seals the backup archives) |
+| The journal | `/etc/systemd/journald.conf.d/50-erp-ai-pro.conf` (`infra/host/journald`): the journal on disk in `/var/log/journal`, at most 24 GB in at most 400 files with 20 GB of the disk left free, compressed, each file deleted 400 days after its first entry; a file holds a month of entries at most, so every entry stays more than a year inside India (DPDP Rules 2025, rules 6(1)(e) and 8(3); CERT-In Directions of 28.04.2022, direction (iv)). A run that changes the file restarts `systemd-journald`, which keeps every service's log stream, and proves with `systemd-analyze cat-config` that no file sorting after it sets a value again |
 | The GitHub CLI | `gh` 2.102.0 or later at `/usr/bin/gh`, which `deploy.sh` verifies the release images with, from GitHub's apt repository: the source `/etc/apt/sources.list.d/github-cli.sources`, and the keyring `/etc/apt/keyrings/githubcli-archive-keyring.gpg` (0644), trusted only when every key in it is one GitHub publishes and its signing key `7F38BBB59D064DBCB3D84D725612B36462313325` is there. Any other apt source naming `https://cli.github.com/packages` stops the run |
 | Docker Engine | Docker's own packages from Docker's apt repository (`docker-ce`, `docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin`), installed only when no Docker Engine with Compose is there; Docker's repository added back when its packages are there without it; the unofficial packages Docker asks to remove first are refused (`docker.io`, `docker-compose`, `docker-compose-v2`, `docker-doc`, `docker-buildx`, `podman-docker`, `containerd`, `runc`) |
-| `/etc/docker/daemon.json` | live restore, and logs rotated at 20 MB × 5 for containers without logging of their own (`infra/host/docker/daemon.json`); an existing file must hold those settings among its own, or the run stops and names them |
+| `/etc/docker/daemon.json` | live restore, and the journald log driver for containers without logging of their own (`infra/host/docker/daemon.json`). The file a bootstrap of ADR-0049 wrote, with json-file logs rotated at 20 MB × 5, is replaced as the bootstrap's own; any other existing file must hold those two settings among its own, without the `log-opts` the journald driver refuses (`max-size`, `max-file`), or the run stops and names them. A changed file is validated with `dockerd --validate`, Docker reloads to turn live restore on and then restarts, and live restore keeps the containers running |
+| `docker.service` | `/etc/systemd/system/docker.service.d/50-erp-ai-pro.conf`: every container logs through `dockerd`, so the journal limits them together as `docker.service`, by default to 10000 messages in 30 seconds, dropping the rest; the drop-in allows 100000 (`LogRateLimitIntervalSec=30s`, `LogRateLimitBurst=100000`). A run that changes it restarts Docker as above, and every run proves with `systemctl show` that `docker.service` applies it |
 | The deploy account | `erp-ai-pro`: home `/srv/erp-ai-pro` (0750), no password, its own keys from `--authorized-keys`, the only member of `docker`. Every other member is removed, the administrator included |
 | LXD | nobody in the `lxd` group, the administrator included, and `lxd-installer.socket` masked, because LXD gives its group root; LXD itself, preinstalled on 22.04, then answers root alone |
 | The deployment checkout | `/srv/erp-ai-pro/ERP-AI-Pro` at the commit the bootstrap ran from, with `infra/compose/secrets` (0700), `infra/compose/.env` (0600, from `.env.example`, `ERP_SITE_ADDRESS` filled in) and, with `--backup-recipient`, `infra/compose/secrets/erp-backup-recipient.crt` (root's, 0644); deployments move it afterwards |
@@ -97,6 +99,8 @@ ssh -o PubkeyAuthentication=no <administrator>@<address>
 
 The first prints `true`. The second fails with `Permission denied (publickey).`, because the server offers public keys only. On the server:
 
+- `sudo docker info --format '{{.LiveRestoreEnabled}} {{.LoggingDriver}}'` prints `true journald`;
+- `systemctl show --property=LogRateLimitBurst docker.service` prints `LogRateLimitBurst=100000`;
 - `sudo ufw status verbose` shows one rule, `22/tcp ALLOW IN <home network>`;
 - `getent group docker lxd` names `erp-ai-pro` in `docker` and nobody in `lxd`;
 - a dry run with sudo from a fresh clone of the same commit prints `nothing to change: the host already matches`.
@@ -211,6 +215,24 @@ A restore itself refuses while a container of the stack runs (`sudo systemctl st
 
 A failed `retain` exits 1 (a sweep failed, the others ran), 2 (its configuration is invalid) or 4 (the database holds migrations the release in `.env` does not know, so nothing was deleted; the journal shows `status=4/NOPERMISSION`, systemd's name for that code, not a permission problem), and the [migrations runbook](migrations.md) says what each means.
 
+## The journal
+
+Everything the server logs goes to its journal in `/var/log/journal`, kept more than a year ("Running the bootstrap" above): the units above, sshd, the firewall and the updates, and every container of the stack under a tag of its own, which `compose.production.yaml` gives with the journald log driver: `erp-ai-pro-api`, `erp-ai-pro-web`, `erp-ai-pro-proxy` and, for every run of the migrator, `erp-ai-pro-migrator`. The administrator reads it with `sudo`, because `erp-ai-pro` reads its own entries alone. Its times are the server's, UTC, so India time is 5 hours 30 minutes ahead:
+
+```bash
+sudo journalctl CONTAINER_TAG=erp-ai-pro-api --since today
+sudo journalctl CONTAINER_TAG=erp-ai-pro-proxy --since '2026-10-30 03:30' --until '2026-10-30 04:30'
+sudo journalctl --disk-usage
+```
+
+A period goes to a file as JSON, one entry per line, with `--all`, without which journalctl writes a field of 4096 bytes or more, such as a stack trace, as null. `--until` includes the entries of its own moment, so the India day 2026-10-30 ends a microsecond before the next begins, and `umask 077` keeps the file private:
+
+```bash
+(umask 077 && sudo journalctl --output=json --all --since '2026-10-29 18:30:00 UTC' --until '2026-10-30 18:29:59.999999 UTC' > journal-2026-10-30.json)
+```
+
+`docker compose -f compose.yaml -f compose.production.yaml logs` keeps working as `erp-ai-pro`, because Docker reads the journald driver's entries back. A container keeps the log driver it was created with: containers that ran before the bootstrap installed the journald settings keep their json-file log until the next `deploy.sh` replaces them, which the deployment of a release whose `compose.production.yaml` names the journald driver does, and `docker inspect --format '{{.HostConfig.LogConfig.Type}}' <container>` shows a container's driver.
+
 ## Trusting the proxy's root on each device
 
 People open `https://<address>`. The proxy serves it with a certificate from its own authority, so every computer and phone that opens the ERP trusts that authority's root once. Until it does, the browser refuses the page, and with it the session cookie, so sign-in fails.
@@ -259,6 +281,7 @@ The root is valid for ten years and stays the same as long as the volume `erp-ai
 
   - `--backup-recipient` may be left out: the backup's public certificate already placed stays as it is. Passing a new one replaces it, as a rotation does (`secrets.md` section 5g).
   - It never moves the deployment checkout or changes `.env` or the client certificates once they exist. It only gives files of the checkout that belong to someone else back to `erp-ai-pro`, the certificates aside.
+  - A run that changes the journal's settings restarts `systemd-journald`, and one that changes `daemon.json` or `docker.service`'s rate limit restarts Docker, whose live restore keeps the containers running. The containers keep the log driver they were created with until the next deployment replaces them ("The journal" above).
 - **The backup's helper images.** `infra/compose/compose.backup.yaml` pins the BusyBox and Azure CLI images by digest, and Dependabot proposes their updates like those of every other image. The first backup after a deployment that moves a pin pulls the new image, and the image it replaces stays on the server until it is removed: `docker image ls --digests mcr.microsoft.com/azure-cli` lists them, and `docker image rm mcr.microsoft.com/azure-cli@<digest>` removes one that `compose.backup.yaml` no longer names.
 - **Never do these:**
   - remove the two volumes;

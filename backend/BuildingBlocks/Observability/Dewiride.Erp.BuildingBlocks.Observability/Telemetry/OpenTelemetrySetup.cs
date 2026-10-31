@@ -27,6 +27,16 @@ public static class OpenTelemetrySetup
             logging.IncludeScopes = true;
         });
 
+        if (!builder.Environment.IsDevelopment())
+        {
+            builder.Logging.AddJsonConsole(console =>
+            {
+                console.IncludeScopes = true;
+                console.UseUtcTimestamp = true;
+                console.TimestampFormat = "O";
+            });
+        }
+
         builder.Services.AddSingleton<ErpResourceDetector>();
         var telemetry = builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
