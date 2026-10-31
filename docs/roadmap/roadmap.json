@@ -1310,7 +1310,7 @@
           "id": "first-deployment-records-kept-a-year",
           "title": "Records kept a year inside India",
           "scope": "Keep every ICT system's records for a year inside India and hand them to CERT-In when asked (CERT-In Directions of 28.04.2022, direction (iv); DPDP rules 6(1)(e) and 8(3); owner decision of 2026-10-31): the containers and the migrator log to the server's journal, kept a year, with the API's console logger in JSON with its scopes; a nightly sealed copy of the day's journal goes to a write-once container of the backup account; SQL auditing, the subscription activity log and the logs of Key Vault, Storage and App Configuration, and Entra's where the licence allows, go to a logs account in Central India; and a runbook covers handing records over.",
-          "status": "in-progress",
+          "status": "blocked",
           "edition": "community",
           "editionConfirmedOn": "2026-10-31",
           "acceptance": [
@@ -1320,6 +1320,7 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-10-31",
+          "blockedReason": "The release that carries the journal settings is installed on the production server with `deploy.sh`, which recreates the containers on the `journald` driver, and the bootstrap runs again from it to install the journald and `docker.service` drop-ins and the new `daemon.json`; then the API's and the proxy's lines are read back from the journal (`docs/operations/runbooks/records.md`, section Checks).",
           "notes": "Owner decisions of 2026-10-31: the ERP serves the owner's own small company with one user, so the records are kept where they cost nothing. The owner declined the logs account in Central India with SQL auditing and the diagnostic settings of the vaults, the storage accounts, the configuration store, the activity log and Entra ID (estimated at well under ₹100 a month), and the nightly sealed copy of the journal: \"i do not want any backups of these. I already told you about this deployment. 100 is far too costly.\" The scope's nightly copy and logs account are therefore not built. Azure's activity log stays 90 days and Entra ID's sign-in and audit logs 30, short of the 180 days of CERT-In's direction (iv), which the owner accepted; the records runbook exports them while Azure holds them."
         },
         {
