@@ -1310,12 +1310,18 @@
           "id": "first-deployment-records-kept-a-year",
           "title": "Records kept a year inside India",
           "scope": "Keep every ICT system's records for a year inside India and hand them to CERT-In when asked (CERT-In Directions of 28.04.2022, direction (iv); DPDP rules 6(1)(e) and 8(3); owner decision of 2026-10-31): the containers and the migrator log to the server's journal, kept a year, with the API's console logger in JSON with its scopes; a nightly sealed copy of the day's journal goes to a write-once container of the backup account; SQL auditing, the subscription activity log and the logs of Key Vault, Storage and App Configuration, and Entra's where the licence allows, go to a logs account in Central India; and a runbook covers handing records over.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-10-31",
-          "acceptance": [],
+          "acceptance": [
+            "Every service of the production stack, the migrator included, logs to the server's journal under a tag of its own, the journal is persistent and kept at least a year with room for it, and `docker.service`'s log rate limit is raised so no record is dropped; outside Development the API's console log is one JSON object per line with its scopes; the bootstrap installs these settings and its runner proves them on fresh Ubuntu 22.04, 24.04 and 26.04.",
+            "Every night a timer seals the previous India day of the journal to the backup encryption certificate and uploads it, as the backup service principal and without overwriting, to a write-once container of the backup account kept 365 days, checks the upload, catches up a missed night and deletes copies past their year; stand-in tests prove its decisions, and reading a day back with the operator's exported key is documented and done once on the server.",
+            "A logs storage account in Central India with one copy (owner decision of 2026-10-31), Entra-only with Shared Key off, admitting the home's address and trusted Microsoft services alone, its records write-once for 365 days and deleted after them, receives SQL auditing of the production database limited to sign-ins and changes of structure, users and permissions (owner decision of 2026-10-31), the subscription activity log, the resource logs of the three vaults, the three storage accounts and the configuration store, and Microsoft Entra ID's audit and sign-in logs; `provision.sh` creates them after a dry run the owner approves and `verify.sh` reads them back.",
+            "`docs/operations/runbooks/records.md` names each record, where it lives, how long it is kept and how a time range is handed to CERT-In (CERT-In Directions of 28 April 2022, direction (iv); DPDP Rules 2025, rules 6(1)(e) and 8(3)), and ADR-0058 records the design."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-10-31"
         },
         {
           "id": "first-deployment-upload-virus-scanning",
