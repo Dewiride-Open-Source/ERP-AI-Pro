@@ -11,16 +11,17 @@ which reads the whole journal, in the deployment checkout /srv/erp-ai-pro/ERP-AI
 journal alone.
 
 A run copies each of the last 30 days up to yesterday, the oldest first, of which the container holds no copy and the
-journal holds entries, so it catches up the nights the server was off. journalctl --output=json writes the day'"'"'s entries
-as one JSON object per line, from the day'"'"'s first microsecond to its last in UTC (18:30 UTC the day before to 18:30 UTC);
-gzip compresses them, and OpenSSL on the server seals them as backup.sh seals its archives: AES-256-GCM, its key wrapped
-with RSA-OAEP-SHA256 to the public certificate secrets/erp-backup-recipient.crt, whose private key only the operator exports
-from Key Vault. Microsoft'"'"'s Azure CLI image, signed in as the backup service principal (secrets/erp-backup-client.pem),
-uploads the copy as <yyyy>/<mm>/<yyyymmdd>.json.gz.p7m without ever writing over a blob and reads its length and MD5 back.
-Last, it deletes the copies the storage service created more than 366 days ago, which the container'"'"'s write-once policy
-keeps for 365. .env names the backup account and the principal: BACKUP_BLOB_ENDPOINT, BACKUP_AZURE_CLIENT_ID and
-AZURE_TENANT_ID. Each step is a line of the journal (journalctl -u erp-ai-pro-journal.service), and a failure names the step
-it stopped at; nothing alerts anyone.
+journal holds entries, so it catches up the nights the server was off. journalctl --output=json --all writes the day'"'"'s
+entries as one JSON object per line with every field whole, where without --all it would write a field of 4096 bytes or
+more, such as a stack trace, as null, from the day'"'"'s first microsecond to its last in UTC (18:30 UTC the day before to
+18:30 UTC); gzip compresses them, and OpenSSL on the server seals them as backup.sh seals its archives: AES-256-GCM, its
+key wrapped with RSA-OAEP-SHA256 to the public certificate secrets/erp-backup-recipient.crt, whose private key only the
+operator exports from Key Vault. Microsoft'"'"'s Azure CLI image, signed in as the backup service principal
+(secrets/erp-backup-client.pem), uploads the copy as <yyyy>/<mm>/<yyyymmdd>.json.gz.p7m without ever writing over a blob
+and reads its length and MD5 back. Last, it deletes the copies the storage service created more than 366 days ago, which
+the container'"'"'s write-once policy keeps for 365. .env names the backup account and the principal: BACKUP_BLOB_ENDPOINT,
+BACKUP_AZURE_CLIENT_ID and AZURE_TENANT_ID. Each step is a line of the journal (journalctl -u erp-ai-pro-journal.service),
+and a failure names the step it stopped at; nothing alerts anyone.
 Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
@@ -206,7 +207,7 @@ entries_outside_day() {
 }
 
 use_journal_container() {
-  read_backup_settings "$ENV_FILE" || return 1
+  read_backup_account "$ENV_FILE" || return 1
   require_backup_client_certificate || return 1
   BACKUP_CONTAINER_NAME="$JOURNAL_CONTAINER"
 }
@@ -289,7 +290,7 @@ copy_day() {
   STEP="day $DAY_DATE"
   day_bounds || fail "cannot write the bounds of $DAY_DATE"
   # The runtime folder is a tmpfs in memory, so gzip takes the day as journalctl writes it and only its compressed form is kept.
-  journalctl --output=json --no-pager --quiet --since "$DAY_SINCE" --until "$DAY_UNTIL" | gzip -n -c > "$packed" \
+  journalctl --output=json --all --no-pager --quiet --since "$DAY_SINCE" --until "$DAY_UNTIL" | gzip -n -c > "$packed" \
     || fail "cannot export the journal of $DAY_DATE (see the error of journalctl or gzip above)"
   entries="$(gzip -d -c -- "$packed" | wc -l)" || fail "cannot count the entries of $DAY_DATE"
   entries="${entries//[[:space:]]/}"

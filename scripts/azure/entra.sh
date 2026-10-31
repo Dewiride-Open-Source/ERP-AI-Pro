@@ -332,7 +332,8 @@ run_rotate_encryption() {
   fi
   log_info "next steps:"
   log_info "  1. bash scripts/azure/export-client-certificate.sh backup-recipient   (the new public certificate; place it on the server in place of the old one, docs/operations/runbooks/secrets.md section 5g)"
-  log_info "  2. keep every earlier version enabled until the last archive sealed to it is past its 90 days: a restore of such an archive exports that version with"
+  log_info "  2. keep every earlier version enabled until the newest archive sealed to it is past its 90 days and the newest copy of the journal sealed to it is past its 365 days,"
+  log_info "     in practice until the next rotation: a restore of such an archive, or journal.sh --fetch of such a copy, exports that version with"
   log_info "     bash scripts/azure/export-client-certificate.sh backup-recipient-key --version <version>   (az keyvault certificate list-versions --vault-name $ERP_AZURE_KEYVAULT_OPS_NAME --name $BACKUP_ENCRYPTION_CERTIFICATE_NAME lists them)"
   log_info "  3. bash scripts/azure/verify.sh --entra"
 }

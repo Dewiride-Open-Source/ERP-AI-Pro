@@ -3,17 +3,19 @@
 USAGE='Usage: bash scripts/deploy/tests/journal-decisions.sh
 
 Runs journal.sh in a temporary folder that stands for the server'"'"'s root (ERP_DEPLOY_TEST_ROOT names it to it), with
-tests/stand-in.sh on PATH as docker, id, date and journalctl, recording every call, and the real OpenSSL, gzip and
-coreutils. The stand-in journalctl serves a file of JSON entries between the bounds it is given, and the stand-in docker
-plays the Azure CLI of compose.backup.yaml on a folder that stands for the container host-journal. It checks each decision
-the script makes:
+tests/stand-in.sh on PATH as docker, flock, id, date and journalctl, recording every call, and the real OpenSSL, gzip and
+coreutils. The stand-in journalctl serves a file of JSON entries between the bounds it is given and takes exactly the
+arguments journal.sh passes, --all among them, and the stand-in docker plays the Azure CLI of compose.backup.yaml on a
+folder that stands for the container host-journal, noting whether the deployment lock is held for each call. Its .env names
+no BACKUP_CONTAINER, which journal.sh does not read. It checks each decision the script makes:
   - a nightly run copies each India day of the last 30 up to yesterday of which the container holds no copy and the journal
     holds entries, the oldest first, asking journalctl for the day from 18:30:00 UTC the day before to 18:29:59.999999 UTC,
     so an entry of a day'"'"'s first or last microsecond lands in that day alone; it seals each day to a throwaway RSA 4096
     certificate with AES-256-GCM and RSA-OAEP-SHA256, uploads it as <yyyy>/<mm>/<yyyymmdd>.json.gz.p7m without writing over
     a blob and reads it back, skips a day already copied and one the journal holds no entry of, catches up missed nights
     across a month and a year within the 30 days and none before, and deletes, naming each, only the copies the storage
-    service created more than 366 days ago; each copy opens with the throwaway key into exactly the entries of its day;
+    service created more than 366 days ago, never taking the deployment lock nor calling the Azure CLI while it is held; each
+    copy opens with the throwaway key into exactly the entries of its day;
   - a copy of a day that the storage service created more than an hour before the day ended is reported as one that cannot
     hold it once the other days are copied, and the run fails;
   - a run without the group systemd-journal, a failed listing, a listing that names a copy twice or gives a creation that
@@ -39,7 +41,7 @@ ACCEPTS_DRY_RUN=0
 # shellcheck source=../lib/common.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/../lib/common.sh"
 
-readonly STAND_IN_COMMANDS=(docker id date journalctl)
+readonly STAND_IN_COMMANDS=(docker flock id date journalctl)
 readonly TREE_FILES=(scripts/deploy/journal.sh scripts/deploy/lib/common.sh scripts/deploy/lib/release.sh scripts/deploy/lib/backup.sh
   infra/compose/compose.backup.yaml)
 readonly NOW='2026-10-30T21:00:00Z'
@@ -53,7 +55,7 @@ readonly STORAGE="--auth-mode login --blob-endpoint https://sterpaiprobackup.blo
 readonly PROPERTIES='--query [properties.contentLength, properties.contentSettings.contentMd5] --output tsv'
 readonly FETCH_PROPERTIES='--query [properties.contentLength, properties.contentSettings.contentMd5, properties.creationTime] --output tsv'
 readonly LISTING="$RUN $AS_BACKUP azure-cli storage blob list $STORAGE --num-results * --query [].[name, properties.creationTime] --output tsv"
-readonly EXPORT='journalctl --output=json --no-pager --quiet'
+readonly EXPORT='journalctl --output=json --all --no-pager --quiet'
 
 WORK=''
 ROOT=''
@@ -129,7 +131,7 @@ state() {
 }
 
 env_text() {
-  printf '# Stand-in production values\nERP_SITE_ADDRESS=192.0.2.10\nIMAGE_TAG=0.3.0\nAZURE_TENANT_ID=%s\nBACKUP_BLOB_ENDPOINT=https://sterpaiprobackup.blob.core.windows.net/\nBACKUP_CONTAINER=host-backups\nBACKUP_AZURE_CLIENT_ID=%s\n' \
+  printf '# Stand-in production values\nERP_SITE_ADDRESS=192.0.2.10\nIMAGE_TAG=0.3.0\nAZURE_TENANT_ID=%s\nBACKUP_BLOB_ENDPOINT=https://sterpaiprobackup.blob.core.windows.net/\nBACKUP_AZURE_CLIENT_ID=%s\n' \
     "$TENANT_ID" "$CLIENT_ID"
 }
 
@@ -180,6 +182,7 @@ forge_copy() {
 
 run_journal() {
   : > "$STATE/calls"
+  : > "$STATE/lock-states"
   STATUS=0
   OUTPUT="$(cd -- "$WORK" && env -u DRY_RUN PATH="$BIN:$PATH" ERP_DEPLOY_TEST_ROOT="$ROOT" TMPDIR="$WORK/tmp" RUNTIME_DIRECTORY="$RUNTIME" \
     bash "$CHECKOUT/scripts/deploy/journal.sh" "$@" 2>&1)" || STATUS=$?
@@ -187,6 +190,7 @@ run_journal() {
 
 run_by_hand() {
   : > "$STATE/calls"
+  : > "$STATE/lock-states"
   STATUS=0
   OUTPUT="$(cd -- "$WORK" && env -u DRY_RUN -u RUNTIME_DIRECTORY PATH="$BIN:$PATH" ERP_DEPLOY_TEST_ROOT="$ROOT" TMPDIR="$WORK/tmp" \
     bash "$CHECKOUT/scripts/deploy/journal.sh" "$@" 2>&1)" || STATUS=$?
@@ -340,6 +344,10 @@ scenario_nightly() {
   expect_no_call "delete --name 2026/10/20261029.json.gz.p7m"
   expect_no_call "delete --name notes.txt"
   expect_no_call "flock"
+  grep -q '^free azure-cli storage blob upload ' "$STATE/lock-states" || fail "noted no lock state for an upload"
+  if grep -q '^held' "$STATE/lock-states"; then
+    fail "ran a call with the deployment lock held: $(grep '^held' "$STATE/lock-states" | head -n 1)"
+  fi
   [[ "$(grep -c '^journalctl ' "$STATE/calls")" == 29 ]] || fail "asked journalctl for $(grep -c '^journalctl ' "$STATE/calls") days, not the 29 without a copy"
   expect_blobs 2025/10/20251029.json.gz.p7m 2025/11/20251101.json.gz.p7m 2026/10/20261001.json.gz.p7m 2026/10/20261028.json.gz.p7m \
     2026/10/20261029.json.gz.p7m 2026/10/20261030.json.gz.p7m notes.txt

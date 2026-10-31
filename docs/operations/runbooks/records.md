@@ -19,14 +19,14 @@ Which Azure source sends which category to which container, what each costs and 
 
 Collect each record that covers the range into one folder, compress it and hand it over. Note in the folder what was asked, by whom and when.
 
-1. **The server's journal**, for a range within its last thirteen months. On the server, as the administrator, whose group `adm` reads the whole journal (the deploy account reads only its own entries), write one JSON object per line into a file only the administrator reads. The server keeps UTC, and `--until` includes its own time, so the India days 1 to 7 November 2026 are:
+1. **The server's journal**, for a range within its last thirteen months. On the server, as the administrator, whose group `adm` reads the whole journal, write one JSON object per line into a file only the administrator reads. (`journalctl` run as the deploy account shows only that account's own entries; it reads the containers' lines through Docker, and being root through Docker it could reach the rest.) The server keeps UTC, and `--until` includes its own time, so the India days 1 to 7 November 2026 are:
 
    ```bash
    umask 077
-   journalctl --since "2026-10-31 18:30:00 UTC" --until "2026-11-07 18:29:59.999999 UTC" --output=json > journal-2026-11-01-to-07.json
+   journalctl --since "2026-10-31 18:30:00 UTC" --until "2026-11-07 18:29:59.999999 UTC" --output=json --all > journal-2026-11-01-to-07.json
    ```
 
-   `journalctl CONTAINER_TAG=erp-ai-pro-proxy --since …` narrows it to one service, and `journalctl -u erp-ai-pro-backup.service --since …` to one of the host's.
+   `--all` keeps every field whole: without it the JSON output writes a field of 4096 bytes or more, such as an error line with its stack trace, as `null`. `journalctl CONTAINER_TAG=erp-ai-pro-proxy --since …` narrows it to one service, and `journalctl -u erp-ai-pro-backup.service --since …` to one of the host's.
 2. **The journal's nightly copies**, for a range the server no longer holds or after the server is lost. Export the backup recipient's key on the operator's computer and copy it to the server ([restore runbook](restore.md), "The server's own files", steps 1 and 2). Then, as `erp-ai-pro`, list the copies and open the days, at most 31 at a time:
 
    ```bash
@@ -40,11 +40,18 @@ Collect each record that covers the range into one folder, compress it and hand 
    ```bash
    az storage container list --account-name sterpaiprologs --auth-mode login --query "[].name" --output tsv
    az storage blob list --account-name sterpaiprologs --container-name insights-activity-logs --auth-mode login --query "[].name" --output tsv
-   az storage blob download-batch --account-name sterpaiprologs --source insights-activity-logs --destination ./activity-log --pattern "*/y=2026/m=11/*" --auth-mode login
+   mkdir -p activity-log
+   az storage blob download-batch --account-name sterpaiprologs --source insights-activity-logs --destination activity-log --pattern "*/y=2026/m=10/d=31/*" --auth-mode login
+   az storage blob download-batch --account-name sterpaiprologs --source insights-activity-logs --destination activity-log --pattern "*/y=2026/m=11/*" --auth-mode login
    ```
 
-   The resource logs sit in hourly blobs `…/y=<year>/m=<month>/d=<day>/h=<hour>/m=00/PT1H.json`, one JSON record per line. The database's audit sits in `.xel` files in `sqldbauditlogs`, in folders by server, database and date ([SQL Database audit log format](https://learn.microsoft.com/azure/azure-sql/database/audit-log-format)), which SQL Server Management Studio opens, or the database reads with `sys.fn_get_audit_file`.
-4. **The change history and the security events**, for the ERP's own records: the change history's export on `/platform/audit` gives a CSV of at most 100,000 lines. Each export is itself recorded as a security event.
+   The resource logs sit in hourly blobs `…/y=<year>/m=<month>/d=<day>/h=<hour>/m=00/PT1H.json`, one JSON record per line. Their names use UTC, and an India day starts at 18:30 UTC the day before, so a range of India days also needs the UTC day before its first: here 31 October for the days from 1 November. The download needs its folder to exist. The database's audit sits in `.xel` files in `sqldbauditlogs`, in folders by server, database and date ([SQL Database audit log format](https://learn.microsoft.com/azure/azure-sql/database/audit-log-format)), which SQL Server Management Studio opens, or the database reads with `sys.fn_get_audit_file`.
+4. **The security events**, from the operator's computer on the home network, signed in with `az login` as the database's Microsoft Entra admin, through the Go sqlcmd ([database runbook](database.md)). The query reads the same India days as step 1 and names each kind as `SecurityEventKind` does:
+
+   ```bash
+   sqlcmd -S tcp:sql-erp-ai-pro.database.windows.net,1433 -d ErpAiPro --authentication-method ActiveDirectoryAzCli -N true -b -W -s "," -o security-events-2026-11-01-to-07.csv -Q "SET NOCOUNT ON; SELECT OccurredAt, CASE Kind WHEN 1 THEN 'SignedIn' WHEN 2 THEN 'SignInFailed' WHEN 3 THEN 'SignedOut' WHEN 4 THEN 'FrontChannelSignedOut' WHEN 5 THEN 'FrontChannelSignOutRefused' WHEN 6 THEN 'BearerTokenRefused' WHEN 7 THEN 'SignInRefused' WHEN 8 THEN 'ChangeHistoryExported' END AS Kind, Detail, ActorObjectId, ClientApplicationId, ClientAddress, CorrelationId FROM audit.SecurityEvents WHERE OccurredAt >= '2026-10-31T18:30:00+00:00' AND OccurredAt < '2026-11-07T18:30:00+00:00' ORDER BY OccurredAt"
+   ```
+5. **The change history**, for the ERP's own records of every business change. On `/platform/audit`, set the date range to the requested days first, then export: the export holds what the page's filters select, at most 100,000 lines of CSV, and is itself recorded as a security event.
 
 ## Checks
 

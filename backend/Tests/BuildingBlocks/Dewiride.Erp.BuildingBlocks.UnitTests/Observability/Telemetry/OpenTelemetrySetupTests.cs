@@ -100,6 +100,7 @@ public sealed class OpenTelemetrySetupTests
         Assert.Equal(formatter, console.FormatterName);
         Assert.Equal(formatter is not null, json.IncludeScopes);
         Assert.Equal(formatter is not null, json.UseUtcTimestamp);
+        Assert.Equal(formatter is null ? null : "O", json.TimestampFormat);
         Assert.False(json.JsonWriterOptions.Indented);
     }
 

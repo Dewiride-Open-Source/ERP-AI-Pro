@@ -42,6 +42,10 @@ readonly DAEMON_CONFIG='/etc/docker/daemon.json'
 # The daemon.json of ADR-0049, which rotates json-file logs at 20 MB x 5: a run replaces it as one this script wrote, where
 # it refuses an operator's own.
 readonly JSON_FILE_DAEMON_CONFIG='{"live-restore": true, "log-driver": "json-file", "log-opts": {"max-size": "20m", "max-file": "5"}}'
+# The log-opts the journald driver takes: its own, those every driver takes and the dual-logging cache's, which it ignores.
+# With any other beside it dockerd does not start, and dockerd --validate does not tell.
+readonly JOURNALD_LOG_OPTS=(tag labels labels-regex env env-regex mode max-buffer-size cache-disabled cache-max-size cache-max-file
+  cache-compress)
 readonly DOCKER_LOG_LIMIT_FILE='/etc/systemd/system/docker.service.d/50-erp-ai-pro.conf'
 readonly JOURNAL_SETTINGS_FILE='/etc/systemd/journald.conf.d/50-erp-ai-pro.conf'
 readonly GITHUB_CLI_REPOSITORY='https://cli.github.com/packages'
@@ -356,7 +360,7 @@ ensure_docker_engine() {
 }
 
 daemon_config_state() {
-  python3 - "$1" "$2" "$JSON_FILE_DAEMON_CONFIG" << 'PYTHON'
+  python3 - "$1" "$2" "$JSON_FILE_DAEMON_CONFIG" "${JOURNALD_LOG_OPTS[@]}" << 'PYTHON'
 import json, sys
 with open(sys.argv[1], encoding="utf-8") as required_file:
     required = json.load(required_file)
@@ -365,12 +369,15 @@ try:
         present = json.load(present_file)
 except ValueError:
     present = None
-if isinstance(present, dict) and all(present.get(key) == value for key, value in required.items()):
-    print("template")
-elif present == json.loads(sys.argv[3]):
+if present == json.loads(sys.argv[3]):
     print("json-file")
-else:
+elif not isinstance(present, dict):
     print("other")
+else:
+    options = present.get("log-opts", {})
+    refused = sorted(set(options) - set(sys.argv[4:])) if isinstance(options, dict) else ["log-opts"]
+    covered = all(present.get(key) == value for key, value in required.items())
+    print(" ".join(["template" if covered and not refused else "other", *refused]))
 PYTHON
 }
 
@@ -394,19 +401,25 @@ check_docker_log_limit() {
 
 ensure_docker_daemon_config() {
   log_step "Docker daemon configuration"
-  local source="$HOST_CONFIG_DIR/docker/daemon.json" apply=0 restart=0
+  local source="$HOST_CONFIG_DIR/docker/daemon.json" apply=0 restart=0 state
   if [[ -f "$DAEMON_CONFIG" && ! -r "$DAEMON_CONFIG" ]]; then
     (( DRY_RUN )) || die "cannot read $DAEMON_CONFIG"
     record_change "check $DAEMON_CONFIG for live restore and the journald log driver (it could not be read without root, so a run with sudo compares it)"
   elif [[ -f "$DAEMON_CONFIG" ]]; then
-    case "$(daemon_config_state "$source" "$DAEMON_CONFIG")" in
+    state="$(daemon_config_state "$source" "$DAEMON_CONFIG")"
+    case "${state%% *}" in
       template) log_info "in place: live restore and the journald log driver in $DAEMON_CONFIG" ;;
       json-file)
         install_config "$source" "$DAEMON_CONFIG" 644 root:root \
           "Docker daemon configuration: live restore and the journald log driver, in place of the json-file log rotation this script wrote" || true
         apply=1
         ;;
-      *) die "$DAEMON_CONFIG lacks live restore or the journald log driver; add these settings to it, keeping its own but the log-opts the journald driver refuses, such as max-size and max-file, and run this script again: $(tr -s '\n ' ' ' < "$source")" ;;
+      *)
+        if [[ "$state" == *' '* ]]; then
+          die "$DAEMON_CONFIG sets log-opts the journald driver refuses, which would keep Docker from starting: ${state#* }; remove them, keeping its other settings, and run this script again with these among them: $(tr -s '\n ' ' ' < "$source")"
+        fi
+        die "$DAEMON_CONFIG lacks live restore or the journald log driver; add these settings to it, keeping its own, and run this script again: $(tr -s '\n ' ' ' < "$source")"
+        ;;
     esac
   elif install_config "$source" "$DAEMON_CONFIG" 644 root:root "Docker daemon configuration: live restore and the journald log driver"; then
     apply=1

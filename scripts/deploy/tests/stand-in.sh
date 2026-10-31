@@ -515,10 +515,10 @@ journal_microseconds() {
 
 stand_in_journalctl() {
   record "journalctl $*"
-  [[ $# == 7 && "$1 $2 $3 $4 $6" == '--output=json --no-pager --quiet --since --until' ]] || unexpected "$@"
+  [[ $# == 8 && "$1 $2 $3 $4 $5 $7" == '--output=json --all --no-pager --quiet --since --until' ]] || unexpected "$@"
   local first last
-  first="$(journal_microseconds "$5")" || unexpected "$@"
-  last="$(journal_microseconds "$7")" || unexpected "$@"
+  first="$(journal_microseconds "$6")" || unexpected "$@"
+  last="$(journal_microseconds "$8")" || unexpected "$@"
   setting journal/exit 0
   if (( REPLY != 0 )); then
     printf 'stand-in journalctl: fails as the scenario says\n' >&2

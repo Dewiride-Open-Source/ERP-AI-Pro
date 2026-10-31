@@ -164,36 +164,63 @@ env_setting() {
   printf '%s' "$value"
 }
 
-read_backup_settings() {
-  local file="$1" endpoint container client tenant
+backup_setting_valid() {
+  local file="$1" key="$2" value="$3"
+  case "$key" in
+    BACKUP_BLOB_ENDPOINT)
+      if [[ ! "$value" =~ $BLOB_ENDPOINT_PATTERN ]]; then
+        log_error "BACKUP_BLOB_ENDPOINT in $file is '$(printable "$value")', not the backup account's blob endpoint https://<account>.blob.core.windows.net/ that provision.sh prints"
+        return 1
+      fi
+      ;;
+    BACKUP_CONTAINER)
+      if (( ${#value} < 3 || ${#value} > 63 )) || [[ ! "$value" =~ $CONTAINER_NAME_PATTERN ]]; then
+        log_error "BACKUP_CONTAINER in $file is '$(printable "$value")', not a container name of 3 to 63 lowercase letters, digits and single hyphens"
+        return 1
+      fi
+      ;;
+    BACKUP_AZURE_CLIENT_ID)
+      if [[ ! "$value" =~ $GUID_PATTERN ]]; then
+        log_error "BACKUP_AZURE_CLIENT_ID in $file is '$(printable "$value")', not the backup service principal's application id that entra.sh prints"
+        return 1
+      fi
+      ;;
+    AZURE_TENANT_ID)
+      if [[ ! "$value" =~ $GUID_PATTERN ]]; then
+        log_error "AZURE_TENANT_ID in $file is '$(printable "$value")', not the Entra tenant id"
+        return 1
+      fi
+      ;;
+  esac
+}
+
+read_backup_values() {
+  local file="$1" key
+  local -A values=()
+  shift
   if [[ ! -f "$file" ]]; then
     log_error "$file is missing; bootstrap.sh writes it from .env.example"
     return 1
   fi
-  endpoint="$(env_setting "$file" BACKUP_BLOB_ENDPOINT)" || return 1
-  container="$(env_setting "$file" BACKUP_CONTAINER)" || return 1
-  client="$(env_setting "$file" BACKUP_AZURE_CLIENT_ID)" || return 1
-  tenant="$(env_setting "$file" AZURE_TENANT_ID)" || return 1
-  if [[ ! "$endpoint" =~ $BLOB_ENDPOINT_PATTERN ]]; then
-    log_error "BACKUP_BLOB_ENDPOINT in $file is '$(printable "$endpoint")', not the backup account's blob endpoint https://<account>.blob.core.windows.net/ that provision.sh prints"
-    return 1
-  fi
-  if (( ${#container} < 3 || ${#container} > 63 )) || [[ ! "$container" =~ $CONTAINER_NAME_PATTERN ]]; then
-    log_error "BACKUP_CONTAINER in $file is '$(printable "$container")', not a container name of 3 to 63 lowercase letters, digits and single hyphens"
-    return 1
-  fi
-  if [[ ! "$client" =~ $GUID_PATTERN ]]; then
-    log_error "BACKUP_AZURE_CLIENT_ID in $file is '$(printable "$client")', not the backup service principal's application id that entra.sh prints"
-    return 1
-  fi
-  if [[ ! "$tenant" =~ $GUID_PATTERN ]]; then
-    log_error "AZURE_TENANT_ID in $file is '$(printable "$tenant")', not the Entra tenant id"
-    return 1
-  fi
-  BACKUP_ENDPOINT="${endpoint%/}"
-  BACKUP_CONTAINER_NAME="$container"
-  BACKUP_CLIENT_ID="$client"
-  BACKUP_TENANT_ID="$tenant"
+  for key in "$@"; do
+    values[$key]="$(env_setting "$file" "$key")" || return 1
+  done
+  for key in "$@"; do
+    backup_setting_valid "$file" "$key" "${values[$key]}" || return 1
+  done
+  BACKUP_ENDPOINT="${values[BACKUP_BLOB_ENDPOINT]%/}"
+  BACKUP_CLIENT_ID="${values[BACKUP_AZURE_CLIENT_ID]}"
+  BACKUP_TENANT_ID="${values[AZURE_TENANT_ID]}"
+  BACKUP_CONTAINER_NAME="${values[BACKUP_CONTAINER]:-$BACKUP_CONTAINER_NAME}"
+}
+
+# journal.sh writes a container of the backup account that .env does not name, so it reads no BACKUP_CONTAINER.
+read_backup_account() {
+  read_backup_values "$1" BACKUP_BLOB_ENDPOINT BACKUP_AZURE_CLIENT_ID AZURE_TENANT_ID
+}
+
+read_backup_settings() {
+  read_backup_values "$1" BACKUP_BLOB_ENDPOINT BACKUP_CONTAINER BACKUP_AZURE_CLIENT_ID AZURE_TENANT_ID
 }
 
 require_backup_client_certificate() {
