@@ -54,4 +54,4 @@ The steps that put the ERP into use on the production server for the first time,
 
 | Date | Release | Operator | Steps done | Issues and follow-ups |
 |---|---|---|---|---|
-| | | | | |
+| 2026-10-31 | v0.1.0 | The owner, with Claude | 1 to 10 and 12, without the backup's parts of 4 to 6, which v0.1.0 does not carry. The owner signed in on a Mac through the proxy, opened People and Attachments, uploaded, downloaded and deleted a file, and signed out. | The proxy's root was trusted on the Mac in the login keychain with **Always Trust**. Double-clicking the file adds it untrusted. Windows' `curl` (Schannel) also needs `--ssl-no-revoke`, because the proxy's authority publishes no revocation data. Steps 11 and 13 to 15 follow with the release that carries the backups, after the bootstrap runs again from it with `--backup-recipient`. |
