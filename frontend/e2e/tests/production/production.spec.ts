@@ -14,7 +14,7 @@ test.describe("the production ERP", () => {
   }) => {
     await page.goto("/");
 
-    await expect(page).toHaveURL(`${baseURL}/login?returnUrl=%2F`);
+    await expect(page).toHaveURL(`${baseURL}/login`);
     const login = new LoginPage(page);
     await expect(login.heading).toBeVisible();
     await expect(login.signInButton).toHaveAttribute("href", "/api/auth/login?returnUrl=%2F");
