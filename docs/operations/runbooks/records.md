@@ -18,7 +18,7 @@ Nothing else is kept. The vaults, the storage accounts and the configuration sto
 
 Collect each record that covers the range into one folder, compress it and hand it over. Note in the folder what was asked, by whom and when.
 
-1. **The server's journal**, for a range within its last thirteen months. On the server, as the administrator, whose group `adm` reads the whole journal, write one JSON object per line into a file only the administrator reads. (`journalctl` run as the deploy account shows only that account's own entries; it reads the containers' lines through Docker, and being root through Docker it could reach the rest.) The server keeps UTC, and `--until` includes its own time, so the India days 1 to 7 November 2026 are:
+1. **The server's journal**, for a range within its last year: a journal file holds up to a month of entries and is deleted whole 400 days after its first entry, so entries between about a year and 400 days old may already be gone, and an export reaching further back than a year is checked by its first entry's time before it is handed over as complete. On the server, as the administrator, whose group `adm` reads the whole journal, write one JSON object per line into a file only the administrator reads. (`journalctl` run as the deploy account shows only that account's own entries; it reads the containers' lines through Docker, and being root through Docker it could reach the rest.) The server keeps UTC, and `--until` includes its own time, so the India days 1 to 7 November 2026 are:
 
    ```bash
    umask 077
