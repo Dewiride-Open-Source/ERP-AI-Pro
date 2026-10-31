@@ -10,9 +10,9 @@ namespace Dewiride.Erp.ArchitectureTests.Rules;
 
 public sealed class LayerTests
 {
-    private const string AzureStorageNamespace = @"^Azure\.Storage(\..*)?$";
+    private const string AzureStorageNamespace = "Azure.Storage";
 
-    private const string BuildingBlocksNamespace = @"^Dewiride\.Erp\.BuildingBlocks(\..*)?$";
+    private const string BuildingBlocksNamespace = "Dewiride.Erp.BuildingBlocks";
 
     private const string StateSetter = "set_" + nameof(EntityEntry.State);
 
@@ -32,9 +32,9 @@ public sealed class LayerTests
 
     private static readonly IObjectProvider<IType> EndpointTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Endpoints(\..*)?$").As("endpoint types");
 
-    private static readonly IObjectProvider<IType> AspNetCoreTypes = Types(true).That().ResideInNamespaceMatching(@"^Microsoft\.AspNetCore(\..*)?$").As("ASP.NET Core types");
+    private static readonly IObjectProvider<IType> AspNetCoreTypes = Types(true).That().ResideInNamespaceOrBelow("Microsoft.AspNetCore").As("ASP.NET Core types");
 
-    private static readonly IObjectProvider<IType> EntityFrameworkTypes = Types(true).That().ResideInNamespaceMatching(@"^Microsoft\.EntityFrameworkCore(\..*)?$").As("EF Core types");
+    private static readonly IObjectProvider<IType> EntityFrameworkTypes = Types(true).That().ResideInNamespaceOrBelow("Microsoft.EntityFrameworkCore").As("EF Core types");
 
     private static readonly IObjectProvider<IType> DomainDependencies = Types(true).That()
         .ResideInNamespaceMatching(@"^(System|Dewiride\.Erp\.BuildingBlocks\.Kernel|Dewiride\.Erp\.BuildingBlocks\.SharedKernel|Dewiride\.Erp\.Modules\..+\.Domain)(\..*)?$")
@@ -44,17 +44,17 @@ public sealed class LayerTests
 
     private static readonly IObjectProvider<IType> HostingTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules\..+\.Hosting(\..*)?$").As("hosting types");
 
-    private static readonly IObjectProvider<IType> BlobStorageTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.BuildingBlocks\.Attachments\.Storage\.Blob(\..*)?$").As("blob storage types");
+    private static readonly IObjectProvider<IType> BlobStorageTypes = Types().That().ResideInNamespaceOrBelow("Dewiride.Erp.BuildingBlocks.Attachments.Storage.Blob").As("blob storage types");
 
-    private static readonly IObjectProvider<IType> AzureStorageTypes = Types(true).That().ResideInNamespaceMatching(AzureStorageNamespace).As("Azure Storage types");
+    private static readonly IObjectProvider<IType> AzureStorageTypes = Types(true).That().ResideInNamespaceOrBelow(AzureStorageNamespace).As("Azure Storage types");
 
     private static readonly IObjectProvider<IType> ChangeRecordType = Types(true).That().HaveFullName(typeof(ChangeRecord).FullName!).As("the change records");
 
     private static readonly IObjectProvider<IType> PersistenceAndAuditingTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.BuildingBlocks\.(Persistence|Auditing)(\..*)?$").As("persistence and auditing types");
 
-    private static readonly IObjectProvider<IType> ModuleTypes = Types().That().ResideInNamespaceMatching(@"^Dewiride\.Erp\.Modules(\..*)?$").As("module types");
+    private static readonly IObjectProvider<IType> ModuleTypes = Types().That().ResideInNamespaceOrBelow("Dewiride.Erp.Modules").As("module types");
 
-    private static readonly IObjectProvider<IType> SqlClientTypes = Types(true).That().ResideInNamespaceMatching(@"^Microsoft\.Data\.SqlClient(\..*)?$").As("SQL Server driver types");
+    private static readonly IObjectProvider<IType> SqlClientTypes = Types(true).That().ResideInNamespaceOrBelow("Microsoft.Data.SqlClient").As("SQL Server driver types");
 
     private static readonly IObjectProvider<IType> AdoNetTypes = Types(true).That().ResideInNamespaceMatching(@"^System\.Data\.Common$").As("ADO.NET provider types");
 
@@ -115,7 +115,7 @@ public sealed class LayerTests
     [Fact]
     public void AzureStorage_IsReferencedOnlyByTheBlobStorageNamespace()
     {
-        Assert.NotEmpty(Types(true).That().ResideInNamespaceMatching(AzureStorageNamespace).GetObjects(Architecture));
+        Assert.NotEmpty(Types(true).That().ResideInNamespaceOrBelow(AzureStorageNamespace).GetObjects(Architecture));
         AssertRule(Types().That().AreNot(BlobStorageTypes).Should().NotDependOnAny(AzureStorageTypes));
     }
 
@@ -204,8 +204,8 @@ public sealed class LayerTests
     [Fact]
     public void Modules_NeverUseTheDatabaseDriver()
     {
-        Assert.NotEmpty(Types().That().ResideInNamespaceMatching(BuildingBlocksNamespace).And().DependOnAny(SqlClientTypes).GetObjects(Architecture));
-        Assert.NotEmpty(Types().That().ResideInNamespaceMatching(BuildingBlocksNamespace).And().DependOnAny(AdoNetTypes).GetObjects(Architecture));
+        Assert.NotEmpty(Types().That().ResideInNamespaceOrBelow(BuildingBlocksNamespace).And().DependOnAny(SqlClientTypes).GetObjects(Architecture));
+        Assert.NotEmpty(Types().That().ResideInNamespaceOrBelow(BuildingBlocksNamespace).And().DependOnAny(AdoNetTypes).GetObjects(Architecture));
         AssertRule(Types().That().Are(ModuleTypes).Should().NotDependOnAny(SqlClientTypes).AndShould().NotDependOnAny(AdoNetTypes));
     }
 
