@@ -156,6 +156,10 @@ validate() {
     backup-recipient-key)
       openssl x509 -in "$OUT_FILE" -noout -subject -serial -enddate -fingerprint -sha256 || discard_invalid_file
       openssl rsa -in "$OUT_FILE" -check -noout || discard_invalid_file
+      local serial
+      serial="$(openssl x509 -in "$OUT_FILE" -noout -serial)" || discard_invalid_file
+      serial="${serial#serial=}"
+      log_info "serial number ${serial#"${serial%%[!0]*}"}, as restore.sh names it"
       log_info "certificate and RSA private key are valid; the serial number names the archives this key opens (their recipient)"
       ;;
     *)

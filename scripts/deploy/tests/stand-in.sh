@@ -168,15 +168,15 @@ blob_command() {
         printf 'ERROR: The specified blob does not exist.\n' >&2
         return 3
       fi
-      setting az/show ''
-      if [[ -n "$REPLY" ]]; then
-        printf '%s\n' "$REPLY"
+      local length md5
+      setting az/show-length "$(wc -c < "$blob" | tr -d '[:space:]')"
+      length="$REPLY"
+      setting az/show-md5 "$(openssl dgst -md5 -binary "$blob" | base64)"
+      md5="$REPLY"
+      if [[ "$*" == *properties.creationTime* ]]; then
+        setting az/show-created "$(< "$created")"
+        printf '%s\t%s\t%s\n' "$length" "$md5" "$REPLY"
       else
-        local length md5
-        setting az/show-length "$(wc -c < "$blob" | tr -d '[:space:]')"
-        length="$REPLY"
-        setting az/show-md5 "$(openssl dgst -md5 -binary "$blob" | base64)"
-        md5="$REPLY"
         printf '%s\t%s\n' "$length" "$md5"
       fi
       ;;
@@ -186,6 +186,9 @@ blob_command() {
           name="${name#./}"
           printf '%s\t%s\n' "$name" "$(< "$STATE/blobs-created/$container/$name")"
         done < <(cd -- "$STATE/blobs/$container" && find . -type f | sort)
+      fi
+      if [[ -f "$STATE/az/list-extra" ]]; then
+        cat -- "$STATE/az/list-extra"
       fi
       ;;
     delete)

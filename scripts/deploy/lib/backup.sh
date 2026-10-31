@@ -23,6 +23,7 @@ readonly BACKUP_MANIFEST_FORMAT='ERP-AI-Pro server backup 1'
 readonly BACKUP_ENV_PART='.env'
 readonly BACKUP_PREVIOUS_ENV_PART='.env.previous'
 readonly BACKUP_ARCHIVE_PATTERN='^[0-9]{4}/(0[1-9]|1[0-2])/[0-9]{8}T[0-9]{6}Z\.tar\.p7m$'
+readonly BACKUP_CREATION_PATTERN='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?(Z|\+00:00)$'
 readonly BACKUP_IMMUTABILITY_DAYS=90
 readonly BACKUP_MINIMUM_KEY_BITS=4096
 readonly BACKUP_CERTIFICATE_WARNING_SECONDS=2592000
@@ -203,8 +204,15 @@ archive_name_of() {
 }
 
 creation_epoch() {
-  [[ -n "$1" ]] || return 1
+  # The Azure CLI writes a blob's name into its tab-separated listing as it is, so a name that holds a tab or a line break
+  # can forge the fields that follow; a creation time of any other shape than the service's is refused, never read by date.
+  [[ "$1" =~ $BACKUP_CREATION_PATTERN ]] || return 1
   date -u -d "$1" +%s 2> /dev/null
+}
+
+listed_twice() {
+  printf 'the listing of %s names %s twice, which the storage service never does: a blob whose name holds a line break forges listing rows' \
+    "$BACKUP_CONTAINER_NAME" "$(printable "$1")"
 }
 
 named_epoch() {

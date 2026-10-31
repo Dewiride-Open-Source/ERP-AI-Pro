@@ -50,6 +50,7 @@ KEY_SHREDDED=0
 STAGE=''
 CONTENT=''
 ARCHIVE_NAME=''
+ARCHIVE_CREATED_EPOCH=0
 STACK_RUNNING=''
 MANIFEST_CREATED=''
 MANIFEST_HOST=''
@@ -178,6 +179,7 @@ name_disagrees() {
 list_archives() {
   local listing name created since mark others=0
   local -a rows=()
+  local -A seen=()
   listing="$(archive_listing)"
   while IFS=$'\t' read -r name created; do
     created="${created%$'\r'}"
@@ -188,6 +190,8 @@ list_archives() {
       others=$(( others + 1 ))
       continue
     fi
+    [[ -z "${seen[$name]:-}" ]] || die "$(listed_twice "$name"); nothing was listed"
+    seen[$name]=1
     since="$(archive_creation "$name" "$created")"
     mark=''
     if name_disagrees "$name" "$since"; then
@@ -203,12 +207,18 @@ list_archives() {
 
 choose_archive() {
   local listing name created since newest=-1 chosen=''
+  local -A seen=()
   listing="$(archive_listing)"
   # Whoever holds the backup principal's certificate chooses an archive's name, so the newest archive is the one the storage
   # service created last, and a name whose time lies far from that creation is reported.
   while IFS=$'\t' read -r name created; do
     created="${created%$'\r'}"
-    if [[ ! "$name" =~ $BACKUP_ARCHIVE_PATTERN ]] || [[ -n "$WANTED" && "$name" != "$WANTED" ]]; then
+    if [[ ! "$name" =~ $BACKUP_ARCHIVE_PATTERN ]]; then
+      continue
+    fi
+    [[ -z "${seen[$name]:-}" ]] || die "$(listed_twice "$name"); nothing was changed"
+    seen[$name]=1
+    if [[ -n "$WANTED" && "$name" != "$WANTED" ]]; then
       continue
     fi
     since="$(archive_creation "$name" "$created")"
@@ -228,6 +238,7 @@ choose_archive() {
     die "$BACKUP_CONTAINER_NAME holds no archive created before $CREATED_BEFORE; nothing was changed"
   fi
   [[ -n "$ARCHIVE_NAME" ]] || die "$BACKUP_CONTAINER_NAME holds no archive yet; nothing was changed"
+  ARCHIVE_CREATED_EPOCH="$newest"
   log_info "the archive $ARCHIVE_NAME of $BACKUP_CONTAINER_NAME, created by the storage service at $(printable "$chosen")"
   if name_disagrees "$ARCHIVE_NAME" "$newest"; then
     log_warn "the name of $ARCHIVE_NAME gives another time than its creation, more than an hour apart: backup.sh names an archive in the minute it uploads it, so make sure this one is a backup of this server's before it is restored (docs/operations/runbooks/restore.md)"
@@ -235,10 +246,15 @@ choose_archive() {
 }
 
 download_archive() {
-  local answer length md5 sealed="$STAGE/archive.tar.p7m"
-  answer="$(backup_blob show --name "$ARCHIVE_NAME" --query '[properties.contentLength, properties.contentSettings.contentMd5]' \
+  local answer length md5 created since sealed="$STAGE/archive.tar.p7m"
+  answer="$(backup_blob show --name "$ARCHIVE_NAME" \
+    --query '[properties.contentLength, properties.contentSettings.contentMd5, properties.creationTime]' \
     --output tsv)" || die "cannot read the properties of $ARCHIVE_NAME (see the Azure CLI's error above); nothing was changed"
-  IFS=$'\t' read -r length md5 <<< "${answer%$'\r'}"
+  IFS=$'\t' read -r length md5 created <<< "${answer%$'\r'}"
+  since="$(creation_epoch "$created")" || since=''
+  if [[ "$since" != "$ARCHIVE_CREATED_EPOCH" ]]; then
+    die "the storage service reports $ARCHIVE_NAME created at $(printable "$created"), not at the time its listing gave; nothing was changed"
+  fi
   backup_blob download --name "$ARCHIVE_NAME" --no-progress --output none > "$sealed" \
     || die "cannot download $ARCHIVE_NAME (see the Azure CLI's error above); nothing was changed"
   if [[ "$(file_size "$sealed")" != "$length" || "$(file_md5_base64 "$sealed")" != "$md5" ]]; then

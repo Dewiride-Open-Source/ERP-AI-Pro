@@ -40,14 +40,14 @@ Not covered, and accepted: an outage of the Central India region keeps the ERP d
 
    It writes `scripts/azure/out/erp-backup-recipient-key.pem` (git-ignored) and prints the certificate's serial number. An archive sealed before the last rotation needs the version it was sealed to (`--version <version>`, [secrets runbook](secrets.md), section 5g); `restore.sh` names the serial number it needs when the key is another version's.
 2. Copy it into the deploy account's home on the server with the deploy account's own key (`scp -i ~/.ssh/erp-ai-pro-deploy scripts/azure/out/erp-backup-recipient-key.pem erp-ai-pro@<server>:`), then shred the workstation's copy: `shred -u scripts/azure/out/erp-backup-recipient-key.pem` (`rm -P` on macOS).
-3. On the server, as `erp-ai-pro`, list the archives and check the one to restore. Neither changes anything, so both may run while the stack runs:
+3. On the server, as `erp-ai-pro`, list the archives, choose the one to restore by its creation time and check it. Neither command changes anything, so both may run while the stack runs:
 
    ```bash
    bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --list
-   bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --latest --key ~/erp-backup-recipient-key.pem --dry-run
+   bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --name <archive> --key ~/erp-backup-recipient-key.pem --dry-run
    ```
 
-   `--list` names each archive with the time the storage service created it, newest first, and marks a name whose time lies more than an hour from its creation. The dry run downloads, opens and checks the archive it would restore and names it, with its creation time, the manifest's release, keys and proxy root fingerprint, what each volume holds now and what a restore would write. It refuses an archive whose manifest names no release, no key and no proxy root: the backup of a server whose volumes were still empty, which restores nothing. Keep the archive's name for the next step.
+   `--list` names each archive with the time the storage service created it, newest first, and marks a name whose time lies more than an hour from its creation. After a suspected compromise of the server, choose an archive created before it, never the newest ("Choosing the archive" below). The dry run downloads, opens and checks the archive it would restore and names it, with its creation time, the manifest's release, keys and proxy root fingerprint, what each volume holds now and what a restore would write. It refuses an archive whose manifest names no release, no key and no proxy root: the backup of a server whose volumes were still empty, which restores nothing. Keep the archive's name for the next step.
 4. Stop the stack as the administrator (`sudo systemctl stop erp-ai-pro.service`). Then, as `erp-ai-pro`, restore that archive by its name, with `--replace` when a volume still holds files:
 
    ```bash
@@ -147,7 +147,7 @@ A new or reinstalled server with the old one's address, taking its place:
 
 ## The rehearsal
 
-A full rehearsal on the production server, twice a year and after any change to the backups, with the ERP closed for about 90 minutes (owner decision of 2026-10-30). It brings the database back from Azure's backups and the server's own files from last night's archive, proves that people can sign in and open an old attachment, rehearses a deleted attachment and a deleted container, and then puts everything back as it was. The first rehearsal runs right after the first deployment, as a step of the go-live; once it succeeds, the operator locks the write-once policy of `host-backups` ([Azure bootstrap](../azure-bootstrap.md), section 5f).
+A full rehearsal on the production server, twice a year and after any change to the backups, with the ERP closed for about 90 minutes (owner decision of 2026-10-30). It brings the database back from Azure's backups and the server's own files from the archive noted before it, proves that people can sign in and open an old attachment, rehearses a deleted attachment and a deleted container, and then puts everything back as it was. The first rehearsal runs right after the first deployment, as a step of the go-live; once it succeeds, the operator locks the write-once policy of `host-backups` ([Azure bootstrap](../azure-bootstrap.md), section 5f).
 
 ### Before it
 
@@ -163,7 +163,7 @@ A full rehearsal on the production server, twice a year and after any change to 
 |---|---|---|
 | 0:00 | On the server: `sudo systemctl stop erp-ai-pro.service`. | **T0** |
 | 0:05 | Restore the database to T0 under the name `ErpAiPro_drill_<yyyymmdd>` ("The database to a point in time", step 2); if T0 is refused as later than the newest log backup, take the latest time accepted. | the restore point **R**; the request **T1** and the database online **T2** |
-| 0:05, meanwhile | On the server: the dry run, then the restore of last night's archive by name with `--replace` ("The server's own files", steps 3 and 4). | done **T3** |
+| 0:05, meanwhile | On the server: the dry run, then the restore by name, with `--replace`, of the archive noted before T0 ("The server's own files", steps 3 and 4). | done **T3** |
 | 0:35 | Swap the databases: `ErpAiPro` becomes `ErpAiPro_live_<yyyymmdd>` and `ErpAiPro_drill_<yyyymmdd>` becomes `ErpAiPro` (step 3); then `database.sh --dry-run` and `verify.sh --database`. The rehearsal copy carries no long-term retention policy, so `verify.sh --database` reports exactly two failures, the weekly and the monthly copies (`got 'PT0S'`), and ends with `[FAIL] 2 check(s) failed`: record them as expected and do not follow their `provision.sh` hint; any other failing line is a real one. Run no `provision.sh` while the rehearsal copy carries the name `ErpAiPro`, until the swap back at 1:20: it would give the copy the template's tags and long-term retention, whose copies would outlive the copy's drop. | **T4** |
 | 0:45 | On the server: `sudo systemctl start erp-ai-pro.service`; it returns once the stack is healthy. Compare the proxy root's fingerprint with the noted one. | **T5** |
 | 0:50 | On a device that trusts the root, open the ERP without a warning, sign in in a private window, look for the marker on the change history page and download the old attachment. | **T6**, the end of the time until people work again |
