@@ -247,10 +247,13 @@ choose_archive() {
 
 download_archive() {
   local answer length md5 created since sealed="$STAGE/archive.tar.p7m"
+  local -a values=()
   answer="$(backup_blob show --name "$ARCHIVE_NAME" \
     --query '[properties.contentLength, properties.contentSettings.contentMd5, properties.creationTime]' \
     --output tsv)" || die "cannot read the properties of $ARCHIVE_NAME (see the Azure CLI's error above); nothing was changed"
-  IFS=$'\t' read -r length md5 created <<< "${answer%$'\r'}"
+  # The Azure CLI's tsv output writes each value of a flat multiselect list on a line of its own.
+  mapfile -t values <<< "${answer//$'\r'/}"
+  length="${values[0]:-}" md5="${values[1]:-}" created="${values[2]:-}"
   since="$(creation_epoch "$created")" || since=''
   if [[ "$since" != "$ARCHIVE_CREATED_EPOCH" ]]; then
     die "the storage service reports $ARCHIVE_NAME created at $(printable "$created"), not at the time its listing gave; nothing was changed"
