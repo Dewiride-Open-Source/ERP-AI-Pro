@@ -16,13 +16,16 @@ readonly PENDING_ID='<pending>'
 readonly APP_ROLES_FILE='scripts/azure/entra/app-roles.json'
 readonly OPTIONAL_CLAIMS_FILE='scripts/azure/entra/optional-claims.json'
 readonly CERTIFICATE_POLICY_TEMPLATE='scripts/azure/entra/certificate-policy.json'
+readonly ENCRYPTION_CERTIFICATE_POLICY_TEMPLATE='scripts/azure/entra/encryption-certificate-policy.json'
 readonly APP_ROLE_ADMIN_VALUE='Erp.Admin'
 readonly APP_ROLE_USER_VALUE='Erp.User'
 readonly SIGNIN_LABELS=(local-dev production)
 readonly SIGNIN_CERTIFICATE_NAME='Erp--Platform--Identity--ClientCertificate'
 readonly SIGNIN_CERTIFICATE_CONTENT_TYPE='application/x-pkcs12'
-readonly SERVER_TARGETS=(runtime migrator)
+readonly SERVER_TARGETS=(runtime migrator backup)
 readonly CLIENT_CERTIFICATE_CONTENT_TYPE='application/x-pem-file'
+readonly BACKUP_ENCRYPTION_CERTIFICATE_NAME='Erp--Platform--Backup--EncryptionCertificate'
+readonly BACKUP_ENCRYPTION_CERTIFICATE_COMMON_NAME='erp-ai-pro-backup-encryption-production'
 readonly IDENTITY_TENANT_ID_KEY='Erp:Platform:Identity:TenantId'
 readonly IDENTITY_CLIENT_ID_KEY='Erp:Platform:Identity:ClientId'
 readonly IDENTITY_WEB_ORIGIN_KEY='Erp:Platform:Identity:WebOrigin'
@@ -118,6 +121,7 @@ server_app_name() {
   case "$1" in
     runtime) printf '%s' "$ERP_AZURE_APP_RUNTIME_NAME" ;;
     migrator) printf '%s' "$ERP_AZURE_APP_MIGRATOR_NAME" ;;
+    backup) printf '%s' "$ERP_AZURE_APP_BACKUP_NAME" ;;
   esac
 }
 
@@ -666,24 +670,24 @@ remove_certificate_policy_file() {
 }
 
 render_certificate_policy() {
-  local common_name="$1" content_type="$2"
+  local common_name="$1" content_type="$2" template="$3"
   require_repo_root_cwd
-  [[ -f "$CERTIFICATE_POLICY_TEMPLATE" ]] || die "certificate policy template '$CERTIFICATE_POLICY_TEMPLATE' not found"
+  [[ -f "$template" ]] || die "certificate policy template '$template' not found"
   CERTIFICATE_POLICY_FILE="$(azure_temp_file certificate-policy)"
   trap remove_certificate_policy_file EXIT
-  sed -e "s|__SUBJECT__|$common_name|" -e "s|__CONTENT_TYPE__|$content_type|" "$CERTIFICATE_POLICY_TEMPLATE" > "$CERTIFICATE_POLICY_FILE"
+  sed -e "s|__SUBJECT__|$common_name|" -e "s|__CONTENT_TYPE__|$content_type|" "$template" > "$CERTIFICATE_POLICY_FILE"
 }
 
 create_certificate_version() {
-  local vault="$1" name="$2" common_name="$3" content_type="$4"
+  local vault="$1" name="$2" common_name="$3" content_type="$4" template="$5"
   if (( DRY_RUN )); then
-    run az keyvault certificate create --vault-name "$vault" --name "$name" --policy "@$CERTIFICATE_POLICY_TEMPLATE" --output none --only-show-errors
+    run az keyvault certificate create --vault-name "$vault" --name "$name" --policy "@$template" --output none --only-show-errors
     log_info "the policy is rendered with CN=$common_name and content type $content_type before the call"
     printf '%s' "$PENDING_ID"
     return 0
   fi
   require_certificate_not_soft_deleted "$vault" "$name"
-  render_certificate_policy "$common_name" "$content_type"
+  render_certificate_policy "$common_name" "$content_type" "$template"
   retry 6 15 -- az keyvault certificate create --vault-name "$vault" --name "$name" --policy "@$CERTIFICATE_POLICY_FILE" --output none --only-show-errors
   remove_certificate_policy_file
   local thumbprint
@@ -693,8 +697,8 @@ create_certificate_version() {
 }
 
 ensure_certificate() {
-  (( $# == 4 )) || die "ensure_certificate: usage ensure_certificate <vault> <certificate-name> <common-name> <content-type>"
-  local vault="$1" name="$2" common_name="$3" content_type="$4"
+  (( $# == 4 || $# == 5 )) || die "ensure_certificate: usage ensure_certificate <vault> <certificate-name> <common-name> <content-type> [<policy-template>]"
+  local vault="$1" name="$2" common_name="$3" content_type="$4" template="${5:-$CERTIFICATE_POLICY_TEMPLATE}"
   local thumbprint
   if ! thumbprint="$(certificate_thumbprint "$vault" "$name")"; then
     (( DRY_RUN )) || die "cannot check certificate '$name' in vault '$vault'"
@@ -706,7 +710,7 @@ ensure_certificate() {
     printf '%s' "$thumbprint"
     return 0
   fi
-  thumbprint="$(create_certificate_version "$vault" "$name" "$common_name" "$content_type")" || die "cannot create certificate '$name' in vault '$vault'"
+  thumbprint="$(create_certificate_version "$vault" "$name" "$common_name" "$content_type" "$template")" || die "cannot create certificate '$name' in vault '$vault'"
   if is_pending "$thumbprint"; then
     log_change "certificate '$name' in $vault" created " (CN=$common_name, $content_type)"
   else
@@ -716,13 +720,13 @@ ensure_certificate() {
 }
 
 rotate_certificate() {
-  (( $# == 4 )) || die "rotate_certificate: usage rotate_certificate <vault> <certificate-name> <common-name> <content-type>"
-  local vault="$1" name="$2" common_name="$3" content_type="$4"
+  (( $# == 4 || $# == 5 )) || die "rotate_certificate: usage rotate_certificate <vault> <certificate-name> <common-name> <content-type> [<policy-template>]"
+  local vault="$1" name="$2" common_name="$3" content_type="$4" template="${5:-$CERTIFICATE_POLICY_TEMPLATE}"
   local current
   current="$(certificate_thumbprint "$vault" "$name")" || die "cannot check certificate '$name' in vault '$vault'"
   [[ -n "$current" ]] || die "certificate '$name' does not exist in vault '$vault'; run: bash scripts/azure/entra.sh"
   local thumbprint
-  thumbprint="$(create_certificate_version "$vault" "$name" "$common_name" "$content_type")" || die "cannot rotate certificate '$name' in vault '$vault'"
+  thumbprint="$(create_certificate_version "$vault" "$name" "$common_name" "$content_type" "$template")" || die "cannot rotate certificate '$name' in vault '$vault'"
   if is_pending "$thumbprint"; then
     log_change "certificate '$name' in $vault" rotated " (current thumbprint $current)"
   else

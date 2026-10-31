@@ -9,19 +9,26 @@ container, delete lock and a read-only blob listing signed in with Entra ID),
 the production storage account (the same properties, geo-redundant, 90 days of
 soft delete, reachable only from the address of the database'"'"'s rule home, with
 no IPv6 rule, open private endpoint connection or network security perimeter,
-and no role on it or in it but the runtime service principal'"'"'s), Shared Key and
-data sharing off on both accounts, every row of the role matrix, the runtime and
-migrator service principals holding exactly their roles (the migrator only the
-production database'"'"'s two connection strings), the operations vault open to the
-operator alone, the absence of Key Vault Crypto User for the developers group,
-and the labelled Erp:Sentinel keys. Never writes.
+and no role on it or in it but the runtime service principal'"'"'s), the backup
+storage account (the same, with 7 days of soft delete, its private container
+host-backups under a write-once policy of 90 days with no legal hold, a warning
+while that policy is unlocked, and no role on it or in it but the backup
+service principal'"'"'s), Shared Key and data sharing off on the three accounts,
+every row of the role matrix, the runtime, migrator and backup service
+principals holding exactly their roles (the migrator only the production
+database'"'"'s two connection strings, the backup service principal only the
+backup container), the operations vault open to the operator alone, the absence
+of Key Vault Crypto User for the developers group, and the labelled
+Erp:Sentinel keys. Never writes.
 
 Options:
   --database        Check the production database instead: the server
                     (Microsoft Entra-only, the operator as its Microsoft Entra
                     admin, TLS 1.2, IPv6 off, no virtual network rule or
                     private endpoint, delete lock), its one firewall rule, the
-                    Basic database and its 7-day restore, the two
+                    Basic database, its 7-day restore and its long-term
+                    copies (each weekly backup 5 weeks, the first of each
+                    month 12 months, no yearly copy), the two
                     connection-string secrets, and, through the Go sqlcmd as
                     the Microsoft Entra admin, the users and rights
                     database.sh converges, with nothing left for it to change.
@@ -29,9 +36,11 @@ Options:
                     claims and front-channel logout URLs), service principals,
                     certificates (each registration signing in with its
                     current certificate alone, the client certificates of the
-                    runtime and the migrator only in the operations vault),
-                    role assignments and identity keys written by entra.sh
-                    instead of the provisioned resources.
+                    runtime, the migrator and the backup only in the
+                    operations vault), the backup encryption certificate (RSA
+                    4096, key encipherment only, exportable, only in the
+                    operations vault), role assignments and identity keys
+                    written by entra.sh instead of the provisioned resources.
   --labels          Check the seeded settings, feature flags and Key Vault
                     references written by seed.sh: every value of
                     infra/appconfig is read back (a reference only under the
@@ -77,6 +86,10 @@ readonly DEVELOPMENT_STORAGE_SKU='Standard_LRS'
 readonly DEVELOPMENT_STORAGE_RETENTION_DAYS='7'
 readonly PRODUCTION_STORAGE_SKU='Standard_GRS'
 readonly PRODUCTION_STORAGE_RETENTION_DAYS='90'
+readonly BACKUP_STORAGE_SKU='Standard_GRS'
+readonly BACKUP_STORAGE_RETENTION_DAYS='7'
+readonly BACKUP_IMMUTABILITY_DAYS='90'
+readonly BACKUP_ENCRYPTION_KEY_SIZE='4096'
 readonly STORAGE_LOCK_NAME='do-not-delete'
 readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
 readonly DATA_PROTECTION_KEY_IDENTIFIER_KEY='Erp:Platform:DataProtection:KeyIdentifier'
@@ -86,6 +99,9 @@ readonly SQL_DATABASE_CAPACITY='5'
 readonly SQL_DATABASE_MAX_SIZE_BYTES='2147483648'
 readonly SQL_BACKUP_STORAGE_REDUNDANCY='Geo'
 readonly SQL_RESTORE_DAYS='7'
+readonly SQL_WEEKLY_RETENTION='P5W'
+readonly SQL_MONTHLY_RETENTION='P12M'
+readonly SQL_YEARLY_RETENTION='PT0S'
 
 readonly ENTRA_HINT='run: bash scripts/azure/entra.sh'
 readonly PROVISION_HINT='run: bash scripts/azure/provision.sh'
@@ -214,7 +230,7 @@ verify_vault() {
 }
 
 verify_storage_account() {
-  local account_name="$1" sku="$2" retention_days="$3"
+  local account_name="$1" sku="$2" retention_days="$3" container_name="$4"
   log_step "Storage account $account_name"
   local account_json
   if ! account_json="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
@@ -262,8 +278,8 @@ verify_storage_account() {
     fail "$account_name blob service properties readable ($(query_error_summary "$service_json"))"
   fi
 
-  assert_query "$account_name container $ATTACHMENTS_CONTAINER_NAME is private" 'None' storage container-rm show --storage-account "$account_name" \
-    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --name "$ATTACHMENTS_CONTAINER_NAME" --query publicAccess
+  assert_query "$account_name container $container_name is private" 'None' storage container-rm show --storage-account "$account_name" \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --name "$container_name" --query publicAccess
   assert_query "$account_name carries the CanNotDelete lock $STORAGE_LOCK_NAME" 'CanNotDelete' lock show --name "$STORAGE_LOCK_NAME" \
     --resource "$(storage_account_resource_id "$account_name")" --query level
 }
@@ -283,17 +299,25 @@ server_expected_roles() {
   local target="$1"
   local production_vault_id secret_name
   production_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_PROD_NAME")"
-  printf '%s\t%s\t%s\n' "$(store_resource_id)" "$ROLE_APP_CONFIGURATION_DATA_READER" 'App Configuration Data Reader on the store'
-  if [[ "$target" == runtime ]]; then
-    printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_SECRETS_USER" "Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME"
-    printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER" "Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME"
-    printf '%s\t%s\t%s\n' "$(storage_container_resource_id "$ERP_AZURE_STORAGE_PROD_NAME" "$ATTACHMENTS_CONTAINER_NAME")" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
-      "Storage Blob Data Contributor on container $ERP_AZURE_STORAGE_PROD_NAME/$ATTACHMENTS_CONTAINER_NAME"
-    return 0
-  fi
-  for secret_name in "${ERP_AZURE_MIGRATOR_SECRETS[@]}"; do
-    printf '%s\t%s\t%s\n' "$production_vault_id/secrets/$secret_name" "$ROLE_KEY_VAULT_SECRETS_USER" "Key Vault Secrets User on the secret $secret_name of $ERP_AZURE_KEYVAULT_PROD_NAME"
-  done
+  case "$target" in
+    runtime)
+      printf '%s\t%s\t%s\n' "$(store_resource_id)" "$ROLE_APP_CONFIGURATION_DATA_READER" 'App Configuration Data Reader on the store'
+      printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_SECRETS_USER" "Key Vault Secrets User on $ERP_AZURE_KEYVAULT_PROD_NAME"
+      printf '%s\t%s\t%s\n' "$production_vault_id" "$ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER" "Key Vault Crypto Service Encryption User on $ERP_AZURE_KEYVAULT_PROD_NAME"
+      printf '%s\t%s\t%s\n' "$(storage_container_resource_id "$ERP_AZURE_STORAGE_PROD_NAME" "$ATTACHMENTS_CONTAINER_NAME")" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
+        "Storage Blob Data Contributor on container $ERP_AZURE_STORAGE_PROD_NAME/$ATTACHMENTS_CONTAINER_NAME"
+      ;;
+    migrator)
+      printf '%s\t%s\t%s\n' "$(store_resource_id)" "$ROLE_APP_CONFIGURATION_DATA_READER" 'App Configuration Data Reader on the store'
+      for secret_name in "${ERP_AZURE_MIGRATOR_SECRETS[@]}"; do
+        printf '%s\t%s\t%s\n' "$production_vault_id/secrets/$secret_name" "$ROLE_KEY_VAULT_SECRETS_USER" "Key Vault Secrets User on the secret $secret_name of $ERP_AZURE_KEYVAULT_PROD_NAME"
+      done
+      ;;
+    backup)
+      printf '%s\t%s\t%s\n' "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_CONTAINER_NAME")" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
+        "Storage Blob Data Contributor on container $ERP_AZURE_STORAGE_BACKUP_NAME/$BACKUP_CONTAINER_NAME"
+      ;;
+  esac
 }
 
 verify_server_roles() {
@@ -385,8 +409,8 @@ verify_resource_access() {
   (( others )) || pass "only $holder holds a role on $resource_name or anything in it, and nobody else holds a $provider data role above it"
 }
 
-verify_production_storage_network() {
-  local account_name="$ERP_AZURE_STORAGE_PROD_NAME"
+verify_storage_network() {
+  local account_name="$1"
   log_step "Network rules of $account_name"
   local settings
   if ! settings="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
@@ -406,7 +430,7 @@ verify_production_storage_network() {
   assert_equals "$account_name publishes no IPv6 endpoint" 'false' "$ipv6_endpoint" \
     "run: az storage account update --name $account_name --resource-group $ERP_AZURE_RESOURCE_GROUP --publish-ipv6-endpoint false"
   local connections name status open_names=''
-  if connections="$(production_storage_private_endpoint_connections 2>&1)"; then
+  if connections="$(storage_private_endpoint_connections "$account_name" 2>&1)"; then
     while IFS=$'\t' read -r name status; do
       case "$status" in
         Approved | Pending) open_names+="${open_names:+ }$name" ;;
@@ -415,20 +439,20 @@ verify_production_storage_network() {
     if [[ -z "$open_names" ]]; then
       pass "$account_name has no private endpoint connection that is not rejected"
     else
-      fail "$account_name has no private endpoint connection that is not rejected (it has $open_names); $(private_endpoint_reject_hint "$open_names")"
+      fail "$account_name has no private endpoint connection that is not rejected (it has $open_names); $(private_endpoint_reject_hint "$account_name" "$open_names")"
     fi
   else
     fail "the private endpoint connections of $account_name are readable ($(query_error_summary "$connections"))"
   fi
   local perimeters
-  if perimeters="$(production_storage_perimeter_count 2>&1)"; then
+  if perimeters="$(storage_perimeter_count "$account_name" 2>&1)"; then
     assert_equals "$account_name belongs to no network security perimeter" '0' "$perimeters" \
       "remove the account on the perimeter's Associated resources page in the Azure portal"
   else
     fail "the network security perimeters of $account_name are readable ($(query_error_summary "$perimeters"))"
   fi
   local rules home_address
-  if ! rules="$(production_storage_ip_rules 2>&1)"; then
+  if ! rules="$(storage_ip_rules "$account_name" 2>&1)"; then
     fail "the IP rules of $account_name are readable ($(query_error_summary "$rules"))"
     return 0
   fi
@@ -453,8 +477,37 @@ verify_production_storage_network() {
   fi
 }
 
+verify_backup_immutability() {
+  local container="$ERP_AZURE_STORAGE_BACKUP_NAME/$BACKUP_CONTAINER_NAME"
+  log_step "Write-once policy of $container"
+  local container_json
+  if ! container_json="$(az_read rest --method get \
+    --url "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_CONTAINER_NAME")?api-version=$STORAGE_API_VERSION" \
+    --output json 2>&1)"; then
+    fail "the container $container is readable ($(query_error_summary "$container_json")); $PROVISION_HINT"
+    return 0
+  fi
+  if [[ "$(json_field "$container_json" properties.hasImmutabilityPolicy)" != true ]]; then
+    fail "$container keeps every archive write-once (it has no immutability policy); $PROVISION_HINT"
+    return 0
+  fi
+  assert_equals "$container keeps every archive write-once for $BACKUP_IMMUTABILITY_DAYS days" "$BACKUP_IMMUTABILITY_DAYS" \
+    "$(json_field "$container_json" properties.immutabilityPolicy.properties.immutabilityPeriodSinceCreationInDays)" "$PROVISION_HINT while the policy is unlocked"
+  assert_equals "$container allows no protected append writes" 'false' \
+    "$(json_eval "$container_json" 'String((((value.properties || {}).immutabilityPolicy || {}).properties || {}).allowProtectedAppendWrites === true || (((value.properties || {}).immutabilityPolicy || {}).properties || {}).allowProtectedAppendWritesAll === true)')"
+  assert_equals "$container carries no legal hold, which would keep the backup job from deleting archives past their $BACKUP_IMMUTABILITY_DAYS days" 'false' \
+    "$(json_eval "$container_json" 'String((value.properties || {}).hasLegalHold === true)')"
+  local state
+  state="$(json_field "$container_json" properties.immutabilityPolicy.properties.state)"
+  case "$state" in
+    Locked) pass "the write-once policy of $container is locked" ;;
+    Unlocked) warn "the write-once policy of $container is unlocked, so the operator could still shorten or remove it; lock it once the first restore rehearsal succeeds (docs/operations/azure-bootstrap.md, section 5f)" ;;
+    *) fail "the write-once policy of $container is locked or unlocked (its state is '${state:-<none>}')" ;;
+  esac
+}
+
 verify_roles() {
-  local operator_id="$1" developers_group_id="$2" runtime_id="$3" migrator_id="$4"
+  local operator_id="$1" developers_group_id="$2" runtime_id="$3" migrator_id="$4" backup_id="$5"
   local store_id development_vault_id attachments_container_id attachments_container
   store_id="$(store_resource_id)"
   development_vault_id="$(vault_resource_id "$ERP_AZURE_KEYVAULT_DEV_NAME")"
@@ -485,11 +538,11 @@ verify_roles() {
     skip "developers group roles: skipped: not configured"
   fi
 
+  local -A server_principal_ids=([runtime]="$runtime_id" [migrator]="$migrator_id" [backup]="$backup_id")
   local target principal_id
   for target in "${SERVER_TARGETS[@]}"; do
     log_step "Role assignments: $target service principal"
-    principal_id="$runtime_id"
-    [[ "$target" == runtime ]] || principal_id="$migrator_id"
+    principal_id="${server_principal_ids[$target]}"
     if [[ -n "$principal_id" ]]; then
       verify_server_roles "$target" "$principal_id"
     else
@@ -504,6 +557,11 @@ verify_roles() {
   verify_resource_access "$ERP_AZURE_STORAGE_PROD_NAME" "$(storage_account_resource_id "$ERP_AZURE_STORAGE_PROD_NAME")" Microsoft.Storage \
     'the runtime service principal' '' \
     "$(storage_container_resource_id "$ERP_AZURE_STORAGE_PROD_NAME" "$ATTACHMENTS_CONTAINER_NAME") $runtime_id $ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
+
+  log_step "Access to $ERP_AZURE_STORAGE_BACKUP_NAME"
+  verify_resource_access "$ERP_AZURE_STORAGE_BACKUP_NAME" "$(storage_account_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME")" Microsoft.Storage \
+    'the backup service principal' '' \
+    "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_CONTAINER_NAME") $backup_id $ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
 }
 
 verify_sentinels() {
@@ -845,6 +903,43 @@ verify_server_registration() {
   verify_server_roles "$target" "$principal_id"
 }
 
+verify_backup_encryption_certificate() {
+  local vault_name="$ERP_AZURE_KEYVAULT_OPS_NAME" certificate_name="$BACKUP_ENCRYPTION_CERTIFICATE_NAME"
+  log_step "Backup encryption certificate $certificate_name"
+  local certificate_json
+  if ! certificate_json="$(az_read keyvault certificate show --vault-name "$vault_name" --name "$certificate_name" --output json 2>&1)"; then
+    if [[ "$certificate_json" == *CertificateNotFound* ]]; then
+      fail "certificate $certificate_name exists in $vault_name; $ENTRA_HINT"
+    else
+      fail "certificate $certificate_name exists in $vault_name ($(query_error_summary "$certificate_json"))"
+    fi
+    return 0
+  fi
+  pass "certificate $certificate_name exists in $vault_name (thumbprint $(json_field "$certificate_json" x509ThumbprintHex))"
+  assert_equals "$certificate_name is enabled" 'true' "$(json_field "$certificate_json" attributes.enabled)"
+  verify_certificate_expiry "$vault_name" "$certificate_name" 'rotate with: bash scripts/azure/entra.sh --rotate-encryption-certificate'
+  assert_equals "$certificate_name holds an RSA key of $BACKUP_ENCRYPTION_KEY_SIZE bits" "$BACKUP_ENCRYPTION_KEY_SIZE" \
+    "$(json_eval "$certificate_json" 'value.cer ? new (require("node:crypto").X509Certificate)(Buffer.from(value.cer, "base64")).publicKey.asymmetricKeyDetails.modulusLength : ""')"
+  assert_equals "$certificate_name's policy makes RSA $BACKUP_ENCRYPTION_KEY_SIZE keys" "RSA $BACKUP_ENCRYPTION_KEY_SIZE" \
+    "$(json_eval "$certificate_json" '((value.policy || {}).keyProperties || {}).keyType + " " + ((value.policy || {}).keyProperties || {}).keySize')"
+  assert_equals "$certificate_name's private key is exportable, by the operator alone, for a restore" 'true' \
+    "$(json_eval "$certificate_json" 'String(((value.policy || {}).keyProperties || {}).exportable === true)')"
+  assert_equals "$certificate_name gets a new key with every version" 'false' \
+    "$(json_eval "$certificate_json" 'String(((value.policy || {}).keyProperties || {}).reuseKey === true)')"
+  assert_equals_exact "$certificate_name may only encipher keys" 'keyEncipherment' \
+    "$(json_eval "$certificate_json" '[...(((value.policy || {}).x509CertificateProperties || {}).keyUsage || [])].sort().join(" ")')"
+  assert_equals "$certificate_name is kept as PEM" "$CLIENT_CERTIFICATE_CONTENT_TYPE" \
+    "$(json_eval "$certificate_json" '((value.policy || {}).secretProperties || {}).contentType')"
+  local stale
+  if ! stale="$(certificate_thumbprint "$ERP_AZURE_KEYVAULT_PROD_NAME" "$certificate_name" 2>&1)"; then
+    fail "$ERP_AZURE_KEYVAULT_PROD_NAME, which the runtime reads, holds no $certificate_name (query failed: $(query_error_summary "$stale"))"
+  elif [[ -n "$stale" ]]; then
+    fail "$ERP_AZURE_KEYVAULT_PROD_NAME, which the runtime reads, holds no $certificate_name (thumbprint $stale is there); delete it with: az keyvault certificate delete --vault-name $ERP_AZURE_KEYVAULT_PROD_NAME --name $certificate_name"
+  else
+    pass "$ERP_AZURE_KEYVAULT_PROD_NAME, which the runtime reads, holds no $certificate_name"
+  fi
+}
+
 verify_entra() {
   local operator_id="$1"
   OPERATOR_ID="$operator_id"
@@ -859,6 +954,7 @@ verify_entra() {
   for target in "${SERVER_TARGETS[@]}"; do
     verify_server_registration "$target"
   done
+  verify_backup_encryption_certificate
 }
 
 seed_rows() {
@@ -1146,6 +1242,18 @@ verify_sql_database() {
     "$(json_field "$database_json" requestedBackupStorageRedundancy)"
   assert_query "$ERP_AZURE_SQL_DATABASE_NAME restores to any point of the last $SQL_RESTORE_DAYS days" "$SQL_RESTORE_DAYS" sql db str-policy show \
     --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" --name "$ERP_AZURE_SQL_DATABASE_NAME" --query retentionDays
+  local policy_json
+  if ! policy_json="$(az_read sql db ltr-policy show --resource-group "$ERP_AZURE_RESOURCE_GROUP" --server "$ERP_AZURE_SQL_SERVER_NAME" \
+    --name "$ERP_AZURE_SQL_DATABASE_NAME" --output json 2>&1)"; then
+    fail "the long-term retention policy of $ERP_AZURE_SQL_DATABASE_NAME is readable ($(query_error_summary "$policy_json")); $PROVISION_HINT"
+    return 0
+  fi
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME keeps each weekly full backup for $SQL_WEEKLY_RETENTION" "$SQL_WEEKLY_RETENTION" \
+    "$(json_field "$policy_json" weeklyRetention)" "$PROVISION_HINT"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME keeps the first full backup of each month for $SQL_MONTHLY_RETENTION" "$SQL_MONTHLY_RETENTION" \
+    "$(json_field "$policy_json" monthlyRetention)" "$PROVISION_HINT"
+  assert_equals "$ERP_AZURE_SQL_DATABASE_NAME keeps no yearly backup" "$SQL_YEARLY_RETENTION" \
+    "$(json_field "$policy_json" yearlyRetention)" "$PROVISION_HINT"
 }
 
 verify_connection_string_secrets() {
@@ -1226,20 +1334,24 @@ verify_database() {
 
 verify_provisioning() {
   local operator_id="$1"
-  local developers_group_id runtime_id migrator_id
+  local developers_group_id runtime_id migrator_id backup_id
   developers_group_id="$(developers_group_object_id)"
   runtime_id="$(service_principal_lookup "$ERP_AZURE_APP_RUNTIME_NAME" id)"
   migrator_id="$(service_principal_lookup "$ERP_AZURE_APP_MIGRATOR_NAME" id)"
+  backup_id="$(service_principal_lookup "$ERP_AZURE_APP_BACKUP_NAME" id)"
 
   verify_store
   verify_vault "$ERP_AZURE_KEYVAULT_DEV_NAME" true
   verify_vault "$ERP_AZURE_KEYVAULT_PROD_NAME" true
   verify_vault "$ERP_AZURE_KEYVAULT_OPS_NAME" false
-  verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME" "$DEVELOPMENT_STORAGE_SKU" "$DEVELOPMENT_STORAGE_RETENTION_DAYS"
+  verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME" "$DEVELOPMENT_STORAGE_SKU" "$DEVELOPMENT_STORAGE_RETENTION_DAYS" "$ATTACHMENTS_CONTAINER_NAME"
   verify_storage_listing "$ERP_AZURE_STORAGE_DEV_NAME"
-  verify_storage_account "$ERP_AZURE_STORAGE_PROD_NAME" "$PRODUCTION_STORAGE_SKU" "$PRODUCTION_STORAGE_RETENTION_DAYS"
-  verify_production_storage_network
-  verify_roles "$operator_id" "$developers_group_id" "$runtime_id" "$migrator_id"
+  verify_storage_account "$ERP_AZURE_STORAGE_PROD_NAME" "$PRODUCTION_STORAGE_SKU" "$PRODUCTION_STORAGE_RETENTION_DAYS" "$ATTACHMENTS_CONTAINER_NAME"
+  verify_storage_network "$ERP_AZURE_STORAGE_PROD_NAME"
+  verify_storage_account "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_STORAGE_SKU" "$BACKUP_STORAGE_RETENTION_DAYS" "$BACKUP_CONTAINER_NAME"
+  verify_storage_network "$ERP_AZURE_STORAGE_BACKUP_NAME"
+  verify_backup_immutability
+  verify_roles "$operator_id" "$developers_group_id" "$runtime_id" "$migrator_id" "$backup_id"
   verify_sentinels
 }
 

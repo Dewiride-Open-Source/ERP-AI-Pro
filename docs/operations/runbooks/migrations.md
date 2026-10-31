@@ -51,6 +51,6 @@ A second migrator that starts while one is running waits for EF Core's database 
 
 ## Recovering from a bad migration
 
-1. Stop traffic to the API if the schema change broke it.
-2. Restore the database to the point in time before the deployment (Azure SQL point-in-time restore to a new database, which then takes the live one's place: `provision.sh` writes both connection strings from `ERP_AZURE_SQL_DATABASE_NAME`, `first-deployment-backups-and-restore-drill`), or ship a new migration that reverses the change.
-3. Deploy the previous image digest only together with a database that matches it; an older API against a newer schema is not supported.
+1. Stop the stack (`sudo systemctl stop erp-ai-pro.service`) if the schema change broke it, so nothing writes to the database while it is replaced.
+2. Restore the database to the point in time before the deployment and put it in the live one's place by renaming the two, which changes no connection string, setting or secret ([restore runbook](restore.md), "The database to a point in time"); or ship a new migration that reverses the change.
+3. After a restore, return to the release that knows exactly the restored schema with `rollback.sh`, which refuses a release whose migrator answers `status` with anything but 0. Deploying the release that carried the bad migration again would apply it again, and an older API against a newer schema is not supported.

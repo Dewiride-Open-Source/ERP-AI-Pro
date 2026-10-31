@@ -105,6 +105,7 @@ jobs:
         run: |
           docker compose -f compose.yaml -f compose.override.yaml config --quiet
           docker compose -f compose.yaml -f compose.production.yaml config --quiet
+          docker compose -f compose.backup.yaml config --quiet
       - name: Smoke test the running stack
         run: node scripts/checks/compose-smoke.ts
 

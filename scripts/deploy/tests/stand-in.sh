@@ -57,12 +57,227 @@ docker_image() {
   esac
 }
 
-docker_compose() {
-  local -a shown=(docker compose) env_files=()
+real() {
+  PATH="${PATH#"${0%/*}:"}" "$@"
+}
+
+volume_of_service() {
+  case "$1" in
+    key-ring-*) REPLY=erp-ai-pro-data-protection-keys ;;
+    proxy-data-*) REPLY=erp-ai-pro-proxy-data ;;
+    *) return 1 ;;
+  esac
+}
+
+owner_of_service() {
+  case "$1" in
+    key-ring-*) REPLY=1654:1654 ;;
+    proxy-data-*) REPLY=10001:10001 ;;
+  esac
+}
+
+list_volume() {
+  local folder="$1" path
+  local -a depth=()
+  if [[ -n "${2:-}" ]]; then
+    depth=(-maxdepth "$2")
+  fi
+  while IFS= read -r path; do
+    printf '/volume%s\n' "${path#"$folder"}"
+  done < <(find "$folder" -mindepth 1 "${depth[@]}" | sort)
+}
+
+volume_command() {
+  local service="$1" role="${1##*-}" volume folder top owner
+  shift
+  volume_of_service "$service" || unexpected "$service" "$@"
+  volume="$REPLY"
+  folder="$STATE/volumes/$volume"
+  setting "volumes/$volume.top" '0:0 755'
+  top="$REPLY"
+  owner_of_service "$service"
+  owner="$REPLY"
+  setting "docker/backup/$service-exit" 0
+  if (( REPLY != 0 )); then
+    printf 'stand-in %s: fails as the scenario says\n' "$service" >&2
+    return "$REPLY"
+  fi
+  case "$role $*" in
+    'reader tar -cf - -C /volume .') real tar -cf - -C "$folder" . ;;
+    'reader stat -c %u:%g %a /volume') printf '%s\n' "$top" ;;
+    'reader find /volume -mindepth 1 -maxdepth 1') list_volume "$folder" 1 ;;
+    'reader find /volume -mindepth 1') list_volume "$folder" ;;
+    'writer find /volume -mindepth 1 -delete' | 'writer tar -xof - -C /volume')
+      if [[ "${top%% *}" != "$owner" ]]; then
+        printf '%s: can'"'"'t write in /volume: Permission denied\n' "$1" >&2
+        return 1
+      fi
+      if [[ "$1" == find ]]; then
+        find "$folder" -mindepth 1 -delete
+      elif [[ -e "$STATE/docker/backup/$service-extracts-nothing" ]]; then
+        cat > /dev/null
+      else
+        real tar -xof - -C "$folder"
+      fi
+      ;;
+    'owner chown '*' /volume') printf '%s %s\n' "$2" "${top#* }" > "$STATE/volumes/$volume.top" ;;
+    'owner chmod 700 /volume')
+      if [[ ! -e "$STATE/docker/backup/$service-chmod-changes-nothing" ]]; then
+        printf '%s 700\n' "${top%% *}" > "$STATE/volumes/$volume.top"
+      fi
+      ;;
+    *) unexpected "$service" "$@" ;;
+  esac
+}
+
+blob_command() {
+  local source="$1" target="$2" client="$3" tenant="$4"
+  shift 4
+  [[ "$client" =~ ^[0-9a-f-]{36}$ && "$tenant" =~ ^[0-9a-f-]{36}$ && "${1:-} ${2:-}" == 'storage blob' ]] || unexpected azure-cli "$@"
+  local action="${3:-}" argument previous='' name='' file='' container='' blob created
+  for argument in "${@:4}"; do
+    case "$previous" in
+      --name) name="$argument" ;;
+      --file) file="$argument" ;;
+      --container-name) container="$argument" ;;
+    esac
+    previous="$argument"
+  done
+  [[ -n "$container" ]] || unexpected azure-cli "$@"
+  blob="$STATE/blobs/$container/$name"
+  created="$STATE/blobs-created/$container/$name"
+  setting "az/$action-exit" 0
+  if (( REPLY != 0 )); then
+    printf 'ERROR: the stand-in Azure CLI fails %s as the scenario says\n' "$action" >&2
+    return "$REPLY"
+  fi
+  case "$action" in
+    upload)
+      [[ "$file" == "$target" && -f "$source" ]] || unexpected azure-cli "$@"
+      if [[ -e "$blob" ]]; then
+        printf 'ERROR: The specified blob already exists.\nErrorCode:BlobAlreadyExists\n' >&2
+        return 1
+      fi
+      mkdir -p -- "${blob%/*}" "${created%/*}"
+      cp -- "$source" "$blob"
+      setting epoch ''
+      real date -u -d "@$REPLY" '+%Y-%m-%dT%H:%M:%S+00:00' > "$created"
+      ;;
+    show)
+      if [[ ! -f "$blob" ]]; then
+        printf 'ERROR: The specified blob does not exist.\n' >&2
+        return 3
+      fi
+      local length md5
+      setting az/show-length "$(wc -c < "$blob" | tr -d '[:space:]')"
+      length="$REPLY"
+      setting az/show-md5 "$(openssl dgst -md5 -binary "$blob" | base64)"
+      md5="$REPLY"
+      if [[ "$*" == *properties.creationTime* ]]; then
+        setting az/show-created "$(< "$created")"
+        printf '%s\t%s\t%s\n' "$length" "$md5" "$REPLY"
+      else
+        printf '%s\t%s\n' "$length" "$md5"
+      fi
+      ;;
+    list)
+      if [[ -d "$STATE/blobs/$container" ]]; then
+        while IFS= read -r name; do
+          name="${name#./}"
+          printf '%s\t%s\n' "$name" "$(< "$STATE/blobs-created/$container/$name")"
+        done < <(cd -- "$STATE/blobs/$container" && find . -type f | sort)
+      fi
+      if [[ -f "$STATE/az/list-extra" ]]; then
+        cat -- "$STATE/az/list-extra"
+      fi
+      ;;
+    delete)
+      setting az/delete-refuses ''
+      if [[ -n "$REPLY" && "$name" == "$REPLY" ]]; then
+        printf 'ERROR: the stand-in Azure CLI refuses to delete %s as the scenario says\n' "$name" >&2
+        return 1
+      fi
+      rm -f -- "$blob" "$created"
+      ;;
+    download) cat -- "$blob" ;;
+    *) unexpected azure-cli "$@" ;;
+  esac
+}
+
+backup_compose() {
+  local shown="$1"
+  shift
+  if [[ "${1:-}" == pull ]]; then
+    record "$shown $*"
+    setting docker/backup/pull-exit 0
+    return "$REPLY"
+  fi
+  [[ "${1:-}" == run ]] || unexpected compose "$@"
+  shift
+  local -a recorded=(run)
+  local source='' target='' client='' tenant='' service
   while (( $# > 0 )); do
     case "$1" in
+      --rm | -T | --quiet-pull)
+        recorded+=("$1")
+        shift
+        ;;
+      -e)
+        recorded+=(-e "$2")
+        case "$2" in
+          BACKUP_CLIENT_ID=*) client="${2#*=}" ;;
+          BACKUP_TENANT_ID=*) tenant="${2#*=}" ;;
+        esac
+        shift 2
+        ;;
+      -v)
+        source="${2%%:*}"
+        target="${2#*:}"
+        target="${target%:ro}"
+        recorded+=(-v "${source##*/}:${2#*:}")
+        shift 2
+        ;;
+      *) break ;;
+    esac
+  done
+  service="${1:-}"
+  shift
+  record "$shown ${recorded[*]} $service $*"
+  if [[ -e /dev/fd/9 ]]; then
+    printf 'held %s %s\n' "$service" "$*" >> "$STATE/lock-states"
+  else
+    printf 'free %s %s\n' "$service" "$*" >> "$STATE/lock-states"
+  fi
+  case "$service" in
+    azure-cli) blob_command "$source" "$target" "$client" "$tenant" "$@" ;;
+    *) volume_command "$service" "$@" ;;
+  esac
+}
+
+docker_volume() {
+  record "docker volume $*"
+  [[ "${1:-}" == inspect ]] || unexpected volume "$@"
+  if [[ ! -d "$STATE/volumes/${*: -1}" ]]; then
+    printf 'Error response from daemon: get %s: no such volume\n' "${*: -1}" >&2
+    return 1
+  fi
+  printf '%s\n' "${*: -1}"
+}
+
+docker_compose() {
+  local -a shown=(docker compose) env_files=()
+  local backup=0
+  while (( $# > 0 )); do
+    case "$1" in
+      --progress)
+        shown+=(--progress "$2")
+        shift 2
+        ;;
       -f)
         shown+=(-f "$2")
+        if [[ "$2" == compose.backup.yaml ]]; then
+          backup=1
+        fi
         shift 2
         ;;
       --env-file)
@@ -73,6 +288,10 @@ docker_compose() {
       *) break ;;
     esac
   done
+  if (( backup )); then
+    backup_compose "${shown[*]}" "$@"
+    return
+  fi
   read_release "${env_files[@]}"
   record "${shown[*]} $* # $RELEASE"
   local folder="docker/$RELEASE" status
@@ -110,8 +329,12 @@ docker_container() {
   record "docker $*"
   case "${1:-}" in
     ps)
-      if [[ -f "$STATE/docker/unhealthy" ]]; then
-        cat -- "$STATE/docker/unhealthy"
+      if [[ "$*" == *health=unhealthy* ]]; then
+        if [[ -f "$STATE/docker/unhealthy" ]]; then
+          cat -- "$STATE/docker/unhealthy"
+        fi
+      elif [[ -f "$STATE/docker/running" ]]; then
+        cat -- "$STATE/docker/running"
       fi
       ;;
     inspect)
@@ -133,6 +356,7 @@ stand_in_docker() {
   case "${1:-}" in
     compose) docker_compose "${@:2}" ;;
     image) docker_image "${@:2}" ;;
+    volume) docker_volume "${@:2}" ;;
     ps | inspect | restart) docker_container "$@" ;;
     *) unexpected "$@" ;;
   esac
@@ -320,6 +544,7 @@ case "$COMMAND" in
         printf '%s\n' "$REPLY"
         ;;
       '-u -d '*' +%s') PATH="${PATH#"${0%/*}:"}" date "$@" ;;
+      '-u -d @'*) PATH="${PATH#"${0%/*}:"}" date "$@" ;;
       *) unexpected "$@" ;;
     esac
     ;;

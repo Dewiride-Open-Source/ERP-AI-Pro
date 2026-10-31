@@ -25,6 +25,12 @@ param restrictToAllowedAddresses bool = false
 
 param allowedAddresses string[] = []
 
+@minValue(0)
+@maxValue(146000)
+param immutabilityPeriodDays int = 0
+
+param immutabilityPolicyLocked bool = false
+
 var allowedAddressRules = [
   for address in allowedAddresses: {
     value: address
@@ -91,6 +97,15 @@ resource account 'Microsoft.Storage/storageAccounts@2026-04-01' = {
       name: containerName
       properties: {
         publicAccess: 'None'
+      }
+
+      resource immutabilityPolicy 'immutabilityPolicies' = if (immutabilityPeriodDays > 0 && !immutabilityPolicyLocked) {
+        name: 'default'
+        properties: {
+          immutabilityPeriodSinceCreationInDays: immutabilityPeriodDays
+          allowProtectedAppendWrites: false
+          allowProtectedAppendWritesAll: false
+        }
       }
     }
   }

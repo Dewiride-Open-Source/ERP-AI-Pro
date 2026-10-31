@@ -4,25 +4,32 @@ USAGE='Usage: bash scripts/azure/provision.sh [--dry-run] [--params <file>]
 
 Creates or converges the ERP-AI-Pro resource group, the App Configuration store,
 both Key Vaults with their data-protection keys, the operations Key Vault (the
-client certificates of the server identities, which no application reads), the
-development and production storage accounts with their attachments containers
-and delete locks (the production one geo-redundant and reachable only from the
-address the database'"'"'s firewall rule home admits), the production Azure SQL
-server (Microsoft Entra-only, the operator as its Microsoft Entra admin, delete
-lock) and its Basic database, the role assignments (the migrator reads only the
-production database'"'"'s connection strings), the labelled Erp:Sentinel keys,
-Erp:Platform:Attachments:BlobServiceUri under each label (bumping that label'"'"'s
-sentinel only when its endpoint changed), Erp:Platform:DataProtection:KeyIdentifier
-under the local-dev and production labels (the versionless identifier of the
-data-protection key in the matching vault; no sentinel bump, because the API
-reads it only when it starts) and the connection-string secrets of the production
-database in the production vault. The home'"'"'s address is home-address.sh'"'"'s: a
-deployment sets the production storage account'"'"'s rule to the address of the
-database'"'"'s rule home, keeps the account'"'"'s own single public address while that
-rule admits none, and stops before it changes anything while the rule admits an
-address that is not public, or none while the account admits more than one
-public address. Safe to run repeatedly; deletes or purges nothing but a role of
-the migrator on the whole production vault.
+client certificates of the server identities and the backup encryption
+certificate, which no application reads), the development and production
+storage accounts with their attachments containers and delete locks (the
+production one geo-redundant and reachable only from the address the
+database'"'"'s firewall rule home admits), the backup storage account (the same
+redundancy, network rule and lock, 7 days of soft delete, and its one container
+host-backups under a write-once policy of 90 days, created unlocked and left
+out of the deployment once the operator has locked it), the production Azure
+SQL server (Microsoft Entra-only, the operator as its Microsoft Entra admin,
+delete lock) and its Basic database with 7 days of point-in-time restore and
+long-term copies (each weekly backup 5 weeks, the first of each month 12
+months), the role assignments (the migrator reads only the production
+database'"'"'s connection strings, the backup service principal only the backup
+container), the labelled Erp:Sentinel keys, Erp:Platform:Attachments:BlobServiceUri
+under each label (bumping that label'"'"'s sentinel only when its endpoint
+changed), Erp:Platform:DataProtection:KeyIdentifier under the local-dev and
+production labels (the versionless identifier of the data-protection key in the
+matching vault; no sentinel bump, because the API reads it only when it starts)
+and the connection-string secrets of the production database in the production
+vault. The home'"'"'s address is home-address.sh'"'"'s: a deployment sets the rule
+of each restricted storage account to the address of the database'"'"'s rule home,
+keeps an account'"'"'s own single public address while that rule admits none, and
+stops before it changes anything while the rule admits an address that is not
+public, or none while an account admits more than one public address. Safe to
+run repeatedly; deletes or purges nothing but a role of the migrator on the
+whole production vault.
 
 Options:
   --dry-run         Print the what-if result and every command that would run; write nothing.
@@ -106,6 +113,48 @@ ensure_storage_account_name() {
     return 0
   fi
   die "storage account name '$account_name' cannot be used ($(json_field "$result" reason): $(json_field "$result" message)); set another $parameter in $PARAMS_FILE"
+}
+
+storage_deployment_address() {
+  local account_name="$1" home_address="$2" group_exists="$3"
+  local rules=''
+  if [[ "$group_exists" == "true" ]] && storage_account_exists "$account_name"; then
+    rules="$(storage_ip_rules "$account_name")" || die "cannot read the IP rules of $account_name"
+  fi
+  if [[ -n "$home_address" ]]; then
+    if [[ -n "$rules" && "$rules" != "$home_address" ]]; then
+      log_warn "$account_name admits $(printf '%s' "$rules" | tr '\n' ' '); the deployment sets its rule to $home_address alone, the address of the database's rule $SQL_FIREWALL_RULE_NAME"
+    fi
+    printf '%s' "$home_address"
+  elif [[ -n "$rules" && "$rules" != *$'\n'* ]] && is_public_ipv4 "$rules"; then
+    log_warn "the database's rule $SQL_FIREWALL_RULE_NAME admits no single address, so the deployment keeps $account_name on $rules; then run: $HOME_ADDRESS_HINT"
+    printf '%s' "$rules"
+  elif [[ -n "$rules" ]]; then
+    die "the database's rule $SQL_FIREWALL_RULE_NAME admits no single address and $account_name admits $(printf '%s' "$rules" | tr '\n' ' '), so the deployment would leave the account admitting none; remove every rule but the home's by hand (az storage account network-rule remove --resource-group $ERP_AZURE_RESOURCE_GROUP --account-name $account_name --ip-address <address>), then run this script again"
+  fi
+}
+
+backup_policy_locked_parameter() {
+  local group_exists="$1"
+  local state=''
+  if [[ "$group_exists" == "true" ]] && storage_account_exists "$ERP_AZURE_STORAGE_BACKUP_NAME"; then
+    state="$(backup_immutability_state)"
+  fi
+  case "$state" in
+    Locked)
+      log_info "locked: the deployment leaves it out, because a locked policy accepts an extension alone and refuses the create-or-update a deployment sends"
+      printf 'true'
+      ;;
+    Unlocked)
+      log_info "unlocked: the deployment converges it to the template; lock it once the first restore rehearsal succeeds (docs/operations/azure-bootstrap.md, section 5f)"
+      printf 'false'
+      ;;
+    '')
+      log_info "none yet: the deployment creates it unlocked"
+      printf 'false'
+      ;;
+    *) die "the write-once policy of $ERP_AZURE_STORAGE_BACKUP_NAME/$BACKUP_CONTAINER_NAME is in the state '$state', which this script does not know" ;;
+  esac
 }
 
 ensure_sql_server_name() {
@@ -209,7 +258,7 @@ main() {
   ensure_login
 
   log_step "Resolving principals"
-  local operator_id operator_login developers_group_id runtime_id migrator_id
+  local operator_id operator_login developers_group_id runtime_id migrator_id backup_id
   operator_id="$(signed_in_user_object_id)"
   operator_login="$(az_read ad signed-in-user show --query userPrincipalName --output tsv)" || die "cannot read the signed-in user's sign-in name"
   log_info "operator: $operator_id ($operator_login), the Microsoft Entra admin of $ERP_AZURE_SQL_SERVER_NAME"
@@ -231,6 +280,12 @@ main() {
   else
     log_info "migrator service principal '$ERP_AZURE_APP_MIGRATOR_NAME' not found; migrator roles skipped until entra.sh has run"
   fi
+  backup_id="$(service_principal_lookup "$ERP_AZURE_APP_BACKUP_NAME" id)"
+  if [[ -n "$backup_id" ]]; then
+    log_info "backup service principal '$ERP_AZURE_APP_BACKUP_NAME': $backup_id"
+  else
+    log_info "backup service principal '$ERP_AZURE_APP_BACKUP_NAME' not found; its role skipped until entra.sh has run"
+  fi
 
   log_step "Resource group $ERP_AZURE_RESOURCE_GROUP"
   local group_exists
@@ -249,34 +304,31 @@ main() {
   log_step "Storage account $ERP_AZURE_STORAGE_PROD_NAME"
   ensure_storage_account_name ERP_AZURE_STORAGE_PROD_NAME "$group_exists"
 
+  log_step "Storage account $ERP_AZURE_STORAGE_BACKUP_NAME"
+  ensure_storage_account_name ERP_AZURE_STORAGE_BACKUP_NAME "$group_exists"
+
   log_step "SQL server $ERP_AZURE_SQL_SERVER_NAME"
   ensure_sql_server_name "$group_exists"
   require_unchanged_sql_admin "$operator_id" "$group_exists"
 
   log_step "The home's address"
-  local home_address='' storage_rules='' storage_address=''
-  if [[ "$group_exists" == "true" ]]; then
-    if sql_server_exists; then
-      home_address="$(home_rule_address)"
-    fi
-    if production_storage_exists; then
-      storage_rules="$(production_storage_ip_rules)"
-    fi
+  local home_address='' production_storage_address backup_storage_address
+  local no_address="no address until bash scripts/azure/home-address.sh points the rule $SQL_FIREWALL_RULE_NAME of the database at one"
+  if [[ "$group_exists" == "true" ]] && sql_server_exists; then
+    home_address="$(home_rule_address)"
   fi
   if [[ -n "$home_address" ]]; then
     is_public_ipv4 "$home_address" \
-      || die "the database's rule $SQL_FIREWALL_RULE_NAME admits $home_address, which is not a public IPv4 address, so the storage account $ERP_AZURE_STORAGE_PROD_NAME could not take it; run first: $HOME_ADDRESS_HINT"
-    storage_address="$home_address"
-    if [[ -n "$storage_rules" && "$storage_rules" != "$home_address" ]]; then
-      log_warn "$ERP_AZURE_STORAGE_PROD_NAME admits $(printf '%s' "$storage_rules" | tr '\n' ' '); the deployment sets its rule to $home_address alone, the address of the database's rule $SQL_FIREWALL_RULE_NAME"
-    fi
-  elif [[ -n "$storage_rules" && "$storage_rules" != *$'\n'* ]] && is_public_ipv4 "$storage_rules"; then
-    storage_address="$storage_rules"
-    log_warn "the database's rule $SQL_FIREWALL_RULE_NAME admits no single address, so the deployment keeps $ERP_AZURE_STORAGE_PROD_NAME on $storage_address; then run: $HOME_ADDRESS_HINT"
-  elif [[ -n "$storage_rules" ]]; then
-    die "the database's rule $SQL_FIREWALL_RULE_NAME admits no single address and $ERP_AZURE_STORAGE_PROD_NAME admits $(printf '%s' "$storage_rules" | tr '\n' ' '), so the deployment would leave the account admitting none; remove every rule but the home's by hand (az storage account network-rule remove --resource-group $ERP_AZURE_RESOURCE_GROUP --account-name $ERP_AZURE_STORAGE_PROD_NAME --ip-address <address>), then run this script again"
+      || die "the database's rule $SQL_FIREWALL_RULE_NAME admits $home_address, which is not a public IPv4 address, so the storage accounts $ERP_AZURE_STORAGE_PROD_NAME and $ERP_AZURE_STORAGE_BACKUP_NAME could not take it; run first: $HOME_ADDRESS_HINT"
   fi
-  log_info "$ERP_AZURE_STORAGE_PROD_NAME admits ${storage_address:-no address until bash scripts/azure/home-address.sh points the rule $SQL_FIREWALL_RULE_NAME of the database at one}"
+  production_storage_address="$(storage_deployment_address "$ERP_AZURE_STORAGE_PROD_NAME" "$home_address" "$group_exists")"
+  backup_storage_address="$(storage_deployment_address "$ERP_AZURE_STORAGE_BACKUP_NAME" "$home_address" "$group_exists")"
+  log_info "$ERP_AZURE_STORAGE_PROD_NAME admits ${production_storage_address:-$no_address}"
+  log_info "$ERP_AZURE_STORAGE_BACKUP_NAME admits ${backup_storage_address:-$no_address}"
+
+  log_step "The write-once policy of $ERP_AZURE_STORAGE_BACKUP_NAME/$BACKUP_CONTAINER_NAME"
+  local backup_policy_locked
+  backup_policy_locked="$(backup_policy_locked_parameter "$group_exists")"
 
   log_step "The migrator's secrets in $ERP_AZURE_KEYVAULT_PROD_NAME"
   local migrator_secret_names=''
@@ -296,7 +348,11 @@ main() {
     "operationsKeyVaultName=$ERP_AZURE_KEYVAULT_OPS_NAME"
     "developmentStorageAccountName=$ERP_AZURE_STORAGE_DEV_NAME"
     "productionStorageAccountName=$ERP_AZURE_STORAGE_PROD_NAME"
-    "productionStorageHomeAddress=$storage_address"
+    "productionStorageHomeAddress=$production_storage_address"
+    "backupStorageAccountName=$ERP_AZURE_STORAGE_BACKUP_NAME"
+    "backupContainerName=$BACKUP_CONTAINER_NAME"
+    "backupStorageHomeAddress=$backup_storage_address"
+    "backupImmutabilityPolicyLocked=$backup_policy_locked"
     "productionSqlServerName=$ERP_AZURE_SQL_SERVER_NAME"
     "productionSqlDatabaseName=$ERP_AZURE_SQL_DATABASE_NAME"
     "operatorPrincipalId=$operator_id"
@@ -305,6 +361,7 @@ main() {
     "runtimePrincipalId=$runtime_id"
     "migratorPrincipalId=$migrator_id"
     "migratorSecretNames=$migrator_secret_names"
+    "backupPrincipalId=$backup_id"
   )
 
   log_step "Deployment preview (what-if)"
@@ -325,6 +382,7 @@ main() {
     [local-dev]="https://$ERP_AZURE_STORAGE_DEV_NAME.blob.core.windows.net/"
     [production]="https://$ERP_AZURE_STORAGE_PROD_NAME.blob.core.windows.net/"
   )
+  local backup_blob_endpoint="https://$ERP_AZURE_STORAGE_BACKUP_NAME.blob.core.windows.net/"
   local development_data_protection_key_uri="${development_vault_uri}keys/$DATA_PROTECTION_KEY_NAME"
   local production_data_protection_key_uri="${production_vault_uri}keys/$DATA_PROTECTION_KEY_NAME"
   local sql_server_fqdn="$ERP_AZURE_SQL_SERVER_NAME.database.windows.net"
@@ -367,6 +425,7 @@ main() {
     operations_vault_uri="$(deployment_output "$outputs_json" operationsKeyVaultUri)"
     attachments_blob_endpoints[local-dev]="$(deployment_output "$outputs_json" developmentAttachmentsBlobEndpoint)"
     attachments_blob_endpoints[production]="$(deployment_output "$outputs_json" productionAttachmentsBlobEndpoint)"
+    backup_blob_endpoint="$(deployment_output "$outputs_json" backupBlobEndpoint)"
     development_data_protection_key_uri="$(deployment_output_uri "$outputs_json" developmentDataProtectionKeyUri)"
     production_data_protection_key_uri="$(deployment_output_uri "$outputs_json" productionDataProtectionKeyUri)"
     sql_server_fqdn="$(deployment_output "$outputs_json" productionSqlServerFqdn)"
@@ -403,14 +462,16 @@ main() {
   printf 'DATA_PROTECTION_KEY_URI_PROD=%s\n' "$production_data_protection_key_uri"
   printf 'ATTACHMENTS_BLOB_ENDPOINT_DEV=%s\n' "${attachments_blob_endpoints[local-dev]}"
   printf 'ATTACHMENTS_BLOB_ENDPOINT_PROD=%s\n' "${attachments_blob_endpoints[production]}"
+  printf 'BACKUP_BLOB_ENDPOINT=%s\n' "$backup_blob_endpoint"
+  printf 'BACKUP_CONTAINER=%s\n' "$BACKUP_CONTAINER_NAME"
   printf 'SQL_SERVER_PROD=%s\n' "$sql_server_fqdn"
   if (( DRY_RUN )); then
     log_info "dry run: nothing was created or changed"
   fi
-  log_info "a new Storage Blob Data Contributor assignment on an attachments container can take up to 10 minutes to take effect; a 403 from blob storage inside that window is expected"
+  log_info "a new Storage Blob Data Contributor assignment on a container can take up to 10 minutes to take effect; a 403 from blob storage inside that window is expected"
   log_info "next steps:"
-  log_info "  1. bash scripts/azure/entra.sh          (app registrations, the runtime and migrator service principals and their client certificates)"
-  log_info "  2. bash scripts/azure/provision.sh      (grants both service principals their roles)"
+  log_info "  1. bash scripts/azure/entra.sh          (app registrations, the runtime, migrator and backup service principals, their client certificates and the backup encryption certificate)"
+  log_info "  2. bash scripts/azure/provision.sh      (grants the three service principals their roles)"
   log_info "  3. create Erp--Platform--Attachments--EncryptionKey in $ERP_AZURE_KEYVAULT_DEV_NAME and in $ERP_AZURE_KEYVAULT_PROD_NAME once each (docs/operations/runbooks/secrets.md, section 5f)"
   log_info "  4. bash scripts/azure/seed.sh           (configuration values and Key Vault references)"
   log_info "  5. $HOME_ADDRESS_HINT   (docs/operations/runbooks/home-address.md), then bash scripts/azure/database.sh   (docs/operations/runbooks/database.md)"

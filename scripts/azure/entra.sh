@@ -2,26 +2,29 @@
 
 USAGE='Usage: bash scripts/azure/entra.sh [--dry-run] [--params <file>]
        bash scripts/azure/entra.sh --rotate-signin-certificate <local-dev|production> [--dry-run] [--params <file>]
-       bash scripts/azure/entra.sh --rotate-client-certificate <runtime|migrator> [--dry-run] [--params <file>]
-       bash scripts/azure/entra.sh --prune-old-credentials <local-dev|production|runtime|migrator> [--dry-run] [--params <file>]
+       bash scripts/azure/entra.sh --rotate-client-certificate <runtime|migrator|backup> [--dry-run] [--params <file>]
+       bash scripts/azure/entra.sh --rotate-encryption-certificate [--dry-run] [--params <file>]
+       bash scripts/azure/entra.sh --prune-old-credentials <local-dev|production|runtime|migrator|backup> [--dry-run] [--params <file>]
 
-Creates or converges the four single-tenant app registrations (sign-in for
-local-dev, sign-in for production, and runtime and migrator for the server),
-their service principals, app roles, the login_hint optional claim and the
-front-channel logout URL of the sign-in registrations (for an https web origin
-only), Microsoft Graph consent, Key Vault certificates (the client certificates
-of runtime and migrator in the operations vault, which no application reads),
-key credentials, the Erp.Admin assignment of the operator and the App
-Configuration identity ids and web origins. Safe to run repeatedly; never
-deletes a registration.
+Creates or converges the five single-tenant app registrations (sign-in for
+local-dev, sign-in for production, and runtime, migrator and backup for the
+server), their service principals, app roles, the login_hint optional claim and
+the front-channel logout URL of the sign-in registrations (for an https web
+origin only), Microsoft Graph consent, Key Vault certificates (the client
+certificates of runtime, migrator and backup, and the RSA 4096 backup
+encryption certificate the server seals its backups to, all in the operations
+vault, which no application reads), key credentials, the Erp.Admin assignment
+of the operator and the App Configuration identity ids and web origins. Safe to
+run repeatedly; never deletes a registration.
 
 Options:
   --dry-run                              Print every write that would run; write nothing.
   --clear-production-redirect-uris       Allow the run to remove the production redirect URIs when ERP_AZURE_PRODUCTION_WEB_ORIGIN is empty.
   --params <file>                        Parameter file (default: scripts/azure/params.env).
   --rotate-signin-certificate <label>    Create a new version of the sign-in certificate of local-dev or production and register it.
-  --rotate-client-certificate <target>   Create a new version of the runtime or migrator client certificate and register it.
-  --prune-old-credentials <target>       Delete every key credential of local-dev, production, runtime or migrator that is not the current certificate.
+  --rotate-client-certificate <target>   Create a new version of the runtime, migrator or backup client certificate and register it.
+  --rotate-encryption-certificate        Create a new version, with a new key, of the backup encryption certificate.
+  --prune-old-credentials <target>       Delete every key credential of local-dev, production, runtime, migrator or backup that is not the current certificate.
   --help                                 Show this help.'
 
 # shellcheck source=lib/common.sh
@@ -35,7 +38,7 @@ MODE=converge
 TARGET=''
 
 set_mode() {
-  [[ "$MODE" == converge ]] || die "only one of --rotate-signin-certificate, --rotate-client-certificate and --prune-old-credentials can be given"
+  [[ "$MODE" == converge ]] || die "only one of --rotate-signin-certificate, --rotate-client-certificate, --rotate-encryption-certificate and --prune-old-credentials can be given"
   MODE="$1"
 }
 
@@ -57,8 +60,8 @@ require_target() {
   fi
   case "$accepted" in
     signin) die "$option accepts local-dev or production; got '$value'" ;;
-    server) die "$option accepts runtime or migrator; got '$value'" ;;
-    *) die "$option accepts local-dev, production, runtime or migrator; got '$value'" ;;
+    server) die "$option accepts runtime, migrator or backup; got '$value'" ;;
+    *) die "$option accepts local-dev, production, runtime, migrator or backup; got '$value'" ;;
   esac
 }
 
@@ -83,6 +86,9 @@ parse_entra_args() {
       --rotate-client-certificate=*)
         set_mode rotate-client
         TARGET="$(require_target "--rotate-client-certificate" "${1#--rotate-client-certificate=}" server)"
+        ;;
+      --rotate-encryption-certificate)
+        set_mode rotate-encryption
         ;;
       --clear-production-redirect-uris)
         CLEAR_REDIRECT_URIS_ALLOWED=1
@@ -184,6 +190,12 @@ converge_server_app() {
   printf -v "$app_id_variable" '%s' "$app_id"
 }
 
+converge_backup_encryption_certificate() {
+  log_step "Backup encryption certificate '$BACKUP_ENCRYPTION_CERTIFICATE_NAME'"
+  ensure_certificate "$ERP_AZURE_KEYVAULT_OPS_NAME" "$BACKUP_ENCRYPTION_CERTIFICATE_NAME" "$BACKUP_ENCRYPTION_CERTIFICATE_COMMON_NAME" \
+    "$CLIENT_CERTIFICATE_CONTENT_TYPE" "$ENCRYPTION_CERTIFICATE_POLICY_TEMPLATE" > /dev/null
+}
+
 run_converge() {
   require_origin ERP_AZURE_LOCAL_WEB_ORIGIN "$ERP_AZURE_LOCAL_WEB_ORIGIN"
   [[ -z "$ERP_AZURE_PRODUCTION_WEB_ORIGIN" ]] || require_origin ERP_AZURE_PRODUCTION_WEB_ORIGIN "$ERP_AZURE_PRODUCTION_WEB_ORIGIN"
@@ -195,32 +207,37 @@ run_converge() {
   log_info "Microsoft Graph service principal: $GRAPH_SP_OBJECT_ID"
   admin_role_id="$(app_role_id "$APP_ROLE_ADMIN_VALUE")"
 
-  local local_dev_app_id='' production_app_id='' runtime_app_id='' migrator_app_id=''
+  local local_dev_app_id='' production_app_id='' runtime_app_id='' migrator_app_id='' backup_app_id=''
   converge_signin_app local-dev "$operator_id" "$admin_role_id" local_dev_app_id
   converge_signin_app production "$operator_id" "$admin_role_id" production_app_id
   converge_server_app runtime runtime_app_id
   converge_server_app migrator migrator_app_id
+  converge_server_app backup backup_app_id
+  converge_backup_encryption_certificate
 
   log_step "Summary"
   printf 'LOCAL_DEV_CLIENT_ID=%s\n' "$local_dev_app_id"
   printf 'PRODUCTION_CLIENT_ID=%s\n' "$production_app_id"
   printf 'RUNTIME_CLIENT_ID=%s\n' "$runtime_app_id"
   printf 'MIGRATOR_CLIENT_ID=%s\n' "$migrator_app_id"
+  printf 'BACKUP_CLIENT_ID=%s\n' "$backup_app_id"
   printf 'AZURE_TENANT_ID=%s\n' "$ERP_AZURE_TENANT_ID"
   printf 'AZURE_CLIENT_ID=%s\n' "$runtime_app_id"
   printf 'MIGRATOR_AZURE_CLIENT_ID=%s\n' "$migrator_app_id"
+  printf 'BACKUP_AZURE_CLIENT_ID=%s\n' "$backup_app_id"
   if (( DRY_RUN )); then
     log_info "dry run: nothing was created or changed; ids shown as $PENDING_ID are assigned by the real run"
   fi
-  log_info "AZURE_TENANT_ID, AZURE_CLIENT_ID (the runtime's) and MIGRATOR_AZURE_CLIENT_ID are the values the server puts in infra/compose/.env"
+  log_info "AZURE_TENANT_ID, AZURE_CLIENT_ID (the runtime's), MIGRATOR_AZURE_CLIENT_ID and BACKUP_AZURE_CLIENT_ID are the values the server puts in infra/compose/.env (docs/operations/runbooks/host-setup.md)"
   log_info "next steps:"
-  log_info "  1. bash scripts/azure/provision.sh   (grants the runtime and migrator service principals their roles)"
+  log_info "  1. bash scripts/azure/provision.sh   (grants the runtime, migrator and backup service principals their roles)"
   log_info "  2. create Erp--Platform--Attachments--EncryptionKey in $ERP_AZURE_KEYVAULT_DEV_NAME and in $ERP_AZURE_KEYVAULT_PROD_NAME once each (docs/operations/runbooks/secrets.md, section 5f)"
   log_info "  3. bash scripts/azure/seed.sh        (configuration values and Key Vault references)"
   log_info "  4. $HOME_ADDRESS_HINT   (docs/operations/runbooks/home-address.md),"
   log_info "     then bash scripts/azure/database.sh   (the database users; docs/operations/runbooks/database.md)"
   log_info "  5. the first migration, with bash scripts/azure/export-client-certificate.sh migrator (docs/operations/runbooks/database.md)"
   log_info "  6. bash scripts/azure/verify.sh --entra"
+  log_info "  7. for the server's nightly backup: bash scripts/azure/export-client-certificate.sh backup and backup-recipient (docs/operations/runbooks/host-setup.md)"
 
   if (( ${#PERMISSION_GRANT_FAILURES[@]} > 0 )); then
     local app_id
@@ -282,13 +299,37 @@ run_rotate_client() {
   fi
   log_info "next steps:"
   log_info "  1. bash scripts/azure/export-client-certificate.sh $TARGET   (downloads the new version and prints the placement command for the server)"
-  if [[ "$TARGET" == runtime ]]; then
-    log_info "  2. on the server: flock /srv/erp-ai-pro/deploy.lock docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up --detach --wait --wait-timeout 300 --force-recreate --no-deps --no-build --pull never api   (a plain up -d keeps the running container with the old certificate file)"
-  else
-    log_info "  2. nothing to restart: every migrator run, the nightly retain included, starts a new container that reads the new file"
-  fi
+  case "$TARGET" in
+    runtime)
+      log_info "  2. on the server: flock /srv/erp-ai-pro/deploy.lock docker compose -f infra/compose/compose.yaml -f infra/compose/compose.production.yaml up --detach --wait --wait-timeout 300 --force-recreate --no-deps --no-build --pull never api   (a plain up -d keeps the running container with the old certificate file)"
+      ;;
+    migrator)
+      log_info "  2. nothing to restart: every migrator run, the nightly retain included, starts a new container that reads the new file"
+      ;;
+    backup)
+      log_info "  2. nothing to restart: every backup run starts a new container that reads the new file"
+      ;;
+  esac
   log_info "  3. bash scripts/azure/entra.sh --prune-old-credentials $TARGET"
   log_info "  4. bash scripts/azure/verify.sh --entra"
+}
+
+run_rotate_encryption() {
+  log_step "Rotating the backup encryption certificate '$BACKUP_ENCRYPTION_CERTIFICATE_NAME'"
+  local thumbprint
+  thumbprint="$(rotate_certificate "$ERP_AZURE_KEYVAULT_OPS_NAME" "$BACKUP_ENCRYPTION_CERTIFICATE_NAME" "$BACKUP_ENCRYPTION_CERTIFICATE_COMMON_NAME" \
+    "$CLIENT_CERTIFICATE_CONTENT_TYPE" "$ENCRYPTION_CERTIFICATE_POLICY_TEMPLATE")"
+
+  log_step "Summary"
+  printf 'ENCRYPTION_CERTIFICATE_THUMBPRINT=%s\n' "$thumbprint"
+  if (( DRY_RUN )); then
+    log_info "dry run: nothing was created or changed"
+  fi
+  log_info "next steps:"
+  log_info "  1. bash scripts/azure/export-client-certificate.sh backup-recipient   (the new public certificate; place it on the server in place of the old one, docs/operations/runbooks/secrets.md section 5g)"
+  log_info "  2. keep every earlier version enabled until the last archive sealed to it is past its 90 days: a restore of such an archive exports that version with"
+  log_info "     bash scripts/azure/export-client-certificate.sh backup-recipient-key --version <version>   (az keyvault certificate list-versions --vault-name $ERP_AZURE_KEYVAULT_OPS_NAME --name $BACKUP_ENCRYPTION_CERTIFICATE_NAME lists them)"
+  log_info "  3. bash scripts/azure/verify.sh --entra"
 }
 
 run_prune() {
@@ -333,6 +374,7 @@ main() {
     converge) run_converge ;;
     rotate-signin) run_rotate_signin ;;
     rotate-client) run_rotate_client ;;
+    rotate-encryption) run_rotate_encryption ;;
     prune) run_prune ;;
     *) die "unknown mode '$MODE'" ;;
   esac
