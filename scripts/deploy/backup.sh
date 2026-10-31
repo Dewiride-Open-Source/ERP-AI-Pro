@@ -213,6 +213,8 @@ check_upload() {
 prune_archives() {
   STEP='prune'
   local listing name created since cutoff kept=0 others=0
+  local -a expired=()
+  local -A seen=() created_of=()
   listing="$(backup_blob list --num-results '*' --query '[].[name, properties.creationTime]' --output tsv)" \
     || fail "cannot list the archives of $BACKUP_CONTAINER_NAME (see the Azure CLI's error above)"
   cutoff=$(( NOW - PRUNE_AGE_SECONDS ))
@@ -225,17 +227,23 @@ prune_archives() {
       others=$(( others + 1 ))
       continue
     fi
+    [[ -z "${seen[$name]:-}" ]] || fail "$(listed_twice "$name")"
+    seen[$name]=1
     since="$(creation_epoch "$created")" \
       || fail "the archive $(printable "$name") reports the creation time '$(printable "$created")', which is not a time"
     if (( since >= cutoff )); then
       kept=$(( kept + 1 ))
       continue
     fi
+    expired+=("$name")
+    created_of[$name]="$created"
+  done <<< "$listing"
+  for name in "${expired[@]}"; do
     backup_blob delete --name "$name" --output none \
       || fail "cannot delete $name, older than $BACKUP_IMMUTABILITY_DAYS days (see the Azure CLI's error above)"
     DELETED=$(( DELETED + 1 ))
-    log_info "prune: deleted $name, created $(printable "$created")"
-  done <<< "$listing"
+    log_info "prune: deleted $name, created $(printable "${created_of[$name]}")"
+  done
   log_info "prune: deleted $DELETED archive(s) older than $BACKUP_IMMUTABILITY_DAYS days, kept $kept, left $others other blob(s) alone"
 }
 

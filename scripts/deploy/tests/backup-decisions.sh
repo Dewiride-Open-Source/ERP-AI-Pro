@@ -12,14 +12,15 @@ scripts make:
     its time without writing over a blob, reads it back and deletes, naming each, only the archives the storage service
     created more than 90 days and a day ago; the archive opens with the throwaway key and every file matches the manifest;
   - a held lock, a failed volume read, a failed upload, an archive that reads back otherwise, a failed listing, a refused
-    delete, a creation time that is not a time, a missing certificate, a recipient certificate that holds a private key or a
+    delete, a creation time that is not a time, a listing that names an archive twice, a missing certificate, a recipient certificate that holds a private key or a
     smaller key, a malformed setting, another account and an argument stop it, the failure naming its step and the archives
     it deleted, and a recipient certificate near its end only warns;
   - a dry run of a restore opens and checks the archive and changes nothing, even while the stack runs; a restore refuses
     while the stack runs, with a key that does not open the archive (naming the certificate it needs), with an archive that
     is forged or whose files differ from its manifest, with the backup of a server whose volumes were still empty, and with
     volumes that hold files unless --replace, each before it changes anything; --list, --latest, --name and --created-before
-    choose by the storage service'"'"'s creation time; a restore onto fresh volumes gives each top folder to its owner
+    choose by the storage service'"'"'s creation time, refusing a forged listing row and a creation the service reports
+    otherwise, and a download that differs from the container'"'"'s record; a restore onto fresh volumes gives each top folder to its owner
     (1654:1654 and 10001:10001, mode 0700) before it fills it, writes .env and .env.previous as the archive holds them and
     shreds the key, and one that fails part-way names what it restored and keeps the key.
 It needs bash with the usual command-line tools (coreutils, grep, sed, find, tar) and OpenSSL 3; check.sh runs it.
@@ -48,6 +49,7 @@ readonly RUN="$COMPOSE_CALL run --rm -T --quiet-pull"
 readonly AS_BACKUP="-e BACKUP_CLIENT_ID=$CLIENT_ID -e BACKUP_TENANT_ID=$TENANT_ID"
 readonly STORAGE="--auth-mode login --blob-endpoint https://sterpaiprobackup.blob.core.windows.net --container-name $CONTAINER"
 readonly PROPERTIES='--query [properties.contentLength, properties.contentSettings.contentMd5] --output tsv'
+readonly RESTORE_PROPERTIES='--query [properties.contentLength, properties.contentSettings.contentMd5, properties.creationTime] --output tsv'
 readonly LISTING="$RUN $AS_BACKUP azure-cli storage blob list $STORAGE --num-results * --query [].[name, properties.creationTime] --output tsv"
 readonly KEY_RING_VOLUME='erp-ai-pro-data-protection-keys'
 readonly PROXY_VOLUME='erp-ai-pro-proxy-data'
@@ -507,14 +509,28 @@ scenario_prune_delete_refused() {
   passed
 }
 
+scenario_prune_forged_listing() {
+  new_world "a listing that names an archive twice stops the prune before it deletes anything"
+  blob 2026/07/20260701T120000Z.tar.p7m 2026-10-29T12:00:00+00:00
+  blob 2026/07/20260720T120000Z.tar.p7m 2026-07-20T12:00:00+00:00
+  state az/list-extra "$(printf '2026/07/20260701T120000Z.tar.p7m\t2026-07-01T12:00:00+00:00')"
+  run_backup
+  expect_status 1
+  expect_output "the listing of $CONTAINER names 2026/07/20260701T120000Z.tar.p7m twice, which the storage service never does"
+  expect_output "the backup stopped at the step 'prune': $CONTAINER/$ARCHIVE is in the container, and no older archive was deleted"
+  expect_no_call "storage blob delete"
+  expect_blobs 2026/07/20260701T120000Z.tar.p7m 2026/07/20260720T120000Z.tar.p7m "$ARCHIVE"
+  passed
+}
+
 scenario_prune_creation_unreadable() {
   local created
-  for created in '' not-a-time; do
+  for created in '' not-a-time '2026-07-01T12:00:00+00:00 (' '2026-07-01 12:00'; do
     new_world "an archive whose creation time is '$created' stops the backup at the step 'prune' rather than being kept"
     blob 2026/07/20260701T120000Z.tar.p7m "$created"
     run_backup
     expect_status 1
-    expect_output "the archive 2026/07/20260701T120000Z.tar.p7m reports the creation time '$created', which is not a time"
+    expect_output "the archive 2026/07/20260701T120000Z.tar.p7m reports the creation time '${created//[^[:alnum:] ._:\/@=+-]/?}', which is not a time"
     expect_output "the backup stopped at the step 'prune': $CONTAINER/$ARCHIVE is in the container, and no older archive was deleted"
     expect_blobs 2026/07/20260701T120000Z.tar.p7m "$ARCHIVE"
   done
@@ -636,7 +652,7 @@ scenario_restore_fresh_server() {
   run_script restore.sh --latest --key "$KEY_FILE"
   expect_status 0
   expect_calls "id -un" "flock --nonblock 9" "docker ps --filter label=com.docker.compose.project=erp-ai-pro --format {{.Label \"com.docker.compose.service\"}}" \
-    "$COMPOSE_CALL pull --policy missing" "$LISTING" "$(blob_call show --name "$ARCHIVE" "$PROPERTIES")" \
+    "$COMPOSE_CALL pull --policy missing" "$LISTING" "$(blob_call show --name "$ARCHIVE" "$RESTORE_PROPERTIES")" \
     "$(blob_call download --name "$ARCHIVE" --no-progress --output none)" \
     "docker volume inspect --format {{.Name}} $KEY_RING_VOLUME" "$(reader_call key-ring stat -c %u:%g %a /volume)" \
     "$RUN key-ring-owner chown 1654:1654 /volume" "$RUN key-ring-owner chmod 700 /volume" "$RUN key-ring-writer tar -xof - -C /volume" \
@@ -829,6 +845,14 @@ scenario_restore_empty_archive() {
   expect_top "$PROXY_VOLUME" '10001:10001 700'
   expect_unchanged_files
   expect_missing "$KEY_FILE"
+  restore_world "the backup of a server that names a release but whose volumes are still empty stays restorable"
+  empty_volumes
+  state epoch "$(date -u -d 2026-10-31T12:00:00Z +%s)"
+  run_backup
+  expect_status 0
+  run_script restore.sh --latest --key "$KEY_FILE" --dry-run
+  expect_status 0
+  expect_output "dry run: 2026/10/20261031T120000Z.tar.p7m opens with this key and matches its manifest"
   passed
 }
 
@@ -911,15 +935,63 @@ scenario_restore_list() {
 }
 
 scenario_restore_created_before() {
-  restore_world "--created-before takes the newest archive the storage service created before that time, and none created at it"
+  restore_world "--created-before takes the newest archive the storage service created before that time, never one created at it, and refuses when none is older"
+  copy_archive 2026/08/20260830T203000Z.tar.p7m 2026-08-30T20:30:00+00:00
   copy_archive 2026/09/20260930T203000Z.tar.p7m 2026-09-30T20:30:00+00:00
   run_script restore.sh --created-before 2026-10-01T00:00:00Z --key "$KEY_FILE" --dry-run
   expect_status 0
   expect_output "the archive 2026/09/20260930T203000Z.tar.p7m of $CONTAINER, created by the storage service at 2026-09-30T20:30:00+00:00"
   expect_output "dry run: 2026/09/20260930T203000Z.tar.p7m opens with this key and matches its manifest"
   run_script restore.sh --created-before 2026-09-30T20:30:00Z --key "$KEY_FILE" --dry-run
+  expect_status 0
+  expect_output "the archive 2026/08/20260830T203000Z.tar.p7m of $CONTAINER, created by the storage service at 2026-08-30T20:30:00+00:00"
+  run_script restore.sh --created-before 2026-08-30T20:30:00Z --key "$KEY_FILE" --dry-run
   expect_status 1
-  expect_output "$CONTAINER holds no archive created before 2026-09-30T20:30:00Z; nothing was changed"
+  expect_output "$CONTAINER holds no archive created before 2026-08-30T20:30:00Z; nothing was changed"
+  passed
+}
+
+scenario_restore_forged_listing() {
+  restore_world "a listing row that a blob name with a line break forges is refused by --created-before and --list"
+  copy_archive 2026/09/20260925T203000Z.tar.p7m 2026-10-31T09:00:00+00:00
+  state az/list-extra "$(printf '2026/09/20260925T203000Z.tar.p7m\t2026-09-25T20:30:05+00:00')"
+  run_script restore.sh --created-before 2026-10-01T00:00:00Z --key "$KEY_FILE" --dry-run
+  expect_status 1
+  expect_output "the listing of $CONTAINER names 2026/09/20260925T203000Z.tar.p7m twice, which the storage service never does"
+  expect_output "forges listing rows; nothing was changed"
+  expect_no_call "storage blob show"
+  expect_no_call "storage blob download"
+  run_script restore.sh --list
+  expect_status 1
+  expect_output "names 2026/09/20260925T203000Z.tar.p7m twice"
+  expect_output "forges listing rows; nothing was listed"
+  restore_world "a creation time that a tab in a blob name gives another shape is refused"
+  state az/list-extra "$(printf '2026/09/20260925T203000Z.tar.p7m\t2026-09-25T20:30:05+00:00 (\t2026-10-31T09:00:00+00:00')"
+  run_script restore.sh --created-before 2026-10-01T00:00:00Z --key "$KEY_FILE" --dry-run
+  expect_status 1
+  expect_output "which is not a time; nothing was changed"
+  expect_no_call "storage blob download"
+  restore_world "an archive whose creation the storage service reports otherwise than its listing is refused before its download"
+  state az/show-created 2026-10-31T09:00:00+00:00
+  run_script restore.sh --latest --key "$KEY_FILE" --dry-run
+  expect_status 1
+  expect_output "the storage service reports $ARCHIVE created at 2026-10-31T09:00:00+00:00, not at the time its listing gave; nothing was changed"
+  expect_no_call "storage blob download"
+  passed
+}
+
+scenario_restore_download_mismatch() {
+  restore_world "a download that differs from the length and MD5 the container reports changes nothing"
+  empty_volumes
+  state az/show-md5 'AAAAAAAAAAAAAAAAAAAAAA=='
+  run_script restore.sh --latest --key "$KEY_FILE"
+  expect_status 1
+  expect_output "the download of $ARCHIVE does not match its length"
+  expect_output "and MD5 AAAAAAAAAAAAAAAAAAAAAA== in the container; nothing was changed"
+  expect_no_call "-owner "
+  expect_no_call "-writer "
+  expect_top "$KEY_RING_VOLUME" '0:0 755'
+  [[ -f "$KEY_FILE" ]] || fail "the refused restore removed the key"
   passed
 }
 
@@ -975,6 +1047,7 @@ main() {
   scenario_check_mismatch
   scenario_prune_listing_fails
   scenario_prune_delete_refused
+  scenario_prune_forged_listing
   scenario_prune_creation_unreadable
   scenario_expiring_recipient
   scenario_certificates
@@ -991,6 +1064,8 @@ main() {
   scenario_restore_choice
   scenario_restore_list
   scenario_restore_created_before
+  scenario_restore_forged_listing
+  scenario_restore_download_mismatch
   scenario_restore_empty_archive
   scenario_restore_partial
   scenario_restore_refusals
