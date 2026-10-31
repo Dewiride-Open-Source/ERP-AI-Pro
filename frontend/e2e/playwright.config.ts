@@ -7,12 +7,14 @@ import {
   gatedBaseURL,
   gatedFeatureFlags,
   offlineBaseURL,
+  productionURL,
   startServers,
   unreachableApiURL,
 } from "./fixtures/targets";
 
 const isCI = Boolean(process.env.CI);
-const browserOnly = { testIgnore: "**/tests/smoke/**" };
+const productionTests = "**/tests/production/**";
+const browserOnly = { testIgnore: ["**/tests/smoke/**", productionTests] };
 const runnerStartsServers = startServers && process.env.TEST_WORKER_INDEX === undefined;
 const endToEndHost =
   "dotnet run --project ../../backend/Tests/EndToEnd/Dewiride.Erp.Testing.EndToEndHost --no-build --";
@@ -43,14 +45,22 @@ export default defineConfig({
     locale: "en-IN",
     timezoneId: "Asia/Kolkata",
   },
-  projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] }, ...browserOnly },
-    { name: "webkit", use: { ...devices["Desktop Safari"] }, ...browserOnly },
-    { name: "mobile-android", use: { ...devices["Pixel 10"] }, ...browserOnly },
-    { name: "mobile-ios", use: { ...devices["iPhone 17"] }, ...browserOnly },
-    { name: "tablet-ios", use: { ...devices["iPad (gen 11)"] }, ...browserOnly },
-  ],
+  projects: productionURL
+    ? [
+        {
+          name: "production",
+          testMatch: productionTests,
+          use: { ...devices["Desktop Chrome"], baseURL: productionURL, ignoreHTTPSErrors: false },
+        },
+      ]
+    : [
+        { name: "chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: productionTests },
+        { name: "firefox", use: { ...devices["Desktop Firefox"] }, ...browserOnly },
+        { name: "webkit", use: { ...devices["Desktop Safari"] }, ...browserOnly },
+        { name: "mobile-android", use: { ...devices["Pixel 10"] }, ...browserOnly },
+        { name: "mobile-ios", use: { ...devices["iPhone 17"] }, ...browserOnly },
+        { name: "tablet-ios", use: { ...devices["iPad (gen 11)"] }, ...browserOnly },
+      ],
   ...(runnerStartsServers && {
     webServer: [
       {

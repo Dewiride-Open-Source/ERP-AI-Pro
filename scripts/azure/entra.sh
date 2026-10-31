@@ -14,8 +14,10 @@ origin only), Microsoft Graph consent, Key Vault certificates (the client
 certificates of runtime, migrator and backup, and the RSA 4096 backup
 encryption certificate the server seals its backups to, all in the operations
 vault, which no application reads), key credentials, the Erp.Admin assignment
-of the operator and the App Configuration identity ids and web origins. Safe to
-run repeatedly; never deletes a registration.
+of the operator and the App Configuration identity ids and web origins, with
+the production label'"'"'s Erp:Platform:Host:AllowedHosts taken from its web
+origin (<address>;api;127.0.0.1). Safe to run repeatedly; never deletes a
+registration.
 
 Options:
   --dry-run                              Print every write that would run; write nothing.
@@ -170,6 +172,9 @@ converge_signin_app() {
   ensure_kv "$IDENTITY_CLIENT_ID_KEY" "$label" "$app_id"
   if [[ -n "$web_origin" ]]; then
     ensure_kv "$IDENTITY_WEB_ORIGIN_KEY" "$label" "$web_origin"
+  fi
+  if [[ "$label" == production && -n "$web_origin" ]]; then
+    ensure_kv "$HOST_ALLOWED_HOSTS_KEY" "$label" "$(production_allowed_hosts)"
   fi
   printf -v "$app_id_variable" '%s' "$app_id"
 }

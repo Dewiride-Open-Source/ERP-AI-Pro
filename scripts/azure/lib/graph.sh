@@ -29,6 +29,8 @@ readonly BACKUP_ENCRYPTION_CERTIFICATE_COMMON_NAME='erp-ai-pro-backup-encryption
 readonly IDENTITY_TENANT_ID_KEY='Erp:Platform:Identity:TenantId'
 readonly IDENTITY_CLIENT_ID_KEY='Erp:Platform:Identity:ClientId'
 readonly IDENTITY_WEB_ORIGIN_KEY='Erp:Platform:Identity:WebOrigin'
+readonly HOST_ALLOWED_HOSTS_KEY='Erp:Platform:Host:AllowedHosts'
+readonly PRODUCTION_INTERNAL_HOSTS=(api 127.0.0.1)
 readonly REDIRECT_PATHS=(/api/auth/signin-oidc /api/auth/signout-callback-oidc)
 readonly FRONT_CHANNEL_SIGN_OUT_PATH='/api/auth/signout-oidc'
 readonly CERTIFICATE_EXPIRY_WARNING_SECONDS=$((30 * 24 * 3600))
@@ -168,6 +170,14 @@ signin_logout_url() {
   # origin is http gets none, and signing out of Entra elsewhere leaves its ERP sessions to their own sign-out or expiry.
   [[ "$origin" == https://* ]] || return 0
   printf '%s%s' "$origin" "$FRONT_CHANNEL_SIGN_OUT_PATH"
+}
+
+production_allowed_hosts() {
+  local origin host IFS=';'
+  origin="$(signin_web_origin production)" || return 1
+  [[ -n "$origin" ]] || return 0
+  host="${origin#https://}"
+  printf '%s' "${host%%:*};${PRODUCTION_INTERNAL_HOSTS[*]}"
 }
 
 logout_url_patch_body() {

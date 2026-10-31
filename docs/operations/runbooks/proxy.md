@@ -4,7 +4,7 @@ The proxy is the only container that publishes ports (80 and 443, on IPv4 only, 
 
 ## The address
 
-`ERP_SITE_ADDRESS` in `infra/compose/.env` on the host is the address people open the ERP at, without scheme or port: today the server's local address, such as `192.168.1.20`, which the router must keep fixed for the server. It is the host of `Erp:Platform:Identity:WebOrigin` under the production label, which `scripts/azure/entra.sh` writes from `ERP_AZURE_PRODUCTION_WEB_ORIGIN` (`https://<address>`) when it registers the production sign-in registration's redirect URIs, and the production `Erp:Platform:Host:AllowedHosts` starts with it (`<address>;api;127.0.0.1`), so the three always change together. The production stack refuses to start without it.
+`ERP_SITE_ADDRESS` in `infra/compose/.env` on the host is the address people open the ERP at, without scheme or port: today the server's local address, such as `192.168.1.20`, which the router must keep fixed for the server. It is the host of `Erp:Platform:Identity:WebOrigin` under the production label, which `scripts/azure/entra.sh` writes from `ERP_AZURE_PRODUCTION_WEB_ORIGIN` (`https://<address>`) when it registers the production sign-in registration's redirect URIs, and the production `Erp:Platform:Host:AllowedHosts`, which the same run writes, starts with it (`<address>;api;127.0.0.1`), so the three always change together. The production stack refuses to start without it.
 
 For an IP address the proxy issues the certificate from a certificate authority of its own, which every device that opens the ERP must trust (below). For a public name it obtains a certificate from Let's Encrypt instead, once ports 80 and 443 reach the server from the internet; no device then needs the proxy's root.
 
