@@ -12,7 +12,6 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/sql.sh"
 
 readonly STORAGE_API_VERSION='2026-04-01'
 readonly BACKUP_CONTAINER_NAME='host-backups'
-readonly BACKUP_JOURNAL_CONTAINER_NAME='host-journal'
 
 storage_account_exists() {
   local account_name="$1"
@@ -59,29 +58,9 @@ private_endpoint_reject_hint() {
     "$names" "$account_name" "$ERP_AZURE_RESOURCE_GROUP"
 }
 
-storage_expected_bypass() {
-  local account_name="$1"
-  if [[ "$account_name" == "$ERP_AZURE_STORAGE_LOGS_NAME" ]]; then
-    printf 'AzureServices'
-  else
-    printf 'None'
-  fi
-}
-
-storage_admitted_description() {
-  local account_name="$1"
-  if [[ "$(storage_expected_bypass "$account_name")" == AzureServices ]]; then
-    printf "the home's address and trusted Microsoft services alone"
-  else
-    printf "the home's address alone"
-  fi
-}
-
 check_storage_network_rules() {
   local account_name="$1"
-  local settings rules connections perimeters expected_bypass admitted
-  expected_bypass="$(storage_expected_bypass "$account_name")"
-  admitted="$(storage_admitted_description "$account_name")"
+  local settings rules connections perimeters
   settings="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
     --query '[publicNetworkAccess, networkRuleSet.defaultAction, networkRuleSet.bypass, length(networkRuleSet.virtualNetworkRules || `[]`), length(networkRuleSet.resourceAccessRules || `[]`), length(networkRuleSet.ipv6Rules || `[]`)]' \
     --output tsv)" || die "cannot read the network rules of $account_name"
@@ -93,13 +72,7 @@ check_storage_network_rules() {
   local -a template_problems=() other_problems=()
   [[ "$public_access" == Enabled ]] || template_problems+=("its public network access is $public_access, not Enabled, so its own rules do not decide who reaches it")
   [[ "$default_action" == Deny ]] || template_problems+=("its default action is $default_action, not Deny")
-  if [[ "$bypass" != "$expected_bypass" ]]; then
-    if [[ "$expected_bypass" == None ]]; then
-      template_problems+=("it lets $bypass past its rules")
-    else
-      template_problems+=("it lets $bypass past its rules, not the trusted Microsoft services that deliver its records")
-    fi
-  fi
+  [[ "$bypass" == None ]] || template_problems+=("it lets $bypass past its rules")
   (( virtual_network_rules == 0 )) || template_problems+=("it has $virtual_network_rules virtual network rule(s)")
   (( resource_rules == 0 )) || template_problems+=("it has $resource_rules resource instance rule(s)")
   (( ipv6_rules == 0 )) || template_problems+=("it has $ipv6_rules IPv6 rule(s)")
@@ -125,43 +98,40 @@ check_storage_network_rules() {
   (( ${#template_problems[@]} + ${#other_problems[@]} == 0 )) && return 0
   local problem
   for problem in "${template_problems[@]}" "${other_problems[@]}"; do
-    log_warn "the storage account $account_name does not admit $admitted: $problem"
+    log_warn "the storage account $account_name does not admit the home's address alone: $problem"
   done
   if (( ${#template_problems[@]} > 0 )); then
     log_info "bash scripts/azure/provision.sh converges the account's own settings to the template, the address of the database's rule $SQL_FIREWALL_RULE_NAME alone (its what-if lists the change first)"
   fi
-  die "the storage account $account_name does not admit $admitted; resolve what is listed above"
+  die "the storage account $account_name does not admit the home's address alone; resolve what is listed above"
 }
 
 ensure_storage_home_address() {
   local account_name="$1" address="$2"
   log_step "IP rule of the storage account $account_name"
-  local current expected_bypass bypass_description
+  local current
   current="$(storage_home_address "$account_name")"
   if [[ "$current" == "$address" ]]; then
     log_info "already admits $address alone"
     return 0
   fi
   if [[ -n "$current" ]]; then
-    log_warn "moving the rule from $current onto $address alone: from then on only a request from $address reaches the files of $account_name"
+    log_warn "moving the rule from $current onto $address alone: the server at home reaches $account_name only when $address is the home's address"
   else
     log_info "admitting $address"
   fi
-  expected_bypass="$(storage_expected_bypass "$account_name")"
-  bypass_description='no bypass'
-  [[ "$expected_bypass" == None ]] || bypass_description='trusted Microsoft services past the rules'
   local url
   url="$(storage_account_resource_id "$account_name")?api-version=$STORAGE_API_VERSION"
   if (( DRY_RUN )); then
     run az rest --method patch --url "$url" \
-      --body "@<file holding networkAcls: default action Deny, $bypass_description, the IP rule $address alone, no IPv6, virtual network or resource instance rule>" \
+      --body "@<file holding networkAcls: default action Deny, no bypass, the IP rule $address alone, no IPv6, virtual network or resource instance rule>" \
       --output none --only-show-errors
     return 0
   fi
   local body_file
   body_file="$(azure_temp_file storage-network-rules)"
-  printf '{"properties":{"networkAcls":{"bypass":"%s","defaultAction":"Deny","ipRules":[{"value":"%s","action":"Allow"}],"ipv6Rules":[],"virtualNetworkRules":[],"resourceAccessRules":[]}}}' \
-    "$expected_bypass" "$address" > "$body_file"
+  printf '{"properties":{"networkAcls":{"bypass":"None","defaultAction":"Deny","ipRules":[{"value":"%s","action":"Allow"}],"ipv6Rules":[],"virtualNetworkRules":[],"resourceAccessRules":[]}}}' \
+    "$address" > "$body_file"
   if ! az rest --method patch --url "$url" --body "@$body_file" --output none --only-show-errors; then
     rm -f -- "$body_file"
     die "cannot set the IP rule of $account_name (see the error above)"
@@ -170,14 +140,13 @@ ensure_storage_home_address() {
   log_info "a changed rule can take a few minutes to apply"
 }
 
-container_immutability_state() {
-  local account_name="$1" container_name="$2"
+backup_immutability_state() {
   local container_json
   if ! container_json="$(az_read rest --method get \
-    --url "$(storage_container_resource_id "$account_name" "$container_name")?api-version=$STORAGE_API_VERSION" \
+    --url "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_CONTAINER_NAME")?api-version=$STORAGE_API_VERSION" \
     --output json 2>&1)"; then
     [[ "$container_json" == *ContainerNotFound* || "$container_json" == *ResourceNotFound* || "$container_json" == *'was not found'* ]] \
-      || die "cannot read the container $container_name of $account_name: $container_json"
+      || die "cannot read the container $BACKUP_CONTAINER_NAME of $ERP_AZURE_STORAGE_BACKUP_NAME: $container_json"
     return 0
   fi
   [[ "$(json_field "$container_json" properties.hasImmutabilityPolicy)" == true ]] || return 0

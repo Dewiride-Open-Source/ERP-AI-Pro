@@ -6,7 +6,7 @@ The production database is Azure SQL at the Basic tier in Central India, reached
 
 - The server `sql-erp-ai-pro` (`ERP_AZURE_SQL_SERVER_NAME`) with the database `ErpAiPro` (`ERP_AZURE_SQL_DATABASE_NAME`): Basic, 5 DTU, at most 2 GB, 7 days of point-in-time restore, long-term copies (each weekly full backup kept 5 weeks, the first full backup of each month 12 months), backups geo-redundant to South India. A `CanNotDelete` lock, `do-not-delete`, keeps the server and its database from being deleted through Azure (not from `DROP DATABASE` in SQL, see "Restoring").
 - Microsoft Entra-only authentication, with the operator who ran `provision.sh` as the Microsoft Entra admin. No SQL login exists.
-- One firewall rule, `home`, for the home's current public IPv4 address, which `home-address.sh` keeps together with the rules of the production, backup and logs storage accounts ([home address runbook](home-address.md)). No other server rule, database rule, virtual network rule or private endpoint reaches the database.
+- One firewall rule, `home`, for the home's current public IPv4 address, which `home-address.sh` keeps together with the rules of the production and backup storage accounts ([home address runbook](home-address.md)). No other server rule, database rule, virtual network rule or private endpoint reaches the database.
 - Two contained users, named after the server identities' registrations:
   - `ERP-AI-Pro Runtime (production)`, the api's: `db_datareader`, `db_datawriter` and `erp_audit_append_only`, so it may only insert into `audit`;
   - `ERP-AI-Pro Migrator (production)`, the migrator's: `db_ddladmin`, `db_datareader`, `db_datawriter` and `CREATE ROLE`, owning the schemas its migrations create.
@@ -20,7 +20,7 @@ From the repository root on the operator's computer, on the home connection with
 1. `bash scripts/azure/provision.sh` creates the server, the database, the lock and the operations vault and writes both connection strings.
 2. `bash scripts/azure/entra.sh` creates the migrator's registration and its certificate in the operations vault.
 3. `bash scripts/azure/provision.sh` again grants the migrator its role on the store and its roles on the two connection strings, now that both exist.
-4. `bash scripts/azure/home-address.sh` creates the firewall rule for the address Azure sees this computer connect from and points the rules of the production, backup and logs storage accounts at the same address ([home address runbook](home-address.md)). The database's rule takes up to five minutes to apply; step 7 waits for it.
+4. `bash scripts/azure/home-address.sh` creates the firewall rule for the address Azure sees this computer connect from and points the rules of the production and backup storage accounts at the same address ([home address runbook](home-address.md)). The database's rule takes up to five minutes to apply; step 7 waits for it.
 5. Create `Erp--Platform--Attachments--EncryptionKey` in `kv-erp-ai-pro-prod` once, with the block of the [secrets runbook](secrets.md) section 5f (`vault=kv-erp-ai-pro-prod`, `prefix=prod`, `user_secrets=false`), never from the development value: the next step stops while it is missing.
 6. `bash scripts/azure/seed.sh --label production` writes the production Key Vault references: the sign-in certificate, both connection strings and the attachments key.
 7. `bash scripts/azure/database.sh` creates both users and the migrator's roles. It reports that the migrations have not run yet, and gives the runtime's user no role until they have.
@@ -28,7 +28,7 @@ From the repository root on the operator's computer, on the home connection with
 9. `bash scripts/azure/database.sh` again adds the runtime's user to `erp_audit_append_only`, then to the data roles, and proves the rights of both users.
 10. `bash scripts/azure/verify.sh --database`, `bash scripts/azure/verify.sh --entra` and `bash scripts/azure/verify.sh` read everything back.
 
-The operator's computer and the server share the home's public address, so the rule admits both. A computer that reaches the internet another way (a VPN, a phone's hotspot, a remote or cloud desktop) is seen at another address, and `home-address.sh` run there would move the four rules away from the home. Once the api runs on the server, its readiness check (`/healthz/ready`, whose `database:*` entries open the database) proves the rule from the server's side.
+The operator's computer and the server share the home's public address, so the rule admits both. A computer that reaches the internet another way (a VPN, a phone's hotspot, a remote or cloud desktop) is seen at another address, and `home-address.sh` run there would move the three rules away from the home. Once the api runs on the server, its readiness check (`/healthz/ready`, whose `database:*` entries open the database) proves the rule from the server's side.
 
 ## First migration
 
@@ -53,7 +53,7 @@ The parentheses keep the variables from reaching a later command. `status` lists
 
 ## When the home's address changes
 
-The internet provider changes the home's public address from time to time. The api then cannot reach the database: `/healthz/ready` fails, and its log shows error 40615 naming the new address (`Client with IP address '<address>' is not allowed to access the server`). The production and backup storage accounts refuse the same address, and the logs account refuses the operator's reads from it, though the records still arrive there, so one command moves the four rules: `bash scripts/azure/home-address.sh`, from a computer on the home network without a VPN, as the [home address runbook](home-address.md) describes, together with the way to do it without the script and the rules that must never be added.
+The internet provider changes the home's public address from time to time. The api then cannot reach the database: `/healthz/ready` fails, and its log shows error 40615 naming the new address (`Client with IP address '<address>' is not allowed to access the server`). The production and backup storage accounts refuse the same address, so one command moves the three rules: `bash scripts/azure/home-address.sh`, from a computer on the home network without a VPN, as the [home address runbook](home-address.md) describes, together with the way to do it without the script and the rules that must never be added.
 
 ## Size
 

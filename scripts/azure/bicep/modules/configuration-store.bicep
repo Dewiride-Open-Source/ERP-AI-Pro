@@ -1,4 +1,4 @@
-import { RoleAssignment, recordsDiagnosticSettingName } from './types.bicep'
+import { RoleAssignment } from './types.bicep'
 
 @minLength(5)
 @maxLength(50)
@@ -12,8 +12,6 @@ param sku string
 param tags object
 
 param roleAssignments RoleAssignment[]
-
-param recordsStorageAccountId string
 
 // Soft delete and purge protection exist only on the Standard and Premium tiers; the
 // resource provider rejects the properties on Free and Developer stores.
@@ -52,25 +50,6 @@ resource storeRoleAssignments 'Microsoft.Authorization/roleAssignments@2022-04-0
     }
   }
 ]
-
-#disable-next-line use-recent-api-versions // the newest version; 2016-09-01, the one stable version the rule accepts, allows a single setting, named service
-resource storeRecords 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: recordsDiagnosticSettingName
-  scope: store
-  properties: {
-    storageAccountId: recordsStorageAccountId
-    logs: [
-      {
-        category: 'Audit'
-        enabled: true
-      }
-      {
-        category: 'HttpRequest'
-        enabled: true
-      }
-    ]
-  }
-}
 
 output endpoint string = store.properties.endpoint
 output id string = store.id

@@ -10,25 +10,15 @@ the production storage account (the same properties, geo-redundant, 90 days of
 soft delete, reachable only from the address of the database'"'"'s rule home, with
 no IPv6 rule, open private endpoint connection or network security perimeter,
 and no role on it or in it but the runtime service principal'"'"'s), the backup
-storage account (the same, with 7 days of soft delete, its private containers
-host-backups under a write-once policy of 90 days and host-journal under one of
-365 days, each with no legal hold and a warning while it is unlocked, and no
-role on it or in it but the backup service principal'"'"'s), the logs storage
-account (one copy, versioning on, the home'"'"'s address and trusted Microsoft
-services alone, every record write-once for 365 days with protected append
-writes and a warning while that policy is unlocked, deleted a day later, its
-lock, and no role on it or in it but the SQL server'"'"'s and the operator'"'"'s),
-Shared Key and data sharing off on the four accounts, the auditing of the SQL
-server (its identity, the logs account, sign-ins and changes of structure,
-users and permissions alone, 366 days, nothing audited by the database itself),
-the diagnostic settings erp-ai-pro-records of the three vaults, the other three
-accounts'"'"' blob services, the store, the subscription'"'"'s activity log and
-Microsoft Entra ID (each the expected logs to the logs account alone), every
-row of the role matrix, the runtime, migrator and backup service principals and
-the SQL server'"'"'s identity holding exactly their roles (the migrator only the
-production database'"'"'s two connection strings, the backup service principal
-only the backup containers), the operations vault open to the operator alone,
-the absence of Key Vault Crypto User for the developers group, and the labelled
+storage account (the same, with 7 days of soft delete, its private container
+host-backups under a write-once policy of 90 days with no legal hold, a warning
+while that policy is unlocked, and no role on it or in it but the backup
+service principal'"'"'s), Shared Key and data sharing off on the three accounts,
+every row of the role matrix, the runtime, migrator and backup service
+principals holding exactly their roles (the migrator only the production
+database'"'"'s two connection strings, the backup service principal only the
+backup container), the operations vault open to the operator alone, the absence
+of Key Vault Crypto User for the developers group, and the labelled
 Erp:Sentinel keys. Never writes.
 
 Options:
@@ -76,8 +66,6 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/lib/graph.sh"
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/sql.sh"
 # shellcheck source=lib/storage.sh
 source "$(dirname -- "${BASH_SOURCE[0]}")/lib/storage.sh"
-# shellcheck source=lib/records.sh
-source "$(dirname -- "${BASH_SOURCE[0]}")/lib/records.sh"
 
 readonly SENTINEL_KEY='Erp:Sentinel'
 readonly LABELS=(local-dev production)
@@ -92,7 +80,6 @@ readonly ROLE_KEY_VAULT_CRYPTO_SERVICE_ENCRYPTION_USER='e147488a-f6f5-4113-8e2d-
 readonly ROLE_KEY_VAULT_CRYPTO_OFFICER='14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
 readonly ROLE_KEY_VAULT_CERTIFICATES_OFFICER='a4417e6f-fecd-4de8-b567-7b0420556985'
 readonly ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR='ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-readonly ROLE_STORAGE_BLOB_DATA_READER='2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
 
 readonly ATTACHMENTS_CONTAINER_NAME='attachments'
 readonly DEVELOPMENT_STORAGE_SKU='Standard_LRS'
@@ -102,28 +89,6 @@ readonly PRODUCTION_STORAGE_RETENTION_DAYS='90'
 readonly BACKUP_STORAGE_SKU='Standard_GRS'
 readonly BACKUP_STORAGE_RETENTION_DAYS='7'
 readonly BACKUP_IMMUTABILITY_DAYS='90'
-readonly BACKUP_JOURNAL_IMMUTABILITY_DAYS='365'
-readonly LOGS_STORAGE_SKU='Standard_LRS'
-readonly LOGS_STORAGE_RETENTION_DAYS='7'
-readonly LOGS_IMMUTABILITY_DAYS='365'
-readonly LOGS_DELETE_AFTER_DAYS="$((LOGS_IMMUTABILITY_DAYS + 1))"
-readonly SQL_AUDIT_ACTION_GROUPS=(
-  SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP
-  FAILED_DATABASE_AUTHENTICATION_GROUP
-  DATABASE_CHANGE_GROUP
-  DATABASE_OBJECT_CHANGE_GROUP
-  DATABASE_OBJECT_OWNERSHIP_CHANGE_GROUP
-  DATABASE_OBJECT_PERMISSION_CHANGE_GROUP
-  DATABASE_OWNERSHIP_CHANGE_GROUP
-  DATABASE_PERMISSION_CHANGE_GROUP
-  DATABASE_PRINCIPAL_CHANGE_GROUP
-  DATABASE_PRINCIPAL_IMPERSONATION_GROUP
-  DATABASE_ROLE_MEMBER_CHANGE_GROUP
-  SCHEMA_OBJECT_CHANGE_GROUP
-  SCHEMA_OBJECT_OWNERSHIP_CHANGE_GROUP
-  SCHEMA_OBJECT_PERMISSION_CHANGE_GROUP
-  USER_CHANGE_PASSWORD_GROUP
-)
 readonly BACKUP_ENCRYPTION_KEY_SIZE='4096'
 readonly STORAGE_LOCK_NAME='do-not-delete'
 readonly BLOB_SERVICE_URI_KEY='Erp:Platform:Attachments:BlobServiceUri'
@@ -151,7 +116,6 @@ LABELS_MODE=0
 DATABASE_MODE=0
 FAILURES=0
 OPERATOR_ID=''
-SQL_SERVER_PRINCIPAL_ID=''
 
 pass() { printf '[ok]   %s\n' "$*"; }
 
@@ -266,8 +230,7 @@ verify_vault() {
 }
 
 verify_storage_account() {
-  local account_name="$1" sku="$2" retention_days="$3" versioning="$4"
-  shift 4
+  local account_name="$1" sku="$2" retention_days="$3" container_name="$4"
   log_step "Storage account $account_name"
   local account_json
   if ! account_json="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
@@ -309,21 +272,14 @@ verify_storage_account() {
     assert_equals "$account_name blob soft delete keeps $retention_days days" "$retention_days" "$(json_field "$service_json" deleteRetentionPolicy.days)"
     assert_equals "$account_name container soft delete enabled" 'true' "$(json_eval "$service_json" 'String((value.containerDeleteRetentionPolicy || {}).enabled === true)')"
     assert_equals "$account_name container soft delete keeps $retention_days days" "$retention_days" "$(json_field "$service_json" containerDeleteRetentionPolicy.days)"
-    if [[ "$versioning" == true ]]; then
-      assert_equals "$account_name blob versioning on, which version-level immutability needs" 'true' "$(json_eval "$service_json" 'String(value.isVersioningEnabled === true)')" "$PROVISION_HINT"
-    else
-      assert_equals "$account_name blob versioning off" 'false' "$(json_eval "$service_json" 'String(value.isVersioningEnabled === true)')"
-    fi
+    assert_equals "$account_name blob versioning off" 'false' "$(json_eval "$service_json" 'String(value.isVersioningEnabled === true)')"
     assert_equals "$account_name change feed off" 'false' "$(json_eval "$service_json" 'String((value.changeFeed || {}).enabled === true)')"
   else
     fail "$account_name blob service properties readable ($(query_error_summary "$service_json"))"
   fi
 
-  local container_name
-  for container_name in "$@"; do
-    assert_query "$account_name container $container_name is private" 'None' storage container-rm show --storage-account "$account_name" \
-      --resource-group "$ERP_AZURE_RESOURCE_GROUP" --name "$container_name" --query publicAccess
-  done
+  assert_query "$account_name container $container_name is private" 'None' storage container-rm show --storage-account "$account_name" \
+    --resource-group "$ERP_AZURE_RESOURCE_GROUP" --name "$container_name" --query publicAccess
   assert_query "$account_name carries the CanNotDelete lock $STORAGE_LOCK_NAME" 'CanNotDelete' lock show --name "$STORAGE_LOCK_NAME" \
     --resource "$(storage_account_resource_id "$account_name")" --query level
 }
@@ -358,25 +314,18 @@ server_expected_roles() {
       done
       ;;
     backup)
-      local container_name
-      for container_name in "$BACKUP_CONTAINER_NAME" "$BACKUP_JOURNAL_CONTAINER_NAME"; do
-        printf '%s\t%s\t%s\n' "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$container_name")" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
-          "Storage Blob Data Contributor on container $ERP_AZURE_STORAGE_BACKUP_NAME/$container_name"
-      done
-      ;;
-    sql-server)
-      printf '%s\t%s\t%s\n' "$(storage_account_resource_id "$ERP_AZURE_STORAGE_LOGS_NAME")" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
-        "Storage Blob Data Contributor on $ERP_AZURE_STORAGE_LOGS_NAME, where it writes its audit records"
+      printf '%s\t%s\t%s\n' "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_CONTAINER_NAME")" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
+        "Storage Blob Data Contributor on container $ERP_AZURE_STORAGE_BACKUP_NAME/$BACKUP_CONTAINER_NAME"
       ;;
   esac
 }
 
 verify_server_roles() {
-  local target="$1" principal_id="$2" label="${3:-$1 service principal}"
+  local target="$1" principal_id="$2"
   local assignments
   if ! assignments="$(az_read role assignment list --all --assignee-object-id "$principal_id" --include-groups \
     --fill-principal-name false --fill-role-definition-name false --query '[].[scope, roleDefinitionId]' --output tsv 2>&1)"; then
-    fail "the role assignments of the $label are readable (query failed: $(query_error_summary "$assignments"))"
+    fail "the role assignments of the $target service principal are readable (query failed: $(query_error_summary "$assignments"))"
     return 0
   fi
   local -A held=() expected=()
@@ -390,18 +339,18 @@ verify_server_roles() {
     key="${scope,,} ${role_id,,}"
     expected["$key"]=1
     if [[ -n "${held[$key]:-}" ]]; then
-      pass "$label is $description"
+      pass "$target service principal is $description"
     else
-      fail "$label is $description (assignment missing); $PROVISION_HINT again"
+      fail "$target service principal is $description (assignment missing); $PROVISION_HINT again"
     fi
   done < <(server_expected_roles "$target")
   local others=0
   for key in "${!held[@]}"; do
     [[ -z "${expected[$key]:-}" ]] || continue
     others=1
-    fail "$label holds no other role (it holds the role ${key#* } on ${key%% *}, which provision.sh never grants); remove that assignment"
+    fail "$target service principal holds no other role (it holds the role ${key#* } on ${key%% *}, which provision.sh never grants); remove that assignment"
   done
-  (( others )) || pass "$label holds no other role, directly or through a group"
+  (( others )) || pass "$target service principal holds no other role, directly or through a group"
 }
 
 grants_data_role() {
@@ -474,11 +423,7 @@ verify_storage_network() {
   { read -r public_access; read -r default_action; read -r bypass; read -r virtual_network_rules; read -r resource_rules; read -r ipv6_rules; read -r ipv6_endpoint; } <<< "$settings"
   assert_equals "$account_name keeps its public endpoint, behind its rules" 'Enabled' "$public_access" "$PROVISION_HINT"
   assert_equals "$account_name refuses every address its rules do not admit" 'Deny' "$default_action" "$PROVISION_HINT"
-  if [[ "$(storage_expected_bypass "$account_name")" == None ]]; then
-    assert_equals "$account_name lets no Azure service past its rules" 'None' "$bypass" "$PROVISION_HINT"
-  else
-    assert_equals "$account_name lets trusted Microsoft services alone past its rules, which deliver its records" 'AzureServices' "$bypass" "$PROVISION_HINT"
-  fi
+  assert_equals "$account_name lets no Azure service past its rules" 'None' "$bypass" "$PROVISION_HINT"
   assert_equals "$account_name has no virtual network rule" '0' "$virtual_network_rules" "$PROVISION_HINT"
   assert_equals "$account_name has no resource instance rule" '0' "$resource_rules" "$PROVISION_HINT"
   assert_equals "$account_name has no IPv6 rule" '0' "$ipv6_rules" "$PROVISION_HINT"
@@ -532,186 +477,33 @@ verify_storage_network() {
   fi
 }
 
-verify_container_immutability() {
-  local container_name="$1" days="$2" item="$3" items="$4" job="$5" lock_when="$6"
-  local container="$ERP_AZURE_STORAGE_BACKUP_NAME/$container_name"
+verify_backup_immutability() {
+  local container="$ERP_AZURE_STORAGE_BACKUP_NAME/$BACKUP_CONTAINER_NAME"
   log_step "Write-once policy of $container"
   local container_json
   if ! container_json="$(az_read rest --method get \
-    --url "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$container_name")?api-version=$STORAGE_API_VERSION" \
+    --url "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_CONTAINER_NAME")?api-version=$STORAGE_API_VERSION" \
     --output json 2>&1)"; then
     fail "the container $container is readable ($(query_error_summary "$container_json")); $PROVISION_HINT"
     return 0
   fi
   if [[ "$(json_field "$container_json" properties.hasImmutabilityPolicy)" != true ]]; then
-    fail "$container keeps every $item write-once (it has no immutability policy); $PROVISION_HINT"
+    fail "$container keeps every archive write-once (it has no immutability policy); $PROVISION_HINT"
     return 0
   fi
-  assert_equals "$container keeps every $item write-once for $days days" "$days" \
+  assert_equals "$container keeps every archive write-once for $BACKUP_IMMUTABILITY_DAYS days" "$BACKUP_IMMUTABILITY_DAYS" \
     "$(json_field "$container_json" properties.immutabilityPolicy.properties.immutabilityPeriodSinceCreationInDays)" "$PROVISION_HINT while the policy is unlocked"
   assert_equals "$container allows no protected append writes" 'false' \
     "$(json_eval "$container_json" 'String((((value.properties || {}).immutabilityPolicy || {}).properties || {}).allowProtectedAppendWrites === true || (((value.properties || {}).immutabilityPolicy || {}).properties || {}).allowProtectedAppendWritesAll === true)')"
-  assert_equals "$container carries no legal hold, which would keep $job from deleting $items past their $days days" 'false' \
+  assert_equals "$container carries no legal hold, which would keep the backup job from deleting archives past their $BACKUP_IMMUTABILITY_DAYS days" 'false' \
     "$(json_eval "$container_json" 'String((value.properties || {}).hasLegalHold === true)')"
   local state
   state="$(json_field "$container_json" properties.immutabilityPolicy.properties.state)"
   case "$state" in
     Locked) pass "the write-once policy of $container is locked" ;;
-    Unlocked) warn "the write-once policy of $container is unlocked, so the operator could still shorten or remove it; lock it $lock_when (docs/operations/azure-bootstrap.md, section 5f)" ;;
+    Unlocked) warn "the write-once policy of $container is unlocked, so the operator could still shorten or remove it; lock it once the first restore rehearsal succeeds (docs/operations/azure-bootstrap.md, section 5f)" ;;
     *) fail "the write-once policy of $container is locked or unlocked (its state is '${state:-<none>}')" ;;
   esac
-}
-
-verify_logs_immutability() {
-  local account_name="$ERP_AZURE_STORAGE_LOGS_NAME"
-  log_step "Write-once policy of $account_name"
-  local account_json
-  if ! account_json="$(az_read storage account show --name "$account_name" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
-    fail "the storage account $account_name is readable ($(query_error_summary "$account_json")); $PROVISION_HINT"
-    return 0
-  fi
-  if [[ "$(json_field "$account_json" immutableStorageWithVersioning.enabled)" != true ]]; then
-    fail "$account_name keeps every record write-once (it has no version-level immutability, which Azure turns on only when it creates an account); set another ERP_AZURE_STORAGE_LOGS_NAME, then $PROVISION_HINT"
-    return 0
-  fi
-  pass "$account_name has version-level immutability"
-  assert_equals "$account_name keeps every record write-once for $LOGS_IMMUTABILITY_DAYS days" "$LOGS_IMMUTABILITY_DAYS" \
-    "$(json_field "$account_json" immutableStorageWithVersioning.immutabilityPolicy.immutabilityPeriodSinceCreationInDays)" "$PROVISION_HINT while the policy is unlocked"
-  assert_equals "$account_name lets Azure Monitor and SQL auditing append to their records" 'true' \
-    "$(json_eval "$account_json" 'String(((value.immutableStorageWithVersioning || {}).immutabilityPolicy || {}).allowProtectedAppendWrites === true)')" \
-    "$PROVISION_HINT while the policy is unlocked"
-  local state
-  state="$(json_field "$account_json" immutableStorageWithVersioning.immutabilityPolicy.state)"
-  case "$state" in
-    Locked) pass "the write-once policy of $account_name is locked" ;;
-    Unlocked) warn "the write-once policy of $account_name is unlocked, so the operator could still shorten or remove it; lock it once the first records have arrived (docs/operations/azure-bootstrap.md, section 5g)" ;;
-    *) fail "the write-once policy of $account_name is locked or unlocked (its state is '${state:-<none>}'); $PROVISION_HINT" ;;
-  esac
-}
-
-verify_logs_lifecycle() {
-  local account_name="$ERP_AZURE_STORAGE_LOGS_NAME"
-  local description="$account_name deletes every record and every previous version $LOGS_DELETE_AFTER_DAYS days on, a day past their write-once period"
-  local policy_json
-  if ! policy_json="$(az_read rest --method get \
-    --url "$(storage_account_resource_id "$account_name")/managementPolicies/default?api-version=$STORAGE_API_VERSION" --output json 2>&1)"; then
-    fail "$description (its lifecycle policy is not readable: $(query_error_summary "$policy_json")); $PROVISION_HINT"
-    return 0
-  fi
-  local problems
-  problems="$(json_eval "$policy_json" '(() => {
-    const days = Number(args[0]);
-    const keys = (object) => Object.entries(object || {}).filter(([, entry]) => entry !== null && entry !== undefined).map(([key]) => key).sort().join(" ");
-    const rules = (((value.properties || {}).policy || {}).rules || []).filter((rule) => rule.enabled !== false);
-    if (rules.length !== 1) return `it has ${rules.length} enabled lifecycle rules, not one`;
-    const definition = rules[0].definition || {};
-    const filters = definition.filters || {};
-    const actions = definition.actions || {};
-    const baseBlob = actions.baseBlob || {};
-    const version = actions.version || {};
-    const problems = [];
-    const types = [...(filters.blobTypes || [])].sort().join(" ");
-    if (types !== "appendBlob blockBlob") problems.push(`its rule covers the blob types ${types || "none"}`);
-    if ((filters.prefixMatch || []).length > 0 || (filters.blobIndexMatch || []).length > 0) problems.push("its rule covers part of the account alone");
-    if (keys(actions) !== "baseBlob version") problems.push(`its rule acts on ${keys(actions) || "nothing"}`);
-    if (keys(baseBlob) !== "delete" || keys(baseBlob.delete) !== "daysAfterModificationGreaterThan" || baseBlob.delete.daysAfterModificationGreaterThan !== days) problems.push(`it does more than delete each record ${days} days after its last write, or not that`);
-    if (keys(version) !== "delete" || keys(version.delete) !== "daysAfterCreationGreaterThan" || version.delete.daysAfterCreationGreaterThan !== days) problems.push(`it does more than delete each previous version ${days} days after its creation, or not that`);
-    return problems.join("\n");
-  })()' "$LOGS_DELETE_AFTER_DAYS")"
-  if [[ -z "$problems" ]]; then
-    pass "$description"
-  else
-    fail "$description (${problems//$'\n'/; }); $PROVISION_HINT"
-  fi
-}
-
-verify_records_setting() {
-  local description="$1" url="$2" read_hint="$3"
-  shift 3
-  local setting problems
-  if ! setting="$(records_setting_json "$url" 2>&1)"; then
-    fail "the diagnostic setting $RECORDS_SETTING_NAME of $description is readable ($(query_error_summary "$setting"))${read_hint:+; $read_hint}"
-    return 0
-  fi
-  if [[ -z "$setting" ]]; then
-    fail "$description sends $* to $ERP_AZURE_STORAGE_LOGS_NAME alone (it has no diagnostic setting $RECORDS_SETTING_NAME); $PROVISION_HINT"
-    return 0
-  fi
-  problems="$(records_setting_problems "$setting" "$(logs_storage_account_id)" "$@")"
-  if [[ -z "$problems" ]]; then
-    pass "$description sends $* to $ERP_AZURE_STORAGE_LOGS_NAME alone"
-  else
-    fail "$description sends $* to $ERP_AZURE_STORAGE_LOGS_NAME alone (${problems//$'\n'/; }); $PROVISION_HINT"
-  fi
-}
-
-verify_records() {
-  log_step "Diagnostic settings $RECORDS_SETTING_NAME"
-  local vault_name account_name
-  for vault_name in "$ERP_AZURE_KEYVAULT_DEV_NAME" "$ERP_AZURE_KEYVAULT_PROD_NAME" "$ERP_AZURE_KEYVAULT_OPS_NAME"; do
-    verify_records_setting "the vault $vault_name" "$(resource_records_url "$(vault_resource_id "$vault_name")")" '' AuditEvent
-  done
-  for account_name in "$ERP_AZURE_STORAGE_DEV_NAME" "$ERP_AZURE_STORAGE_PROD_NAME" "$ERP_AZURE_STORAGE_BACKUP_NAME"; do
-    verify_records_setting "the blob service of $account_name" "$(resource_records_url "$(storage_account_resource_id "$account_name")/blobServices/default")" '' \
-      StorageRead StorageWrite StorageDelete
-  done
-  verify_records_setting "the store $ERP_AZURE_APPCONFIG_NAME" "$(resource_records_url "$(store_resource_id)")" '' Audit HttpRequest
-  verify_records_setting "the subscription's activity log" "$(activity_log_records_url)" '' "${ACTIVITY_LOG_CATEGORIES[@]}"
-  verify_records_setting "Microsoft Entra ID" "$(entra_records_url)" "reading it needs $ENTRA_ROLE_HINT" "${ENTRA_LOG_CATEGORIES[@]}"
-}
-
-verify_sql_auditing() {
-  log_step "Auditing of $ERP_AZURE_SQL_SERVER_NAME"
-  local server_json
-  if ! server_json="$(az_read sql server show --name "$ERP_AZURE_SQL_SERVER_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" --output json 2>&1)"; then
-    fail "server $ERP_AZURE_SQL_SERVER_NAME exists in resource group $ERP_AZURE_RESOURCE_GROUP ($(query_error_summary "$server_json")); $PROVISION_HINT"
-    return 0
-  fi
-  assert_equals "$ERP_AZURE_SQL_SERVER_NAME has a system-assigned identity, which writes its audit records" 'SystemAssigned' \
-    "$(json_field "$server_json" identity.type)" "$PROVISION_HINT"
-  SQL_SERVER_PRINCIPAL_ID="$(json_field "$server_json" identity.principalId)"
-  local auditing_json
-  if ! auditing_json="$(az_read rest --method get --url "$(sql_server_resource_id)/auditingSettings/default?api-version=$SQL_API_VERSION" \
-    --output json 2>&1)"; then
-    fail "the auditing of $ERP_AZURE_SQL_SERVER_NAME is readable ($(query_error_summary "$auditing_json"))"
-    return 0
-  fi
-  assert_equals "$ERP_AZURE_SQL_SERVER_NAME audits its databases" 'Enabled' "$(json_field "$auditing_json" properties.state)" "$PROVISION_HINT"
-  local logs_endpoint audit_endpoint
-  if logs_endpoint="$(az_read storage account show --name "$ERP_AZURE_STORAGE_LOGS_NAME" --resource-group "$ERP_AZURE_RESOURCE_GROUP" \
-    --query primaryEndpoints.blob --output tsv 2>&1)"; then
-    audit_endpoint="$(json_field "$auditing_json" properties.storageEndpoint)"
-    assert_equals "$ERP_AZURE_SQL_SERVER_NAME writes its audit records to $ERP_AZURE_STORAGE_LOGS_NAME" "${logs_endpoint%/}" "${audit_endpoint%/}" "$PROVISION_HINT"
-  else
-    fail "$ERP_AZURE_SQL_SERVER_NAME writes its audit records to $ERP_AZURE_STORAGE_LOGS_NAME (the account is not readable: $(query_error_summary "$logs_endpoint")); $PROVISION_HINT"
-  fi
-  assert_equals "$ERP_AZURE_SQL_SERVER_NAME writes them with its identity, never an access key" 'true' \
-    "$(json_eval "$auditing_json" 'String((value.properties || {}).isManagedIdentityInUse === true)')" "$PROVISION_HINT"
-  assert_equals "$ERP_AZURE_SQL_SERVER_NAME sends them to no other destination" 'false' \
-    "$(json_eval "$auditing_json" 'String((value.properties || {}).isAzureMonitorTargetEnabled === true)')" "$PROVISION_HINT"
-  assert_equals "$ERP_AZURE_SQL_SERVER_NAME keeps them $LOGS_DELETE_AFTER_DAYS days, a day past their write-once period" "$LOGS_DELETE_AFTER_DAYS" \
-    "$(json_field "$auditing_json" properties.retentionDays)" "$PROVISION_HINT"
-  local group_problems
-  group_problems="$(json_eval "$auditing_json" '(() => {
-    const audited = (value.properties || {}).auditActionsAndGroups || [];
-    const missing = args.filter((group) => !audited.includes(group));
-    const extra = audited.filter((group) => !args.includes(group));
-    return [missing.length > 0 ? `it leaves out ${missing.join(", ")}` : "", extra.length > 0 ? `it also audits ${extra.join(", ")}` : ""].filter(Boolean).join("; ");
-  })()' "${SQL_AUDIT_ACTION_GROUPS[@]}")"
-  if [[ -z "$group_problems" ]]; then
-    pass "$ERP_AZURE_SQL_SERVER_NAME audits sign-ins and changes of structure, users and permissions alone, never a statement"
-  else
-    fail "$ERP_AZURE_SQL_SERVER_NAME audits sign-ins and changes of structure, users and permissions alone, never a statement ($group_problems); $PROVISION_HINT"
-  fi
-  local database_state
-  if database_state="$(az_read rest --method get \
-    --url "$(sql_server_resource_id)/databases/$ERP_AZURE_SQL_DATABASE_NAME/auditingSettings/default?api-version=$SQL_API_VERSION" \
-    --query properties.state --output tsv 2>&1)"; then
-    assert_equals "$ERP_AZURE_SQL_DATABASE_NAME has no auditing of its own beside the server's, which could record statements" 'Disabled' "$database_state" \
-      "turn it off with: az sql db audit-policy update --resource-group $ERP_AZURE_RESOURCE_GROUP --server $ERP_AZURE_SQL_SERVER_NAME --name $ERP_AZURE_SQL_DATABASE_NAME --state Disabled"
-  else
-    fail "the auditing of $ERP_AZURE_SQL_DATABASE_NAME itself is readable ($(query_error_summary "$database_state"))"
-  fi
 }
 
 verify_roles() {
@@ -734,9 +526,6 @@ verify_roles() {
     fi
   done
   assert_role "operator is Storage Blob Data Contributor on container $attachments_container" "$attachments_container_id" "$operator_id" "$ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
-  local logs_account_id
-  logs_account_id="$(storage_account_resource_id "$ERP_AZURE_STORAGE_LOGS_NAME")"
-  assert_role "operator is Storage Blob Data Reader on $ERP_AZURE_STORAGE_LOGS_NAME, to read the records and hand them over" "$logs_account_id" "$operator_id" "$ROLE_STORAGE_BLOB_DATA_READER"
 
   log_step "Role assignments: developers group"
   if [[ -n "$developers_group_id" ]]; then
@@ -761,13 +550,6 @@ verify_roles() {
     fi
   done
 
-  log_step "Role assignments: the identity of $ERP_AZURE_SQL_SERVER_NAME"
-  if [[ -n "$SQL_SERVER_PRINCIPAL_ID" ]]; then
-    verify_server_roles sql-server "$SQL_SERVER_PRINCIPAL_ID" "the identity of $ERP_AZURE_SQL_SERVER_NAME"
-  else
-    fail "the identity of $ERP_AZURE_SQL_SERVER_NAME holds exactly its role (the server has no identity); $PROVISION_HINT"
-  fi
-
   log_step "Access to $ERP_AZURE_KEYVAULT_OPS_NAME"
   verify_resource_access "$ERP_AZURE_KEYVAULT_OPS_NAME" "$(vault_resource_id "$ERP_AZURE_KEYVAULT_OPS_NAME")" Microsoft.KeyVault 'the operator' "$operator_id"
 
@@ -779,14 +561,7 @@ verify_roles() {
   log_step "Access to $ERP_AZURE_STORAGE_BACKUP_NAME"
   verify_resource_access "$ERP_AZURE_STORAGE_BACKUP_NAME" "$(storage_account_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME")" Microsoft.Storage \
     'the backup service principal' '' \
-    "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_CONTAINER_NAME") $backup_id $ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
-    "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_JOURNAL_CONTAINER_NAME") $backup_id $ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
-
-  log_step "Access to $ERP_AZURE_STORAGE_LOGS_NAME"
-  verify_resource_access "$ERP_AZURE_STORAGE_LOGS_NAME" "$logs_account_id" Microsoft.Storage \
-    "the identity of $ERP_AZURE_SQL_SERVER_NAME and the operator" '' \
-    "$logs_account_id $SQL_SERVER_PRINCIPAL_ID $ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR" \
-    "$logs_account_id $operator_id $ROLE_STORAGE_BLOB_DATA_READER"
+    "$(storage_container_resource_id "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_CONTAINER_NAME") $backup_id $ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR"
 }
 
 verify_sentinels() {
@@ -1574,23 +1349,13 @@ verify_provisioning() {
   verify_vault "$ERP_AZURE_KEYVAULT_DEV_NAME" true
   verify_vault "$ERP_AZURE_KEYVAULT_PROD_NAME" true
   verify_vault "$ERP_AZURE_KEYVAULT_OPS_NAME" false
-  verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME" "$DEVELOPMENT_STORAGE_SKU" "$DEVELOPMENT_STORAGE_RETENTION_DAYS" false "$ATTACHMENTS_CONTAINER_NAME"
+  verify_storage_account "$ERP_AZURE_STORAGE_DEV_NAME" "$DEVELOPMENT_STORAGE_SKU" "$DEVELOPMENT_STORAGE_RETENTION_DAYS" "$ATTACHMENTS_CONTAINER_NAME"
   verify_storage_listing "$ERP_AZURE_STORAGE_DEV_NAME"
-  verify_storage_account "$ERP_AZURE_STORAGE_PROD_NAME" "$PRODUCTION_STORAGE_SKU" "$PRODUCTION_STORAGE_RETENTION_DAYS" false "$ATTACHMENTS_CONTAINER_NAME"
+  verify_storage_account "$ERP_AZURE_STORAGE_PROD_NAME" "$PRODUCTION_STORAGE_SKU" "$PRODUCTION_STORAGE_RETENTION_DAYS" "$ATTACHMENTS_CONTAINER_NAME"
   verify_storage_network "$ERP_AZURE_STORAGE_PROD_NAME"
-  verify_storage_account "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_STORAGE_SKU" "$BACKUP_STORAGE_RETENTION_DAYS" false \
-    "$BACKUP_CONTAINER_NAME" "$BACKUP_JOURNAL_CONTAINER_NAME"
+  verify_storage_account "$ERP_AZURE_STORAGE_BACKUP_NAME" "$BACKUP_STORAGE_SKU" "$BACKUP_STORAGE_RETENTION_DAYS" "$BACKUP_CONTAINER_NAME"
   verify_storage_network "$ERP_AZURE_STORAGE_BACKUP_NAME"
-  verify_container_immutability "$BACKUP_CONTAINER_NAME" "$BACKUP_IMMUTABILITY_DAYS" archive archives 'the backup job' \
-    'once the first restore rehearsal succeeds'
-  verify_container_immutability "$BACKUP_JOURNAL_CONTAINER_NAME" "$BACKUP_JOURNAL_IMMUTABILITY_DAYS" 'copy of the journal' 'copies of the journal' 'the journal job' \
-    'once a day of the journal has been read back'
-  verify_storage_account "$ERP_AZURE_STORAGE_LOGS_NAME" "$LOGS_STORAGE_SKU" "$LOGS_STORAGE_RETENTION_DAYS" true
-  verify_storage_network "$ERP_AZURE_STORAGE_LOGS_NAME"
-  verify_logs_immutability
-  verify_logs_lifecycle
-  verify_sql_auditing
-  verify_records
+  verify_backup_immutability
   verify_roles "$operator_id" "$developers_group_id" "$runtime_id" "$migrator_id" "$backup_id"
   verify_sentinels
 }

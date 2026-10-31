@@ -63,33 +63,7 @@ param backupImmutabilityPeriodDays int = 90
 
 param backupImmutabilityPolicyLocked bool = false
 
-@minLength(3)
-@maxLength(63)
-param backupJournalContainerName string = 'host-journal'
-
-@minValue(1)
-@maxValue(146000)
-param backupJournalImmutabilityPeriodDays int = 365
-
-param backupJournalImmutabilityPolicyLocked bool = false
-
 param backupStorageHomeAddress string = ''
-
-@minLength(3)
-@maxLength(24)
-param logsStorageAccountName string
-
-@minValue(7)
-@maxValue(365)
-param logsStorageDeleteRetentionDays int = 7
-
-@minValue(1)
-@maxValue(146000)
-param logsImmutabilityPeriodDays int = 365
-
-param logsImmutabilityPolicyLocked bool = false
-
-param logsStorageHomeAddress string = ''
 
 @minLength(1)
 @maxLength(63)
@@ -130,14 +104,7 @@ var roleDefinitionIds = {
   keyVaultCryptoOfficer: '14b46e9e-c2b7-41b4-b07b-48a6ebf60603'
   keyVaultCertificatesOfficer: 'a4417e6f-fecd-4de8-b567-7b0420556985'
   storageBlobDataContributor: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-  storageBlobDataReader: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
 }
-
-// A day past the write-once period: SQL auditing refuses a retention that does not exceed the
-// storage policy's period, and the lifecycle rule then deletes nothing the policy still keeps.
-var logsDeleteAfterDays = logsImmutabilityPeriodDays + 1
-
-var recordsStorageAccountId = resourceId('Microsoft.Storage/storageAccounts', logsStorageAccountName)
 
 var configurationStoreRoleAssignments RoleAssignment[] = concat(
   [
@@ -293,29 +260,6 @@ var backupStorageRoleAssignments RoleAssignment[] = empty(backupPrincipalId)
       }
     ]
 
-var logsStorageRoleAssignments RoleAssignment[] = [
-  {
-    principalId: operatorPrincipalId
-    principalType: 'User'
-    roleDefinitionId: roleDefinitionIds.storageBlobDataReader
-  }
-]
-
-module logsStorageAccount 'modules/logs-storage-account.bicep' = {
-  name: 'storage-account-logs'
-  params: {
-    name: logsStorageAccountName
-    location: location
-    tags: tags
-    deleteRetentionDays: logsStorageDeleteRetentionDays
-    immutabilityPeriodDays: logsImmutabilityPeriodDays
-    immutabilityPolicyLocked: logsImmutabilityPolicyLocked
-    deleteAfterDays: logsDeleteAfterDays
-    allowedAddresses: empty(logsStorageHomeAddress) ? [] : [logsStorageHomeAddress]
-    roleAssignments: logsStorageRoleAssignments
-  }
-}
-
 module configurationStore 'modules/configuration-store.bicep' = {
   name: 'configuration-store'
   params: {
@@ -324,11 +268,7 @@ module configurationStore 'modules/configuration-store.bicep' = {
     sku: configurationStoreSku
     tags: tags
     roleAssignments: configurationStoreRoleAssignments
-    recordsStorageAccountId: recordsStorageAccountId
   }
-  dependsOn: [
-    logsStorageAccount
-  ]
 }
 
 module developmentKeyVault 'modules/key-vault.bicep' = {
@@ -338,11 +278,7 @@ module developmentKeyVault 'modules/key-vault.bicep' = {
     location: location
     tags: tags
     roleAssignments: developmentKeyVaultRoleAssignments
-    recordsStorageAccountId: recordsStorageAccountId
   }
-  dependsOn: [
-    logsStorageAccount
-  ]
 }
 
 module productionKeyVault 'modules/key-vault.bicep' = {
@@ -353,11 +289,7 @@ module productionKeyVault 'modules/key-vault.bicep' = {
     tags: tags
     roleAssignments: productionKeyVaultRoleAssignments
     secretRoleAssignments: productionKeyVaultSecretRoleAssignments
-    recordsStorageAccountId: recordsStorageAccountId
   }
-  dependsOn: [
-    logsStorageAccount
-  ]
 }
 
 module operationsKeyVault 'modules/key-vault.bicep' = {
@@ -368,11 +300,7 @@ module operationsKeyVault 'modules/key-vault.bicep' = {
     tags: tags
     roleAssignments: operationsKeyVaultRoleAssignments
     createDataProtectionKey: false
-    recordsStorageAccountId: recordsStorageAccountId
   }
-  dependsOn: [
-    logsStorageAccount
-  ]
 }
 
 module developmentStorageAccount 'modules/storage-account.bicep' = {
@@ -382,20 +310,10 @@ module developmentStorageAccount 'modules/storage-account.bicep' = {
     location: location
     sku: 'Standard_LRS'
     tags: tags
-    containers: [
-      {
-        name: attachmentsContainerName
-        immutabilityPeriodDays: 0
-        immutabilityPolicyLocked: false
-        roleAssignments: developmentStorageRoleAssignments
-      }
-    ]
+    containerName: attachmentsContainerName
     deleteRetentionDays: developmentStorageDeleteRetentionDays
-    recordsStorageAccountId: recordsStorageAccountId
+    roleAssignments: developmentStorageRoleAssignments
   }
-  dependsOn: [
-    logsStorageAccount
-  ]
 }
 
 module productionStorageAccount 'modules/storage-account.bicep' = {
@@ -405,22 +323,12 @@ module productionStorageAccount 'modules/storage-account.bicep' = {
     location: location
     sku: 'Standard_GRS'
     tags: tags
-    containers: [
-      {
-        name: attachmentsContainerName
-        immutabilityPeriodDays: 0
-        immutabilityPolicyLocked: false
-        roleAssignments: productionStorageRoleAssignments
-      }
-    ]
+    containerName: attachmentsContainerName
     deleteRetentionDays: productionStorageDeleteRetentionDays
+    roleAssignments: productionStorageRoleAssignments
     restrictToAllowedAddresses: true
     allowedAddresses: empty(productionStorageHomeAddress) ? [] : [productionStorageHomeAddress]
-    recordsStorageAccountId: recordsStorageAccountId
   }
-  dependsOn: [
-    logsStorageAccount
-  ]
 }
 
 module backupStorageAccount 'modules/storage-account.bicep' = {
@@ -430,28 +338,14 @@ module backupStorageAccount 'modules/storage-account.bicep' = {
     location: location
     sku: 'Standard_GRS'
     tags: tags
-    containers: [
-      {
-        name: backupContainerName
-        immutabilityPeriodDays: backupImmutabilityPeriodDays
-        immutabilityPolicyLocked: backupImmutabilityPolicyLocked
-        roleAssignments: backupStorageRoleAssignments
-      }
-      {
-        name: backupJournalContainerName
-        immutabilityPeriodDays: backupJournalImmutabilityPeriodDays
-        immutabilityPolicyLocked: backupJournalImmutabilityPolicyLocked
-        roleAssignments: backupStorageRoleAssignments
-      }
-    ]
+    containerName: backupContainerName
     deleteRetentionDays: backupStorageDeleteRetentionDays
+    roleAssignments: backupStorageRoleAssignments
     restrictToAllowedAddresses: true
     allowedAddresses: empty(backupStorageHomeAddress) ? [] : [backupStorageHomeAddress]
-    recordsStorageAccountId: recordsStorageAccountId
+    immutabilityPeriodDays: backupImmutabilityPeriodDays
+    immutabilityPolicyLocked: backupImmutabilityPolicyLocked
   }
-  dependsOn: [
-    logsStorageAccount
-  ]
 }
 
 module productionSqlDatabase 'modules/sql-database.bicep' = {
@@ -466,17 +360,6 @@ module productionSqlDatabase 'modules/sql-database.bicep' = {
   }
 }
 
-module productionSqlAuditing 'modules/sql-auditing.bicep' = {
-  name: 'sql-auditing-production'
-  params: {
-    serverName: productionSqlServerName
-    serverPrincipalId: productionSqlDatabase.outputs.principalId
-    logsStorageAccountName: logsStorageAccount.outputs.name
-    writerRoleDefinitionId: roleDefinitionIds.storageBlobDataContributor
-    retentionDays: logsDeleteAfterDays
-  }
-}
-
 output configurationStoreEndpoint string = configurationStore.outputs.endpoint
 output configurationStoreId string = configurationStore.outputs.id
 output developmentKeyVaultUri string = developmentKeyVault.outputs.uri
@@ -486,14 +369,11 @@ output developmentDataProtectionKeyUri string = developmentKeyVault.outputs.data
 output productionDataProtectionKeyUri string = productionKeyVault.outputs.dataProtectionKeyUri
 output developmentAttachmentsBlobEndpoint string = developmentStorageAccount.outputs.blobEndpoint
 output developmentStorageAccountId string = developmentStorageAccount.outputs.id
-output developmentAttachmentsContainerId string = developmentStorageAccount.outputs.containerIds[attachmentsContainerName]
+output developmentAttachmentsContainerId string = developmentStorageAccount.outputs.containerId
 output productionAttachmentsBlobEndpoint string = productionStorageAccount.outputs.blobEndpoint
 output productionStorageAccountId string = productionStorageAccount.outputs.id
-output productionAttachmentsContainerId string = productionStorageAccount.outputs.containerIds[attachmentsContainerName]
+output productionAttachmentsContainerId string = productionStorageAccount.outputs.containerId
 output backupBlobEndpoint string = backupStorageAccount.outputs.blobEndpoint
 output backupStorageAccountId string = backupStorageAccount.outputs.id
-output backupContainerId string = backupStorageAccount.outputs.containerIds[backupContainerName]
-output backupJournalContainerId string = backupStorageAccount.outputs.containerIds[backupJournalContainerName]
-output logsBlobEndpoint string = logsStorageAccount.outputs.blobEndpoint
-output logsStorageAccountId string = logsStorageAccount.outputs.id
+output backupContainerId string = backupStorageAccount.outputs.containerId
 output productionSqlServerFqdn string = productionSqlDatabase.outputs.fullyQualifiedDomainName

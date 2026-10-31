@@ -505,32 +505,6 @@ stand_in_git() {
   esac
 }
 
-journal_microseconds() {
-  local pattern='^([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2})(\.([0-9]{6}))? UTC$' seconds fraction
-  [[ "$1" =~ $pattern ]] || return 1
-  fraction="${BASH_REMATCH[3]:-000000}"
-  seconds="$(real date -u -d "${BASH_REMATCH[1]}" +%s)" || return 1
-  printf '%s%s' "$seconds" "$fraction"
-}
-
-stand_in_journalctl() {
-  record "journalctl $*"
-  [[ $# == 8 && "$1 $2 $3 $4 $5 $7" == '--output=json --all --no-pager --quiet --since --until' ]] || unexpected "$@"
-  local first last
-  first="$(journal_microseconds "$6")" || unexpected "$@"
-  last="$(journal_microseconds "$8")" || unexpected "$@"
-  setting journal/exit 0
-  if (( REPLY != 0 )); then
-    printf 'stand-in journalctl: fails as the scenario says\n' >&2
-    return "$REPLY"
-  fi
-  if [[ -f "$STATE/journal/entries" ]]; then
-    awk -v first="$first" -v last="$last" \
-      'match($0, /"__REALTIME_TIMESTAMP":"[0-9]+"/) { stamp = substr($0, RSTART + 24, RLENGTH - 25) + 0; if (stamp >= first + 0 && stamp <= last + 0) print }' \
-      "$STATE/journal/entries"
-  fi
-}
-
 stand_in_mv() {
   setting mv-refuses ''
   if [[ -n "$REPLY" && "${*: -1}" == *"$REPLY" ]]; then
@@ -547,23 +521,14 @@ case "$COMMAND" in
   curl) stand_in_curl "$@" ;;
   git) stand_in_git "$@" ;;
   mv) stand_in_mv "$@" ;;
-  journalctl) stand_in_journalctl "$@" ;;
   flock)
     record "flock $*"
     [[ ! -f "$STATE/flock-held" || ( "$1" == --wait && -f "$STATE/flock-released" ) ]]
     ;;
   id)
-    case "$*" in
-      -un)
-        record "id -un"
-        setting account erp-ai-pro
-        ;;
-      -Gn)
-        record "id -Gn"
-        setting groups 'erp-ai-pro systemd-journal'
-        ;;
-      *) unexpected "$@" ;;
-    esac
+    [[ "$*" == -un ]] || unexpected "$@"
+    record "id -un"
+    setting account erp-ai-pro
     printf '%s\n' "$REPLY"
     ;;
   date)

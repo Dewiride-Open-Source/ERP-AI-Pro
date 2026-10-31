@@ -25,9 +25,6 @@ readonly BACKUP_PREVIOUS_ENV_PART='.env.previous'
 readonly BACKUP_ARCHIVE_PATTERN='^[0-9]{4}/(0[1-9]|1[0-2])/[0-9]{8}T[0-9]{6}Z\.tar\.p7m$'
 readonly BACKUP_CREATION_PATTERN='^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,9})?(Z|\+00:00)$'
 readonly BACKUP_IMMUTABILITY_DAYS=90
-readonly JOURNAL_CONTAINER='host-journal'
-readonly JOURNAL_IMMUTABILITY_DAYS=365
-readonly JOURNAL_COPY_PATTERN='^[0-9]{4}/(0[1-9]|1[0-2])/[0-9]{8}\.json\.gz\.p7m$'
 readonly BACKUP_MINIMUM_KEY_BITS=4096
 readonly BACKUP_CERTIFICATE_WARNING_SECONDS=2592000
 readonly BACKUP_UPLOAD_PATH='/backup/archive.tar.p7m'
@@ -46,12 +43,8 @@ BACKUP_CONTAINER_NAME=''
 BACKUP_CLIENT_ID=''
 BACKUP_TENANT_ID=''
 BACKUP_ARCHIVE=''
-BLOB_PROPERTIES=()
 RECIPIENT_SERIAL=''
 RECIPIENT_SUMMARY=''
-KEY_FILE=''
-KEY_CHECKED=0
-KEY_SHREDDED=0
 
 backup_compose() {
   (cd -- "$COMPOSE_DIR" && host_docker compose --progress quiet -f "$BACKUP_COMPOSE_FILE" "$@")
@@ -78,70 +71,6 @@ backup_blob() {
     --container-name "$BACKUP_CONTAINER_NAME" "$@" < /dev/null
 }
 
-# The Azure CLI's tsv output writes each value of a flat multiselect list on a line of its own.
-blob_properties() {
-  local answer
-  answer="$(backup_blob show --name "$1" --query "$2" --output tsv)" || return 1
-  mapfile -t BLOB_PROPERTIES <<< "${answer//$'\r'/}"
-}
-
-seal_file() {
-  openssl cms -encrypt -binary -aes-256-gcm -in "$1" -outform DER -out "$2" -recip "$BACKUP_RECIPIENT_FILE" "${CMS_RECIPIENT_OPTIONS[@]}"
-}
-
-open_sealed() {
-  openssl cms -decrypt -binary -inform DER -in "$1" -inkey "$KEY_FILE" -out "$2"
-}
-
-check_key() {
-  if [[ ! -f "$KEY_FILE" || -L "$KEY_FILE" || ! -r "$KEY_FILE" ]]; then
-    die "--key: '$(printable "$KEY_FILE")' is not a regular file this account can read; nothing was changed"
-  fi
-  openssl pkey -in "$KEY_FILE" -noout 2> /dev/null \
-    || die "--key: $KEY_FILE holds no private key that OpenSSL reads without a password, as export-client-certificate.sh backup-recipient-key writes it; nothing was changed"
-  KEY_CHECKED=1
-}
-
-key_mismatch_hint() {
-  local sealed="$1" what="${2:-the archive}" parsed='' line depth inside=0 serial key_serial=''
-  local -a recipients=()
-  parsed="$(openssl asn1parse -inform DER -in "$sealed" 2> /dev/null)" || parsed=''
-  # Inside the recipientInfos SET (depth 3), each IssuerAndSerialNumber's serial is the INTEGER at depth 6. asn1parse prints
-  # every INTEGER in hexadecimal, where cms -print shows one below 128 bits in decimal.
-  while IFS= read -r line; do
-    [[ "$line" =~ :d=([0-9]+) ]] || continue
-    depth="${BASH_REMATCH[1]}"
-    if (( depth == 3 )); then
-      inside=0
-      if [[ "$line" == *'cons: SET'* ]]; then
-        inside=1
-      fi
-    elif (( inside && depth == 6 )) && [[ "$line" == *'prim: INTEGER'* ]]; then
-      serial="${line##*:}"
-      serial="${serial#"${serial%%[!0]*}"}"
-      recipients+=("${serial:-0}")
-    fi
-  done <<< "$parsed"
-  key_serial="$(openssl x509 -in "$KEY_FILE" -noout -serial 2> /dev/null | sed -n 's/^serial=0*//p')" || key_serial=''
-  printf '%s is sealed to the certificate with the serial number %s, and the key file holds %s; export the version with that serial number (export-client-certificate.sh backup-recipient-key --version <version>)' \
-    "$what" "$(printable "${recipients[*]:-unreadable}")" "$(printable "${key_serial:-no certificate}")"
-}
-
-shred_key() {
-  if shred -u -- "$KEY_FILE"; then
-    KEY_SHREDDED=1
-    log_info "shredded the key file $KEY_FILE"
-  else
-    log_warn "cannot shred $KEY_FILE (see the error above)"
-  fi
-}
-
-warn_key_left() {
-  if (( KEY_CHECKED && ! KEY_SHREDDED )) && [[ -e "$KEY_FILE" ]]; then
-    log_warn "the key stays at $KEY_FILE; shred it once you are done (shred -u $KEY_FILE), because it never belongs on the server"
-  fi
-}
-
 # Prints the value of the one KEY=value line of an env file, read as data and never sourced: compose reads .env with its own
 # rules, so a key set in another form or twice could mean one thing here and another there.
 env_setting() {
@@ -164,63 +93,36 @@ env_setting() {
   printf '%s' "$value"
 }
 
-backup_setting_valid() {
-  local file="$1" key="$2" value="$3"
-  case "$key" in
-    BACKUP_BLOB_ENDPOINT)
-      if [[ ! "$value" =~ $BLOB_ENDPOINT_PATTERN ]]; then
-        log_error "BACKUP_BLOB_ENDPOINT in $file is '$(printable "$value")', not the backup account's blob endpoint https://<account>.blob.core.windows.net/ that provision.sh prints"
-        return 1
-      fi
-      ;;
-    BACKUP_CONTAINER)
-      if (( ${#value} < 3 || ${#value} > 63 )) || [[ ! "$value" =~ $CONTAINER_NAME_PATTERN ]]; then
-        log_error "BACKUP_CONTAINER in $file is '$(printable "$value")', not a container name of 3 to 63 lowercase letters, digits and single hyphens"
-        return 1
-      fi
-      ;;
-    BACKUP_AZURE_CLIENT_ID)
-      if [[ ! "$value" =~ $GUID_PATTERN ]]; then
-        log_error "BACKUP_AZURE_CLIENT_ID in $file is '$(printable "$value")', not the backup service principal's application id that entra.sh prints"
-        return 1
-      fi
-      ;;
-    AZURE_TENANT_ID)
-      if [[ ! "$value" =~ $GUID_PATTERN ]]; then
-        log_error "AZURE_TENANT_ID in $file is '$(printable "$value")', not the Entra tenant id"
-        return 1
-      fi
-      ;;
-  esac
-}
-
-read_backup_values() {
-  local file="$1" key
-  local -A values=()
-  shift
+read_backup_settings() {
+  local file="$1" endpoint container client tenant
   if [[ ! -f "$file" ]]; then
     log_error "$file is missing; bootstrap.sh writes it from .env.example"
     return 1
   fi
-  for key in "$@"; do
-    values[$key]="$(env_setting "$file" "$key")" || return 1
-  done
-  for key in "$@"; do
-    backup_setting_valid "$file" "$key" "${values[$key]}" || return 1
-  done
-  BACKUP_ENDPOINT="${values[BACKUP_BLOB_ENDPOINT]%/}"
-  BACKUP_CLIENT_ID="${values[BACKUP_AZURE_CLIENT_ID]}"
-  BACKUP_TENANT_ID="${values[AZURE_TENANT_ID]}"
-  BACKUP_CONTAINER_NAME="${values[BACKUP_CONTAINER]:-$BACKUP_CONTAINER_NAME}"
-}
-
-# journal.sh writes a container of the backup account that .env does not name, so it reads no BACKUP_CONTAINER.
-read_backup_account() {
-  read_backup_values "$1" BACKUP_BLOB_ENDPOINT BACKUP_AZURE_CLIENT_ID AZURE_TENANT_ID
-}
-
-read_backup_settings() {
-  read_backup_values "$1" BACKUP_BLOB_ENDPOINT BACKUP_CONTAINER BACKUP_AZURE_CLIENT_ID AZURE_TENANT_ID
+  endpoint="$(env_setting "$file" BACKUP_BLOB_ENDPOINT)" || return 1
+  container="$(env_setting "$file" BACKUP_CONTAINER)" || return 1
+  client="$(env_setting "$file" BACKUP_AZURE_CLIENT_ID)" || return 1
+  tenant="$(env_setting "$file" AZURE_TENANT_ID)" || return 1
+  if [[ ! "$endpoint" =~ $BLOB_ENDPOINT_PATTERN ]]; then
+    log_error "BACKUP_BLOB_ENDPOINT in $file is '$(printable "$endpoint")', not the backup account's blob endpoint https://<account>.blob.core.windows.net/ that provision.sh prints"
+    return 1
+  fi
+  if (( ${#container} < 3 || ${#container} > 63 )) || [[ ! "$container" =~ $CONTAINER_NAME_PATTERN ]]; then
+    log_error "BACKUP_CONTAINER in $file is '$(printable "$container")', not a container name of 3 to 63 lowercase letters, digits and single hyphens"
+    return 1
+  fi
+  if [[ ! "$client" =~ $GUID_PATTERN ]]; then
+    log_error "BACKUP_AZURE_CLIENT_ID in $file is '$(printable "$client")', not the backup service principal's application id that entra.sh prints"
+    return 1
+  fi
+  if [[ ! "$tenant" =~ $GUID_PATTERN ]]; then
+    log_error "AZURE_TENANT_ID in $file is '$(printable "$tenant")', not the Entra tenant id"
+    return 1
+  fi
+  BACKUP_ENDPOINT="${endpoint%/}"
+  BACKUP_CONTAINER_NAME="$container"
+  BACKUP_CLIENT_ID="$client"
+  BACKUP_TENANT_ID="$tenant"
 }
 
 require_backup_client_certificate() {

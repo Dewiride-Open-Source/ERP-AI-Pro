@@ -54,7 +54,7 @@ Each line is JSON:
 - An entry whose `logger` begins with `http.log.access` is one request. It holds the device's address (`request.remote_ip`), `request.method`, `request.host`, the path (`request.uri`), the TLS version (`request.tls.version`, 771 for TLS 1.2 and 772 for TLS 1.3), `status`, `size`, `bytes_read` and `duration` in seconds.
 - An entry whose `logger` begins with `http.log.error` names a failure, such as `dial tcp: lookup api` with status 502 while the api container is down.
 
-Query strings and headers are never written, so a search for a person, a download link, a cookie or a token cannot be read from the log. The proxy logs to the server's journal under the tag `erp-ai-pro-proxy` (`journalctl CONTAINER_TAG=erp-ai-pro-proxy` as the administrator), which keeps it for more than a year, and a sealed copy of each day leaves the server every night, as CERT-In's direction (iv) of 28 April 2022 and the DPDP Rules, 2025 ask ([records runbook](records.md), [ADR-0058](../../adr/0058-records-kept-a-year-inside-india.md)).
+Query strings and headers are never written, so a search for a person, a download link, a cookie or a token cannot be read from the log. The proxy logs to the server's journal under the tag `erp-ai-pro-proxy` (`journalctl CONTAINER_TAG=erp-ai-pro-proxy` as the administrator), which keeps it for more than a year, as CERT-In's direction (iv) of 28 April 2022 and the DPDP Rules, 2025 ask ([records runbook](records.md), [ADR-0058](../../adr/0058-records-kept-a-year-inside-india.md)).
 
 ## Moving to a public name
 

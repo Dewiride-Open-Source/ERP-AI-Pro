@@ -70,7 +70,7 @@ Each step changes only what differs, and the run ends with the list of what it c
 | LXD | nobody in the `lxd` group, the administrator included, and `lxd-installer.socket` masked, because LXD gives its group root; LXD itself, preinstalled on 22.04, then answers root alone |
 | The deployment checkout | `/srv/erp-ai-pro/ERP-AI-Pro` at the commit the bootstrap ran from, with `infra/compose/secrets` (0700), `infra/compose/.env` (0600, from `.env.example`, `ERP_SITE_ADDRESS` filled in) and, with `--backup-recipient`, `infra/compose/secrets/erp-backup-recipient.crt` (root's, 0644); deployments move it afterwards |
 | Docker volumes | `erp-ai-pro-data-protection-keys` and `erp-ai-pro-proxy-data`, never removed |
-| systemd | `erp-ai-pro.service` (enabled), and `erp-ai-pro-retain.timer`, `erp-ai-pro-heal.timer`, `erp-ai-pro-backup.timer` and `erp-ai-pro-journal.timer` (enabled, running) with their services (below) |
+| systemd | `erp-ai-pro.service` (enabled), and `erp-ai-pro-retain.timer`, `erp-ai-pro-heal.timer` and `erp-ai-pro-backup.timer` (enabled, running) with their services (below) |
 | Ubuntu's updates | `/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf`: Ubuntu's security and regular updates every day, the GitHub CLI's repository included, and a restart at 21:30 UTC (03:00 India time) when one needs it; the update services and timers unmasked and enabled |
 | SSH | `/etc/ssh/sshd_config.d/10-erp-ai-pro.conf`: public keys only, no root sign-in, no X11 forwarding, proven with `sshd -T` after every run reloads sshd |
 | Firewall | ufw on IPv4 and IPv6, with one rule: SSH over IPv4 from the home network. Any other rule stops the run. The ERP's 80 and 443 are not ufw's: Docker admits them itself, on IPv4 only, and the router, with no port forwarded, keeps them inside the home network |
@@ -129,16 +129,16 @@ Shred the workstation's copy as well (`shred -u scripts/azure/out/erp-runtime-cl
 
 ## The backup's certificates
 
-The nightly backup and the nightly copy of the journal need two more files in `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets`, and `erp-ai-pro-backup.service` and `erp-ai-pro-journal.service` are skipped until both exist:
+The nightly backup needs two more files in `/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets`, and `erp-ai-pro-backup.service` is skipped until both exist:
 
-- **`erp-backup-client.pem`**, the certificate (PEM, private key included) of the backup service principal "ERP-AI-Pro Backup (production)", the one identity that may write to and read the backup account's containers `host-backups` and `host-journal`. `bash scripts/azure/export-client-certificate.sh backup` exports it; copy it to the administrator's home over SSH and install it like the other two, for 1654, the user the backup's Azure CLI container runs as:
+- **`erp-backup-client.pem`**, the certificate (PEM, private key included) of the backup service principal "ERP-AI-Pro Backup (production)", the one identity that may write to and read the backup container. `bash scripts/azure/export-client-certificate.sh backup` exports it; copy it to the administrator's home over SSH and install it like the other two, for 1654, the user the backup's Azure CLI container runs as:
 
   ```bash
   sudo install -o 1654 -g 1654 -m 0400 ~/erp-backup-client.pem /srv/erp-ai-pro/ERP-AI-Pro/infra/compose/secrets/erp-backup-client.pem
   shred -u ~/erp-backup-client.pem
   ```
 
-- **`erp-backup-recipient.crt`**, the public certificate of the RSA 4096 key in `kv-erp-ai-pro-ops` that every archive and every copy of the journal is sealed to. `bash scripts/azure/export-client-certificate.sh backup-recipient` exports it and prints its SHA-256 fingerprint. It holds no key and is no secret. Copy it to the administrator's home and place it with the bootstrap, run again from a clone of the running release ("Upkeep" below), which refuses a file that holds a private key:
+- **`erp-backup-recipient.crt`**, the public certificate of the RSA 4096 key in `kv-erp-ai-pro-ops` that every archive is sealed to. `bash scripts/azure/export-client-certificate.sh backup-recipient` exports it and prints its SHA-256 fingerprint. It holds no key and is no secret. Copy it to the administrator's home and place it with the bootstrap, run again from a clone of the running release ("Upkeep" below), which refuses a file that holds a private key:
 
   ```bash
   sudo bash ERP-AI-Pro/scripts/deploy/bootstrap.sh --site-address <address> --authorized-keys /srv/erp-ai-pro/.ssh/authorized_keys --backup-recipient ~/erp-backup-recipient.crt
@@ -167,7 +167,7 @@ The private key that opens the archives never stays on the server: the operator 
 | `BACKUP_AZURE_CLIENT_ID` | the backup service principal's application id, which `entra.sh` prints | the go-live, together with `erp-backup-client.pem` |
 | `COMPOSE_NETWORK_CIDR` | the compose network, `172.28.0.0/16` unless that range is taken on the home network | rarely |
 
-The nightly copy of the journal reads `BACKUP_BLOB_ENDPOINT`, `BACKUP_AZURE_CLIENT_ID` and `AZURE_TENANT_ID` too; its container, `host-journal` of the same account, is fixed in `scripts/deploy/lib/backup.sh` (`JOURNAL_CONTAINER`). The ids, the endpoint and the container name are not secrets. No secret ever goes into `.env`. Beside it, `.env.previous` (0600) holds the four release values of the release before, which `deploy.sh` keeps and `rollback.sh` returns to ([deploy runbook](deploy.md)). The nightly backup keeps both files; `backup.sh` and `restore.sh` read the backup values as data and refuse a value of another shape, a key set twice and a key set in another form than `KEY=value`.
+The ids, the endpoint and the container name are not secrets. No secret ever goes into `.env`. Beside it, `.env.previous` (0600) holds the four release values of the release before, which `deploy.sh` keeps and `rollback.sh` returns to ([deploy runbook](deploy.md)). The nightly backup keeps both files; `backup.sh` and `restore.sh` read the backup values as data and refuse a value of another shape, a key set twice and a key set in another form than `KEY=value`.
 
 ## At boot, every minute and every night
 
@@ -180,20 +180,15 @@ The nightly copy of the journal reads `BACKUP_BLOB_ENDPOINT`, `BACKUP_AZURE_CLIE
   - it seals the archive with the host's OpenSSL (CMS, AES-256-GCM, its key wrapped with RSA-OAEP-SHA256) to `erp-backup-recipient.crt`, so only the private key in `kv-erp-ai-pro-ops` opens it;
   - through the Azure CLI image of the same file, signed in as the backup service principal, it uploads the archive into `BACKUP_CONTAINER` as `<yyyy>/<mm>/<yyyymmddThhmmssZ>.tar.p7m`, never over an existing blob, reads its length and MD5 back, and deletes the archives older than 90 days and a day, which the container's write-once policy keeps until then;
   - it holds the lock while it copies the files, waiting up to 14 minutes for it and failing that night's run when it does not get it, and lets it go before it seals and uploads the copy. Nothing tells anyone about a failed backup (owner decision of 2026-10-30): each step is a line of its journal, and a failure names the step it stopped at.
-- **`erp-ai-pro-journal.timer`** runs `erp-ai-pro-journal.service` at 02:30 India time, after the backup, or at the next boot when the server was off. The service runs `scripts/deploy/journal.sh` of the deployment checkout as `erp-ai-pro` with the group `systemd-journal`, which reads the whole journal, and copies the journal off the server one India day (00:00 to 24:00 India time) at a time ("The journal" below):
-  - each of the last 30 days up to yesterday, the oldest first, of which `host-journal` holds no copy and the journal holds entries, so a run catches up the nights the server was off: `journalctl --output=json --all` writes the day's entries, one JSON object per line with every field whole (without `--all` it writes a field of 4096 bytes or more, such as a stack trace, as null), from 18:30:00 UTC the day before to 18:29:59.999999 UTC, and gzip compresses them as they come into the service's runtime folder `/run/erp-ai-pro-journal`, in memory and private to `erp-ai-pro`;
-  - OpenSSL seals the day to `erp-backup-recipient.crt` as the backup seals its archives;
-  - the Azure CLI image of `compose.backup.yaml`, signed in as the backup service principal, uploads it into `host-journal` of the backup account as `<yyyy>/<mm>/<yyyymmdd>.json.gz.p7m`, never over an existing blob, and reads its length and MD5 back; the container keeps each copy write-once for 365 days, and the run deletes the copies created more than 366 days ago;
-  - it takes no lock, because it reads the journal alone. A copy that the storage service created more than an hour before its day ended cannot hold that day, so the run copies the other days and then fails, naming it. Nothing tells anyone about a failed copy: each step is a line of its journal, and a failure names the step it stopped at.
 
 The lock is the one `deploy.sh`, `rollback.sh` and `restore.sh` hold while they run, so no unit starts in the middle of a deployment: the boot and retention units wait for the lock until their start times out (10 minutes for the stack, 30 for the retention run), and the backup waits up to 14 minutes of its 30. The heal service holds it for the seconds it takes to look at the stack, and the backup for the seconds it takes to copy the files. Stopping the stack takes no lock, so a shutdown never waits.
 
-The boot and nightly services are skipped, not failed, until `.env` and their certificates exist: the client certificates for the boot and retention units, `erp-backup-client.pem` and `erp-backup-recipient.crt` for the backup and the copy of the journal ("The backup's certificates" above). The boot and retention units fail until the first deployment has written the release into `.env`, because `compose.production.yaml` refuses to resolve without its digests; the backup does not need a release, and before the first deployment it backs up volumes no container has filled yet. The heal service needs only `.env`, and before the first deployment it finds no container to look at. Their state and output stay in the journal:
+The boot and nightly services are skipped, not failed, until `.env` and their certificates exist: the client certificates for the boot and retention units, `erp-backup-client.pem` and `erp-backup-recipient.crt` for the backup ("The backup's certificates" above). The boot and retention units fail until the first deployment has written the release into `.env`, because `compose.production.yaml` refuses to resolve without its digests; the backup does not need a release, and before the first deployment it backs up volumes no container has filled yet. The heal service needs only `.env`, and before the first deployment it finds no container to look at. Their state and output stay in the journal:
 
 ```bash
 systemctl status erp-ai-pro.service
-systemctl list-timers erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer erp-ai-pro-journal.timer
-journalctl -u erp-ai-pro.service -u erp-ai-pro-retain.service -u erp-ai-pro-heal.service -u erp-ai-pro-backup.service -u erp-ai-pro-journal.service --since today
+systemctl list-timers erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer
+journalctl -u erp-ai-pro.service -u erp-ai-pro-retain.service -u erp-ai-pro-heal.service -u erp-ai-pro-backup.service --since today
 docker compose -f compose.yaml -f compose.production.yaml ps
 ```
 
@@ -207,31 +202,6 @@ A run prints one line per step, in this order: `settings` (the container, the se
 
 To run a backup at once, as the administrator, for instance after placing a new certificate: `sudo systemctl start erp-ai-pro-backup.service`, which returns when the run ends.
 
-### The journal
-
-Everything the server logs goes to its journal in `/var/log/journal`, kept more than a year ("Running the bootstrap" above): the units above, sshd, the firewall and the updates, and every container of the stack under a tag of its own, which `compose.production.yaml` gives with the journald log driver: `erp-ai-pro-api`, `erp-ai-pro-web`, `erp-ai-pro-proxy` and, for every run of the migrator, `erp-ai-pro-migrator`. The administrator reads it with `sudo`; its times are the server's, UTC, so India time is 5 hours 30 minutes ahead:
-
-```bash
-sudo journalctl CONTAINER_TAG=erp-ai-pro-api --since today
-sudo journalctl CONTAINER_TAG=erp-ai-pro-proxy --since '2026-10-30 03:30' --until '2026-10-30 04:30'
-sudo journalctl CONTAINER_TAG=erp-ai-pro-migrator --output json
-sudo journalctl -u erp-ai-pro-journal.service --since yesterday
-sudo journalctl --disk-usage
-```
-
-`docker compose -f compose.yaml -f compose.production.yaml logs` keeps working as `erp-ai-pro`, because Docker reads the journald driver's entries back. A container keeps the log driver it was created with: containers that ran before the bootstrap installed the journald settings keep their json-file log until the next `deploy.sh` replaces them, which the deployment of a release whose `compose.production.yaml` names the journald driver does, and `docker inspect --format '{{.HostConfig.LogConfig.Type}}' <container>` shows a container's driver.
-
-Every night `erp-ai-pro-journal.service` copies the journal of each past India day into `host-journal` ("At boot, every minute and every night" above). A run prints one line per step: `journal`, `settings` (the container, the service principal and the certificate the copies are sealed to), `images`, `list` (the copies the container holds and the days it lacks), then for each day it lacks `day <yyyy-mm-dd> (<its bounds in UTC>)` with its entries and sealed bytes, or `the journal holds no entry of it`, and `check`, and last `prune`. A run that succeeded ends with `copied the journal of <n> day(s) to host-journal (<the days>); …`; a failed run ends with `[error] the journal copy stopped at the step '<step>': …`, which says which days reached the container and how many old copies it deleted before it stopped, and the unit shows as failed in `systemctl --failed`. A day the run could not copy is copied by the next run, as long as it lies within the last 30 days. To run it at once: `sudo systemctl start erp-ai-pro-journal.service`.
-
-`scripts/deploy/journal.sh` also reads the copies back, as `erp-ai-pro`. `--list` names every copy with the time the storage service created it, newest first, and needs no key; `--fetch` takes the first India day of a period, `--through` its last (the period includes both, at most 31 days, every one of them over; without `--through` it is the first day alone), and the private key of the backup encryption certificate, which the operator exports for it alone (`export-client-certificate.sh backup-recipient-key`) and copies to the server as for a restore ([restore runbook](restore.md)), once for the whole period:
-
-```bash
-bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/journal.sh --list
-bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/journal.sh --fetch <first yyyy-mm-dd> [--through <last yyyy-mm-dd>] --key <exported key> [--output <folder>]
-```
-
-A fetch takes the days in order, each in a private folder kept in memory: it checks the copy against the length and MD5 the container keeps and that the storage service created it after its day ended, opens it with the key, checks that every entry lies within the day, and writes the day's JSON lines, one entry per line, to its own file `journal-<yyyy-mm-dd>.json` (0600) in a new folder (0700), by default `/srv/erp-ai-pro/journal-<first>-to-<last>`; it refuses a folder that exists. It shreds the key file once the last day is written. A refused fetch keeps the key, says to shred it and names the days it wrote before it stopped, which stay in the folder; a fetch of the days after them goes into another folder. Copy the folder off the server, then shred it on the server (`shred -u <folder>/*.json && rmdir <folder>`). The [records runbook](records.md) says how a period is handed over.
-
 ### Restoring the server's files
 
 `scripts/deploy/restore.sh` puts an archive back into the two volumes, `.env` and `.env.previous`, as `erp-ai-pro`, with the private key the operator exports for it. `--list` names every archive with the time the storage service created it, newest first, and needs no key; a dry run downloads, opens and checks one archive and lists what a restore would change. Both may run while the stack runs:
@@ -244,6 +214,24 @@ bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/restore.sh --name <archive> --key
 A restore itself refuses while a container of the stack runs (`sudo systemctl stop erp-ai-pro.service` first), and replaces volumes that hold files only with `--replace`. It gives each volume's top folder the owner and mode its image gives it, fills it as that owner and shreds the key file once it is done. It reads the container and the service principal from `.env`, so on a rebuilt server the bootstrap's fresh `.env` first takes `AZURE_TENANT_ID`, `BACKUP_BLOB_ENDPOINT`, `BACKUP_CONTAINER` and `BACKUP_AZURE_CLIENT_ID`, and `erp-backup-client.pem` is placed; the restored `.env` then takes its place. The [restore runbook](restore.md) holds the procedure, the rebuilt server and the rehearsal.
 
 A failed `retain` exits 1 (a sweep failed, the others ran), 2 (its configuration is invalid) or 4 (the database holds migrations the release in `.env` does not know, so nothing was deleted; the journal shows `status=4/NOPERMISSION`, systemd's name for that code, not a permission problem), and the [migrations runbook](migrations.md) says what each means.
+
+## The journal
+
+Everything the server logs goes to its journal in `/var/log/journal`, kept more than a year ("Running the bootstrap" above): the units above, sshd, the firewall and the updates, and every container of the stack under a tag of its own, which `compose.production.yaml` gives with the journald log driver: `erp-ai-pro-api`, `erp-ai-pro-web`, `erp-ai-pro-proxy` and, for every run of the migrator, `erp-ai-pro-migrator`. The administrator reads it with `sudo`, because `erp-ai-pro` reads its own entries alone. Its times are the server's, UTC, so India time is 5 hours 30 minutes ahead:
+
+```bash
+sudo journalctl CONTAINER_TAG=erp-ai-pro-api --since today
+sudo journalctl CONTAINER_TAG=erp-ai-pro-proxy --since '2026-10-30 03:30' --until '2026-10-30 04:30'
+sudo journalctl --disk-usage
+```
+
+A period goes to a file as JSON, one entry per line, with `--all`, without which journalctl writes a field of 4096 bytes or more, such as a stack trace, as null. `--until` includes the entries of its own moment, so the India day 2026-10-30 ends a microsecond before the next begins, and `umask 077` keeps the file private:
+
+```bash
+(umask 077 && sudo journalctl --output=json --all --since '2026-10-29 18:30:00 UTC' --until '2026-10-30 18:29:59.999999 UTC' > journal-2026-10-30.json)
+```
+
+`docker compose -f compose.yaml -f compose.production.yaml logs` keeps working as `erp-ai-pro`, because Docker reads the journald driver's entries back. A container keeps the log driver it was created with: containers that ran before the bootstrap installed the journald settings keep their json-file log until the next `deploy.sh` replaces them, which the deployment of a release whose `compose.production.yaml` names the journald driver does, and `docker inspect --format '{{.HostConfig.LogConfig.Type}}' <container>` shows a container's driver.
 
 ## Trusting the proxy's root on each device
 
@@ -297,7 +285,7 @@ The root is valid for ten years and stays the same as long as the volume `erp-ai
 - **The backup's helper images.** `infra/compose/compose.backup.yaml` pins the BusyBox and Azure CLI images by digest, and Dependabot proposes their updates like those of every other image. The first backup after a deployment that moves a pin pulls the new image, and the image it replaces stays on the server until it is removed: `docker image ls --digests mcr.microsoft.com/azure-cli` lists them, and `docker image rm mcr.microsoft.com/azure-cli@<digest>` removes one that `compose.backup.yaml` no longer names.
 - **Never do these:**
   - remove the two volumes;
-  - leave the backup's private key (`erp-backup-recipient-key.pem`) on the server after a restore or a fetch of the journal, or place it as `erp-backup-recipient.crt`: whoever holds it opens every archive and every copy of the journal;
+  - leave the backup's private key (`erp-backup-recipient-key.pem`) on the server after a restore, or place it as `erp-backup-recipient.crt`: whoever holds it opens every archive;
   - add an account to the `docker` or `lxd` group;
   - run `git clean` with `-x` in the deployment checkout: it deletes `.env` and `.env.previous`, and with `-d` the client certificates too;
   - edit the four release lines of `.env` or `.env.previous`, or move the deployment checkout by hand after the first deployment: `deploy.sh` and `rollback.sh` do both;

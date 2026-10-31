@@ -1,4 +1,4 @@
-import { RoleAssignment, SecretRoleAssignment, recordsDiagnosticSettingName } from './types.bicep'
+import { RoleAssignment, SecretRoleAssignment } from './types.bicep'
 
 @minLength(3)
 @maxLength(24)
@@ -15,8 +15,6 @@ param secretRoleAssignments SecretRoleAssignment[] = []
 param createDataProtectionKey bool = true
 
 param dataProtectionKeyName string = 'Erp--Platform--DataProtection--Key'
-
-param recordsStorageAccountId string
 
 resource vault 'Microsoft.KeyVault/vaults@2025-05-01' = {
   name: name
@@ -90,21 +88,6 @@ resource secretRoleAssignmentResources 'Microsoft.Authorization/roleAssignments@
     }
   }
 ]
-
-#disable-next-line use-recent-api-versions // the newest version; 2016-09-01, the one stable version the rule accepts, allows a single setting, named service
-resource vaultRecords 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: recordsDiagnosticSettingName
-  scope: vault
-  properties: {
-    storageAccountId: recordsStorageAccountId
-    logs: [
-      {
-        category: 'AuditEvent'
-        enabled: true
-      }
-    ]
-  }
-}
 
 output uri string = vault.properties.vaultUri
 output id string = vault.id

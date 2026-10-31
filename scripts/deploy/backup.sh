@@ -178,7 +178,8 @@ seal_archive() {
   fi
   BACKUP_ARCHIVE="$STAGE/archive.tar.p7m"
   tar -cf "$plain" -C "$CONTENT" "${parts[@]}" || fail "cannot pack the archive"
-  seal_file "$plain" "$BACKUP_ARCHIVE" || fail "OpenSSL cannot seal the archive (see its error above)"
+  openssl cms -encrypt -binary -aes-256-gcm -in "$plain" -outform DER -out "$BACKUP_ARCHIVE" \
+    -recip "$BACKUP_RECIPIENT_FILE" "${CMS_RECIPIENT_OPTIONS[@]}" || fail "OpenSSL cannot seal the archive (see its error above)"
   rm -f -- "$plain"
   # The Azure CLI container runs as 1654 and reads the sealed archive alone through a read-only mount; the folder stays private.
   chmod 644 -- "$BACKUP_ARCHIVE" || fail "cannot let the Azure CLI container read $BACKUP_ARCHIVE"
@@ -197,10 +198,13 @@ upload_archive() {
 
 check_upload() {
   STEP='check'
-  local length md5 expected_length expected_md5
-  blob_properties "$ARCHIVE_NAME" '[properties.contentLength, properties.contentSettings.contentMd5]' \
-    || fail "cannot read $UPLOADED back (see the Azure CLI's error above)"
-  length="${BLOB_PROPERTIES[0]:-}" md5="${BLOB_PROPERTIES[1]:-}"
+  local answer length md5 expected_length expected_md5
+  local -a values=()
+  answer="$(backup_blob show --name "$ARCHIVE_NAME" --query '[properties.contentLength, properties.contentSettings.contentMd5]' \
+    --output tsv)" || fail "cannot read $UPLOADED back (see the Azure CLI's error above)"
+  # The Azure CLI's tsv output writes each value of a flat multiselect list on a line of its own.
+  mapfile -t values <<< "${answer//$'\r'/}"
+  length="${values[0]:-}" md5="${values[1]:-}"
   expected_length="$(file_size "$BACKUP_ARCHIVE")" || fail "cannot read the size of $BACKUP_ARCHIVE"
   expected_md5="$(file_md5_base64 "$BACKUP_ARCHIVE")" || fail "cannot hash $BACKUP_ARCHIVE"
   if [[ "$length" != "$expected_length" || "$md5" != "$expected_md5" ]]; then

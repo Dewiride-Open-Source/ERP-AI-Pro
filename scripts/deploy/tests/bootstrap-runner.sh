@@ -13,9 +13,9 @@ that Docker runs with live restore and the journald log driver of the bootstrap'
 docker.service may send the journal 100000 messages in 30 seconds, that a new container naming no log driver
 logs to the journal and its line reaches /var/log/journal under its tag, that the deploy account runs gh
 2.102.0 or later from GitHub'"'"'s repository with GitHub'"'"'s keys alone, that a password sign-in is refused,
-and that sshd, the firewall on IPv4 and IPv6, the docker and lxd groups, the units (the backup and journal
-timers among them, their services skipped until the backup'"'"'s client certificate exists), the update
-services and settings, the checkout with its secrets folder, .env and the backup'"'"'s public certificate, the
+and that sshd, the firewall on IPv4 and IPv6, the docker and lxd groups, the units (the backup timer among
+them, its service skipped until the backup'"'"'s client certificate exists), the update services and
+settings, the checkout with its secrets folder, .env and the backup'"'"'s public certificate, the
 volumes and the production stack'"'"'s IPv4-only ports are what ADR-0049 and ADR-0058 decide. It hardens the
 machine it runs on, so it refuses to run anywhere but on a GitHub-hosted runner, as the runner user.
 
@@ -116,7 +116,7 @@ assert_untouched() {
     die "$after created the account $DEPLOY_USER or $DEPLOY_HOME"
   fi
   local path
-  for path in /etc/ssh/sshd_config.d/10-erp-ai-pro.conf /etc/systemd/system/erp-ai-pro.service /etc/systemd/system/erp-ai-pro-journal.service \
+  for path in /etc/ssh/sshd_config.d/10-erp-ai-pro.conf /etc/systemd/system/erp-ai-pro.service \
     /etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf /etc/systemd/journald.conf.d/50-erp-ai-pro.conf \
     /etc/systemd/system/docker.service.d/50-erp-ai-pro.conf "$GITHUB_CLI_SOURCE" "$GITHUB_CLI_KEYRING"; do
     [[ ! -e "$path" ]] || die "$after wrote $path"
@@ -318,17 +318,17 @@ prove_access_rules() {
 prove_units_and_updates() {
   log_step "The units and the nightly updates"
   local unit
-  for unit in erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer erp-ai-pro-journal.timer; do
+  for unit in erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer; do
     [[ "$(systemctl is-enabled "$unit")" == enabled ]] || die "$unit is not enabled"
   done
-  for unit in erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer erp-ai-pro-journal.timer; do
+  for unit in erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer; do
     systemctl is-active --quiet "$unit" || die "$unit is not running"
   done
-  for unit in erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-backup.service erp-ai-pro-journal.service; do
+  for unit in erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-backup.service; do
     sudo systemctl start "$unit"
     [[ "$(systemctl show --property=ConditionResult --value "$unit")" == no ]] || die "$unit did not wait for .env and its certificates"
   done
-  passed "the boot unit and the four timers are enabled and running, and the boot, retention, backup and journal services wait for their certificates"
+  passed "the boot unit and the three timers are enabled and running, and the boot, retention and backup services wait for their certificates"
 
   sudo systemctl start erp-ai-pro-heal.service
   [[ "$(systemctl show --property=Result --value erp-ai-pro-heal.service)" == success ]] \

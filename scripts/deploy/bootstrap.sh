@@ -10,10 +10,10 @@ GitHub'"'"'s own repository, with which deploy.sh verifies a release, the deploy
 only member of the docker group and nobody in the lxd group, its checkout of this repository in
 /srv/erp-ai-pro/ERP-AI-Pro with the folder of the client certificates, .env and the two external volumes,
 the systemd units that start the stack at boot, restart an unhealthy container every minute and run the
-retention sweeps, the backup of the server'"'"'s own files and the copy of its journal every night,
-Ubuntu'"'"'s security and regular updates (the GitHub CLI'"'"'s included) that restart the server at 03:00
-India time when one needs it, SSH with public keys only, and a firewall that admits SSH from the home
-network only. Every step changes only what differs, so a second run changes nothing.
+retention sweeps and the backup of the server'"'"'s own files every night, Ubuntu'"'"'s security and regular
+updates (the GitHub CLI'"'"'s included) that restart the server at 03:00 India time when one needs it, SSH
+with public keys only, and a firewall that admits SSH from the home network only. Every step changes only
+what differs, so a second run changes nothing.
 Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
@@ -69,9 +69,9 @@ readonly UPDATES_FILE='/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf
 readonly UPDATE_SERVICES=(apt-daily.service apt-daily-upgrade.service)
 readonly UPDATE_TIMERS=(apt-daily.timer apt-daily-upgrade.timer)
 readonly UNIT_FILES=(erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-retain.timer erp-ai-pro-heal.service erp-ai-pro-heal.timer
-  erp-ai-pro-backup.service erp-ai-pro-backup.timer erp-ai-pro-journal.service erp-ai-pro-journal.timer)
-readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer erp-ai-pro-journal.timer)
-readonly STACK_TIMERS=(erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer erp-ai-pro-journal.timer)
+  erp-ai-pro-backup.service erp-ai-pro-backup.timer)
+readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer)
+readonly STACK_TIMERS=(erp-ai-pro-retain.timer erp-ai-pro-heal.timer erp-ai-pro-backup.timer)
 readonly BACKUP_FILES=(erp-backup-client.pem erp-backup-recipient.crt)
 readonly BACKUP_RECIPIENT_TARGET="$DEPLOY_COMPOSE_DIR/secrets/erp-backup-recipient.crt"
 readonly BACKUP_RECIPIENT_MINIMUM_BITS=4096
@@ -793,7 +793,7 @@ ensure_units() {
       log_info "systemd skips erp-ai-pro.service and erp-ai-pro-retain.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing[*]}"
     fi
     if (( ${#missing_backup[@]} > 0 )); then
-      log_info "systemd skips erp-ai-pro-backup.service and erp-ai-pro-journal.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing_backup[*]}"
+      log_info "systemd skips erp-ai-pro-backup.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing_backup[*]}"
     fi
   fi
 }
