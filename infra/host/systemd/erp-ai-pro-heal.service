@@ -1,0 +1,14 @@
+[Unit]
+Description=Restart an unhealthy container of the ERP-AI-Pro production stack
+Documentation=https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/operations/runbooks/host-setup.md
+After=docker.service erp-ai-pro.service
+ConditionPathExists=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose/.env
+
+[Service]
+Type=oneshot
+User=erp-ai-pro
+Group=erp-ai-pro
+WorkingDirectory=/srv/erp-ai-pro/ERP-AI-Pro/infra/compose
+# heal.sh takes the deployment lock itself, without waiting, so a minute in which another run holds it is skipped.
+ExecStart=/usr/bin/bash /srv/erp-ai-pro/ERP-AI-Pro/scripts/deploy/heal.sh
+TimeoutStartSec=5min

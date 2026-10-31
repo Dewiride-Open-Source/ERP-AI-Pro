@@ -1,0 +1,9 @@
+[Unit]
+Description=Look for an unhealthy container of the ERP-AI-Pro production stack every minute
+Documentation=https://github.com/Dewiride-Open-Source/ERP-AI-Pro/blob/main/docs/operations/runbooks/host-setup.md
+
+[Timer]
+OnCalendar=minutely
+
+[Install]
+WantedBy=timers.target

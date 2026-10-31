@@ -106,10 +106,34 @@ docker_compose() {
   esac
 }
 
+docker_container() {
+  record "docker $*"
+  case "${1:-}" in
+    ps)
+      if [[ -f "$STATE/docker/unhealthy" ]]; then
+        cat -- "$STATE/docker/unhealthy"
+      fi
+      ;;
+    inspect)
+      setting "docker/started/${*: -1}" ''
+      [[ -n "$REPLY" ]] || unexpected "$@"
+      printf '%s\n' "$REPLY"
+      ;;
+    restart)
+      setting "docker/restart-exit" 0
+      if (( REPLY == 0 )); then
+        printf '%s\n' "${*: -1}"
+      fi
+      return "$REPLY"
+      ;;
+  esac
+}
+
 stand_in_docker() {
   case "${1:-}" in
     compose) docker_compose "${@:2}" ;;
     image) docker_image "${@:2}" ;;
+    ps | inspect | restart) docker_container "$@" ;;
     *) unexpected "$@" ;;
   esac
 }
@@ -284,10 +308,20 @@ case "$COMMAND" in
     printf '%s\n' "$REPLY"
     ;;
   date)
-    [[ "$*" == +%H%M ]] || unexpected "$@"
-    record "date +%H%M"
-    setting clock 1200
-    printf '%s\n' "$REPLY"
+    record "date $*"
+    case "$*" in
+      +%H%M)
+        setting clock 1200
+        printf '%s\n' "$REPLY"
+        ;;
+      '-u +%s')
+        setting epoch ''
+        [[ -n "$REPLY" ]] || unexpected "$@"
+        printf '%s\n' "$REPLY"
+        ;;
+      '-u -d '*' +%s') PATH="${PATH#"${0%/*}:"}" date "$@" ;;
+      *) unexpected "$@" ;;
+    esac
     ;;
   sleep) record "sleep $*" ;;
   *) unexpected "$@" ;;

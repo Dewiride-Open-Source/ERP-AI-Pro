@@ -42,6 +42,7 @@ In production `compose.production.yaml` runs every image as `<image>:${IMAGE_TAG
 |---|---|---|
 | `host/systemd/erp-ai-pro.service` | `/etc/systemd/system/` | brings the last deployment's api, web and proxy containers back at boot, never running the migrator, recreating a container or pulling, and tries a failed start again every minute; it waits for the deployment lock `/srv/erp-ai-pro/deploy.lock` |
 | `host/systemd/erp-ai-pro-retain.service`, `.timer` | `/etc/systemd/system/` | `run --rm -T migrator retain` every night at 01:00 India time, under the same lock, its result in the journal |
+| `host/systemd/erp-ai-pro-heal.service`, `.timer` | `/etc/systemd/system/` | `scripts/deploy/heal.sh` every minute: restarts a running container that Docker reports unhealthy once it has run 30 minutes, never starts a stopped one, takes the same lock without waiting and writes each restart to the journal; nothing alerts anyone ([ADR-0055](../docs/adr/0055-the-production-host-restarts-an-unhealthy-container-and-alerts-nobody.md)) |
 | `host/ssh/10-erp-ai-pro.conf` | `/etc/ssh/sshd_config.d/` | public keys only, no root sign-in, no X11 forwarding |
 | `host/apt/52erp-ai-pro-unattended-upgrades.conf` | `/etc/apt/apt.conf.d/` | daily security updates, the GitHub CLI's repository included, restarting the server at 03:00 India time when one needs it |
 | `host/docker/daemon.json` | `/etc/docker/daemon.json` | live restore, and rotated logs for containers without logging of their own |

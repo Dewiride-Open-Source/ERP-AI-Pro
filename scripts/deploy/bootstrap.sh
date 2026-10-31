@@ -7,9 +7,10 @@ when run again: Docker Engine with live restore, the GitHub CLI from GitHub'"'"'
 deploy.sh verifies a release, the deploy account erp-ai-pro as the only member of the docker group and
 nobody in the lxd group, its checkout of this repository in /srv/erp-ai-pro/ERP-AI-Pro with the folder of
 the client certificates, .env and the two external volumes, the systemd units that start the stack at
-boot and run the retention sweeps every night, security updates (the GitHub CLI'"'"'s included) that restart
-the server at 03:00 India time when one needs it, SSH with public keys only, and a firewall that admits
-SSH from the home network only. Every step changes only what differs, so a second run changes nothing.
+boot, restart an unhealthy container every minute and run the retention sweeps every night, security
+updates (the GitHub CLI'"'"'s included) that restart the server at 03:00 India time when one needs it, SSH
+with public keys only, and a firewall that admits SSH from the home network only. Every step changes only
+what differs, so a second run changes nothing.
 Runbook: docs/operations/runbooks/host-setup.md
 
 Options:
@@ -52,9 +53,9 @@ readonly SSH_EFFECTIVE_SETTINGS=(
 readonly UPDATES_FILE='/etc/apt/apt.conf.d/52erp-ai-pro-unattended-upgrades.conf'
 readonly UPDATE_SERVICES=(apt-daily.service apt-daily-upgrade.service)
 readonly UPDATE_TIMERS=(apt-daily.timer apt-daily-upgrade.timer)
-readonly UNIT_FILES=(erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-retain.timer)
-readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer)
-readonly RETAIN_TIMER='erp-ai-pro-retain.timer'
+readonly UNIT_FILES=(erp-ai-pro.service erp-ai-pro-retain.service erp-ai-pro-retain.timer erp-ai-pro-heal.service erp-ai-pro-heal.timer)
+readonly ENABLED_UNITS=(erp-ai-pro.service erp-ai-pro-retain.timer erp-ai-pro-heal.timer)
+readonly STACK_TIMERS=(erp-ai-pro-retain.timer erp-ai-pro-heal.timer)
 readonly SSH_RULE_COMMENT='SSH from the home network'
 
 SITE_ADDRESS=''
@@ -614,13 +615,12 @@ ensure_deployment_folder() {
 
 ensure_units() {
   log_step "systemd units"
-  local unit reload=0 timer_changed=0
+  local unit reload=0
+  local -A changed=()
   for unit in "${UNIT_FILES[@]}"; do
     if install_config "$HOST_CONFIG_DIR/systemd/$unit" "/etc/systemd/system/$unit" 644 root:root "the unit $unit"; then
       reload=1
-      if [[ "$unit" == *.timer ]]; then
-        timer_changed=1
-      fi
+      changed["$unit"]=1
     fi
   done
   if (( reload )); then
@@ -632,12 +632,14 @@ ensure_units() {
       run systemctl enable --quiet "$unit"
     fi
   done
-  if ! systemctl is-active --quiet "$RETAIN_TIMER"; then
-    record_change "start $RETAIN_TIMER"
-    run systemctl start "$RETAIN_TIMER"
-  elif (( timer_changed )); then
-    run systemctl restart "$RETAIN_TIMER"
-  fi
+  for unit in "${STACK_TIMERS[@]}"; do
+    if ! systemctl is-active --quiet "$unit"; then
+      record_change "start $unit"
+      run systemctl start "$unit"
+    elif [[ -n "${changed[$unit]:-}" ]]; then
+      run systemctl restart "$unit"
+    fi
+  done
   if [[ -x "$DEPLOY_HOME" ]]; then
     local certificate
     local -a missing=()
@@ -647,7 +649,7 @@ ensure_units() {
       fi
     done
     if (( ${#missing[@]} > 0 )); then
-      log_info "systemd skips both services until $DEPLOY_COMPOSE_DIR/secrets holds ${missing[*]}"
+      log_info "systemd skips erp-ai-pro.service and erp-ai-pro-retain.service until $DEPLOY_COMPOSE_DIR/secrets holds ${missing[*]}"
     fi
   fi
 }

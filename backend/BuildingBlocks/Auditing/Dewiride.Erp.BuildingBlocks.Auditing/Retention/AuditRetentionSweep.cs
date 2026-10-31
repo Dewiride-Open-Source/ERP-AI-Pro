@@ -10,8 +10,9 @@ namespace Dewiride.Erp.BuildingBlocks.Auditing.Retention;
 // A change record is kept whole financial years after the year of its change, counted in IST, so every record of one financial
 // year leaves on the same day. Rows go in statements of at most BatchSize, each committed on its own, because a statement that
 // takes 5,000 locks on one index makes SQL Server escalate to a lock on the whole table, which would hold back every insert of
-// the running API until the statement ends. Every row a statement matches is past its retention, so it needs no ordering, and
-// SQL Server receives a plain DELETE TOP.
+// the running API until the statement ends. Each batch takes the oldest rows in the order of the index on OccurredAt, which finds
+// them without a sort (a time-ordered id does not sort by time in SQL Server), and a row limit with an order is one EF Core
+// translates without logging RowLimitingOperationWithoutOrderByWarning into every nightly run.
 internal sealed partial class AuditRetentionSweep(
     AuditingDbContext context,
     TimeProvider timeProvider,
@@ -26,7 +27,9 @@ internal sealed partial class AuditRetentionSweep(
         var settings = options.Value;
 
         var eventsBefore = now - settings.SecurityEventRetention;
-        var events = await DeleteAsync(context.SecurityEvents.Where(e => e.OccurredAt < eventsBefore), cancellationToken).ConfigureAwait(false);
+        var events = await DeleteAsync(
+            context.SecurityEvents.Where(e => e.OccurredAt < eventsBefore).OrderBy(e => e.OccurredAt).ThenBy(e => e.Id),
+            cancellationToken).ConfigureAwait(false);
         LogSecurityEventsDeleted(logger, events, eventsBefore);
 
         if (settings.ChangeRecordRetentionYears is not { } years)
@@ -36,7 +39,9 @@ internal sealed partial class AuditRetentionSweep(
         }
 
         var recordsBefore = ChangeRecordsBefore(now, years);
-        var records = await DeleteAsync(context.ChangeRecords.Where(r => r.OccurredAt < recordsBefore), cancellationToken).ConfigureAwait(false);
+        var records = await DeleteAsync(
+            context.ChangeRecords.Where(r => r.OccurredAt < recordsBefore).OrderBy(r => r.OccurredAt).ThenBy(r => r.Id),
+            cancellationToken).ConfigureAwait(false);
         LogChangeRecordsDeleted(logger, records, recordsBefore);
     }
 
@@ -47,7 +52,7 @@ internal sealed partial class AuditRetentionSweep(
         return IndianStandardTime.StartOfIstDay(new FinancialYear(current.StartYear - years).Start);
     }
 
-    private static async Task<long> DeleteAsync<TRow>(IQueryable<TRow> rows, CancellationToken cancellationToken)
+    private static async Task<long> DeleteAsync<TRow>(IOrderedQueryable<TRow> rows, CancellationToken cancellationToken)
     {
         long total = 0;
         int deleted;

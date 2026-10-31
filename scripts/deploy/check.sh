@@ -4,11 +4,13 @@ USAGE='Usage: bash scripts/deploy/check.sh
 
 Syntax-checks every shell script under scripts/deploy and runs shellcheck when it is on PATH; checks that
 the systemd units under infra/host/systemd run as the deploy account in the deployment checkout that
-bootstrap.sh creates and wait for exactly the files it names, that both services run compose under the
-lock deploy.sh and rollback.sh hold, that the boot unit never migrates, recreates or pulls and tries a
-failed start again, that the nightly unit runs retain alone, that infra/compose/compose.production.yaml
-runs every image by the digest deploy.sh writes into .env, and that infra/host/docker/daemon.json is JSON;
-runs the stand-in scenarios of deploy.sh and rollback.sh (tests/release-decisions.sh); and, where the
+bootstrap.sh creates and wait for exactly the files it names, that the boot and nightly services run
+compose under the lock deploy.sh and rollback.sh hold, that the boot unit never migrates, recreates or
+pulls and tries a failed start again, that the nightly unit runs retain alone, that the heal unit runs
+heal.sh of the deployment checkout every minute and starts no other unit, that
+infra/compose/compose.production.yaml runs every image by the digest deploy.sh writes into .env, and that
+infra/host/docker/daemon.json is JSON; runs the stand-in scenarios of deploy.sh and rollback.sh
+(tests/release-decisions.sh) and of heal.sh (tests/heal-decisions.sh); and, where the
 tools exist (an Ubuntu host or CI runner), verifies the units with systemd-analyze, the APT settings with
 apt-config and the Docker daemon configuration with dockerd --validate. Needs no root and changes nothing.
 
@@ -83,7 +85,7 @@ check_unit_paths() {
 }
 
 check_unit_commands() {
-  log_step "the units start and sweep only as ADR-0049 decides"
+  log_step "the units start, sweep and heal only as ADR-0049 and ADR-0055 decide"
   local boot="$UNIT_DIR/erp-ai-pro.service" retain="$UNIT_DIR/erp-ai-pro-retain.service" timer="$UNIT_DIR/erp-ai-pro-retain.timer"
   local start flag unit
   start="$(sed -n 's/^ExecStart=//p' "$boot")"
@@ -106,8 +108,16 @@ check_unit_commands() {
       || die "$unit does not run compose under the lock $DEPLOY_LOCK that deploy.sh and rollback.sh hold"
   done
   grep -q '^OnCalendar=.* Asia/Kolkata$' "$timer" || die "$timer does not keep its time in India time"
+  local heal="$UNIT_DIR/erp-ai-pro-heal.service" heal_timer="$UNIT_DIR/erp-ai-pro-heal.timer"
+  [[ "$(sed -n 's/^ExecStart=//p' "$heal")" == "/usr/bin/bash $DEPLOY_CHECKOUT/scripts/deploy/heal.sh" ]] \
+    || die "$heal does not run scripts/deploy/heal.sh of the deployment checkout"
+  if grep -qE '^(Wants|Requires)=' "$heal"; then
+    die "$heal starts another unit, but it only looks at the running stack"
+  fi
+  grep -qx 'OnCalendar=minutely' "$heal_timer" || die "$heal_timer does not run every minute"
   log_info "the boot never migrates, recreates or pulls, retries a failed start, and the nightly run is retain alone"
   log_info "both wait for the lock $DEPLOY_LOCK while a deployment or rollback holds it"
+  log_info "the heal unit runs heal.sh every minute, which takes the same lock without waiting"
 }
 
 check_release_pins() {
@@ -133,6 +143,11 @@ check_release_pins() {
 check_release_decisions() {
   log_step "deploy.sh and rollback.sh against stand-ins (tests/release-decisions.sh)"
   bash scripts/deploy/tests/release-decisions.sh
+}
+
+check_heal_decisions() {
+  log_step "heal.sh against stand-ins (tests/heal-decisions.sh)"
+  bash scripts/deploy/tests/heal-decisions.sh
 }
 
 check_daemon_config() {
@@ -189,7 +204,8 @@ main() {
   check_units_with_systemd
   check_apt_settings
   check_release_decisions
-  printf 'deploy scripts check ok: %s shell script(s) parse, the host configuration is consistent and the release decisions hold\n' "$SHELL_SCRIPT_COUNT"
+  check_heal_decisions
+  printf 'deploy scripts check ok: %s shell script(s) parse, the host configuration is consistent and the release and heal decisions hold\n' "$SHELL_SCRIPT_COUNT"
 }
 
 main "$@"
