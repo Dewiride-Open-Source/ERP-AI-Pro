@@ -175,9 +175,9 @@ blob_command() {
       md5="$REPLY"
       if [[ "$*" == *properties.creationTime* ]]; then
         setting az/show-created "$(< "$created")"
-        printf '%s\t%s\t%s\n' "$length" "$md5" "$REPLY"
+        printf '%s\n%s\n%s\n' "$length" "$md5" "$REPLY"
       else
-        printf '%s\t%s\n' "$length" "$md5"
+        printf '%s\n%s\n' "$length" "$md5"
       fi
       ;;
     list)

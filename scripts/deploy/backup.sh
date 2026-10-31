@@ -199,9 +199,12 @@ upload_archive() {
 check_upload() {
   STEP='check'
   local answer length md5 expected_length expected_md5
+  local -a values=()
   answer="$(backup_blob show --name "$ARCHIVE_NAME" --query '[properties.contentLength, properties.contentSettings.contentMd5]' \
     --output tsv)" || fail "cannot read $UPLOADED back (see the Azure CLI's error above)"
-  IFS=$'\t' read -r length md5 <<< "${answer%$'\r'}"
+  # The Azure CLI's tsv output writes each value of a flat multiselect list on a line of its own.
+  mapfile -t values <<< "${answer//$'\r'/}"
+  length="${values[0]:-}" md5="${values[1]:-}"
   expected_length="$(file_size "$BACKUP_ARCHIVE")" || fail "cannot read the size of $BACKUP_ARCHIVE"
   expected_md5="$(file_md5_base64 "$BACKUP_ARCHIVE")" || fail "cannot hash $BACKUP_ARCHIVE"
   if [[ "$length" != "$expected_length" || "$md5" != "$expected_md5" ]]; then
