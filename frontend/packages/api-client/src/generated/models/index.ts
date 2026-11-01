@@ -368,6 +368,60 @@ export function createInvitePersonRequestFromDiscriminatorValue(parseNode: Parse
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {JobActorResponse}
+ */
+// @ts-ignore
+export function createJobActorResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoJobActorResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {JobResponse}
+ */
+// @ts-ignore
+export function createJobResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoJobResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {JobRunEventResponse}
+ */
+// @ts-ignore
+export function createJobRunEventResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoJobRunEventResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {JobRunHistoryResponse}
+ */
+// @ts-ignore
+export function createJobRunHistoryResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoJobRunHistoryResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {JobRunResponse}
+ */
+// @ts-ignore
+export function createJobRunResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoJobRunResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {JobScheduleResponse}
+ */
+// @ts-ignore
+export function createJobScheduleResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoJobScheduleResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {OrgChartPersonResponse}
  */
 // @ts-ignore
@@ -409,6 +463,15 @@ export function createPagedResponseOfDepartmentResponseFromDiscriminatorValue(pa
 // @ts-ignore
 export function createPagedResponseOfDesignationResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoPagedResponseOfDesignationResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfJobRunResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfJobRunResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfJobRunResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -955,6 +1018,108 @@ export function deserializeIntoInvitePersonRequest(invitePersonRequest: Partial<
 }
 /**
  * The deserialization information for the current model
+ * @param JobActorResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoJobActorResponse(jobActorResponse: Partial<JobActorResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "id": n => { jobActorResponse.id = n.getGuidValue(); },
+        "kind": n => { jobActorResponse.kind = n.getEnumValue<JobActorKind>(JobActorKindObject); },
+        "name": n => { jobActorResponse.name = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param JobResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoJobResponse(jobResponse: Partial<JobResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "description": n => { jobResponse.description = n.getStringValue(); },
+        "maxAttempts": n => { jobResponse.maxAttempts = n.getNumberValue(); },
+        "name": n => { jobResponse.name = n.getStringValue(); },
+        "schedule": n => { jobResponse.schedule = n.getObjectValue<JobScheduleResponse>(createJobScheduleResponseFromDiscriminatorValue); },
+        "title": n => { jobResponse.title = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param JobRunEventResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoJobRunEventResponse(jobRunEventResponse: Partial<JobRunEventResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "actor": n => { jobRunEventResponse.actor = n.getObjectValue<JobActorResponse>(createJobActorResponseFromDiscriminatorValue); },
+        "attempt": n => { jobRunEventResponse.attempt = n.getNumberValue(); },
+        "errorCode": n => { jobRunEventResponse.errorCode = n.getStringValue(); },
+        "errorMessage": n => { jobRunEventResponse.errorMessage = n.getStringValue(); },
+        "id": n => { jobRunEventResponse.id = n.getGuidValue(); },
+        "kind": n => { jobRunEventResponse.kind = n.getEnumValue<JobRunEventKind>(JobRunEventKindObject); },
+        "occurredAt": n => { jobRunEventResponse.occurredAt = n.getDateValue(); },
+        "retryAt": n => { jobRunEventResponse.retryAt = n.getDateValue(); },
+        "runner": n => { jobRunEventResponse.runner = n.getStringValue(); },
+        "traceId": n => { jobRunEventResponse.traceId = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param JobRunHistoryResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoJobRunHistoryResponse(jobRunHistoryResponse: Partial<JobRunHistoryResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "events": n => { jobRunHistoryResponse.events = n.getCollectionOfObjectValues<JobRunEventResponse>(createJobRunEventResponseFromDiscriminatorValue); },
+        "run": n => { jobRunHistoryResponse.run = n.getObjectValue<JobRunResponse>(createJobRunResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param JobRunResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoJobRunResponse(jobRunResponse: Partial<JobRunResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "attemptCount": n => { jobRunResponse.attemptCount = n.getNumberValue(); },
+        "cancelRequestedAt": n => { jobRunResponse.cancelRequestedAt = n.getDateValue(); },
+        "createdAt": n => { jobRunResponse.createdAt = n.getDateValue(); },
+        "dueAt": n => { jobRunResponse.dueAt = n.getDateValue(); },
+        "failureCount": n => { jobRunResponse.failureCount = n.getNumberValue(); },
+        "finishedAt": n => { jobRunResponse.finishedAt = n.getDateValue(); },
+        "id": n => { jobRunResponse.id = n.getGuidValue(); },
+        "idempotencyKey": n => { jobRunResponse.idempotencyKey = n.getStringValue(); },
+        "jobName": n => { jobRunResponse.jobName = n.getStringValue(); },
+        "jobTitle": n => { jobRunResponse.jobTitle = n.getStringValue(); },
+        "lastErrorCode": n => { jobRunResponse.lastErrorCode = n.getStringValue(); },
+        "lastErrorMessage": n => { jobRunResponse.lastErrorMessage = n.getStringValue(); },
+        "maxAttempts": n => { jobRunResponse.maxAttempts = n.getNumberValue(); },
+        "requestedBy": n => { jobRunResponse.requestedBy = n.getObjectValue<JobActorResponse>(createJobActorResponseFromDiscriminatorValue); },
+        "startedAt": n => { jobRunResponse.startedAt = n.getDateValue(); },
+        "status": n => { jobRunResponse.status = n.getEnumValue<JobRunStatus>(JobRunStatusObject); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param JobScheduleResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoJobScheduleResponse(jobScheduleResponse: Partial<JobScheduleResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "expression": n => { jobScheduleResponse.expression = n.getStringValue(); },
+        "lastOccurrenceAt": n => { jobScheduleResponse.lastOccurrenceAt = n.getDateValue(); },
+        "lastRunId": n => { jobScheduleResponse.lastRunId = n.getGuidValue(); },
+        "lastRunStatus": n => { jobScheduleResponse.lastRunStatus = n.getEnumValue<JobRunStatus>(JobRunStatusObject); },
+        "nextOccurrenceAt": n => { jobScheduleResponse.nextOccurrenceAt = n.getDateValue(); },
+        "problem": n => { jobScheduleResponse.problem = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param OrgChartPersonResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -1029,6 +1194,21 @@ export function deserializeIntoPagedResponseOfDesignationResponse(pagedResponseO
         "pageSize": n => { pagedResponseOfDesignationResponse.pageSize = n.getNumberValue(); },
         "totalCount": n => { pagedResponseOfDesignationResponse.totalCount = n.getNumberValue(); },
         "totalPages": n => { pagedResponseOfDesignationResponse.totalPages = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param PagedResponseOfJobRunResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfJobRunResponse(pagedResponseOfJobRunResponse: Partial<PagedResponseOfJobRunResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfJobRunResponse.items = n.getCollectionOfObjectValues<JobRunResponse>(createJobRunResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfJobRunResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfJobRunResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfJobRunResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfJobRunResponse.totalPages = n.getNumberValue(); },
     }
 }
 /**
@@ -1504,6 +1684,189 @@ export interface InvitePersonRequest extends AdditionalDataHolder, Parsable {
      */
     roles?: PersonRole[] | null;
 }
+export type JobActorKind = (typeof JobActorKindObject)[keyof typeof JobActorKindObject];
+export interface JobActorResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The kind property
+     */
+    kind?: JobActorKind | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+}
+export interface JobResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The description property
+     */
+    description?: string | null;
+    /**
+     * The maxAttempts property
+     */
+    maxAttempts?: number | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+    /**
+     * The schedule property
+     */
+    schedule?: JobScheduleResponse | null;
+    /**
+     * The title property
+     */
+    title?: string | null;
+}
+export type JobRunEventKind = (typeof JobRunEventKindObject)[keyof typeof JobRunEventKindObject];
+export interface JobRunEventResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The actor property
+     */
+    actor?: JobActorResponse | null;
+    /**
+     * The attempt property
+     */
+    attempt?: number | null;
+    /**
+     * The errorCode property
+     */
+    errorCode?: string | null;
+    /**
+     * The errorMessage property
+     */
+    errorMessage?: string | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The kind property
+     */
+    kind?: JobRunEventKind | null;
+    /**
+     * The occurredAt property
+     */
+    occurredAt?: Date | null;
+    /**
+     * The retryAt property
+     */
+    retryAt?: Date | null;
+    /**
+     * The runner property
+     */
+    runner?: string | null;
+    /**
+     * The traceId property
+     */
+    traceId?: string | null;
+}
+export interface JobRunHistoryResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The events property
+     */
+    events?: JobRunEventResponse[] | null;
+    /**
+     * The run property
+     */
+    run?: JobRunResponse | null;
+}
+export interface JobRunResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The attemptCount property
+     */
+    attemptCount?: number | null;
+    /**
+     * The cancelRequestedAt property
+     */
+    cancelRequestedAt?: Date | null;
+    /**
+     * The createdAt property
+     */
+    createdAt?: Date | null;
+    /**
+     * The dueAt property
+     */
+    dueAt?: Date | null;
+    /**
+     * The failureCount property
+     */
+    failureCount?: number | null;
+    /**
+     * The finishedAt property
+     */
+    finishedAt?: Date | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The idempotencyKey property
+     */
+    idempotencyKey?: string | null;
+    /**
+     * The jobName property
+     */
+    jobName?: string | null;
+    /**
+     * The jobTitle property
+     */
+    jobTitle?: string | null;
+    /**
+     * The lastErrorCode property
+     */
+    lastErrorCode?: string | null;
+    /**
+     * The lastErrorMessage property
+     */
+    lastErrorMessage?: string | null;
+    /**
+     * The maxAttempts property
+     */
+    maxAttempts?: number | null;
+    /**
+     * The requestedBy property
+     */
+    requestedBy?: JobActorResponse | null;
+    /**
+     * The startedAt property
+     */
+    startedAt?: Date | null;
+    /**
+     * The status property
+     */
+    status?: JobRunStatus | null;
+}
+export type JobRunStatus = (typeof JobRunStatusObject)[keyof typeof JobRunStatusObject];
+export interface JobScheduleResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The expression property
+     */
+    expression?: string | null;
+    /**
+     * The lastOccurrenceAt property
+     */
+    lastOccurrenceAt?: Date | null;
+    /**
+     * The lastRunId property
+     */
+    lastRunId?: Guid | null;
+    /**
+     * The lastRunStatus property
+     */
+    lastRunStatus?: JobRunStatus | null;
+    /**
+     * The nextOccurrenceAt property
+     */
+    nextOccurrenceAt?: Date | null;
+    /**
+     * The problem property
+     */
+    problem?: string | null;
+}
 export interface OrgChartPersonResponse extends AdditionalDataHolder, Parsable {
     /**
      * The departmentId property
@@ -1609,6 +1972,28 @@ export interface PagedResponseOfDesignationResponse extends AdditionalDataHolder
      * The items property
      */
     items?: DesignationResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
+}
+export interface PagedResponseOfJobRunResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: JobRunResponse[] | null;
     /**
      * The page property
      */
@@ -2284,6 +2669,114 @@ export function serializeInvitePersonRequest(writer: SerializationWriter, invite
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param JobActorResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeJobActorResponse(writer: SerializationWriter, jobActorResponse: Partial<JobActorResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!jobActorResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("id", jobActorResponse.id);
+    writer.writeEnumValue<JobActorKind>("kind", jobActorResponse.kind);
+    writer.writeStringValue("name", jobActorResponse.name);
+    writer.writeAdditionalData(jobActorResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param JobResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeJobResponse(writer: SerializationWriter, jobResponse: Partial<JobResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!jobResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("description", jobResponse.description);
+    writer.writeNumberValue("maxAttempts", jobResponse.maxAttempts);
+    writer.writeStringValue("name", jobResponse.name);
+    writer.writeObjectValue<JobScheduleResponse>("schedule", jobResponse.schedule, serializeJobScheduleResponse);
+    writer.writeStringValue("title", jobResponse.title);
+    writer.writeAdditionalData(jobResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param JobRunEventResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeJobRunEventResponse(writer: SerializationWriter, jobRunEventResponse: Partial<JobRunEventResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!jobRunEventResponse || isSerializingDerivedType) { return; }
+    writer.writeObjectValue<JobActorResponse>("actor", jobRunEventResponse.actor, serializeJobActorResponse);
+    writer.writeNumberValue("attempt", jobRunEventResponse.attempt);
+    writer.writeStringValue("errorCode", jobRunEventResponse.errorCode);
+    writer.writeStringValue("errorMessage", jobRunEventResponse.errorMessage);
+    writer.writeGuidValue("id", jobRunEventResponse.id);
+    writer.writeEnumValue<JobRunEventKind>("kind", jobRunEventResponse.kind);
+    writer.writeDateValue("occurredAt", jobRunEventResponse.occurredAt);
+    writer.writeDateValue("retryAt", jobRunEventResponse.retryAt);
+    writer.writeStringValue("runner", jobRunEventResponse.runner);
+    writer.writeStringValue("traceId", jobRunEventResponse.traceId);
+    writer.writeAdditionalData(jobRunEventResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param JobRunHistoryResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeJobRunHistoryResponse(writer: SerializationWriter, jobRunHistoryResponse: Partial<JobRunHistoryResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!jobRunHistoryResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<JobRunEventResponse>("events", jobRunHistoryResponse.events, serializeJobRunEventResponse);
+    writer.writeObjectValue<JobRunResponse>("run", jobRunHistoryResponse.run, serializeJobRunResponse);
+    writer.writeAdditionalData(jobRunHistoryResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param JobRunResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeJobRunResponse(writer: SerializationWriter, jobRunResponse: Partial<JobRunResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!jobRunResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("attemptCount", jobRunResponse.attemptCount);
+    writer.writeDateValue("cancelRequestedAt", jobRunResponse.cancelRequestedAt);
+    writer.writeDateValue("createdAt", jobRunResponse.createdAt);
+    writer.writeDateValue("dueAt", jobRunResponse.dueAt);
+    writer.writeNumberValue("failureCount", jobRunResponse.failureCount);
+    writer.writeDateValue("finishedAt", jobRunResponse.finishedAt);
+    writer.writeGuidValue("id", jobRunResponse.id);
+    writer.writeStringValue("idempotencyKey", jobRunResponse.idempotencyKey);
+    writer.writeStringValue("jobName", jobRunResponse.jobName);
+    writer.writeStringValue("jobTitle", jobRunResponse.jobTitle);
+    writer.writeStringValue("lastErrorCode", jobRunResponse.lastErrorCode);
+    writer.writeStringValue("lastErrorMessage", jobRunResponse.lastErrorMessage);
+    writer.writeNumberValue("maxAttempts", jobRunResponse.maxAttempts);
+    writer.writeObjectValue<JobActorResponse>("requestedBy", jobRunResponse.requestedBy, serializeJobActorResponse);
+    writer.writeDateValue("startedAt", jobRunResponse.startedAt);
+    writer.writeEnumValue<JobRunStatus>("status", jobRunResponse.status);
+    writer.writeAdditionalData(jobRunResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param JobScheduleResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeJobScheduleResponse(writer: SerializationWriter, jobScheduleResponse: Partial<JobScheduleResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!jobScheduleResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("expression", jobScheduleResponse.expression);
+    writer.writeDateValue("lastOccurrenceAt", jobScheduleResponse.lastOccurrenceAt);
+    writer.writeGuidValue("lastRunId", jobScheduleResponse.lastRunId);
+    writer.writeEnumValue<JobRunStatus>("lastRunStatus", jobScheduleResponse.lastRunStatus);
+    writer.writeDateValue("nextOccurrenceAt", jobScheduleResponse.nextOccurrenceAt);
+    writer.writeStringValue("problem", jobScheduleResponse.problem);
+    writer.writeAdditionalData(jobScheduleResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param OrgChartPersonResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -2363,6 +2856,22 @@ export function serializePagedResponseOfDesignationResponse(writer: Serializatio
     writer.writeNumberValue("totalCount", pagedResponseOfDesignationResponse.totalCount);
     writer.writeNumberValue("totalPages", pagedResponseOfDesignationResponse.totalPages);
     writer.writeAdditionalData(pagedResponseOfDesignationResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfJobRunResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfJobRunResponse(writer: SerializationWriter, pagedResponseOfJobRunResponse: Partial<PagedResponseOfJobRunResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfJobRunResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<JobRunResponse>("items", pagedResponseOfJobRunResponse.items, serializeJobRunResponse);
+    writer.writeNumberValue("page", pagedResponseOfJobRunResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfJobRunResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfJobRunResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfJobRunResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfJobRunResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -2894,6 +3403,31 @@ export const ErpRoleObject = {
     Manager: "manager",
     Administrator: "administrator",
 } as const;
+export const JobActorKindObject = {
+    Person: "person",
+    System: "system",
+    Anonymous: "anonymous",
+} as const;
+export const JobRunEventKindObject = {
+    Enqueued: "enqueued",
+    Started: "started",
+    Succeeded: "succeeded",
+    Failed: "failed",
+    DeadLettered: "deadLettered",
+    Interrupted: "interrupted",
+    LeaseExpired: "leaseExpired",
+    CancelRequested: "cancelRequested",
+    Cancelled: "cancelled",
+    Rerun: "rerun",
+} as const;
+export const JobRunStatusObject = {
+    Pending: "pending",
+    Running: "running",
+    Failed: "failed",
+    Succeeded: "succeeded",
+    DeadLettered: "deadLettered",
+    Cancelled: "cancelled",
+} as const;
 export const PermissionObject = {
     IdentityUsersDepartmentsCreate: "identity.users.departments.create",
     IdentityUsersDepartmentsDelete: "identity.users.departments.delete",
@@ -2918,6 +3452,9 @@ export const PermissionObject = {
     PlatformAttachmentsFilesUpload: "platform.attachments.files.upload",
     PlatformAuditChangesExport: "platform.audit.changes.export",
     PlatformAuditChangesRead: "platform.audit.changes.read",
+    PlatformJobsRunsCancel: "platform.jobs.runs.cancel",
+    PlatformJobsRunsRead: "platform.jobs.runs.read",
+    PlatformJobsRunsRerun: "platform.jobs.runs.rerun",
     PlatformSystemInfoInfoRead: "platform.system-info.info.read",
     PlatformSystemInfoStartupsRead: "platform.system-info.startups.read",
 } as const;

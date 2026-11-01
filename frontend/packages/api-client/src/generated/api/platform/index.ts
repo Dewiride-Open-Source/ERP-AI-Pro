@@ -8,6 +8,8 @@ import { AuditRequestBuilderNavigationMetadata, type AuditRequestBuilder } from 
 // @ts-ignore
 import { FeaturesRequestBuilderRequestsMetadata, type FeaturesRequestBuilder } from './features/index.js';
 // @ts-ignore
+import { JobsRequestBuilderNavigationMetadata, JobsRequestBuilderRequestsMetadata, type JobsRequestBuilder } from './jobs/index.js';
+// @ts-ignore
 import { SystemInfoRequestBuilderNavigationMetadata, SystemInfoRequestBuilderRequestsMetadata, type SystemInfoRequestBuilder } from './systemInfo/index.js';
 // @ts-ignore
 import { type BaseRequestBuilder, type KeysToExcludeForNavigationMetadata, type NavigationMetadata } from '@microsoft/kiota-abstractions';
@@ -28,6 +30,10 @@ export interface PlatformRequestBuilder extends BaseRequestBuilder<PlatformReque
      * The features property
      */
     get features(): FeaturesRequestBuilder;
+    /**
+     * The jobs property
+     */
+    get jobs(): JobsRequestBuilder;
     /**
      * The systemInfo property
      */
@@ -50,6 +56,10 @@ export const PlatformRequestBuilderNavigationMetadata: Record<Exclude<keyof Plat
     },
     features: {
         requestsMetadata: FeaturesRequestBuilderRequestsMetadata,
+    },
+    jobs: {
+        requestsMetadata: JobsRequestBuilderRequestsMetadata,
+        navigationMetadata: JobsRequestBuilderNavigationMetadata,
     },
     systemInfo: {
         requestsMetadata: SystemInfoRequestBuilderRequestsMetadata,

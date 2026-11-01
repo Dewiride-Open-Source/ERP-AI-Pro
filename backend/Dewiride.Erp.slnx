@@ -44,6 +44,14 @@
     <Project Path="Modules/Platform/Audit/Tests/UnitTests/Dewiride.Erp.Modules.Platform.Audit.UnitTests/Dewiride.Erp.Modules.Platform.Audit.UnitTests.csproj" />
     <Project Path="Modules/Platform/Audit/Tests/IntegrationTests/Dewiride.Erp.Modules.Platform.Audit.IntegrationTests/Dewiride.Erp.Modules.Platform.Audit.IntegrationTests.csproj" />
   </Folder>
+  <Folder Name="/Modules/Platform/Jobs/">
+    <Project Path="Modules/Platform/Jobs/Contracts/Dewiride.Erp.Modules.Platform.Jobs.Contracts/Dewiride.Erp.Modules.Platform.Jobs.Contracts.csproj" />
+    <Project Path="Modules/Platform/Jobs/Module/Dewiride.Erp.Modules.Platform.Jobs/Dewiride.Erp.Modules.Platform.Jobs.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/Jobs/Tests/">
+    <Project Path="Modules/Platform/Jobs/Tests/UnitTests/Dewiride.Erp.Modules.Platform.Jobs.UnitTests/Dewiride.Erp.Modules.Platform.Jobs.UnitTests.csproj" />
+    <Project Path="Modules/Platform/Jobs/Tests/IntegrationTests/Dewiride.Erp.Modules.Platform.Jobs.IntegrationTests/Dewiride.Erp.Modules.Platform.Jobs.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/Modules/Platform/SystemInfo/">
     <Project Path="Modules/Platform/SystemInfo/Contracts/Dewiride.Erp.Modules.Platform.SystemInfo.Contracts/Dewiride.Erp.Modules.Platform.SystemInfo.Contracts.csproj" />
     <Project Path="Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo/Dewiride.Erp.Modules.Platform.SystemInfo.csproj" />

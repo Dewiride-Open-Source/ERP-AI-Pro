@@ -371,6 +371,7 @@
           "Dewiride.Erp.Modules.Identity.Users": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.Attachments": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.Audit": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Jobs": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.SystemInfo": "[1.0.0, )"
         }
       },
@@ -419,6 +420,22 @@
         }
       },
       "dewiride.erp.modules.platform.audit.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.jobs": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Jobs": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Jobs.Contracts": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.jobs.contracts": {
         "type": "Project",
         "dependencies": {
           "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
