@@ -86,9 +86,9 @@ What the job runner and the scheduler record ([background jobs](../architecture/
 
 | Instrument (meter `Dewiride.Erp.Jobs`) | Type | Recorded |
 |---|---|---|
-| `erp.jobs.attempts` | counter, `{attempt}`, tagged `erp.jobs.job`, `erp.jobs.outcome` (`succeeded`, `failed`, `dead-lettered`, `interrupted`, `cancelled`, `lease-lost`) and `erp.error.code` | every attempt that ends |
+| `erp.jobs.attempts` | counter, `{attempt}`, tagged `erp.jobs.job`, `erp.jobs.outcome` (`succeeded`, `failed`, `dead-lettered`, `interrupted`, `cancelled`, `lease-lost`, and `unrecorded` for an attempt whose ending could not be written, because recording it threw or the shutdown's last grace ended first) and `erp.error.code` | every attempt that ends |
 | `erp.jobs.attempt.duration` | histogram, seconds | the time each attempt took |
-| `erp.jobs.attempts.active` | up-down counter | the attempts running in the process |
+| `erp.jobs.attempts.active` | up-down counter | the attempts running in the process, taken back in a `finally`, so it returns to zero whatever ends an attempt |
 | `erp.jobs.leases.recovered` | counter | the runs recovered after their runner stopped renewing their lease |
 | `erp.jobs.claims.lost` | counter | the claims another runner won |
 | `erp.jobs.occurrences` | counter | each occurrence the scheduler took, enqueued or skipped |
