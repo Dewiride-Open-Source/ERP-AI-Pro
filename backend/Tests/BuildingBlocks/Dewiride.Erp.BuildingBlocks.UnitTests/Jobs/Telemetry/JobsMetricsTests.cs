@@ -25,7 +25,10 @@ public sealed class JobsMetricsTests : IDisposable
 
         metrics.AttemptStarted(Job);
         metrics.AttemptEnded(Job, "failed", "directory.unavailable", TimeSpan.FromMilliseconds(1_500));
+        var activeBeforeTheAttemptFinished = active.GetMeasurementSnapshot().Select(measurement => measurement.Value).ToList();
+        metrics.AttemptFinished(Job);
 
+        Assert.Equal([1L], activeBeforeTheAttemptFinished);
         var attempt = Assert.Single(attempts.GetMeasurementSnapshot());
         Assert.Equal(1, attempt.Value);
         Assert.Equal(Job, attempt.Tags[JobsMetrics.JobTag]);

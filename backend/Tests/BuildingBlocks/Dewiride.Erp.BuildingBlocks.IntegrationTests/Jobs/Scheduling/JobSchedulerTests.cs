@@ -1,9 +1,11 @@
 using System.Globalization;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Jobs.Fakes;
+using Dewiride.Erp.BuildingBlocks.Jobs.Administration;
 using Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
 using Dewiride.Erp.BuildingBlocks.Jobs.Domain;
 using Dewiride.Erp.BuildingBlocks.Jobs.Scheduling;
+using Dewiride.Erp.Testing.Jobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -146,6 +148,32 @@ public sealed class JobSchedulerTests
         }
     }
 
+    [Theory]
+    [InlineData("succeeded")]
+    [InlineData("cancelled")]
+    [InlineData("deleted")]
+    public async Task EnqueueDueAsync_PreviousRunFinished_EnqueuesTheNextOccurrence(string end)
+    {
+        var (name, _, jobs) = Create();
+        await using (jobs)
+        {
+            var driver = new JobRunnerDriver(jobs.First.Services);
+            await driver.EnqueueDueOccurrencesAsync(TestContext.Current.CancellationToken);
+            MoveTo(jobs, Ist("2026-11-02T00:31"));
+            Assert.Equal(1, await driver.EnqueueDueOccurrencesAsync(TestContext.Current.CancellationToken));
+            var first = Assert.Single(await RunsOf(jobs, name));
+            await EndAsync(jobs, first.Id, end);
+            MoveTo(jobs, Ist("2026-11-03T00:31"));
+
+            Assert.Equal(1, await driver.EnqueueDueOccurrencesAsync(TestContext.Current.CancellationToken));
+
+            var next = Assert.Single(await RunsOf(jobs, name), run => run.Id != first.Id);
+            Assert.Equal(("occurrence:2026-11-03T00:30+05:30", Ist("2026-11-03T00:30"), JobRunStatus.Pending), (next.IdempotencyKey, next.DueAt, next.Status));
+            var row = await ScheduleOf(jobs, name);
+            Assert.Equal((Ist("2026-11-04T00:30"), Ist("2026-11-03T00:30"), next.Id), (row.NextOccurrenceAt, row.LastOccurrenceAt!.Value, row.LastRunId!.Value));
+        }
+    }
+
     [Fact]
     public async Task EnqueueDueAsync_InvalidExpression_LogsOnceAndLeavesTheScheduleAlone()
     {
@@ -186,6 +214,27 @@ public sealed class JobSchedulerTests
             .AddRecurringJob<ScriptedJob, TestScheduleOptions>(JobsDatabase.Definition(name), schedule => schedule.Expression));
 
         return (name, options, jobs);
+    }
+
+    private static async Task EndAsync(JobsDatabase jobs, JobRunId id, string end)
+    {
+        switch (end)
+        {
+            case "succeeded":
+                Assert.Equal(JobRunStatus.Succeeded, (await new JobRunnerDriver(jobs.First.Services).RunAsync(id, TestContext.Current.CancellationToken)).Status);
+                break;
+            case "cancelled":
+                await using (var scope = jobs.Second.Services.CreateAsyncScope())
+                {
+                    var cancelled = await scope.ServiceProvider.GetRequiredService<IJobAdministration>().CancelAsync(id, TestContext.Current.CancellationToken);
+                    Assert.Equal(JobRunStatus.Cancelled, cancelled.Value.Status);
+                }
+
+                break;
+            default:
+                Assert.Equal(1, await jobs.QueryAsync((context, cancellationToken) => context.Runs.Where(r => r.Id == id).ExecuteDeleteAsync(cancellationToken)));
+                break;
+        }
     }
 
     private static DateTimeOffset Ist(string minute) => DateTimeOffset.Parse($"{minute}:00+05:30", CultureInfo.InvariantCulture);

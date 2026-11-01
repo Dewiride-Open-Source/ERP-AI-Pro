@@ -9,10 +9,15 @@ namespace Dewiride.Erp.BuildingBlocks.Jobs.Persistence;
 // Every change of a run after its insert is one of these compare-and-set statements: an UPDATE of one row whose WHERE names the
 // state it expects, with the event that records the change inserted in the same transaction. No row means a runner or an
 // administrator changed the run first, and nothing is written. The statements of an attempt also name its lease token, so a
-// runner whose lease was taken over can never overwrite the attempt that replaced it. A READ COMMITTED UPDATE qualifies its row
-// under an update lock, also under row versioning and optimized locking, so two runners cannot both see the state they expect.
-// The retrying execution strategy runs a transition again after a commit whose acknowledgement was lost; the retry then finds
-// the event that commit wrote and reports the change as made.
+// runner whose lease was taken over can never overwrite the attempt that replaced it. Without optimized locking a READ
+// COMMITTED UPDATE qualifies its row under an update lock, under row versioning too; under Azure SQL's optimized locking it
+// qualifies the latest committed version without one, waits for a writer that holds the row and qualifies it again. Either way
+// two runners cannot both see the state they expect. A stop request wins over every ending of an attempt but success: a
+// failure, a dead letter or an interruption is written only while the run holds no request, and otherwise the attempt ends
+// cancelled in the same transaction, so no waiting run keeps a request that its next claim would ignore. The retrying execution
+// strategy runs a transition again after a commit whose acknowledgement was lost; the retry then finds the event that commit
+// wrote and reports the change it made. A claim that committed is read back whatever the shutdown does, so its attempt runs and
+// the shutdown interrupts it, instead of the run waiting under a lease nobody renews.
 internal static class JobRunTransitions
 {
     public static Task<List<JobRun>> DueAsync(JobsDbContext context, IReadOnlyCollection<string> jobNames, DateTimeOffset now, int take, CancellationToken cancellationToken) =>
@@ -61,7 +66,7 @@ internal static class JobRunTransitions
             return null;
         }
 
-        var run = await context.Runs.AsNoTracking().SingleOrDefaultAsync(r => r.Id == runId && r.LeaseToken == claim.Token, cancellationToken).ConfigureAwait(false);
+        var run = await context.Runs.AsNoTracking().SingleOrDefaultAsync(r => r.Id == runId && r.LeaseToken == claim.Token, CancellationToken.None).ConfigureAwait(false);
 
         return run is null ? null : new ClaimedRun(run.Id, run.JobName, run.Payload, run.AttemptCount, run.FailureCount, claim.Token, claim.Runner, claim.TraceId, claim.At);
     }
@@ -86,18 +91,22 @@ internal static class JobRunTransitions
         return cancelRequested ? LeaseState.CancelRequested : LeaseState.Held;
     }
 
-    public static Task<bool> EndAttemptAsync(JobsDbContext context, ClaimedRun run, AttemptEnding ending, JobRunEvent recorded, CancellationToken cancellationToken)
+    public static Task<JobRunStatus?> EndAttemptAsync(JobsDbContext context, ClaimedRun run, DateTimeOffset at, AttemptEnding ending, JobRunEvent recorded, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(run);
 
-        return InTransactionAsync(context, recorded, token => End(Held(context, run.Id, run.LeaseToken), ending, token), cancellationToken);
+        var stopped = JobRunEvent.Record(run.Id, JobRunEventKind.Cancelled, at, ActorIds.System, run.Attempt, run.Runner, run.TraceId);
+
+        return EndAsync(context, Held(context, run.Id, run.LeaseToken), at, ending, recorded, stopped, cancellationToken);
     }
 
-    public static Task<bool> EndAbandonedAsync(JobsDbContext context, JobRun observed, DateTimeOffset now, AttemptEnding ending, JobRunEvent recorded, CancellationToken cancellationToken)
+    public static Task<JobRunStatus?> EndAbandonedAsync(JobsDbContext context, JobRun observed, DateTimeOffset now, AttemptEnding ending, JobRunEvent recorded, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(observed);
 
-        return InTransactionAsync(context, recorded, token => End(Abandoned(context, observed, now), ending, token), cancellationToken);
+        var stopped = JobRunEvent.Record(observed.Id, JobRunEventKind.Cancelled, now, ActorIds.System, observed.AttemptCount, observed.LeaseHolder, error: StoredError.From(JobAttemptErrors.LeaseExpired));
+
+        return EndAsync(context, Abandoned(context, observed, now), now, ending, recorded, stopped, cancellationToken);
     }
 
     public static Task<bool> RerunAsync(JobsDbContext context, JobRunId runId, DateTimeOffset at, Guid actorId, CancellationToken cancellationToken) =>
@@ -167,6 +176,37 @@ internal static class JobRunTransitions
     private static IQueryable<JobRun> Abandoned(JobsDbContext context, JobRun observed, DateTimeOffset now) =>
         Held(context, observed.Id, observed.LeaseToken ?? Guid.Empty).Where(r => r.LeaseExpiresAt <= now);
 
+    private static async Task<JobRunStatus?> EndAsync(
+        JobsDbContext context,
+        IQueryable<JobRun> attempt,
+        DateTimeOffset at,
+        AttemptEnding ending,
+        JobRunEvent recorded,
+        JobRunEvent stopped,
+        CancellationToken cancellationToken)
+    {
+        if (ending.Status is JobRunStatus.Succeeded or JobRunStatus.Cancelled)
+        {
+            return await InTransactionAsync(context, recorded, token => End(attempt, ending, token), cancellationToken).ConfigureAwait(false) ? ending.Status : null;
+        }
+
+        var cancelled = AttemptEnding.Cancelled(at);
+        var written = await FirstInTransactionAsync(
+            context,
+            [
+                (recorded, token => End(attempt.Where(r => r.CancelRequestedAt == null), ending, token)),
+                (stopped, token => End(attempt.Where(r => r.CancelRequestedAt != null), cancelled, token)),
+            ],
+            cancellationToken).ConfigureAwait(false);
+
+        return written switch
+        {
+            0 => ending.Status,
+            1 => cancelled.Status,
+            _ => null,
+        };
+    }
+
     private static Task<int> End(IQueryable<JobRun> attempt, AttemptEnding ending, CancellationToken cancellationToken) =>
         attempt.ExecuteUpdateAsync(
             setters =>
@@ -212,22 +252,40 @@ internal static class JobRunTransitions
             .SetProperty(r => r.LeaseHolder, (string?)null)
             .SetProperty(r => r.LeaseExpiresAt, (DateTimeOffset?)null);
 
-    private static Task<bool> InTransactionAsync(JobsDbContext context, JobRunEvent recorded, Func<CancellationToken, Task<int>> change, CancellationToken cancellationToken) =>
+    private static async Task<bool> InTransactionAsync(JobsDbContext context, JobRunEvent recorded, Func<CancellationToken, Task<int>> change, CancellationToken cancellationToken) =>
+        await FirstInTransactionAsync(context, [(recorded, change)], cancellationToken).ConfigureAwait(false) == 0;
+
+    private static Task<int> FirstInTransactionAsync(
+        JobsDbContext context,
+        IReadOnlyList<(JobRunEvent Recorded, Func<CancellationToken, Task<int>> Change)> changes,
+        CancellationToken cancellationToken) =>
         context.Database.CreateExecutionStrategy().ExecuteAsync(
             async token =>
             {
                 context.ChangeTracker.Clear();
                 await using var transaction = await context.Database.BeginTransactionAsync(token).ConfigureAwait(false);
-                if (await change(token).ConfigureAwait(false) == 0)
+                for (var index = 0; index < changes.Count; index++)
                 {
-                    return await context.Events.AnyAsync(e => e.Id == recorded.Id, token).ConfigureAwait(false);
+                    if (await changes[index].Change(token).ConfigureAwait(false) > 0)
+                    {
+                        context.Events.Add(changes[index].Recorded);
+                        await context.SaveChangesAsync(token).ConfigureAwait(false);
+                        await transaction.CommitAsync(token).ConfigureAwait(false);
+
+                        return index;
+                    }
                 }
 
-                context.Events.Add(recorded);
-                await context.SaveChangesAsync(token).ConfigureAwait(false);
-                await transaction.CommitAsync(token).ConfigureAwait(false);
+                for (var index = 0; index < changes.Count; index++)
+                {
+                    var id = changes[index].Recorded.Id;
+                    if (await context.Events.AnyAsync(e => e.Id == id, token).ConfigureAwait(false))
+                    {
+                        return index;
+                    }
+                }
 
-                return true;
+                return -1;
             },
             cancellationToken);
 }

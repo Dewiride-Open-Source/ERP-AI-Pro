@@ -78,6 +78,8 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
 
     private readonly List<Action<IEndpointRouteBuilder>> _testEndpoints = [];
 
+    private readonly List<Action<IServiceCollection>> _testServices = [];
+
     private TestDeployment? _deployment;
 
     private bool _ownsDeployment;
@@ -166,6 +168,19 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         }
 
         _testEndpoints.Add(map);
+
+        return this;
+    }
+
+    public ErpApiFactory WithTestServices(Action<IServiceCollection> configure)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        if (_hostCreated)
+        {
+            throw new InvalidOperationException("WithTestServices must be called before the first client or service is requested from the factory.");
+        }
+
+        _testServices.Add(configure);
 
         return this;
     }
@@ -304,6 +319,11 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
             {
                 services.AddSingleton<InProcessJobQueue>();
                 services.Replace(ServiceDescriptor.Scoped<IJobQueue>(provider => provider.GetRequiredService<InProcessJobQueue>()));
+            }
+
+            foreach (var configure in _testServices)
+            {
+                configure(services);
             }
         });
     }

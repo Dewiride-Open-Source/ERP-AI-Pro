@@ -25,7 +25,7 @@ internal sealed class JobsMetrics
         ArgumentNullException.ThrowIfNull(meterFactory);
 
         var meter = meterFactory.Create(MeterName);
-        _attempts = meter.CreateCounter<long>("erp.jobs.attempts", "{attempt}", "Attempts by job and outcome: succeeded, failed, dead-lettered, interrupted, cancelled or lease-lost.");
+        _attempts = meter.CreateCounter<long>("erp.jobs.attempts", "{attempt}", "Attempts by job and outcome: succeeded, failed, dead-lettered, interrupted, cancelled, lease-lost, or unrecorded when the outcome could not be written.");
         _attemptDuration = meter.CreateHistogram<double>("erp.jobs.attempt.duration", "s", "Duration of attempts by job and outcome.");
         _activeAttempts = meter.CreateUpDownCounter<long>("erp.jobs.attempts.active", "{attempt}", "Attempts this process is running.");
         _recoveredLeases = meter.CreateCounter<long>("erp.jobs.leases.recovered", "{lease}", "Runs recovered after the runner holding them stopped renewing their lease.");
@@ -36,9 +36,10 @@ internal sealed class JobsMetrics
 
     public void AttemptStarted(string job) => _activeAttempts.Add(1, Tag(JobTag, job));
 
+    public void AttemptFinished(string job) => _activeAttempts.Add(-1, Tag(JobTag, job));
+
     public void AttemptEnded(string job, string outcome, string? errorCode, TimeSpan duration)
     {
-        _activeAttempts.Add(-1, Tag(JobTag, job));
         _attemptDuration.Record(duration.TotalSeconds, Tag(JobTag, job), Tag(OutcomeTag, outcome));
         if (errorCode is null)
         {

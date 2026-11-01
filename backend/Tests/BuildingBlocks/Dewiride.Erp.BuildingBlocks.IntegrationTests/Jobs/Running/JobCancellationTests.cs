@@ -12,7 +12,9 @@ using Microsoft.Extensions.Options;
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Jobs.Running;
 
 // The second runner's host stands for the API an administrator uses, its actor the administrator; the first runs the jobs as
-// the system.
+// the system. An attempt that ends before its first renewal never reads a stop request, so those tests end the job while the
+// first runner's clock holds still. The test of a recovery asks for the stop through the first host, whose clock still sees the
+// lease held, while the second recovers the run.
 public sealed class JobCancellationTests
 {
     private static readonly Guid Administrator = new("0198f6a2-7c1e-7b3a-9d4e-000000000a01");
@@ -70,6 +72,70 @@ public sealed class JobCancellationTests
         var outcome = await attempt;
 
         Assert.Equal(JobRunStatus.Succeeded, outcome.Status);
+    }
+
+    [Theory]
+    [InlineData(ErrorKind.Unavailable)]
+    [InlineData(ErrorKind.Validation)]
+    public async Task CancelAsync_RunningJobFailsBeforeItsNextRenewal_CancelsTheRunInsteadOfRecordingTheFailure(ErrorKind kind)
+    {
+        var script = new JobScript().WaitingForRelease(Result.Fail(new Error("test.failure", "The test failed.", kind)));
+        await using var jobs = Create(script, "cancel-then-fail");
+        var id = await jobs.EnqueueAsync<ScriptedJob>(JobsDatabase.NewKey());
+        var attempt = new JobRunnerDriver(jobs.First.Services).RunAsync(id, TestContext.Current.CancellationToken);
+        await script.Started;
+
+        var requested = await AdministerAsync(jobs, administration => administration.CancelAsync(id, TestContext.Current.CancellationToken));
+        script.Release();
+        var outcome = await attempt;
+
+        Assert.Equal(JobRunStatus.Running, requested.Value.Status);
+        Assert.Equal((JobRunStatus.Cancelled, (string?)null), (outcome.Status, outcome.ErrorCode));
+        await AssertCancelledByTheSystemAsync(jobs, id, outcome.TraceId);
+        jobs.Advance(JobRetryPolicy.Default.DelayAfter(1));
+        Assert.Null(await jobs.FirstRunner.TryRunAsync(id, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task CancelAsync_RunningJobInterruptedBeforeItsNextRenewal_CancelsTheRunInsteadOfPuttingItBack()
+    {
+        var script = JobScript.Succeeding().WaitingForItsToken();
+        await using var jobs = Create(script, "cancel-then-interrupt");
+        var id = await jobs.EnqueueAsync<ScriptedJob>(JobsDatabase.NewKey());
+        var attempt = new JobRunnerDriver(jobs.First.Services).RunAsync(id, TestContext.Current.CancellationToken);
+        await script.Started;
+
+        var requested = await AdministerAsync(jobs, administration => administration.CancelAsync(id, TestContext.Current.CancellationToken));
+        jobs.FirstRunner.Abort();
+        var outcome = await attempt;
+
+        Assert.Equal(JobRunStatus.Running, requested.Value.Status);
+        Assert.True(script.TokenFired);
+        Assert.Equal((JobRunStatus.Cancelled, (string?)null), (outcome.Status, outcome.ErrorCode));
+        await AssertCancelledByTheSystemAsync(jobs, id, outcome.TraceId);
+    }
+
+    [Fact]
+    public async Task RecoverExpiredLeasesAsync_StopRequestedAfterTheRecoveryReadTheRun_CancelsTheRun()
+    {
+        await using var jobs = Create(JobScript.Succeeding(), "cancel-recovering");
+        var id = await jobs.EnqueueAsync<ScriptedJob>(JobsDatabase.NewKey());
+        await jobs.FirstRunner.TryClaimAsync(id, 0, ActivityTraceId.CreateRandom().ToHexString(), TestContext.Current.CancellationToken);
+        JobsDatabase.ActorOf(jobs.First).ActorId = Administrator;
+        jobs.SecondClock.Advance(jobs.Second.Services.GetRequiredService<IOptions<JobRunnerOptions>>().Value.LeaseDuration);
+        JobRunDetails? requested = null;
+        JobsTransactionHook.Of(jobs.Second).BeforeNextStart(async () =>
+            requested = (await AdministerAsync(jobs.First, administration => administration.CancelAsync(id, TestContext.Current.CancellationToken))).Value);
+
+        var recovered = await jobs.SecondRunner.RecoverExpiredLeasesAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal((1, (JobRunStatus?)JobRunStatus.Running), (recovered, requested?.Status));
+        var run = await jobs.RunAsync(id);
+        Assert.Equal((JobRunStatus.Cancelled, 0, (Guid?)null, Administrator), (run.Status, run.FailureCount, run.LeaseToken, run.CancelRequestedBy!.Value));
+        var events = await jobs.EventsAsync(id);
+        Assert.DoesNotContain(events, e => e.Kind is JobRunEventKind.LeaseExpired or JobRunEventKind.Failed or JobRunEventKind.DeadLettered);
+        var cancelled = Assert.Single(events, e => e.Kind == JobRunEventKind.Cancelled);
+        Assert.Equal((ActorIds.System, "job.lease-expired", 1, "runner-a"), (cancelled.ActorId, cancelled.ErrorCode, cancelled.Attempt!.Value, cancelled.Runner));
     }
 
     [Fact]
@@ -147,17 +213,31 @@ public sealed class JobCancellationTests
 
     private static JobsDatabase Create(JobScript script, string scenario)
     {
-        var jobs = JobsDatabase.Create(services => services.AddSingleton(script).AddJob<ScriptedJob>(JobsDatabase.Definition(JobsDatabase.NewName(scenario))));
+        var jobs = JobsDatabase.Create(services => JobsTransactionHook.Register(services.AddSingleton(script).AddJob<ScriptedJob>(JobsDatabase.Definition(JobsDatabase.NewName(scenario)))));
         JobsDatabase.ActorOf(jobs.Second).ActorId = Administrator;
 
         return jobs;
     }
 
-    private static async Task<Result<JobRunDetails>> AdministerAsync(JobsDatabase jobs, Func<IJobAdministration, Task<Result<JobRunDetails>>> action)
+    private static Task<Result<JobRunDetails>> AdministerAsync(JobsDatabase jobs, Func<IJobAdministration, Task<Result<JobRunDetails>>> action) =>
+        AdministerAsync(jobs.Second, action);
+
+    private static async Task<Result<JobRunDetails>> AdministerAsync(IHost host, Func<IJobAdministration, Task<Result<JobRunDetails>>> action)
     {
-        await using var scope = jobs.Second.Services.CreateAsyncScope();
+        await using var scope = host.Services.CreateAsyncScope();
 
         return await action(scope.ServiceProvider.GetRequiredService<IJobAdministration>());
+    }
+
+    private static async Task AssertCancelledByTheSystemAsync(JobsDatabase jobs, JobRunId id, string traceId)
+    {
+        var run = await jobs.RunAsync(id);
+        Assert.Equal((JobRunStatus.Cancelled, 0, jobs.FirstClock.GetUtcNow(), (Guid?)null), (run.Status, run.FailureCount, run.FinishedAt!.Value, run.LeaseToken));
+        var events = await jobs.EventsAsync(id);
+        Assert.DoesNotContain(events, e => e.Kind is JobRunEventKind.Failed or JobRunEventKind.DeadLettered or JobRunEventKind.Interrupted);
+        Assert.Equal(Administrator, Assert.Single(events, e => e.Kind == JobRunEventKind.CancelRequested).ActorId);
+        var cancelled = Assert.Single(events, e => e.Kind == JobRunEventKind.Cancelled);
+        Assert.Equal((ActorIds.System, 1, "runner-a", traceId, (string?)null), (cancelled.ActorId, cancelled.Attempt!.Value, cancelled.Runner, cancelled.TraceId, cancelled.ErrorCode));
     }
 
     private static TimeSpan RenewalInterval(JobsDatabase jobs) => jobs.First.Services.GetRequiredService<IOptions<JobRunnerOptions>>().Value.RenewalInterval;

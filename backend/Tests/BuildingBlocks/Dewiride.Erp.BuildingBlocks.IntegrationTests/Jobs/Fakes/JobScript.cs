@@ -30,12 +30,14 @@ public sealed class JobScript
 
     public void MarkStarted() => _started.TrySetResult();
 
-    public JobScript WaitingForRelease()
+    public JobScript WaitingForRelease() => WaitingForRelease(Result.Success());
+
+    public JobScript WaitingForRelease(Result result)
     {
         Run = async (_, _) =>
         {
             await _released.Task;
-            return Result.Success();
+            return result;
         };
 
         return this;

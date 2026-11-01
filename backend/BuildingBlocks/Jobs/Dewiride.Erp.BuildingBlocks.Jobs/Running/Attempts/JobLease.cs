@@ -7,6 +7,8 @@ namespace Dewiride.Erp.BuildingBlocks.Jobs.Running.Attempts;
 // Keeps an attempt's lease alive while its job runs, in a scope of its own, and reads at each renewal whether an administrator
 // asked the run to stop. A lease found taken over, or a stop request, cancels the job's token; after a stop request the lease
 // is still renewed, so the run is not recovered while its job winds down. A renewal that fails is retried at the next interval.
+// Start sets the first renewal's timer before it returns, so the interval counts from the start of the job whatever the thread
+// pool is doing.
 internal sealed partial class JobLease : IAsyncDisposable
 {
     private readonly IServiceScopeFactory _scopes;
@@ -49,7 +51,7 @@ internal sealed partial class JobLease : IAsyncDisposable
 
     public bool CancelRequested => _cancelRequested;
 
-    public void Start() => _renewals = Task.Run(RenewAsync);
+    public void Start() => _renewals = RenewAsync();
 
     public async Task StopAsync()
     {

@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace Dewiride.Erp.Testing.EndToEnd;
+namespace Dewiride.Erp.Testing.EndToEnd.Jobs;
 
 // The end-to-end host runs no job runner, so no run ever executes there, and a spec shows a run in each state by seeding it here
 // with the events the engine would have written; the run belongs to whatever job the seed names, defined by the host or not.

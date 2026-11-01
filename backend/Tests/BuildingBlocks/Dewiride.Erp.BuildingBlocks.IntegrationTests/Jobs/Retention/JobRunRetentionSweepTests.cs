@@ -20,8 +20,9 @@ using Microsoft.Extensions.Time.Testing;
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Jobs.Retention;
 
 // A sweep deletes every finished run past its retention in the per-process test database, not only its own test's. These runs
-// finish in 2001 and every sweep's clock is set before 2003, while the other test classes write their runs in 2026, so no sweep
-// here reaches another class's run; schedule rows are swept for every job the host does not schedule, so the class runs alone.
+// finish in 2001 and every sweep's clock is set before 2003, while the other test classes write their runs in 2026, or in 2000
+// without finishing them, so no sweep here reaches another class's run; schedule rows are swept for every job the host does not
+// schedule, so the class runs alone.
 [Collection(JobScheduleHolders.Name)]
 public sealed class JobRunRetentionSweepTests
 {

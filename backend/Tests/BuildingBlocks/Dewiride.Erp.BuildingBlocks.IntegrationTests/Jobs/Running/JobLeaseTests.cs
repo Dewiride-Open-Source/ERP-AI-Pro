@@ -3,6 +3,7 @@ using Dewiride.Erp.BuildingBlocks.IntegrationTests.Jobs.Fakes;
 using Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
 using Dewiride.Erp.BuildingBlocks.Jobs.Domain;
 using Dewiride.Erp.BuildingBlocks.Jobs.Running;
+using Dewiride.Erp.Testing.Jobs;
 using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Jobs.Running;
@@ -37,7 +38,36 @@ public sealed class JobLeaseTests
     }
 
     [Fact]
-    public async Task CompleteAsync_AfterTheLeaseWasRecovered_DiscardsTheOutcome()
+    public async Task RenewAsync_LeaseHeld_ExtendsTheLeaseSoNoRunnerRecoversTheRun()
+    {
+        var script = JobScript.Succeeding().WaitingForRelease();
+        await using var jobs = JobsDatabase.Create(services => services.AddSingleton(script).AddJob<ScriptedJob>(JobsDatabase.Definition(JobsDatabase.NewName("renew"))));
+        var id = await jobs.EnqueueAsync<ScriptedJob>(JobsDatabase.NewKey());
+        var claimedUntil = jobs.FirstClock.GetUtcNow() + LeaseDuration(jobs);
+        var attempt = jobs.FirstRunner.TryRunAsync(id, TestContext.Current.CancellationToken);
+        await script.Started;
+        Assert.Equal(claimedUntil, (await jobs.RunAsync(id)).LeaseExpiresAt);
+
+        jobs.FirstClock.Advance(RenewalInterval(jobs));
+        var renewedUntil = jobs.FirstClock.GetUtcNow() + LeaseDuration(jobs);
+        var waited = Stopwatch.StartNew();
+        while ((await jobs.RunAsync(id)).LeaseExpiresAt != renewedUntil)
+        {
+            Assert.True(waited.Elapsed < TimeSpan.FromMinutes(1), "The renewal did not extend the lease.");
+        }
+
+        jobs.SecondClock.SetUtcNow(claimedUntil + ((renewedUntil - claimedUntil) / 2));
+        var recovered = await new JobRunnerDriver(jobs.Second.Services).RecoverExpiredLeasesAsync(TestContext.Current.CancellationToken);
+        script.Release();
+        var completed = await attempt;
+
+        Assert.Equal(0, recovered);
+        Assert.Equal(JobRunStatus.Succeeded, completed!.RecordedStatus);
+        Assert.DoesNotContain(await jobs.EventsAsync(id), e => e.Kind == JobRunEventKind.LeaseExpired);
+    }
+
+    [Fact]
+    public async Task TryRunAsync_LeaseRecoveredBeforeTheJobReturns_DiscardsTheOutcome()
     {
         var script = JobScript.Succeeding().WaitingForRelease();
         await using var jobs = JobsDatabase.Create(services => services.AddSingleton(script).AddJob<ScriptedJob>(JobsDatabase.Definition(JobsDatabase.NewName("discard"))));
@@ -68,7 +98,7 @@ public sealed class JobLeaseTests
 
         jobs.SecondClock.Advance(LeaseDuration(jobs));
         Assert.Equal(1, await jobs.SecondRunner.RecoverExpiredLeasesAsync(TestContext.Current.CancellationToken));
-        jobs.FirstClock.Advance(jobs.First.Services.GetRequiredService<IOptions<JobRunnerOptions>>().Value.RenewalInterval);
+        jobs.FirstClock.Advance(RenewalInterval(jobs));
         var completed = await attempt;
 
         Assert.True(script.TokenFired);
@@ -78,4 +108,6 @@ public sealed class JobLeaseTests
     }
 
     private static TimeSpan LeaseDuration(JobsDatabase jobs) => jobs.First.Services.GetRequiredService<IOptions<JobRunnerOptions>>().Value.LeaseDuration;
+
+    private static TimeSpan RenewalInterval(JobsDatabase jobs) => jobs.First.Services.GetRequiredService<IOptions<JobRunnerOptions>>().Value.RenewalInterval;
 }

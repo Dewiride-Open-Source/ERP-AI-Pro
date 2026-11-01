@@ -3,6 +3,7 @@ using System.Text.Json;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.EndToEnd;
+using Dewiride.Erp.Testing.EndToEnd.Jobs;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.EndToEnd;
 

@@ -16,11 +16,12 @@ namespace Dewiride.Erp.Host.Migrator;
 // The host is built but never started: starting it would run the modules' hosted services, which belong to the API. Every
 // command first refuses a database that holds a migration this release does not know, because the release's seeders and sweeps
 // were written for an older schema, and status refusing too tells a deployment that the database is ahead before it replaces
-// anything. The retention sweeps run here alone, under the migrator's principal, because the API's database user may not delete
-// from the audit schema and one step on one timer deletes everything past a retention. migrate only logs a sweep that failed,
-// because a deletion that can wait never stops a deployment; retain does nothing else, so it fails with the sweep and whatever
-// schedules it sees the failure. Of the store's Key Vault references the host opens only the two connection strings, so the
-// migrator's principal is granted no other secret of the vault (ADR-0050).
+// anything. The retention sweeps run here alone, under the migrator's principal: the API's database user may not delete from
+// the audit schema, and every retention sweep then runs in one step on one timer, while the API keeps its own expiry cleanups
+// of idempotency keys, abandoned uploads and expired download links. migrate only logs a sweep that failed, because a deletion
+// that can wait never stops a deployment; retain does nothing else, so it fails with the sweep and whatever schedules it sees
+// the failure. Of the store's Key Vault references the host opens only the two connection strings, so the migrator's principal
+// is granted no other secret of the vault (ADR-0050).
 internal static partial class MigratorApplication
 {
     public static readonly FrozenSet<string> KeyVaultReferences = new[]

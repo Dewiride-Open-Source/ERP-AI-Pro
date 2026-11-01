@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
 using Dewiride.Erp.BuildingBlocks.Jobs.Domain;
 using Dewiride.Erp.BuildingBlocks.Jobs.Queue;
 using Dewiride.Erp.BuildingBlocks.Jobs.Running;
+using Dewiride.Erp.BuildingBlocks.Jobs.Scheduling;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging.Testing;
@@ -12,7 +13,8 @@ using Microsoft.Extensions.Options;
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Jobs.Running;
 
 // The loop of the first runner's host, started and stopped by hand. The host's shutdown timeout is the token the test gives
-// StopAsync and cancels when it chooses, so no test waits for real time to pass.
+// StopAsync and cancels when it chooses, so no test waits for real time to pass. The test of the loop's start gate builds the
+// service over a lifetime it starts by hand, which tells it when the loop reached the gate.
 public sealed class JobRunnerServiceTests
 {
     [Fact]
@@ -86,15 +88,17 @@ public sealed class JobRunnerServiceTests
         var script = JobScript.Succeeding();
         await using var jobs = Create(script, "not-started");
         var id = await jobs.EnqueueAsync<ScriptedJob>(JobsDatabase.NewKey());
-        var service = ServiceOf(jobs);
+        using var lifetime = new ManualApplicationLifetime();
+        using var service = ServiceOf(jobs, lifetime);
 
         await service.StartAsync(TestContext.Current.CancellationToken);
+        await lifetime.StartRequested.WaitAsync(TimeSpan.FromMinutes(1), TestContext.Current.CancellationToken);
         jobs.First.Services.GetRequiredService<JobSignal>().Wake();
         jobs.Advance(PollInterval(jobs) * 3);
 
         Assert.Equal((JobRunStatus.Pending, 0), ((await jobs.RunAsync(id)).Status, (await jobs.RunAsync(id)).AttemptCount));
         Assert.Empty(script.Executions);
-        JobsDatabase.LifetimeOf(jobs.First).NotifyStarted();
+        lifetime.NotifyStarted();
         await script.Started;
         await service.StopAsync(CancellationToken.None);
         Assert.Equal(JobRunStatus.Succeeded, (await jobs.RunAsync(id)).Status);
@@ -140,6 +144,20 @@ public sealed class JobRunnerServiceTests
         JobsDatabase.Create(services => services.AddSingleton(script).AddJob<ScriptedJob>(JobsDatabase.Definition(JobsDatabase.NewName(scenario))));
 
     private static JobRunnerService ServiceOf(JobsDatabase jobs) => jobs.First.Services.GetServices<IHostedService>().OfType<JobRunnerService>().Single();
+
+    private static JobRunnerService ServiceOf(JobsDatabase jobs, IHostApplicationLifetime lifetime)
+    {
+        var services = jobs.First.Services;
+
+        return new JobRunnerService(
+            services.GetRequiredService<JobRunner>(),
+            services.GetRequiredService<JobScheduler>(),
+            services.GetRequiredService<JobSignal>(),
+            lifetime,
+            services.GetRequiredService<IOptions<JobRunnerOptions>>(),
+            services.GetRequiredService<TimeProvider>(),
+            services.GetRequiredService<ILogger<JobRunnerService>>());
+    }
 
     private static async Task<JobRunnerService> StartAsync(JobsDatabase jobs)
     {

@@ -18,12 +18,18 @@ namespace Dewiride.Erp.BuildingBlocks.Jobs.Running;
 // Claims due runs of the jobs this release defines, up to the free slots, and runs each attempt on a task of its own, outside
 // any request, so every attempt's scope answers the system as its actor. A job's token fires when its attempt overruns its
 // limit, when an administrator asks it to stop, when its lease is lost, or when the host's shutdown timeout ends, never when
-// shutdown merely begins. An attempt's outcome is recorded with no token until the shutdown's last grace has passed. Delivery is
-// at least once: a process that dies after a job's work but before its outcome leaves the run to the runner that recovers its
-// expired lease.
+// shutdown merely begins. An attempt's outcome is recorded with no token until the shutdown's last grace has passed, and what
+// the attempt logs and measures follows the ending that was written, which a stored stop request turns from a failure or an
+// interruption into a cancel; an attempt whose ending could not be written is measured as unrecorded. Delivery is at least
+// once: a process that dies after a job's work but before its outcome leaves the run to the runner that recovers its expired
+// lease.
 internal sealed partial class JobRunner : IDisposable
 {
     public const int RecoveryBatchSize = 100;
+
+    private const string LeaseLostOutcome = "lease-lost";
+
+    private const string UnrecordedOutcome = "unrecorded";
 
     private readonly IServiceScopeFactory _scopes;
 
@@ -148,11 +154,11 @@ internal sealed partial class JobRunner : IDisposable
                 (null, { } due) => (AttemptEnding.Failed(failures, due, error), Recovered(run, JobRunEventKind.LeaseExpired, now, error, due)),
                 _ => (AttemptEnding.DeadLettered(failures, now, error), Recovered(run, JobRunEventKind.DeadLettered, now, error, null)),
             };
-            if (await JobRunTransitions.EndAbandonedAsync(context, run, now, ending, recorded, cancellationToken).ConfigureAwait(false))
+            if (await JobRunTransitions.EndAbandonedAsync(context, run, now, ending, recorded, cancellationToken).ConfigureAwait(false) is { } status)
             {
                 recovered++;
                 _metrics.LeaseRecovered(run.JobName);
-                LogRecovered(run.JobName, run.AttemptCount, run.LeaseHolder, ending.Status);
+                LogRecovered(run.JobName, run.AttemptCount, run.LeaseHolder, status);
             }
         }
 
@@ -178,16 +184,6 @@ internal sealed partial class JobRunner : IDisposable
 
     private static JobRunEvent Recorded(ClaimedRun run, JobRunEventKind kind, DateTimeOffset at, StoredError? error = null, DateTimeOffset? retryAt = null) =>
         JobRunEvent.Record(run.Id, kind, at, ActorIds.System, run.Attempt, run.Runner, run.TraceId, error, retryAt);
-
-    private static string OutcomeTag(JobRunStatus? status) => status switch
-    {
-        JobRunStatus.Succeeded => "succeeded",
-        JobRunStatus.Failed => "failed",
-        JobRunStatus.DeadLettered => "dead-lettered",
-        JobRunStatus.Pending => "interrupted",
-        JobRunStatus.Cancelled => "cancelled",
-        _ => "lease-lost",
-    };
 
     private static (AttemptEnding Ending, JobRunEvent Event) Ending(ClaimedRun run, JobRetryPolicy retry, JobAttemptOutcome outcome, DateTimeOffset now)
     {
@@ -258,13 +254,40 @@ internal sealed partial class JobRunner : IDisposable
     private async Task<CompletedAttempt> RunAttemptAsync(ClaimedRun run, Activity activity, CancellationToken jobToken)
     {
         var registration = _catalog.Find(run.JobName) ?? throw new InvalidOperationException($"The job {run.JobName} was claimed, but this release does not define it.");
-        var definition = registration.Definition;
         activity.SetTag(JobsTelemetry.RunIdTag, run.Id.Value.ToString());
         activity.SetTag(JobsTelemetry.AttemptTag, run.Attempt);
         using var logScope = _logger.BeginScope(new JobAttemptScope(run.Id, run.JobName, run.Attempt, run.TraceId));
         LogStarted(run.JobName, run.Attempt);
         _metrics.AttemptStarted(run.JobName);
-        var started = _time.GetTimestamp();
+        try
+        {
+            var started = _time.GetTimestamp();
+            var outcome = await InvokeAsync(registration, run, jobToken).ConfigureAwait(false);
+            var elapsed = _time.GetElapsedTime(started);
+            (JobAttemptOutcome Outcome, JobRunStatus? Status, string Tag) recorded;
+            try
+            {
+                recorded = await RecordAsync(run, registration.Definition.Retry, outcome, elapsed).ConfigureAwait(false);
+            }
+            catch
+            {
+                Measure(run.JobName, activity, outcome, UnrecordedOutcome, elapsed);
+                throw;
+            }
+
+            Measure(run.JobName, activity, recorded.Outcome, recorded.Tag, elapsed);
+
+            return new CompletedAttempt(run, recorded.Outcome, recorded.Status);
+        }
+        finally
+        {
+            _metrics.AttemptFinished(run.JobName);
+        }
+    }
+
+    private async Task<JobAttemptOutcome> InvokeAsync(JobRegistration registration, ClaimedRun run, CancellationToken jobToken)
+    {
+        var definition = registration.Definition;
         Result? result = null;
         Exception? failure = null;
         bool leaseLost;
@@ -298,68 +321,63 @@ internal sealed partial class JobRunner : IDisposable
             LogThrew(failure, run.JobName, run.Attempt, failure.GetType().Name);
         }
 
-        var elapsed = _time.GetElapsedTime(started);
-        var status = await RecordAsync(run, definition.Retry, outcome, elapsed).ConfigureAwait(false);
-        var tag = OutcomeTag(status);
+        return outcome;
+    }
+
+    private async Task<(JobAttemptOutcome Outcome, JobRunStatus? Status, string Tag)> RecordAsync(ClaimedRun run, JobRetryPolicy retry, JobAttemptOutcome outcome, TimeSpan elapsed)
+    {
+        if (outcome.End == JobAttemptEnd.LeaseLost)
+        {
+            return (outcome, null, LeaseLostOutcome);
+        }
+
+        var now = _time.GetUtcNow();
+        var (ending, recorded) = Ending(run, retry, outcome, now);
+        JobRunStatus? written;
+        try
+        {
+            await using var scope = _scopes.CreateAsyncScope();
+            written = await JobRunTransitions.EndAttemptAsync(Context(scope), run, now, ending, recorded, _abandon.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (_abandon.IsCancellationRequested)
+        {
+            LogRecordingAbandoned(run.JobName, run.Attempt);
+            return (outcome, null, UnrecordedOutcome);
+        }
+
+        switch (written)
+        {
+            case JobRunStatus.Succeeded:
+                LogSucceeded(run.JobName, run.Attempt, elapsed.TotalMilliseconds);
+                return (outcome, written, "succeeded");
+            case JobRunStatus.Failed:
+                LogFailed(run.JobName, run.Attempt, recorded.ErrorCode!, recorded.RetryAt!.Value);
+                return (outcome, written, "failed");
+            case JobRunStatus.DeadLettered:
+                LogGaveUp(run.JobName, run.Attempt, recorded.ErrorCode!);
+                return (outcome, written, "dead-lettered");
+            case JobRunStatus.Pending:
+                LogInterrupted(run.JobName, run.Attempt);
+                return (outcome, written, "interrupted");
+            case JobRunStatus.Cancelled:
+                LogCancelled(run.JobName, run.Attempt);
+                return (new JobAttemptOutcome(JobAttemptEnd.Cancelled, null), written, "cancelled");
+            default:
+                LogOutcomeDiscarded(run.JobName, run.Attempt);
+                return (outcome, null, LeaseLostOutcome);
+        }
+    }
+
+    private void Measure(string jobName, Activity activity, JobAttemptOutcome outcome, string tag, TimeSpan elapsed)
+    {
         var storedCode = outcome.Error is { } error ? StoredError.From(error).Code : null;
-        _metrics.AttemptEnded(run.JobName, tag, storedCode, elapsed);
+        _metrics.AttemptEnded(jobName, tag, storedCode, elapsed);
         activity.SetTag(JobsMetrics.OutcomeTag, tag);
         if (storedCode is not null)
         {
             activity.SetTag(JobsMetrics.ErrorCodeTag, storedCode);
             activity.SetStatus(ActivityStatusCode.Error, storedCode);
         }
-
-        return new CompletedAttempt(run, outcome, status);
-    }
-
-    private async Task<JobRunStatus?> RecordAsync(ClaimedRun run, JobRetryPolicy retry, JobAttemptOutcome outcome, TimeSpan elapsed)
-    {
-        if (outcome.End == JobAttemptEnd.LeaseLost)
-        {
-            return null;
-        }
-
-        var now = _time.GetUtcNow();
-        var (ending, recorded) = Ending(run, retry, outcome, now);
-        bool written;
-        try
-        {
-            await using var scope = _scopes.CreateAsyncScope();
-            written = await JobRunTransitions.EndAttemptAsync(Context(scope), run, ending, recorded, _abandon.Token).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (_abandon.IsCancellationRequested)
-        {
-            LogRecordingAbandoned(run.JobName, run.Attempt);
-            return null;
-        }
-
-        if (!written)
-        {
-            LogOutcomeDiscarded(run.JobName, run.Attempt);
-            return null;
-        }
-
-        switch (ending.Status)
-        {
-            case JobRunStatus.Succeeded:
-                LogSucceeded(run.JobName, run.Attempt, elapsed.TotalMilliseconds);
-                break;
-            case JobRunStatus.Failed:
-                LogFailed(run.JobName, run.Attempt, recorded.ErrorCode!, recorded.RetryAt!.Value);
-                break;
-            case JobRunStatus.DeadLettered:
-                LogGaveUp(run.JobName, run.Attempt, recorded.ErrorCode!);
-                break;
-            case JobRunStatus.Pending:
-                LogInterrupted(run.JobName, run.Attempt);
-                break;
-            case JobRunStatus.Cancelled:
-                LogCancelled(run.JobName, run.Attempt);
-                break;
-        }
-
-        return ending.Status;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Started attempt {Attempt} of {JobName}")]

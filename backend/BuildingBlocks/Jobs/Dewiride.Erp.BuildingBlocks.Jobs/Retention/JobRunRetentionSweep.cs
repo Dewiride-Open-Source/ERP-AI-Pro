@@ -10,9 +10,9 @@ namespace Dewiride.Erp.BuildingBlocks.Jobs.Retention;
 
 // Finished runs leave once they are older than the retention, together with their events, which the database deletes with their
 // run; a run still pending, running or failed stays whatever its age. The sweep runs in the migrator with the other sweeps, so
-// one step and one timer delete everything past its retention. Runs go oldest first in statements of BatchSize, each committed
-// on its own: every run takes its events along, and a statement that locks 5,000 rows of one index makes SQL Server lock the
-// whole table instead, which would hold back the running API. The schedule rows of jobs this release does not schedule go too.
+// every retention sweep runs in one step on one timer. Runs go oldest first in statements of BatchSize, each committed on its
+// own: every run takes its events along, and a statement that locks 5,000 rows of one index makes SQL Server lock the whole
+// table instead, which would hold back the running API. The schedule rows of jobs this release does not schedule go too.
 internal sealed partial class JobRunRetentionSweep(
     JobsDbContext context,
     JobCatalog catalog,

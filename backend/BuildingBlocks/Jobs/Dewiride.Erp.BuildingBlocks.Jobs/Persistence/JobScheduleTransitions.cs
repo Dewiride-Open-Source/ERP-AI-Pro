@@ -6,9 +6,10 @@ using Microsoft.EntityFrameworkCore;
 namespace Dewiride.Erp.BuildingBlocks.Jobs.Persistence;
 
 // A schedule row changes only by compare-and-set on the next occurrence and expression the scheduler read, so of several
-// schedulers polling at once exactly one takes each occurrence: the row's update lock makes the others wait, and they then find
-// it moved on. Whether the previous run is unfinished is read only once the row is locked, and the unique key of the run is the
-// last guard against a second run of one occurrence.
+// schedulers polling at once exactly one takes each occurrence: the others wait for the first scheduler's lock on the row (an
+// update lock, or under optimized locking its transaction lock, after which they qualify the row again) and then find it moved
+// on. Whether the previous run is unfinished is read only once the row is locked, and the unique key of the run is the last
+// guard against a second run of one occurrence.
 internal static class JobScheduleTransitions
 {
     private const int UniqueIndexViolation = 2601;

@@ -28,7 +28,12 @@ public sealed class JobRetryTests
             var run = await jobs.RunAsync(id);
             Assert.Equal((JobRunStatus.Failed, "test.unavailable", attempt, attempt), (outcome.Status, outcome.ErrorCode, run.FailureCount, run.AttemptCount));
             retries.Add(run.DueAt - jobs.FirstClock.GetUtcNow());
-            jobs.Advance(run.DueAt - jobs.FirstClock.GetUtcNow());
+            jobs.Advance(run.DueAt - jobs.FirstClock.GetUtcNow() - TimeSpan.FromSeconds(1));
+            Assert.Null(await jobs.FirstRunner.TryRunAsync(id, TestContext.Current.CancellationToken));
+            Assert.Equal(0, await jobs.FirstRunner.StartDueAsync(TestContext.Current.CancellationToken));
+            var waiting = await jobs.RunAsync(id);
+            Assert.Equal((JobRunStatus.Failed, attempt), (waiting.Status, waiting.AttemptCount));
+            jobs.Advance(TimeSpan.FromSeconds(1));
         }
 
         var last = await driver.RunAsync(id, TestContext.Current.CancellationToken);
