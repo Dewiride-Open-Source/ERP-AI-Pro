@@ -33,6 +33,7 @@
 | Actor | `IActorContext`, `ActorIds`, `SystemActorContext` in `Dewiride.Erp.BuildingBlocks.Application.Actors`; `HttpActorContext` in `Dewiride.Erp.BuildingBlocks.Endpoints.Actors` | `ActorIds.System`, `ActorIds.Anonymous` |
 | Error code | `<area>.<kebab-case-problem>` in ProblemDetails `code` | `request.invalid`, `query.invalid-field`, `concurrency.conflict`, `idempotency.key-reused` |
 | Permission | `<domain>.<module>.<feature>.<action>` | `finance.sales.invoices.issue` |
+| Background job | `<domain>.<module>.<job>`, three lower-case kebab segments of at most 128 characters, the first two a module's permission prefix (`JobTests.JobNames_AreUniqueAndModuleJobsUseTheirModulesPrefix`, [ADR-0059](../adr/0059-background-jobs-a-persistent-queue-leases-ist-schedules-and-the-nightly-account-check.md)) | `identity.users.directory-account-check` |
 | Feature flag | `Erp.Modules.<Domain>.<Module>[.<Capability>]`; a building block capability `Erp.Platform.<Concern>.<Capability>`, declared with `AddErpPlatformFeature` | `Erp.Modules.Finance.Sales.EInvoicing`, `Erp.Platform.Identity.BearerTokens` |
 | Configuration key | `Erp:<Domain>:<Module>:<Setting>` | `Erp:Finance:Sales:InvoicePrefix` |
 | Key Vault secret | `Erp--<Domain>--<Module>--<Name>` | `Erp--Finance--Sales--IrpClientSecret` |
