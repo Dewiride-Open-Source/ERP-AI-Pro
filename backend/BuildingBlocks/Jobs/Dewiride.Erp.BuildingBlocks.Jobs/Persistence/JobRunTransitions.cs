@@ -16,8 +16,9 @@ namespace Dewiride.Erp.BuildingBlocks.Jobs.Persistence;
 // failure, a dead letter or an interruption is written only while the run holds no request, and otherwise the attempt ends
 // cancelled in the same transaction, so no waiting run keeps a request that its next claim would ignore. The retrying execution
 // strategy runs a transition again after a commit whose acknowledgement was lost; the retry then finds the event that commit
-// wrote and reports the change it made. A claim that committed is read back whatever the shutdown does, so its attempt runs and
-// the shutdown interrupts it, instead of the run waiting under a lease nobody renews.
+// wrote and reports the change it made. A claim that committed is read back whatever the shutdown does, so its attempt runs as
+// any other in flight, ending on its own or interrupted when the shutdown's timeout fires, instead of the run waiting under a
+// lease nobody renews.
 internal static class JobRunTransitions
 {
     public static Task<List<JobRun>> DueAsync(JobsDbContext context, IReadOnlyCollection<string> jobNames, DateTimeOffset now, int take, CancellationToken cancellationToken) =>
