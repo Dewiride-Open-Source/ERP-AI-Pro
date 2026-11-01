@@ -75,6 +75,7 @@ test.describe("page search", () => {
               - option "System See which version of the ERP is running, since when, and its recent starts."
               - option "Attachments Upload and download the files kept with the ERP."
               - option "Audit trail See who changed what in the ERP, and when."
+              - option "Background jobs See the work the ERP does on its own, when it runs next, and how each run went."
             - group "Organisation":
               - text: Organisation
               - option "People Register people, assign their roles and record their moves."
@@ -82,7 +83,7 @@ test.describe("page search", () => {
               - option "Departments See the company's departments and which department each one sits under."
               - option "Designations See the designations people can hold in the company."
       `);
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(8);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(9);
       await expectActive(shell, "Home");
       await expect(shell.paletteStatus).toHaveText("");
       await expect(shell.paletteResults.locator("[aria-describedby]")).toHaveCount(0);
@@ -92,7 +93,7 @@ test.describe("page search", () => {
       await capture("palette-open", shell.palette);
 
       await shell.paletteSearch.fill("plat");
-      await expect(shell.paletteStatus).toHaveText("3 pages");
+      await expect(shell.paletteStatus).toHaveText("4 pages");
       await expect(shell.paletteResults).toMatchAriaSnapshot(`
         - listbox "Pages":
           - group "Platform":
@@ -100,8 +101,9 @@ test.describe("page search", () => {
             - option "System See which version of the ERP is running, since when, and its recent starts." [selected]
             - option "Attachments Upload and download the files kept with the ERP."
             - option "Audit trail See who changed what in the ERP, and when."
+            - option "Background jobs See the work the ERP does on its own, when it runs next, and how each run went."
       `);
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(3);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(4);
       await shell.paletteSearch.fill("plat att");
       await expect(shell.paletteStatus).toHaveText("1 page");
       await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
@@ -139,7 +141,7 @@ test.describe("page search", () => {
       await expect(page).toHaveURL((url) => url.pathname === homePath);
 
       await shell.paletteSearch.fill("");
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(8);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(9);
       await expect(shell.paletteStatus).toHaveText("");
       await expect(shell.paletteSearch).toHaveAttribute("aria-expanded", "true");
       await expectActive(shell, "Home");
@@ -166,6 +168,7 @@ test.describe("page search", () => {
       ["ArrowDown", "System"],
       ["ArrowDown", "Attachments"],
       ["ArrowDown", "Audit trail"],
+      ["ArrowDown", "Background jobs"],
       ["ArrowDown", "People"],
       ["ArrowDown", "Organisation chart"],
       ["ArrowDown", "Departments"],
@@ -175,6 +178,7 @@ test.describe("page search", () => {
       ["ArrowUp", "Departments"],
       ["ArrowUp", "Organisation chart"],
       ["ArrowUp", "People"],
+      ["ArrowUp", "Background jobs"],
       ["ArrowUp", "Audit trail"],
       ["ArrowUp", "Attachments"],
       ["ArrowUp", "System"],
@@ -288,7 +292,7 @@ test.describe("page search", () => {
     expect(await bottomOnceOpened(shell.palette), "bottom edge of the page search").toBeLessThanOrEqual(
       screen.height,
     );
-    for (let step = 0; step < 7; step += 1) await page.keyboard.press("ArrowDown");
+    for (let step = 0; step < 8; step += 1) await page.keyboard.press("ArrowDown");
     await expectActive(shell, "Designations");
     await expect(shell.paletteOption("Designations")).toBeInViewport({ ratio: 0.99 });
   });

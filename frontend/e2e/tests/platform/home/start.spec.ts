@@ -6,6 +6,7 @@ import { peoplePath } from "../../../pages/identity/users/people.page";
 import { attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { auditTrailPath } from "../../../pages/platform/audit/changes.page";
 import { StartPage } from "../../../pages/platform/home/start.page";
+import { jobsPath } from "../../../pages/platform/jobs/runs.page";
 
 const organisationPages = [
   ["Organisation chart", orgChartPath],
@@ -21,7 +22,7 @@ test.describe("start page", () => {
     await start.goto();
 
     await expect(page).toHaveTitle(/Home · ERP-AI-Pro/);
-    await expect(start.areas).toHaveCount(7);
+    await expect(start.areas).toHaveCount(8);
     await expect(start.noAreas).toHaveCount(0);
     await expect(page.getByRole("main")).toMatchAriaSnapshot(`
       - paragraph: Home
@@ -42,6 +43,10 @@ test.describe("start page", () => {
             - heading "Audit trail" [level=3]
             - text: /who changed what in the ERP/
             - link "Open Audit trail"
+          - listitem:
+            - heading "Background jobs" [level=3]
+            - text: /the work the ERP does on its own/
+            - link "Open Background jobs"
           - listitem:
             - heading "People" [level=3]
             - text: /Register people, assign their roles/
@@ -67,6 +72,10 @@ test.describe("start page", () => {
     await expect(start.heading).toBeVisible();
     await start.openLink("Audit trail").click();
     await expect(page).toHaveURL((url) => url.pathname === auditTrailPath);
+    await page.goBack();
+    await expect(start.heading).toBeVisible();
+    await start.openLink("Background jobs").click();
+    await expect(page).toHaveURL((url) => url.pathname === jobsPath);
     await page.goBack();
     await expect(start.heading).toBeVisible();
     await start.openLink("People").click();

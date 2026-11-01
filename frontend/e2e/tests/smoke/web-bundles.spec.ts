@@ -1,9 +1,11 @@
 import type { APIRequestContext } from "@playwright/test";
 
+import { retiredJob, runKeyPrefix, seedJobRun } from "../../fixtures/job-runs";
 import { ownPersonRecordId } from "../../fixtures/person-records";
 import { signIn, type SignedInPerson } from "../../fixtures/sign-in";
 import { expect, test } from "../../fixtures/test";
 import { personPath } from "../../pages/identity/users/person.page";
+import { jobRunPath } from "../../pages/platform/jobs/runs.page";
 
 const chunkPath = /\/_next\/static\/chunks\/[^"'\s<>\\]+\.js/g;
 
@@ -22,6 +24,10 @@ const orgChartMarker = "org-chart-expand-all";
 
 const organisationMarkers = [departmentsMarker, designationsMarker, orgChartMarker];
 
+const jobRunsMarker = "No runs match these filters.";
+
+const runActionsMarker = "job-run-rerun";
+
 const routes: readonly WebRoute[] = [
   {
     path: "/design/form-kit",
@@ -36,6 +42,7 @@ const routes: readonly WebRoute[] = [
       "audit-export",
       "No people match these filters.",
       ...organisationMarkers,
+      jobRunsMarker,
     ],
   },
   {
@@ -50,6 +57,7 @@ const routes: readonly WebRoute[] = [
       "audit-export",
       "No people match these filters.",
       ...organisationMarkers,
+      jobRunsMarker,
     ],
   },
   {
@@ -64,6 +72,7 @@ const routes: readonly WebRoute[] = [
       "audit-export",
       "No people match these filters.",
       ...organisationMarkers,
+      jobRunsMarker,
     ],
   },
   {
@@ -78,6 +87,7 @@ const routes: readonly WebRoute[] = [
       "audit-export",
       "No people match these filters.",
       ...organisationMarkers,
+      jobRunsMarker,
     ],
   },
   {
@@ -91,6 +101,7 @@ const routes: readonly WebRoute[] = [
       "audit-export",
       "No people match these filters.",
       ...organisationMarkers,
+      jobRunsMarker,
     ],
   },
   {
@@ -105,6 +116,7 @@ const routes: readonly WebRoute[] = [
       "audit-export",
       "No people match these filters.",
       ...organisationMarkers,
+      jobRunsMarker,
     ],
   },
   {
@@ -119,6 +131,48 @@ const routes: readonly WebRoute[] = [
       "No bills match these filters.",
       "animated-list-item",
       "No people match these filters.",
+      ...organisationMarkers,
+      jobRunsMarker,
+    ],
+  },
+  {
+    path: "/platform/jobs",
+    ownMarkers: [jobRunsMarker, runActionsMarker],
+    foreignMarkers: [
+      "upload-progress",
+      "Delete this attachment?",
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
+      "No bills match these filters.",
+      "animated-list-item",
+      "audit-export",
+      "No people match these filters.",
+      ...organisationMarkers,
+    ],
+  },
+  {
+    path: "/platform/jobs/runs/[runId]",
+    address: async (request) =>
+      jobRunPath(
+        await seedJobRun(request, {
+          jobName: retiredJob,
+          idempotencyKey: `${runKeyPrefix("bundles")}-failed`,
+          status: "failed",
+        }),
+      ),
+    ownMarkers: [runActionsMarker],
+    foreignMarkers: [
+      jobRunsMarker,
+      "audit-export",
+      "No people match these filters.",
+      "upload-progress",
+      "Delete this attachment?",
+      "system-info-refresh",
+      "supplier-example-form",
+      "motion-demo-preference",
+      "No bills match these filters.",
+      "animated-list-item",
       ...organisationMarkers,
     ],
   },
@@ -136,6 +190,7 @@ const routes: readonly WebRoute[] = [
       "animated-list-item",
       "audit-export",
       ...organisationMarkers,
+      jobRunsMarker,
     ],
   },
   {
@@ -154,6 +209,7 @@ const routes: readonly WebRoute[] = [
       "No bills match these filters.",
       "animated-list-item",
       ...organisationMarkers,
+      jobRunsMarker,
     ],
   },
   {
@@ -170,6 +226,7 @@ const routes: readonly WebRoute[] = [
       "supplier-example-form",
       "motion-demo-preference",
       "animated-list-item",
+      jobRunsMarker,
     ],
   },
   {
@@ -186,6 +243,7 @@ const routes: readonly WebRoute[] = [
       "supplier-example-form",
       "motion-demo-preference",
       "animated-list-item",
+      jobRunsMarker,
     ],
   },
   {
@@ -202,6 +260,7 @@ const routes: readonly WebRoute[] = [
       "supplier-example-form",
       "motion-demo-preference",
       "animated-list-item",
+      jobRunsMarker,
     ],
   },
 ];
