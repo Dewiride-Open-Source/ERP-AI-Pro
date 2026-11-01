@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-10-31",
+  "updatedOn": "2026-11-01",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -1310,7 +1310,7 @@
           "id": "first-deployment-records-kept-a-year",
           "title": "Records kept a year inside India",
           "scope": "Keep every ICT system's records for a year inside India and hand them to CERT-In when asked (CERT-In Directions of 28.04.2022, direction (iv); DPDP rules 6(1)(e) and 8(3); owner decision of 2026-10-31): the containers and the migrator log to the server's journal, kept a year, with the API's console logger in JSON with its scopes; a nightly sealed copy of the day's journal goes to a write-once container of the backup account; SQL auditing, the subscription activity log and the logs of Key Vault, Storage and App Configuration, and Entra's where the licence allows, go to a logs account in Central India; and a runbook covers handing records over.",
-          "status": "blocked",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-10-31",
           "acceptance": [
@@ -1320,19 +1320,20 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-10-31",
-          "blockedReason": "The release that carries the journal settings is installed on the production server with `deploy.sh`, which recreates the containers on the `journald` driver, and the bootstrap runs again from it to install the journald and `docker.service` drop-ins and the new `daemon.json`; then the API's and the proxy's lines are read back from the journal (`docs/operations/runbooks/records.md`, section Checks).",
-          "notes": "Owner decisions of 2026-10-31: the ERP serves the owner's own small company with one user, so the records are kept where they cost nothing. The owner declined the logs account in Central India with SQL auditing and the diagnostic settings of the vaults, the storage accounts, the configuration store, the activity log and Entra ID (estimated at well under ₹100 a month), and the nightly sealed copy of the journal: \"i do not want any backups of these. I already told you about this deployment. 100 is far too costly.\" The scope's nightly copy and logs account are therefore not built. Azure's activity log stays 90 days and Entra ID's sign-in and audit logs 30, short of the 180 days of CERT-In's direction (iv), which the owner accepted; the records runbook exports them while Azure holds them."
+          "completedOn": "2026-11-01",
+          "notes": "Owner decisions of 2026-10-31: the ERP serves the owner's own small company with one user, so the records are kept where they cost nothing. The owner declined the logs account in Central India with SQL auditing and the diagnostic settings of the vaults, the storage accounts, the configuration store, the activity log and Entra ID (estimated at well under ₹100 a month), and the nightly sealed copy of the journal: \"i do not want any backups of these. I already told you about this deployment. 100 is far too costly.\" The scope's nightly copy and logs account are therefore not built. Azure's activity log stays 90 days and Entra ID's sign-in and audit logs 30, short of the 180 days of CERT-In's direction (iv), which the owner accepted; the records runbook exports them while Azure holds them. On the production server since 2026-11-01, with v0.1.3 installed by `deploy.sh` and the bootstrap run again from it: the journal keeps its files 400 days within 24 GB, with 20 GB of the disk left free; `docker.service`'s journal rate limit is 100000 messages in 30 seconds; every container logs through `journald` under `erp-ai-pro-<service>`; and the API's and the proxy's lines were read back from the journal after Docker's restart."
         },
         {
           "id": "first-deployment-upload-virus-scanning",
           "title": "Virus scanning of uploads",
           "scope": "Scan the plaintext of every upload with ClamAV in the production stack behind IAttachmentScanner while it streams (a digest-pinned image; owner approval of 2026-10-31): a file with a known virus is refused and never stored, a clean one records Clean, and uploads are refused with 503 while the scanner cannot answer; the scanner's signature updates, memory limit, hardening and health check, a test with the EICAR test file, and an ADR recording the GPL program reached over a socket and never distributed.",
-          "status": "planned",
+          "status": "deferred",
           "edition": "community",
           "editionConfirmedOn": "2026-10-31",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Owner decision of 2026-10-31: set aside until more people use the ERP. With the owner its only user, scanning mainly guards against files the owner uploads, and ClamAV needs 3 to 4 GB of the server's 7.1 GB of memory, against the stack's 0.4 GB; uploads keep recording `notScanned`. Research for its return: the image `clamav/clamav` (digest-pinned, non-root through `/init-unprivileged`, signatures on a volume of their own, freshclam updating them), clamd's `INSTREAM` over TCP 3310, clamd.conf with `StreamMaxLength` and `MaxFileSize` at or above `Erp:Platform:Attachments:MaxSizeBytes` and `AlertExceedsMax yes`, 3 GiB with `ConcurrentDatabaseReload no` (uploads wait during the daily reload) or 4 GiB, and the hook `IAttachmentScanner` in `BuildingBlocks.Attachments/Scanning`, which `AttachmentUploader` feeds the plaintext while it streams."
         }
       ]
     },

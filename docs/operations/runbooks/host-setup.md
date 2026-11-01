@@ -36,6 +36,8 @@ Sign in as the administrator over SSH, through the server's IPv4 address from a 
 git clone https://github.com/Dewiride-Open-Source/ERP-AI-Pro.git
 ```
 
+With `--branch <tag>`, git warns `refs/tags/<tag> <id> is not a commit!`, because a release tag is annotated and names a tag object. It then checks out the commit that object names, which its `Note: switching to '<commit>'` prints and `git rev-parse <tag>^{commit}` answers on any clone.
+
 See what it would change. The dry run needs no root and changes nothing:
 
 ```bash
