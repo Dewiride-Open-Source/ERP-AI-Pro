@@ -46,6 +46,17 @@
         "AllowedContentTypes": "application/pdf;image/png;image/jpeg;image/gif;image/webp;text/plain;text/csv;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "DownloadLinkLifetime": "00:05:00",
         "TransferTimeout": "00:10:00"
+      },
+      "Jobs": {
+        "PollInterval": "00:00:30",
+        "LeaseDuration": "00:02:00",
+        "MaxConcurrentRuns": "2",
+        "FinishedRunRetention": "400.00:00:00"
+      }
+    },
+    "Identity": {
+      "Users": {
+        "AccountCheckSchedule": "30 0 * * *"
       }
     }
   }
