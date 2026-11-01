@@ -17,9 +17,10 @@ namespace Dewiride.Erp.Host.Migrator;
 // command first refuses a database that holds a migration this release does not know, because the release's seeders and sweeps
 // were written for an older schema, and status refusing too tells a deployment that the database is ahead before it replaces
 // anything. The retention sweeps run here alone, under the migrator's principal, because the API's database user may not delete
-// what they delete. migrate only logs a sweep that failed, because a deletion that can wait never stops a deployment; retain does
-// nothing else, so it fails with the sweep and whatever schedules it sees the failure. Of the store's Key Vault references the
-// host opens only the two connection strings, so the migrator's principal is granted no other secret of the vault (ADR-0050).
+// from the audit schema and one step on one timer deletes everything past a retention. migrate only logs a sweep that failed,
+// because a deletion that can wait never stops a deployment; retain does nothing else, so it fails with the sweep and whatever
+// schedules it sees the failure. Of the store's Key Vault references the host opens only the two connection strings, so the
+// migrator's principal is granted no other secret of the vault (ADR-0050).
 internal static partial class MigratorApplication
 {
     public static readonly FrozenSet<string> KeyVaultReferences = new[]

@@ -4,6 +4,7 @@ using Dewiride.Erp.BuildingBlocks.Auditing;
 using Dewiride.Erp.BuildingBlocks.Caching;
 using Dewiride.Erp.BuildingBlocks.Configuration;
 using Dewiride.Erp.BuildingBlocks.Idempotency;
+using Dewiride.Erp.BuildingBlocks.Jobs;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.BuildingBlocks.Observability.Resilience;
 using Dewiride.Erp.BuildingBlocks.Persistence;
@@ -30,6 +31,7 @@ public static class ErpHostComposition
         builder.AddErpIdempotency();
         builder.AddErpAuditing();
         builder.AddErpAttachments();
+        builder.AddErpJobs();
         builder.AddModules(Modules.All);
 
         return builder;

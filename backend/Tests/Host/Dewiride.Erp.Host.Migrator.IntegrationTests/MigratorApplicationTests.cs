@@ -27,7 +27,7 @@ public sealed class MigratorApplicationTests
 
     private const string CachingSchema = "platform_caching";
 
-    private static readonly string[] Schemas = [FilesSchema, CachingSchema, "platform_idempotency", "audit", "platform_system_info"];
+    private static readonly string[] Schemas = [FilesSchema, CachingSchema, "platform_idempotency", "audit", "platform_jobs", "platform_system_info"];
 
     private static readonly string[] FilesTables = ["Attachments", "DownloadLinks", "DownloadRedemptions", "StoredContents", "UploadReservations"];
 

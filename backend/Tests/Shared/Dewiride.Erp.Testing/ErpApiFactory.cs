@@ -4,12 +4,15 @@ using Dewiride.Erp.BuildingBlocks.Authentication.DataProtection;
 using Dewiride.Erp.BuildingBlocks.Authentication.Graph;
 using Dewiride.Erp.BuildingBlocks.Authentication.Options;
 using Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
+using Dewiride.Erp.BuildingBlocks.Jobs.Queue;
+using Dewiride.Erp.BuildingBlocks.Jobs.Running;
 using Dewiride.Erp.BuildingBlocks.Persistence.Options;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Authentication.BearerTokens;
 using Dewiride.Erp.Testing.Blob;
 using Dewiride.Erp.Testing.Deployment;
 using Dewiride.Erp.Testing.Graph;
+using Dewiride.Erp.Testing.Jobs;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,6 +22,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Identity.Client;
 
@@ -79,6 +83,10 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
     private bool _ownsDeployment;
 
     private bool _hostCreated;
+
+    private bool _runsJobs;
+
+    private bool _inProcessJobQueue;
 
     public ErpApiFactory()
         : this(Environments.Development)
@@ -158,6 +166,33 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
         }
 
         _testEndpoints.Add(map);
+
+        return this;
+    }
+
+    // Every factory host shares the test process's database, so a host runs no job loop unless its test asks for one: the loop
+    // would claim the runs of other tests and run the nightly jobs at their hour. The engine stays composed either way, so a test
+    // can drive it with JobRunnerDriver.
+    public ErpApiFactory WithJobRunner()
+    {
+        if (_hostCreated)
+        {
+            throw new InvalidOperationException("WithJobRunner must be called before the first client or service is requested from the factory.");
+        }
+
+        _runsJobs = true;
+
+        return this;
+    }
+
+    public ErpApiFactory WithInProcessJobQueue()
+    {
+        if (_hostCreated)
+        {
+            throw new InvalidOperationException("WithInProcessJobQueue must be called before the first client or service is requested from the factory.");
+        }
+
+        _inProcessJobQueue = true;
 
         return this;
     }
@@ -257,6 +292,19 @@ public sealed class ErpApiFactory : WebApplicationFactory<Program>
             services.AddTransient<IStartupFilter, ThrowingRouteStartupFilter>();
             services.AddTransient<IStartupFilter>(_ => new TestEndpointsStartupFilter(_testEndpoints));
             deployment.Register(services);
+            if (!_runsJobs)
+            {
+                foreach (var loop in services.Where(descriptor => descriptor.ServiceType == typeof(IHostedService) && descriptor.ImplementationType == typeof(JobRunnerService)).ToList())
+                {
+                    services.Remove(loop);
+                }
+            }
+
+            if (_inProcessJobQueue)
+            {
+                services.AddSingleton<InProcessJobQueue>();
+                services.Replace(ServiceDescriptor.Scoped<IJobQueue>(provider => provider.GetRequiredService<InProcessJobQueue>()));
+            }
         });
     }
 

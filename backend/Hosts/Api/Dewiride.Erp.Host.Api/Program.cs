@@ -1,5 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Authentication;
 using Dewiride.Erp.BuildingBlocks.Endpoints;
+using Dewiride.Erp.BuildingBlocks.Jobs;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.BuildingBlocks.Observability.Health;
 using Dewiride.Erp.BuildingBlocks.Observability.Telemetry;
@@ -16,6 +17,7 @@ builder.AddErpEndpoints();
 builder.AddErpAuthentication();
 builder.AddErpOpenApi();
 builder.AddRequestPipeline();
+builder.AddErpJobRunner();
 
 var app = builder.Build();
 
