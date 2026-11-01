@@ -16,12 +16,13 @@ import { isDateRange, type ListFilterValue, type ListQuery } from "@/shared/list
 import { ListTable } from "@/shared/lists/list-table";
 
 import { jobsNavigation } from "../../nav";
+import { useRunFocus } from "../hooks/use-run-focus";
 import { runKeyMaxLength, runKeyPattern, runStatuses, runsList } from "../lists/runs.list";
 
 import { RunActions, type RunActionRights } from "./run-actions";
 import type { RunRow } from "./run-rows";
 import { RunStatus } from "./run-status-badge";
-import { noError, notFinished, runStatusLabel, triesText } from "./run-text";
+import { lastErrorText, notFinished, runLinkName, runStatusLabel, triesText } from "./run-text";
 
 const keyPattern = {
   source: runKeyPattern,
@@ -38,7 +39,10 @@ function dateText(value: Date | undefined, fallback: string): string {
   return value === undefined ? fallback : formatDateTimeIst(value);
 }
 
-function runColumns(focusAfterId: string, rights: RunActionRights): readonly DataTableColumn<RunRow>[] {
+function runColumns(
+  onLeave: (runId: string) => void,
+  rights: RunActionRights,
+): readonly DataTableColumn<RunRow>[] {
   return [
     {
       id: "job",
@@ -47,7 +51,9 @@ function runColumns(focusAfterId: string, rights: RunActionRights): readonly Dat
         <Link
           href={`/platform/jobs/runs/${run.id}`}
           prefetch={false}
+          aria-label={runLinkName(run)}
           className="rounded-sm font-medium break-words whitespace-normal text-primary underline-offset-4 focus-ring hover:underline"
+          data-run-link={run.id}
           data-testid="job-run-link"
         >
           {run.jobLabel}
@@ -85,7 +91,7 @@ function runColumns(focusAfterId: string, rights: RunActionRights): readonly Dat
     {
       id: "lastError",
       header: "Last error",
-      cell: (run) => run.lastError ?? noError,
+      cell: (run) => lastErrorText(run),
       className: "max-w-64 whitespace-normal break-words",
     },
     {
@@ -93,7 +99,7 @@ function runColumns(focusAfterId: string, rights: RunActionRights): readonly Dat
       header: "Actions",
       role: "actions",
       align: "end",
-      cell: (run) => <RunActions run={run} rights={rights} focusAfterId={focusAfterId} align="end" />,
+      cell: (run) => <RunActions run={run} rights={rights} onLeave={onLeave} align="end" />,
     },
   ];
 }
@@ -114,7 +120,8 @@ export function RunsList({
   labelledBy: string;
 }) {
   const { rerun, cancel } = rights;
-  const columns = useMemo(() => runColumns(labelledBy, { rerun, cancel }), [labelledBy, rerun, cancel]);
+  const onLeave = useRunFocus(runs, labelledBy);
+  const columns = useMemo(() => runColumns(onLeave, { rerun, cancel }), [onLeave, rerun, cancel]);
   const { job, status, key, created } = query.filters;
   const chosenJobs = choices(job);
   const jobChoices = useMemo(() => {

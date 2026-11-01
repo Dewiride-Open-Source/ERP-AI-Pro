@@ -21,11 +21,9 @@ export class JobsPage {
   readonly jobsCard: Locator;
   readonly jobs: Locator;
   readonly jobsUnavailable: Locator;
-  readonly jobsEmpty: Locator;
   readonly runsCard: Locator;
   readonly runsHeading: Locator;
   readonly runsUnavailable: Locator;
-  readonly runsEmpty: Locator;
   readonly list: DataTableRegion;
 
   constructor(private readonly page: Page) {
@@ -33,11 +31,9 @@ export class JobsPage {
     this.jobsCard = page.getByTestId("jobs-card");
     this.jobs = this.jobsCard.getByTestId("job");
     this.jobsUnavailable = page.getByTestId("jobs-unavailable");
-    this.jobsEmpty = page.getByTestId("jobs-empty");
     this.runsCard = page.getByTestId("job-runs-card");
     this.runsHeading = this.runsCard.getByRole("heading", { name: "Runs", level: 2 });
     this.runsUnavailable = page.getByTestId("job-runs-unavailable");
-    this.runsEmpty = page.getByTestId("job-runs-empty");
     this.list = new DataTableRegion(page, this.runsCard);
   }
 
@@ -67,6 +63,21 @@ export class JobsPage {
 
   async keys(): Promise<string[]> {
     return (await this.list.rows()).getByTestId("job-run-key").allInnerTexts();
+  }
+
+  widestCardOverflow(): Promise<number> {
+    return this.list.cardList.evaluate((cards) => {
+      const width = cards.getBoundingClientRect().width;
+      return Math.max(
+        ...[...cards.querySelectorAll("[data-testid='data-table-card']")].map(
+          (card) => card.getBoundingClientRect().width - width,
+        ),
+      );
+    });
+  }
+
+  link(run: Locator): Locator {
+    return run.getByTestId("job-run-link");
   }
 
   status(run: Locator): Locator {

@@ -21,7 +21,7 @@ import { RunActions } from "./run-actions";
 import { RunEvents } from "./run-events";
 import { runRow, type RunRow } from "./run-rows";
 import { RunStatus } from "./run-status-badge";
-import { givesUpText, noError, notFinished, notStarted, runTitle, triesText } from "./run-text";
+import { givesUpText, lastErrorText, notFinished, notStarted, runTitle, triesText } from "./run-text";
 
 const missing = "—";
 
@@ -109,7 +109,7 @@ function RunDetails({ run }: { run: RunRow }) {
           <Detail label="Finished">{dateText(run.finishedAt, notFinished)}</Detail>
           <Detail label="Tries">{triesText(run)}</Detail>
           <Detail label="Gives up">{givesUpText(run.maxAttempts)}</Detail>
-          <Detail label="Last error">{run.lastError ?? noError}</Detail>
+          <Detail label="Last error">{lastErrorText(run)}</Detail>
         </dl>
       </CardContent>
     </Card>

@@ -1,15 +1,20 @@
 import type { APIRequestContext } from "@playwright/test";
+import { randomUUID } from "node:crypto";
 
 import {
   accountCheckJob,
+  misscheduledTestJob,
   retiredJob,
   runKeyPrefix,
+  scheduledTestJob,
   seedJobRun,
+  seedJobSchedule,
   type JobRunSeed,
   type JobRunStatus,
 } from "../../../fixtures/job-runs";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
+import { JobRunPage } from "../../../pages/platform/jobs/run.page";
 import {
   jobRunApi,
   jobRunPath,
@@ -20,12 +25,21 @@ import {
 } from "../../../pages/platform/jobs/runs.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
 
+type ApiSchedule = {
+  readonly expression: string;
+  readonly nextOccurrenceAt: string | null;
+  readonly problem: string | null;
+  readonly lastOccurrenceAt: string | null;
+  readonly lastRunId: string | null;
+  readonly lastRunStatus: JobRunStatus | null;
+};
+
 type ApiJob = {
   readonly name: string;
   readonly title: string;
   readonly description: string;
   readonly maxAttempts: number;
-  readonly schedule: { readonly expression: string; readonly nextOccurrenceAt: string | null } | null;
+  readonly schedule: ApiSchedule | null;
 };
 
 type ApiRun = {
@@ -47,6 +61,15 @@ const keyProblem = "A key holds only letters, digits and the characters . _ : + 
 
 const finishedMeanwhile =
   "This run has finished meanwhile, so there is nothing to cancel. Reload the page to see how it ended.";
+
+const notRerunnable =
+  "This run is waiting, running or done by now, so it cannot run again. Reload the page to see where it stands.";
+
+const stillRunning =
+  "This run is still running, so it cannot be cancelled yet. Try again in a few minutes: once it has stopped answering, the ERP cancels it at once.";
+
+const notHere =
+  "If it has stopped answering, it is cancelled at once; otherwise it stops only once the version of the ERP that started it notices the request.";
 
 const indiaDateTime = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
@@ -78,8 +101,8 @@ const listSeeds: readonly Omit<JobRunSeed, "idempotencyKey">[] = [
   { jobName: retiredJob, status: "cancelled" },
   { jobName: accountCheckJob, status: "succeeded", attempts: 3 },
   { jobName: retiredJob, status: "pending" },
-  { jobName: accountCheckJob, status: "failed" },
-  { jobName: retiredJob, status: "running", stopRequested: true },
+  { jobName: retiredJob, status: "failed" },
+  { jobName: accountCheckJob, status: "running", stopRequested: true },
   { jobName: retiredJob, status: "pending" },
 ];
 
@@ -101,12 +124,21 @@ async function seedRuns(
   return runs;
 }
 
-async function accountCheckOf(api: SignedInApi): Promise<ApiJob> {
+async function jobOf(api: SignedInApi, name: string): Promise<ApiJob> {
   const response = await api.get(jobsApi);
   expect(response.status(), "the jobs").toBe(200);
-  const job = ((await response.json()) as ApiJob[]).find((candidate) => candidate.name === accountCheckJob);
-  expect(job, "the account check among the jobs").toBeDefined();
+  const job = ((await response.json()) as ApiJob[]).find((candidate) => candidate.name === name);
+  expect(job, `${name} among the jobs`).toBeDefined();
   return job!;
+}
+
+function accountCheckOf(api: SignedInApi): Promise<ApiJob> {
+  return jobOf(api, accountCheckJob);
+}
+
+function scheduleOf(job: ApiJob): ApiSchedule {
+  expect(job.schedule, `the schedule of ${job.name}`).not.toBeNull();
+  return job.schedule!;
 }
 
 async function runsOf(api: SignedInApi, prefix: string, sort: string): Promise<ApiRun[]> {
@@ -122,6 +154,16 @@ async function firstKeys(api: SignedInApi, prefix: string, sort: string): Promis
 
 function istDateTime(instant: string): string {
   return indiaDateTime.format(new Date(instant));
+}
+
+function runName(run: ApiRun): string {
+  return `created ${istDateTime(run.createdAt)}`;
+}
+
+async function runOf(api: SignedInApi, id: string): Promise<ApiRun> {
+  const response = await api.get(jobRunApi(id));
+  expect(response.status(), "the run").toBe(200);
+  return ((await response.json()) as { run: ApiRun }).run;
 }
 
 function isoIndiaDate(instant: string): string {
@@ -163,8 +205,8 @@ test.describe("background jobs", () => {
 
         await expect(page).toHaveTitle(/Background jobs · ERP-AI-Pro/);
         await expect(jobsPage.jobsUnavailable).toHaveCount(0);
-        await expect(jobsPage.jobsCard.getByTestId("job-problem")).toHaveCount(0);
         const job = jobsPage.job(accountCheck.title);
+        await expect(job.getByTestId("job-problem")).toHaveCount(0);
         await expect(job).toMatchAriaSnapshot(`
           - listitem:
             - heading "${accountCheck.title}" [level=3]
@@ -179,6 +221,101 @@ test.describe("background jobs", () => {
             - definition: Up to ${accountCheck.maxAttempts} times
         `);
         await capture("jobs-card", jobsPage.jobsCard);
+      });
+
+      test("shows a job's last run with its status and opens it", async ({ page, api, request, capture }) => {
+        const jobsPage = new JobsPage(page);
+        const runPage = new JobRunPage(page);
+        const runId = await seedJobRun(request, {
+          jobName: scheduledTestJob,
+          idempotencyKey: `${runKeyPrefix("last-run")}-done`,
+          status: "succeeded",
+        });
+        const seeded = await seedJobSchedule(request, {
+          jobName: scheduledTestJob,
+          lastRunId: runId,
+          lastOccurrenceAt: new Date().toISOString(),
+        });
+        const scheduled = await jobOf(api, scheduledTestJob);
+        const schedule = scheduleOf(scheduled);
+        expect(schedule, "the scheduled test job's schedule").toMatchObject({
+          expression: "15 2 * * *",
+          nextOccurrenceAt: expect.any(String),
+          problem: null,
+          lastRunId: seeded.lastRunId,
+          lastRunStatus: "succeeded",
+        });
+        const job = jobsPage.job(scheduled.title);
+
+        await jobsPage.goto();
+
+        await expect(job.getByTestId("job-problem")).toHaveCount(0);
+        await expect(job).toMatchAriaSnapshot(`
+          - listitem:
+            - heading "${scheduled.title}" [level=3]
+            - paragraph: ${JSON.stringify(scheduled.description)}
+            - term: Schedule
+            - definition: "15 2 * * * (India time)"
+            - term: Next run
+            - definition: ${JSON.stringify(istDateTime(schedule.nextOccurrenceAt ?? ""))}
+            - term: Last run
+            - definition:
+              - text: ${JSON.stringify(`${istDateTime(seeded.lastOccurrenceAt)} Done`)}
+              - link "Open the last run of ${scheduled.title}":
+                - /url: ${jobRunPath(seeded.lastRunId)}
+            - term: Tries
+            - definition: Up to ${scheduled.maxAttempts} times
+        `);
+        await capture("jobs-last-run", job);
+
+        await job.getByRole("link", { name: `Open the last run of ${scheduled.title}` }).click();
+        await expect(page).toHaveURL((url) => url.pathname === jobRunPath(seeded.lastRunId));
+        await expect(runPage.heading).toHaveText(scheduled.title);
+        await expect(runPage.statusLine).toHaveText("Done");
+      });
+
+      test("shows a job whose schedule cannot run beside a last run that is no longer recorded", async ({
+        page,
+        api,
+        request,
+        capture,
+      }) => {
+        const jobsPage = new JobsPage(page);
+        const seeded = await seedJobSchedule(request, {
+          jobName: misscheduledTestJob,
+          lastRunId: randomUUID(),
+          lastOccurrenceAt: new Date().toISOString(),
+        });
+        const misscheduled = await jobOf(api, misscheduledTestJob);
+        expect(scheduleOf(misscheduled), "the misscheduled test job's schedule").toMatchObject({
+          expression: "61 * * * *",
+          nextOccurrenceAt: null,
+          lastRunId: seeded.lastRunId,
+          lastRunStatus: null,
+        });
+        const job = jobsPage.job(misscheduled.title);
+
+        await jobsPage.goto();
+
+        await expect(job).toMatchAriaSnapshot(`
+          - listitem:
+            - heading "${misscheduled.title}" [level=3]
+            - paragraph: ${JSON.stringify(misscheduled.description)}
+            - term: Schedule
+            - definition: "61 * * * * (India time)"
+            - term: Next run
+            - definition: Not scheduled
+            - term: Last run
+            - definition: ${JSON.stringify(istDateTime(seeded.lastOccurrenceAt))}
+            - term: Tries
+            - definition: Up to ${misscheduled.maxAttempts} times
+            - alert:
+              - text: The ERP does not run this job on its own now
+              - paragraph: "The minute field holds 61, but the minute allows 0 to 59."
+              - paragraph: Once its schedule setting is corrected, the ERP runs it on its own again.
+        `);
+        await expect(job.getByRole("link"), "a last run that is no longer recorded").toHaveCount(0);
+        await capture("jobs-schedule-problem", job);
       });
 
       test("lists the runs and filters, sorts, pages and hides their columns", async ({
@@ -237,10 +374,11 @@ test.describe("background jobs", () => {
         const failed = seeded.find((run) => run.idempotencyKey === failedKey)!;
         const failedRow = await jobsPage.run(failedKey);
         const failedStatus = `Failed Tries again at ${istDateTime(failed.dueAt)}`;
+        const failedName = `${accountCheck.title}, ${runName(failed)}`;
         if (await list.showsCards()) {
           await expect(failedRow).toMatchAriaSnapshot(`
             - listitem:
-              - link "${accountCheck.title}":
+              - link ${JSON.stringify(failedName)}:
                 - /url: ${jobRunPath(failed.id)}
               - term: Status
               - definition: ${JSON.stringify(failedStatus)}
@@ -256,15 +394,15 @@ test.describe("background jobs", () => {
               - definition: 2 tries, 2 failed
               - term: Last error
               - definition: The attempt failed.
-              - ${quotedNode(`button "Run again: ${accountCheck.title}"`)}
-              - ${quotedNode(`button "Cancel: ${accountCheck.title}"`)}
+              - ${quotedNode(`button "Run again: ${failedName}"`)}
+              - ${quotedNode(`button "Cancel: ${failedName}"`)}
           `);
         } else {
           await expect(list.columnHeader("Created")).toHaveAttribute("aria-sort", "descending");
           await expect(failedRow).toMatchAriaSnapshot(`
             - row:
-              - rowheader "${accountCheck.title}":
-                - link "${accountCheck.title}":
+              - rowheader ${JSON.stringify(failedName)}:
+                - link ${JSON.stringify(failedName)}:
                   - /url: ${jobRunPath(failed.id)}
               - cell ${JSON.stringify(failedStatus)}
               - cell "${failedKey}"
@@ -274,8 +412,8 @@ test.describe("background jobs", () => {
               - cell "2 tries, 2 failed"
               - cell "The attempt failed."
               - cell:
-                - ${quotedNode(`button "Run again: ${accountCheck.title}"`)}
-                - ${quotedNode(`button "Cancel: ${accountCheck.title}"`)}
+                - ${quotedNode(`button "Run again: ${failedName}"`)}
+                - ${quotedNode(`button "Cancel: ${failedName}"`)}
           `);
         }
         const waiting = await jobsPage.run(runs[1]!.key);
@@ -413,21 +551,23 @@ test.describe("background jobs", () => {
           status: "deadLettered",
           attempts: accountCheck.maxAttempts,
         });
+        const name = runName(await runOf(api, id));
 
         await jobsPage.goto(`?key=${prefix}`);
         await jobsPage.waitUntilInteractive();
         const run = await jobsPage.run(key);
         await expect(jobsPage.status(run)).toHaveText("Gave up");
         await expect(jobsPage.cancel(run)).toHaveCount(0);
+        await expect(jobsPage.link(run)).toHaveAccessibleName(`${accountCheck.title}, ${name}`);
         const rerun = jobsPage.rerun(run);
-        await expect(rerun).toHaveAccessibleName(`Run again: ${accountCheck.title}`);
+        await expect(rerun).toHaveAccessibleName(`Run again: ${accountCheck.title}, ${name}`);
 
         await rerun.click();
         const question = jobsPage.confirmation(`Run ${accountCheck.title} again?`);
         await expect(question).toMatchAriaSnapshot(`
           - alertdialog "Run ${accountCheck.title} again?":
             - heading "Run ${accountCheck.title} again?" [level=2]
-            - paragraph: The ERP starts this run again in a moment, with all ${accountCheck.maxAttempts} of its tries available again. Its earlier tries stay in its history.
+            - paragraph: ${JSON.stringify(`This run, ${name}, starts again in a moment, with all ${accountCheck.maxAttempts} of its tries available again. Its earlier tries stay in its history.`)}
             - button "Keep it as it is"
             - button "Run again"
         `);
@@ -440,10 +580,9 @@ test.describe("background jobs", () => {
         await rerun.click();
         await question.getByRole("button", { name: "Run again", exact: true }).click();
         await expect(shell.toast(`${accountCheck.title} will run again in a moment.`)).toBeVisible();
-        await expect(jobsPage.runsHeading).toBeFocused();
+        await expect(jobsPage.cancel(run)).toBeFocused();
         await expect(jobsPage.status(run)).toHaveText("Waiting");
         await expect(jobsPage.rerun(run)).toHaveCount(0);
-        await expect(jobsPage.cancel(run)).toBeVisible();
         const after = await api.get(jobRunApi(id));
         expect(after.status(), "the run after it was run again").toBe(200);
         expect(((await after.json()) as { run?: ApiRun }).run).toMatchObject({
@@ -456,30 +595,42 @@ test.describe("background jobs", () => {
 
       test("cancels a waiting run and asks a running run to stop once confirmed, and keeps each when asked to", async ({
         page,
+        api,
         request,
         capture,
       }) => {
         const jobsPage = new JobsPage(page);
         const shell = new AppShell(page);
+        const accountCheck = await accountCheckOf(api);
         const prefix = runKeyPrefix("cancel");
         const waitingKey = `${prefix}-waiting`;
         const runningKey = `${prefix}-running`;
-        await seedJobRun(request, { jobName: retiredJob, idempotencyKey: waitingKey, status: "pending" });
-        await seedJobRun(request, { jobName: retiredJob, idempotencyKey: runningKey, status: "running" });
+        const waitingId = await seedJobRun(request, {
+          jobName: accountCheckJob,
+          idempotencyKey: waitingKey,
+          status: "pending",
+        });
+        const runningId = await seedJobRun(request, {
+          jobName: accountCheckJob,
+          idempotencyKey: runningKey,
+          status: "running",
+        });
+        const waitingName = runName(await runOf(api, waitingId));
+        const runningName = runName(await runOf(api, runningId));
 
         await jobsPage.goto(`?key=${prefix}`);
         await jobsPage.waitUntilInteractive();
         const waiting = await jobsPage.run(waitingKey);
         await expect(jobsPage.status(waiting)).toHaveText("Waiting");
         const cancelWaiting = jobsPage.cancel(waiting);
-        await expect(cancelWaiting).toHaveAccessibleName(`Cancel: ${retiredJob}`);
+        await expect(cancelWaiting).toHaveAccessibleName(`Cancel: ${accountCheck.title}, ${waitingName}`);
 
         await cancelWaiting.click();
-        const cancellation = jobsPage.confirmation(`Cancel this run of ${retiredJob}?`);
+        const cancellation = jobsPage.confirmation(`Cancel this run of ${accountCheck.title}?`);
         await expect(cancellation).toMatchAriaSnapshot(`
-          - alertdialog "Cancel this run of ${retiredJob}?":
-            - heading "Cancel this run of ${retiredJob}?" [level=2]
-            - paragraph: The run does not start. You can run it again later.
+          - alertdialog "Cancel this run of ${accountCheck.title}?":
+            - heading "Cancel this run of ${accountCheck.title}?" [level=2]
+            - paragraph: ${JSON.stringify(`This run, ${waitingName}, does not start. You can run it again later.`)}
             - button "Keep the run"
             - button "Cancel the run"
         `);
@@ -491,21 +642,20 @@ test.describe("background jobs", () => {
 
         await cancelWaiting.click();
         await cancellation.getByRole("button", { name: "Cancel the run" }).click();
-        await expect(shell.toast(`Cancelled the run of ${retiredJob}.`)).toBeVisible();
-        await expect(jobsPage.runsHeading).toBeFocused();
+        await expect(shell.toast(`Cancelled the run of ${accountCheck.title}.`)).toBeVisible();
+        await expect(jobsPage.rerun(waiting)).toBeFocused();
         await expect(jobsPage.status(waiting)).toHaveText("Cancelled");
         await expect(jobsPage.cancel(waiting)).toHaveCount(0);
-        await expect(jobsPage.rerun(waiting), "a run of a job the ERP no longer has").toHaveCount(0);
 
         const running = await jobsPage.run(runningKey);
         const cancelRunning = jobsPage.cancel(running);
         await expect(jobsPage.status(running)).toHaveText("Running");
         await cancelRunning.click();
-        const stop = jobsPage.confirmation(`Ask this run of ${retiredJob} to stop?`);
+        const stop = jobsPage.confirmation(`Ask this run of ${accountCheck.title} to stop?`);
         await expect(stop).toMatchAriaSnapshot(`
-          - alertdialog "Ask this run of ${retiredJob} to stop?":
-            - heading "Ask this run of ${retiredJob} to stop?" [level=2]
-            - paragraph: The run stops within about a minute, once it notices the request. If it finishes before then, it is recorded as done.
+          - alertdialog "Ask this run of ${accountCheck.title} to stop?":
+            - heading "Ask this run of ${accountCheck.title} to stop?" [level=2]
+            - paragraph: ${JSON.stringify(`This run, ${runningName}, stops within about a minute, once it notices the request. If it finishes before then, it is recorded as done.`)}
             - button "Keep it running"
             - button "Ask it to stop"
         `);
@@ -516,40 +666,131 @@ test.describe("background jobs", () => {
 
         await cancelRunning.click();
         await stop.getByRole("button", { name: "Ask it to stop" }).click();
-        await expect(shell.toast(`Asked the run of ${retiredJob} to stop.`)).toBeVisible();
-        await expect(jobsPage.runsHeading).toBeFocused();
+        await expect(shell.toast(`Asked the run of ${accountCheck.title} to stop.`)).toBeVisible();
+        await expect(jobsPage.link(running)).toBeFocused();
         await expect(jobsPage.status(running)).toHaveText("Running Stop requested");
         await expect(jobsPage.cancel(running)).toHaveCount(0);
       });
 
-      test("explains a cancel that a change elsewhere made out of date beside its button, again when it is retried", async ({
+      test("cancels a run of a job this version of the ERP does not have, and asks again to stop one that keeps running", async ({
         page,
         api,
         request,
         capture,
       }) => {
         const jobsPage = new JobsPage(page);
-        const prefix = runKeyPrefix("stale");
-        const key = `${prefix}-waiting`;
-        const id = await seedJobRun(request, { jobName: retiredJob, idempotencyKey: key, status: "pending" });
+        const shell = new AppShell(page);
+        const prefix = runKeyPrefix("cancel-retired");
+        const waitingKey = `${prefix}-waiting`;
+        const runningKey = `${prefix}-running`;
+        const waitingId = await seedJobRun(request, {
+          jobName: retiredJob,
+          idempotencyKey: waitingKey,
+          status: "pending",
+        });
+        const runningId = await seedJobRun(request, {
+          jobName: retiredJob,
+          idempotencyKey: runningKey,
+          status: "running",
+        });
+        const waitingName = runName(await runOf(api, waitingId));
+        const runningName = runName(await runOf(api, runningId));
 
         await jobsPage.goto(`?key=${prefix}`);
         await jobsPage.waitUntilInteractive();
-        const cancelledElsewhere = await api.post(`${jobRunApi(id)}/cancel`);
-        expect(cancelledElsewhere.status(), "the cancel made elsewhere").toBe(200);
+        const waiting = await jobsPage.run(waitingKey);
+        await expect(jobsPage.cancel(waiting)).toHaveAccessibleName(`Cancel: ${retiredJob}, ${waitingName}`);
+        await jobsPage.cancel(waiting).click();
+        const cancellation = jobsPage.confirmation(`Cancel this run of ${retiredJob}?`);
+        await expect(cancellation).toMatchAriaSnapshot(`
+          - alertdialog "Cancel this run of ${retiredJob}?":
+            - heading "Cancel this run of ${retiredJob}?" [level=2]
+            - paragraph: ${JSON.stringify(`This run, ${waitingName}, does not start. This version of the ERP does not have its job, so it cannot run it again.`)}
+            - button "Keep the run"
+            - button "Cancel the run"
+        `);
+        await cancellation.getByRole("button", { name: "Cancel the run" }).click();
+        await expect(shell.toast(`Cancelled the run of ${retiredJob}.`)).toBeVisible();
+        await expect(jobsPage.link(waiting)).toBeFocused();
+        await expect(jobsPage.status(waiting)).toHaveText("Cancelled");
+        await expect(jobsPage.cancel(waiting)).toHaveCount(0);
+        await expect(jobsPage.rerun(waiting), "a run of a job the ERP no longer has").toHaveCount(0);
 
-        const run = await jobsPage.run(key);
-        const cancel = jobsPage.cancel(run);
+        const running = await jobsPage.run(runningKey);
+        const cancelRunning = jobsPage.cancel(running);
+        await cancelRunning.click();
+        const stop = jobsPage.confirmation(`Ask this run of ${retiredJob} to stop?`);
+        await expect(stop).toMatchAriaSnapshot(`
+          - alertdialog "Ask this run of ${retiredJob} to stop?":
+            - heading "Ask this run of ${retiredJob} to stop?" [level=2]
+            - paragraph: ${JSON.stringify(`This run, ${runningName}, belongs to a job this version of the ERP does not have. ${notHere}`)}
+            - button "Keep it running"
+            - button "Ask it to stop"
+        `);
+        await capture("job-run-stop-retired-question", stop);
+        await stop.getByRole("button", { name: "Ask it to stop" }).click();
+        await expect(shell.toast(`Asked the run of ${retiredJob} to stop.`)).toBeVisible();
+        await expect(jobsPage.status(running)).toHaveText("Running Stop requested");
+        await expect(cancelRunning).toBeFocused();
+
+        await cancelRunning.click();
+        await expect(cancellation).toMatchAriaSnapshot(`
+          - alertdialog "Cancel this run of ${retiredJob}?":
+            - heading "Cancel this run of ${retiredJob}?" [level=2]
+            - paragraph: ${JSON.stringify(`This run, ${runningName}, was asked to stop, but it belongs to a job this version of the ERP does not have. ${notHere}`)}
+            - button "Keep it running"
+            - button "Cancel the run"
+        `);
+        await cancellation.getByRole("button", { name: "Cancel the run" }).click();
+        const refusal = jobsPage.cancelError(running);
+        await expect(refusal).toHaveRole("alert");
+        await expect(refusal).toHaveText(stillRunning);
+        await expect(cancelRunning).toBeFocused();
+        await expect(jobsPage.status(running)).toHaveText("Running Stop requested");
+        await capture("job-run-still-running", jobsPage.runsCard);
+      });
+
+      test("explains an action that a change elsewhere made out of date beside its button, again when it is retried", async ({
+        page,
+        api,
+        request,
+        capture,
+      }) => {
+        const jobsPage = new JobsPage(page);
+        const accountCheck = await accountCheckOf(api);
+        const prefix = runKeyPrefix("stale");
+        const waitingKey = `${prefix}-waiting`;
+        const gaveUpKey = `${prefix}-gave-up`;
+        const waitingId = await seedJobRun(request, {
+          jobName: retiredJob,
+          idempotencyKey: waitingKey,
+          status: "pending",
+        });
+        const gaveUpId = await seedJobRun(request, {
+          jobName: accountCheckJob,
+          idempotencyKey: gaveUpKey,
+          status: "deadLettered",
+        });
+
+        await jobsPage.goto(`?key=${prefix}`);
+        await jobsPage.waitUntilInteractive();
+        const cancelledElsewhere = await api.post(`${jobRunApi(waitingId)}/cancel`);
+        expect(cancelledElsewhere.status(), "the cancel made elsewhere").toBe(200);
+        const rerunElsewhere = await api.post(`${jobRunApi(gaveUpId)}/rerun`);
+        expect(rerunElsewhere.status(), "the run again made elsewhere").toBe(200);
+
+        const waiting = await jobsPage.run(waitingKey);
+        const cancel = jobsPage.cancel(waiting);
         const cancellation = jobsPage.confirmation(`Cancel this run of ${retiredJob}?`);
         await cancel.click();
         await cancellation.getByRole("button", { name: "Cancel the run" }).click();
-        const refusal = jobsPage.cancelError(run);
+        const refusal = jobsPage.cancelError(waiting);
         await expect(refusal).toHaveRole("alert");
         await expect(refusal).toContainText(finishedMeanwhile);
         await expect(refusal).toContainText("Reference: ");
         await expect(refusal).toBeInViewport();
         await expect(cancel).toBeFocused();
-        await expect(jobsPage.status(run)).toHaveText("Waiting");
+        await expect(jobsPage.status(waiting)).toHaveText("Waiting");
         await capture("job-run-cancel-refused", jobsPage.runsCard);
 
         const release = await holdServerFunctionCalls(page, jobsPath);
@@ -562,6 +803,67 @@ test.describe("background jobs", () => {
         await expect(refusal).toContainText(finishedMeanwhile);
         await expect(refusal).toContainText("Reference: ");
         await expect(cancel).not.toHaveAttribute("aria-busy");
+
+        const gaveUp = await jobsPage.run(gaveUpKey);
+        const rerun = jobsPage.rerun(gaveUp);
+        const question = jobsPage.confirmation(`Run ${accountCheck.title} again?`);
+        await rerun.click();
+        await question.getByRole("button", { name: "Run again", exact: true }).click();
+        const rerunRefusal = jobsPage.rerunError(gaveUp);
+        await expect(rerunRefusal).toHaveRole("alert");
+        await expect(rerunRefusal).toContainText(notRerunnable);
+        await expect(rerunRefusal).toContainText("Reference: ");
+        await expect(rerun).toBeFocused();
+        await expect(jobsPage.status(gaveUp)).toHaveText("Gave up");
+
+        const releaseRerun = await holdServerFunctionCalls(page, jobsPath);
+        await rerun.click();
+        await question.getByRole("button", { name: "Run again", exact: true }).click();
+        await expect(rerunRefusal).toHaveCount(0);
+        await expect(rerun).toHaveAttribute("aria-busy", "true");
+        releaseRerun();
+        await expect(rerunRefusal).toHaveRole("alert");
+        await expect(rerunRefusal).toContainText(notRerunnable);
+        await expect(rerun).not.toHaveAttribute("aria-busy");
+      });
+
+      test("keeps a refusal inside its run's card on a screen 360 or 320 pixels wide", async ({
+        page,
+        api,
+        request,
+        capture,
+      }) => {
+        const jobsPage = new JobsPage(page);
+        const prefix = runKeyPrefix("narrow");
+        const key = `${prefix}-waiting`;
+        const id = await seedJobRun(request, { jobName: retiredJob, idempotencyKey: key, status: "pending" });
+        await seedJobRun(request, {
+          jobName: accountCheckJob,
+          idempotencyKey: `${prefix}-failed`,
+          status: "failed",
+        });
+        await page.setViewportSize({ width: 360, height: 800 });
+
+        await jobsPage.goto(`?key=${prefix}`);
+        await jobsPage.waitUntilInteractive();
+        expect(await jobsPage.list.showsCards(), "the runs shown as cards").toBe(true);
+        const cancelledElsewhere = await api.post(`${jobRunApi(id)}/cancel`);
+        expect(cancelledElsewhere.status(), "the cancel made elsewhere").toBe(200);
+        const run = await jobsPage.run(key);
+        await jobsPage.cancel(run).click();
+        await jobsPage
+          .confirmation(`Cancel this run of ${retiredJob}?`)
+          .getByRole("button", { name: "Cancel the run" })
+          .click();
+        await expect(jobsPage.cancelError(run)).toContainText(finishedMeanwhile);
+
+        for (const width of [360, 320]) {
+          await page.setViewportSize({ width, height: 800 });
+          await expect
+            .poll(() => jobsPage.widestCardOverflow(), { message: `the cards at ${width} pixels` })
+            .toBeLessThanOrEqual(0);
+          await capture(`job-run-cancel-refused-${width}`, jobsPage.runsCard);
+        }
       });
     });
   }

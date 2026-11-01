@@ -9,7 +9,7 @@ import {
 
 import { formatTimeIst } from "@/shared/format/dates";
 
-import { eventSentence, retryText, runEventDays, showsReference } from "./run-text";
+import { eventErrorText, eventSentence, retryText, runEventDays, showsReference } from "./run-text";
 
 export function RunEvents({
   events,
@@ -41,7 +41,8 @@ export function RunEvents({
 }
 
 function RunEvent({ event }: { event: JobRunEventResponse }) {
-  const { occurredAt, errorMessage, retryAt, traceId } = event;
+  const { occurredAt, retryAt, traceId } = event;
+  const error = eventErrorText(event);
 
   return (
     <TimelineItem data-testid="job-run-event">
@@ -52,7 +53,7 @@ function RunEvent({ event }: { event: JobRunEventResponse }) {
         <p className="wrap-anywhere" data-testid="job-run-event-summary">
           {eventSentence(event)}
         </p>
-        {errorMessage ? <p className="wrap-anywhere text-destructive">{errorMessage}</p> : null}
+        {error === undefined ? null : <p className="wrap-anywhere text-destructive">{error}</p>}
         {retryAt instanceof Date ? <p className="text-muted-foreground">{retryText(retryAt)}</p> : null}
         {traceId && showsReference(event.kind) ? (
           <p className="text-sm text-muted-foreground">

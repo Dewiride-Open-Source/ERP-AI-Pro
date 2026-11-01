@@ -7,7 +7,15 @@ import { useHydrated } from "@dewiride/erp-ui/lib/use-hydrated";
 import { cn } from "@dewiride/erp-ui/lib/utils";
 import { CircleStopIcon, RotateCcwIcon, type LucideIcon } from "lucide-react";
 import { unstable_isUnrecognizedActionError, unstable_rethrow } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState, useTransition, type ComponentProps } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ComponentProps,
+} from "react";
 import { toast } from "sonner";
 
 import { rejectedActionState } from "@/shared/forms/client/rejected-action";
@@ -16,15 +24,17 @@ import { cancelJobRun, rerunJobRun } from "../server/actions";
 
 import {
   cancelDone,
+  cancelOutcome,
   cancelQuestion,
   canCancel,
   canRerun,
   rerunDone,
   rerunQuestion,
+  runActionName,
   type RunActionOutcome,
   type RunActionRefusal,
-  type RunChoice,
   type RunQuestion,
+  type RunSubject,
 } from "./run-text";
 
 export interface RunActionRights {
@@ -32,25 +42,34 @@ export interface RunActionRights {
   readonly cancel: boolean;
 }
 
-export interface RunActionSubject extends RunChoice {
+export interface RunActionSubject extends RunSubject {
   readonly id: string;
-  readonly jobLabel: string;
-  readonly maxAttempts: number | undefined;
 }
 
-// Every action changes what the run can do next, so the button that did it leaves the page once the action is done; as it
-// goes, focus moves to the element focusAfterId names instead of falling to the page.
+type RunActionFocus =
+  | { readonly focusAfterId: string; readonly onLeave?: never }
+  | { readonly onLeave: (runId: string) => void; readonly focusAfterId?: never };
+
+// An action changes what the run can do next, so the button that did it leaves once the action is done, unless the run can
+// still be cancelled: a running run of a job this version of the ERP does not have keeps Cancel, and Cancel keeps focus. A
+// button leaves before the refreshed page is drawn, so as it goes, focus moves to the element focusAfterId names, or onLeave
+// hears which run's button left and a list focuses what it shows of the run once its refreshed rows are drawn.
 export function RunActions({
   run,
   rights,
-  focusAfterId,
   align,
+  focusAfterId,
+  onLeave,
 }: {
   run: RunActionSubject;
   rights: RunActionRights;
-  focusAfterId: string;
   align: "start" | "end";
-}) {
+} & RunActionFocus) {
+  const { id } = run;
+  const leave = useCallback(() => {
+    if (onLeave !== undefined) onLeave(id);
+    else if (focusAfterId !== undefined) document.getElementById(focusAfterId)?.focus();
+  }, [focusAfterId, onLeave, id]);
   const offersRerun = rights.rerun && canRerun(run);
   const offersCancel = rights.cancel && canCancel(run);
   if (!offersRerun && !offersCancel) return null;
@@ -58,17 +77,18 @@ export function RunActions({
   return (
     <div
       className={cn("flex flex-wrap items-start gap-2", align === "end" ? "justify-end" : "justify-start")}
+      data-run-actions={id}
       data-testid="job-run-actions"
     >
       {offersRerun ? (
         <RunAction
           label="Run again"
-          accessibleName={`Run again: ${run.jobLabel}`}
+          accessibleName={runActionName("Run again", run)}
           icon={RotateCcwIcon}
-          question={rerunQuestion(run.jobLabel, run.maxAttempts)}
-          send={() => rerunJobRun(run.id)}
+          question={rerunQuestion(run)}
+          send={() => rerunJobRun(id)}
           done={() => rerunDone(run.jobLabel)}
-          focusAfterId={focusAfterId}
+          leave={leave}
           align={align}
           testId="job-run-rerun"
         />
@@ -76,13 +96,14 @@ export function RunActions({
       {offersCancel ? (
         <RunAction
           label="Cancel"
-          accessibleName={`Cancel: ${run.jobLabel}`}
+          accessibleName={runActionName("Cancel", run)}
           icon={CircleStopIcon}
-          question={cancelQuestion(run.jobLabel, run.status)}
+          question={cancelQuestion(run)}
           tone="destructive"
-          send={() => cancelJobRun(run.id)}
+          send={async () => cancelOutcome(await cancelJobRun(id), run.stopRequested)}
           done={(stopRequested) => cancelDone(run.jobLabel, stopRequested)}
-          focusAfterId={focusAfterId}
+          stays={(stopRequested) => stopRequested && canCancel({ ...run, status: "running", stopRequested })}
+          leave={leave}
           align={align}
           testId="job-run-cancel"
         />
@@ -95,7 +116,7 @@ export function RunActions({
 // cleared when the action is asked for again, so a repeated refusal is announced again. A refusal widens a table's actions
 // column, which can move the button and the refusal out of view inside a table that scrolls sideways, so each new refusal is
 // scrolled into view. After a success, focus moves on only as the button leaves, because the closing confirmation can return
-// focus to the button after the API has answered.
+// focus to the button after the API has answered; a button the outcome leaves on the page keeps focus.
 function RunAction({
   label,
   accessibleName,
@@ -104,7 +125,8 @@ function RunAction({
   tone = "default",
   send,
   done,
-  focusAfterId,
+  stays = neverStays,
+  leave,
   align,
   testId,
 }: {
@@ -115,20 +137,21 @@ function RunAction({
   tone?: "default" | "destructive" | undefined;
   send: () => Promise<RunActionOutcome>;
   done: (stopRequested: boolean) => string;
-  focusAfterId: string;
+  stays?: ((stopRequested: boolean) => boolean) | undefined;
+  leave: () => void;
   align: "start" | "end";
   testId: string;
 }) {
   const [pending, startAction] = useTransition();
   const [refusal, setRefusal] = useState<RunActionRefusal>();
   const refusalRef = useRef<HTMLParagraphElement>(null);
-  const succeeded = useRef(false);
+  const leaving = useRef(false);
 
   useLayoutEffect(
     () => () => {
-      if (succeeded.current) document.getElementById(focusAfterId)?.focus();
+      if (leaving.current) leave();
     },
-    [focusAfterId],
+    [leave],
   );
 
   useEffect(() => {
@@ -137,13 +160,14 @@ function RunAction({
 
   const confirm = () => {
     setRefusal(undefined);
+    leaving.current = false;
     startAction(async () => {
       const outcome = await settle(send);
       if (!outcome.done) {
         setRefusal(outcome);
         return;
       }
-      succeeded.current = true;
+      leaving.current = !stays(outcome.stopRequested);
       toast.success(done(outcome.stopRequested));
     });
   };
@@ -167,7 +191,7 @@ function RunAction({
         <p
           ref={refusalRef}
           role="alert"
-          className="w-72 max-w-full text-sm whitespace-normal text-destructive"
+          className="w-full max-w-72 text-sm whitespace-normal text-destructive"
           data-testid={`${testId}-error`}
         >
           {refusal.message}
@@ -181,6 +205,10 @@ function RunAction({
       )}
     </div>
   );
+}
+
+function neverStays(): boolean {
+  return false;
 }
 
 async function settle(send: () => Promise<RunActionOutcome>): Promise<RunActionOutcome> {

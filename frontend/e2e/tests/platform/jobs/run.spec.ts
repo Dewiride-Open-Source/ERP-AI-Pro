@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { accountCheckJob, retiredJob, runKeyPrefix, seedJobRun } from "../../../fixtures/job-runs";
-import { expect, test, themes, type SignedInApi } from "../../../fixtures/test";
+import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
 import { JobRunPage } from "../../../pages/platform/jobs/run.page";
 import { jobRunApi, jobRunPath, jobsApi } from "../../../pages/platform/jobs/runs.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
@@ -103,6 +103,7 @@ test.describe("job run", () => {
         );
         const firstRetry = history.events.find((event) => event.kind === "failed" && event.attempt === 1);
         const name = person?.name ?? "";
+        const runName = `created ${istDateTime(history.run.createdAt)}`;
 
         await runPage.goto(id);
         await runPage.waitUntilInteractive();
@@ -113,8 +114,8 @@ test.describe("job run", () => {
           - paragraph: Background jobs
           - heading "${accountCheck.title}" [level=1]
           - paragraph: ${JSON.stringify(`Failed Tries again at ${istDateTime(history.run.dueAt)}`)}
-          - ${quotedNode(`button "Run again: ${accountCheck.title}"`)}
-          - ${quotedNode(`button "Cancel: ${accountCheck.title}"`)}
+          - ${quotedNode(`button "Run again: ${accountCheck.title}, ${runName}"`)}
+          - ${quotedNode(`button "Cancel: ${accountCheck.title}, ${runName}"`)}
         `);
         await expect(runPage.details).toMatchAriaSnapshot(`
           - heading "Details" [level=2]
@@ -186,7 +187,9 @@ test.describe("job run", () => {
 
         await runPage.cancel.click();
         const cancellation = runPage.confirmation(`Cancel this run of ${accountCheck.title}?`);
-        await expect(cancellation).toContainText("The run does not start. You can run it again later.");
+        await expect(cancellation).toContainText(
+          `This run, ${runName}, does not start. You can run it again later.`,
+        );
         await cancellation.getByRole("button", { name: "Keep the run" }).click();
         await expect(cancellation).toHaveCount(0);
         await expect(runPage.cancel).toBeFocused();
@@ -239,7 +242,7 @@ test.describe("job run", () => {
         const runPage = new JobRunPage(page);
         const name = person?.name ?? "";
         const id = await seedJobRun(request, {
-          jobName: retiredJob,
+          jobName: accountCheckJob,
           idempotencyKey: `${runKeyPrefix("stopping")}-running`,
           status: "running",
           stopRequested: true,
@@ -261,10 +264,39 @@ test.describe("job run", () => {
     });
   }
 
+  test("words the ERP's own reason a try failed instead of showing its technical message", async ({
+    page,
+    request,
+  }) => {
+    const runPage = new JobRunPage(page);
+    const technical = "The attempt ran longer than its limit of 00:10:00 and was told to stop.";
+    const id = await seedJobRun(request, {
+      jobName: accountCheckJob,
+      idempotencyKey: `${runKeyPrefix("timed-out")}-gave-up`,
+      status: "deadLettered",
+      attempts: 2,
+      errorCode: "job.timed-out",
+      errorMessage: technical,
+    });
+
+    await runPage.goto(id);
+
+    await expect(runPage.detail("Last error")).toHaveText(
+      "A try ran longer than its time limit, so the ERP stopped it.",
+    );
+    await expect(
+      runPage.history.getByText("The try ran longer than its time limit, so the ERP stopped it.", {
+        exact: true,
+      }),
+      "the failed try and the try after which the ERP gave up",
+    ).toHaveCount(2);
+    await expect(page.getByText(technical)).toHaveCount(0);
+  });
+
   test.describe("that does not exist", () => {
     test.use({ expectedConsoleError: /the server responded with a status of 404/ });
 
-    test("answers not found inside the shell", async ({ page, capture }) => {
+    forEachTheme("answers not found inside the shell", async ({ page, capture }) => {
       const shell = new AppShell(page);
 
       for (const id of [randomUUID(), "not-a-run"]) {

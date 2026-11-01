@@ -20,6 +20,7 @@ export interface RunRow {
   readonly failureCount: number;
   readonly maxAttempts: number | undefined;
   readonly stopRequested: boolean;
+  readonly lastErrorCode: string | undefined;
   readonly lastError: string | undefined;
 }
 
@@ -43,6 +44,7 @@ export function runRow(run: JobRunResponse): RunRow | undefined {
     failureCount: run.failureCount ?? 0,
     maxAttempts: run.maxAttempts ?? undefined,
     stopRequested: status === "running" && run.cancelRequestedAt instanceof Date,
+    lastErrorCode: nonEmpty(run.lastErrorCode),
     lastError: nonEmpty(run.lastErrorMessage),
   };
 }

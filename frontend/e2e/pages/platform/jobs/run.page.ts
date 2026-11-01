@@ -9,8 +9,6 @@ export class JobRunPage {
   readonly actions: Locator;
   readonly rerun: Locator;
   readonly cancel: Locator;
-  readonly rerunError: Locator;
-  readonly cancelError: Locator;
   readonly details: Locator;
   readonly history: Locator;
   readonly timeline: Locator;
@@ -25,8 +23,6 @@ export class JobRunPage {
     this.actions = page.getByTestId("job-run-actions");
     this.rerun = page.getByTestId("job-run-rerun");
     this.cancel = page.getByTestId("job-run-cancel");
-    this.rerunError = page.getByTestId("job-run-rerun-error");
-    this.cancelError = page.getByTestId("job-run-cancel-error");
     this.details = page.getByTestId("job-run-details");
     this.history = page.getByTestId("job-run-history");
     this.timeline = this.history.getByRole("list", { name: "History", exact: true });

@@ -48,6 +48,7 @@ test("runRow_ARunOfAJobTheErpHas_KeepsEachDetailAsAPlainValue", () => {
     failureCount: 2,
     maxAttempts: 6,
     stopRequested: false,
+    lastErrorCode: "directory.unavailable",
     lastError: "Microsoft Graph did not answer.",
   });
 });
@@ -96,6 +97,7 @@ test("runRow_DetailsTheApiSentAsNull_AreUndefined", () => {
     }),
   );
 
+  assert.equal(row?.lastErrorCode, undefined);
   assert.equal(row?.lastError, undefined);
   assert.equal(row?.startedAt, undefined);
   assert.equal(row?.attemptCount, 0);

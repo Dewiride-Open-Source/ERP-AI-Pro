@@ -24,6 +24,21 @@ export interface RunChoice extends RunState {
   readonly jobDefined: boolean;
 }
 
+export interface NamedRun {
+  readonly jobLabel: string;
+  readonly createdAt: Date | undefined;
+  readonly key: string;
+}
+
+export interface RunSubject extends NamedRun, RunChoice {
+  readonly maxAttempts: number | undefined;
+}
+
+export interface RunLastError {
+  readonly lastErrorCode: string | undefined;
+  readonly lastError: string | undefined;
+}
+
 export type RunActionRefusal = {
   readonly done: false;
   readonly message: string;
@@ -65,6 +80,18 @@ export const noError = "None";
 export const runOutOfDate = "This page is out of date. Reload the page, then try again.";
 
 export const runGone = "This run is no longer recorded. Reload the page to see the runs there are now.";
+
+export const stillRunning =
+  "This run is still running, so it cannot be cancelled yet. Try again in a few minutes: once it has stopped answering, the ERP cancels it at once.";
+
+const leaseExpiredCode = "job.lease-expired";
+
+const timedOutCode = "job.timed-out";
+
+const exceptionCode = "job.exception";
+
+const unexpectedError =
+  "Something unexpected went wrong; the server's log holds the details under the try's reference.";
 
 export const rerunProblemMessages: ProblemMessages = {
   "job.run-not-rerunnable":
@@ -126,38 +153,71 @@ export function canRerun({ status, jobDefined }: RunChoice): boolean {
   return jobDefined && (status === "failed" || status === "deadLettered" || status === "cancelled");
 }
 
-// The ERP itself stops a running run that was asked to stop: at its runner's next check, or once it takes back a run whose
-// runner stopped answering, so the page asks only once.
-export function canCancel({ status, stopRequested }: RunChoice): boolean {
-  return status === "pending" || status === "failed" || (status === "running" && !stopRequested);
+// The ERP itself stops a running run of a job it has once the run is asked to stop: at its runner's next check, or once it
+// takes back a run whose runner stopped answering, so the page asks only once. No runner of this version takes back a run of
+// a job it does not have, so the page asks again for such a run, which the ERP cancels at once when it has stopped answering.
+export function canCancel({ status, stopRequested, jobDefined }: RunChoice): boolean {
+  return (
+    status === "pending" || status === "failed" || (status === "running" && (!stopRequested || !jobDefined))
+  );
 }
 
-export function rerunQuestion(jobLabel: string, maxAttempts: number | undefined): RunQuestion {
-  const tries = maxAttempts === undefined ? "all its tries" : `all ${maxAttempts} of its tries`;
+export function runName({ createdAt, key }: Pick<NamedRun, "createdAt" | "key">): string {
+  return createdAt === undefined ? `key ${key}` : `created ${formatDateTimeIst(createdAt)}`;
+}
+
+export function runLinkName(run: NamedRun): string {
+  return `${run.jobLabel}, ${runName(run)}`;
+}
+
+export function runActionName(action: string, run: NamedRun): string {
+  return `${action}: ${runLinkName(run)}`;
+}
+
+export function rerunQuestion(run: RunSubject): RunQuestion {
+  const tries = run.maxAttempts === undefined ? "all its tries" : `all ${run.maxAttempts} of its tries`;
   return {
-    title: `Run ${jobLabel} again?`,
-    description: `The ERP starts this run again in a moment, with ${tries} available again. Its earlier tries stay in its history.`,
+    title: `Run ${run.jobLabel} again?`,
+    description: `This run, ${runName(run)}, starts again in a moment, with ${tries} available again. Its earlier tries stay in its history.`,
     confirm: "Run again",
     keep: "Keep it as it is",
   };
 }
 
-export function cancelQuestion(jobLabel: string, status: JobRunStatus): RunQuestion {
-  if (status === "running") {
+export function cancelQuestion(run: RunSubject): RunQuestion {
+  const { jobLabel, status, stopRequested, jobDefined } = run;
+  const name = runName(run);
+  if (status === "running" && jobDefined) {
     return {
       title: `Ask this run of ${jobLabel} to stop?`,
-      description:
-        "The run stops within about a minute, once it notices the request. If it finishes before then, it is recorded as done.",
+      description: `This run, ${name}, stops within about a minute, once it notices the request. If it finishes before then, it is recorded as done.`,
       confirm: "Ask it to stop",
       keep: "Keep it running",
     };
   }
+  if (status === "running") {
+    const notHere =
+      "If it has stopped answering, it is cancelled at once; otherwise it stops only once the version of the ERP that started it notices the request.";
+    return stopRequested
+      ? {
+          title: `Cancel this run of ${jobLabel}?`,
+          description: `This run, ${name}, was asked to stop, but it belongs to a job this version of the ERP does not have. ${notHere}`,
+          confirm: "Cancel the run",
+          keep: "Keep it running",
+        }
+      : {
+          title: `Ask this run of ${jobLabel} to stop?`,
+          description: `This run, ${name}, belongs to a job this version of the ERP does not have. ${notHere}`,
+          confirm: "Ask it to stop",
+          keep: "Keep it running",
+        };
+  }
+  const ending = status === "failed" ? "does not try again" : "does not start";
   return {
     title: `Cancel this run of ${jobLabel}?`,
-    description:
-      status === "failed"
-        ? "The run does not try again. You can run it again later."
-        : "The run does not start. You can run it again later.",
+    description: jobDefined
+      ? `This run, ${name}, ${ending}. You can run it again later.`
+      : `This run, ${name}, ${ending}. This version of the ERP does not have its job, so it cannot run it again.`,
     confirm: "Cancel the run",
     keep: "Keep the run",
   };
@@ -169,6 +229,12 @@ export function rerunDone(jobLabel: string): string {
 
 export function cancelDone(jobLabel: string, stopRequested: boolean): string {
   return stopRequested ? `Asked the run of ${jobLabel} to stop.` : `Cancelled the run of ${jobLabel}.`;
+}
+
+export function cancelOutcome(outcome: RunActionOutcome, askedToStop: boolean): RunActionOutcome {
+  return outcome.done && outcome.stopRequested && askedToStop
+    ? { done: false, message: stillRunning }
+    : outcome;
 }
 
 // An action's request is built from what the page shows, so a request the API finds malformed means the page is out of
@@ -205,6 +271,33 @@ export function eventSentence(event: JobRunEventResponse): string {
       return `${actor} set this run to run again.`;
     default:
       return "The run changed.";
+  }
+}
+
+export function eventErrorText({ kind, errorCode, errorMessage }: JobRunEventResponse): string | undefined {
+  switch (errorCode) {
+    case leaseExpiredCode:
+      if (kind === "leaseExpired") return undefined;
+      return kind === "cancelled" ? "The try had stopped answering." : "The try stopped answering.";
+    case timedOutCode:
+      return "The try ran longer than its time limit, so the ERP stopped it.";
+    case exceptionCode:
+      return unexpectedError;
+    default:
+      return nonEmpty(errorMessage);
+  }
+}
+
+export function lastErrorText({ lastErrorCode, lastError }: RunLastError): string {
+  switch (lastErrorCode) {
+    case leaseExpiredCode:
+      return "A try stopped answering, so it counted as a failed try.";
+    case timedOutCode:
+      return "A try ran longer than its time limit, so the ERP stopped it.";
+    case exceptionCode:
+      return unexpectedError;
+    default:
+      return nonEmpty(lastError) ?? noError;
   }
 }
 
