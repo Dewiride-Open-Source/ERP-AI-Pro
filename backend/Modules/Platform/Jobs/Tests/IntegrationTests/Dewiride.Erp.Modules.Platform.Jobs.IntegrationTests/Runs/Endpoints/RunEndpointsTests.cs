@@ -14,6 +14,8 @@ namespace Dewiride.Erp.Modules.Platform.Jobs.IntegrationTests.Runs.Endpoints;
 
 public sealed class RunEndpointsTests(JobsHost host) : IClassFixture<JobsHost>
 {
+    private const string AccountCheckJobName = "identity.users.directory-account-check";
+
     [Fact]
     public async Task Get_Jobs_ListsEveryJobTheHostDefinesByNameWithItsAttempts()
     {
@@ -50,6 +52,25 @@ public sealed class RunEndpointsTests(JobsHost host) : IClassFixture<JobsHost>
         Assert.Null(schedule.LastOccurrenceAt);
         Assert.Null(schedule.LastRunId);
         Assert.Null(schedule.LastRunStatus);
+    }
+
+    [Fact]
+    public async Task Get_JobsOfAHostGivenTheSeededSchedule_ListsTheAccountCheckAtHalfPastMidnightIndiaTimeWithoutAProblem()
+    {
+        using var client = host.Administrator();
+        var before = host.Clock.GetUtcNow();
+
+        var jobs = await JobsApi.ListJobsAsync(client);
+
+        var after = host.Clock.GetUtcNow();
+        var schedule = Assert.Single(jobs, job => job.Name == AccountCheckJobName).Schedule;
+        Assert.NotNull(schedule);
+        Assert.Equal(JobsHost.AccountCheckSchedule, schedule.Expression);
+        Assert.Null(schedule.Problem);
+        var next = Assert.NotNull(schedule.NextOccurrenceAt);
+        Assert.InRange(next, before, after.AddDays(1));
+        var inIndia = IndianStandardTime.ToIst(next);
+        Assert.Equal((0, 30, 0), (inIndia.Hour, inIndia.Minute, inIndia.Second));
     }
 
     [Fact]

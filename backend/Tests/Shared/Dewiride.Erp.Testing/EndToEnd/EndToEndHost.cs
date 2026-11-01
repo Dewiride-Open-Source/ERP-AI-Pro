@@ -13,7 +13,9 @@ namespace Dewiride.Erp.Testing.EndToEnd;
 // leaves their database and container behind, so every start removes those whose host has gone, the session lock on the
 // database and the lease on the container having ended with its process, once they are older than LeftoverAge. Every browser
 // project's requests and every call of the web servers reach the API from loopback, one anonymous rate limit partition, so
-// the host allows anonymous callers ten times the default.
+// the host allows anonymous callers ten times the default. The host reads no App Configuration, so it is given the schedule of
+// the account check that the store seeds, for the jobs page to show; like every test host it runs no job loop, so the check
+// never runs on its own.
 public static class EndToEndHost
 {
     public const string EnvironmentName = "Testing";
@@ -23,6 +25,10 @@ public static class EndToEndHost
     public const string ContainerNamePrefix = "erpe2e-";
 
     public const string AnonymousPermitLimit = "6000";
+
+    public const string AccountCheckScheduleKey = "Erp:Identity:Users:AccountCheckSchedule";
+
+    public const string AccountCheckSchedule = "30 0 * * *";
 
     public static TimeSpan LeftoverAge { get; } = TimeSpan.FromMinutes(10);
 
@@ -41,6 +47,7 @@ public static class EndToEndHost
         await using var factory = ErpApiFactory.ForEnvironment(EnvironmentName)
             .WithConfiguration(ErpApiFactory.IdentityWebOriginKey, settings.WebOrigin)
             .WithConfiguration($"{RateLimitingOptions.SectionName}:{nameof(RateLimitingOptions.AnonymousPermitLimit)}", AnonymousPermitLimit)
+            .WithConfiguration(AccountCheckScheduleKey, AccountCheckSchedule)
             .WithTestEndpoints(PersonaSignIn.Map)
             .WithTestEndpoints(DirectoryPeople.Map)
             .WithTestEndpoints(DirectoryApplicationAccess.Map)
