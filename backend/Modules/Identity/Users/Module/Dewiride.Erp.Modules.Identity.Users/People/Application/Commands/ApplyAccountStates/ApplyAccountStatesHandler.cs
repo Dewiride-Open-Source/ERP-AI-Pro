@@ -14,7 +14,8 @@ namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.ApplyA
 // record answers that their manager is not active. An answer without a single enabled account cannot be the company
 // directory, whose people sign in with enabled accounts, and neither can one that does not answer the account of the person
 // running the check as enabled, who signed in with it; either changes nothing and counts as a directory that cannot answer, so
-// a wrong answer never deactivates the administrator who could reactivate the others.
+// a wrong answer never deactivates the administrator running the check, who can reactivate the others. The nightly run as the
+// system has no account in the answer, so only the first guard applies to it (ADR-0059).
 internal sealed partial class ApplyAccountStatesHandler(UsersDbContext context, IActorContext actor, ILogger<ApplyAccountStatesHandler> logger)
     : ICommandHandler<ApplyAccountStatesCommand, AccountCheckDetails>
 {

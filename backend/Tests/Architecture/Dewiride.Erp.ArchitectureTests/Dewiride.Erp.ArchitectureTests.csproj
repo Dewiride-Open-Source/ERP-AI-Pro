@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../../Hosts/Api/Dewiride.Erp.Host.Api/Dewiride.Erp.Host.Api.csproj" />
+    <ProjectReference Include="../../../Hosts/Migrator/Dewiride.Erp.Host.Migrator/Dewiride.Erp.Host.Migrator.csproj" />
     <ProjectReference Include="../../Shared/Dewiride.Erp.Testing/Dewiride.Erp.Testing.csproj" />
   </ItemGroup>
 

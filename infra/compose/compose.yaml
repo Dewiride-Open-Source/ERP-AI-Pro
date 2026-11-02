@@ -35,6 +35,7 @@ services:
     expose:
       - "8080"
     restart: unless-stopped
+    stop_grace_period: 45s
 
   web:
     image: ghcr.io/dewiride-open-source/erp-ai-pro/web:${IMAGE_TAG:-local}

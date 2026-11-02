@@ -1,5 +1,6 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
+using Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
 using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.BuildingBlocks.Persistence;
@@ -10,6 +11,7 @@ using Dewiride.Erp.Modules.Identity.Users.Designations.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Integration;
 using Dewiride.Erp.Modules.Identity.Users.People.Application;
 using Dewiride.Erp.Modules.Identity.Users.People.Endpoints;
+using Dewiride.Erp.Modules.Identity.Users.People.Hosting;
 using Dewiride.Erp.Modules.Identity.Users.Permissions.Endpoints;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
 using Dewiride.Erp.Modules.Identity.Users.Positions.Endpoints;
@@ -61,6 +63,8 @@ public sealed class UsersModule : IModule
         builder.AddModuleDbContext<UsersDbContext>(UsersDbContext.SchemaName);
         builder.Services.AddHandlersFromAssembly(typeof(UsersModule).Assembly);
         builder.Services.AddScoped<DirectoryAccountCheck>();
+        builder.Services.AddOptions<AccountCheckOptions>().BindConfiguration(AccountCheckOptions.SectionName);
+        builder.Services.AddRecurringJob<DirectoryAccountCheckJob, AccountCheckOptions>(DirectoryAccountCheckJob.Definition, options => options.AccountCheckSchedule);
         builder.Services.AddScoped<IPersonAdmission, UserAdmission>();
         builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IRecordNames, UserRecordNames>());
         builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IPersonNames, UserRecordNames>());

@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-11-01",
+  "updatedOn": "2026-11-02",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -1350,12 +1350,21 @@
           "id": "business-building-blocks-background-jobs-and-scheduling",
           "title": "Background jobs and scheduling",
           "scope": "Implement backend/BuildingBlocks/Jobs with a persistent job table with idempotency keys, retry with exponential backoff, dead-letter state, cron-style recurring schedules in IST, a hosted runner with graceful shutdown, admin endpoints to list/re-run/cancel jobs, an in-process fake for tests, and the nightly Entra directory sync from `user-management-user-lifecycle` as the first recurring job.",
-          "status": "planned",
+          "status": "blocked",
           "edition": "community",
-          "acceptance": [],
+          "editionConfirmedOn": "2026-11-01",
+          "acceptance": [
+            "The nightly check: at `Erp:Identity:Users:AccountCheckSchedule` (seeded `30 0 * * *`, India time, the owner's choice of 2026-11-01) the API enqueues exactly one run of `identity.users.directory-account-check` per occurrence, whatever the number of instances and across restarts, and an occurrence missed while the API was down runs once when it is back; the run deactivates every active linked person whose Entra account is disabled or deleted, with change records whose actor is the system, shown as \"The ERP\".",
+            "The runner: each attempt is claimed by exactly one runner even with two racing; a run whose lease expired is recovered; retryable failures are retried with doubling delays up to the job's `MaxAttempts` and then dead-lettered, permanent ones at once; when the API stops nothing new starts, and a running job keeps its token until the host's 30-second shutdown timeout, its run then returning to pending without counting a failure, with the api service's `stop_grace_period` at 45 seconds; all proven against real SQL Server.",
+            "Schedules and retention: the in-house five-field India-time cron parser refuses every malformed expression with its reason and passes the next-occurrence table (month ends, 29 February, day of month together with day of week as Ubuntu's crontab(5) defines it); finished runs older than `Erp:Platform:Jobs:FinishedRunRetention` (400 days, the owner's choice of 2026-11-01) are deleted by the migrator's `migrate` and `retain` alone.",
+            "The administrator surface: administrators alone list jobs and runs, re-run a failed, dead-lettered or cancelled run and cancel an unfinished one, through the five `/api/platform/jobs` routes and the pages `/platform/jobs` and `/platform/jobs/runs/{id}`, behind `Erp.Modules.Platform.Jobs`; Playwright passes on all six projects in light and dark, with an employee's 403 and no-access page, the gated and unavailable states and one validation failure.",
+            "In production: after the release that carries it is installed, the first night's run of the account check succeeds on the production server, read on the jobs page."
+          ],
           "tags": [],
           "dependsOn": [],
-          "notes": "From `user-management-user-lifecycle` (ADR-0047): the nightly directory sync is `DirectoryAccountCheck` of the users module, which takes `IDirectoryAccounts` as an argument because only the API composes the sign-in services; this item runs it every night as the system actor, under which the audit trail names the ERP, and administrators run the same check from People until then."
+          "startedOn": "2026-11-01",
+          "blockedReason": "The first night's run of the account check on the production server, read on the jobs page, follows the installation of the release that carries this item (the last acceptance criterion).",
+          "notes": "From `user-management-user-lifecycle` (ADR-0047): the nightly directory sync is `DirectoryAccountCheck` of the users module, which takes `IDirectoryAccounts` as an argument because only the API composes the sign-in services; this item runs it every night as the system actor, under which the audit trail names the ERP, and administrators run the same check from People until then. What exists (ADR-0059): `BuildingBlocks.Jobs` runs the ERP's own work as runs in the schema `platform_jobs` (`JobRuns`, the append-only `JobRunEvents` and `JobSchedules`), each attempt claimed under a fencing lease token by the API's runner alone and run as the system actor, failures that can heal retried with doubling delays up to the job's attempts and then dead-lettered, and five-field India-time schedules whose latest missed occurrence runs once; the migrator deletes finished runs after `Erp:Platform:Jobs:FinishedRunRetention` (400 days). The module `Platform/Jobs` shows jobs and runs to administrators on `/platform/jobs` and `/platform/jobs/runs/{id}`, with Run again and Cancel, behind `Erp.Modules.Platform.Jobs`. The first recurring job, `identity.users.directory-account-check` (\"Check Microsoft accounts\"), runs the account check every night at `Erp:Identity:Users:AccountCheckSchedule` (`30 0 * * *`, 00:30 India time); the settings and the flag are seeded in App Configuration under both labels."
         },
         {
           "id": "business-building-blocks-transactional-outbox-and-integration-events",
@@ -1363,6 +1372,7 @@
           "scope": "Add a per-module outbox table written in the same transaction as domain changes, a dispatcher running on the `business-building-blocks-background-jobs-and-scheduling` runner publishing integration events in-process to <Domain>.Contracts subscribers with at-least-once delivery and idempotent handlers, covered by integration tests.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1374,6 +1384,7 @@
           "scope": "Create a `dotnet new erp-module` template package (templates/erp-module) generating Domain/Application/Infrastructure/Endpoints/Ai folders, DbContext with schema and migrations factory, IModule registration and matching test projects under backend/Modules/<Domain>/<Feature>/, and a `pnpm scaffold:feature` script generating frontend/apps/web/src/features/<domain>/<feature>/ with route, list/detail pages and an e2e spec, both derived from the `user-management` reference module and verified by architecture tests on generated output.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1385,6 +1396,7 @@
           "scope": "Create backend/Modules/ReferenceData with countries, Indian States and UTs with GST State codes, currencies, a dated exchange-rate table with manual entry and file import, fiscal-year and period services (April to March), seed migrations, cached read endpoints and reusable UI pickers, with tests.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1396,6 +1408,7 @@
           "scope": "Create backend/Modules/Compliance/StatutoryParameters with effective-dated, versioned parameter sets seeded from statutory/*.json, an `IStatutoryParameters.GetAsOf(date)` service, list/read endpoints, an admin viewer page with version diff, and the first datasets (GST rate schedule with history, SAC/HSN master seeded with 9983xx and 997331, State codes, GST due-date rules) pinned by golden-value tests.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1406,6 +1419,7 @@
           "scope": "Seed and golden-test TDS sections with the ITA-1961 to ITA-2025 crosswalk, rates, per-FY thresholds, no/inoperative-PAN and 206AB non-filer rates, company income-tax rates and surcharge, advance-tax schedule, professional-tax State slabs, PF/ESI ceilings and rates (including the pending PF ceiling revision), LWF, gratuity and bonus parameters, and Companies Act Schedule II useful lives with income-tax block rates.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1416,6 +1430,7 @@
           "scope": "Provide configurable number series per document type and financial year (max 16 characters, unique per FY, prefix and reset rules) with gap-free concurrent allocation proven by a parallel integration test.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1426,6 +1441,7 @@
           "scope": "Add backend/BuildingBlocks/Approvals with an ApprovalRequest entity bound to any aggregate by generic reference, a state machine (submitted, approved, rejected, returned, withdrawn), approver resolution by manager or role, SLA reminder jobs, endpoints and an approvals inbox page, used by vendors, bills, payouts, reimbursements and timesheets until `approvals-workflow-consumer-migration` migrates them (tag bridge).",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1437,6 +1453,7 @@
           "scope": "Add backend/BuildingBlocks/Email with Microsoft Graph sendMail from a shared mailbox, a dark-mode-safe HTML template base, attachment support, a delivery log, a local dev mail-sink compose profile and SPF/DKIM/DMARC documentation, used for invoice delivery, approval requests and reminders until `notifications` generalises it (tag bridge).",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1447,6 +1464,7 @@
           "scope": "Extend frontend/packages/ui with advanced table features (saved views, bulk actions, CSV export, virtualised rows), list/detail/wizard page templates, entity activity timeline and document tab components, and demonstrate them on a hidden /kit route covered by e2e screenshots.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
@@ -1458,6 +1476,7 @@
           "scope": "Add a dev container, a one-command local stack (`pnpm dev:all` starting SQL Server, aspire-dashboard, API and web), a seed-data generator for realistic demo data, and a module documentation index with module SDK docs.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": []
@@ -1468,6 +1487,7 @@
           "scope": "Let the Community hosts and web app compose a module set assembled outside this repository while Community code names no other edition: AddErpPlatform and every host take their module list as an argument (Modules.All stays the Community list), the API host pipeline and OpenAPI registration become entry points another host project calls, the web app navigation registry, gated route segments and shell slots accept feature folders supplied at build time, the architecture tests and scripts/checks/feature-boundaries.ts run over a given module set, root namespace and source root, and the minimal approvals building block routes decisions through a replaceable approval-routing contract; each extension point is exercised by a test module inside this repository.",
           "status": "planned",
           "edition": "community",
+          "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
           "dependsOn": [

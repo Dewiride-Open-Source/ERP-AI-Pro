@@ -13,4 +13,5 @@ export const gatedFeatureFlags = [
   "Erp.Modules.Platform.Attachments",
   "Erp.Modules.Platform.Audit",
   "Erp.Modules.Identity.Users",
+  "Erp.Modules.Platform.Jobs",
 ] as const;

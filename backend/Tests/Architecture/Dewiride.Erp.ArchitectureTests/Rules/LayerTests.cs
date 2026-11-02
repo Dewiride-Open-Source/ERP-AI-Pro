@@ -1,7 +1,9 @@
 using ArchUnitNET.Domain;
 using ArchUnitNET.Domain.Dependencies;
 using ArchUnitNET.Fluent;
+using Dewiride.Erp.BuildingBlocks.Jobs;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Dewiride.Erp.Testing.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
@@ -23,6 +25,10 @@ public sealed class LayerTests
     private const string IdentityWebAssemblyPrefix = "Microsoft.Identity.Web";
 
     private const string TestingAssemblyPrefix = "Dewiride.Erp.Testing";
+
+    private const string ApiHostAssembly = "Dewiride.Erp.Host.Api";
+
+    private const string MigratorHostAssembly = "Dewiride.Erp.Host.Migrator";
 
     private static readonly Architecture Architecture = ErpAssemblies.Architecture;
 
@@ -207,6 +213,21 @@ public sealed class LayerTests
         Assert.NotEmpty(Types().That().ResideInNamespaceOrBelow(BuildingBlocksNamespace).And().DependOnAny(SqlClientTypes).GetObjects(Architecture));
         Assert.NotEmpty(Types().That().ResideInNamespaceOrBelow(BuildingBlocksNamespace).And().DependOnAny(AdoNetTypes).GetObjects(Architecture));
         AssertRule(Types().That().Are(ModuleTypes).Should().NotDependOnAny(SqlClientTypes).AndShould().NotDependOnAny(AdoNetTypes));
+    }
+
+    [Fact]
+    public void JobRunner_IsComposedByTheApiHostAlone()
+    {
+        var runner = typeof(JobsRegistration).GetMethod(nameof(JobsRegistration.AddErpJobRunner))!;
+
+        var composers = ErpAssemblies.All
+            .Append(typeof(TestDatabaseHost).Assembly)
+            .Where(assembly => CompiledCalls.AnyTo(runner, assembly))
+            .Select(assembly => assembly.GetName().Name)
+            .ToList();
+
+        Assert.Contains(ErpAssemblies.All, assembly => assembly.GetName().Name == MigratorHostAssembly);
+        Assert.Equal([ApiHostAssembly], composers);
     }
 
     private static IEnumerable<(string Caller, string DeclaringType, string Method, string Target)> EntityFrameworkCalls(IReadOnlyCollection<string> declaringTypes) =>

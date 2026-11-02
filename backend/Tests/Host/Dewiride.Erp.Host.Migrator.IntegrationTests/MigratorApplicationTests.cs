@@ -27,7 +27,17 @@ public sealed class MigratorApplicationTests
 
     private const string CachingSchema = "platform_caching";
 
-    private static readonly string[] Schemas = [FilesSchema, CachingSchema, "platform_idempotency", "audit", "platform_system_info"];
+    private const string JobRunsTable = "[platform_jobs].[JobRuns]";
+
+    private const string JobRunEventsTable = "[platform_jobs].[JobRunEvents]";
+
+    private const string JobSchedulesTable = "[platform_jobs].[JobSchedules]";
+
+    private const string AccountCheckJob = "identity.users.directory-account-check";
+
+    private const string UnknownJob = "test.jobs.unknown";
+
+    private static readonly string[] Schemas = [FilesSchema, CachingSchema, "platform_idempotency", "audit", "platform_jobs", "platform_system_info"];
 
     private static readonly string[] FilesTables = ["Attachments", "DownloadLinks", "DownloadRedemptions", "StoredContents", "UploadReservations"];
 
@@ -236,6 +246,33 @@ public sealed class MigratorApplicationTests
             await ExistsAsync(database.ConnectionString, "ChangeRecords", recentRecord),
         ];
         Assert.Equal([false, true, false, true], kept);
+    }
+
+    [Fact]
+    public async Task RunAsync_Retain_DeletesTheJobRunsPastTheirRetentionAndKeepsTheSchedulesOfTheModulesJobs()
+    {
+        await using var database = await EmptyTestDatabase.CreateAsync();
+        Assert.Equal(MigratorExitCodes.Succeeded, await RunAsync([MigratorApplication.MigrateCommand], database.ConnectionString));
+        var longAgo = new DateTimeOffset(2001, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var yesterday = TimeProvider.System.GetUtcNow().AddDays(-1);
+        var oldRun = await AddFinishedRunAsync(database.ConnectionString, longAgo);
+        var oldEvent = await AddRunEventAsync(database.ConnectionString, oldRun, longAgo);
+        var recentRun = await AddFinishedRunAsync(database.ConnectionString, yesterday);
+        await AddScheduleAsync(database.ConnectionString, AccountCheckJob, yesterday);
+        await AddScheduleAsync(database.ConnectionString, UnknownJob, yesterday);
+
+        var exitCode = await RunAsync([MigratorApplication.RetainCommand], database.ConnectionString);
+
+        Assert.Equal(MigratorExitCodes.Succeeded, exitCode);
+        bool[] kept =
+        [
+            await ExistsAsync(database.ConnectionString, JobRunsTable, "Id", oldRun),
+            await ExistsAsync(database.ConnectionString, JobRunEventsTable, "Id", oldEvent),
+            await ExistsAsync(database.ConnectionString, JobRunsTable, "Id", recentRun),
+            await ExistsAsync(database.ConnectionString, JobSchedulesTable, "JobName", AccountCheckJob),
+            await ExistsAsync(database.ConnectionString, JobSchedulesTable, "JobName", UnknownJob),
+        ];
+        Assert.Equal([false, false, true, true, false], kept);
     }
 
     [Theory]
@@ -497,12 +534,46 @@ public sealed class MigratorApplicationTests
         return id;
     }
 
-    private static async Task<bool> ExistsAsync(string connectionString, string table, Guid id)
+    private static Task<Guid> AddFinishedRunAsync(string connectionString, DateTimeOffset finishedAt) =>
+        InsertAsync(
+            connectionString,
+            "INSERT INTO [platform_jobs].[JobRuns] ([Id], [JobName], [IdempotencyKey], [Status], [DueAt], [CreatedAt], [RequestedBy], [AttemptCount], [FailureCount], [StartedAt], [FinishedAt]) VALUES (@id, 'test.migrator.retention', CONVERT(varchar(36), @id), 4, @occurredAt, @occurredAt, @id, 1, 0, @occurredAt, @occurredAt)",
+            finishedAt);
+
+    private static async Task<Guid> AddRunEventAsync(string connectionString, Guid runId, DateTimeOffset occurredAt)
+    {
+        var id = Guid.CreateVersion7();
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new SqlCommand("INSERT INTO [platform_jobs].[JobRunEvents] ([Id], [RunId], [OccurredAt], [Kind], [ActorId]) VALUES (@id, @runId, @occurredAt, 3, @runId)", connection);
+        command.Parameters.AddWithValue("@id", id);
+        command.Parameters.AddWithValue("@runId", runId);
+        command.Parameters.AddWithValue("@occurredAt", occurredAt);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+
+        return id;
+    }
+
+    private static async Task AddScheduleAsync(string connectionString, string jobName, DateTimeOffset lastOccurrenceAt)
     {
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync(TestContext.Current.CancellationToken);
-        await using var command = new SqlCommand($"SELECT COUNT(*) FROM [audit].[{table}] WHERE [Id] = @id", connection);
-        command.Parameters.AddWithValue("@id", id);
+        await using var command = new SqlCommand(
+            "INSERT INTO [platform_jobs].[JobSchedules] ([JobName], [Expression], [NextOccurrenceAt], [LastOccurrenceAt]) VALUES (@jobName, '30 0 * * *', DATEADD(day, 1, @lastOccurrenceAt), @lastOccurrenceAt)",
+            connection);
+        command.Parameters.AddWithValue("@jobName", jobName);
+        command.Parameters.AddWithValue("@lastOccurrenceAt", lastOccurrenceAt);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    private static Task<bool> ExistsAsync(string connectionString, string table, Guid id) => ExistsAsync(connectionString, $"[audit].[{table}]", "Id", id);
+
+    private static async Task<bool> ExistsAsync(string connectionString, string table, string key, object value)
+    {
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new SqlCommand($"SELECT COUNT(*) FROM {table} WHERE [{key}] = @value", connection);
+        command.Parameters.AddWithValue("@value", value);
 
         return (int)(await command.ExecuteScalarAsync(TestContext.Current.CancellationToken))! == 1;
     }

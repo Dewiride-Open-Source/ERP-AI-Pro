@@ -37,6 +37,9 @@ const sidebarSnapshot = `
       - listitem:
         - link "Audit trail":
           - /url: /platform/audit
+      - listitem:
+        - link "Background jobs":
+          - /url: /platform/jobs
     - text: Organisation
     - list "Organisation":
       - listitem:
@@ -78,6 +81,9 @@ const drawerSnapshot = `
         - listitem:
           - link "Audit trail":
             - /url: /platform/audit
+        - listitem:
+          - link "Background jobs":
+            - /url: /platform/jobs
       - text: Organisation
       - list "Organisation":
         - listitem:
@@ -173,6 +179,7 @@ test.describe("app shell navigation", () => {
           "Home",
           "System",
           "Audit trail",
+          "Background jobs",
           "People",
           "Organisation chart",
           "Departments",

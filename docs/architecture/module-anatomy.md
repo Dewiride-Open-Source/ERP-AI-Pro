@@ -21,7 +21,7 @@ backend/Modules/Finance/Sales/
 │   │   │   └── EventHandlers/InvoiceIssuedHandler.cs
 │   │   ├── Endpoints/{InvoiceEndpoints.cs, Requests/CreateDraftInvoiceRequest.cs, Responses/InvoiceResponse.cs}
 │   │   ├── Persistence/{InvoiceConfiguration.cs, InvoiceLineConfiguration.cs}
-│   │   ├── Hosting/InvoiceReminderService.cs                    hosted services that drive Application handlers (a BackgroundService)
+│   │   ├── Hosting/{OverdueReminderJob.cs, InvoiceReminderService.cs}   jobs the API's job runner runs (IJob) and hosted services that drive Application handlers (a BackgroundService)
 │   │   └── Reports/InvoiceRegister/{InvoiceRegisterQuery.cs, InvoiceRegisterHandler.cs, InvoiceRegisterEndpoints.cs}
 │   ├── CreditNotes/  Receipts/  NumberingSeries/  Exports/       same shape
 │   ├── Shared/Gst/{GstRate.cs, TaxBreakup.cs, PlaceOfSupplyResolver.cs}   module-internal shared code, sub-foldered by topic
@@ -43,7 +43,9 @@ Rules that keep the shape honest:
 - `Persistence/<Module>DbContext` derives from `ModuleDbContext` and is registered from `AddServices` with `builder.AddModuleDbContext<T>(schema)`; there is no design-time factory, `dotnet ef` runs the API host offline (see `persistence.md`).
 - Entities implement `IAuditable`, `ISoftDeletable` and `IVersioned` from `BuildingBlocks.Kernel.Domain` (getter-only, `private set` on the entity; on the root of an inheritance hierarchy, never on an owned type) to opt into the audit stamps of `AuditingSaveChangesInterceptor`, the `SoftDelete` query filter and the `rowversion` concurrency token; nothing is configured per entity. Money properties are `Money` values from `BuildingBlocks.Kernel.Monetary`, mapped by convention to `<Property>_Amount decimal(19,4)` and `<Property>_Currency char(3)`.
 - Every entity type of the module's context implements `IAuditable`, which also records each of its changes in `audit.ChangeRecords` with the values before and after, or `IAppendOnly`, for a row inserted once and never changed (`ApiStartup`); the architecture tests fail on any other ([persistence](persistence.md), section "Change records"; [ADR-0043](../adr/0043-change-records-and-the-append-only-audit-schema.md)). A recorded type's configuration declares its change key, `builder.RecordChangesAs("finance.sales.invoices")` (the module's permission prefix, then the feature), files a child's changes under its parent with `builder.FileChangesUnder(l => l.InvoiceId)`, so the parent's history shows them, and leaves out a property whose every change is noise with `ExcludeFromChangeRecords()`; the module registers an `IRecordNames` for its keys whose records have a name (`Integration/`), so the history can name them. A recorded type keeps one `Guid` key set in code, is changed by no delete of a principal (its foreign keys `Restrict` or `NoAction`) and has neither an owned type nor a complex collection; nothing in the module calls `Update` or `Attach` or runs raw SQL, which would change rows without a record.
-- `Hosting/` holds hosted services (`BackgroundService`) that drive Application handlers; it may reference Application, Domain, `BuildingBlocks.*` and `Microsoft.Extensions.*` (hosting, dependency injection, logging, feature management), never ASP.NET Core, EF Core or Endpoints.
+- `Hosting/` holds the feature's jobs and hosted services; it may reference Application, Domain, `BuildingBlocks.*` and `Microsoft.Extensions.*` (hosting, dependency injection, logging, feature management), never ASP.NET Core, EF Core or Endpoints.
+  - A job is an `IJob` or `IJob<TPayload>` of `BuildingBlocks.Jobs` with its `JobDefinition`, registered from `AddServices` with `AddJob` or, with its schedule, `AddRecurringJob`, and run by the API's job runner as the system actor ([background jobs](background-jobs.md)). Its name is `<domain>.<module>.<job>`, under the module's permission prefix, and its description one sentence (`JobTests`). A run executes at least once, so a job is idempotent and safe to run twice at once.
+  - A hosted service (`BackgroundService`) drives Application handlers.
 - Request and response records carry unique names (`CreateDraftInvoiceRequest`, `InvoiceResponse`) so OpenAPI schema ids never collide.
 - Request records are `public sealed record` types in `Endpoints/Requests/` with every attribute on the `property:` target (`FromQuery(Name = …)` for the wire name, `Description` for the document, DataAnnotations for the rules), and `AddServices` calls `builder.Services.AddValidation()`, because the validation generator skips non-public types and assemblies that never call it, without a warning (`http-conventions.md`). Response records stay `internal`.
 
@@ -119,4 +121,5 @@ Rules that keep the shape honest (ADR-0024; the full register with its enforcers
 | Feature flag | `Erp.Modules.Finance.Sales` |
 | Permissions | `finance.sales.<feature>.<action>` |
 | Configuration keys | `Erp:Finance:Sales:<Setting>` |
+| Job names | `finance.sales.<job>` |
 | Frontend | `features/finance/sales/`, routes `/finance/sales/...` |

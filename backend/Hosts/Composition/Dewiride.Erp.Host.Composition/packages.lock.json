@@ -307,6 +307,14 @@
           "Microsoft.AspNetCore.OpenApi": "[10.0.14, )"
         }
       },
+      "dewiride.erp.buildingblocks.jobs": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )"
+        }
+      },
       "dewiride.erp.buildingblocks.kernel": {
         "type": "Project"
       },
@@ -349,6 +357,7 @@
           "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Idempotency": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Jobs": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
           "Dewiride.Erp.Modules.Identity.Users.Contracts": "[1.0.0, )"
@@ -388,6 +397,22 @@
         }
       },
       "dewiride.erp.modules.platform.audit.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.jobs": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Jobs": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Jobs.Contracts": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.jobs.contracts": {
         "type": "Project",
         "dependencies": {
           "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
