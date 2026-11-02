@@ -415,29 +415,29 @@ Microsoft.Identity.Abstractions 12.7.0
   Note: built from https://github.com/AzureAD/microsoft-identity-abstractions-for-dotnet/tree/76944ea3aa506494c16f7b1a67ec83538f631ba6
   Package URL: pkg:nuget/Microsoft.Identity.Abstractions@12.7.0
 
-Microsoft.Identity.Client 4.91.1
+Microsoft.Identity.Client 4.92.0
   Licence: MIT
   © Microsoft Corporation. All rights reserved.
   Licence text: [2]
-  Source: https://api.nuget.org/v3-flatcontainer/microsoft.identity.client/4.91.1/microsoft.identity.client.4.91.1.nupkg
-  Note: built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/5df0316152afd7fd28a51ff046c5ba7f7829be04
-  Package URL: pkg:nuget/Microsoft.Identity.Client@4.91.1
+  Source: https://api.nuget.org/v3-flatcontainer/microsoft.identity.client/4.92.0/microsoft.identity.client.4.92.0.nupkg
+  Note: built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2465fc31fa2b481b68660670e2becfd3fba7c631
+  Package URL: pkg:nuget/Microsoft.Identity.Client@4.92.0
 
-Microsoft.Identity.Client.Broker 4.91.1
+Microsoft.Identity.Client.Broker 4.92.0
   Licence: MIT
   © Microsoft Corporation. All rights reserved.
   Licence text: [2]
-  Source: https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.broker/4.91.1/microsoft.identity.client.broker.4.91.1.nupkg
-  Note: built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/5df0316152afd7fd28a51ff046c5ba7f7829be04
-  Package URL: pkg:nuget/Microsoft.Identity.Client.Broker@4.91.1
+  Source: https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.broker/4.92.0/microsoft.identity.client.broker.4.92.0.nupkg
+  Note: built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2465fc31fa2b481b68660670e2becfd3fba7c631
+  Package URL: pkg:nuget/Microsoft.Identity.Client.Broker@4.92.0
 
-Microsoft.Identity.Client.Extensions.Msal 4.91.1
+Microsoft.Identity.Client.Extensions.Msal 4.92.0
   Licence: MIT
   © Microsoft Corporation. All rights reserved.
   Licence text: [2]
-  Source: https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.extensions.msal/4.91.1/microsoft.identity.client.extensions.msal.4.91.1.nupkg
-  Note: built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/5df0316152afd7fd28a51ff046c5ba7f7829be04
-  Package URL: pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.91.1
+  Source: https://api.nuget.org/v3-flatcontainer/microsoft.identity.client.extensions.msal/4.92.0/microsoft.identity.client.extensions.msal.4.92.0.nupkg
+  Note: built from https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/tree/2465fc31fa2b481b68660670e2becfd3fba7c631
+  Package URL: pkg:nuget/Microsoft.Identity.Client.Extensions.Msal@4.92.0
 
 Microsoft.Identity.Web 4.16.1
   Licence: MIT
@@ -642,39 +642,39 @@ OpenTelemetry.Instrumentation.SqlClient 1.20.1
   Note: built from https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/07b29448c1dfb807121fc5ff202888e84b764c07
   Package URL: pkg:nuget/OpenTelemetry.Instrumentation.SqlClient@1.20.1
 
-Polly.Core 8.8.1
+Polly.Core 8.9.0
   Licence: BSD-3-Clause
   Copyright (c) 2015-2026, App vNext
   Copyright (c) 2015-2025, App vNext
   Licence text: [9]
-  Source: https://api.nuget.org/v3-flatcontainer/polly.core/8.8.1/polly.core.8.8.1.nupkg
-  Note: built from https://github.com/App-vNext/Polly/tree/97acd91b52541664f961888d7655ba9b92ba6252
-  Package URL: pkg:nuget/Polly.Core@8.8.1
+  Source: https://api.nuget.org/v3-flatcontainer/polly.core/8.9.0/polly.core.8.9.0.nupkg
+  Note: built from https://github.com/App-vNext/Polly/tree/1fc5d119f0e7445563229bd144ba271e907d89f2
+  Package URL: pkg:nuget/Polly.Core@8.9.0
 
-Polly.Extensions 8.8.1
+Polly.Extensions 8.9.0
   Licence: BSD-3-Clause
   Copyright (c) 2015-2026, App vNext
   Copyright (c) 2015-2025, App vNext
   Licence text: [9]
-  Source: https://api.nuget.org/v3-flatcontainer/polly.extensions/8.8.1/polly.extensions.8.8.1.nupkg
-  Note: built from https://github.com/App-vNext/Polly/tree/97acd91b52541664f961888d7655ba9b92ba6252
-  Package URL: pkg:nuget/Polly.Extensions@8.8.1
+  Source: https://api.nuget.org/v3-flatcontainer/polly.extensions/8.9.0/polly.extensions.8.9.0.nupkg
+  Note: built from https://github.com/App-vNext/Polly/tree/1fc5d119f0e7445563229bd144ba271e907d89f2
+  Package URL: pkg:nuget/Polly.Extensions@8.9.0
 
-Polly.RateLimiting 8.8.1
+Polly.RateLimiting 8.9.0
   Licence: BSD-3-Clause
   Copyright (c) 2015-2026, App vNext
   Copyright (c) 2015-2025, App vNext
   Licence text: [9]
-  Source: https://api.nuget.org/v3-flatcontainer/polly.ratelimiting/8.8.1/polly.ratelimiting.8.8.1.nupkg
-  Note: built from https://github.com/App-vNext/Polly/tree/97acd91b52541664f961888d7655ba9b92ba6252
-  Package URL: pkg:nuget/Polly.RateLimiting@8.8.1
+  Source: https://api.nuget.org/v3-flatcontainer/polly.ratelimiting/8.9.0/polly.ratelimiting.8.9.0.nupkg
+  Note: built from https://github.com/App-vNext/Polly/tree/1fc5d119f0e7445563229bd144ba271e907d89f2
+  Package URL: pkg:nuget/Polly.RateLimiting@8.9.0
 
-Scalar.AspNetCore 2.18.3
+Scalar.AspNetCore 2.18.6
   Licence: MIT
   Licence text: [2]
-  Source: https://api.nuget.org/v3-flatcontainer/scalar.aspnetcore/2.18.3/scalar.aspnetcore.2.18.3.nupkg
-  Note: built from https://github.com/scalar/scalar/tree/74361961e3156ef7211395f01c20db733f87ad45
-  Package URL: pkg:nuget/Scalar.AspNetCore@2.18.3
+  Source: https://api.nuget.org/v3-flatcontainer/scalar.aspnetcore/2.18.6/scalar.aspnetcore.2.18.6.nupkg
+  Note: built from https://github.com/scalar/scalar/tree/4b040993e5b970d025046e2cbfdefa4e3ff38e08
+  Package URL: pkg:nuget/Scalar.AspNetCore@2.18.6
 
 System.ClientModel 1.15.0
   Licence: MIT

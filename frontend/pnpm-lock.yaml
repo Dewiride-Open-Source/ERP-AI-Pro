@@ -210,14 +210,14 @@ catalogs:
       specifier: 19.3.0
       version: 19.3.0
     '@vercel/otel':
-      specifier: 2.1.3
-      version: 2.1.3
+      specifier: 2.2.0
+      version: 2.2.0
     class-variance-authority:
       specifier: 0.7.1
       version: 0.7.1
     cn:
-      specifier: 0.5.0
-      version: 0.5.0
+      specifier: 0.5.1
+      version: 0.5.1
     eslint:
       specifier: 10.13.0
       version: 10.13.0
@@ -231,11 +231,11 @@ catalogs:
       specifier: 1.8.2
       version: 1.8.2
     lucide-react:
-      specifier: 1.62.0
-      version: 1.62.0
+      specifier: 1.65.0
+      version: 1.65.0
     motion:
-      specifier: 14.7.1
-      version: 14.7.1
+      specifier: 14.8.0
+      version: 14.8.0
     next:
       specifier: 16.4.3
       version: 16.4.3
@@ -327,13 +327,13 @@ importers:
         version: 0.223.0(@opentelemetry/api@1.9.1)
       '@vercel/otel':
         specifier: 'catalog:'
-        version: 2.1.3(@opentelemetry/api-logs@0.223.0)(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.223.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.223.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))
+        version: 2.2.0(@opentelemetry/api-logs@0.223.0)(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.223.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.223.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))
       geist:
         specifier: 'catalog:'
         version: 1.8.2(next@16.4.3(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@24.19.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))
       lucide-react:
         specifier: 'catalog:'
-        version: 1.62.0(@types/react@19.3.0)(react@19.3.1)
+        version: 1.65.0(@types/react@19.3.0)(react@19.3.1)
       next:
         specifier: 'catalog:'
         version: 16.4.3(@babel/core@7.29.7(supports-color@7.2.0))(@opentelemetry/api@1.9.1)(@playwright/test@1.64.1)(@types/node@24.19.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -467,13 +467,13 @@ importers:
         version: 0.7.1
       cn:
         specifier: 'catalog:'
-        version: 0.5.0
+        version: 0.5.1
       lucide-react:
         specifier: 'catalog:'
-        version: 1.62.0(@types/react@19.3.0)(react@19.3.1)
+        version: 1.65.0(@types/react@19.3.0)(react@19.3.1)
       motion:
         specifier: 'catalog:'
-        version: 14.7.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+        version: 14.8.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       next-themes:
         specifier: 'catalog:'
         version: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -2153,8 +2153,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vercel/otel@2.1.3':
-    resolution: {integrity: sha512-Ofvzs9qhftRD1YMLuPnhbXjQZG6IKrJ9AmEKmRHRGfoWlV89ed2gAOkvddkFiZDFZJm2rrFNdeZKRVxoCdnWiw==}
+  '@vercel/otel@2.2.0':
+    resolution: {integrity: sha512-MP5wQS3Wh/Ly6WAvINE98UOk8JgK4mwWIMW9oEaMxmsnVt8fQWp8D86Ps2nVAbHDkdiI+Xxw5RV49Yz6XyqCOg==}
     engines: {node: ^18.19.0 || >=20.6.0}
     peerDependencies:
       '@opentelemetry/api': '>=1.9.0 <2.0.0'
@@ -2348,8 +2348,8 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
-  cn@0.5.0:
-    resolution: {integrity: sha512-JGEixZEpfFXm1P5uXwvEobOFLlHwIWi5v4tjd1ZwfiYmcEilkuD2l+054rvJcYCR1B+uVThHeUbgmNz1FwuxuA==}
+  cn@0.5.1:
+    resolution: {integrity: sha512-SA06SpzSWXRNrt/EQWnRpck9jEVDfVJonw8ZewiNR6pOC4U0SQ81tWaQ9/PKNPh/lWvjuY4CMlxpc8tJViiX6Q==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -2755,15 +2755,18 @@ packages:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
 
-  framer-motion@14.7.1:
-    resolution: {integrity: sha512-mFDYZxyfeZnpvL/zEQEqLZNYVA/ya47c9TBfZb/PEoNBBVSVvCLkMrCv9U38cuw72W161XENZwZB0+4nIBLEJg==}
+  framer-motion@14.8.0:
+    resolution: {integrity: sha512-PQsSx+UlaKiyPhADjVT5wALBErJJdbMeKQS4gQx6ibOrSNni7qjqfTKMvf6YHGG8pQWi6njs7AqrIG7R2hbnxA==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
+      remix: ^3.1.0
     peerDependenciesMeta:
       react:
         optional: true
       react-dom:
+        optional: true
+      remix:
         optional: true
 
   fs-extra@11.4.0:
@@ -3268,8 +3271,8 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  lucide-react@1.62.0:
-    resolution: {integrity: sha512-2i8QZZhkgYMA3oJvKYpCltHh54VnT/3rIPkDLHbzr3IJQBaCz8+7j7V2k2rczYd2aCqcBaMmNlWQ2KKeDfcxmw==}
+  lucide-react@1.65.0:
+    resolution: {integrity: sha512-roSdtzudEY39i2hn5LLjA8toYfhF2z4S10WSqZF4ubXpHlOmNTvaxMxZLdJfQDi6pEifQWX+cRmYihKSsvAxfA==}
     peerDependencies:
       '@types/react': '*'
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -3320,21 +3323,24 @@ packages:
   module-details-from-path@1.0.4:
     resolution: {integrity: sha512-EGWKgxALGMgzvxYF1UyGTy0HXX/2vHLkw6+NvDKW2jypWbHpjQuj4UMcqQWXHERJhVGKikolT06G3bcKe4fi7w==}
 
-  motion-dom@14.7.1:
-    resolution: {integrity: sha512-p9q9F7+HoijbQjUG/cSGNmWS2t1OaAKxkd2RG5gQJRoDwoTap/Khb7K1P5rLW90crnSmx0rcRXzh3Jd5UNrpEw==}
+  motion-dom@14.8.0:
+    resolution: {integrity: sha512-HzA41kvV7BgluM7L/XbW+gHFzDtJUbHnEsrlnIzPS9dqSfoPy9YzL6VKF7ai0TiQcykkkLUqvIxECAdwa9gwAw==}
 
   motion-utils@14.7.0:
     resolution: {integrity: sha512-woO0/Nb7ys75f94fjvQi/6leiHGvZUYkeHUPEZ3vxsV+9OpEVhkxp01x8MlRwX0zt31EqgXsKDAoBoJLC148Tw==}
 
-  motion@14.7.1:
-    resolution: {integrity: sha512-o+q7MExUC0RuCUF62HxF9v+fNVX7pUMYZqlyigQJJFAgAsmnnSlAOYeG41hGYkamxFR0rdBA0KXpaBJ28/GGAw==}
+  motion@14.8.0:
+    resolution: {integrity: sha512-4KUxmgq8Lt8o/4/m8WnRicBQ+mJUMHl5Gp00o0R0+uU3NDqLwQX3GuBiqVillZl0NzOrhPuC00c5ydP6lokjmQ==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
+      remix: ^3.1.0
     peerDependenciesMeta:
       react:
         optional: true
       react-dom:
+        optional: true
+      remix:
         optional: true
 
   ms@2.1.3:
@@ -5838,7 +5844,7 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
 
-  '@vercel/otel@2.1.3(@opentelemetry/api-logs@0.223.0)(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.223.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.223.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))':
+  '@vercel/otel@2.2.0(@opentelemetry/api-logs@0.223.0)(@opentelemetry/api@1.9.1)(@opentelemetry/instrumentation@0.223.0(@opentelemetry/api@1.9.1)(supports-color@7.2.0))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.223.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.223.0
@@ -6047,7 +6053,7 @@ snapshots:
 
   cn@0.2.6: {}
 
-  cn@0.5.0: {}
+  cn@0.5.1: {}
 
   code-block-writer@13.0.3: {}
 
@@ -6605,9 +6611,9 @@ snapshots:
     dependencies:
       is-callable: 1.2.7
 
-  framer-motion@14.7.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
+  framer-motion@14.8.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
-      motion-dom: 14.7.1
+      motion-dom: 14.8.0
       motion-utils: 14.7.0
       tslib: 2.8.1
     optionalDependencies:
@@ -7057,7 +7063,7 @@ snapshots:
     dependencies:
       yallist: 3.1.1
 
-  lucide-react@1.62.0(@types/react@19.3.0)(react@19.3.1):
+  lucide-react@1.65.0(@types/react@19.3.0)(react@19.3.1):
     dependencies:
       react: 19.3.1
     optionalDependencies:
@@ -7096,15 +7102,15 @@ snapshots:
 
   module-details-from-path@1.0.4: {}
 
-  motion-dom@14.7.1:
+  motion-dom@14.8.0:
     dependencies:
       motion-utils: 14.7.0
 
   motion-utils@14.7.0: {}
 
-  motion@14.7.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
+  motion@14.8.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
-      framer-motion: 14.7.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      framer-motion: 14.8.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       tslib: 2.8.1
     optionalDependencies:
       react: 19.3.1
