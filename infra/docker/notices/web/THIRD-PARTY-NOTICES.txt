@@ -2,7 +2,7 @@ Third-party notices of the ERP-AI-Pro web image
 ===============================================
 
 This file describes ghcr.io/dewiride-open-source/erp-ai-pro/web,
-built on docker.io/library/node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205
+built on docker.io/library/node:24-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c
 (Debian GNU/Linux 12 (bookworm)).
 
 ERP-AI-Pro is free software. Copyright (c) 2026 Dewiride Technologies Private Limited.
@@ -19,14 +19,14 @@ this image itself holds.
 Runtimes and tools of the base image (4)
 ----------------------------------------
 
-Node.js 24.22.1
+Node.js 24.22.2
   Licence: MIT
   Copyright Node.js contributors. All rights reserved.
   Copyright Joyent, Inc. and other Node contributors. All rights reserved.
   In this image: /usr/local/LICENSE
-  Source: https://github.com/nodejs/node/tree/v24.22.1
+  Source: https://github.com/nodejs/node/tree/v24.22.2
   Note: the runtime of the Node.js base image; /usr/local/LICENSE holds its licence and those of the libraries it bundles
-  Package URL: pkg:generic/node@24.22.1?download_url=https%3A%2F%2Fnodejs.org%2Fdist%2Fv24.22.1%2Fnode-v24.22.1-linux-x64.tar.xz
+  Package URL: pkg:generic/node@24.22.2?download_url=https%3A%2F%2Fnodejs.org%2Fdist%2Fv24.22.2%2Fnode-v24.22.2-linux-x64.tar.xz
 
 corepack 0.36.0
   Licence: MIT
@@ -641,12 +641,12 @@ npm packages of the web app (134)
   Source: https://registry.npmjs.org/@tanstack/table-core/-/table-core-9.3.1.tgz
   Package URL: pkg:npm/%40tanstack/table-core@9.3.1
 
-@vercel/otel 2.1.3
+@vercel/otel 2.2.0
   Licence: MIT
   Copyright (c) 2023 Vercel
   Licence text: [1]
-  Source: https://registry.npmjs.org/@vercel/otel/-/otel-2.1.3.tgz
-  Package URL: pkg:npm/%40vercel/otel@2.1.3
+  Source: https://registry.npmjs.org/@vercel/otel/-/otel-2.2.0.tgz
+  Package URL: pkg:npm/%40vercel/otel@2.2.0
 
 aria-hidden 1.2.6
   Licence: MIT
@@ -695,12 +695,12 @@ clsx 2.1.1
   Source: https://registry.npmjs.org/clsx/-/clsx-2.1.1.tgz
   Package URL: pkg:npm/clsx@2.1.1
 
-cn 0.5.0
+cn 0.5.1
   Licence: MIT
   Copyright (c) 2026 shadcn
   Licence text: [1]
-  Source: https://registry.npmjs.org/cn/-/cn-0.5.0.tgz
-  Package URL: pkg:npm/cn@0.5.0
+  Source: https://registry.npmjs.org/cn/-/cn-0.5.1.tgz
+  Package URL: pkg:npm/cn@0.5.1
 
 date-fns 4.4.0
   Licence: MIT
@@ -731,12 +731,12 @@ es-module-lexer 3.0.2
   Source: https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz
   Package URL: pkg:npm/es-module-lexer@3.0.2
 
-framer-motion 14.7.1
+framer-motion 14.8.0
   Licence: MIT
   Copyright (c) 2018 Framer B.V.
   Licence text: [1]
-  Source: https://registry.npmjs.org/framer-motion/-/framer-motion-14.7.1.tgz
-  Package URL: pkg:npm/framer-motion@14.7.1
+  Source: https://registry.npmjs.org/framer-motion/-/framer-motion-14.8.0.tgz
+  Package URL: pkg:npm/framer-motion@14.8.0
 
 geist 1.8.2
   Licence: SIL OPEN FONT LICENSE
@@ -759,13 +759,13 @@ import-in-the-middle 3.5.1
   Source: https://registry.npmjs.org/import-in-the-middle/-/import-in-the-middle-3.5.1.tgz
   Package URL: pkg:npm/import-in-the-middle@3.5.1
 
-lucide-react 1.62.0
+lucide-react 1.65.0
   Licence: ISC
   Copyright (c) 2026 Lucide Icons and Contributors
   Copyright (c) 2013-present Cole Bemis
   Licence text: [9]
-  Source: https://registry.npmjs.org/lucide-react/-/lucide-react-1.62.0.tgz
-  Package URL: pkg:npm/lucide-react@1.62.0
+  Source: https://registry.npmjs.org/lucide-react/-/lucide-react-1.65.0.tgz
+  Package URL: pkg:npm/lucide-react@1.65.0
 
 module-details-from-path 1.0.4
   Licence: MIT
@@ -774,19 +774,19 @@ module-details-from-path 1.0.4
   Source: https://registry.npmjs.org/module-details-from-path/-/module-details-from-path-1.0.4.tgz
   Package URL: pkg:npm/module-details-from-path@1.0.4
 
-motion 14.7.1
+motion 14.8.0
   Licence: MIT
   Copyright (c) 2024 [Motion](https://motion.dev) B.V.
   Licence text: [1]
-  Source: https://registry.npmjs.org/motion/-/motion-14.7.1.tgz
-  Package URL: pkg:npm/motion@14.7.1
+  Source: https://registry.npmjs.org/motion/-/motion-14.8.0.tgz
+  Package URL: pkg:npm/motion@14.8.0
 
-motion-dom 14.7.1
+motion-dom 14.8.0
   Licence: MIT
   Copyright (c) 2024 [Motion](https://motion.dev) B.V.
   Licence text: [1]
-  Source: https://registry.npmjs.org/motion-dom/-/motion-dom-14.7.1.tgz
-  Package URL: pkg:npm/motion-dom@14.7.1
+  Source: https://registry.npmjs.org/motion-dom/-/motion-dom-14.8.0.tgz
+  Package URL: pkg:npm/motion-dom@14.8.0
 
 motion-utils 14.7.0
   Licence: MIT
@@ -1569,12 +1569,12 @@ tar 1.34+dfsg-1.2+deb12u1
   Note: source package tar 1.34+dfsg-1.2+deb12u1; the copyright file names GPL-2+; GPL-3+; GPL-3+ with Bison exception; LGPL-3+
   Package URL: pkg:deb/debian/tar@1.34%2Bdfsg-1.2%2Bdeb12u1?arch=amd64&distro=debian-12
 
-tzdata 2026c-0+deb12u1
+tzdata 2026e-0+deb12u1
   Licence: not declared in a form an SPDX expression can state; see its copyright file
   In this image: /usr/share/doc/tzdata/copyright
-  Source: https://snapshot.debian.org/package/tzdata/2026c-0%2Bdeb12u1/
-  Note: source package tzdata 2026c-0+deb12u1; the copyright file names public-domain
-  Package URL: pkg:deb/debian/tzdata@2026c-0%2Bdeb12u1?arch=all&distro=debian-12
+  Source: https://snapshot.debian.org/package/tzdata/2026e-0%2Bdeb12u1/
+  Note: source package tzdata 2026e-0+deb12u1; the copyright file names public-domain
+  Package URL: pkg:deb/debian/tzdata@2026e-0%2Bdeb12u1?arch=all&distro=debian-12
 
 usr-is-merged 37~deb12u1
   Licence: GPL-2.0-or-later

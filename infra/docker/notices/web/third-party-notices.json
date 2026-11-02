@@ -1,15 +1,15 @@
 {
   "image": "web",
   "repository": "ghcr.io/dewiride-open-source/erp-ai-pro/web",
-  "base": "docker.io/library/node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205",
+  "base": "docker.io/library/node:24-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c",
   "system": "Debian GNU/Linux 12 (bookworm)",
   "source": "https://github.com/Dewiride-Open-Source/ERP-AI-Pro",
   "copyright": "Copyright (c) 2026 Dewiride Technologies Private Limited.",
   "components": {
-    "pkg:generic/node@24.22.1?download_url=https%3A%2F%2Fnodejs.org%2Fdist%2Fv24.22.1%2Fnode-v24.22.1-linux-x64.tar.xz": {
+    "pkg:generic/node@24.22.2?download_url=https%3A%2F%2Fnodejs.org%2Fdist%2Fv24.22.2%2Fnode-v24.22.2-linux-x64.tar.xz": {
       "kind": "runtime",
       "name": "Node.js",
-      "version": "24.22.1",
+      "version": "24.22.2",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -21,7 +21,7 @@
       "inImage": [
         "/usr/local/LICENSE"
       ],
-      "source": "https://github.com/nodejs/node/tree/v24.22.1",
+      "source": "https://github.com/nodejs/node/tree/v24.22.2",
       "detail": "the runtime of the Node.js base image; /usr/local/LICENSE holds its licence and those of the libraries it bundles"
     },
     "pkg:npm/corepack@0.36.0": {
@@ -1439,10 +1439,10 @@
       "source": "https://registry.npmjs.org/@tanstack/table-core/-/table-core-9.3.1.tgz",
       "supplier": "Person: Tanner Linsley"
     },
-    "pkg:npm/%40vercel/otel@2.1.3": {
+    "pkg:npm/%40vercel/otel@2.2.0": {
       "kind": "npm",
       "name": "@vercel/otel",
-      "version": "2.1.3",
+      "version": "2.2.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1453,7 +1453,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/@vercel/otel/-/otel-2.1.3.tgz",
+      "source": "https://registry.npmjs.org/@vercel/otel/-/otel-2.2.0.tgz",
       "supplier": "Person: Vercel Inc"
     },
     "pkg:npm/aria-hidden@1.2.6": {
@@ -1569,10 +1569,10 @@
       "source": "https://registry.npmjs.org/clsx/-/clsx-2.1.1.tgz",
       "supplier": "Person: Luke Edwards (luke.edwards05@gmail.com)"
     },
-    "pkg:npm/cn@0.5.0": {
+    "pkg:npm/cn@0.5.1": {
       "kind": "npm",
       "name": "cn",
-      "version": "0.5.0",
+      "version": "0.5.1",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1583,7 +1583,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/cn/-/cn-0.5.0.tgz"
+      "source": "https://registry.npmjs.org/cn/-/cn-0.5.1.tgz"
     },
     "pkg:npm/date-fns@4.4.0": {
       "kind": "npm",
@@ -1653,10 +1653,10 @@
       "source": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-3.0.2.tgz",
       "supplier": "Person: Guy Bedford"
     },
-    "pkg:npm/framer-motion@14.7.1": {
+    "pkg:npm/framer-motion@14.8.0": {
       "kind": "npm",
       "name": "framer-motion",
-      "version": "14.7.1",
+      "version": "14.8.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1667,7 +1667,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/framer-motion/-/framer-motion-14.7.1.tgz",
+      "source": "https://registry.npmjs.org/framer-motion/-/framer-motion-14.8.0.tgz",
       "supplier": "Person: Matt Perry"
     },
     "pkg:npm/geist@1.8.2": {
@@ -1721,10 +1721,10 @@
       "source": "https://registry.npmjs.org/import-in-the-middle/-/import-in-the-middle-3.5.1.tgz",
       "supplier": "Person: Bryan English (bryan.english@datadoghq.com)"
     },
-    "pkg:npm/lucide-react@1.62.0": {
+    "pkg:npm/lucide-react@1.65.0": {
       "kind": "npm",
       "name": "lucide-react",
-      "version": "1.62.0",
+      "version": "1.65.0",
       "licence": "ISC",
       "spdx": "ISC",
       "copyright": [
@@ -1736,7 +1736,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.62.0.tgz",
+      "source": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.65.0.tgz",
       "supplier": "Person: Eric Fennis"
     },
     "pkg:npm/module-details-from-path@1.0.4": {
@@ -1756,10 +1756,10 @@
       "source": "https://registry.npmjs.org/module-details-from-path/-/module-details-from-path-1.0.4.tgz",
       "supplier": "Person: Thomas Watson (w@tson.dk)"
     },
-    "pkg:npm/motion@14.7.1": {
+    "pkg:npm/motion@14.8.0": {
       "kind": "npm",
       "name": "motion",
-      "version": "14.7.1",
+      "version": "14.8.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1770,13 +1770,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/motion/-/motion-14.7.1.tgz",
+      "source": "https://registry.npmjs.org/motion/-/motion-14.8.0.tgz",
       "supplier": "Person: Matt Perry"
     },
-    "pkg:npm/motion-dom@14.7.1": {
+    "pkg:npm/motion-dom@14.8.0": {
       "kind": "npm",
       "name": "motion-dom",
-      "version": "14.7.1",
+      "version": "14.8.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -1787,7 +1787,7 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://registry.npmjs.org/motion-dom/-/motion-dom-14.7.1.tgz",
+      "source": "https://registry.npmjs.org/motion-dom/-/motion-dom-14.8.0.tgz",
       "supplier": "Person: Matt Perry"
     },
     "pkg:npm/motion-utils@14.7.0": {
@@ -3893,10 +3893,10 @@
       "supplier": "Organization: Janos Lenart (ocsi@debian.org)",
       "detail": "source package tar 1.34+dfsg-1.2+deb12u1; the copyright file names GPL-2+; GPL-3+; GPL-3+ with Bison exception; LGPL-3+"
     },
-    "pkg:deb/debian/tzdata@2026c-0%2Bdeb12u1?arch=all&distro=debian-12": {
+    "pkg:deb/debian/tzdata@2026e-0%2Bdeb12u1?arch=all&distro=debian-12": {
       "kind": "deb",
       "name": "tzdata",
-      "version": "2026c-0+deb12u1",
+      "version": "2026e-0+deb12u1",
       "licence": "NOASSERTION",
       "spdx": "NOASSERTION",
       "copyright": [],
@@ -3905,9 +3905,9 @@
       "inImage": [
         "/usr/share/doc/tzdata/copyright"
       ],
-      "source": "https://snapshot.debian.org/package/tzdata/2026c-0%2Bdeb12u1/",
+      "source": "https://snapshot.debian.org/package/tzdata/2026e-0%2Bdeb12u1/",
       "supplier": "Organization: GNU Libc Maintainers (debian-glibc@lists.debian.org)",
-      "detail": "source package tzdata 2026c-0+deb12u1; the copyright file names public-domain"
+      "detail": "source package tzdata 2026e-0+deb12u1; the copyright file names public-domain"
     },
     "pkg:deb/debian/usr-is-merged@37~deb12u1?arch=all&distro=debian-12": {
       "kind": "deb",
