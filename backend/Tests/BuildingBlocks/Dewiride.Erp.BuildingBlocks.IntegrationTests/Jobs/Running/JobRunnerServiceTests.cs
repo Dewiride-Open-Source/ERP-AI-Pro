@@ -7,6 +7,8 @@ using Dewiride.Erp.BuildingBlocks.Jobs.Running;
 using Dewiride.Erp.BuildingBlocks.Jobs.Scheduling;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Options;
 
@@ -138,6 +140,25 @@ public sealed class JobRunnerServiceTests
         Assert.Equal(LogLevel.Warning, records[0].Level);
         Assert.NotNull(records[0].Exception);
         Assert.All(records.Skip(1), record => Assert.Equal(LogLevel.Debug, record.Level));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_JobClaimedAndRun_LogsTheStoresExecutedCommandsAtDebug()
+    {
+        var script = JobScript.Succeeding();
+        await using var jobs = Create(script, "quiet-store");
+        var id = await jobs.EnqueueAsync<ScriptedJob>(JobsDatabase.NewKey());
+        var service = await StartAsync(jobs);
+
+        await script.Started;
+        await service.StopAsync(CancellationToken.None);
+
+        Assert.Equal(JobRunStatus.Succeeded, (await jobs.RunAsync(id)).Status);
+        var commands = JobsDatabase.LogsOf(jobs.First).GetSnapshot()
+            .Where(record => record.Category == DbLoggerCategory.Database.Command.Name && record.Id == RelationalEventId.CommandExecuted)
+            .ToList();
+        Assert.NotEmpty(commands);
+        Assert.All(commands, record => Assert.Equal(LogLevel.Debug, record.Level));
     }
 
     private static JobsDatabase Create(JobScript script, string scenario) =>
