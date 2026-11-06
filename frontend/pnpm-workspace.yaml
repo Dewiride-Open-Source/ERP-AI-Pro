@@ -17,6 +17,9 @@ peerDependencyRules:
     eslint-plugin-jsx-a11y>eslint: "10"
     eslint-plugin-react>eslint: "10"
 
+overrides:
+  "minimatch@>=7 <11.0.1": 11.0.4
+
 catalog:
   next: 16.4.3
   react: 19.3.1
