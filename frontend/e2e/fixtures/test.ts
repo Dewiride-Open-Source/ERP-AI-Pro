@@ -116,7 +116,9 @@ export const test = base.extend<Fixtures>({
       const isExpected = (text: string) =>
         cancelledRouterFetch.test(text) || (expectedConsoleError?.test(text) ?? false);
       page.on("console", (message) => {
-        if (message.type() === "error" && !isExpected(message.text())) errors.push(message.text());
+        if (message.type() !== "error" || isExpected(message.text())) return;
+        const { url } = message.location();
+        errors.push(url === "" ? message.text() : `${message.text()} (${url})`);
       });
       page.on("pageerror", (error) => {
         if (!isExpected(error.message)) errors.push(error.message);
