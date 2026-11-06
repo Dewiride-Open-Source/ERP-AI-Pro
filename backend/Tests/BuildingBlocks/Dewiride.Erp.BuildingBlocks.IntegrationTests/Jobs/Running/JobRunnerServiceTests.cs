@@ -161,6 +161,70 @@ public sealed class JobRunnerServiceTests
         Assert.All(commands, record => Assert.Equal(LogLevel.Debug, record.Level));
     }
 
+    [Fact]
+    public async Task ExecuteAsync_RunSourceEnqueuesARun_ClaimsAndRunsIt()
+    {
+        var script = JobScript.Succeeding();
+        await using var jobs = JobsDatabase.Create(services => services
+            .AddSingleton(script)
+            .AddJob<ScriptedJob>(JobsDatabase.Definition(JobsDatabase.NewName("sourced")))
+            .AddJobRunSource<ScriptedRunSource>());
+        var key = JobsDatabase.NewKey();
+        SourceOf(jobs).Key = key;
+        var service = await StartAsync(jobs);
+
+        await script.Started;
+        await service.StopAsync(CancellationToken.None);
+
+        var run = await jobs.QueryAsync((context, cancellationToken) => context.Runs.AsNoTracking().SingleAsync(r => r.IdempotencyKey == key, cancellationToken));
+        Assert.Equal(JobRunStatus.Succeeded, run.Status);
+        Assert.Single(script.Executions);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RunSourceFails_LogsItsStreakWhileTheRunnerStillClaims()
+    {
+        var script = JobScript.Succeeding();
+        var failedAgain = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var recovered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var jobs = JobsDatabase.Create(services => services
+            .AddSingleton(script)
+            .AddJob<ScriptedJob>(JobsDatabase.Definition(JobsDatabase.NewName("source-fails")))
+            .AddJobRunSource<ScriptedRunSource>()
+            .Configure<FakeLogCollectorOptions>(options => options.OutputSink = line =>
+            {
+                if (line.Contains($"{nameof(ScriptedRunSource)} failed again", StringComparison.Ordinal))
+                {
+                    failedAgain.TrySetResult();
+                }
+                else if (line.Contains($"{nameof(ScriptedRunSource)} works again", StringComparison.Ordinal))
+                {
+                    recovered.TrySetResult();
+                }
+            }));
+        SourceOf(jobs).FailPolls(2);
+        var id = await jobs.EnqueueAsync<ScriptedJob>(JobsDatabase.NewKey());
+        var signal = jobs.First.Services.GetRequiredService<IJobRunnerSignal>();
+        var service = await StartAsync(jobs);
+
+        await script.Started;
+        signal.Wake();
+        await failedAgain.Task;
+        signal.Wake();
+        await recovered.Task;
+        await service.StopAsync(CancellationToken.None);
+
+        Assert.Equal(JobRunStatus.Succeeded, (await jobs.RunAsync(id)).Status);
+        var logs = JobsDatabase.LogsOf(jobs.First).GetSnapshot();
+        var streak = logs.Where(record => record.Message.StartsWith($"The run source {nameof(ScriptedRunSource)}", StringComparison.Ordinal)).ToList();
+        Assert.Equal(new[] { LogLevel.Warning, LogLevel.Debug, LogLevel.Information }, streak.Select(record => record.Level));
+        Assert.All(streak.Take(2), record => Assert.IsType<InvalidOperationException>(record.Exception));
+        Assert.Contains("after 2 failed polls", streak[2].Message, StringComparison.Ordinal);
+        Assert.DoesNotContain(logs, record => record.Message.StartsWith("Polling for due jobs failed", StringComparison.Ordinal));
+    }
+
+    private static ScriptedRunSource SourceOf(JobsDatabase jobs) => jobs.First.Services.GetServices<IJobRunSource>().OfType<ScriptedRunSource>().Single();
+
     private static JobsDatabase Create(JobScript script, string scenario) =>
         JobsDatabase.Create(services => services.AddSingleton(script).AddJob<ScriptedJob>(JobsDatabase.Definition(JobsDatabase.NewName(scenario))));
 
@@ -173,6 +237,7 @@ public sealed class JobRunnerServiceTests
         return new JobRunnerService(
             services.GetRequiredService<JobRunner>(),
             services.GetRequiredService<JobScheduler>(),
+            services.GetServices<IJobRunSource>(),
             services.GetRequiredService<JobSignal>(),
             lifetime,
             services.GetRequiredService<IOptions<JobRunnerOptions>>(),

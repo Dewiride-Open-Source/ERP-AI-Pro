@@ -29,24 +29,39 @@ public static class EfUnitOfWork
             return await CommitAsync(context, dispatcher, handler, cancellationToken).ConfigureAwait(false);
         }
 
-        return await context.Database.CreateExecutionStrategy().ExecuteAsync(
+        var committed = await context.Database.CreateExecutionStrategy().ExecuteAsync(
             async token =>
             {
                 context.ChangeTracker.Clear();
                 await using var transaction = await context.Database.BeginTransactionAsync(token).ConfigureAwait(false);
-                var result = await CommitAsync(context, dispatcher, handler, token).ConfigureAwait(false);
-                if (result.IsFailure)
+                try
                 {
-                    await transaction.RollbackAsync(token).ConfigureAwait(false);
+                    var result = await CommitAsync(context, dispatcher, handler, token).ConfigureAwait(false);
+                    if (result.IsFailure)
+                    {
+                        await transaction.RollbackAsync(token).ConfigureAwait(false);
+                        signal.MarkRolledBack();
+                        return result;
+                    }
+
+                    await transaction.CommitAsync(token).ConfigureAwait(false);
+
                     return result;
                 }
-
-                await transaction.CommitAsync(token).ConfigureAwait(false);
-                signal.MarkCommitted();
-
-                return result;
+                catch
+                {
+                    signal.MarkRolledBack();
+                    throw;
+                }
             },
             cancellationToken).ConfigureAwait(false);
+
+        if (committed.IsSuccess)
+        {
+            signal.MarkCommitted();
+        }
+
+        return committed;
     }
 
     private static async Task<Result<TResult>> CommitAsync<TResult>(DbContext context, DomainEventDispatcher dispatcher, PipelineContinuation<TResult> handler, CancellationToken cancellationToken)

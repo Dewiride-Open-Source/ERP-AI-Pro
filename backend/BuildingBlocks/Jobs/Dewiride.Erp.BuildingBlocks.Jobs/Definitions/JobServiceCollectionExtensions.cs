@@ -1,4 +1,6 @@
+using Dewiride.Erp.BuildingBlocks.Jobs.Running;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
@@ -35,6 +37,16 @@ public static class JobServiceCollectionExtensions
             null,
             static (job, _, context, cancellationToken) => ((TJob)job).RunAsync(context, cancellationToken),
             provider => schedule(provider.GetRequiredService<IOptionsMonitor<TOptions>>().CurrentValue)));
+    }
+
+    public static IServiceCollection AddJobRunSource<TSource>(this IServiceCollection services)
+        where TSource : class, IJobRunSource
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IJobRunSource, TSource>());
+
+        return services;
     }
 
     private static IServiceCollection AddJobRegistration(this IServiceCollection services, JobRegistration registration)

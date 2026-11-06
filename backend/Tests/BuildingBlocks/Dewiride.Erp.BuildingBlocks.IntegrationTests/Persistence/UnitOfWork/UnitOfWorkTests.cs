@@ -155,6 +155,101 @@ public sealed class UnitOfWorkTests(SampleDatabase database) : IClassFixture<Sam
         Assert.Equal("Ambient", (await database.FindAsync(id)).Name);
     }
 
+    [Fact]
+    public async Task RunAsync_UnitCommits_RunsItsAfterCommitCallbacksOnceTheCommitIsDone()
+    {
+        var id = await AddAsync("Unnoticed");
+        await using var scope = database.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
+        var dispatcher = scope.ServiceProvider.GetRequiredService<DomainEventDispatcher>();
+        var signal = scope.ServiceProvider.GetRequiredService<UnitOfWorkSignal>();
+        var committedWhenCalled = new List<bool>();
+
+        var result = await EfUnitOfWork.RunAsync(context, dispatcher, signal, async token =>
+        {
+            var sample = await context.Samples.SingleAsync(s => s.Id == id, token);
+            sample.Rename("Noticed", database.Clock.GetUtcNow());
+            signal.AfterCommit(() => committedWhenCalled.Add(signal.Committed));
+
+            return Result.Success("done");
+        }, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(Assert.Single(committedWhenCalled));
+        Assert.Equal("Noticed", (await database.FindAsync(id)).Name);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RunAsync_UnitFailsOrThrows_DropsItsAfterCommitCallbacks(bool throws)
+    {
+        var id = await AddAsync("Retried");
+        await using var scope = database.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
+        var dispatcher = scope.ServiceProvider.GetRequiredService<DomainEventDispatcher>();
+        var signal = scope.ServiceProvider.GetRequiredService<UnitOfWorkSignal>();
+        var dropped = 0;
+        var kept = 0;
+
+        var failing = EfUnitOfWork.RunAsync<string>(context, dispatcher, signal, _ =>
+        {
+            signal.AfterCommit(() => dropped++);
+
+            return throws ? throw new InvalidOperationException("The unit gave up.") : Task.FromResult<Result<string>>(Error.Failure("test.refused", "The unit refused."));
+        }, TestContext.Current.CancellationToken);
+        if (throws)
+        {
+            await Assert.ThrowsAsync<InvalidOperationException>(() => failing);
+        }
+        else
+        {
+            Assert.True((await failing).IsFailure);
+        }
+
+        var result = await EfUnitOfWork.RunAsync(context, dispatcher, signal, async token =>
+        {
+            var sample = await context.Samples.SingleAsync(s => s.Id == id, token);
+            sample.Rename("Succeeded", database.Clock.GetUtcNow());
+            signal.AfterCommit(() => kept++);
+
+            return Result.Success("done");
+        }, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal((0, 1), (dropped, kept));
+    }
+
+    [Fact]
+    public async Task RunAsync_UnitInsideAnotherUnit_RunsItsCallbacksOnlyAfterTheOuterCommit()
+    {
+        var id = await AddAsync("Outer");
+        await using var scope = database.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
+        var dispatcher = scope.ServiceProvider.GetRequiredService<DomainEventDispatcher>();
+        var signal = scope.ServiceProvider.GetRequiredService<UnitOfWorkSignal>();
+        var calls = 0;
+        var callsWhenTheInnerUnitReturned = -1;
+
+        var result = await EfUnitOfWork.RunAsync(context, dispatcher, signal, async token =>
+        {
+            var inner = await EfUnitOfWork.RunAsync(context, dispatcher, signal, async innerToken =>
+            {
+                var sample = await context.Samples.SingleAsync(s => s.Id == id, innerToken);
+                sample.Rename("Inner", database.Clock.GetUtcNow());
+                signal.AfterCommit(() => calls++);
+
+                return Result.Success("inner");
+            }, token);
+            callsWhenTheInnerUnitReturned = calls;
+
+            return inner;
+        }, TestContext.Current.CancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal((0, 1), (callsWhenTheInnerUnitReturned, calls));
+    }
+
     private async Task<SampleId> AddAsync(string name)
     {
         var id = SampleId.Create();

@@ -32,6 +32,7 @@ public static class JobsRegistration
         builder.Services.ConfigureDbContext<JobsDbContext>(options => options.ConfigureWarnings(warnings => warnings.Log((RelationalEventId.CommandExecuted, LogLevel.Debug))));
         builder.Services.TryAddSingleton(provider => new JobCatalog(provider.GetServices<JobRegistration>()));
         builder.Services.TryAddSingleton<JobSignal>();
+        builder.Services.TryAddSingleton<IJobRunnerSignal>(provider => provider.GetRequiredService<JobSignal>());
         builder.Services.TryAddSingleton<JobsMetrics>();
         builder.Services.TryAddScoped<IJobQueue, SqlJobQueue>();
         builder.Services.TryAddScoped<IJobAdministration, JobAdministration>();

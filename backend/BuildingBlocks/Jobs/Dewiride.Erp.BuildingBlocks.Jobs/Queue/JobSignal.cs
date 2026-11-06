@@ -3,7 +3,7 @@ namespace Dewiride.Erp.BuildingBlocks.Jobs.Queue;
 // Wakes this process's runner as soon as there is work for it: a run enqueued or re-run, an occurrence enqueued, a slot freed.
 // A wake that comes while the runner polls is kept, so the runner polls once more instead of sleeping through it; the runner
 // resets the signal before it polls, so the poll that follows sees whatever a wake it consumed announced.
-internal sealed class JobSignal
+internal sealed class JobSignal : IJobRunnerSignal
 {
     private TaskCompletionSource _wake = NewWake();
 

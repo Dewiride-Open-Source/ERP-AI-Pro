@@ -14,6 +14,7 @@ namespace Dewiride.Erp.BuildingBlocks.Jobs.Running;
 internal sealed partial class JobRunnerService(
     JobRunner runner,
     JobScheduler scheduler,
+    IEnumerable<IJobRunSource> sources,
     JobSignal signal,
     IHostApplicationLifetime lifetime,
     IOptions<JobRunnerOptions> options,
@@ -21,6 +22,8 @@ internal sealed partial class JobRunnerService(
     ILogger<JobRunnerService> logger) : BackgroundService
 {
     public static readonly TimeSpan RecordingGrace = TimeSpan.FromSeconds(5);
+
+    private readonly PolledSource[] _sources = [.. sources.Select(source => new PolledSource(source))];
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
@@ -66,6 +69,7 @@ internal sealed partial class JobRunnerService(
             try
             {
                 await scheduler.EnqueueDueAsync(token).ConfigureAwait(false);
+                await EnqueueFromSourcesAsync(token).ConfigureAwait(false);
                 await runner.RecoverExpiredLeasesAsync(token).ConfigureAwait(false);
                 await runner.StartDueAsync(token).ConfigureAwait(false);
                 if (failures > 0)
@@ -109,6 +113,41 @@ internal sealed partial class JobRunnerService(
         await started.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    private async Task EnqueueFromSourcesAsync(CancellationToken cancellationToken)
+    {
+        foreach (var polled in _sources)
+        {
+            try
+            {
+                await polled.Source.EnqueueDueAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                polled.Failures++;
+                if (polled.Failures == 1)
+                {
+                    LogSourceFailed(exception, polled.Name);
+                }
+                else
+                {
+                    LogSourceStillFailing(exception, polled.Name, polled.Failures);
+                }
+
+                continue;
+            }
+
+            if (polled.Failures > 0)
+            {
+                LogSourceRecovered(polled.Name, polled.Failures);
+                polled.Failures = 0;
+            }
+        }
+    }
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Polling for due jobs failed; the runner polls again at its next interval")]
     private partial void LogPollFailed(Exception exception);
 
@@ -120,4 +159,22 @@ internal sealed partial class JobRunnerService(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "{Attempts} job attempts were still running when the shutdown ended; their runs are recovered once their leases expire")]
     private partial void LogStillRunning(int attempts);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "The run source {Source} failed; the runner asks it again at its next poll")]
+    private partial void LogSourceFailed(Exception exception, string source);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "The run source {Source} failed again, {Failures} times in a row")]
+    private partial void LogSourceStillFailing(Exception exception, string source, int failures);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "The run source {Source} works again after {Failures} failed polls")]
+    private partial void LogSourceRecovered(string source, int failures);
+
+    private sealed class PolledSource(IJobRunSource source)
+    {
+        public IJobRunSource Source { get; } = source;
+
+        public string Name { get; } = source.GetType().Name;
+
+        public int Failures { get; set; }
+    }
 }
