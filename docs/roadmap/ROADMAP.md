@@ -1138,6 +1138,7 @@ Id `notifications` · Milestone: M9 Operations backbone · Edition: Mixed · Sta
 - [ ] **P21.1** Notification core (`notifications-notification-core`) <a id="notifications-notification-core"></a>
   Create backend/BuildingBlocks/Notifications with a notification aggregate (type, recipient, payload, channels, read state), subscriptions to `business-building-blocks-transactional-outbox-and-integration-events` integration events, digest batching, per-type/channel user preferences and an in-app bell updated over Server-Sent Events, with tests.
   - Edition: Community (recommended)
+  - Note: ADR-0060 decided that a building block does not subscribe to integration events: a delivery job is named under a module permission prefix and records its processed record in that module context, so a subscriber in a module Integration/Consumers folder receives each event and calls the notifications building block.
 - [ ] **P21.2** Email channel (`notifications-email-channel`) <a id="notifications-email-channel"></a>
   Promote `business-building-blocks-minimal-transactional-email-sender` into a provider abstraction with Microsoft Graph sendMail and SMTP fallback implementations, a queued background sender with retries, bounce handling and delivery-status tracking, keeping the dev mail sink, with fake-transport tests.
   - Edition: Community (recommended)
@@ -1351,6 +1352,7 @@ Id `reporting` · Milestone: M12 Insight and connectivity · Edition: Mixed · S
 - [ ] **P27.1** Reporting infrastructure (`reporting-reporting-infrastructure`) <a id="reporting-reporting-infrastructure"></a>
   Create backend/BuildingBlocks/Reporting with read models refreshed from `business-building-blocks-transactional-outbox-and-integration-events` events, a report-definition abstraction (parameters, dataset, layout), Excel/CSV/PDF export and scheduled delivery through `notifications`, with tests.
   - Edition: Community (recommended)
+  - Note: ADR-0060 decided that a building block does not subscribe to integration events: a delivery job is named under a module permission prefix and records its processed record in that module context, so a subscriber in a module Integration/Consumers folder receives each event and refreshes the reporting read models through the building block.
 - [ ] **P27.2** Role dashboards (`reporting-role-dashboards`) <a id="reporting-role-dashboards"></a>
   Build owner (cash, receivables, payables, runway, compliance status), finance, HR and delivery/utilisation dashboards with drill-down and date ranges over a module widget registry; the owner dashboard may be pulled forward by order override after M5.
   - Edition: Enterprise (recommended)

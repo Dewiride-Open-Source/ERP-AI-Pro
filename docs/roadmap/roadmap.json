@@ -2786,7 +2786,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "ADR-0060 decided that a building block does not subscribe to integration events: a delivery job is named under a module permission prefix and records its processed record in that module context, so a subscriber in a module Integration/Consumers folder receives each event and calls the notifications building block."
         },
         {
           "id": "notifications-email-channel",
@@ -3379,7 +3380,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "ADR-0060 decided that a building block does not subscribe to integration events: a delivery job is named under a module permission prefix and records its processed record in that module context, so a subscriber in a module Integration/Consumers folder receives each event and refreshes the reporting read models through the building block."
         },
         {
           "id": "reporting-role-dashboards",
