@@ -1395,7 +1395,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "Edition split (ADR-0030): the Community templates generate no Ai or web ai folder; the template for an Enterprise companion module (<Domain>/<Module>Ai) belongs to the private repository."
+          "notes": "Edition split (ADR-0030): the Community templates generate no Ai or web ai folder; the template for an Enterprise companion module (<Domain>/<Module>Ai) belongs to the private repository. Owner decision of 2026-11-06: the backend generator is a zero-dependency Node script in scripts/ that also registers the module everywhere it must be listed, not a dotnet new template package; the scope wording that names dotnet new and templates/erp-module is superseded, and the generated module follows the current four-project anatomy."
         },
         {
           "id": "business-building-blocks-reference-data-module",
