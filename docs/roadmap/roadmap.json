@@ -1370,12 +1370,19 @@
           "id": "business-building-blocks-transactional-outbox-and-integration-events",
           "title": "Transactional outbox and integration events",
           "scope": "Add a per-module outbox table written in the same transaction as domain changes, a dispatcher running on the `business-building-blocks-background-jobs-and-scheduling` runner publishing integration events in-process to <Domain>.Contracts subscribers with at-least-once delivery and idempotent handlers, covered by integration tests.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
-          "acceptance": [],
+          "acceptance": [
+            "An integration event published while a command's unit of work changes data is written to the publishing module's own outbox table in that transaction: a unit that fails, throws or rolls back leaves none, a committed one exactly one, and a publication outside a unit of work is refused; proven against SQL Server.",
+            "After the commit the job runner passes each event on as one delivery run per subscriber, at once when the committing process wakes it and otherwise within `Erp:Platform:Jobs:PollInterval`, and each subscriber handles it in its own module's transaction together with its processed record, as the system actor.",
+            "Relaying an event twice, two runners racing for one delivery, a lease lost after the subscriber committed and an administrator's re-run each leave the subscriber's change applied once; a failing subscriber is retried with doubling delays and dead-lettered on the jobs page without holding back another subscriber or event, and no order is promised, as the architecture document says.",
+            "Integration events are public sealed records in a module's Contracts with a stable `<domain>.<module>.<event>` name and members of identifiers, codes and dates only, and architecture tests refuse anything else, a publisher or subscriber outside its module's `Integration` folder, a subscriber name outside its module's prefix, and a module context mapping another assembly's types besides the change records and the two integration-event tables.",
+            "Passed-on events older than `Erp:Platform:IntegrationEvents:PublishedEventRetention` (400 days, the owner's choice of 2026-11-02) and processed records older than `Erp:Platform:Jobs:FinishedRunRetention` are deleted by the migrator's `migrate` and `retain` alone, never an event still waiting to be passed on; no product module publishes an event yet (owner decision of 2026-11-02), so a test module's event proves the delivery."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-11-06",
           "notes": "From `user-management-user-lifecycle` (ADR-0047): the users module will consume the invitation of a directory person with ERP roles and the recording of a position, and publish a deactivation, for `hr-core-onboarding-and-offboarding` and `integrations-entra-group-onboarding-and-sync`; writes across modules wait for this item rather than a write interface in the Contracts."
         },
         {
