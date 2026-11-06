@@ -22,7 +22,7 @@ internal sealed class UnitOfWorkStep(IServiceProvider services, DbContextCatalog
             return next(cancellationToken);
         }
 
-        var registration = catalog.Registrations.FirstOrDefault(candidate => candidate.ContextType.Assembly == descriptor.HandlerType.Assembly);
+        var registration = catalog.OwnedBy(descriptor.HandlerType.Assembly);
         if (registration is null)
         {
             return next(cancellationToken);

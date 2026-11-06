@@ -10,6 +10,7 @@
       "BuildingBlocks\\Configuration\\Dewiride.Erp.BuildingBlocks.Configuration\\Dewiride.Erp.BuildingBlocks.Configuration.csproj",
       "BuildingBlocks\\Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints\\Dewiride.Erp.BuildingBlocks.Endpoints.csproj",
       "BuildingBlocks\\Idempotency\\Dewiride.Erp.BuildingBlocks.Idempotency\\Dewiride.Erp.BuildingBlocks.Idempotency.csproj",
+      "BuildingBlocks\\IntegrationEvents\\Dewiride.Erp.BuildingBlocks.IntegrationEvents\\Dewiride.Erp.BuildingBlocks.IntegrationEvents.csproj",
       "BuildingBlocks\\Jobs\\Dewiride.Erp.BuildingBlocks.Jobs\\Dewiride.Erp.BuildingBlocks.Jobs.csproj",
       "BuildingBlocks\\Kernel\\Dewiride.Erp.BuildingBlocks.Kernel\\Dewiride.Erp.BuildingBlocks.Kernel.csproj",
       "BuildingBlocks\\Modules\\Dewiride.Erp.BuildingBlocks.Modules\\Dewiride.Erp.BuildingBlocks.Modules.csproj",

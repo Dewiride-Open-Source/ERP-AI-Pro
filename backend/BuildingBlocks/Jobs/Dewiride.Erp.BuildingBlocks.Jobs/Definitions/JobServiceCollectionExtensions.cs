@@ -44,7 +44,8 @@ public static class JobServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<IJobRunSource, TSource>());
+        services.TryAddSingleton<TSource>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IJobRunSource, TSource>(provider => provider.GetRequiredService<TSource>()));
 
         return services;
     }

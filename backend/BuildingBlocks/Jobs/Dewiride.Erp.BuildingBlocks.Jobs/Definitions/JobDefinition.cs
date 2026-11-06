@@ -4,6 +4,8 @@ namespace Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
 // renaming a job leaves its earlier runs under a name that no release defines.
 public sealed record JobDefinition(string Name, string Title, string Description, JobRetryPolicy Retry, TimeSpan AttemptTimeout)
 {
+    public const int NameMaxLength = JobNames.MaxLength;
+
     public const int TitleMaxLength = 100;
 
     public const int DescriptionMaxLength = 400;

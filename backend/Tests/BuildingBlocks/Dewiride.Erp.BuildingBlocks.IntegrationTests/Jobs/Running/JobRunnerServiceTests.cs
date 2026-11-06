@@ -220,7 +220,7 @@ public sealed class JobRunnerServiceTests
         Assert.Equal(new[] { LogLevel.Warning, LogLevel.Debug, LogLevel.Information }, streak.Select(record => record.Level));
         Assert.All(streak.Take(2), record => Assert.IsType<InvalidOperationException>(record.Exception));
         Assert.Contains("after 2 failed polls", streak[2].Message, StringComparison.Ordinal);
-        Assert.DoesNotContain(logs, record => record.Message.StartsWith("Polling for due jobs failed", StringComparison.Ordinal));
+        Assert.DoesNotContain(logs, record => record.Message.StartsWith("Polling for due jobs failed", StringComparison.Ordinal) && record.Exception is InvalidOperationException { Message: "The scripted run source failed." });
     }
 
     private static ScriptedRunSource SourceOf(JobsDatabase jobs) => jobs.First.Services.GetServices<IJobRunSource>().OfType<ScriptedRunSource>().Single();

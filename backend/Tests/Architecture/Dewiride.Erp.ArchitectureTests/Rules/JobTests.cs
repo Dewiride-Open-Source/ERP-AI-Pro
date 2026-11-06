@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Subscribing;
 using Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
 using Dewiride.Erp.BuildingBlocks.Modules;
 using Dewiride.Erp.Testing;
@@ -49,7 +50,7 @@ public sealed class JobTests(ErpApiFactory factory) : IClassFixture<ErpApiFactor
         var jobs = Registrations();
 
         var outsideTheirModule = jobs
-            .Where(registration => ModuleOf(registration.JobType) is not { } module || !registration.Name.StartsWith(module.Descriptor.PermissionPrefix, StringComparison.Ordinal))
+            .Where(registration => ModuleOf(OwnerOf(registration.JobType)) is not { } module || !registration.Name.StartsWith(module.Descriptor.PermissionPrefix, StringComparison.Ordinal))
             .Select(registration => $"{registration.Name} ({registration.JobType.FullName})")
             .ToList();
 
@@ -68,7 +69,11 @@ public sealed class JobTests(ErpApiFactory factory) : IClassFixture<ErpApiFactor
         Assert.All(definitions, definition => Assert.Matches(OneSentence, definition.Description));
     }
 
-    private static IModule? ModuleOf(Type jobType) => HostModules.All.SingleOrDefault(module => module.GetType().Assembly == jobType.Assembly);
+    // A delivery job is the building block's own class, closed over the subscriber that a module declares.
+    internal static Type OwnerOf(Type jobType) =>
+        jobType.IsGenericType && jobType.GetGenericTypeDefinition() == typeof(IntegrationEventDeliveryJob<,>) ? jobType.GetGenericArguments()[1] : jobType;
+
+    private static IModule? ModuleOf(Type ownerType) => HostModules.All.SingleOrDefault(module => module.GetType().Assembly == ownerType.Assembly);
 
     private List<JobRegistration> Registrations() => [.. factory.Services.GetServices<JobRegistration>()];
 }

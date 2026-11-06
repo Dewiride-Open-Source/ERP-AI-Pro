@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
@@ -26,7 +27,7 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
     }
 
     [Fact]
-    public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssemblyAndTheChangeRecords()
+    public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssemblyTheChangeRecordsAndTheIntegrationEventTables()
     {
         using var scope = factory.Services.CreateScope();
         var violations = new List<string>();
@@ -35,7 +36,7 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
         {
             var context = (DbContext)scope.ServiceProvider.GetRequiredService(registration.ContextType);
             violations.AddRange(context.Model.GetEntityTypes()
-                .Where(e => e.ClrType.Assembly != registration.ContextType.Assembly && e.ClrType != typeof(ChangeRecord))
+                .Where(e => e.ClrType.Assembly != registration.ContextType.Assembly && e.ClrType != typeof(ChangeRecord) && e.ClrType != typeof(OutboxMessage) && e.ClrType != typeof(ProcessedMessage))
                 .Select(e => $"{registration.ContextType.Name} maps {e.ClrType.FullName} from {e.ClrType.Assembly.GetName().Name}"));
         }
 

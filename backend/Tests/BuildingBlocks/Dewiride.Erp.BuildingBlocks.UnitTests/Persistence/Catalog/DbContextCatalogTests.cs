@@ -34,4 +34,31 @@ public sealed class DbContextCatalogTests
         Assert.Contains("String", exception.Message, StringComparison.Ordinal);
         Assert.Contains("Int32", exception.Message, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void OwnedBy_AssemblyOwningOneContext_AnswersItsRegistration()
+    {
+        var owned = new DbContextRegistration(typeof(DbContextCatalogTests), "finance_sales");
+        var catalog = new DbContextCatalog([owned, new DbContextRegistration(typeof(string), "finance_payroll")]);
+
+        Assert.Equal(owned, catalog.OwnedBy(typeof(DbContextCatalogTests).Assembly));
+    }
+
+    [Fact]
+    public void OwnedBy_AssemblyOwningNoContext_AnswersNothing()
+    {
+        var catalog = new DbContextCatalog([new DbContextRegistration(typeof(string), "finance_payroll")]);
+
+        Assert.Null(catalog.OwnedBy(typeof(DbContextCatalogTests).Assembly));
+    }
+
+    [Fact]
+    public void OwnedBy_AssemblyOwningTwoContexts_ThrowsNamingBoth()
+    {
+        var catalog = new DbContextCatalog([new DbContextRegistration(typeof(string), "finance_sales"), new DbContextRegistration(typeof(int), "finance_payroll")]);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => catalog.OwnedBy(typeof(string).Assembly));
+
+        Assert.Contains("String and Int32", exception.Message, StringComparison.Ordinal);
+    }
 }

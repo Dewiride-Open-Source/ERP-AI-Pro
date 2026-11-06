@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
@@ -34,14 +35,14 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
     }
 
     [Fact]
-    public void ModuleContexts_MapOnlyAuditableOrAppendOnlyEntityTypes()
+    public void ModuleContexts_MapOnlyAuditableOrAppendOnlyEntityTypesBesidesTheOutbox()
     {
         var modules = CatalogueModels()
             .Where(pair => pair.Registration.ContextType.Assembly.GetName().Name!.StartsWith(ErpAssemblies.ModulesPrefix, StringComparison.Ordinal))
             .ToList();
         var violations = modules
             .SelectMany(pair => pair.Model.GetEntityTypes().Select(entityType => (pair.Registration, EntityType: entityType)))
-            .Where(pair => !typeof(IAuditable).IsAssignableFrom(pair.EntityType.ClrType) && !typeof(IAppendOnly).IsAssignableFrom(pair.EntityType.ClrType))
+            .Where(pair => !typeof(IAuditable).IsAssignableFrom(pair.EntityType.ClrType) && !typeof(IAppendOnly).IsAssignableFrom(pair.EntityType.ClrType) && pair.EntityType.ClrType != typeof(OutboxMessage))
             .Select(pair => $"{pair.Registration.ContextType.Name} maps {pair.EntityType.DisplayName()}, which is neither auditable nor append-only")
             .ToList();
 

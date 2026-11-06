@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 
 public sealed class DbContextCatalog
@@ -24,4 +26,19 @@ public sealed class DbContextCatalog
     }
 
     public IReadOnlyList<DbContextRegistration> Registrations { get; }
+
+    public DbContextRegistration? OwnedBy(Assembly assembly)
+    {
+        ArgumentNullException.ThrowIfNull(assembly);
+
+        var owned = Registrations.Where(registration => registration.ContextType.Assembly == assembly).ToList();
+
+        return owned.Count switch
+        {
+            0 => null,
+            1 => owned[0],
+            _ => throw new InvalidOperationException(
+                $"{assembly.GetName().Name} owns {string.Join(" and ", owned.Select(registration => registration.ContextType.Name))}; an assembly owns one DbContext, the one its commands' unit of work commits."),
+        };
+    }
 }

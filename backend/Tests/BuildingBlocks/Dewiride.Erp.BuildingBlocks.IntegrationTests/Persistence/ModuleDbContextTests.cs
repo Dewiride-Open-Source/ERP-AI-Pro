@@ -22,7 +22,7 @@ public sealed class ModuleDbContextTests(SampleDatabase database) : IClassFixtur
             .ToListAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal([SampleDbContext.SchemaName], schemas);
-        Assert.Equal(["SampleLines", "SampleNotes", "Samples", ModuleDbContextRegistration.MigrationsHistoryTable], tables.Order(StringComparer.Ordinal));
+        Assert.Equal(["OutboxMessages", "ProcessedMessages", "Receipts", "SampleLines", "SampleNotes", "Samples", "Shipments", ModuleDbContextRegistration.MigrationsHistoryTable], tables.Order(StringComparer.Ordinal));
     }
 
     [Fact]

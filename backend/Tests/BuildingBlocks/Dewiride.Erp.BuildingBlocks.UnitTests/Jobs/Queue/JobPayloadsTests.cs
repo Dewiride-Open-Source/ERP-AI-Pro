@@ -42,6 +42,18 @@ public sealed class JobPayloadsTests
     }
 
     [Fact]
+    public void TryDeserialize_PayloadMissingAMember_IsRefusedInsteadOfFilledWithADefault()
+    {
+        Assert.False(JobPayloads.TryDeserialize("""{"personId":"0198f6a2-7c1e-7b3a-9d4e-2f6a8b1c3d5e","kind":"finalNotice"}""", typeof(ReminderPayload), out _));
+    }
+
+    [Fact]
+    public void TryDeserialize_NullWhereTheTypeAllowsNone_IsRefused()
+    {
+        Assert.False(JobPayloads.TryDeserialize("""{"note":null}""", typeof(NotePayload), out _));
+    }
+
+    [Fact]
     public void SameAs_StoredDocumentWrittenDifferently_MatchesThePayloadOfTheSameValues()
     {
         var json = JobPayloads.Serialize(new ReminderPayload(PersonId, new DateOnly(2026, 11, 2), ReminderKind.FirstNotice));
