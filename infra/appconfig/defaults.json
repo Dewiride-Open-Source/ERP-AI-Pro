@@ -52,6 +52,9 @@
         "LeaseDuration": "00:02:00",
         "MaxConcurrentRuns": "2",
         "FinishedRunRetention": "400.00:00:00"
+      },
+      "IntegrationEvents": {
+        "PublishedEventRetention": "400.00:00:00"
       }
     },
     "Identity": {

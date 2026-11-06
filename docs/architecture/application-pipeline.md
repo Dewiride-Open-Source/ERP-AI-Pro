@@ -20,7 +20,7 @@ A step implements `IPipelineStep` and declares its `PipelineStage`. The order co
 |---|---|---|
 | `Logging` | `LoggingStep` | starts an activity on the source `Dewiride.Erp.Application` named after the request, tags it with the request, handler and kind, logs the outcome (commands at information, queries at debug; a failed result logs its error code, an exception logs a warning and is rethrown) |
 | `Validation` | `ValidationStep` | `Validator.TryValidateObject(validateAllProperties: true)` over the request's top-level properties (a nested object is not validated), then its class-level attributes and `IValidatableObject`; a failure returns `Error.Validation("request.invalid", …)` whose `Fields` carry one message list per member name the results carry, and `""` for a result that names no member ([HTTP conventions](http-conventions.md)), so nothing reaches the database |
-| `UnitOfWork` | `UnitOfWorkStep` (`BuildingBlocks.Persistence`) | commands only, and only when the handler's assembly owns a context in the `DbContextCatalog`: runs the handler inside `EfUnitOfWork.RunAsync` on that context; queries pass straight through |
+| `UnitOfWork` | `UnitOfWorkStep` (`BuildingBlocks.Persistence`) | commands only, and only when the handler's assembly owns a context in the `DbContextCatalog` (`DbContextCatalog.OwnedBy`, which throws when an assembly owns more than one): runs the handler inside `EfUnitOfWork.RunAsync` on that context; queries pass straight through |
 
 ## Unit of work
 
@@ -29,6 +29,10 @@ A step implements `IPipelineStep` and declares its `PipelineStage`. The order co
 A handler therefore never calls `SaveChangesAsync`: it changes tracked entities and returns a `Result`.
 
 Each save of the unit also writes the change records of the recorded entities it saves ([persistence](persistence.md), section "Change records"; [ADR-0043](../adr/0043-change-records-and-the-append-only-audit-schema.md)). They join the same `SaveChangesAsync` and so the same transaction: a unit that fails or rolls back writes none, a retry of the execution strategy replays the use case after `ChangeTracker.Clear()`, which drops the records of the failed attempt, so one set is written, and a round of domain events that throws rolls back the records of the rounds before it. A change whose record cannot be written fails the save like any other database error.
+
+`UnitOfWorkSignal` (scoped, `BuildingBlocks.Persistence/UnitOfWork`) is what a request knows of its unit of work. `Committed` is set once the outermost unit has committed, which the idempotency middleware reads (section "Idempotency"). `AfterCommit(Action callback)` registers work for that moment: `EfUnitOfWork` runs the callbacks once, after the commit and after the execution strategy returned, so a callback can never turn a committed command into a retry or a failure. A failed result, an exception and an attempt the execution strategy retries drop the callbacks registered so far (`MarkRolledBack()`), so a retry registers its own, and a unit that joins an ambient transaction leaves its callbacks to the commit of the unit that began it. The outbox publisher registers the job runner's wake there ([integration events](integration-events.md)).
+
+A domain-event handler runs inside the transaction, so a reaction that must not roll back with the aggregate, or that belongs to another module, is an integration event: a handler of the module's `Integration/Publishers` calls `IIntegrationEventPublisher.Publish(context, integrationEvent)`, which adds a row to the module's own outbox, and the next round's `SaveChangesAsync` saves it in the same transaction. The other modules receive it only after the commit, each subscriber in a background-job run and a transaction of its own ([integration events](integration-events.md)).
 
 ## Results and ProblemDetails
 
