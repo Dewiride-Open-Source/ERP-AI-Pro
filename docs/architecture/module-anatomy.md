@@ -26,7 +26,7 @@ backend/Modules/Finance/Sales/
 │   ├── CreditNotes/  Receipts/  NumberingSeries/  Exports/       same shape
 │   ├── Shared/Gst/{GstRate.cs, TaxBreakup.cs, PlaceOfSupplyResolver.cs}   module-internal shared code, sub-foldered by topic
 │   ├── Reports/Gstr1/                                           module-level reports spanning features
-│   ├── Integration/{Consumers/ClientDeactivatedHandler.cs, Publishers/InvoiceIssuedPublisher.cs}   the only folder that touches integration events: Publishers/ publish the module's, Consumers/ subscribe to them
+│   ├── Integration/{Consumers/ClientDraftsHolder.cs, Publishers/InvoiceIssuedPublisher.cs}   the only folder that touches integration events: Publishers/ publish the module's, Consumers/ subscribe to them
 │   └── PublicApi/SalesInvoiceQueries.cs                         implements the Contracts interfaces
 └── Tests/
     ├── UnitTests/Dewiride.Erp.Modules.Finance.Sales.UnitTests/           mirrors the feature folders; Domain + Application; no database
