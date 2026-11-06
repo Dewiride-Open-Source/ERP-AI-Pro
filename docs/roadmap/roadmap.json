@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-11-02",
+  "updatedOn": "2026-11-06",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -1350,7 +1350,7 @@
           "id": "business-building-blocks-background-jobs-and-scheduling",
           "title": "Background jobs and scheduling",
           "scope": "Implement backend/BuildingBlocks/Jobs with a persistent job table with idempotency keys, retry with exponential backoff, dead-letter state, cron-style recurring schedules in IST, a hosted runner with graceful shutdown, admin endpoints to list/re-run/cancel jobs, an in-process fake for tests, and the nightly Entra directory sync from `user-management-user-lifecycle` as the first recurring job.",
-          "status": "blocked",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [
@@ -1363,8 +1363,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-11-01",
-          "blockedReason": "The first night's run of the account check on the production server, read on the jobs page, follows the installation of the release that carries this item (the last acceptance criterion).",
-          "notes": "From `user-management-user-lifecycle` (ADR-0047): the nightly directory sync is `DirectoryAccountCheck` of the users module, which takes `IDirectoryAccounts` as an argument because only the API composes the sign-in services; this item runs it every night as the system actor, under which the audit trail names the ERP, and administrators run the same check from People until then. What exists (ADR-0059): `BuildingBlocks.Jobs` runs the ERP's own work as runs in the schema `platform_jobs` (`JobRuns`, the append-only `JobRunEvents` and `JobSchedules`), each attempt claimed under a fencing lease token by the API's runner alone and run as the system actor, failures that can heal retried with doubling delays up to the job's attempts and then dead-lettered, and five-field India-time schedules whose latest missed occurrence runs once; the migrator deletes finished runs after `Erp:Platform:Jobs:FinishedRunRetention` (400 days). The module `Platform/Jobs` shows jobs and runs to administrators on `/platform/jobs` and `/platform/jobs/runs/{id}`, with Run again and Cancel, behind `Erp.Modules.Platform.Jobs`. The first recurring job, `identity.users.directory-account-check` (\"Check Microsoft accounts\"), runs the account check every night at `Erp:Identity:Users:AccountCheckSchedule` (`30 0 * * *`, 00:30 India time); the settings and the flag are seeded in App Configuration under both labels."
+          "completedOn": "2026-11-06",
+          "notes": "From `user-management-user-lifecycle` (ADR-0047): the nightly directory sync is `DirectoryAccountCheck` of the users module, which takes `IDirectoryAccounts` as an argument because only the API composes the sign-in services; this item runs it every night as the system actor, under which the audit trail names the ERP, and administrators can also run the same check from People. What exists (ADR-0059): `BuildingBlocks.Jobs` runs the ERP's own work as runs in the schema `platform_jobs` (`JobRuns`, the append-only `JobRunEvents` and `JobSchedules`), each attempt claimed under a fencing lease token by the API's runner alone and run as the system actor, failures that can heal retried with doubling delays up to the job's attempts and then dead-lettered, and five-field India-time schedules whose latest missed occurrence runs once; the migrator deletes finished runs after `Erp:Platform:Jobs:FinishedRunRetention` (400 days). The module `Platform/Jobs` shows jobs and runs to administrators on `/platform/jobs` and `/platform/jobs/runs/{id}`, with Run again and Cancel, behind `Erp.Modules.Platform.Jobs`. The first recurring job, `identity.users.directory-account-check` (\"Check Microsoft accounts\"), runs the account check every night at `Erp:Identity:Users:AccountCheckSchedule` (`30 0 * * *`, 00:30 India time); the settings and the flag are seeded in App Configuration under both labels. In production: v0.1.4, which carries this item, was installed on 2026-11-02. The server could not reach the database from that afternoon until 2026-11-06, because the home's public address had changed (`docs/operations/runbooks/home-address.md`), so the nightly occurrences of 3 to 6 November did not run on time. Once the address rules were moved, the scheduler enqueued the latest missed occurrence, 00:30 India time on 2026-11-06, once; it succeeded on its first attempt at 18:31 India time that day, reading 1 account and deactivating none, and the owner read the run on the jobs page. Since #143 the store's executed commands log at Debug, so an idle API writes no line at each poll."
         },
         {
           "id": "business-building-blocks-transactional-outbox-and-integration-events",
