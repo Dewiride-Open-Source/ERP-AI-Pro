@@ -8,9 +8,11 @@ using Dewiride.Erp.BuildingBlocks.Jobs.Scheduling;
 using Dewiride.Erp.BuildingBlocks.Jobs.Telemetry;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Retention;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Dewiride.Erp.BuildingBlocks.Jobs;
 
@@ -25,6 +27,9 @@ public static class JobsRegistration
             .ValidateDataAnnotations()
             .ValidateOnStart();
         builder.AddModuleDbContext<JobsDbContext>(JobsDbContext.SchemaName);
+        // The runner reads the store at every poll, so an idle API would write a line for each of those commands; a failed command
+        // still logs at its own level.
+        builder.Services.ConfigureDbContext<JobsDbContext>(options => options.ConfigureWarnings(warnings => warnings.Log((RelationalEventId.CommandExecuted, LogLevel.Debug))));
         builder.Services.TryAddSingleton(provider => new JobCatalog(provider.GetServices<JobRegistration>()));
         builder.Services.TryAddSingleton<JobSignal>();
         builder.Services.TryAddSingleton<JobsMetrics>();
