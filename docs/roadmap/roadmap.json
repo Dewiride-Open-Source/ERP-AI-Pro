@@ -1370,7 +1370,7 @@
           "id": "business-building-blocks-transactional-outbox-and-integration-events",
           "title": "Transactional outbox and integration events",
           "scope": "Add a per-module outbox table written in the same transaction as domain changes, a dispatcher running on the `business-building-blocks-background-jobs-and-scheduling` runner publishing integration events in-process to <Domain>.Contracts subscribers with at-least-once delivery and idempotent handlers, covered by integration tests.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [
@@ -1383,7 +1383,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-11-06",
-          "notes": "From `user-management-user-lifecycle` (ADR-0047): the users module will consume the invitation of a directory person with ERP roles and the recording of a position, and publish a deactivation, for `hr-core-onboarding-and-offboarding` and `integrations-entra-group-onboarding-and-sync`; writes across modules wait for this item rather than a write interface in the Contracts."
+          "completedOn": "2026-11-06",
+          "notes": "BuildingBlocks.IntegrationEvents exists (ADR-0060): per-module OutboxMessages and ProcessedMessages tables that a module opts into with a set and a migration; IIntegrationEventPublisher writing the outbox inside the unit of work and announcing the event after the commit; OutboxRelay as the job runner run source, reading only when a pass is due (an announcement, the first poll after a start, the poll after a first failure, or hourly); one delivery job run per subscriber under event:<id>, run as the system in the subscriber module transaction with its processed record; a chain limit of ten deliveries; deliveries of another event or older than the run retention refused; strict events of at most 15 KiB as delivered; retention in the migrator; architecture rules proven on probes. No product module publishes yet: the first events come with hr-core-onboarding-and-offboarding. Pushed as ad064a6..7f6f357 on 2026-11-06 with main CI green, the full browser matrix included."
         },
         {
           "id": "business-building-blocks-module-and-feature-scaffolders",
