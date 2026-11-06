@@ -180,7 +180,7 @@ An outbox whose read fails, such as one whose table a developer's database has n
 
 **Twice is harmless.** Two relays reading one row at once, or a relay that enqueued and failed before its mark, enqueue under the same key, and `IJobQueue` answers the run that key already names; the mark changes the row for one of them only.
 
-**The owner's SQL Server.** With `READ_COMMITTED_SNAPSHOT` off, the default of SQL Server, the relay's read of a module's outbox waits behind a transaction that added a row and has not committed, at most the command timeout, after which the poll logs the source's failure and the next poll reads again. Azure SQL Database, where it is on, reads the last committed rows and never waits.
+**The owner's SQL Server.** With `READ_COMMITTED_SNAPSHOT` off, the default of SQL Server, the relay's read of a module's outbox waits behind a transaction that added a row and has not committed, at most the command timeout, after which the relay logs the outbox's failure and reads it again at the next poll, once, then hourly or after the next announcement. Azure SQL Database, where it is on, reads the last committed rows and never waits.
 
 ## Deliveries are job runs
 
@@ -232,7 +232,7 @@ The rules of change follow:
 
 - **A name never changes.**
 - **A member is added only as a constructor parameter with a default**, so the events published before it, and still queued, read with the default.
-- **Any other change** (a member removed, renamed or retyped, a meaning changed) **is a new event** with a name for its meaning, never a version. The old event is retired in two releases, because a row of it still waiting once its subscribers are gone would be marked without a delivery: and the runner claims no run of a job its release does not define: the first release stops publishing it and publishes the new one, and a later release deletes the old event and its subscribers whole once no outbox holds a row of it waiting and no delivery run of its subscribers is unfinished on the jobs page. The subscribers the first release keeps are no compatibility path (root `CLAUDE.md` §8): nothing new reaches them, and they exist only to finish the events and runs already written.
+- **Any other change** (a member removed, renamed or retyped, a meaning changed) **is a new event** with a name for its meaning, never a version. The old event is retired in two releases, because a row of it still waiting once its subscribers are gone would be marked without a delivery, and the runner claims no run of a job its release does not define: the first release stops publishing it and publishes the new one, and a later release deletes the old event and its subscribers whole once no outbox holds a row of it waiting and no delivery run of its subscribers is unfinished on the jobs page. The subscribers the first release keeps are no compatibility path (root `CLAUDE.md` §8): nothing new reaches them, and they exist only to finish the events and runs already written.
 - **An enum an event carries** is part of the event: an enum name the release before does not know is unreadable to it, so an event carrying a member added in a release dead-letters after a rollback to the release before.
 - **`IntegrationEventDelivery` is part of every queued run**: a change to it needs new subscriber job names, because the runs already queued carry its old shape, which `JobPayloads` would refuse as `job.payload-unreadable`.
 
@@ -267,7 +267,7 @@ The details are in [observability](../guides/observability.md), section "Integra
 |---|---|---|---|---|
 | `Erp:Platform:IntegrationEvents:PublishedEventRetention` | `400.00:00:00` | 1 to 3650 days; never deletes an event not yet passed on | the migrator (`IntegrationEventsOptions`, validated on start in every host) | at the migrator's next run |
 
-It is seeded unlabelled in `infra/appconfig/defaults.json` and registered in the [configuration register](../configuration.md). The deliveries follow the jobs' settings (`Erp:Platform:Jobs:*`), and the integration events need no secret and no Key Vault reference.
+It is seeded unlabelled in `infra/appconfig/defaults.json` and registered in the [configuration register](../configuration.md). The deliveries follow the jobs' settings (`Erp:Platform:Jobs:*`), `FinishedRunRetention` also bounding the age of an event a delivery still handles, read by the API at its start, and the integration events need no secret and no Key Vault reference.
 
 ## Testing
 

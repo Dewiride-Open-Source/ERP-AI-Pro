@@ -278,7 +278,7 @@ Section `Erp:Platform:Jobs`, and each recurring job's schedule in its module's s
 | `Erp:Platform:Jobs:PollInterval` | `00:00:30` | 1 second to 10 minutes | the API (`JobRunnerOptions`) | at the next start |
 | `Erp:Platform:Jobs:LeaseDuration` | `00:02:00` | 30 seconds to 1 hour; renewed every third of it | the API (`JobRunnerOptions`) | at the next start |
 | `Erp:Platform:Jobs:MaxConcurrentRuns` | `2` | 1 to 16 | the API (`JobRunnerOptions`) | at the next start |
-| `Erp:Platform:Jobs:FinishedRunRetention` | `400.00:00:00` | 1 to 3650 days | the migrator (`JobsOptions`, validated in every host) | at the migrator's next run |
+| `Erp:Platform:Jobs:FinishedRunRetention` | `400.00:00:00` | 1 to 3650 days | the migrator (`JobsOptions`, validated in every host), and the API, whose deliveries of integration events refuse an event this old ([integration events](integration-events.md)) | at the migrator's next run; for deliveries, at the API's next start |
 | `Erp:Identity:Users:AccountCheckSchedule` | — (seeded `30 0 * * *`; without it the nightly check is not scheduled) | a five-field expression (section "Schedules in India time"); an invalid one stops only the nightly check | the API's scheduler (`AccountCheckOptions`), at every poll | on refresh |
 
 `HostOptions.ShutdownTimeout` keeps its 30-second default, and the jobs need no secret and no Key Vault reference.
