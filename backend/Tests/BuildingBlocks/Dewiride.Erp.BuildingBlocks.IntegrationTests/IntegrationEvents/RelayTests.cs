@@ -149,11 +149,11 @@ public sealed class RelayTests
         await using var events = await IntegrationEventsDatabase.CreateAsync();
         var (_, id) = await events.DispatchAsync(host: events.Second);
         var relay = RelayOf(events);
-        events.OutboxReads.Failing = true;
+        events.OutboxReads.FailEveryRead();
 
         await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
         await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
-        events.OutboxReads.Failing = false;
+        events.OutboxReads.Stop();
         await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
         var beforeTheFullPass = (await events.OutboxRowAsync(id))!.RelayedAt;
         events.Advance(OutboxRelay.FullPassInterval);
@@ -166,6 +166,31 @@ public sealed class RelayTests
         Assert.Equal(LogLevel.Error, failure.Level);
         Assert.IsType<InvalidOperationException>(failure.Exception);
         Assert.Single(lines, record => record.Message.EndsWith("again after 2 failed passes", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task EnqueueDueAsync_EventThatFailsFirstOnAPageBeforeTheOutboxFailsAgain_IsTriedAgainAtTheNextPoll()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var relay = RelayOf(events);
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        var (_, stuck) = await events.DispatchAsync();
+        var delivery = await events.DeliveryPayloadAsync(stuck);
+        using var otherEvent = JsonDocument.Parse($$"""{"shipmentId":"{{SampleShipmentId.Create().Value}}","parcels":9,"dispatchedAt":"2026-11-01T06:30:00+00:00"}""");
+        var conflicting = await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery with { Event = otherEvent.RootElement.Clone() }, OutboxRelay.KeyOf(stuck));
+        events.Advance(TimeSpan.FromSeconds(1));
+        await events.DispatchManyAsync(OutboxRelay.BatchSize);
+        events.OutboxReads.FailEveryRead();
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        events.OutboxReads.FailFromRead(2);
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        events.OutboxReads.Stop();
+        await events.QueryJobsAsync((context, token) => context.Runs.Where(r => r.Id == conflicting).ExecuteUpdateAsync(s => s.SetProperty(r => r.Payload, JobPayloads.Serialize(delivery)), token));
+
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+
+        Assert.NotNull((await events.OutboxRowAsync(stuck))!.RelayedAt);
+        Assert.Contains(conflicting, (await events.DeliveriesAsync(stuck)).Select(run => run.Id));
     }
 
     [Fact]

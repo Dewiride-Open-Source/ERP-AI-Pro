@@ -5,7 +5,6 @@ using Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Inte
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Shipments;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Jobs;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
-using Dewiride.Erp.BuildingBlocks.Jobs;
 using Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
 using Dewiride.Erp.BuildingBlocks.Jobs.Domain;
 using Dewiride.Erp.BuildingBlocks.Jobs.Persistence;
@@ -159,7 +158,7 @@ public sealed class DeliveryTests
     {
         await using var events = await IntegrationEventsDatabase.CreateAsync();
         var (shipment, id) = await events.DispatchAsync();
-        var oldest = events.FirstClock.GetUtcNow() - new JobsOptions().FinishedRunRetention;
+        var oldest = events.FirstClock.GetUtcNow() - events.RunRetention;
         var delivery = await events.DeliveryPayloadAsync(id);
 
         var tooOld = await events.RunAsync(await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery with { OccurredAt = oldest }, JobsDatabase.NewKey()));

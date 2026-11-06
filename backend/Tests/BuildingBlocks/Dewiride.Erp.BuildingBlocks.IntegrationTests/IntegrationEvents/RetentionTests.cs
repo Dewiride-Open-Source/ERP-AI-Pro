@@ -1,7 +1,5 @@
-using Dewiride.Erp.BuildingBlocks.IntegrationEvents;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Retention;
-using Dewiride.Erp.BuildingBlocks.Jobs;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents;
@@ -18,7 +16,7 @@ public sealed class RetentionTests
         var (_, waiting) = await events.DispatchAsync();
         var (_, passedOn) = await events.DispatchAsync();
         await events.RelayAsync(passedOn);
-        events.Advance(new IntegrationEventsOptions().PublishedEventRetention);
+        events.Advance(events.EventRetention);
 
         await SweepAsync(events);
         var keptAtTheCutoff = await events.OutboxRowAsync(passedOn);
@@ -37,7 +35,7 @@ public sealed class RetentionTests
         var (_, id) = await events.DispatchAsync();
         await events.RelayAsync(id);
         await events.RunAsync((await events.DeliveryAsync(id, events.Recorder)).Id);
-        events.Advance(new JobsOptions().FinishedRunRetention);
+        events.Advance(events.RunRetention);
 
         await SweepAsync(events);
         var keptAtTheCutoff = await events.ProcessedAsync(id);
@@ -61,7 +59,7 @@ public sealed class RetentionTests
 
             return context.SaveChangesAsync(token);
         });
-        events.Advance(new[] { new IntegrationEventsOptions().PublishedEventRetention, new JobsOptions().FinishedRunRetention }.Max() + Tick);
+        events.Advance(new[] { events.EventRetention, events.RunRetention }.Max() + Tick);
 
         await SweepAsync(events);
 

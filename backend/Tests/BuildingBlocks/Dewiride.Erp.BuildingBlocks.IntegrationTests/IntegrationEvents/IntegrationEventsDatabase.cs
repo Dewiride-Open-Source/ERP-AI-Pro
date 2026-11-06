@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.Events;
@@ -32,6 +33,7 @@ using Dewiride.Erp.Testing.Sql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging.Testing;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents;
@@ -39,9 +41,12 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents;
 // Two runners of one installation over the test process's database, as JobsDatabase builds them, each composing the sample
 // context with its outbox and processed records, its publisher and two subscribers named for this fixture alone, so no other
 // test's host claims their deliveries. A test passes on and runs its own events by id, because every host of the process shares
-// the outbox; a test of the relay's own passes also passes on whatever the collection's earlier tests left waiting.
+// the outbox; a test of the relay's own passes also passes on whatever the collection's earlier tests left waiting. The hosts keep
+// finished runs RunRetentionDays rather than production's 400, so a test tells the runs' retention from the events'.
 internal sealed class IntegrationEventsDatabase : IAsyncDisposable
 {
+    private const int RunRetentionDays = 30;
+
     private static readonly SemaphoreSlim MigrationGate = new(1, 1);
 
     private static bool _migrated;
@@ -72,6 +77,10 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
     public FakeTimeProvider SecondClock => Second.Services.GetRequiredService<FakeTimeProvider>();
 
     public PublishedEvents Published => First.Services.GetRequiredService<PublishedEvents>();
+
+    public TimeSpan EventRetention => First.Services.GetRequiredService<IOptions<IntegrationEventsOptions>>().Value.PublishedEventRetention;
+
+    public TimeSpan RunRetention => First.Services.GetRequiredService<IOptions<JobsOptions>>().Value.FinishedRunRetention;
 
     public static async Task<IntegrationEventsDatabase> CreateAsync(JobRetryPolicy? retry = null)
     {
@@ -266,6 +275,7 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
         {
             [ErpConfigurationSourceResolver.SourceSetting] = ErpConfigurationSourceResolver.InMemorySource,
             [$"{DatabaseOptions.SectionName}:{nameof(DatabaseOptions.ConnectionString)}"] = SqlTestDatabase.Current.ConnectionString,
+            [$"{JobsOptions.SectionName}:{nameof(JobsOptions.FinishedRunRetention)}"] = TimeSpan.FromDays(RunRetentionDays).ToString("c", CultureInfo.InvariantCulture),
         });
         var clock = new FakeTimeProvider(JobsDatabase.DefaultStart);
         builder.Services.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Debug));

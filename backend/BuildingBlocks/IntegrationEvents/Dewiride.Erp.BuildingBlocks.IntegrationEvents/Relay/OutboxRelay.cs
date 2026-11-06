@@ -61,7 +61,7 @@ internal sealed partial class OutboxRelay(
         var newFailures = 0;
         foreach (var contextType in tables.Outboxes)
         {
-            newFailures += await TryRelayAsync(contextType, cancellationToken).ConfigureAwait(false);
+            newFailures += await RelayAsync(contextType, cancellationToken).ConfigureAwait(false);
         }
 
         if (newFailures > 0)
@@ -83,12 +83,37 @@ internal sealed partial class OutboxRelay(
         }
     }
 
-    private async Task<int> TryRelayAsync(Type contextType, CancellationToken cancellationToken)
+    private async Task<int> RelayAsync(Type contextType, CancellationToken cancellationToken)
     {
-        int newFailures;
+        var newFailures = 0;
         try
         {
-            newFailures = await RelayAsync(contextType, cancellationToken).ConfigureAwait(false);
+            await using var scope = scopes.CreateAsyncScope();
+            var context = (ModuleDbContext)scope.ServiceProvider.GetRequiredService(contextType);
+            var queue = scope.ServiceProvider.GetRequiredService<IJobQueue>();
+            var failed = new List<IntegrationEventId>();
+            List<OutboxMessage> page;
+            do
+            {
+                page = await context.Set<OutboxMessage>()
+                    .AsNoTracking()
+                    .Where(m => m.RelayedAt == null && !failed.Contains(m.Id))
+                    .OrderBy(m => m.OccurredAt)
+                    .ThenBy(m => m.Id)
+                    .Take(BatchSize)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                foreach (var message in page)
+                {
+                    var failures = await TryPassOnAsync(context, queue, message, cancellationToken).ConfigureAwait(false);
+                    if (failures > 0)
+                    {
+                        failed.Add(message.Id);
+                        newFailures += failures == 1 ? 1 : 0;
+                    }
+                }
+            }
+            while (page.Count == BatchSize);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -96,13 +121,13 @@ internal sealed partial class OutboxRelay(
         }
         catch (Exception exception)
         {
-            var failures = _failingOutboxes.AddOrUpdate(contextType, 1, static (_, count) => count + 1);
-            if (failures == 1)
+            if (_failingOutboxes.AddOrUpdate(contextType, 1, static (_, count) => count + 1) == 1)
             {
                 LogOutboxFailed(exception, contextType.Name);
+                newFailures++;
             }
 
-            return failures == 1 ? 1 : 0;
+            return newFailures;
         }
 
         if (_failingOutboxes.TryRemove(contextType, out var earlier))
@@ -111,40 +136,6 @@ internal sealed partial class OutboxRelay(
         }
 
         return newFailures;
-    }
-
-    private async Task<int> RelayAsync(Type contextType, CancellationToken cancellationToken)
-    {
-        await using var scope = scopes.CreateAsyncScope();
-        var context = (ModuleDbContext)scope.ServiceProvider.GetRequiredService(contextType);
-        var queue = scope.ServiceProvider.GetRequiredService<IJobQueue>();
-        var failed = new List<IntegrationEventId>();
-        var newFailures = 0;
-        while (true)
-        {
-            var page = await context.Set<OutboxMessage>()
-                .AsNoTracking()
-                .Where(m => m.RelayedAt == null && !failed.Contains(m.Id))
-                .OrderBy(m => m.OccurredAt)
-                .ThenBy(m => m.Id)
-                .Take(BatchSize)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-            foreach (var message in page)
-            {
-                var failures = await TryPassOnAsync(context, queue, message, cancellationToken).ConfigureAwait(false);
-                if (failures > 0)
-                {
-                    failed.Add(message.Id);
-                    newFailures += failures == 1 ? 1 : 0;
-                }
-            }
-
-            if (page.Count < BatchSize)
-            {
-                return newFailures;
-            }
-        }
     }
 
     private async Task<int> TryPassOnAsync(ModuleDbContext context, IJobQueue queue, OutboxMessage message, CancellationToken cancellationToken)
