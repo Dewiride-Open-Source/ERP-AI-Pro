@@ -21,27 +21,35 @@ These settings live outside the repository, in **Settings** of `Dewiride-Open-So
   - The in-repo check `node scripts/checks/secret-patterns.ts` (verify.ts and the ci-backend workflow) covers the same ground for every tracked and new file, so a value that GitHub does not recognise still fails the build; a push-protection block is fixed by rotating the value ([runbooks/secrets.md](runbooks/secrets.md)), never bypassed.
 - **Private vulnerability reporting**: enabled (referenced by `SECURITY.md` and the issue template config).
 
-## Rulesets → `main`
+## Rulesets → `main` and `main pull requests`
 
-The ruleset is named `main` and targets the default branch.
+The owner's own changes are committed on `main` and pushed straight to it, each push with the owner's approval, and open no pull request: a pull request only ran the checks that `main` runs again after every push (owner decision of 2026-11-06). Two rulesets target the default branch, because a bypass actor bypasses every rule of its ruleset, and the rules nobody may bypass have to live apart from the ones the owner's account skips.
 
+### `main`: rules nobody bypasses
+
+No bypass actor.
 
 - Restrict deletions.
 - Require linear history.
+- Block force pushes.
+- Signed commits are not required yet; the rule is added, with the owner's permission, once SSH commit signing is configured on the owner's machine (see `docs/guides/local-development.md`).
+
+### `main pull requests`: how everyone else contributes
+
+The Repository admin role, the owner's account, is its bypass actor in mode *always*, so the owner's direct pushes skip it, and GitHub reports each push's "bypassed rule violations". Everyone else, Dependabot included, changes `main` through a pull request that meets it.
+
 - Require a pull request before merging; squash merge only; dismiss stale approvals.
-- Require status checks to pass, each check required from the GitHub Actions app (integration 15368) so no other app can report it. GitHub lists checks by **job name**, and every workflow runs on each pull request (no path filters), so all of these always report:
+- Require status checks to pass, each check required from the GitHub Actions app (integration 15368) so no other app can report it. GitHub lists checks by **job name**, and every workflow runs on each pull request and each push to `main` (no path filters), so all of these always report on a pull request; a push to `main` runs all of them but `Review dependency changes` and `Contributor licence agreement`, which run on pull requests alone (a push's dependencies are checked by `scripts/checks/licences.ts` in ci-backend and ci-frontend and by the advisory gate in ci-frontend instead, and the release gate requires only the checks a push starts):
   - `Build, analyse and test` (ci-backend)
   - `Lint, typecheck and build` (ci-frontend)
-  - `Playwright` (e2e: the job that merges the shards' blob reports into one HTML report and fails unless every shard passed; a pull request shards chromium and mobile-android, `main` all six projects, [ADR-0028](../adr/0028-playwright-matrix-navigation-crawl-and-sharded-reports.md))
+  - `Playwright` (e2e: the job that merges the shards' blob reports into one HTML report and fails unless every shard passed; a pull request shards chromium and mobile-android, a push to `main` all six projects, [ADR-0028](../adr/0028-playwright-matrix-navigation-crawl-and-sharded-reports.md))
   - `Build images and smoke test the compose stack` (docker-build)
   - `Bootstrap a fresh Ubuntu host (ubuntu-22.04)`, `(ubuntu-24.04)` and `(ubuntu-26.04)` (docker-build: `scripts/deploy/bootstrap.sh` on a GitHub-hosted runner of each supported release, [ADR-0049](../adr/0049-the-production-host-a-deploy-account-keys-from-the-home-network-and-nightly-updates.md); owner decision of 2026-10-18)
   - `Review dependency changes` (dependency-review)
   - `Validate roadmap and rendered Markdown` (roadmap)
   - `Contributor licence agreement` (cla; it runs on `pull_request_target`, so the workflow, the checker and the exemptions always come from `main`, and it reports from the first pull request after the workflow reaches `main`, [ADR-0030](../adr/0030-community-and-enterprise-editions.md))
   - `Analyze (csharp)`, `Analyze (javascript-typescript)`, `Analyze (actions)` (CodeQL)
-- Require review from Code Owners, with the Repository admin role as a bypass actor in "For pull requests only" mode. `.github/CODEOWNERS` covers `/.github/` and `/docs/cla/`, and a required check is matched by job name, so an outside or Dependabot pull request that adds a workflow with a job named like a required check (or edits a signature file) waits for the owner's approval; GitHub never lets an author approve their own pull request, so a pull request opened with the owner's account is merged through the bypass (`gh pr merge --admin`, or the REST merge endpoint), only once every required check has passed and with the owner's permission, and the bypass never allows a direct push. Where the organisation's plan offers "Require workflows to pass before merging", require `.github/workflows/cla.yml` from `main` that way as well.
-- Block force pushes.
-- Signed commits are not required yet; the rule is added, with the owner's permission, once SSH commit signing is configured on the owner's machine (see `docs/guides/local-development.md`).
+- Require review from Code Owners. `.github/CODEOWNERS` covers `/.github/` and `/docs/cla/`, and a required check is matched by job name, so an outside or Dependabot pull request that adds a workflow with a job named like a required check (or edits a signature file) waits for the owner's approval. Where the organisation's plan offers "Require workflows to pass before merging", require `.github/workflows/cla.yml` from `main` that way as well.
 
 ## Rulesets → tags `v*`
 
