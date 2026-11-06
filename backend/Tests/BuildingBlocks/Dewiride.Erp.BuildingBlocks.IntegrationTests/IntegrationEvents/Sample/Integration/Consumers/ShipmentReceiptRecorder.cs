@@ -13,7 +13,7 @@ public sealed class ShipmentReceiptRecorder(SampleDbContext database, Subscriber
         ArgumentNullException.ThrowIfNull(integrationEvent);
         ArgumentNullException.ThrowIfNull(context);
 
-        var outcome = await script.OutcomeOf(typeof(ShipmentReceiptRecorder), integrationEvent, context, cancellationToken);
+        var outcome = await script.OutcomeOf(typeof(ShipmentReceiptRecorder), integrationEvent, context, database, cancellationToken);
         if (outcome.IsSuccess)
         {
             database.Receipts.Add(SampleReceipt.Record(integrationEvent.ShipmentId, context.EventId.Value, integrationEvent.Parcels, nameof(ShipmentReceiptRecorder)));

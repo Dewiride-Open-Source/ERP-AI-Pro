@@ -13,7 +13,7 @@ public sealed class ShipmentLabelPrinter(SampleDbContext database, SubscriberScr
         ArgumentNullException.ThrowIfNull(integrationEvent);
         ArgumentNullException.ThrowIfNull(context);
 
-        var outcome = await script.OutcomeOf(typeof(ShipmentLabelPrinter), integrationEvent, context, cancellationToken);
+        var outcome = await script.OutcomeOf(typeof(ShipmentLabelPrinter), integrationEvent, context, database, cancellationToken);
         if (outcome.IsSuccess)
         {
             database.Receipts.Add(SampleReceipt.Record(integrationEvent.ShipmentId, context.EventId.Value, integrationEvent.Parcels, nameof(ShipmentLabelPrinter)));

@@ -1,6 +1,10 @@
 using System.Text;
 using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Events;
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Publishing;
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Subscribing;
+using Dewiride.Erp.BuildingBlocks.Jobs.Queue;
 
 namespace Dewiride.Erp.BuildingBlocks.UnitTests.IntegrationEvents.Events;
 
@@ -50,5 +54,54 @@ public sealed class IntegrationEventSerializerTests
 
         Assert.True(Encoding.UTF8.GetByteCount(JsonSerializer.Serialize(oversized)) > IntegrationEventSerializer.MaxBytes);
         Assert.Contains(nameof(ProbeEvent), refusal.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Serialize_EventWhoseTimesGrowWhenADeliveryWritesThem_IsMeasuredAsTheDeliveryCarriesIt()
+    {
+        var timetable = TimetableOf(500);
+
+        Assert.True(JsonSerializer.SerializeToUtf8Bytes(timetable, IntegrationEventSerializer.Options).Length <= IntegrationEventSerializer.MaxBytes);
+        Assert.Throws<ArgumentException>(() => IntegrationEventSerializer.Serialize(timetable));
+    }
+
+    [Fact]
+    public void Serialize_LargestEvent_FitsAJobPayloadInsideTheLargestDelivery()
+    {
+        var count = 0;
+        while (Fits(TimetableOf(count + 1)))
+        {
+            count++;
+        }
+
+        using var largest = JsonDocument.Parse(IntegrationEventSerializer.Serialize(TimetableOf(count)));
+        var delivery = new IntegrationEventDelivery(
+            Guid.CreateVersion7(),
+            new string('e', IntegrationEventNames.MaxLength),
+            new string('s', 128),
+            new DateTimeOffset(2026, 11, 6, 18, 31, 0, TimeSpan.FromHours(5.5)),
+            new string('+', OutboxMessage.CorrelationIdMaxLength),
+            IntegrationEventChain.MaxDepth,
+            largest.RootElement.Clone());
+
+        Assert.True(Encoding.UTF8.GetByteCount(JobPayloads.Serialize(delivery)) <= JobPayloads.MaxBytes);
+        Assert.False(Fits(TimetableOf(count + 1)));
+    }
+
+    private static ProbeTimetable TimetableOf(int count) =>
+        new(Guid.CreateVersion7(), [.. Enumerable.Range(0, count).Select(index => new DateTimeOffset(2026, 11, 6, 4, 30, 0, TimeSpan.Zero).AddDays(index))]);
+
+    private static bool Fits(ProbeTimetable timetable)
+    {
+        try
+        {
+            IntegrationEventSerializer.Serialize(timetable);
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

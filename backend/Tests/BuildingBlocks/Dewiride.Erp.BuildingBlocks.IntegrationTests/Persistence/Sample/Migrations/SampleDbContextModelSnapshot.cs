@@ -34,6 +34,9 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                         .IsUnicode(false)
                         .HasColumnType("varchar(64)");
 
+                    b.Property<int>("Depth")
+                        .HasColumnType("int");
+
                     b.Property<string>("EventName")
                         .IsRequired()
                         .HasMaxLength(128)

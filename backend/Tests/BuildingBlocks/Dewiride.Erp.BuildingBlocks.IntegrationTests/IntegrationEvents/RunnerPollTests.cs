@@ -1,3 +1,4 @@
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Relay;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Integration.Consumers;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Shipments;
 using Dewiride.Erp.BuildingBlocks.Jobs.Domain;
@@ -6,9 +7,9 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents;
 
-// The one test that lets a runner poll, so it also passes on and delivers whatever events the collection's earlier tests left
-// waiting, and waits for its own event alone. The clocks never move: the commit's announcement wakes the runner, and each enqueue
-// wakes it again.
+// The one test that lets a runner poll, so it also delivers whatever events the collection's earlier tests left waiting, which
+// the relay's first pass, made before the runner starts, passes on. With that pass made and the clocks never moving, only the
+// commit's announcement can pass the test's own event on: it wakes the runner, and each enqueue wakes it again.
 [Collection(IntegrationEventPublishers.Name)]
 public sealed class RunnerPollTests
 {
@@ -21,8 +22,9 @@ public sealed class RunnerPollTests
         var shipment = SampleShipmentId.Create();
         var recorded = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var printed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        events.Script.Answer<ShipmentReceiptRecorder>((integrationEvent, _, _) => Arrive(integrationEvent.ShipmentId, shipment, recorded));
-        events.Script.Answer<ShipmentLabelPrinter>((integrationEvent, _, _) => Arrive(integrationEvent.ShipmentId, shipment, printed));
+        events.Script.Answer<ShipmentReceiptRecorder>((integrationEvent, _, _, _) => Arrive(integrationEvent.ShipmentId, shipment, recorded));
+        events.Script.Answer<ShipmentLabelPrinter>((integrationEvent, _, _, _) => Arrive(integrationEvent.ShipmentId, shipment, printed));
+        await events.First.Services.GetRequiredService<OutboxRelay>().EnqueueDueAsync(TestContext.Current.CancellationToken);
         var service = events.First.Services.GetServices<IHostedService>().OfType<JobRunnerService>().Single();
         await service.StartAsync(TestContext.Current.CancellationToken);
         IntegrationEventsDatabase.LifetimeOf(events.First).NotifyStarted();

@@ -163,19 +163,19 @@ public sealed class UnitOfWorkTests(SampleDatabase database) : IClassFixture<Sam
         var context = scope.ServiceProvider.GetRequiredService<SampleDbContext>();
         var dispatcher = scope.ServiceProvider.GetRequiredService<DomainEventDispatcher>();
         var signal = scope.ServiceProvider.GetRequiredService<UnitOfWorkSignal>();
-        var committedWhenCalled = new List<bool>();
+        var committedWhenCalled = new List<(bool Signalled, bool TransactionEnded)>();
 
         var result = await EfUnitOfWork.RunAsync(context, dispatcher, signal, async token =>
         {
             var sample = await context.Samples.SingleAsync(s => s.Id == id, token);
             sample.Rename("Noticed", database.Clock.GetUtcNow());
-            signal.AfterCommit(() => committedWhenCalled.Add(signal.Committed));
+            signal.AfterCommit(() => committedWhenCalled.Add((signal.Committed, context.Database.CurrentTransaction is null)));
 
             return Result.Success("done");
         }, TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccess);
-        Assert.True(Assert.Single(committedWhenCalled));
+        Assert.Equal((true, true), Assert.Single(committedWhenCalled));
         Assert.Equal("Noticed", (await database.FindAsync(id)).Name);
     }
 

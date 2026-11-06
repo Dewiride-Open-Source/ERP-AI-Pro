@@ -1,3 +1,4 @@
+using Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 using Dewiride.Erp.BuildingBlocks.Persistence;
@@ -40,14 +41,20 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
         var modules = CatalogueModels()
             .Where(pair => pair.Registration.ContextType.Assembly.GetName().Name!.StartsWith(ErpAssemblies.ModulesPrefix, StringComparison.Ordinal))
             .ToList();
-        var violations = modules
-            .SelectMany(pair => pair.Model.GetEntityTypes().Select(entityType => (pair.Registration, EntityType: entityType)))
-            .Where(pair => !typeof(IAuditable).IsAssignableFrom(pair.EntityType.ClrType) && !typeof(IAppendOnly).IsAssignableFrom(pair.EntityType.ClrType) && pair.EntityType.ClrType != typeof(OutboxMessage))
-            .Select(pair => $"{pair.Registration.ContextType.Name} maps {pair.EntityType.DisplayName()}, which is neither auditable nor append-only")
-            .ToList();
+        var violations = modules.SelectMany(pair => UnrecordedEntityTypes(pair.Model, pair.Registration.ContextType)).ToList();
 
         Assert.NotEmpty(modules);
         Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void UnrecordedEntityTypes_ProbeContexts_AcceptTheIntegrationEventTablesAndRefuseAnyOtherType()
+    {
+        using var recording = new ProbeContexts.Recording();
+        using var foreign = new ProbeContexts.Foreign();
+
+        Assert.Empty(UnrecordedEntityTypes(recording.Model, typeof(ProbeContexts.Recording)));
+        Assert.Contains(ProbeContexts.Foreign.BagName, Assert.Single(UnrecordedEntityTypes(foreign.Model, typeof(ProbeContexts.Foreign))), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -159,6 +166,11 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
             .. named.GroupBy(pair => pair.Key, StringComparer.Ordinal).Where(group => group.Count() > 1).Select(group => $"{group.Key} is named by {string.Join(" and ", group.Select(pair => pair.Names))}"),
         ];
     }
+
+    private static List<string> UnrecordedEntityTypes(IModel model, Type contextType) =>
+        [.. model.GetEntityTypes()
+            .Where(entityType => !typeof(IAuditable).IsAssignableFrom(entityType.ClrType) && !typeof(IAppendOnly).IsAssignableFrom(entityType.ClrType) && entityType.ClrType != typeof(OutboxMessage))
+            .Select(entityType => $"{contextType.Name} maps {entityType.DisplayName()}, which is neither auditable nor append-only")];
 
     private static IEnumerable<IEntityType> RecordedTypesOf(DbContext context) => context.Model.GetEntityTypes().Where(RecordedEntityTypes.IsRecorded);
 

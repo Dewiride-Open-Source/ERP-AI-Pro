@@ -6,8 +6,8 @@ using System.Text.Json.Serialization;
 namespace Dewiride.Erp.BuildingBlocks.Jobs.Queue;
 
 // Payloads use the HTTP API's JSON rules: web names, strict numbers and enums as camelCase names. A payload missing a constructor
-// parameter or holding null for a member that cannot be null is unreadable, never filled with a default, so a run whose payload
-// type changed shape is dead-lettered instead of running on made-up values. The json column stores a document, not its text, so
+// parameter that has no default, or holding null for a member that cannot be null, is unreadable, so a run whose payload type
+// changed shape is dead-lettered instead of running on made-up values. The json column stores a document, not its text, so
 // a stored payload is compared with a new one through the payload type: both written by this serializer, never as the text the
 // database hands back.
 internal static class JobPayloads

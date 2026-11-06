@@ -1,3 +1,4 @@
+using Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
@@ -5,6 +6,7 @@ using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Dewiride.Erp.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using HostModules = Dewiride.Erp.Host.Composition.Modules;
 
 namespace Dewiride.Erp.ArchitectureTests.Rules;
@@ -30,17 +32,22 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
     public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssemblyTheChangeRecordsAndTheIntegrationEventTables()
     {
         using var scope = factory.Services.CreateScope();
-        var violations = new List<string>();
 
-        foreach (var registration in Catalogue().Registrations)
-        {
-            var context = (DbContext)scope.ServiceProvider.GetRequiredService(registration.ContextType);
-            violations.AddRange(context.Model.GetEntityTypes()
-                .Where(e => e.ClrType.Assembly != registration.ContextType.Assembly && e.ClrType != typeof(ChangeRecord) && e.ClrType != typeof(OutboxMessage) && e.ClrType != typeof(ProcessedMessage))
-                .Select(e => $"{registration.ContextType.Name} maps {e.ClrType.FullName} from {e.ClrType.Assembly.GetName().Name}"));
-        }
+        var violations = Catalogue().Registrations
+            .SelectMany(registration => ForeignEntityTypes(((DbContext)scope.ServiceProvider.GetRequiredService(registration.ContextType)).Model, registration.ContextType))
+            .ToList();
 
         Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void ForeignEntityTypes_ProbeContexts_AcceptTheSharedTablesAndRefuseAnotherAssemblysType()
+    {
+        using var recording = new ProbeContexts.Recording();
+        using var foreign = new ProbeContexts.Foreign();
+
+        Assert.Empty(ForeignEntityTypes(recording.Model, typeof(ProbeContexts.Recording)));
+        Assert.Contains(ProbeContexts.Foreign.BagName, Assert.Single(ForeignEntityTypes(foreign.Model, typeof(ProbeContexts.Foreign))), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -77,6 +84,11 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
 
         Assert.Empty(violations);
     }
+
+    private static List<string> ForeignEntityTypes(IModel model, Type contextType) =>
+        [.. model.GetEntityTypes()
+            .Where(e => e.ClrType.Assembly != contextType.Assembly && e.ClrType != typeof(ChangeRecord) && e.ClrType != typeof(OutboxMessage) && e.ClrType != typeof(ProcessedMessage))
+            .Select(e => $"{contextType.Name} maps {e.DisplayName()} from {e.ClrType.Assembly.GetName().Name}")];
 
     private DbContextCatalog Catalogue() => factory.Services.GetRequiredService<DbContextCatalog>();
 }

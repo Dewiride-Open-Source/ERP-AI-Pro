@@ -13,7 +13,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrations
 {
     [DbContext(typeof(SampleDbContext))]
-    [Migration("20261106152001_AddIntegrationEvents")]
+    [Migration("20261106164525_AddIntegrationEvents")]
     partial class AddIntegrationEvents
     {
         /// <inheritdoc />
@@ -36,6 +36,9 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                         .HasMaxLength(64)
                         .IsUnicode(false)
                         .HasColumnType("varchar(64)");
+
+                    b.Property<int>("Depth")
+                        .HasColumnType("int");
 
                     b.Property<string>("EventName")
                         .IsRequired()

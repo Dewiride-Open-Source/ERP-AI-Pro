@@ -39,19 +39,20 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents;
 // Two runners of one installation over the test process's database, as JobsDatabase builds them, each composing the sample
 // context with its outbox and processed records, its publisher and two subscribers named for this fixture alone, so no other
 // test's host claims their deliveries. A test passes on and runs its own events by id, because every host of the process shares
-// the outbox.
+// the outbox; a test of the relay's own passes also passes on whatever the collection's earlier tests left waiting.
 internal sealed class IntegrationEventsDatabase : IAsyncDisposable
 {
     private static readonly SemaphoreSlim MigrationGate = new(1, 1);
 
     private static bool _migrated;
 
-    private IntegrationEventsDatabase(IHost first, IHost second, string recorder, string printer)
+    private IntegrationEventsDatabase(IHost first, IHost second, string recorder, string printer, OutboxReadFailure outboxReads)
     {
         First = first;
         Second = second;
         Recorder = recorder;
         Printer = printer;
+        OutboxReads = outboxReads;
     }
 
     public IHost First { get; }
@@ -62,11 +63,15 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
 
     public string Printer { get; }
 
+    public OutboxReadFailure OutboxReads { get; }
+
     public SubscriberScript Script => First.Services.GetRequiredService<SubscriberScript>();
 
     public FakeTimeProvider FirstClock => First.Services.GetRequiredService<FakeTimeProvider>();
 
     public FakeTimeProvider SecondClock => Second.Services.GetRequiredService<FakeTimeProvider>();
+
+    public PublishedEvents Published => First.Services.GetRequiredService<PublishedEvents>();
 
     public static async Task<IntegrationEventsDatabase> CreateAsync(JobRetryPolicy? retry = null)
     {
@@ -74,17 +79,17 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
         var printer = JobsDatabase.NewName("label-printer");
         var script = new SubscriberScript();
         var published = new PublishedEvents();
+        var outboxReads = new OutboxReadFailure();
         var database = new IntegrationEventsDatabase(
-            Build("runner-a", recorder, printer, script, published, retry ?? JobRetryPolicy.Default),
-            Build("runner-b", recorder, printer, script, published, retry ?? JobRetryPolicy.Default),
+            Build("runner-a", recorder, printer, script, published, outboxReads, retry ?? JobRetryPolicy.Default),
+            Build("runner-b", recorder, printer, script, published, outboxReads, retry ?? JobRetryPolicy.Default),
             recorder,
-            printer);
+            printer,
+            outboxReads);
         await MigrateOnceAsync(database.First);
 
         return database;
     }
-
-    public static TestActorContext ActorOf(IHost host) => host.Services.GetRequiredService<TestActorContext>();
 
     public static TestRequestOrigin OriginOf(IHost host) => host.Services.GetRequiredService<TestRequestOrigin>();
 
@@ -126,15 +131,29 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
             host);
         Assert.True(result.IsSuccess);
 
-        return (id, First.Services.GetRequiredService<PublishedEvents>().Of(id));
+        return (id, Published.Of(id));
     }
 
-    public async Task<IntegrationEventDelivery> DeliveryOf(IntegrationEventId id)
+    public async Task<IReadOnlyList<IntegrationEventId>> DispatchManyAsync(int count)
+    {
+        var shipments = Enumerable.Range(0, count).Select(_ => SampleShipmentId.Create()).ToList();
+        var result = await RunUnitAsync((context, _, _) =>
+        {
+            context.Shipments.AddRange(shipments.Select(id => SampleShipment.Dispatch(id, 1, FirstClock.GetUtcNow())));
+
+            return Task.FromResult(Result.Success("dispatched"));
+        });
+        Assert.True(result.IsSuccess);
+
+        return [.. shipments.Select(Published.Of)];
+    }
+
+    public async Task<IntegrationEventDelivery> DeliveryPayloadAsync(IntegrationEventId id)
     {
         var row = await OutboxRowAsync(id) ?? throw new InvalidOperationException($"The event {id.Value} is not in the outbox.");
         using var document = JsonDocument.Parse(row.Payload);
 
-        return new IntegrationEventDelivery(id.Value, row.EventName, SampleDbContext.SchemaName, row.OccurredAt, row.CorrelationId, document.RootElement.Clone());
+        return new IntegrationEventDelivery(id.Value, row.EventName, SampleDbContext.SchemaName, row.OccurredAt, row.CorrelationId, row.Depth, document.RootElement.Clone());
     }
 
     public async Task<JobRunId> EnqueueAsync<THandler>(IntegrationEventDelivery delivery, string key)
@@ -145,8 +164,6 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
         return await scope.ServiceProvider.GetRequiredService<IJobQueue>()
             .EnqueueAsync<IntegrationEventDeliveryJob<ShipmentDispatched, THandler>, IntegrationEventDelivery>(delivery, key, TestContext.Current.CancellationToken);
     }
-
-    public bool Published(SampleShipmentId shipment) => First.Services.GetRequiredService<PublishedEvents>().Contains(shipment);
 
     public Task RelayAsync(IntegrationEventId id) => RelayAsync(First, id);
 
@@ -186,6 +203,9 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
 
     public Task<OutboxMessage?> OutboxRowAsync(IntegrationEventId id) =>
         QueryAsync((context, token) => context.OutboxMessages.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id, token));
+
+    public Task<List<OutboxMessage>> OutboxRowsAsync(IReadOnlyList<IntegrationEventId> ids) =>
+        QueryAsync((context, token) => context.OutboxMessages.AsNoTracking().Where(m => ids.Contains(m.Id)).ToListAsync(token));
 
     public Task<List<SampleReceipt>> ReceiptsAsync(SampleShipmentId shipment) =>
         QueryAsync((context, token) => context.Receipts.AsNoTracking().Where(r => r.ShipmentId == shipment.Value).OrderBy(r => r.RecordedBy).ToListAsync(token));
@@ -239,7 +259,7 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
         }
     }
 
-    private static IHost Build(string runner, string recorder, string printer, SubscriberScript script, PublishedEvents published, JobRetryPolicy retry)
+    private static IHost Build(string runner, string recorder, string printer, SubscriberScript script, PublishedEvents published, OutboxReadFailure outboxReads, JobRetryPolicy retry)
     {
         var builder = Microsoft.Extensions.Hosting.Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings { EnvironmentName = Environments.Development });
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
@@ -262,6 +282,7 @@ internal sealed class IntegrationEventsDatabase : IAsyncDisposable
         builder.Services.AddSingleton(published);
         builder.Services.AddErpPersistenceCore();
         builder.Services.AddModuleDbContext<SampleDbContext>(SampleDbContext.SchemaName);
+        builder.Services.ConfigureDbContext<SampleDbContext>(options => options.AddInterceptors(outboxReads));
         builder.Services.AddScoped<IDomainEventHandler<SampleShipmentDispatched>, ShipmentDispatchedPublisher>();
         builder.AddErpJobs();
         builder.AddErpJobRunner();

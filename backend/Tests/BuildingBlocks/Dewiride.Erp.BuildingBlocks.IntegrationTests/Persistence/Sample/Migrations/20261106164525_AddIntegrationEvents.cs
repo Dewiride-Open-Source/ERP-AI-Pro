@@ -21,6 +21,7 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                     Payload = table.Column<string>(type: "json", nullable: false),
                     OccurredAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     CorrelationId = table.Column<string>(type: "varchar(64)", unicode: false, maxLength: 64, nullable: true),
+                    Depth = table.Column<int>(type: "int", nullable: false),
                     RelayedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true)
                 },
                 constraints: table =>

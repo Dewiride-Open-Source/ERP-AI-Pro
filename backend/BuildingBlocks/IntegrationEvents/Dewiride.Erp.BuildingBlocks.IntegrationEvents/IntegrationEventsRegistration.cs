@@ -23,6 +23,7 @@ public static class IntegrationEventsRegistration
             .ValidateOnStart();
         builder.Services.TryAddSingleton(provider => new IntegrationEventCatalog(provider.GetServices<IntegrationEventSubscription>()));
         builder.Services.TryAddSingleton<IntegrationEventTables>();
+        builder.Services.TryAddScoped<IntegrationEventChain>();
         builder.Services.TryAddScoped<IIntegrationEventPublisher, OutboxPublisher>();
         builder.Services.AddJobRunSource<OutboxRelay>();
         builder.Services.AddRetentionSweep<IntegrationEventRetentionSweep>();

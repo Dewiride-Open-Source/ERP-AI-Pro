@@ -7,22 +7,24 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Events;
 namespace Dewiride.Erp.BuildingBlocks.IntegrationEvents.Events;
 
 // Events use the job payloads' rules: web names, strict numbers and enums as camelCase names, read strictly, so an event missing a
-// constructor parameter or holding null where its type allows none is unreadable instead of being filled with defaults, and a
-// subscriber never acts on a value the publisher did not send. Members the type does not know are skipped, so an event that a
-// later release published still delivers after a rollback. An event is at most MaxBytes, leaving room for the delivery around it
-// within a job payload's 16 KiB.
+// constructor parameter that has no default, or holding null where its type allows none, is unreadable instead of being filled
+// with made-up values; a member added later with a default reads as that default from an event published before it. Members the
+// type does not know are skipped, so an event that a later release published still delivers after a rollback. An event is written
+// as a delivery carries it, read back and written again, which escapes characters such as the plus of a time zone offset that the
+// first writing leaves bare, and is at most MaxBytes in that form, leaving room for the delivery around it within a job payload's
+// 16 KiB.
 internal static class IntegrationEventSerializer
 {
     public const int MaxBytes = 15 * 1024;
 
-    private static readonly JsonSerializerOptions Options = CreateOptions();
+    internal static readonly JsonSerializerOptions Options = CreateOptions();
 
     public static string Serialize<TEvent>(TEvent integrationEvent)
         where TEvent : class, IIntegrationEvent
     {
         ArgumentNullException.ThrowIfNull(integrationEvent);
 
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(integrationEvent, Options);
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(JsonSerializer.SerializeToElement(integrationEvent, Options), Options);
         if (bytes.Length > MaxBytes)
         {
             throw new ArgumentException($"An integration event is at most {MaxBytes} bytes of JSON; this {typeof(TEvent).Name} is {bytes.Length}. Keep identifiers, codes and dates, and let the subscriber read the rest.", nameof(integrationEvent));

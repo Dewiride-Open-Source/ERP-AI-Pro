@@ -10,7 +10,7 @@ public sealed class OutboxMessage
 {
     public const int CorrelationIdMaxLength = 64;
 
-    internal OutboxMessage(IntegrationEventId id, string eventName, string payload, DateTimeOffset occurredAt, string? correlationId)
+    internal OutboxMessage(IntegrationEventId id, string eventName, string payload, DateTimeOffset occurredAt, string? correlationId, int depth)
     {
         if (correlationId is { Length: > CorrelationIdMaxLength })
         {
@@ -22,6 +22,7 @@ public sealed class OutboxMessage
         Payload = payload;
         OccurredAt = occurredAt;
         CorrelationId = correlationId;
+        Depth = depth;
     }
 
     private OutboxMessage()
@@ -37,6 +38,8 @@ public sealed class OutboxMessage
     public DateTimeOffset OccurredAt { get; private set; }
 
     public string? CorrelationId { get; private set; }
+
+    public int Depth { get; private set; }
 
     public DateTimeOffset? RelayedAt { get; private set; }
 }

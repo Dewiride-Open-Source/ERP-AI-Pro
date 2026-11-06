@@ -1,15 +1,16 @@
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Dewiride.Erp.ArchitectureTests.Rules.Probes.Events;
 using Dewiride.Erp.ArchitectureTests.Rules.Probes.Integration.Consumers;
 using Dewiride.Erp.ArchitectureTests.Rules.Probes.Integration.Publishers;
+using Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Events;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Publishing;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Subscribing;
 using Dewiride.Erp.BuildingBlocks.Kernel.Events;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
-using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
 using Dewiride.Erp.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +21,8 @@ namespace Dewiride.Erp.ArchitectureTests.Rules;
 
 // No product module publishes or subscribes yet, so every rule runs twice: over the product's types, where it must find nothing,
 // and over the probes of Rules/Probes and of this class, where it must accept the probe that keeps it and refuse each that breaks
-// it.
+// it. An event's members are those its serializer writes, read from the serializer's own contract, so a member the serializer
+// includes without being a public property is checked too.
 public sealed partial class IntegrationEventTests(ErpApiFactory factory) : IClassFixture<ErpApiFactory>
 {
     private const string ProbePrefix = "probe.ledgers.";
@@ -45,12 +47,18 @@ public sealed partial class IntegrationEventTests(ErpApiFactory factory) : IClas
     {
         Assert.Empty(EventProblems([typeof(ProbeEvents.LedgerPosted)], _ => ProbePrefix, _ => true));
         Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerOpened)], _ => ProbePrefix, _ => true), problem => problem.Contains("not a public sealed record", StringComparison.Ordinal));
+        Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerArchived)], _ => ProbePrefix, _ => true), problem => problem.Contains("not a public sealed record", StringComparison.Ordinal));
+        Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerHidden)], _ => ProbePrefix, _ => true), problem => problem.Contains("not a public sealed record", StringComparison.Ordinal));
         Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerClosedElsewhere)], _ => ProbePrefix, _ => true), problem => problem.Contains("outside its module's prefix", StringComparison.Ordinal));
         Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerPostedV2)], _ => ProbePrefix, _ => true), problem => problem.Contains("a version instead of a meaning", StringComparison.Ordinal));
         Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerMisnamed)], _ => ProbePrefix, _ => true), problem => problem.Contains("not three lower-case kebab segments", StringComparison.Ordinal));
         Assert.Contains(EventProblems([typeof(MisplacedEvent)], _ => ProbePrefix, _ => true), problem => problem.Contains("not in an Events namespace", StringComparison.Ordinal));
         Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerPosted)], _ => ProbePrefix, _ => false), problem => problem.Contains("not declared in a module's Contracts", StringComparison.Ordinal));
         Assert.Equal(LooseMembers, EventProblems([typeof(ProbeEvents.LedgerNoted)], _ => ProbePrefix, _ => true).Select(MemberOf).Order(StringComparer.Ordinal));
+        Assert.Equal(["Comment"], EventProblems([typeof(ProbeEvents.LedgerCommented)], _ => ProbePrefix, _ => true).Select(MemberOf));
+        Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerRelabelled)], _ => ProbePrefix, _ => true), problem => problem.Contains("LedgerId names a converter of its own", StringComparison.Ordinal));
+        Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerRewritten)], _ => ProbePrefix, _ => true), problem => problem.Contains("LedgerRewritten names a converter of its own", StringComparison.Ordinal));
+        Assert.Contains(EventProblems([typeof(ProbeEvents.LedgerExtended)], _ => ProbePrefix, _ => true), problem => problem.Contains("Rest keeps members its type does not declare", StringComparison.Ordinal));
         Assert.False(IsInContractsAssembly(typeof(ProbeEvents.LedgerPosted)));
     }
 
@@ -103,8 +111,8 @@ public sealed partial class IntegrationEventTests(ErpApiFactory factory) : IClas
     [Fact]
     public void UnrecordedSubscriptions_ProbeContexts_AcceptAContextWithProcessedRecordsAndRefuseAnyOther()
     {
-        using var recording = new RecordingProbeContext();
-        using var outboxOnly = new OutboxOnlyProbeContext();
+        using var recording = new ProbeContexts.Recording();
+        using var outboxOnly = new ProbeContexts.OutboxOnly();
 
         Assert.Empty(UnrecordedSubscriptions([typeof(ProbeConsumers.LedgerPostedRecorder)], _ => recording.Model));
         Assert.Single(UnrecordedSubscriptions([typeof(ProbeConsumers.LedgerPostedRecorder)], _ => outboxOnly.Model));
@@ -125,11 +133,16 @@ public sealed partial class IntegrationEventTests(ErpApiFactory factory) : IClas
     [Fact]
     public void TableProblems_ProbeContexts_AcceptTheConfiguredTablesAndRefuseRemappedOnes()
     {
-        using var recording = new RecordingProbeContext();
-        using var remapped = new RemappedProbeContext();
+        using var recording = new ProbeContexts.Recording();
+        using var remapped = new ProbeContexts.Remapped();
+        using var rekeyed = new ProbeContexts.Rekeyed();
 
-        Assert.Empty(TableProblems(recording.Model, RecordingProbeContext.SchemaName));
-        Assert.Equal(3, TableProblems(remapped.Model, RemappedProbeContext.SchemaName).Count);
+        Assert.Empty(TableProblems(recording.Model, ProbeContexts.Recording.SchemaName));
+        Assert.Equal(3, TableProblems(remapped.Model, ProbeContexts.Remapped.SchemaName).Count);
+        var rekeyedProblems = TableProblems(rekeyed.Model, ProbeContexts.Rekeyed.SchemaName);
+        Assert.Equal(2, rekeyedProblems.Count);
+        Assert.Contains(rekeyedProblems, problem => problem.Contains("filtered indexes", StringComparison.Ordinal));
+        Assert.Contains(rekeyedProblems, problem => problem.Contains("keyed by event and subscriber", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -193,12 +206,36 @@ public sealed partial class IntegrationEventTests(ErpApiFactory factory) : IClas
                 problems.Add($"{type.FullName} is named '{name}', a version instead of a meaning");
             }
 
-            problems.AddRange(type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(property => !IsPlainMember(property.PropertyType))
-                .Select(property => $"{type.FullName}.{property.Name} is a {property.PropertyType.Name}, which an event does not carry"));
+            problems.AddRange(MemberProblems(type));
         }
 
         return problems;
+    }
+
+    private static IEnumerable<string> MemberProblems(Type type)
+    {
+        if (type.GetCustomAttribute<JsonConverterAttribute>() is not null)
+        {
+            yield return $"{type.FullName} names a converter of its own, which can write anything";
+            yield break;
+        }
+
+        foreach (var property in IntegrationEventSerializer.Options.GetTypeInfo(type).Properties)
+        {
+            var member = (property.AttributeProvider as MemberInfo)?.Name ?? property.Name;
+            if (property.IsExtensionData)
+            {
+                yield return $"{type.FullName}.{member} keeps members its type does not declare, which an event does not carry";
+            }
+            else if (property.CustomConverter is not null)
+            {
+                yield return $"{type.FullName}.{member} names a converter of its own, which can write anything";
+            }
+            else if (!IsPlainMember(property.PropertyType))
+            {
+                yield return $"{type.FullName}.{member} is a {property.PropertyType.Name}, which an event does not carry";
+            }
+        }
     }
 
     private static bool IsPlainMember(Type type) =>
@@ -275,35 +312,5 @@ public sealed partial class IntegrationEventTests(ErpApiFactory factory) : IClas
     public sealed class MisplacedPublisher(IIntegrationEventPublisher publisher)
     {
         public IIntegrationEventPublisher Publisher { get; } = publisher;
-    }
-
-    private sealed class RecordingProbeContext() : ModuleDbContext(new DbContextOptionsBuilder<RecordingProbeContext>().UseSqlServer().Options, SchemaName)
-    {
-        public const string SchemaName = "probe_ledgers";
-
-        public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
-
-        public DbSet<ProcessedMessage> ProcessedMessages => Set<ProcessedMessage>();
-    }
-
-    private sealed class OutboxOnlyProbeContext() : ModuleDbContext(new DbContextOptionsBuilder<OutboxOnlyProbeContext>().UseSqlServer().Options, "probe_outboxes")
-    {
-        public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
-    }
-
-    private sealed class RemappedProbeContext() : ModuleDbContext(new DbContextOptionsBuilder<RemappedProbeContext>().UseSqlServer().Options, SchemaName)
-    {
-        public const string SchemaName = "probe_remapped";
-
-        public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
-
-        public DbSet<ProcessedMessage> ProcessedMessages => Set<ProcessedMessage>();
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<OutboxMessage>().ToTable("Outbox").Property(m => m.Payload).HasColumnType("nvarchar(max)");
-            modelBuilder.Entity<ProcessedMessage>().ToTable("Processed");
-        }
     }
 }

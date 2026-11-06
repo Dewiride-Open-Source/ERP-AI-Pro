@@ -2,7 +2,9 @@ using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Relay;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Integration.Consumers;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Shipments;
+using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
 using Dewiride.Erp.BuildingBlocks.Jobs.Domain;
+using Dewiride.Erp.BuildingBlocks.Jobs.Queue;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents;
@@ -65,10 +67,36 @@ public sealed class RelayTests
     }
 
     [Fact]
+    public async Task EnqueueDueAsync_FirstPassAfterAStart_PassesOnAnEventNoAnnouncementReached()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var (_, id) = await events.DispatchAsync(host: events.Second);
+
+        await RelayOf(events).EnqueueDueAsync(TestContext.Current.CancellationToken);
+
+        Assert.NotNull((await events.OutboxRowAsync(id))!.RelayedAt);
+        Assert.Equal(2, (await events.DeliveriesAsync(id)).Count);
+    }
+
+    [Fact]
+    public async Task EnqueueDueAsync_EventCommittedInThisProcessAfterAPass_IsPassedOnAtTheNextPoll()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var relay = RelayOf(events);
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        var (_, id) = await events.DispatchAsync();
+
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+
+        Assert.NotNull((await events.OutboxRowAsync(id))!.RelayedAt);
+        Assert.Equal(2, (await events.DeliveriesAsync(id)).Count);
+    }
+
+    [Fact]
     public async Task EnqueueDueAsync_EventAnotherProcessCommitted_WaitsForTheFullPassInsteadOfBeingReadAtEveryPoll()
     {
         await using var events = await IntegrationEventsDatabase.CreateAsync();
-        var relay = events.First.Services.GetRequiredService<OutboxRelay>();
+        var relay = RelayOf(events);
         await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
         var (_, id) = await events.DispatchAsync(host: events.Second);
 
@@ -83,26 +111,77 @@ public sealed class RelayTests
     }
 
     [Fact]
-    public async Task EnqueueDueAsync_EventThatCannotBePassedOn_LogsItOnceAndPassesOnTheEventsBehindIt()
+    public async Task EnqueueDueAsync_EventThatKeepsFailing_IsTriedAgainAtTheNextPollOnceAndThenHourlyWhileTheEventsBehindItGoOn()
     {
         await using var events = await IntegrationEventsDatabase.CreateAsync();
         var (_, stuck) = await events.DispatchAsync();
         events.Advance(TimeSpan.FromSeconds(1));
         var (_, behind) = await events.DispatchAsync();
-        var other = await events.DeliveryOf(stuck);
+        var delivery = await events.DeliveryPayloadAsync(stuck);
         using var otherEvent = JsonDocument.Parse($$"""{"shipmentId":"{{SampleShipmentId.Create().Value}}","parcels":9,"dispatchedAt":"2026-11-01T06:30:00+00:00"}""");
-        await events.EnqueueAsync<ShipmentReceiptRecorder>(other with { Event = otherEvent.RootElement.Clone() }, OutboxRelay.KeyOf(stuck));
-        var relay = events.First.Services.GetRequiredService<OutboxRelay>();
+        var conflicting = await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery with { Event = otherEvent.RootElement.Clone() }, OutboxRelay.KeyOf(stuck));
+        var relay = RelayOf(events);
 
         await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
-        relay.Announce();
+        var behindAfterTheFirstPass = (await events.OutboxRowAsync(behind))!.RelayedAt;
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        await events.QueryJobsAsync((context, token) => context.Runs.Where(r => r.Id == conflicting).ExecuteUpdateAsync(s => s.SetProperty(r => r.Payload, JobPayloads.Serialize(delivery)), token));
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        var stuckBeforeTheFullPass = (await events.OutboxRowAsync(stuck))!.RelayedAt;
+        events.Advance(OutboxRelay.FullPassInterval);
         await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
 
-        Assert.Null((await events.OutboxRowAsync(stuck))!.RelayedAt);
-        Assert.NotNull((await events.OutboxRowAsync(behind))!.RelayedAt);
+        Assert.NotNull(behindAfterTheFirstPass);
         Assert.Equal(2, (await events.DeliveriesAsync(behind)).Count);
-        var failures = IntegrationEventsDatabase.LogsOf(events.First).GetSnapshot().Where(record => record.Message.StartsWith("Could not pass on", StringComparison.Ordinal) && record.Message.Contains(stuck.Value.ToString(), StringComparison.Ordinal)).ToList();
-        Assert.Equal(LogLevel.Error, Assert.Single(failures).Level);
-        Assert.IsType<InvalidOperationException>(failures[0].Exception);
+        Assert.Null(stuckBeforeTheFullPass);
+        Assert.NotNull((await events.OutboxRowAsync(stuck))!.RelayedAt);
+        Assert.Contains(conflicting, (await events.DeliveriesAsync(stuck)).Select(run => run.Id));
+        var lines = IntegrationEventsDatabase.LogsOf(events.First).GetSnapshot().Where(record => record.Message.Contains(stuck.Value.ToString(), StringComparison.Ordinal)).ToList();
+        var failure = Assert.Single(lines, record => record.Message.StartsWith("Could not pass on", StringComparison.Ordinal));
+        Assert.Equal(LogLevel.Error, failure.Level);
+        Assert.IsType<InvalidOperationException>(failure.Exception);
+        Assert.Single(lines, record => record.Message.EndsWith("after 2 failed passes", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task EnqueueDueAsync_OutboxThatCannotBeRead_IsTriedAgainAtTheNextPollOnceAndThenHourly()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var (_, id) = await events.DispatchAsync(host: events.Second);
+        var relay = RelayOf(events);
+        events.OutboxReads.Failing = true;
+
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        events.OutboxReads.Failing = false;
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+        var beforeTheFullPass = (await events.OutboxRowAsync(id))!.RelayedAt;
+        events.Advance(OutboxRelay.FullPassInterval);
+        await relay.EnqueueDueAsync(TestContext.Current.CancellationToken);
+
+        Assert.Null(beforeTheFullPass);
+        Assert.NotNull((await events.OutboxRowAsync(id))!.RelayedAt);
+        var lines = IntegrationEventsDatabase.LogsOf(events.First).GetSnapshot().Where(record => record.Message.Contains(nameof(SampleDbContext), StringComparison.Ordinal)).ToList();
+        var failure = Assert.Single(lines, record => record.Message.StartsWith("Could not read the outbox", StringComparison.Ordinal));
+        Assert.Equal(LogLevel.Error, failure.Level);
+        Assert.IsType<InvalidOperationException>(failure.Exception);
+        Assert.Single(lines, record => record.Message.EndsWith("again after 2 failed passes", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task EnqueueDueAsync_MoreEventsThanAPage_PassesThemAllOn()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var ids = await events.DispatchManyAsync(OutboxRelay.BatchSize + 1);
+
+        await RelayOf(events).EnqueueDueAsync(TestContext.Current.CancellationToken);
+
+        var rows = await events.OutboxRowsAsync(ids);
+        Assert.Equal(ids.Count, rows.Count);
+        Assert.All(rows, row => Assert.NotNull(row.RelayedAt));
+        var keys = ids.Select(OutboxRelay.KeyOf).ToList();
+        Assert.Equal(2 * ids.Count, await events.QueryJobsAsync((context, token) => context.Runs.CountAsync(r => keys.Contains(r.IdempotencyKey), token)));
+    }
+
+    private static OutboxRelay RelayOf(IntegrationEventsDatabase events) => events.First.Services.GetRequiredService<OutboxRelay>();
 }

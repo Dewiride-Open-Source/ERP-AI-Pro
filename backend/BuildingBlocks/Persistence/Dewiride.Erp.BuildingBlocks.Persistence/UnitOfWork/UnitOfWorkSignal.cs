@@ -1,6 +1,10 @@
+using Microsoft.Extensions.Logging;
+
 namespace Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
 
-public sealed class UnitOfWorkSignal
+// A callback runs after the commit, so its failure is logged and the next callback still runs: the change it follows is already
+// saved, and neither the caller nor a retry may learn otherwise.
+public sealed partial class UnitOfWorkSignal(ILogger<UnitOfWorkSignal> logger)
 {
     private List<Action>? _afterCommit;
 
@@ -13,16 +17,26 @@ public sealed class UnitOfWorkSignal
         (_afterCommit ??= []).Add(callback);
     }
 
-    public void MarkCommitted()
+    internal void MarkCommitted()
     {
         Committed = true;
         var callbacks = _afterCommit;
         _afterCommit = null;
         foreach (var callback in callbacks ?? [])
         {
-            callback();
+            try
+            {
+                callback();
+            }
+            catch (Exception exception)
+            {
+                LogCallbackFailed(exception);
+            }
         }
     }
 
-    public void MarkRolledBack() => _afterCommit = null;
+    internal void MarkRolledBack() => _afterCommit = null;
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "A callback after the commit of a unit of work failed; the unit's change stays saved")]
+    private partial void LogCallbackFailed(Exception exception);
 }

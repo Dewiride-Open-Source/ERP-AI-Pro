@@ -1,11 +1,18 @@
 using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Publishing;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Integration.Consumers;
+using Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Shipments;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Jobs;
+using Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample;
+using Dewiride.Erp.BuildingBlocks.Jobs;
 using Dewiride.Erp.BuildingBlocks.Jobs.Definitions;
 using Dewiride.Erp.BuildingBlocks.Jobs.Domain;
+using Dewiride.Erp.BuildingBlocks.Jobs.Persistence;
+using Dewiride.Erp.BuildingBlocks.Jobs.Running.Attempts;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents;
 
@@ -28,13 +35,27 @@ public sealed class DeliveryTests
     }
 
     [Fact]
+    public async Task RunAsync_DeliveryPublishedByAnotherModule_RecordsTheChangeInTheSubscribersOwnContext()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var (shipment, id) = await events.DispatchAsync();
+        var delivery = (await events.DeliveryPayloadAsync(id)) with { Source = JobsDbContext.SchemaName };
+
+        var outcome = await events.RunAsync(await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery, JobsDatabase.NewKey()));
+
+        Assert.Equal(JobRunStatus.Succeeded, outcome.Status);
+        Assert.Equal(nameof(ShipmentReceiptRecorder), Assert.Single(await events.ReceiptsAsync(shipment)).RecordedBy);
+        Assert.Equal(events.Recorder, Assert.Single(await events.ProcessedAsync(id)).Subscriber);
+    }
+
+    [Fact]
     public async Task RunAsync_DeliveryOfAnEventItsSubscriberHandled_ChangesNothing()
     {
         await using var events = await IntegrationEventsDatabase.CreateAsync();
         var (shipment, id) = await events.DispatchAsync();
         await events.RelayAsync(id);
         await events.RunAsync((await events.DeliveryAsync(id, events.Recorder)).Id);
-        var again = await events.EnqueueAsync<ShipmentReceiptRecorder>(await events.DeliveryOf(id), JobsDatabase.NewKey());
+        var again = await events.EnqueueAsync<ShipmentReceiptRecorder>(await events.DeliveryPayloadAsync(id), JobsDatabase.NewKey());
 
         var outcome = await events.RunAsync(again);
 
@@ -52,11 +73,11 @@ public sealed class DeliveryTests
         var (shipment, id) = await events.DispatchAsync();
         await events.RelayAsync(id);
         var first = (await events.DeliveryAsync(id, events.Recorder)).Id;
-        var second = await events.EnqueueAsync<ShipmentReceiptRecorder>(await events.DeliveryOf(id), JobsDatabase.NewKey());
+        var second = await events.EnqueueAsync<ShipmentReceiptRecorder>(await events.DeliveryPayloadAsync(id), JobsDatabase.NewKey());
         var arrived = 0;
         var bothArrived = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        events.Script.Answer<ShipmentReceiptRecorder>(async (_, _, _) =>
+        events.Script.Answer<ShipmentReceiptRecorder>(async (_, _, _, _) =>
         {
             if (Interlocked.Increment(ref arrived) == 2)
             {
@@ -87,7 +108,7 @@ public sealed class DeliveryTests
     public async Task RunAsync_FailingSubscriber_IsRetriedThenDeadLetteredWithoutHoldingBackTheOther()
     {
         await using var events = await IntegrationEventsDatabase.CreateAsync(new JobRetryPolicy(2, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1)));
-        events.Script.Answer<ShipmentLabelPrinter>((_, _, _) => Task.FromResult(Result.Fail(Error.Unavailable("test.printer-offline", "The label printer is offline."))));
+        events.Script.Answer<ShipmentLabelPrinter>((_, _, _, _) => Task.FromResult(Result.Fail(Error.Unavailable("test.printer-offline", "The label printer is offline."))));
         var (shipment, id) = await events.DispatchAsync();
         await events.RelayAsync(id);
         var printer = (await events.DeliveryAsync(id, events.Printer)).Id;
@@ -110,12 +131,84 @@ public sealed class DeliveryTests
         await using var events = await IntegrationEventsDatabase.CreateAsync();
         var (shipment, id) = await events.DispatchAsync();
         using var missingParcels = JsonDocument.Parse($$"""{"shipmentId":"{{shipment.Value}}","dispatchedAt":"2026-11-01T06:30:00+00:00"}""");
-        var delivery = (await events.DeliveryOf(id)) with { Event = missingParcels.RootElement.Clone() };
+        var delivery = (await events.DeliveryPayloadAsync(id)) with { Event = missingParcels.RootElement.Clone() };
 
         var outcome = await events.RunAsync(await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery, JobsDatabase.NewKey()));
 
         Assert.Equal((JobRunStatus.DeadLettered, "integration-event.unreadable"), (outcome.Status, outcome.ErrorCode));
         Assert.Empty(await events.ReceiptsAsync(shipment));
         Assert.Equal(0, events.Script.CallsOf<ShipmentReceiptRecorder>(shipment.Value));
+    }
+
+    [Fact]
+    public async Task RunAsync_DeliveryOfAnotherEventThanTheSubscribers_IsDeadLetteredAsUnreadable()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var (shipment, id) = await events.DispatchAsync();
+        var delivery = (await events.DeliveryPayloadAsync(id)) with { EventName = "test.events.shipment-lost" };
+
+        var outcome = await events.RunAsync(await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery, JobsDatabase.NewKey()));
+
+        Assert.Equal((JobRunStatus.DeadLettered, "integration-event.unreadable"), (outcome.Status, outcome.ErrorCode));
+        Assert.Empty(await events.ReceiptsAsync(shipment));
+        Assert.Equal(0, events.Script.CallsOf<ShipmentReceiptRecorder>(shipment.Value));
+    }
+
+    [Fact]
+    public async Task RunAsync_EventAsOldAsTheProcessedRecordsAreKept_IsDeadLetteredAsTooOldWhileAYoungerOneIsHandled()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var (shipment, id) = await events.DispatchAsync();
+        var oldest = events.FirstClock.GetUtcNow() - new JobsOptions().FinishedRunRetention;
+        var delivery = await events.DeliveryPayloadAsync(id);
+
+        var tooOld = await events.RunAsync(await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery with { OccurredAt = oldest }, JobsDatabase.NewKey()));
+        var younger = await events.RunAsync(await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery with { OccurredAt = oldest + TimeSpan.FromTicks(1) }, JobsDatabase.NewKey()));
+
+        Assert.Equal((JobRunStatus.DeadLettered, "integration-event.too-old"), (tooOld.Status, tooOld.ErrorCode));
+        Assert.Equal(JobRunStatus.Succeeded, younger.Status);
+        Assert.Equal(1, events.Script.CallsOf<ShipmentReceiptRecorder>(shipment.Value));
+    }
+
+    [Fact]
+    public async Task RunAsync_SubscriberPublishes_ItsEventFollowsOneDeliveryMoreThanTheDeliveredEvent()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var (_, id) = await events.DispatchAsync();
+        var followUp = SampleShipmentId.Create();
+        events.Script.Answer<ShipmentReceiptRecorder>((_, _, database, _) => DispatchAsync(database, followUp, events));
+        var delivery = (await events.DeliveryPayloadAsync(id)) with { Depth = IntegrationEventChain.MaxDepth - 1 };
+
+        var outcome = await events.RunAsync(await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery, JobsDatabase.NewKey()));
+
+        Assert.Equal(JobRunStatus.Succeeded, outcome.Status);
+        Assert.Equal(0, (await events.OutboxRowAsync(id))!.Depth);
+        Assert.Equal(IntegrationEventChain.MaxDepth, (await events.OutboxRowAsync(events.Published.Of(followUp)))!.Depth);
+    }
+
+    [Fact]
+    public async Task RunAsync_SubscriberPublishesPastTheLongestChain_FailsAndSavesNothing()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var (shipment, id) = await events.DispatchAsync();
+        var followUp = SampleShipmentId.Create();
+        events.Script.Answer<ShipmentReceiptRecorder>((_, _, database, _) => DispatchAsync(database, followUp, events));
+        var delivery = (await events.DeliveryPayloadAsync(id)) with { Depth = IntegrationEventChain.MaxDepth };
+
+        var outcome = await events.RunAsync(await events.EnqueueAsync<ShipmentReceiptRecorder>(delivery, JobsDatabase.NewKey()));
+
+        Assert.Equal((JobRunStatus.Failed, JobAttemptErrors.ExceptionCode), (outcome.Status, outcome.ErrorCode));
+        Assert.Contains(IntegrationEventsDatabase.LogsOf(events.First).GetSnapshot(), record => record.Exception is InvalidOperationException { Message: var message } && message.Contains($"a chain of {IntegrationEventChain.MaxDepth + 1} deliveries", StringComparison.Ordinal));
+        Assert.Empty(events.Published.AllOf(followUp));
+        Assert.False(await events.QueryAsync((context, token) => context.Shipments.AnyAsync(s => s.Id == followUp, token)));
+        Assert.Empty(await events.ReceiptsAsync(shipment));
+        Assert.Empty(await events.ProcessedAsync(id));
+    }
+
+    private static Task<Result> DispatchAsync(SampleDbContext database, SampleShipmentId shipment, IntegrationEventsDatabase events)
+    {
+        database.Shipments.Add(SampleShipment.Dispatch(shipment, 1, events.FirstClock.GetUtcNow()));
+
+        return Task.FromResult(Result.Success());
     }
 }

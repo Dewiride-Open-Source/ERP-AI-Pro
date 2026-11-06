@@ -14,11 +14,11 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationEvents.Relay;
 
 // Passes committed events on as one delivery run per subscriber, at the job runner's poll. Reading every outbox at every poll
 // would write a command line of each module's context every PollInterval, so the relay reads only when an event committed in
-// this process since its last pass (Announce, after the commit), at its first poll after the start, after a pass in which an
-// event could not be passed on, and once every FullPassInterval, which also finds an event whose process stopped between its
-// commit and the announcement. Each event is passed on in its own try/catch, so one that keeps failing never holds back the
-// events behind it. An enqueue under the event's key answers the run an earlier pass made, so a pass that stopped between the
-// enqueue and the mark makes no second delivery.
+// this process since its last pass (Announce, after the commit), at its first poll after the start, at the poll after a pass in
+// which an event or an outbox failed for the first time, and once every FullPassInterval, which also finds an event whose process
+// stopped between its commit and the announcement and retries an event or an outbox that keeps failing. Each event and each
+// outbox is passed on in its own try/catch, so one that keeps failing never holds back the others. An enqueue under the event's
+// key answers the run an earlier pass made, so a pass that stopped between the enqueue and the mark makes no second delivery.
 internal sealed partial class OutboxRelay(
     IServiceScopeFactory scopes,
     IntegrationEventTables tables,
@@ -33,7 +33,9 @@ internal sealed partial class OutboxRelay(
 
     public static readonly TimeSpan FullPassInterval = TimeSpan.FromHours(1);
 
-    private readonly ConcurrentDictionary<IntegrationEventId, int> _failing = new();
+    private readonly ConcurrentDictionary<IntegrationEventId, int> _failingEvents = new();
+
+    private readonly ConcurrentDictionary<Type, int> _failingOutboxes = new();
 
     private int _due = 1;
 
@@ -56,23 +58,15 @@ internal sealed partial class OutboxRelay(
         }
 
         _lastPass = now;
-        var complete = false;
-        try
+        var newFailures = 0;
+        foreach (var contextType in tables.Outboxes)
         {
-            var passedOnEveryEvent = true;
-            foreach (var contextType in tables.Outboxes)
-            {
-                passedOnEveryEvent &= await RelayAsync(contextType, cancellationToken).ConfigureAwait(false);
-            }
-
-            complete = passedOnEveryEvent;
+            newFailures += await TryRelayAsync(contextType, cancellationToken).ConfigureAwait(false);
         }
-        finally
+
+        if (newFailures > 0)
         {
-            if (!complete)
-            {
-                Volatile.Write(ref _due, 1);
-            }
+            Volatile.Write(ref _due, 1);
         }
     }
 
@@ -89,12 +83,43 @@ internal sealed partial class OutboxRelay(
         }
     }
 
-    private async Task<bool> RelayAsync(Type contextType, CancellationToken cancellationToken)
+    private async Task<int> TryRelayAsync(Type contextType, CancellationToken cancellationToken)
+    {
+        int newFailures;
+        try
+        {
+            newFailures = await RelayAsync(contextType, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            var failures = _failingOutboxes.AddOrUpdate(contextType, 1, static (_, count) => count + 1);
+            if (failures == 1)
+            {
+                LogOutboxFailed(exception, contextType.Name);
+            }
+
+            return failures == 1 ? 1 : 0;
+        }
+
+        if (_failingOutboxes.TryRemove(contextType, out var earlier))
+        {
+            LogOutboxReadAfterFailures(contextType.Name, earlier);
+        }
+
+        return newFailures;
+    }
+
+    private async Task<int> RelayAsync(Type contextType, CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
         var context = (ModuleDbContext)scope.ServiceProvider.GetRequiredService(contextType);
         var queue = scope.ServiceProvider.GetRequiredService<IJobQueue>();
         var failed = new List<IntegrationEventId>();
+        var newFailures = 0;
         while (true)
         {
             var page = await context.Set<OutboxMessage>()
@@ -107,20 +132,22 @@ internal sealed partial class OutboxRelay(
                 .ConfigureAwait(false);
             foreach (var message in page)
             {
-                if (!await TryPassOnAsync(context, queue, message, cancellationToken).ConfigureAwait(false))
+                var failures = await TryPassOnAsync(context, queue, message, cancellationToken).ConfigureAwait(false);
+                if (failures > 0)
                 {
                     failed.Add(message.Id);
+                    newFailures += failures == 1 ? 1 : 0;
                 }
             }
 
             if (page.Count < BatchSize)
             {
-                return failed.Count == 0;
+                return newFailures;
             }
         }
     }
 
-    private async Task<bool> TryPassOnAsync(ModuleDbContext context, IJobQueue queue, OutboxMessage message, CancellationToken cancellationToken)
+    private async Task<int> TryPassOnAsync(ModuleDbContext context, IJobQueue queue, OutboxMessage message, CancellationToken cancellationToken)
     {
         try
         {
@@ -132,20 +159,21 @@ internal sealed partial class OutboxRelay(
         }
         catch (Exception exception)
         {
-            if (_failing.AddOrUpdate(message.Id, 1, static (_, failures) => failures + 1) == 1)
+            var failures = _failingEvents.AddOrUpdate(message.Id, 1, static (_, count) => count + 1);
+            if (failures == 1)
             {
                 LogPassOnFailed(exception, message.EventName, message.Id.Value, context.Schema);
             }
 
-            return false;
+            return failures;
         }
 
-        if (_failing.TryRemove(message.Id, out var failures))
+        if (_failingEvents.TryRemove(message.Id, out var earlier))
         {
-            LogPassedOnAfterFailures(message.EventName, message.Id.Value, context.Schema, failures);
+            LogPassedOnAfterFailures(message.EventName, message.Id.Value, context.Schema, earlier);
         }
 
-        return true;
+        return 0;
     }
 
     private async Task PassOnAsync(ModuleDbContext context, IJobQueue queue, OutboxMessage message, CancellationToken cancellationToken)
@@ -154,7 +182,7 @@ internal sealed partial class OutboxRelay(
         if (subscribers.Count > 0)
         {
             using var document = JsonDocument.Parse(message.Payload);
-            var delivery = new IntegrationEventDelivery(message.Id.Value, message.EventName, context.Schema, message.OccurredAt, message.CorrelationId, document.RootElement.Clone());
+            var delivery = new IntegrationEventDelivery(message.Id.Value, message.EventName, context.Schema, message.OccurredAt, message.CorrelationId, message.Depth, document.RootElement.Clone());
             foreach (var subscription in subscribers)
             {
                 await subscription.Enqueue(queue, delivery, KeyOf(message.Id), cancellationToken).ConfigureAwait(false);
@@ -172,9 +200,15 @@ internal sealed partial class OutboxRelay(
     [LoggerMessage(Level = LogLevel.Information, Message = "Passed on {EventName} {EventId} of {Source} to {Subscribers} subscribers")]
     private partial void LogPassedOn(string eventName, Guid eventId, string source, int subscribers);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Could not pass on {EventName} {EventId} of {Source}; the relay tries again at its next pass, and the events behind it go on")]
+    [LoggerMessage(Level = LogLevel.Error, Message = "Could not pass on {EventName} {EventId} of {Source}; the relay tries again at a later pass, and the events behind it go on")]
     private partial void LogPassOnFailed(Exception exception, string eventName, Guid eventId, string source);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Passed on {EventName} {EventId} of {Source} after {Failures} failed passes")]
     private partial void LogPassedOnAfterFailures(string eventName, Guid eventId, string source, int failures);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Could not read the outbox of {Context}; the relay tries again at a later pass, and the other outboxes go on")]
+    private partial void LogOutboxFailed(Exception exception, string context);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Read the outbox of {Context} again after {Failures} failed passes")]
+    private partial void LogOutboxReadAfterFailures(string context, int failures);
 }

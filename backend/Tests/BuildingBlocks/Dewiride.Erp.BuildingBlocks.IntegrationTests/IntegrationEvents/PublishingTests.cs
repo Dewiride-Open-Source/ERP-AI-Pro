@@ -18,12 +18,15 @@ public sealed class PublishingTests
     {
         await using var events = await IntegrationEventsDatabase.CreateAsync();
         var origin = IntegrationEventsDatabase.OriginOf(events.First);
+        var before = await events.QueryAsync((context, token) => context.OutboxMessages.CountAsync(token));
 
         var (shipment, id) = await events.DispatchAsync(parcels: 4);
 
+        Assert.Equal(before + 1, await events.QueryAsync((context, token) => context.OutboxMessages.CountAsync(token)));
+        Assert.Equal([id], events.Published.AllOf(shipment));
         var row = await events.OutboxRowAsync(id);
         Assert.NotNull(row);
-        Assert.Equal((ShipmentDispatched.Name, events.FirstClock.GetUtcNow(), origin.CorrelationId, (DateTimeOffset?)null), (row.EventName, row.OccurredAt, row.CorrelationId, row.RelayedAt));
+        Assert.Equal((ShipmentDispatched.Name, events.FirstClock.GetUtcNow(), origin.CorrelationId, (DateTimeOffset?)null, 0), (row.EventName, row.OccurredAt, row.CorrelationId, row.RelayedAt, row.Depth));
         using var payload = JsonDocument.Parse(row.Payload);
         Assert.Equal(shipment.Value, payload.RootElement.GetProperty("shipmentId").GetGuid());
         Assert.Equal(4, payload.RootElement.GetProperty("parcels").GetInt32());

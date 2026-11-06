@@ -8,7 +8,7 @@ using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationEvents.Publishing;
 
-internal sealed class OutboxPublisher(UnitOfWorkSignal signal, OutboxRelay relay, IRequestOrigin origin, TimeProvider timeProvider) : IIntegrationEventPublisher
+internal sealed class OutboxPublisher(UnitOfWorkSignal signal, OutboxRelay relay, IntegrationEventChain chain, IRequestOrigin origin, TimeProvider timeProvider) : IIntegrationEventPublisher
 {
     public IntegrationEventId Publish<TEvent>(ModuleDbContext context, TEvent integrationEvent)
         where TEvent : class, IIntegrationEvent
@@ -27,8 +27,9 @@ internal sealed class OutboxPublisher(UnitOfWorkSignal signal, OutboxRelay relay
             throw new InvalidOperationException($"{context.GetType().Name} has no outbox; declare `public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();` and add its migration.");
         }
 
+        var depth = chain.DepthOf(name);
         var id = IntegrationEventId.Create();
-        context.Set<OutboxMessage>().Add(new OutboxMessage(id, name, IntegrationEventSerializer.Serialize(integrationEvent), timeProvider.GetUtcNow(), origin.CorrelationId));
+        context.Set<OutboxMessage>().Add(new OutboxMessage(id, name, IntegrationEventSerializer.Serialize(integrationEvent), timeProvider.GetUtcNow(), origin.CorrelationId, depth));
         signal.AfterCommit(relay.Announce);
 
         return id;

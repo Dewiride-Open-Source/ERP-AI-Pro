@@ -10,8 +10,9 @@ using Microsoft.Extensions.Options;
 namespace Dewiride.Erp.BuildingBlocks.IntegrationEvents.Retention;
 
 // An event leaves its outbox once it was passed on longer ago than PublishedEventRetention, never while it waits to be passed on,
-// and a processed record leaves once it is older than the job runs it belongs to, so a delivery's record outlives no run that
-// could re-run it. Both go oldest first in statements of BatchSize, each committed on its own, as the job runs' sweep does.
+// and a processed record leaves once it is older than FinishedRunRetention; a delivery whose event is that old is refused before
+// its subscriber runs, so no delivery that runs can miss the record of an earlier handling. Both go oldest first in statements of
+// BatchSize, each committed on its own, as the job runs' sweep does.
 internal sealed partial class IntegrationEventRetentionSweep(
     IServiceProvider services,
     IntegrationEventTables tables,

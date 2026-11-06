@@ -1,6 +1,8 @@
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents;
+using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Retention;
 using Dewiride.Erp.BuildingBlocks.Jobs;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents;
 
@@ -44,6 +46,27 @@ public sealed class RetentionTests
 
         Assert.Single(keptAtTheCutoff);
         Assert.Empty(await events.ProcessedAsync(id));
+    }
+
+    [Fact]
+    public async Task SweepAsync_MoreRowsThanABatch_DeletesThemAll()
+    {
+        await using var events = await IntegrationEventsDatabase.CreateAsync();
+        var ids = await events.DispatchManyAsync(IntegrationEventRetentionSweep.BatchSize + 1);
+        var now = events.FirstClock.GetUtcNow();
+        await events.QueryAsync((context, token) => context.OutboxMessages.Where(m => ids.Contains(m.Id)).ExecuteUpdateAsync(s => s.SetProperty(m => m.RelayedAt, now), token));
+        await events.QueryAsync((context, token) =>
+        {
+            context.ProcessedMessages.AddRange(ids.Select(id => new ProcessedMessage(id, events.Recorder, now)));
+
+            return context.SaveChangesAsync(token);
+        });
+        events.Advance(new[] { new IntegrationEventsOptions().PublishedEventRetention, new JobsOptions().FinishedRunRetention }.Max() + Tick);
+
+        await SweepAsync(events);
+
+        Assert.Empty(await events.OutboxRowsAsync(ids));
+        Assert.Equal(0, await events.QueryAsync((context, token) => context.ProcessedMessages.CountAsync(m => ids.Contains(m.EventId), token)));
     }
 
     private static async Task SweepAsync(IntegrationEventsDatabase events)
