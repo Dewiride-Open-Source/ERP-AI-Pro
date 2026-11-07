@@ -12,5 +12,6 @@ public static class Modules
         new ErpModules.Platform.Audit.AuditModule(),
         new ErpModules.Platform.Jobs.JobsModule(),
         new ErpModules.Identity.Users.UsersModule(),
+        new ErpModules.Platform.ReferenceData.ReferenceDataModule(),
     ];
 }

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../Contracts/Dewiride.Erp.Modules.Platform.ReferenceData.Contracts/Dewiride.Erp.Modules.Platform.ReferenceData.Contracts.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Countries/Persistence/countries.json" LogicalName="countries.json" />
+    <EmbeddedResource Include="IndianStates/Persistence/indian-states.json" LogicalName="indian-states.json" />
+  </ItemGroup>
+
+</Project>

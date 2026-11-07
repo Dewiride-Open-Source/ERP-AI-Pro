@@ -1,0 +1,325 @@
+{
+  "source": "GST State codes from 1 July 2017, each row with the instrument that dates it; names as the Government of India spells them (india.gov.in, read 7 November 2026)",
+  "states": [
+    {
+      "gstCode": "01",
+      "name": "Jammu and Kashmir",
+      "kind": "state",
+      "validFrom": "2017-07-08",
+      "validUntil": "2019-10-30",
+      "source": "Central Goods and Services Tax (Extension to Jammu and Kashmir) Act, 2017 (No. 26 of 2017), in force from 8 July 2017, until the Jammu and Kashmir Reorganisation Act, 2019 (No. 34 of 2019), appointed day 31 October 2019 (S.O. 2889(E))"
+    },
+    {
+      "gstCode": "01",
+      "name": "Jammu and Kashmir",
+      "kind": "unionTerritory",
+      "validFrom": "2019-10-31",
+      "validUntil": null,
+      "source": "Jammu and Kashmir Reorganisation Act, 2019 (No. 34 of 2019), section 4, appointed day 31 October 2019 (S.O. 2889(E)); Notification 62/2019-Central Tax"
+    },
+    {
+      "gstCode": "02",
+      "name": "Himachal Pradesh",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "03",
+      "name": "Punjab",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "04",
+      "name": "Chandigarh",
+      "kind": "unionTerritory",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "05",
+      "name": "Uttarakhand",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "06",
+      "name": "Haryana",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "07",
+      "name": "Delhi",
+      "kind": "unionTerritory",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "08",
+      "name": "Rajasthan",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "09",
+      "name": "Uttar Pradesh",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "10",
+      "name": "Bihar",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "11",
+      "name": "Sikkim",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "12",
+      "name": "Arunachal Pradesh",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "13",
+      "name": "Nagaland",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "14",
+      "name": "Manipur",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "15",
+      "name": "Mizoram",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "16",
+      "name": "Tripura",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "17",
+      "name": "Meghalaya",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "18",
+      "name": "Assam",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "19",
+      "name": "West Bengal",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "20",
+      "name": "Jharkhand",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "21",
+      "name": "Odisha",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "22",
+      "name": "Chhattisgarh",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "23",
+      "name": "Madhya Pradesh",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "24",
+      "name": "Gujarat",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "25",
+      "name": "Daman and Diu",
+      "kind": "unionTerritory",
+      "validFrom": "2017-07-01",
+      "validUntil": "2020-07-31",
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template; until the transition of Notification 10/2020-Central Tax as amended by Notification 45/2020-Central Tax (31 July 2020) and Circular 168/24/2021-GST"
+    },
+    {
+      "gstCode": "26",
+      "name": "Dadra and Nagar Haveli",
+      "kind": "unionTerritory",
+      "validFrom": "2017-07-01",
+      "validUntil": "2020-01-25",
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template; until the Dadra and Nagar Haveli and Daman and Diu (Merger of Union territories) Act, 2019 (No. 44 of 2019), appointed day 26 January 2020 (S.O. 4542(E))"
+    },
+    {
+      "gstCode": "26",
+      "name": "Dadra and Nagar Haveli and Daman and Diu",
+      "kind": "unionTerritory",
+      "validFrom": "2020-01-26",
+      "validUntil": null,
+      "source": "Dadra and Nagar Haveli and Daman and Diu (Merger of Union territories) Act, 2019 (No. 44 of 2019), appointed day 26 January 2020 (S.O. 4542(E))"
+    },
+    {
+      "gstCode": "27",
+      "name": "Maharashtra",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "29",
+      "name": "Karnataka",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "30",
+      "name": "Goa",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "31",
+      "name": "Lakshadweep",
+      "kind": "unionTerritory",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "32",
+      "name": "Kerala",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "33",
+      "name": "Tamil Nadu",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "34",
+      "name": "Puducherry",
+      "kind": "unionTerritory",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "35",
+      "name": "Andaman and Nicobar Islands",
+      "kind": "unionTerritory",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "36",
+      "name": "Telangana",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "37",
+      "name": "Andhra Pradesh",
+      "kind": "state",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), section 9, in force from 1 July 2017; State code as GSTN lists it in the GSTR-1 template"
+    },
+    {
+      "gstCode": "38",
+      "name": "Ladakh",
+      "kind": "unionTerritory",
+      "validFrom": "2020-01-01",
+      "validUntil": null,
+      "source": "Notification 62/2019-Central Tax and Notification 3/2020-Central Tax: Ladakh registrations from 1 January 2020"
+    },
+    {
+      "gstCode": "97",
+      "name": "Other Territory",
+      "kind": "otherTerritory",
+      "validFrom": "2017-07-01",
+      "validUntil": null,
+      "source": "Central Goods and Services Tax Act, 2017 (No. 12 of 2017), sections 2(81) and 2(114)(f)"
+    }
+  ]
+}

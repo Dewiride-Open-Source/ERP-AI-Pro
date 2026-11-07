@@ -18,6 +18,7 @@
     <ProjectReference Include="../../../Modules/Platform/Attachments/Module/Dewiride.Erp.Modules.Platform.Attachments/Dewiride.Erp.Modules.Platform.Attachments.csproj" />
     <ProjectReference Include="../../../Modules/Platform/Audit/Module/Dewiride.Erp.Modules.Platform.Audit/Dewiride.Erp.Modules.Platform.Audit.csproj" />
     <ProjectReference Include="../../../Modules/Platform/Jobs/Module/Dewiride.Erp.Modules.Platform.Jobs/Dewiride.Erp.Modules.Platform.Jobs.csproj" />
+    <ProjectReference Include="../../../Modules/Platform/ReferenceData/Module/Dewiride.Erp.Modules.Platform.ReferenceData/Dewiride.Erp.Modules.Platform.ReferenceData.csproj" />
     <ProjectReference Include="../../../Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo/Dewiride.Erp.Modules.Platform.SystemInfo.csproj" />
   </ItemGroup>
 

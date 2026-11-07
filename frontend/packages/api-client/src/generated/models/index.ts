@@ -160,6 +160,40 @@ export interface ChooseOwnThemeRequest extends AdditionalDataHolder, Parsable {
      */
     theme?: ThemePreference | null;
 }
+export interface CorrectExchangeRateRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Rupees for the unit of the currency, more than 0 and at most 1,000,000, with at most four decimal places.
+     */
+    rate?: number | null;
+    /**
+     * Where the rate comes from, such as FBIL reference rate; absent or blank when not given.
+     */
+    source?: string | null;
+    /**
+     * Units of the currency the rate is for: 1, 10, 100, 1,000, 10,000 or 100,000, as the source quotes it.
+     */
+    unit?: number | null;
+    /**
+     * Version of the rate the correction was made from, as the API last returned it.
+     */
+    version?: string | null;
+}
+export interface CountriesResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The countries property
+     */
+    countries?: CountryResponse[] | null;
+}
+export interface CountryResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The code property
+     */
+    code?: string | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+}
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
@@ -217,6 +251,33 @@ export function createChooseOwnThemeRequestFromDiscriminatorValue(parseNode: Par
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {CorrectExchangeRateRequest}
+ */
+// @ts-ignore
+export function createCorrectExchangeRateRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoCorrectExchangeRateRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {CountriesResponse}
+ */
+// @ts-ignore
+export function createCountriesResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoCountriesResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {CountryResponse}
+ */
+// @ts-ignore
+export function createCountryResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoCountryResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {CreateDepartmentRequest}
  */
 // @ts-ignore
@@ -231,6 +292,24 @@ export function createCreateDepartmentRequestFromDiscriminatorValue(parseNode: P
 // @ts-ignore
 export function createCreateDesignationRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoCreateDesignationRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {CurrenciesResponse}
+ */
+// @ts-ignore
+export function createCurrenciesResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoCurrenciesResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {CurrencyResponse}
+ */
+// @ts-ignore
+export function createCurrencyResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoCurrencyResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -323,6 +402,15 @@ export function createDownloadLinkResponseFromDiscriminatorValue(parseNode: Pars
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ExchangeRateResponse}
+ */
+// @ts-ignore
+export function createExchangeRateResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoExchangeRateResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {FeaturesResponse}
  */
 // @ts-ignore
@@ -341,6 +429,42 @@ export function createFeatureStateResponseFromDiscriminatorValue(parseNode: Pars
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {FinancialPeriodResponse}
+ */
+// @ts-ignore
+export function createFinancialPeriodResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoFinancialPeriodResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {FinancialQuarterResponse}
+ */
+// @ts-ignore
+export function createFinancialQuarterResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoFinancialQuarterResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {FinancialYearResponse}
+ */
+// @ts-ignore
+export function createFinancialYearResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoFinancialYearResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {FinancialYearsResponse}
+ */
+// @ts-ignore
+export function createFinancialYearsResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoFinancialYearsResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {HttpValidationProblemDetails_errors}
  */
 // @ts-ignore
@@ -355,6 +479,51 @@ export function createHttpValidationProblemDetails_errorsFromDiscriminatorValue(
 // @ts-ignore
 export function createHttpValidationProblemDetailsFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoHttpValidationProblemDetails;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ImportedExchangeRateRequest}
+ */
+// @ts-ignore
+export function createImportedExchangeRateRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoImportedExchangeRateRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ImportedExchangeRatesResponse}
+ */
+// @ts-ignore
+export function createImportedExchangeRatesResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoImportedExchangeRatesResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ImportExchangeRatesRequest}
+ */
+// @ts-ignore
+export function createImportExchangeRatesRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoImportExchangeRatesRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {IndianStateResponse}
+ */
+// @ts-ignore
+export function createIndianStateResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoIndianStateResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {IndianStatesResponse}
+ */
+// @ts-ignore
+export function createIndianStatesResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoIndianStatesResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -467,6 +636,15 @@ export function createPagedResponseOfDesignationResponseFromDiscriminatorValue(p
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfExchangeRateResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfExchangeRateResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfExchangeRateResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {PagedResponseOfJobRunResponse}
  */
 // @ts-ignore
@@ -562,6 +740,15 @@ export function createProfileResponseFromDiscriminatorValue(parseNode: ParseNode
 // @ts-ignore
 export function createRecentStartupsResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoRecentStartupsResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {RecordExchangeRateRequest}
+ */
+// @ts-ignore
+export function createRecordExchangeRateRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoRecordExchangeRateRequest;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -670,6 +857,26 @@ export function createUpdatePersonRequestFromDiscriminatorValue(parseNode: Parse
 // @ts-ignore
 export function createUploadPolicyResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoUploadPolicyResponse;
+}
+export interface CurrenciesResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The currencies property
+     */
+    currencies?: CurrencyResponse[] | null;
+}
+export interface CurrencyResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The code property
+     */
+    code?: string | null;
+    /**
+     * The minorUnits property
+     */
+    minorUnits?: number | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
 }
 export interface CurrentUserResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -822,6 +1029,43 @@ export function deserializeIntoChooseOwnThemeRequest(chooseOwnThemeRequest: Part
 }
 /**
  * The deserialization information for the current model
+ * @param CorrectExchangeRateRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoCorrectExchangeRateRequest(correctExchangeRateRequest: Partial<CorrectExchangeRateRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "rate": n => { correctExchangeRateRequest.rate = n.getNumberValue(); },
+        "source": n => { correctExchangeRateRequest.source = n.getStringValue(); },
+        "unit": n => { correctExchangeRateRequest.unit = n.getNumberValue(); },
+        "version": n => { correctExchangeRateRequest.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param CountriesResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoCountriesResponse(countriesResponse: Partial<CountriesResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "countries": n => { countriesResponse.countries = n.getCollectionOfObjectValues<CountryResponse>(createCountryResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param CountryResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoCountryResponse(countryResponse: Partial<CountryResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "code": n => { countryResponse.code = n.getStringValue(); },
+        "name": n => { countryResponse.name = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param CreateDepartmentRequest The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -841,6 +1085,30 @@ export function deserializeIntoCreateDepartmentRequest(createDepartmentRequest: 
 export function deserializeIntoCreateDesignationRequest(createDesignationRequest: Partial<CreateDesignationRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "name": n => { createDesignationRequest.name = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param CurrenciesResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoCurrenciesResponse(currenciesResponse: Partial<CurrenciesResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "currencies": n => { currenciesResponse.currencies = n.getCollectionOfObjectValues<CurrencyResponse>(createCurrencyResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param CurrencyResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoCurrencyResponse(currencyResponse: Partial<CurrencyResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "code": n => { currencyResponse.code = n.getStringValue(); },
+        "minorUnits": n => { currencyResponse.minorUnits = n.getNumberValue(); },
+        "name": n => { currencyResponse.name = n.getStringValue(); },
     }
 }
 /**
@@ -952,6 +1220,23 @@ export function deserializeIntoDownloadLinkResponse(downloadLinkResponse: Partia
 }
 /**
  * The deserialization information for the current model
+ * @param ExchangeRateResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoExchangeRateResponse(exchangeRateResponse: Partial<ExchangeRateResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "currency": n => { exchangeRateResponse.currency = n.getStringValue(); },
+        "id": n => { exchangeRateResponse.id = n.getGuidValue(); },
+        "rate": n => { exchangeRateResponse.rate = n.getNumberValue(); },
+        "rateDate": n => { exchangeRateResponse.rateDate = n.getDateOnlyValue(); },
+        "source": n => { exchangeRateResponse.source = n.getStringValue(); },
+        "unit": n => { exchangeRateResponse.unit = n.getNumberValue(); },
+        "version": n => { exchangeRateResponse.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param FeaturesResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -971,6 +1256,61 @@ export function deserializeIntoFeatureStateResponse(featureStateResponse: Partia
     return {
         "enabled": n => { featureStateResponse.enabled = n.getBooleanValue(); },
         "name": n => { featureStateResponse.name = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param FinancialPeriodResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoFinancialPeriodResponse(financialPeriodResponse: Partial<FinancialPeriodResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "end": n => { financialPeriodResponse.end = n.getDateOnlyValue(); },
+        "label": n => { financialPeriodResponse.label = n.getStringValue(); },
+        "number": n => { financialPeriodResponse.number = n.getNumberValue(); },
+        "quarter": n => { financialPeriodResponse.quarter = n.getNumberValue(); },
+        "start": n => { financialPeriodResponse.start = n.getDateOnlyValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param FinancialQuarterResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoFinancialQuarterResponse(financialQuarterResponse: Partial<FinancialQuarterResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "end": n => { financialQuarterResponse.end = n.getDateOnlyValue(); },
+        "label": n => { financialQuarterResponse.label = n.getStringValue(); },
+        "number": n => { financialQuarterResponse.number = n.getNumberValue(); },
+        "start": n => { financialQuarterResponse.start = n.getDateOnlyValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param FinancialYearResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoFinancialYearResponse(financialYearResponse: Partial<FinancialYearResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "end": n => { financialYearResponse.end = n.getDateOnlyValue(); },
+        "label": n => { financialYearResponse.label = n.getStringValue(); },
+        "periods": n => { financialYearResponse.periods = n.getCollectionOfObjectValues<FinancialPeriodResponse>(createFinancialPeriodResponseFromDiscriminatorValue); },
+        "quarters": n => { financialYearResponse.quarters = n.getCollectionOfObjectValues<FinancialQuarterResponse>(createFinancialQuarterResponseFromDiscriminatorValue); },
+        "start": n => { financialYearResponse.start = n.getDateOnlyValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param FinancialYearsResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoFinancialYearsResponse(financialYearsResponse: Partial<FinancialYearsResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "years": n => { financialYearsResponse.years = n.getCollectionOfObjectValues<FinancialYearResponse>(createFinancialYearResponseFromDiscriminatorValue); },
     }
 }
 /**
@@ -999,6 +1339,70 @@ export function deserializeIntoHttpValidationProblemDetails(httpValidationProble
 // @ts-ignore
 export function deserializeIntoHttpValidationProblemDetails_errors(httpValidationProblemDetails_errors: Partial<HttpValidationProblemDetails_errors> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ImportedExchangeRateRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoImportedExchangeRateRequest(importedExchangeRateRequest: Partial<ImportedExchangeRateRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "currency": n => { importedExchangeRateRequest.currency = n.getStringValue(); },
+        "rate": n => { importedExchangeRateRequest.rate = n.getNumberValue(); },
+        "rateDate": n => { importedExchangeRateRequest.rateDate = n.getDateOnlyValue(); },
+        "source": n => { importedExchangeRateRequest.source = n.getStringValue(); },
+        "unit": n => { importedExchangeRateRequest.unit = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ImportedExchangeRatesResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoImportedExchangeRatesResponse(importedExchangeRatesResponse: Partial<ImportedExchangeRatesResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "recorded": n => { importedExchangeRatesResponse.recorded = n.getNumberValue(); },
+        "unchanged": n => { importedExchangeRatesResponse.unchanged = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ImportExchangeRatesRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoImportExchangeRatesRequest(importExchangeRatesRequest: Partial<ImportExchangeRatesRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "rates": n => { importExchangeRatesRequest.rates = n.getCollectionOfObjectValues<ImportedExchangeRateRequest>(createImportedExchangeRateRequestFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param IndianStateResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoIndianStateResponse(indianStateResponse: Partial<IndianStateResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "gstCode": n => { indianStateResponse.gstCode = n.getStringValue(); },
+        "kind": n => { indianStateResponse.kind = n.getEnumValue<IndianStateKind>(IndianStateKindObject); },
+        "name": n => { indianStateResponse.name = n.getStringValue(); },
+        "validFrom": n => { indianStateResponse.validFrom = n.getDateOnlyValue(); },
+        "validUntil": n => { indianStateResponse.validUntil = n.getDateOnlyValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param IndianStatesResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoIndianStatesResponse(indianStatesResponse: Partial<IndianStatesResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "states": n => { indianStatesResponse.states = n.getCollectionOfObjectValues<IndianStateResponse>(createIndianStateResponseFromDiscriminatorValue); },
     }
 }
 /**
@@ -1198,6 +1602,21 @@ export function deserializeIntoPagedResponseOfDesignationResponse(pagedResponseO
 }
 /**
  * The deserialization information for the current model
+ * @param PagedResponseOfExchangeRateResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfExchangeRateResponse(pagedResponseOfExchangeRateResponse: Partial<PagedResponseOfExchangeRateResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfExchangeRateResponse.items = n.getCollectionOfObjectValues<ExchangeRateResponse>(createExchangeRateResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfExchangeRateResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfExchangeRateResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfExchangeRateResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfExchangeRateResponse.totalPages = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param PagedResponseOfJobRunResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -1377,6 +1796,21 @@ export function deserializeIntoProfileResponse(profileResponse: Partial<ProfileR
 export function deserializeIntoRecentStartupsResponse(recentStartupsResponse: Partial<RecentStartupsResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "startups": n => { recentStartupsResponse.startups = n.getCollectionOfObjectValues<StartupResponse>(createStartupResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param RecordExchangeRateRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoRecordExchangeRateRequest(recordExchangeRateRequest: Partial<RecordExchangeRateRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "currency": n => { recordExchangeRateRequest.currency = n.getStringValue(); },
+        "rate": n => { recordExchangeRateRequest.rate = n.getNumberValue(); },
+        "rateDate": n => { recordExchangeRateRequest.rateDate = n.getDateOnlyValue(); },
+        "source": n => { recordExchangeRateRequest.source = n.getStringValue(); },
+        "unit": n => { recordExchangeRateRequest.unit = n.getNumberValue(); },
     }
 }
 /**
@@ -1610,6 +2044,36 @@ export interface DownloadLinkResponse extends AdditionalDataHolder, Parsable {
     url?: string | null;
 }
 export type ErpRole = (typeof ErpRoleObject)[keyof typeof ErpRoleObject];
+export interface ExchangeRateResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The currency property
+     */
+    currency?: string | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The rate property
+     */
+    rate?: number | null;
+    /**
+     * The rateDate property
+     */
+    rateDate?: DateOnly | null;
+    /**
+     * The source property
+     */
+    source?: string | null;
+    /**
+     * The unit property
+     */
+    unit?: number | null;
+    /**
+     * The version property
+     */
+    version?: string | null;
+}
 export interface FeaturesResponse extends AdditionalDataHolder, Parsable {
     /**
      * The features property
@@ -1625,6 +2089,74 @@ export interface FeatureStateResponse extends AdditionalDataHolder, Parsable {
      * The name property
      */
     name?: string | null;
+}
+export interface FinancialPeriodResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The end property
+     */
+    end?: DateOnly | null;
+    /**
+     * The label property
+     */
+    label?: string | null;
+    /**
+     * The number property
+     */
+    number?: number | null;
+    /**
+     * The quarter property
+     */
+    quarter?: number | null;
+    /**
+     * The start property
+     */
+    start?: DateOnly | null;
+}
+export interface FinancialQuarterResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The end property
+     */
+    end?: DateOnly | null;
+    /**
+     * The label property
+     */
+    label?: string | null;
+    /**
+     * The number property
+     */
+    number?: number | null;
+    /**
+     * The start property
+     */
+    start?: DateOnly | null;
+}
+export interface FinancialYearResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The end property
+     */
+    end?: DateOnly | null;
+    /**
+     * The label property
+     */
+    label?: string | null;
+    /**
+     * The periods property
+     */
+    periods?: FinancialPeriodResponse[] | null;
+    /**
+     * The quarters property
+     */
+    quarters?: FinancialQuarterResponse[] | null;
+    /**
+     * The start property
+     */
+    start?: DateOnly | null;
+}
+export interface FinancialYearsResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The years property
+     */
+    years?: FinancialYearResponse[] | null;
 }
 export interface HttpValidationProblemDetails extends AdditionalDataHolder, ApiError, Parsable {
     /**
@@ -1661,6 +2193,73 @@ export interface HttpValidationProblemDetails extends AdditionalDataHolder, ApiE
     type?: string | null;
 }
 export interface HttpValidationProblemDetails_errors extends AdditionalDataHolder, Parsable {
+}
+export interface ImportedExchangeRateRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * ISO 4217 code of the foreign currency, such as USD; never INR.
+     */
+    currency?: string | null;
+    /**
+     * Rupees for the unit of the currency, more than 0 and at most 1,000,000, with at most four decimal places.
+     */
+    rate?: number | null;
+    /**
+     * Day the rate is for, today or earlier by India's time.
+     */
+    rateDate?: DateOnly | null;
+    /**
+     * Where the rate comes from, such as FBIL reference rate; absent or blank when not given.
+     */
+    source?: string | null;
+    /**
+     * Units of the currency the rate is for: 1, 10, 100, 1,000, 10,000 or 100,000, as the source quotes it.
+     */
+    unit?: number | null;
+}
+export interface ImportedExchangeRatesResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The recorded property
+     */
+    recorded?: number | null;
+    /**
+     * The unchanged property
+     */
+    unchanged?: number | null;
+}
+export interface ImportExchangeRatesRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * The rates of the file, in its order, at most 1,000; recorded all together or not at all.
+     */
+    rates?: ImportedExchangeRateRequest[] | null;
+}
+export type IndianStateKind = (typeof IndianStateKindObject)[keyof typeof IndianStateKindObject];
+export interface IndianStateResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The gstCode property
+     */
+    gstCode?: string | null;
+    /**
+     * The kind property
+     */
+    kind?: IndianStateKind | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+    /**
+     * The validFrom property
+     */
+    validFrom?: DateOnly | null;
+    /**
+     * The validUntil property
+     */
+    validUntil?: DateOnly | null;
+}
+export interface IndianStatesResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The states property
+     */
+    states?: IndianStateResponse[] | null;
 }
 export interface InvitePersonRequest extends AdditionalDataHolder, Parsable {
     /**
@@ -1972,6 +2571,28 @@ export interface PagedResponseOfDesignationResponse extends AdditionalDataHolder
      * The items property
      */
     items?: DesignationResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
+}
+export interface PagedResponseOfExchangeRateResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: ExchangeRateResponse[] | null;
     /**
      * The page property
      */
@@ -2307,6 +2928,28 @@ export interface RecentStartupsResponse extends AdditionalDataHolder, Parsable {
      */
     startups?: StartupResponse[] | null;
 }
+export interface RecordExchangeRateRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * ISO 4217 code of the foreign currency, such as USD; never INR.
+     */
+    currency?: string | null;
+    /**
+     * Rupees for the unit of the currency, more than 0 and at most 1,000,000, with at most four decimal places.
+     */
+    rate?: number | null;
+    /**
+     * Day the rate is for, today or earlier by India's time.
+     */
+    rateDate?: DateOnly | null;
+    /**
+     * Where the rate comes from, such as FBIL reference rate; absent or blank when not given.
+     */
+    source?: string | null;
+    /**
+     * Units of the currency the rate is for: 1, 10, 100, 1,000, 10,000 or 100,000, as the source quotes it.
+     */
+    unit?: number | null;
+}
 export interface RecordPositionRequest extends AdditionalDataHolder, Parsable {
     /**
      * Department the person is in from that date; absent puts them in none.
@@ -2455,6 +3098,46 @@ export function serializeChooseOwnThemeRequest(writer: SerializationWriter, choo
 }
 /**
  * Serializes information the current object
+ * @param CorrectExchangeRateRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeCorrectExchangeRateRequest(writer: SerializationWriter, correctExchangeRateRequest: Partial<CorrectExchangeRateRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!correctExchangeRateRequest || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("rate", correctExchangeRateRequest.rate);
+    writer.writeStringValue("source", correctExchangeRateRequest.source);
+    writer.writeNumberValue("unit", correctExchangeRateRequest.unit);
+    writer.writeStringValue("version", correctExchangeRateRequest.version);
+    writer.writeAdditionalData(correctExchangeRateRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param CountriesResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeCountriesResponse(writer: SerializationWriter, countriesResponse: Partial<CountriesResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!countriesResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<CountryResponse>("countries", countriesResponse.countries, serializeCountryResponse);
+    writer.writeAdditionalData(countriesResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param CountryResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeCountryResponse(writer: SerializationWriter, countryResponse: Partial<CountryResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!countryResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("code", countryResponse.code);
+    writer.writeStringValue("name", countryResponse.name);
+    writer.writeAdditionalData(countryResponse.additionalData);
+}
+/**
+ * Serializes information the current object
  * @param CreateDepartmentRequest The instance to serialize from.
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param writer Serialization writer to use to serialize this model
@@ -2477,6 +3160,32 @@ export function serializeCreateDesignationRequest(writer: SerializationWriter, c
     if (!createDesignationRequest || isSerializingDerivedType) { return; }
     writer.writeStringValue("name", createDesignationRequest.name);
     writer.writeAdditionalData(createDesignationRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param CurrenciesResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeCurrenciesResponse(writer: SerializationWriter, currenciesResponse: Partial<CurrenciesResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!currenciesResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<CurrencyResponse>("currencies", currenciesResponse.currencies, serializeCurrencyResponse);
+    writer.writeAdditionalData(currenciesResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param CurrencyResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeCurrencyResponse(writer: SerializationWriter, currencyResponse: Partial<CurrencyResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!currencyResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("code", currencyResponse.code);
+    writer.writeNumberValue("minorUnits", currencyResponse.minorUnits);
+    writer.writeStringValue("name", currencyResponse.name);
+    writer.writeAdditionalData(currencyResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -2596,6 +3305,24 @@ export function serializeDownloadLinkResponse(writer: SerializationWriter, downl
 }
 /**
  * Serializes information the current object
+ * @param ExchangeRateResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeExchangeRateResponse(writer: SerializationWriter, exchangeRateResponse: Partial<ExchangeRateResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!exchangeRateResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("currency", exchangeRateResponse.currency);
+    writer.writeGuidValue("id", exchangeRateResponse.id);
+    writer.writeNumberValue("rate", exchangeRateResponse.rate);
+    writer.writeDateOnlyValue("rateDate", exchangeRateResponse.rateDate);
+    writer.writeStringValue("source", exchangeRateResponse.source);
+    writer.writeNumberValue("unit", exchangeRateResponse.unit);
+    writer.writeStringValue("version", exchangeRateResponse.version);
+    writer.writeAdditionalData(exchangeRateResponse.additionalData);
+}
+/**
+ * Serializes information the current object
  * @param FeaturesResponse The instance to serialize from.
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param writer Serialization writer to use to serialize this model
@@ -2618,6 +3345,65 @@ export function serializeFeatureStateResponse(writer: SerializationWriter, featu
     writer.writeBooleanValue("enabled", featureStateResponse.enabled);
     writer.writeStringValue("name", featureStateResponse.name);
     writer.writeAdditionalData(featureStateResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param FinancialPeriodResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeFinancialPeriodResponse(writer: SerializationWriter, financialPeriodResponse: Partial<FinancialPeriodResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!financialPeriodResponse || isSerializingDerivedType) { return; }
+    writer.writeDateOnlyValue("end", financialPeriodResponse.end);
+    writer.writeStringValue("label", financialPeriodResponse.label);
+    writer.writeNumberValue("number", financialPeriodResponse.number);
+    writer.writeNumberValue("quarter", financialPeriodResponse.quarter);
+    writer.writeDateOnlyValue("start", financialPeriodResponse.start);
+    writer.writeAdditionalData(financialPeriodResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param FinancialQuarterResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeFinancialQuarterResponse(writer: SerializationWriter, financialQuarterResponse: Partial<FinancialQuarterResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!financialQuarterResponse || isSerializingDerivedType) { return; }
+    writer.writeDateOnlyValue("end", financialQuarterResponse.end);
+    writer.writeStringValue("label", financialQuarterResponse.label);
+    writer.writeNumberValue("number", financialQuarterResponse.number);
+    writer.writeDateOnlyValue("start", financialQuarterResponse.start);
+    writer.writeAdditionalData(financialQuarterResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param FinancialYearResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeFinancialYearResponse(writer: SerializationWriter, financialYearResponse: Partial<FinancialYearResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!financialYearResponse || isSerializingDerivedType) { return; }
+    writer.writeDateOnlyValue("end", financialYearResponse.end);
+    writer.writeStringValue("label", financialYearResponse.label);
+    writer.writeCollectionOfObjectValues<FinancialPeriodResponse>("periods", financialYearResponse.periods, serializeFinancialPeriodResponse);
+    writer.writeCollectionOfObjectValues<FinancialQuarterResponse>("quarters", financialYearResponse.quarters, serializeFinancialQuarterResponse);
+    writer.writeDateOnlyValue("start", financialYearResponse.start);
+    writer.writeAdditionalData(financialYearResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param FinancialYearsResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeFinancialYearsResponse(writer: SerializationWriter, financialYearsResponse: Partial<FinancialYearsResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!financialYearsResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<FinancialYearResponse>("years", financialYearsResponse.years, serializeFinancialYearResponse);
+    writer.writeAdditionalData(financialYearsResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -2648,6 +3434,75 @@ export function serializeHttpValidationProblemDetails(writer: SerializationWrite
 export function serializeHttpValidationProblemDetails_errors(writer: SerializationWriter, httpValidationProblemDetails_errors: Partial<HttpValidationProblemDetails_errors> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
     if (!httpValidationProblemDetails_errors || isSerializingDerivedType) { return; }
     writer.writeAdditionalData(httpValidationProblemDetails_errors.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ImportedExchangeRateRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeImportedExchangeRateRequest(writer: SerializationWriter, importedExchangeRateRequest: Partial<ImportedExchangeRateRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!importedExchangeRateRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("currency", importedExchangeRateRequest.currency);
+    writer.writeNumberValue("rate", importedExchangeRateRequest.rate);
+    writer.writeDateOnlyValue("rateDate", importedExchangeRateRequest.rateDate);
+    writer.writeStringValue("source", importedExchangeRateRequest.source);
+    writer.writeNumberValue("unit", importedExchangeRateRequest.unit);
+    writer.writeAdditionalData(importedExchangeRateRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ImportedExchangeRatesResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeImportedExchangeRatesResponse(writer: SerializationWriter, importedExchangeRatesResponse: Partial<ImportedExchangeRatesResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!importedExchangeRatesResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("recorded", importedExchangeRatesResponse.recorded);
+    writer.writeNumberValue("unchanged", importedExchangeRatesResponse.unchanged);
+    writer.writeAdditionalData(importedExchangeRatesResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ImportExchangeRatesRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeImportExchangeRatesRequest(writer: SerializationWriter, importExchangeRatesRequest: Partial<ImportExchangeRatesRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!importExchangeRatesRequest || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<ImportedExchangeRateRequest>("rates", importExchangeRatesRequest.rates, serializeImportedExchangeRateRequest);
+    writer.writeAdditionalData(importExchangeRatesRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param IndianStateResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeIndianStateResponse(writer: SerializationWriter, indianStateResponse: Partial<IndianStateResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!indianStateResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("gstCode", indianStateResponse.gstCode);
+    writer.writeEnumValue<IndianStateKind>("kind", indianStateResponse.kind);
+    writer.writeStringValue("name", indianStateResponse.name);
+    writer.writeDateOnlyValue("validFrom", indianStateResponse.validFrom);
+    writer.writeDateOnlyValue("validUntil", indianStateResponse.validUntil);
+    writer.writeAdditionalData(indianStateResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param IndianStatesResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeIndianStatesResponse(writer: SerializationWriter, indianStatesResponse: Partial<IndianStatesResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!indianStatesResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<IndianStateResponse>("states", indianStatesResponse.states, serializeIndianStateResponse);
+    writer.writeAdditionalData(indianStatesResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -2860,6 +3715,22 @@ export function serializePagedResponseOfDesignationResponse(writer: Serializatio
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfExchangeRateResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfExchangeRateResponse(writer: SerializationWriter, pagedResponseOfExchangeRateResponse: Partial<PagedResponseOfExchangeRateResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfExchangeRateResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<ExchangeRateResponse>("items", pagedResponseOfExchangeRateResponse.items, serializeExchangeRateResponse);
+    writer.writeNumberValue("page", pagedResponseOfExchangeRateResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfExchangeRateResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfExchangeRateResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfExchangeRateResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfExchangeRateResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param PagedResponseOfJobRunResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -3054,6 +3925,22 @@ export function serializeRecentStartupsResponse(writer: SerializationWriter, rec
     if (!recentStartupsResponse || isSerializingDerivedType) { return; }
     writer.writeCollectionOfObjectValues<StartupResponse>("startups", recentStartupsResponse.startups, serializeStartupResponse);
     writer.writeAdditionalData(recentStartupsResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param RecordExchangeRateRequest The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeRecordExchangeRateRequest(writer: SerializationWriter, recordExchangeRateRequest: Partial<RecordExchangeRateRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!recordExchangeRateRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("currency", recordExchangeRateRequest.currency);
+    writer.writeNumberValue("rate", recordExchangeRateRequest.rate);
+    writer.writeDateOnlyValue("rateDate", recordExchangeRateRequest.rateDate);
+    writer.writeStringValue("source", recordExchangeRateRequest.source);
+    writer.writeNumberValue("unit", recordExchangeRateRequest.unit);
+    writer.writeAdditionalData(recordExchangeRateRequest.additionalData);
 }
 /**
  * Serializes information the current object
@@ -3403,6 +4290,11 @@ export const ErpRoleObject = {
     Manager: "manager",
     Administrator: "administrator",
 } as const;
+export const IndianStateKindObject = {
+    State: "state",
+    UnionTerritory: "unionTerritory",
+    OtherTerritory: "otherTerritory",
+} as const;
 export const JobActorKindObject = {
     Person: "person",
     System: "system",
@@ -3455,6 +4347,10 @@ export const PermissionObject = {
     PlatformJobsRunsCancel: "platform.jobs.runs.cancel",
     PlatformJobsRunsRead: "platform.jobs.runs.read",
     PlatformJobsRunsRerun: "platform.jobs.runs.rerun",
+    PlatformReferenceDataExchangeRatesCorrect: "platform.reference-data.exchange-rates.correct",
+    PlatformReferenceDataExchangeRatesRead: "platform.reference-data.exchange-rates.read",
+    PlatformReferenceDataExchangeRatesRecord: "platform.reference-data.exchange-rates.record",
+    PlatformReferenceDataListsRead: "platform.reference-data.lists.read",
     PlatformSystemInfoInfoRead: "platform.system-info.info.read",
     PlatformSystemInfoStartupsRead: "platform.system-info.startups.read",
 } as const;

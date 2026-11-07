@@ -5955,6 +5955,1167 @@
         ]
       }
     },
+    "/api/platform/reference-data/countries": {
+      "get": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Lists every country the ERP knows by name, with its ISO 3166-1 alpha-2 code.",
+        "operationId": "Platform.ReferenceData.ListCountries",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountriesResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/reference-data/indian-states": {
+      "get": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Lists India's States and Union Territories with their GST State codes, those of one date or every code with its dates.",
+        "operationId": "Platform.ReferenceData.ListIndianStates",
+        "parameters": [
+          {
+            "name": "on",
+            "in": "query",
+            "description": "Date whose State codes are wanted, as yyyy-MM-dd; absent lists every code with the dates it applies to.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndianStatesResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/reference-data/currencies": {
+      "get": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Lists every currency an amount in the ERP can be in, by code, with its name and decimal places.",
+        "operationId": "Platform.ReferenceData.ListCurrencies",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrenciesResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/reference-data/financial-years": {
+      "get": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Lists the financial years from one to another, each with its quarters and its twelve monthly periods from April.",
+        "operationId": "Platform.ReferenceData.ListFinancialYears",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "description": "First financial year to list, by its label such as 2024-25.",
+            "required": true,
+            "schema": {
+              "maxLength": 7,
+              "minLength": 0,
+              "pattern": "^[0-9]{4}-[0-9]{2}$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Last financial year to list, by its label such as 2027-28; at most 49 years after the first.",
+            "required": true,
+            "schema": {
+              "maxLength": 7,
+              "minLength": 0,
+              "pattern": "^[0-9]{4}-[0-9]{2}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialYearsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/reference-data/exchange-rates": {
+      "get": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Lists the exchange rates, the newest day first unless the caller sorts them.",
+        "operationId": "Platform.ReferenceData.ListExchangeRates",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number, from 1; the first page when absent.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Items per page, from 1 to 200; 50 when absent.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Comma-separated field:asc or field:desc terms over the fields the endpoint allows.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "Semicolon-separated field:operator:value terms over the fields the endpoint allows; values are percent-encoded and an in-list separates its values with |.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfExchangeRateResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Records the rupee value of a foreign currency for one day.",
+        "operationId": "Platform.ReferenceData.RecordExchangeRate",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "A UUID chosen by the client for this request; repeating the request with the same key replays the first response instead of acting twice.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordExchangeRateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRateResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/platform/reference-data/exchange-rates/{id}": {
+      "get": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Describes one exchange rate.",
+        "operationId": "Platform.ReferenceData.GetExchangeRate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRateResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Corrects the rate, unit and source of an exchange rate.",
+        "operationId": "Platform.ReferenceData.CorrectExchangeRate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectExchangeRateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRateResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Removes an exchange rate recorded by mistake; its currency and day can then be recorded again.",
+        "operationId": "Platform.ReferenceData.RemoveExchangeRate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/platform/reference-data/exchange-rates/imports": {
+      "post": {
+        "tags": [
+          "Platform.ReferenceData"
+        ],
+        "summary": "Records the rates of a file all together, leaving alone those already recorded with the same rate, or none of them when a rate cannot be recorded.",
+        "operationId": "Platform.ReferenceData.ImportExchangeRates",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "A UUID chosen by the client for this request; repeating the request with the same key replays the first response instead of acting twice.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportExchangeRatesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportedExchangeRatesResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
     "/api/platform/features": {
       "get": {
         "tags": [
@@ -6272,6 +7433,80 @@
           }
         }
       },
+      "CorrectExchangeRateRequest": {
+        "required": [
+          "rate",
+          "unit",
+          "source",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "rate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Rupees for the unit of the currency, more than 0 and at most 1,000,000, with at most four decimal places.",
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Units of the currency the rate is for: 1, 10, 100, 1,000, 10,000 or 100,000, as the source quotes it.",
+            "format": "int32"
+          },
+          "source": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Where the rate comes from, such as FBIL reference rate; absent or blank when not given."
+          },
+          "version": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Version of the rate the correction was made from, as the API last returned it."
+          }
+        }
+      },
+      "CountriesResponse": {
+        "required": [
+          "countries"
+        ],
+        "type": "object",
+        "properties": {
+          "countries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountryResponse"
+            }
+          }
+        }
+      },
+      "CountryResponse": {
+        "required": [
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "CreateDepartmentRequest": {
         "required": [
           "name",
@@ -6312,6 +7547,40 @@
               "string"
             ],
             "description": "Name of the designation, unique among the designations."
+          }
+        }
+      },
+      "CurrenciesResponse": {
+        "required": [
+          "currencies"
+        ],
+        "type": "object",
+        "properties": {
+          "currencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurrencyResponse"
+            }
+          }
+        }
+      },
+      "CurrencyResponse": {
+        "required": [
+          "code",
+          "name",
+          "minorUnits"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "minorUnits": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -6518,6 +7787,48 @@
           "administrator"
         ]
       },
+      "ExchangeRateResponse": {
+        "required": [
+          "id",
+          "currency",
+          "rateDate",
+          "rate",
+          "unit",
+          "source",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "rateDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "unit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "source": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
       "FeaturesResponse": {
         "required": [
           "features"
@@ -6544,6 +7855,112 @@
           },
           "enabled": {
             "type": "boolean"
+          }
+        }
+      },
+      "FinancialPeriodResponse": {
+        "required": [
+          "number",
+          "label",
+          "quarter",
+          "start",
+          "end"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          },
+          "quarter": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "FinancialQuarterResponse": {
+        "required": [
+          "number",
+          "label",
+          "start",
+          "end"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "FinancialYearResponse": {
+        "required": [
+          "label",
+          "start",
+          "end",
+          "quarters",
+          "periods"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string",
+            "format": "date"
+          },
+          "end": {
+            "type": "string",
+            "format": "date"
+          },
+          "quarters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancialQuarterResponse"
+            }
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancialPeriodResponse"
+            }
+          }
+        }
+      },
+      "FinancialYearsResponse": {
+        "required": [
+          "years"
+        ],
+        "type": "object",
+        "properties": {
+          "years": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancialYearResponse"
+            }
           }
         }
       },
@@ -6598,6 +8015,151 @@
           "traceId": {
             "type": "string",
             "description": "Correlation id of the request, the same value the X-Correlation-ID response header carries."
+          }
+        }
+      },
+      "ImportedExchangeRateRequest": {
+        "required": [
+          "currency",
+          "rateDate",
+          "rate",
+          "unit",
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "maxLength": 3,
+            "minLength": 0,
+            "pattern": "^[A-Z]{3}$",
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "ISO 4217 code of the foreign currency, such as USD; never INR."
+          },
+          "rateDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Day the rate is for, today or earlier by India's time.",
+            "format": "date"
+          },
+          "rate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Rupees for the unit of the currency, more than 0 and at most 1,000,000, with at most four decimal places.",
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Units of the currency the rate is for: 1, 10, 100, 1,000, 10,000 or 100,000, as the source quotes it.",
+            "format": "int32"
+          },
+          "source": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Where the rate comes from, such as FBIL reference rate; absent or blank when not given."
+          }
+        }
+      },
+      "ImportedExchangeRatesResponse": {
+        "required": [
+          "recorded",
+          "unchanged"
+        ],
+        "type": "object",
+        "properties": {
+          "recorded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unchanged": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ImportExchangeRatesRequest": {
+        "required": [
+          "rates"
+        ],
+        "type": "object",
+        "properties": {
+          "rates": {
+            "maxItems": 1000,
+            "minItems": 1,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ImportedExchangeRateRequest"
+            },
+            "description": "The rates of the file, in its order, at most 1,000; recorded all together or not at all."
+          }
+        }
+      },
+      "IndianStateKind": {
+        "enum": [
+          "state",
+          "unionTerritory",
+          "otherTerritory"
+        ]
+      },
+      "IndianStateResponse": {
+        "required": [
+          "gstCode",
+          "name",
+          "kind",
+          "validFrom",
+          "validUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "gstCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/IndianStateKind"
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "validUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "IndianStatesResponse": {
+        "required": [
+          "states"
+        ],
+        "type": "object",
+        "properties": {
+          "states": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndianStateResponse"
+            }
           }
         }
       },
@@ -7171,6 +8733,40 @@
           }
         }
       },
+      "PagedResponseOfExchangeRateResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExchangeRateResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfJobRunResponse": {
         "required": [
           "items",
@@ -7335,6 +8931,10 @@
           "platform.jobs.runs.cancel",
           "platform.jobs.runs.read",
           "platform.jobs.runs.rerun",
+          "platform.reference-data.exchange-rates.correct",
+          "platform.reference-data.exchange-rates.read",
+          "platform.reference-data.exchange-rates.record",
+          "platform.reference-data.lists.read",
           "platform.system-info.info.read",
           "platform.system-info.startups.read"
         ]
@@ -7736,6 +9336,61 @@
             "items": {
               "$ref": "#/components/schemas/StartupResponse"
             }
+          }
+        }
+      },
+      "RecordExchangeRateRequest": {
+        "required": [
+          "currency",
+          "rateDate",
+          "rate",
+          "unit",
+          "source"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "maxLength": 3,
+            "minLength": 0,
+            "pattern": "^[A-Z]{3}$",
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "ISO 4217 code of the foreign currency, such as USD; never INR."
+          },
+          "rateDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Day the rate is for, today or earlier by India's time.",
+            "format": "date"
+          },
+          "rate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Rupees for the unit of the currency, more than 0 and at most 1,000,000, with at most four decimal places.",
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Units of the currency the rate is for: 1, 10, 100, 1,000, 10,000 or 100,000, as the source quotes it.",
+            "format": "int32"
+          },
+          "source": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Where the rate comes from, such as FBIL reference rate; absent or blank when not given."
           }
         }
       },
@@ -8161,6 +9816,9 @@
     },
     {
       "name": "Identity.Users"
+    },
+    {
+      "name": "Platform.ReferenceData"
     },
     {
       "name": "Platform.Features"

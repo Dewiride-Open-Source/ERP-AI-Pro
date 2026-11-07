@@ -36,6 +36,13 @@
       }
     },
     {
+      "id": "Erp.Modules.Platform.ReferenceData",
+      "enabled": {
+        "local-dev": true,
+        "production": true
+      }
+    },
+    {
       "id": "Erp.Platform.Identity.BearerTokens",
       "enabled": {
         "local-dev": false,
