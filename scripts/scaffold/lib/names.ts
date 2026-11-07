@@ -24,33 +24,126 @@ export type ScaffoldInput = {
 const pascalName = /^(?:[A-Z][a-z0-9]+)+$/;
 const wordBoundary = /(?<=[a-z0-9])(?=[A-Z])/;
 const proseWords = /^[a-z][a-z0-9]*(?: [a-z][a-z0-9]*)*$/;
-const oneSentence = /^[A-Z][^.!?\r\n]*\.$/;
+const oneSentence = /^[A-Z][A-Za-z0-9 ,;:'()/-]*\.$/;
 const shortTitle = /^[A-Z][A-Za-z0-9]*(?: [A-Za-z0-9]+)*$/;
 const iconName = /^[A-Z][A-Za-z0-9]*Icon$/;
 const titleMaxLength = 40;
+const changeKeyMaxLength = 64;
 
 const reservedRouteDomains = new Set(["auth", "api", "login", "profile", "design", "healthz", "openapi", "scalar"]);
-const reservedTypeNames = new Set([
+const reservedClientNames = new Set([
+  "any",
+  "as",
+  "async",
+  "await",
+  "boolean",
+  "break",
+  "case",
+  "catch",
+  "class",
+  "const",
+  "constructor",
+  "continue",
+  "debugger",
+  "declare",
+  "default",
+  "delete",
+  "do",
+  "else",
+  "enum",
+  "export",
+  "extends",
+  "false",
+  "finally",
+  "for",
+  "from",
+  "function",
+  "get",
+  "if",
+  "implements",
+  "import",
+  "in",
+  "instanceof",
+  "interface",
+  "is",
+  "keyof",
+  "let",
+  "module",
+  "namespace",
+  "never",
+  "new",
+  "null",
+  "number",
+  "object",
+  "of",
+  "package",
+  "private",
+  "protected",
+  "public",
+  "readonly",
+  "require",
+  "return",
+  "set",
+  "static",
+  "string",
+  "super",
+  "switch",
+  "symbol",
+  "this",
+  "throw",
+  "true",
+  "try",
+  "type",
+  "typeof",
+  "undefined",
+  "unique",
+  "unknown",
+  "var",
+  "void",
+  "while",
+  "with",
+  "yield",
+]);
+const reservedNames = new Set([
   "Action",
+  "Application",
   "Attribute",
+  "BuildingBlocks",
+  "Commands",
+  "Contracts",
   "Delegate",
   "Dewiride",
+  "Domain",
+  "Endpoints",
   "Enum",
+  "Erp",
   "Error",
   "Errors",
   "Exception",
   "Guid",
+  "Hosts",
+  "Integration",
+  "IntegrationTests",
+  "Kernel",
   "Microsoft",
   "Module",
+  "Modules",
   "Object",
+  "Persistence",
+  "Queries",
+  "Requests",
+  "Responses",
   "Result",
   "Results",
   "Shouldly",
   "String",
   "System",
   "Task",
+  "Testing",
+  "Tests",
   "Type",
   "TypedResults",
+  "UnitTests",
   "Xunit",
 ]);
 
@@ -66,29 +159,58 @@ export function formsOf(pascal: string): NameForms {
 }
 
 export function nameProblems(input: ScaffoldInput): string[] {
+  const names = { domain: input.domain, module: input.module, entity: input.entity, entities: input.entities };
+  const malformed = Object.entries(names).flatMap(([role, name]) =>
+    pascalName.test(name) ? [] : [`the ${role} "${name}" is not PascalCase words of letters and digits, each starting with a capital`],
+  );
+
+  return [...malformed, ...namingClashes(input), ...textProblems(input)];
+}
+
+function namingClashes(input: ScaffoldInput): string[] {
   const problems: string[] = [];
   const names = { domain: input.domain, module: input.module, entity: input.entity, entities: input.entities };
-  for (const [role, name] of Object.entries(names)) {
-    if (!pascalName.test(name)) problems.push(`the ${role} "${name}" is not PascalCase words of letters and digits, each starting with a capital`);
-    else if (reservedTypeNames.has(name)) problems.push(`the ${role} "${name}" would shadow a type or namespace the generated code uses`);
+  for (const [role, name] of Object.entries(names).filter(([, name]) => pascalName.test(name))) {
+    if (reservedNames.has(name)) problems.push(`the ${role} "${name}" would shadow a type or namespace the generated code uses`);
+    if (role !== "entity" && reservedClientNames.has(formsOf(name).camel)) {
+      problems.push(`the ${role} "${name}" becomes the API client property "${formsOf(name).camel}", a word the client generator renames`);
+    }
   }
+
+  for (const [role, name] of Object.entries({ module: input.module, domain: input.domain })) {
+    if (input.entity === name) problems.push(`the entity "${input.entity}" is also the ${role}, whose namespace would hide the entity's type`);
+  }
+
+  if (input.entity === input.entities) problems.push(`the entity and its plural are both "${input.entity}"`);
 
   if (pascalName.test(input.module) && formsOf(input.module).words.split(" ").at(-1) === "ai") {
     problems.push(`the module "${input.module}" ends in Ai, the name of an Enterprise companion module`);
   }
 
-  if (pascalName.test(input.domain) && reservedRouteDomains.has(formsOf(input.domain).kebab)) {
-    problems.push(`the domain "${input.domain}" would take the route /${formsOf(input.domain).kebab}, which the API or the web app already uses`);
+  const route = formsOf(input.domain).kebab;
+  if (pascalName.test(input.domain) && reservedRouteDomains.has(route)) {
+    problems.push(`the domain "${input.domain}" would take the route /${route}, which the API or the web app already uses`);
   }
 
-  if (input.entity === input.entities) problems.push(`the entity and its plural are both "${input.entity}"`);
+  const keyNames = [input.domain, input.module, input.entities];
+  const changeKey = keyNames.map((name) => formsOf(name).kebab).join(".");
+  if (keyNames.every((name) => pascalName.test(name)) && changeKey.length > changeKeyMaxLength) {
+    problems.push(`the change key "${changeKey}" is longer than the ${changeKeyMaxLength} characters a change record keeps`);
+  }
 
+  return problems;
+}
+
+function textProblems(input: ScaffoldInput): string[] {
+  const problems: string[] = [];
   for (const [role, words] of Object.entries({ singular: input.singular, plural: input.plural })) {
     if (words !== undefined && !proseWords.test(words)) problems.push(`the ${role} "${words}" is not lower-case words separated by single spaces`);
   }
 
   for (const [role, sentence] of Object.entries({ description: input.description, "read permission": input.readSentence, "create permission": input.createSentence })) {
-    if (!oneSentence.test(sentence)) problems.push(`the ${role} "${sentence}" is not one sentence that starts with a capital and ends with a full stop`);
+    if (!oneSentence.test(sentence)) {
+      problems.push(`the ${role} "${sentence}" is not one sentence of letters, digits, spaces and , ; : ' ( ) / - that starts with a capital and ends with a full stop`);
+    }
   }
 
   for (const [role, title] of Object.entries({ title: input.title, "area title": input.areaTitle })) {

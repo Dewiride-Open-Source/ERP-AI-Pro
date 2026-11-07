@@ -1,0 +1,7 @@
+__Domain__ / __Module__ routes (every __entity-words__ is `{ id, name }`):
+
+| Route | Name | Permission | Answers |
+|---|---|---|---|
+| `GET /api/__domain-kebab__/__module-kebab__/__entities-kebab__` | `__Domain__.__Module__.List__Entities__` | `__domain-kebab__.__module-kebab__.__entities-kebab__.read` | `200` `{ items, page, pageSize, totalCount, totalPages }`, by name unless sorted; `page`, `pageSize` (1 to 200, default 50), `sort` and `filter` over `name`; 400 `query.*` |
+| `GET /api/__domain-kebab__/__module-kebab__/__entities-kebab__/{id}` | `__Domain__.__Module__.Get__Entity__` | `__domain-kebab__.__module-kebab__.__entities-kebab__.read` | `200` the __entity-words__; 404 `__entity-kebab__.not-found` |
+| `POST /api/__domain-kebab__/__module-kebab__/__entities-kebab__` | `__Domain__.__Module__.Create__Entity__` | `__domain-kebab__.__module-kebab__.__entities-kebab__.create` | `{ name }` with an `Idempotency-Key`, the name kept without the spaces at either end; `201` with `Location: /api/__domain-kebab__/__module-kebab__/__entities-kebab__/{id}` and the __entity-words__; 400 `request.invalid` keyed `name` (a missing name, or one over 100 characters), `__entity-kebab__.name-required` (a name of spaces alone); the idempotency answers of `application-pipeline.md` |

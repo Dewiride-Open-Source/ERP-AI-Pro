@@ -49,6 +49,32 @@ test("an entity equal to its plural, prose that is not lower-case words, and tex
   assert.equal(problems.length, 7);
 });
 
+test("an entity named as its module, its domain or a generated folder, and a change key beyond 64 characters, are refused", () => {
+  const problemsOf = (input: ScaffoldInput) => nameProblems(input).join("\n");
+  assert.match(problemsOf({ ...valid, module: "Notes", entity: "Notes", entities: "NoteSets" }), /the entity "Notes" is also the module/);
+  assert.match(problemsOf({ ...valid, entity: "ScaffoldProof" }), /the entity "ScaffoldProof" is also the domain/);
+  assert.match(problemsOf({ ...valid, entity: "Application", entities: "Applications" }), /the entity "Application" would shadow/);
+  assert.match(problemsOf({ ...valid, module: "Contracts" }), /the module "Contracts" would shadow/);
+  assert.match(problemsOf({ ...valid, entities: "VeryLongLedgerNotesKeptForTheScaffoldProofOfEveryBranch" }), /longer than the 64 characters/);
+});
+
+test("a single-word domain, module or plural that becomes a reserved word of the API client is refused, and a longer name holding one is not", () => {
+  const problemsOf = (input: ScaffoldInput) => nameProblems(input).join("\n");
+  assert.match(problemsOf({ ...valid, domain: "Default" }), /the domain "Default" becomes the API client property "default"/);
+  assert.match(problemsOf({ ...valid, module: "New" }), /the module "New" becomes the API client property "new"/);
+  assert.deepEqual(nameProblems({ ...valid, module: "DefaultSettings", entities: "Returns", entity: "Return" }), []);
+});
+
+test("a sentence with a character that would break a string literal or a table of the docs is refused, while every sentence the modules use passes", () => {
+  for (const sentence of ['Says "hello".', "A back\\slash.", "A | pipe.", "A {brace}.", "A `tick`."]) {
+    assert.equal(nameProblems({ ...valid, readSentence: sentence }).length, 1, sentence);
+  }
+
+  for (const sentence of ["See the company's departments and which department each one sits under.", "See the work the ERP does on its own, when it runs next, and how each run went.", "Upload and download the files kept with the ERP."]) {
+    assert.deepEqual(nameProblems({ ...valid, readSentence: sentence }), [], sentence);
+  }
+});
+
 test("tokens carry every form of the four names, the prose overrides and the texts", () => {
   const tokens = tokensOf({ ...valid, singular: "note on a ledger", plural: "notes on ledgers" });
   assert.equal(tokens.get("__Domain__"), "ScaffoldProof");
