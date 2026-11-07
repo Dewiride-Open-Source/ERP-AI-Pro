@@ -42,7 +42,7 @@ A module that starts publishing integration events declares `public DbSet<Outbox
 
 | Where | How |
 |---|---|
-| Your machine | `node scripts/ef/ef.ts update --all`, or the migrator: `cd backend && dotnet run --project Hosts/Migrator/Dewiride.Erp.Host.Migrator` (launch profile `migrate`; `--launch-profile status` lists what is pending) |
+| Your machine | `node scripts/ef/ef.ts update --all`, which applies migrations alone, or the migrator, which also runs the seeders (the countries and GST State codes of `Platform/ReferenceData` among them): `cd backend && dotnet run --project Hosts/Migrator/Dewiride.Erp.Host.Migrator` (launch profile `migrate`; `--launch-profile status` lists what is pending) |
 | Local containers | the compose `migrator` service runs before the `api` service on every `up`, signing in as the `erp_local_migrator` SQL login (`db_ddladmin`, `db_datareader`, `db_datawriter`, the database permission `CREATE ROLE` and `CONTROL` on the schema `audit`; [local development](local-development.md), section "Containers") |
 | Tests | the `SqlTestDatabase` assembly fixture migrates and seeds a fresh database per test process through the same composition |
 | CI | `ci-backend.yml`'s test databases and `e2e.yml`'s end-to-end API hosts are migrated and seeded by `SqlTestDatabase` through `TestDatabaseHost`; `docker-build.yml` runs the compose stack, whose migrator container migrates the CI SQL Server |
@@ -82,22 +82,14 @@ The migrator creates the `files` schema but needs no `Erp:Platform:Attachments` 
 
 ## Seeding reference data
 
-A module seeds data it cannot work without (states, units, default settings) through a seeder:
+A module seeds data it cannot work without (countries, State codes, units, default settings) through a seeder, registered in its `AddServices`:
 
 ```csharp
-internal sealed class IndianStatesSeeder(TaxDbContext context) : ISeeder
-{
-    public async Task SeedAsync(CancellationToken cancellationToken)
-    {
-        // insert the states that are missing by their code; never update or delete existing rows
-    }
-}
-
-// in the module's AddServices
-builder.Services.AddSeeder<IndianStatesSeeder>(order: 100);
+builder.Services.AddSeeder<CountrySeeder>(100);
 ```
 
-- A seeder runs on every migrator run and in every test database, so it must leave the same rows however often it runs: insert what is missing by its natural key, never duplicate, never overwrite what a person changed.
+- A seeder runs on every migrator run and in every test database, so it must leave the same rows however often it runs: never duplicate, and never overwrite what a person changed.
+- Rows a person adds or changes are seeded by inserting what is missing by its natural key. Rows no person changes, such as the countries and GST State codes of `Platform/ReferenceData`, follow a file the module embeds (`CountrySeeder`, `IndianStateSeeder`): a missing row is added, a changed one follows the file and one the file does not list is deleted, each change recorded by the system ([ADR-0062](../adr/0062-reference-data-seeded-lists-every-iso-currency-dated-exchange-rates-and-financial-periods.md)).
 - Seeders run after every migration, ordered by `order` and then by type name, each in its own scope. Give a seeder that depends on another module's data a higher order.
-- Every seeder ships with a test that runs it twice and compares the rows (`SeedingTests` shows the pattern).
+- Every seeder ships with a test that runs it twice and compares the rows (`SeedingTests` shows the pattern; `ReferenceDataSeederTests` also proves that a seeder following a file puts back a changed row and deletes one the file does not list).
 - Statutory rates and thresholds are effective-dated parameter records with their government source, never literals in a seeder.

@@ -1432,7 +1432,8 @@
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-reference-data-module (ADR-0062): the GST State codes live in Platform/ReferenceData (`IndianStates`, each row dated by and citing its instrument, read by other modules through `IIndianStates` of its Contracts), so this item's \"State codes\" dataset is that module's, never a second copy."
         },
         {
           "id": "business-building-blocks-statutory-datasets-direct-tax-and-labour",
@@ -1547,7 +1548,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-reference-data-module (ADR-0062): a form takes its country, State and currency from Platform/ReferenceData by wrapping itself in `ReferenceListsProvider` (from `@/features/platform/reference-data`) and using `CountryPicker`, `IndianStatePicker` (with the document's date as `on`) and `CurrencyPicker`; the API checks a GSTIN's first two digits with `IIndianStates.FindAsync(gstCode, date)` and a country with `ICountries.FindAsync(code)`."
         },
         {
           "id": "clients-contacts",
@@ -1879,7 +1881,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-reference-data-module (ADR-0062): `Kernel.Time.FinancialPeriod` is the calendar month of a financial year (number 1 to 12 from April, its quarter, first and last day, label \"April 2026\"), with `FinancialYear.Periods` and `PeriodOf`, and Platform/ReferenceData answers `GET /api/platform/reference-data/financial-years?from=&to=` and exports `FinancialYearPicker` and `FinancialPeriodPicker` (value: the period's first day); this item's period records with their locks and opening balances take another name, because a second `FinancialPeriod` would be ambiguous wherever `Kernel.Time` is imported."
         },
         {
           "id": "finance-core-currency-and-fx",
@@ -1889,7 +1892,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-reference-data-module (ADR-0062): the rate table holds one undeleted rate per foreign currency and day, the rupees for a quotation unit of 1 to 100,000 as published (four decimals); `IExchangeRates.RateOnAsync(currency, date)` answers the latest rate on or before the date with its own date; `Money` holds the 155 ordinary ISO 4217 currencies, so rounding reads each currency's minor units (0, 2 or 3). The State Bank's telegraphic transfer buying rate for tax deducted on payments abroad (Income-tax Rules, 2026 rule 207; rule 26 before 1 April 2026) is not kept: the item that deducts that tax adds a rate kind (owner decision of 2026-11-07: one rate a day until then)."
         },
         {
           "id": "finance-core-gst-tax-engine",
@@ -2033,7 +2037,8 @@
           "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-reference-data-module (ADR-0062): the IRP's currency master lacks the ISO 4217 codes SLE, VED, XCG and ZWG (error 2203) that `Money` holds, so an invoice in one of them leaves the optional `ForCur` and `TotInvValFc` out; the country master is the 250 codes the ERP seeds (the 249 ISO 3166-1 codes and XK). A buyer outside India takes place-of-supply State code 96 and PIN 999999, codes the reference data module does not hold, since 96 is no State."
         },
         {
           "id": "finance-sales-recurring-and-retainer-billing",
