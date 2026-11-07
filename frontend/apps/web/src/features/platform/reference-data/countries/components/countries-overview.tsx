@@ -1,18 +1,20 @@
 import { GlobeIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import type { SearchParameters } from "@/shared/lists/list-query";
+import { SearchedList } from "@/shared/lists/searched/searched-list";
+import {
+  readSearchedListView,
+  searchedListHref,
+  type SearchedListAddress,
+  type SearchedListColumn,
+} from "@/shared/lists/searched/searched-list-view";
+
 import {
   ReferenceListFrame,
   ReferenceListUnavailable,
 } from "../../list-pages/components/reference-list-frame";
-import { countriesPage } from "../../list-pages/components/reference-list-pages";
-import {
-  readReferenceListView,
-  referenceListHref,
-  type ReferenceListColumn,
-  type SearchParameters,
-} from "../../list-pages/components/reference-list-view";
-import { SearchedReferenceList } from "../../list-pages/components/searched-reference-list";
+import { countriesPage, referenceListSearch } from "../../list-pages/components/reference-list-pages";
 import { readCountries } from "../../reference-lists/server/queries";
 
 export const countriesTitle = countriesPage.title;
@@ -21,14 +23,16 @@ const countriesPerPage = 20;
 
 const listHeadingId = "countries-heading";
 
-const countryColumns: readonly ReferenceListColumn[] = [
+const countriesAddress: SearchedListAddress = { path: countriesPage.path };
+
+const countryColumns: readonly SearchedListColumn[] = [
   { id: "name", header: "Name", title: true },
   { id: "code", header: "Code" },
 ];
 
 export async function CountriesOverview({ searchParameters }: { searchParameters: SearchParameters }) {
-  const { view, canonical } = readReferenceListView(searchParameters);
-  if (!canonical) redirect(referenceListHref(countriesPage.path, view));
+  const { view, canonical } = readSearchedListView(searchParameters);
+  if (!canonical) redirect(searchedListHref(countriesAddress, view));
   const list = await readCountries();
 
   return (
@@ -42,17 +46,17 @@ export async function CountriesOverview({ searchParameters }: { searchParameters
       testId="countries-card"
     >
       {list.status === "read" ? (
-        <SearchedReferenceList
+        <SearchedList
           items={list.items}
           pageSize={countriesPerPage}
           keysOf={(country) => country}
           rowOf={(country) => ({ id: country.code, cells: { code: country.code, name: country.name } })}
-          path={countriesPage.path}
+          address={countriesAddress}
           view={view}
           label={countriesTitle}
           labelledBy={listHeadingId}
           noun={{ one: "country", other: "countries" }}
-          searchExample="India or IN"
+          search={{ ...referenceListSearch, example: "India or IN" }}
           columns={countryColumns}
         />
       ) : (

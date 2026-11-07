@@ -28,7 +28,7 @@ const jobRunsMarker = "No runs match these filters.";
 
 const runActionsMarker = "job-run-rerun";
 
-const referenceListMarker = "reference-list-no-matches";
+const referenceListsTabsMarker = "reference-lists-tabs";
 
 const financialYearChooserMarker = "financial-year-chooser";
 
@@ -39,7 +39,7 @@ const exchangeRateImportMarker = "exchange-rate-template";
 const referencePickersMarker = "reference-pickers-form";
 
 const referenceDataMarkers = [
-  referenceListMarker,
+  referenceListsTabsMarker,
   financialYearChooserMarker,
   exchangeRatesMarker,
   exchangeRateImportMarker,
@@ -57,8 +57,8 @@ const otherModuleMarkers = [
   jobRunsMarker,
 ];
 
-function otherReferenceDataMarkers(own: string): string[] {
-  return referenceDataMarkers.filter((marker) => marker !== own);
+function otherReferenceDataMarkers(...own: readonly string[]): string[] {
+  return referenceDataMarkers.filter((marker) => !own.includes(marker));
 }
 
 const routes: readonly WebRoute[] = [
@@ -312,13 +312,16 @@ const routes: readonly WebRoute[] = [
   },
   {
     path: "/platform/reference-data",
-    ownMarkers: [referenceListMarker],
-    foreignMarkers: [...otherReferenceDataMarkers(referenceListMarker), ...otherModuleMarkers],
+    ownMarkers: [referenceListsTabsMarker],
+    foreignMarkers: [...otherReferenceDataMarkers(referenceListsTabsMarker), ...otherModuleMarkers],
   },
   {
     path: "/platform/reference-data/financial-years",
-    ownMarkers: [financialYearChooserMarker],
-    foreignMarkers: [...otherReferenceDataMarkers(financialYearChooserMarker), ...otherModuleMarkers],
+    ownMarkers: [financialYearChooserMarker, referenceListsTabsMarker],
+    foreignMarkers: [
+      ...otherReferenceDataMarkers(financialYearChooserMarker, referenceListsTabsMarker),
+      ...otherModuleMarkers,
+    ],
   },
   {
     path: "/platform/reference-data/exchange-rates",

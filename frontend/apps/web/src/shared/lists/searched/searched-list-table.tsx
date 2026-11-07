@@ -7,20 +7,20 @@ import {
   TableRow,
 } from "@dewiride/erp-ui/components/ui/table";
 
-import type { ReferenceListColumn, ReferenceListRow } from "./reference-list-view";
+import type { SearchedListColumn, SearchedListRow } from "./searched-list-view.ts";
 
 // The rows are drawn twice, as a table and as cards, and the width of the list's own box shows one of them, at the width
 // the data table changes at, so a list keeps its shape wherever a page places it. The title column leads the table, because
 // a row header names only the cells after it in its row.
-export function ReferenceListTable({
+export function SearchedListTable({
   labelledBy,
   columns,
   rows,
   pending = false,
 }: {
   labelledBy: string;
-  columns: readonly ReferenceListColumn[];
-  rows: readonly ReferenceListRow[];
+  columns: readonly SearchedListColumn[];
+  rows: readonly SearchedListRow[];
   pending?: boolean | undefined;
 }) {
   const title = columns.find((column) => column.title === true) ?? columns[0];
@@ -30,13 +30,13 @@ export function ReferenceListTable({
   return (
     <div
       data-pending={pending || undefined}
-      className="@container/reference-list min-w-0 transition-opacity duration-(--motion-duration-fast) data-pending:opacity-60"
+      className="@container/searched-list min-w-0 transition-opacity duration-(--motion-duration-fast) data-pending:opacity-60"
     >
       <Table
         aria-labelledby={labelledBy}
         aria-busy={pending || undefined}
-        data-testid="reference-list-table"
-        className="hidden @2xl/reference-list:table"
+        data-testid="searched-list-table"
+        className="hidden @2xl/searched-list:table"
       >
         <TableHeader>
           <TableRow>
@@ -49,7 +49,7 @@ export function ReferenceListTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} data-testid="reference-list-row">
+            <TableRow key={row.id} data-testid="searched-list-row">
               {tableColumns.map((column) =>
                 column === title ? (
                   <TableHead key={column.id} scope="row" className="h-auto p-2 whitespace-normal">
@@ -67,16 +67,16 @@ export function ReferenceListTable({
         role="list"
         aria-labelledby={labelledBy}
         aria-busy={pending || undefined}
-        data-testid="reference-list-cards"
-        className="grid gap-2 @2xl/reference-list:hidden"
+        data-testid="searched-list-cards"
+        className="grid gap-2 @2xl/searched-list:hidden"
       >
         {rows.map((row) => (
           <li
             key={row.id}
-            data-testid="reference-list-card"
+            data-testid="searched-list-card"
             className="grid gap-3 rounded-lg border bg-card p-3"
           >
-            <p data-testid="reference-list-card-title" className="font-medium break-words">
+            <p data-testid="searched-list-card-title" className="font-medium break-words">
               {title === undefined ? null : row.cells[title.id]}
             </p>
             {details.length > 0 ? (

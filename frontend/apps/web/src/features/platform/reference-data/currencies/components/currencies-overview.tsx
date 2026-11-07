@@ -1,18 +1,20 @@
 import { CoinsIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import type { SearchParameters } from "@/shared/lists/list-query";
+import { SearchedList } from "@/shared/lists/searched/searched-list";
+import {
+  readSearchedListView,
+  searchedListHref,
+  type SearchedListAddress,
+  type SearchedListColumn,
+} from "@/shared/lists/searched/searched-list-view";
+
 import {
   ReferenceListFrame,
   ReferenceListUnavailable,
 } from "../../list-pages/components/reference-list-frame";
-import { currenciesPage } from "../../list-pages/components/reference-list-pages";
-import {
-  readReferenceListView,
-  referenceListHref,
-  type ReferenceListColumn,
-  type SearchParameters,
-} from "../../list-pages/components/reference-list-view";
-import { SearchedReferenceList } from "../../list-pages/components/searched-reference-list";
+import { currenciesPage, referenceListSearch } from "../../list-pages/components/reference-list-pages";
 import { readCurrencies } from "../../reference-lists/server/queries";
 
 export const currenciesTitle = currenciesPage.title;
@@ -21,15 +23,17 @@ const currenciesPerPage = 20;
 
 const listHeadingId = "currencies-heading";
 
-const currencyColumns: readonly ReferenceListColumn[] = [
+const currenciesAddress: SearchedListAddress = { path: currenciesPage.path };
+
+const currencyColumns: readonly SearchedListColumn[] = [
   { id: "name", header: "Name", title: true },
   { id: "code", header: "Code" },
   { id: "decimals", header: "Decimal places" },
 ];
 
 export async function CurrenciesOverview({ searchParameters }: { searchParameters: SearchParameters }) {
-  const { view, canonical } = readReferenceListView(searchParameters);
-  if (!canonical) redirect(referenceListHref(currenciesPage.path, view));
+  const { view, canonical } = readSearchedListView(searchParameters);
+  if (!canonical) redirect(searchedListHref(currenciesAddress, view));
   const list = await readCurrencies();
 
   return (
@@ -43,7 +47,7 @@ export async function CurrenciesOverview({ searchParameters }: { searchParameter
       testId="currencies-card"
     >
       {list.status === "read" ? (
-        <SearchedReferenceList
+        <SearchedList
           items={list.items}
           pageSize={currenciesPerPage}
           keysOf={(currency) => currency}
@@ -51,12 +55,12 @@ export async function CurrenciesOverview({ searchParameters }: { searchParameter
             id: currency.code,
             cells: { code: currency.code, name: currency.name, decimals: String(currency.minorUnits) },
           })}
-          path={currenciesPage.path}
+          address={currenciesAddress}
           view={view}
           label={currenciesTitle}
           labelledBy={listHeadingId}
           noun={{ one: "currency", other: "currencies" }}
-          searchExample="US Dollar or USD"
+          search={{ ...referenceListSearch, example: "US Dollar or USD" }}
           columns={currencyColumns}
         />
       ) : (

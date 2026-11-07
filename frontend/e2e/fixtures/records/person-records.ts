@@ -1,7 +1,7 @@
-import { expect, type APIResponse } from "@playwright/test";
+import { expect, type APIRequestContext, type APIResponse } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-import type { SignedInPerson } from "../sign-in";
+import { requestTokenCookie, requestTokenHeader, signIn, type SignedInPerson } from "../sign-in";
 import type { SignedInApi } from "../test";
 
 export const peopleApi = "/api/identity/users";
@@ -99,6 +99,27 @@ export async function deactivatePersonRecord(
     data: { status: "deactivated", version: person.version },
   });
   expect(response.status(), `the deactivation of ${person.id}`).toBe(200);
+}
+
+// An administrator assigns the roles from a request context of their own, so the browser keeps the accountant's session, and
+// the roles count from the accountant's next request.
+export async function assignRoles(
+  request: APIRequestContext,
+  accountant: SignedInPerson | undefined,
+  roles: readonly PersonRole[],
+): Promise<void> {
+  await signIn(request, "administrator");
+  const id = await ownPersonRecordId(request, accountant);
+  const record = await request.get(`${peopleApi}/${id}`);
+  expect(record.status(), "the accountant's record").toBe(200);
+  const { version } = (await record.json()) as { version: string };
+  const token = (await request.storageState()).cookies.find((cookie) => cookie.name === requestTokenCookie);
+  expect(token, "the administrator's request token").toBeDefined();
+  const assigned = await request.put(`${peopleApi}/${id}/roles`, {
+    headers: { [requestTokenHeader]: decodeURIComponent(token?.value ?? "") },
+    data: { roles, version },
+  });
+  expect(assigned.status(), `the roles [${roles.join(", ")}] of the accountant`).toBe(200);
 }
 
 export async function createDepartmentRecord(

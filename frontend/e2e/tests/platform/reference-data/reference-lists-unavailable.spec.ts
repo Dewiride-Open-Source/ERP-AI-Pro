@@ -38,8 +38,8 @@ test.describe("reference lists without the API", () => {
       await expect(list.card).toBeVisible();
       await expect(list.unavailable).toHaveRole("status");
       await expect(list.unavailable).toHaveText("The list of countries could not be read. Try again later.");
-      await expect(list.search).toHaveCount(0);
-      await expect(list.list).toHaveCount(0);
+      await expect(list.entries.search).toHaveCount(0);
+      await expect(list.entries.root).toHaveCount(0);
       await capture("countries-unavailable");
     },
   );
@@ -57,8 +57,8 @@ test.describe("reference lists without the API", () => {
 
       await expect(page).toHaveTitle(`${definition.title} · ERP-AI-Pro`);
       await expect(list.unavailable, definition.title).toHaveText(message);
-      await expect(list.search, definition.title).toHaveCount(0);
-      await expect(list.list, definition.title).toHaveCount(0);
+      await expect(list.entries.search, definition.title).toHaveCount(0);
+      await expect(list.entries.root, definition.title).toHaveCount(0);
     }
 
     const years = new FinancialYearsPage(page);

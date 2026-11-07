@@ -1,7 +1,7 @@
 import type { IndianStateKind } from "@dewiride/erp-api-client";
 import { isIsoDate } from "@dewiride/erp-ui/lib/calendar-date";
 
-import { searchReferenceList } from "../../list-pages/components/reference-list-view.ts";
+import { searchByCodeOrName } from "@/shared/lists/searched/searched-list-view";
 
 export type ListRead<T> =
   | { readonly status: "read"; readonly items: readonly T[] }
@@ -101,7 +101,7 @@ export function matchReferenceOptions<T extends { readonly value: string; readon
   options: readonly T[],
   typed: string,
 ): readonly T[] {
-  return searchReferenceList(options, typed, (option) => ({ code: option.value, name: option.label }));
+  return searchByCodeOrName(options, typed, (option) => ({ code: option.value, name: option.label }));
 }
 
 export function countryOptions(

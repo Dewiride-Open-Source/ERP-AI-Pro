@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 
 import { withholdClientBundles } from "../../../fixtures/client-bundles";
 import {
-  assignRoles,
   exchangeRateApi,
   exchangeRateImportsApi,
   exchangeRatesApi,
@@ -13,6 +12,7 @@ import {
   removeRates,
   typedDate,
 } from "../../../fixtures/records/exchange-rate-records";
+import { assignRoles } from "../../../fixtures/records/person-records";
 import { expect, forEachTheme, test, themes } from "../../../fixtures/test";
 import {
   ExchangeRatePage,

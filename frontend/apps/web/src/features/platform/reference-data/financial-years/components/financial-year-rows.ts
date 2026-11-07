@@ -1,18 +1,16 @@
 import { formatDisplayDate } from "@dewiride/erp-ui/lib/calendar-date";
 
-import type {
-  ReferenceListColumn,
-  ReferenceListRow,
-} from "../../list-pages/components/reference-list-view.ts";
+import type { SearchedListColumn, SearchedListRow } from "@/shared/lists/searched/searched-list-view";
+
 import type { FinancialYearItem } from "../../reference-lists/components/reference-options.ts";
 
-export const quarterColumns: readonly ReferenceListColumn[] = [
+export const quarterColumns: readonly SearchedListColumn[] = [
   { id: "quarter", header: "Quarter", title: true },
   { id: "from", header: "From" },
   { id: "until", header: "Until" },
 ];
 
-export const periodColumns: readonly ReferenceListColumn[] = [
+export const periodColumns: readonly SearchedListColumn[] = [
   { id: "month", header: "Month", title: true },
   { id: "period", header: "Period" },
   { id: "quarter", header: "Quarter" },
@@ -24,7 +22,7 @@ export function yearDays(year: Pick<FinancialYearItem, "start" | "end">): string
   return `From ${formatDisplayDate(year.start)} to ${formatDisplayDate(year.end)}.`;
 }
 
-export function quarterRows(year: FinancialYearItem): readonly ReferenceListRow[] {
+export function quarterRows(year: FinancialYearItem): readonly SearchedListRow[] {
   return year.quarters.map((quarter) => ({
     id: quarter.start,
     cells: {
@@ -35,7 +33,7 @@ export function quarterRows(year: FinancialYearItem): readonly ReferenceListRow[
   }));
 }
 
-export function periodRows(year: FinancialYearItem): readonly ReferenceListRow[] {
+export function periodRows(year: FinancialYearItem): readonly SearchedListRow[] {
   return year.periods.map((period) => ({
     id: period.start,
     cells: {

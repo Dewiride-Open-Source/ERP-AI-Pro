@@ -2,14 +2,14 @@ import { CalendarRangeIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { istDateKey } from "@/shared/format/dates";
+import type { SearchParameters } from "@/shared/lists/list-query";
+import { SearchedListTable } from "@/shared/lists/searched/searched-list-table";
 
 import {
   ReferenceListFrame,
   ReferenceListUnavailable,
 } from "../../list-pages/components/reference-list-frame";
 import { financialYearsPage } from "../../list-pages/components/reference-list-pages";
-import { ReferenceListTable } from "../../list-pages/components/reference-list-table";
-import type { SearchParameters } from "../../list-pages/components/reference-list-view";
 import { ReferenceListsProvider } from "../../reference-lists/components/reference-lists-provider";
 import { readFinancialYears } from "../../reference-lists/server/queries";
 
@@ -57,7 +57,7 @@ export async function FinancialYearsOverview({ searchParameters }: { searchParam
               <h3 id={quartersHeadingId} className="font-medium">
                 Quarters
               </h3>
-              <ReferenceListTable
+              <SearchedListTable
                 labelledBy={quartersHeadingId}
                 columns={quarterColumns}
                 rows={quarterRows(year)}
@@ -67,7 +67,7 @@ export async function FinancialYearsOverview({ searchParameters }: { searchParam
               <h3 id={periodsHeadingId} className="font-medium">
                 Monthly periods
               </h3>
-              <ReferenceListTable
+              <SearchedListTable
                 labelledBy={periodsHeadingId}
                 columns={periodColumns}
                 rows={periodRows(year)}

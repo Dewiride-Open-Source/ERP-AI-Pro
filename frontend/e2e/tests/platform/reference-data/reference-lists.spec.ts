@@ -9,7 +9,6 @@ import {
   currencyRow,
   currentAndPreviousFinancialYears,
   dayMonthYear,
-  expectedMatches,
   FinancialYearsPage,
   financialYearsPath,
   indianStateKeys,
@@ -21,11 +20,11 @@ import {
   readCountries,
   readCurrencies,
   readIndianStates,
-  referenceListAddress,
   ReferenceListPage,
   referenceListTabs,
 } from "../../../pages/platform/reference-data/reference-lists.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
+import { expectedMatches, searchedListAddress } from "../../../pages/shared/lists/searched-list.page";
 
 const countriesPerPage = 20;
 
@@ -83,7 +82,7 @@ test.describe("reference lists", () => {
         await expect(list.tab(tab.name), tab.name).not.toHaveAttribute("aria-current");
       }
       await expect(list.listHeading).toHaveText("All countries");
-      await expect(list.search).toMatchAriaSnapshot(`
+      await expect(list.entries.search).toMatchAriaSnapshot(`
         - search "Search countries":
           - group:
             - text: Name or code
@@ -93,45 +92,49 @@ test.describe("reference lists", () => {
                 - /placeholder: India or IN
           - button "Search"
       `);
-      await expect(list.status).toHaveText(
+      await expect(list.entries.status).toHaveText(
         shownCount(countries.length, countriesPerPage, { one: "country", other: "countries" }),
       );
-      await expect(list.pageLabel).toHaveText(`Page 1 of ${Math.ceil(countries.length / countriesPerPage)}`);
-      expect(await list.rows()).toEqual(countries.slice(0, countriesPerPage).map(countryRow));
+      await expect(list.entries.pageLabel).toHaveText(
+        `Page 1 of ${Math.ceil(countries.length / countriesPerPage)}`,
+      );
+      expect(await list.entries.rows()).toEqual(countries.slice(0, countriesPerPage).map(countryRow));
       await capture("countries");
 
       const united = expectedMatches(countries, "united", (country) => country);
       expect(united.length, "countries named United").toBeGreaterThan(1);
-      await list.searchFor("united");
+      await list.entries.searchFor("united");
       await expect(page).toHaveURL((url) => url.searchParams.get("q") === "united");
-      await expect(list.status).toHaveText(
+      await expect(list.entries.status).toHaveText(
         shownCount(united.length, countriesPerPage, { one: "country", other: "countries" }),
       );
-      await expect.poll(() => list.rows()).toEqual(united.slice(0, countriesPerPage).map(countryRow));
-      await expect(list.searchBox).toBeFocused();
+      await expect.poll(() => list.entries.rows()).toEqual(united.slice(0, countriesPerPage).map(countryRow));
+      await expect(list.entries.searchBox).toBeFocused();
 
       const byCode = expectedMatches(countries, "IN", (country) => country);
-      await list.searchBox.fill("IN");
-      await list.searchButton.click();
+      await list.entries.searchBox.fill("IN");
+      await list.entries.searchButton.click();
       await expect(page).toHaveURL((url) => url.searchParams.get("q") === "IN");
-      await expect.poll(() => list.rows()).toEqual(byCode.slice(0, countriesPerPage).map(countryRow));
-      expect((await list.rows())[0], "the country whose code was typed in full").toEqual(countryRow(india!));
+      await expect.poll(() => list.entries.rows()).toEqual(byCode.slice(0, countriesPerPage).map(countryRow));
+      expect((await list.entries.rows())[0], "the country whose code was typed in full").toEqual(
+        countryRow(india!),
+      );
       await capture("countries-found-by-code", list.card);
 
-      await list.clearSearch.click();
+      await list.entries.clearSearch.click();
       await expect(page).toHaveURL((url) => url.pathname === countriesPath && url.search === "");
-      await expect(list.searchBox).toHaveValue("");
-      await expect(list.searchBox).toBeFocused();
-      await expect(list.clearSearch).toHaveCount(0);
+      await expect(list.entries.searchBox).toHaveValue("");
+      await expect(list.entries.searchBox).toBeFocused();
+      await expect(list.entries.clearSearch).toHaveCount(0);
 
-      await list.searchFor("atlantis");
-      await expect(list.noMatches).toContainText("No countries match this search.");
-      await expect(list.status).toHaveText("No countries to show.");
-      await expect(list.pages).toHaveCount(0);
+      await list.entries.searchFor("atlantis");
+      await expect(list.entries.noMatches).toContainText("No countries match this search.");
+      await expect(list.entries.status).toHaveText("No countries to show.");
+      await expect(list.entries.pages).toHaveCount(0);
       await capture("countries-no-matches", list.card);
-      await list.noMatches.getByRole("link", { name: "Clear the search", exact: true }).click();
+      await list.entries.noMatches.getByRole("link", { name: "Clear the search", exact: true }).click();
       await expect(page).toHaveURL((url) => url.search === "");
-      await expect(list.searchBox).toBeFocused();
+      await expect(list.entries.searchBox).toBeFocused();
     },
   );
 
@@ -143,27 +146,27 @@ test.describe("reference lists", () => {
     await list.goto();
     await list.waitUntilInteractive();
 
-    await expect(list.pageLink("First page")).toHaveAttribute("aria-disabled", "true");
-    await expect(list.pageLink("Previous page")).toHaveAttribute("aria-disabled", "true");
-    await list.pageLink("Next page").focus();
+    await expect(list.entries.pageLink("First page")).toHaveAttribute("aria-disabled", "true");
+    await expect(list.entries.pageLink("Previous page")).toHaveAttribute("aria-disabled", "true");
+    await list.entries.pageLink("Next page").focus();
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL((url) => url.searchParams.get("page") === "2");
-    await expect(list.pageLabel).toHaveText(`Page 2 of ${pageCount}`);
-    await expect.poll(() => list.names()).toEqual(names(countriesPerPage, 2 * countriesPerPage));
-    await expect(list.pageLink("Next page")).toBeFocused();
+    await expect(list.entries.pageLabel).toHaveText(`Page 2 of ${pageCount}`);
+    await expect.poll(() => list.entries.titles()).toEqual(names(countriesPerPage, 2 * countriesPerPage));
+    await expect(list.entries.pageLink("Next page")).toBeFocused();
 
-    await list.pageLink("Last page").click();
+    await list.entries.pageLink("Last page").click();
     await expect(page).toHaveURL((url) => url.searchParams.get("page") === String(pageCount));
-    await expect.poll(() => list.names()).toEqual(names((pageCount - 1) * countriesPerPage));
-    await expect(list.pageLink("Next page")).toHaveAttribute("aria-disabled", "true");
-    await expect(list.pageLink("Last page")).toHaveAttribute("aria-disabled", "true");
+    await expect.poll(() => list.entries.titles()).toEqual(names((pageCount - 1) * countriesPerPage));
+    await expect(list.entries.pageLink("Next page")).toHaveAttribute("aria-disabled", "true");
+    await expect(list.entries.pageLink("Last page")).toHaveAttribute("aria-disabled", "true");
 
-    await list.pageLink("First page").click();
+    await list.entries.pageLink("First page").click();
     await expect(page).toHaveURL((url) => url.pathname === countriesPath && url.search === "");
-    await expect.poll(() => list.names()).toEqual(names(0, countriesPerPage));
+    await expect.poll(() => list.entries.titles()).toEqual(names(0, countriesPerPage));
 
     for (const { address, canonical } of [
-      { address: referenceListAddress(countriesPath, { page: 99 }), canonical: `?page=${pageCount}` },
+      { address: searchedListAddress(countriesPath, { page: 99 }), canonical: `?page=${pageCount}` },
       { address: `${countriesPath}?page=1`, canonical: "" },
       { address: `${countriesPath}?page=two`, canonical: "" },
       { address: `${countriesPath}?q=%20india%20`, canonical: "?q=india" },
@@ -209,23 +212,23 @@ test.describe("reference lists", () => {
 
       await expect(list.tab("States and union territories")).toHaveAttribute("aria-current", "page");
       await expect(list.listHeading).toHaveText("GST State codes");
-      await expect(list.status).toHaveText(
+      await expect(list.entries.status).toHaveText(
         shownCount(states.length, codesPerPage, { one: "entry", other: "entries" }),
       );
-      await expect(list.pageLabel).toHaveText(`Page 1 of ${Math.ceil(states.length / codesPerPage)}`);
-      expect(await list.rows()).toEqual(states.slice(0, codesPerPage).map(indianStateRow));
+      await expect(list.entries.pageLabel).toHaveText(`Page 1 of ${Math.ceil(states.length / codesPerPage)}`);
+      expect(await list.entries.rows()).toEqual(states.slice(0, codesPerPage).map(indianStateRow));
       await capture("indian-states");
 
-      await list.searchFor("25");
+      await list.entries.searchFor("25");
       await expect(page).toHaveURL((url) => url.searchParams.get("q") === "25");
       const byCode = expectedMatches(states, "25", indianStateKeys);
-      await expect.poll(() => list.rows()).toEqual(byCode.map(indianStateRow));
-      await expect(list.status).toHaveText(
+      await expect.poll(() => list.entries.rows()).toEqual(byCode.map(indianStateRow));
+      await expect(list.entries.status).toHaveText(
         shownCount(byCode.length, codesPerPage, { one: "entry", other: "entries" }),
       );
       const shown = indianStateRow(ended!);
-      if (await list.showsCards()) {
-        await expect(list.row(ended!.name)).toMatchAriaSnapshot(`
+      if (await list.entries.showsCards()) {
+        await expect(list.entries.row(ended!.name)).toMatchAriaSnapshot(`
           - listitem:
             - paragraph: ${quoted(shown["Name"])}
             - term: GST State code
@@ -238,7 +241,7 @@ test.describe("reference lists", () => {
             - definition: ${quoted(shown["Until"])}
         `);
       } else {
-        await expect(list.row(ended!.name)).toMatchAriaSnapshot(`
+        await expect(list.entries.row(ended!.name)).toMatchAriaSnapshot(`
           - row:
             - rowheader ${quoted(shown["Name"])}
             - cell ${quoted(shown["GST State code"])}
@@ -251,8 +254,8 @@ test.describe("reference lists", () => {
 
       const byName = expectedMatches(states, "daman", indianStateKeys);
       expect(byName.length, "entries named Daman").toBeGreaterThan(1);
-      await list.searchFor("daman");
-      await expect.poll(() => list.rows()).toEqual(byName.map(indianStateRow));
+      await list.entries.searchFor("daman");
+      await expect.poll(() => list.entries.rows()).toEqual(byName.map(indianStateRow));
     },
   );
 
@@ -260,15 +263,17 @@ test.describe("reference lists", () => {
     const states = await readIndianStates(page.request);
     const pageCount = Math.ceil(states.length / codesPerPage);
     const list = new ReferenceListPage(page, indianStatesList);
-    await list.goto(referenceListAddress(indianStatesPath, { page: pageCount }));
+    await list.goto(searchedListAddress(indianStatesPath, { page: pageCount }));
     await list.waitUntilInteractive();
 
-    await expect(list.pageLabel).toHaveText(`Page ${pageCount} of ${pageCount}`);
-    expect(await list.rows()).toEqual(states.slice((pageCount - 1) * codesPerPage).map(indianStateRow));
-    await list.pageLink("Previous page").click();
+    await expect(list.entries.pageLabel).toHaveText(`Page ${pageCount} of ${pageCount}`);
+    expect(await list.entries.rows()).toEqual(
+      states.slice((pageCount - 1) * codesPerPage).map(indianStateRow),
+    );
+    await list.entries.pageLink("Previous page").click();
     await expect(page).toHaveURL((url) => url.searchParams.get("page") === String(pageCount - 1));
     await expect
-      .poll(() => list.rows())
+      .poll(() => list.entries.rows())
       .toEqual(
         states.slice((pageCount - 2) * codesPerPage, (pageCount - 1) * codesPerPage).map(indianStateRow),
       );
@@ -288,17 +293,19 @@ test.describe("reference lists", () => {
       await list.waitUntilInteractive();
 
       await expect(list.tab("Currencies")).toHaveAttribute("aria-current", "page");
-      await expect(list.status).toHaveText(
+      await expect(list.entries.status).toHaveText(
         shownCount(currencies.length, currenciesPerPage, { one: "currency", other: "currencies" }),
       );
-      expect(await list.rows()).toEqual(currencies.slice(0, currenciesPerPage).map(currencyRow));
+      expect(await list.entries.rows()).toEqual(currencies.slice(0, currenciesPerPage).map(currencyRow));
       await capture("currencies");
 
-      await list.searchFor("usd");
+      await list.entries.searchFor("usd");
       await expect(page).toHaveURL((url) => url.searchParams.get("q") === "usd");
       const byCode = expectedMatches(currencies, "usd", (currency) => currency);
-      await expect.poll(() => list.rows()).toEqual(byCode.slice(0, currenciesPerPage).map(currencyRow));
-      expect((await list.rows())[0], "the currency whose code was typed in full").toEqual(
+      await expect
+        .poll(() => list.entries.rows())
+        .toEqual(byCode.slice(0, currenciesPerPage).map(currencyRow));
+      expect((await list.entries.rows())[0], "the currency whose code was typed in full").toEqual(
         currencyRow(dollar!),
       );
       await capture("currencies-found-by-code", list.card);

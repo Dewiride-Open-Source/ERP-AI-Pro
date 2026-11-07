@@ -1,5 +1,7 @@
 import { expect, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 
+import { SearchedListRegion, shownRows, type ShownRow } from "../../shared/lists/searched-list.page";
+
 export const countriesPath = "/platform/reference-data";
 
 export const indianStatesPath = "/platform/reference-data/indian-states";
@@ -59,8 +61,6 @@ export type FinancialYearEntry = {
   readonly periods: readonly FinancialPeriodEntry[];
 };
 
-export type ShownRow = Readonly<Record<string, string>>;
-
 export type ReferenceList = {
   readonly path: string;
   readonly title: ReferenceListTab;
@@ -99,17 +99,6 @@ const counts = new Intl.NumberFormat("en-IN");
 
 export function count(value: number): string {
   return counts.format(value);
-}
-
-export function referenceListAddress(
-  path: string,
-  { q, page }: { readonly q?: string; readonly page?: number } = {},
-): string {
-  const search = new URLSearchParams();
-  if (q !== undefined) search.set("q", q);
-  if (page !== undefined && page > 1) search.set("page", String(page));
-  const query = search.toString();
-  return query === "" ? path : `${path}?${query}`;
 }
 
 export function dayMonthYear(isoDate: string): string {
@@ -186,27 +175,6 @@ export async function currentAndPreviousFinancialYears(
   return { current: current as FinancialYearEntry, previous: previous as FinancialYearEntry };
 }
 
-function comparable(text: string): string {
-  return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
-}
-
-// What a person expects a search to find, written apart from the page's own code: every typed word inside the code or the
-// name, ignoring case and accents, in the list's order, except that a code typed in full comes first.
-export function expectedMatches<T>(
-  items: readonly T[],
-  search: string,
-  keysOf: (item: T) => { readonly code: string; readonly name: string },
-): T[] {
-  const typed = comparable(search);
-  const words = typed.split(/\s+/u);
-  const holds = (item: T) => {
-    const { code, name } = keysOf(item);
-    return words.every((word) => comparable(code).includes(word) || comparable(name).includes(word));
-  };
-  const fullCode = (item: T) => comparable(keysOf(item).code) === typed;
-  return [...items.filter(fullCode), ...items.filter((item) => !fullCode(item) && holds(item))];
-}
-
 export function countryRow(country: CountryEntry): ShownRow {
   return { Code: country.code, Name: country.name };
 }
@@ -244,52 +212,6 @@ export function periodRows(year: FinancialYearEntry): ShownRow[] {
   }));
 }
 
-// A list draws its rows twice, as a table and as cards, and shows one of them by the width of its box; each row is read
-// from whichever is shown, as its values by column heading.
-export async function shownRows(container: Locator, titleHeading: string): Promise<ShownRow[]> {
-  const table = container.getByTestId("reference-list-table");
-  const cardList = container.getByTestId("reference-list-cards");
-  await expect
-    .poll(async () => (await table.isVisible()) || (await cardList.isVisible()), {
-      message: "the rows show as a table or as cards",
-    })
-    .toBe(true);
-  if (await table.isVisible()) {
-    const headings = await table.locator("thead th").allInnerTexts();
-    return table
-      .getByTestId("reference-list-row")
-      .evaluateAll(
-        (rows, columns) =>
-          rows.map((row) =>
-            Object.fromEntries(
-              Array.from(row.querySelectorAll("th, td"), (cell, index) => [
-                columns[index] ?? String(index),
-                (cell as HTMLElement).innerText.trim(),
-              ]),
-            ),
-          ),
-        headings,
-      );
-  }
-  return cardList.getByTestId("reference-list-card").evaluateAll(
-    (cards, title) =>
-      cards.map((card) => {
-        const titleText = card.querySelector("[data-testid='reference-list-card-title']");
-        const terms = Array.from(card.querySelectorAll("dt"), (term) =>
-          (term as HTMLElement).innerText.trim(),
-        );
-        const details = Array.from(card.querySelectorAll("dd"), (detail) =>
-          (detail as HTMLElement).innerText.trim(),
-        );
-        return Object.fromEntries([
-          [title, titleText instanceof HTMLElement ? titleText.innerText.trim() : ""],
-          ...terms.map((term, index) => [term, details[index] ?? ""]),
-        ]);
-      }),
-    titleHeading,
-  );
-}
-
 export class ReferenceListsShell {
   readonly heading: Locator;
   readonly tabs: Locator;
@@ -313,15 +235,7 @@ export class ReferenceListsShell {
 export class ReferenceListPage extends ReferenceListsShell {
   readonly card: Locator;
   readonly listHeading: Locator;
-  readonly list: Locator;
-  readonly search: Locator;
-  readonly searchBox: Locator;
-  readonly searchButton: Locator;
-  readonly clearSearch: Locator;
-  readonly status: Locator;
-  readonly pages: Locator;
-  readonly pageLabel: Locator;
-  readonly noMatches: Locator;
+  readonly entries: SearchedListRegion;
   readonly unavailable: Locator;
 
   constructor(
@@ -331,52 +245,17 @@ export class ReferenceListPage extends ReferenceListsShell {
     super(page);
     this.card = page.getByTestId(definition.card);
     this.listHeading = this.card.getByRole("heading", { level: 2 });
-    this.list = this.card.getByTestId("reference-list");
-    this.search = this.card.getByRole("search", { name: `Search ${definition.title.toLowerCase()}` });
-    this.searchBox = this.search.getByRole("searchbox", { name: "Name or code" });
-    this.searchButton = this.search.getByRole("button", { name: "Search", exact: true });
-    this.clearSearch = this.search.getByRole("link", { name: "Clear the search", exact: true });
-    this.status = this.card.getByTestId("data-table-status");
-    this.pages = this.card.getByRole("navigation", { name: `${definition.title}, pages` });
-    this.pageLabel = this.card.getByTestId("reference-list-page");
-    this.noMatches = this.card.getByTestId("reference-list-no-matches");
+    this.entries = new SearchedListRegion(this.card, {
+      label: definition.title,
+      searchLabel: "Name or code",
+      titleHeading: "Name",
+    });
     this.unavailable = this.card.getByTestId("reference-list-unavailable");
   }
 
   async goto(address = this.definition.path): Promise<void> {
     await this.page.goto(address);
     await expect(this.heading).toHaveText(this.definition.title);
-  }
-
-  pageLink(name: "First page" | "Previous page" | "Next page" | "Last page"): Locator {
-    return this.pages.getByRole("link", { name, exact: true });
-  }
-
-  rows(): Promise<ShownRow[]> {
-    return shownRows(this.list, "Name");
-  }
-
-  async names(): Promise<string[]> {
-    return (await this.rows()).map((row) => row["Name"] ?? "");
-  }
-
-  async searchFor(text: string): Promise<void> {
-    await this.searchBox.fill(text);
-    await this.searchBox.press("Enter");
-  }
-
-  // The rows are a table on a wide screen and cards on a narrow one.
-  async showsCards(): Promise<boolean> {
-    await shownRows(this.list, "Name");
-    return this.list.getByTestId("reference-list-cards").isVisible();
-  }
-
-  row(name: string): Locator {
-    return this.list
-      .getByTestId("reference-list-row")
-      .or(this.list.getByTestId("reference-list-card"))
-      .filter({ visible: true })
-      .filter({ hasText: name });
   }
 }
 

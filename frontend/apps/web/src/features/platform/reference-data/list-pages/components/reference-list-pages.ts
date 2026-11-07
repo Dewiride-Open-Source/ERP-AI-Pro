@@ -19,4 +19,7 @@ export const referenceListPages = [
   financialYearsPage,
 ] as const;
 
-export type ReferenceListPath = (typeof referenceListPages)[number]["path"];
+export const referenceListSearch = {
+  label: "Name or code",
+  advice: "Search by another name or code.",
+} as const;

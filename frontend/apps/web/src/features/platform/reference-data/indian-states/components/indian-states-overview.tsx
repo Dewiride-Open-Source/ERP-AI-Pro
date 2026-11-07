@@ -1,17 +1,19 @@
 import { MapPinnedIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import type { SearchParameters } from "@/shared/lists/list-query";
+import { SearchedList } from "@/shared/lists/searched/searched-list";
+import {
+  readSearchedListView,
+  searchedListHref,
+  type SearchedListAddress,
+} from "@/shared/lists/searched/searched-list-view";
+
 import {
   ReferenceListFrame,
   ReferenceListUnavailable,
 } from "../../list-pages/components/reference-list-frame";
-import { indianStatesPage } from "../../list-pages/components/reference-list-pages";
-import {
-  readReferenceListView,
-  referenceListHref,
-  type SearchParameters,
-} from "../../list-pages/components/reference-list-view";
-import { SearchedReferenceList } from "../../list-pages/components/searched-reference-list";
+import { indianStatesPage, referenceListSearch } from "../../list-pages/components/reference-list-pages";
 import { readIndianStates } from "../../reference-lists/server/queries";
 
 import { indianStateColumns, indianStateRow } from "./indian-state-rows";
@@ -22,9 +24,11 @@ const codesPerPage = 10;
 
 const listHeadingId = "indian-states-heading";
 
+const indianStatesAddress: SearchedListAddress = { path: indianStatesPage.path };
+
 export async function IndianStatesOverview({ searchParameters }: { searchParameters: SearchParameters }) {
-  const { view, canonical } = readReferenceListView(searchParameters);
-  if (!canonical) redirect(referenceListHref(indianStatesPage.path, view));
+  const { view, canonical } = readSearchedListView(searchParameters);
+  if (!canonical) redirect(searchedListHref(indianStatesAddress, view));
   const list = await readIndianStates();
 
   return (
@@ -38,16 +42,17 @@ export async function IndianStatesOverview({ searchParameters }: { searchParamet
       testId="indian-states-card"
     >
       {list.status === "read" ? (
-        <SearchedReferenceList
+        <SearchedList
           items={list.items}
           pageSize={codesPerPage}
           keysOf={(state) => ({ code: state.gstCode, name: state.name })}
           rowOf={indianStateRow}
-          path={indianStatesPage.path}
+          address={indianStatesAddress}
           view={view}
           label={indianStatesTitle}
           labelledBy={listHeadingId}
           noun={{ one: "entry", other: "entries" }}
+          search={referenceListSearch}
           columns={indianStateColumns}
         />
       ) : (

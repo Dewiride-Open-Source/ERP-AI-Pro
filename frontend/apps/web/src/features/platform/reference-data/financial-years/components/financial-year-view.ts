@@ -1,5 +1,6 @@
+import type { SearchParameters } from "@/shared/lists/list-query";
+
 import { financialYearsPage } from "../../list-pages/components/reference-list-pages.ts";
-import type { SearchParameters } from "../../list-pages/components/reference-list-view.ts";
 
 export interface FinancialYearChoice {
   readonly current: string;
