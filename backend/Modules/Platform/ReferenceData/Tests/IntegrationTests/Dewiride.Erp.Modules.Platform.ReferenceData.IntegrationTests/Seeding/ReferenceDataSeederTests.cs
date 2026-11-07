@@ -1,3 +1,5 @@
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.Seeding;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Countries.Domain;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Countries.Persistence;
@@ -54,7 +56,36 @@ public sealed class ReferenceDataSeederTests(ErpApiFactory factory) : IClassFixt
 
         await SeedAsync<CountrySeeder>();
 
-        Assert.Contains(("AQ", "Antarctica"), (await CountriesAsync()).Select(row => (row.Code, row.Name)));
+        var seededRow = Assert.Single(await CountriesAsync(), row => row.Code == "AQ");
+        Assert.Equal("Antarctica", seededRow.Name);
+        using var administrator = factory.CreateClient().AsUser(TestUsers.Administrator);
+        var seeded = (await ExchangeRatesApi.ChangesOfAsync(administrator, seededRow.Id))[^1];
+        Assert.Equal(ChangeOperation.Updated, seeded.Operation);
+        Assert.Equal("platform.reference-data.countries", seeded.EntityType);
+        Assert.Equal("Antarctica", seeded.SubjectName);
+        Assert.Equal(ActorIds.System, seeded.ActorId);
+        Assert.Contains(seeded.Changes, value => value is { Property: "name", Before: "Antarctica before the file", After: "Antarctica" });
+    }
+
+    [Fact]
+    public async Task IndianStateSeeder_RowThatDiffersFromTheFile_TakesTheFilesValuesBack()
+    {
+        var expected = Assert.Single(IndianStateSourceFile.Read().States, entry => entry.GstCode == "25");
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ReferenceDataDbContext>();
+            var row = await context.IndianStates.SingleAsync(s => s.GstCode == "25", TestContext.Current.CancellationToken);
+            row.Revise("Daman and Diu before the file", TerritoryKind.State, null, "No instrument");
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await SeedAsync<IndianStateSeeder>();
+
+        await using var check = factory.Services.CreateAsyncScope();
+        var stored = await check.ServiceProvider.GetRequiredService<ReferenceDataDbContext>().IndianStates
+            .AsNoTracking()
+            .SingleAsync(s => s.GstCode == "25", TestContext.Current.CancellationToken);
+        Assert.Equal((expected.Name, expected.Kind, expected.ValidFrom, expected.ValidUntil, expected.Source), (stored.Name, stored.Kind, stored.ValidFrom, stored.ValidUntil, stored.Source));
     }
 
     [Fact]

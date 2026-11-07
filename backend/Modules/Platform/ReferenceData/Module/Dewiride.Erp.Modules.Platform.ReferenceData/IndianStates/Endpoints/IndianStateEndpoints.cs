@@ -7,7 +7,7 @@ using Dewiride.Erp.Modules.Platform.ReferenceData.Contracts.IndianStates;
 using Dewiride.Erp.Modules.Platform.ReferenceData.IndianStates.Application.Queries.ListIndianStates;
 using Dewiride.Erp.Modules.Platform.ReferenceData.IndianStates.Endpoints.Requests;
 using Dewiride.Erp.Modules.Platform.ReferenceData.IndianStates.Endpoints.Responses;
-using Dewiride.Erp.Modules.Platform.ReferenceData.Shared;
+using Dewiride.Erp.Modules.Platform.ReferenceData.Shared.Caching;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;

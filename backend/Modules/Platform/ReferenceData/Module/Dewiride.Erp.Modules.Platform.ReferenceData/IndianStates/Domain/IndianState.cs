@@ -80,6 +80,4 @@ internal sealed class IndianState : AggregateRoot<IndianStateId>, IAuditable
         ValidUntil = validUntil;
         Source = source;
     }
-
-    public bool AppliesOn(DateOnly date) => date >= ValidFrom && (ValidUntil is not { } until || date <= until);
 }

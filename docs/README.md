@@ -75,5 +75,8 @@
 | [0057](adr/0057-the-production-topology.md) | The production topology |
 | [0058](adr/0058-records-kept-a-year-inside-india.md) | Records kept a year inside India |
 | [0059](adr/0059-background-jobs-a-persistent-queue-leases-ist-schedules-and-the-nightly-account-check.md) | Background jobs: a persistent queue, leases, IST schedules and the nightly account check |
+| [0060](adr/0060-integration-events-per-module-outboxes-deliveries-as-job-runs-and-no-order.md) | Integration events: per-module outboxes, deliveries as job runs, and no order |
+| [0061](adr/0061-a-module-scaffolder-that-registers-what-it-writes-proven-on-every-push.md) | A module scaffolder that registers what it writes, proven on every push |
+| [0062](adr/0062-reference-data-seeded-lists-every-iso-currency-dated-exchange-rates-and-financial-periods.md) | Reference data: seeded lists, every ISO currency, dated exchange rates and financial periods |
 
 New decisions use [0000-template.md](adr/0000-template.md).

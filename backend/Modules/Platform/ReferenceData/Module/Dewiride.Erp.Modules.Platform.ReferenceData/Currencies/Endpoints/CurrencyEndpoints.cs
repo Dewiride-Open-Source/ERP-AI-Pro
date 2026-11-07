@@ -6,7 +6,7 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Contracts;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Currencies.Application.Queries.ListCurrencies;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Currencies.Endpoints.Responses;
-using Dewiride.Erp.Modules.Platform.ReferenceData.Shared;
+using Dewiride.Erp.Modules.Platform.ReferenceData.Shared.Caching;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;

@@ -6,7 +6,7 @@ using Dewiride.Erp.Modules.Platform.ReferenceData.Contracts;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Contracts.Countries;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Countries.Application.Queries.ListCountries;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Countries.Endpoints.Responses;
-using Dewiride.Erp.Modules.Platform.ReferenceData.Shared;
+using Dewiride.Erp.Modules.Platform.ReferenceData.Shared.Caching;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;

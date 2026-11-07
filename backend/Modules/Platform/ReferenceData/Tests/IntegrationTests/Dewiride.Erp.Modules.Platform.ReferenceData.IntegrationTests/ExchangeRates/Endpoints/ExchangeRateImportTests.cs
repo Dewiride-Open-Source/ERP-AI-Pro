@@ -114,6 +114,32 @@ public sealed class ExchangeRateImportTests(ErpApiFactory factory) : IClassFixtu
         Assert.Equal("rates", Assert.Single(problem.Errors.Keys));
     }
 
+    [Fact]
+    public async Task Import_EmptyRows_Returns400KeyedByEachEmptyRowAndRecordsNothing()
+    {
+        using var client = Administrator();
+        var day = ExchangeRatesApi.UniqueDay();
+
+        using var alone = await ExchangeRatesApi.ImportAsync(client, [null!]);
+        using var after = await ExchangeRatesApi.ImportAsync(client, ExchangeRatesApi.Rate("USD", day, 84m), null!);
+
+        Assert.Equal("rates[0]", Assert.Single((await ExchangeRatesApi.AssertInvalidAsync(alone, "request.invalid")).Errors.Keys));
+        Assert.Equal("rates[1]", Assert.Single((await ExchangeRatesApi.AssertInvalidAsync(after, "request.invalid")).Errors.Keys));
+        Assert.Empty(await RatesOfAsync(client, day));
+    }
+
+    [Fact]
+    public async Task Import_ThousandsOfEmptyObjects_Returns400KeyedByRatesAlone()
+    {
+        using var client = Administrator();
+        var file = Enumerable.Range(0, 5_000).Select(_ => (object)new { }).ToArray();
+
+        using var response = await ExchangeRatesApi.ImportAsync(client, file);
+
+        var problem = await ExchangeRatesApi.AssertInvalidAsync(response, "request.invalid");
+        Assert.Equal("rates", Assert.Single(problem.Errors.Keys));
+    }
+
     private static async Task<List<ExchangeRateResponse>> RatesOfAsync(HttpClient client, DateOnly day)
     {
         var page = await ExchangeRatesApi.ListAsync(client, $"sort=currency:asc&filter={ExchangeRatesApi.Filter($"rateDate:eq:{ExchangeRatesApi.Day(day)}")}");

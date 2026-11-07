@@ -7,7 +7,7 @@ using Dewiride.Erp.Modules.Platform.ReferenceData.Contracts;
 using Dewiride.Erp.Modules.Platform.ReferenceData.FinancialYears.Application.Queries.ListFinancialYears;
 using Dewiride.Erp.Modules.Platform.ReferenceData.FinancialYears.Endpoints.Requests;
 using Dewiride.Erp.Modules.Platform.ReferenceData.FinancialYears.Endpoints.Responses;
-using Dewiride.Erp.Modules.Platform.ReferenceData.Shared;
+using Dewiride.Erp.Modules.Platform.ReferenceData.Shared.Caching;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;

@@ -280,20 +280,14 @@ test('the command line prints tab-separated rows and validates a directory', () 
   assert.ok(settings.stdout.split('\n').includes('Erp:Platform:Host:ApplicationName\tERP-AI-Pro'));
   const flags = run('flags', join(seedDirectory, 'feature-flags.json'));
   assert.equal(flags.status, 0);
-  assert.deepEqual(flags.stdout.trim().split('\n'), [
-    'Erp.Modules.Platform.SystemInfo\tlocal-dev\ttrue',
-    'Erp.Modules.Platform.SystemInfo\tproduction\ttrue',
-    'Erp.Modules.Platform.Attachments\tlocal-dev\ttrue',
-    'Erp.Modules.Platform.Attachments\tproduction\ttrue',
-    'Erp.Modules.Platform.Audit\tlocal-dev\ttrue',
-    'Erp.Modules.Platform.Audit\tproduction\ttrue',
-    'Erp.Modules.Platform.Jobs\tlocal-dev\ttrue',
-    'Erp.Modules.Platform.Jobs\tproduction\ttrue',
-    'Erp.Modules.Identity.Users\tlocal-dev\ttrue',
-    'Erp.Modules.Identity.Users\tproduction\ttrue',
-    'Erp.Platform.Identity.BearerTokens\tlocal-dev\tfalse',
-    'Erp.Platform.Identity.BearerTokens\tproduction\tfalse',
-  ]);
+  const seededFlags = readFeatureFlags(join(seedDirectory, 'feature-flags.json'));
+  const rows = flags.stdout.trim().split('\n');
+  assert.deepEqual(
+    rows,
+    seededFlags.flatMap((flag) => (['local-dev', 'production'] as const).map((label) => `${flag.id}\t${label}\t${String(flag.enabled[label])}`)),
+  );
+  assert.ok(rows.includes('Erp.Modules.Platform.SystemInfo\tlocal-dev\ttrue'));
+  assert.ok(rows.includes('Erp.Platform.Identity.BearerTokens\tproduction\tfalse'));
   const references = run('references', join(seedDirectory, 'key-vault-references.json'));
   assert.equal(references.status, 0);
   assert.deepEqual(references.stdout.trim().split('\n'), [

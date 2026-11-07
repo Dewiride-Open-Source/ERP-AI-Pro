@@ -28,6 +28,7 @@ dotnet user-secrets set "Erp:Platform:Attachments:BlobServiceUri" "https://sterp
 # before the first dotnet run, run the block in section "Attachments storage" (from the repository root): it writes the attachments encryption key to user secrets without displaying it, and the API refuses to start without the key
 dotnet user-secrets set APPCONFIG_ENDPOINT https://<store>.azconfig.io --project Hosts/Api/Dewiride.Erp.Host.Api   # after az login; the store holds every sign-in setting, and the API refuses to start without them (section "Sign-in")
 node ../scripts/ef/ef.ts update --all                     # every context; creates ErpAiPro when it does not exist (docs/guides/migrations.md)
+dotnet run --project Hosts/Migrator/Dewiride.Erp.Host.Migrator   # runs the seeders, which ef.ts does not: the countries and GST State codes of Platform/ReferenceData among them (docs/guides/migrations.md)
 dotnet test --solution Dewiride.Erp.slnx                   # needs ERP_TEST_SQL_CONNECTION, ERP_TEST_BLOB_EMULATOR_HOST and Azurite running (sections "Configuration and secrets", "Attachments storage")
 dotnet run --project Hosts/Api/Dewiride.Erp.Host.Api      # http://localhost:5080 with the local-dev label of the store; attachments go to the development storage account as your az login identity (section "Attachments storage")
 

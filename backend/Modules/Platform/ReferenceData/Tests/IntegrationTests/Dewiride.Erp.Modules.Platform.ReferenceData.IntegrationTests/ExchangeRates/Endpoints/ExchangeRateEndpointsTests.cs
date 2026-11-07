@@ -167,6 +167,26 @@ public sealed class ExchangeRateEndpointsTests(ErpApiFactory factory) : IClassFi
         Assert.Equal([("EUR", newer), ("USD", newer), ("USD", older)], page.Items.Select(rate => (rate.Currency, rate.RateDate)));
     }
 
+    [Theory]
+    [InlineData("rateDate:desc", "EUR 2,USD 2,EUR 1,USD 1")]
+    [InlineData("currency:asc", "EUR 2,EUR 1,USD 2,USD 1")]
+    [InlineData("currency:desc", "USD 2,USD 1,EUR 2,EUR 1")]
+    public async Task List_SortedByOneField_BreaksItsTiesByTheNewestDayThenTheCurrency(string sort, string expected)
+    {
+        using var client = Administrator();
+        var first = ExchangeRatesApi.UniqueDay();
+        var second = ExchangeRatesApi.UniqueDay();
+        foreach (var (currency, day) in new[] { ("USD", first), ("EUR", second), ("USD", second), ("EUR", first) })
+        {
+            await ExchangeRatesApi.RecordAsync(client, currency, day, 90m);
+        }
+
+        var filter = ExchangeRatesApi.Filter($"rateDate:in:{ExchangeRatesApi.Day(first)}|{ExchangeRatesApi.Day(second)}");
+        var page = await ExchangeRatesApi.ListAsync(client, $"sort={sort}&filter={filter}");
+
+        Assert.Equal(expected.Split(','), page.Items.Select(rate => $"{rate.Currency} {(rate.RateDate == first ? 1 : 2)}"));
+    }
+
     [Fact]
     public async Task List_FilteredByCurrency_ReturnsOnlyThatCurrency()
     {

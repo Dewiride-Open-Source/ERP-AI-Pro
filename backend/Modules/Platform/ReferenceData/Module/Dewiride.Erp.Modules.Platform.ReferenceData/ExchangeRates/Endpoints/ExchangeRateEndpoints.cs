@@ -1,10 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.BuildingBlocks.Application.Queries;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Errors;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
 using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
 using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.Modules.Platform.ReferenceData.Contracts;
 using Dewiride.Erp.Modules.Platform.ReferenceData.ExchangeRates.Application;
 using Dewiride.Erp.Modules.Platform.ReferenceData.ExchangeRates.Application.Commands.CorrectExchangeRate;
@@ -52,6 +57,7 @@ internal static class ExchangeRateEndpoints
             .WithSummary("Records the rates of a file all together, leaving alone those already recorded with the same rate, or none of them when a rate cannot be recorded.")
             .RequirePermission(ReferenceDataPermissions.RecordExchangeRates)
             .RequireIdempotencyKey()
+            .DisableValidation()
             .ProducesProblem(StatusCodes.Status409Conflict);
 
         routes.MapPut("/{id:guid}", CorrectAsync)
@@ -127,6 +133,11 @@ internal static class ExchangeRateEndpoints
         ICommandHandler<ImportExchangeRatesCommand, ImportedExchangeRates> handler,
         CancellationToken cancellationToken)
     {
+        if (ImportProblems(request) is { } problems)
+        {
+            return Error.Validation(ProblemTypes.RequestInvalid, "One or more validation errors occurred.", problems).ToProblem();
+        }
+
         var rates = request.Rates!
             .Select(rate => new ImportedExchangeRate(rate.Currency!, rate.RateDate!.Value, rate.Rate!.Value, rate.Unit!.Value, rate.Source))
             .ToList();
@@ -135,6 +146,48 @@ internal static class ExchangeRateEndpoints
         return result.IsSuccess
             ? TypedResults.Ok(new ImportedExchangeRatesResponse(result.Value.Recorded, result.Value.Unchanged))
             : result.Error!.ToProblem();
+    }
+
+    // The framework's validation walks every row of a body before it looks at their number, so the import route skips it and
+    // checks the number and the empty rows first, then each row's own rules, keyed as the framework keys them.
+    private static Dictionary<string, string[]>? ImportProblems(ImportExchangeRatesRequest request)
+    {
+        var rows = request.Rates;
+        if (rows is null || rows.Count is 0 or > ExchangeRateLimits.MaxImportedRates)
+        {
+            return new(StringComparer.Ordinal)
+            {
+                ["rates"] = [string.Create(CultureInfo.InvariantCulture, $"An import holds 1 to {ExchangeRateLimits.MaxImportedRates:N0} rates.")],
+            };
+        }
+
+        var problems = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        for (var index = 0; index < rows.Count; index++)
+        {
+            var row = rows[index];
+            if (row is null)
+            {
+                problems[string.Create(CultureInfo.InvariantCulture, $"rates[{index}]")] = ["Each row of an import is a rate."];
+                continue;
+            }
+
+            var results = new List<ValidationResult>();
+            if (Validator.TryValidateObject(row, new ValidationContext(row), results, validateAllProperties: true))
+            {
+                continue;
+            }
+
+            foreach (var result in results)
+            {
+                foreach (var member in result.MemberNames)
+                {
+                    var key = string.Create(CultureInfo.InvariantCulture, $"rates[{index}].{JsonNamingPolicy.CamelCase.ConvertName(member)}");
+                    problems[key] = [result.ErrorMessage ?? "The value is not valid."];
+                }
+            }
+        }
+
+        return problems.Count == 0 ? null : problems;
     }
 
     private static async Task<Results<Ok<ExchangeRateResponse>, ProblemHttpResult>> CorrectAsync(

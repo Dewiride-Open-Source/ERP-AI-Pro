@@ -22,8 +22,6 @@ internal sealed class ExchangeRate : AggregateRoot<ExchangeRateId>, IAuditable, 
     {
     }
 
-    public static IReadOnlyList<int> Units => QuotationUnits;
-
     public Currency Currency { get; private set; }
 
     public DateOnly RateDate { get; private set; }

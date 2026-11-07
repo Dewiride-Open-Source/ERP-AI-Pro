@@ -9,27 +9,6 @@ public sealed class IndianStateTests
     private static readonly DateOnly Until = new(2020, 7, 31);
 
     [Theory]
-    [InlineData("2017-06-30", false)]
-    [InlineData("2017-07-01", true)]
-    [InlineData("2020-07-31", true)]
-    [InlineData("2020-08-01", false)]
-    public void AppliesOn_DateAgainstAnEndedCode_IsTrueOnlyWithinItsDatesInclusive(string date, bool expected)
-    {
-        var state = IndianState.Create("25", From, "Daman and Diu", TerritoryKind.UnionTerritory, Until, "Instrument");
-
-        Assert.Equal(expected, state.AppliesOn(DateOnly.Parse(date, System.Globalization.CultureInfo.InvariantCulture)));
-    }
-
-    [Fact]
-    public void AppliesOn_CodeWithoutAnEnd_HoldsForEveryLaterDate()
-    {
-        var state = IndianState.Create("27", From, "Maharashtra", TerritoryKind.State, null, "Instrument");
-
-        Assert.True(state.AppliesOn(new DateOnly(9999, 12, 31)));
-        Assert.False(state.AppliesOn(From.AddDays(-1)));
-    }
-
-    [Theory]
     [InlineData("2")]
     [InlineData("123")]
     [InlineData("AB")]
