@@ -33,7 +33,7 @@ Date: 2026-11-07
 
 ## Consequences
 
-- A new module starts complete and registered, and a broken template shows on the push that broke it; ci-backend runs about 8 to 10 minutes longer on `main`, still shorter than the slowest Playwright shard.
+- A new module starts complete and registered, and a broken template shows on the push that broke it; ci-backend runs about 4 minutes longer on `main` (on its first runs the proof took 3 to 4 minutes, Firefox's installation and specs included, in a job of 10 to 14 minutes), still shorter than the slowest Playwright shard.
 - The generated Playwright specs ran on five projects in this item, Firefox aside, and run on Firefox in the proof on every push to `main`; a real module generated with them runs them on all six projects in the full matrix.
 - Module context keys changed (`platform-system-info`, `identity-users`, …): `node scripts/ef/ef.ts list` shows them, and the migration guides use them.
 - **Earlier decisions this changes.** [ADR-0021](0021-migrator-program-and-seeding.md) keyed every context by its kebab-case class name (`system-info`, `idempotency`); a module context is now keyed `<domain>-<module>`, a building block's as before, and `dotnet ef` receives the fully qualified class name. [ADR-0002](0002-modular-monolith-module-anatomy.md)'s manual steps for a new module become what the command automates.
