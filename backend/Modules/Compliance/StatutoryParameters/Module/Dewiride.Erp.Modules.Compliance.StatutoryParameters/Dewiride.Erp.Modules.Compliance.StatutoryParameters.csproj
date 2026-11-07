@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../Contracts/Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts/Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.csproj" />
+    <ProjectReference Include="../../../../Platform/ReferenceData/Contracts/Dewiride.Erp.Modules.Platform.ReferenceData.Contracts/Dewiride.Erp.Modules.Platform.ReferenceData.Contracts.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints/Dewiride.Erp.BuildingBlocks.Endpoints.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
+    <ProjectReference Include="../../../../../BuildingBlocks/Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ParameterSets/Persistence/Statutory/**/*.json" LogicalName="statutory/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

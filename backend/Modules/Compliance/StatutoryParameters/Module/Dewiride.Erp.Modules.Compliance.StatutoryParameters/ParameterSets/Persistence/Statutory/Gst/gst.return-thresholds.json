@@ -1,0 +1,83 @@
+{
+  "key": "gst.return-thresholds",
+  "title": "GST return turnover limits",
+  "description": "The turnover and value limits, for tax periods from January 2021, that decide who may furnish returns every quarter (QRMP), the most the invoice furnishing facility carries in a month and who must furnish GSTR-9C, each with its test in the words of its instrument.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "threshold",
+      "title": "Limit",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "What it decides",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "amount",
+      "title": "Amount",
+      "kind": "amount"
+    },
+    {
+      "name": "test",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2021-01-01",
+      "instruments": [
+        "Notification No. 84/2020-Central Tax, 10 November 2020",
+        "Notification No. 82/2020-Central Tax, 10 November 2020, Central Goods and Services Tax (Thirteenth Amendment) Rules, 2020, rules 59 and 61A",
+        "Notification No. 30/2021-Central Tax, 30 July 2021, substituting rule 80 from 1 August 2021"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2021-01-01",
+      "source": "Notification No. 84/2020-Central Tax",
+      "cells": {
+        "threshold": "qrmp-eligibility",
+        "name": "Quarterly returns (QRMP): who may choose them",
+        "amount": 50000000,
+        "test": "having an aggregate turnover of up to five crore rupees in the preceding financial year"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Notification No. 84/2020-Central Tax, paragraph (2), and Central Goods and Services Tax Rules, 2017, rule 61A(2)",
+      "cells": {
+        "threshold": "qrmp-exit",
+        "name": "Quarterly returns (QRMP): who must leave them",
+        "amount": 50000000,
+        "test": "A registered person whose aggregate turnover crosses five crore rupees during a quarter in a financial year shall not be eligible for furnishing of return on quarterly basis from the first month of the succeeding quarter."
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 59(2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "threshold": "iff-monthly-value",
+        "name": "Invoice furnishing facility (IFF): the most in a month",
+        "amount": 5000000,
+        "test": "for the first and second months of a quarter, up to a cumulative value of fifty lakh rupees in each of the months"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 80(3), as substituted by Notification No. 30/2021-Central Tax",
+      "cells": {
+        "threshold": "gstr-9c",
+        "name": "Reconciliation statement (GSTR-9C): who must furnish it",
+        "amount": 50000000,
+        "test": "whose aggregate turnover during a financial year exceeds five crore rupees, shall also furnish a self-certified reconciliation statement as specified under section 44 in FORM GSTR-9C"
+      }
+    }
+  ]
+}

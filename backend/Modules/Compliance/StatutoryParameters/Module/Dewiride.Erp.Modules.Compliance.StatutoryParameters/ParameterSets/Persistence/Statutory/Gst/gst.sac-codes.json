@@ -1,0 +1,795 @@
+{
+  "key": "gst.sac-codes",
+  "title": "SAC codes",
+  "description": "The codes of the Scheme of Classification of Services, the Annexure to Notification No. 11/2017-Central Tax (Rate), for Heading 9983 with its 9 groups and 59 service codes, and for code 997331 with its Heading 9973 and Group 99733, each description as the Annexure prints it. A heading has four digits, a group five and a service code six; a heading's parent is a Section of the Annexure, which carries no code.",
+  "basis": "law",
+  "asOf": "supplyDate",
+  "columns": [
+    {
+      "name": "code",
+      "title": "Code",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "level",
+      "title": "Level",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "heading",
+          "title": "Heading"
+        },
+        {
+          "value": "group",
+          "title": "Group"
+        },
+        {
+          "value": "service",
+          "title": "Service"
+        }
+      ]
+    },
+    {
+      "name": "parent",
+      "title": "Parent code",
+      "kind": "code",
+      "optional": true,
+      "references": [
+        "gst.sac-codes"
+      ]
+    },
+    {
+      "name": "description",
+      "title": "Description",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2017-07-01",
+      "instruments": [
+        "Notification No. 11/2017-Central Tax (Rate), 28 June 2017, G.S.R. 690(E), and its Annexure: Scheme of Classification of Services, in force 1 July 2017"
+      ]
+    },
+    {
+      "from": "2019-10-01",
+      "instruments": [
+        "Notification No. 20/2019-Central Tax (Rate), 30 September 2019, G.S.R. 731(E), in force 1 October 2019"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2017-07-01",
+      "until": "2019-09-30",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 232",
+      "cells": {
+        "code": "9973",
+        "level": "heading",
+        "parent": null,
+        "description": "Leasing or rental services with or without operator"
+      }
+    },
+    {
+      "from": "2019-10-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 232, as amended by Notification No. 20/2019-Central Tax (Rate), clause (iv)(b)",
+      "cells": {
+        "code": "9973",
+        "level": "heading",
+        "parent": null,
+        "description": "Leasing or rental services without operator"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 250",
+      "cells": {
+        "code": "99733",
+        "level": "group",
+        "parent": "9973",
+        "description": "Licensing services for the right to use intellectual property and similar products"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 251",
+      "cells": {
+        "code": "997331",
+        "level": "service",
+        "parent": "99733",
+        "description": "Licensing services for the right to use computer software and databases"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 296",
+      "cells": {
+        "code": "9983",
+        "level": "heading",
+        "parent": null,
+        "description": "Other professional, technical and business services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 297",
+      "cells": {
+        "code": "99831",
+        "level": "group",
+        "parent": "9983",
+        "description": "Management consulting and management services; information technology services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 298",
+      "cells": {
+        "code": "998311",
+        "level": "service",
+        "parent": "99831",
+        "description": "Management consulting and management services including financial, strategic, human resources, marketing, operations and supply chain management"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 299",
+      "cells": {
+        "code": "998312",
+        "level": "service",
+        "parent": "99831",
+        "description": "Business consulting services including public relations services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 300",
+      "cells": {
+        "code": "998313",
+        "level": "service",
+        "parent": "99831",
+        "description": "Information technology consulting and support services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 301",
+      "cells": {
+        "code": "998314",
+        "level": "service",
+        "parent": "99831",
+        "description": "Information technology design and development services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 302",
+      "cells": {
+        "code": "998315",
+        "level": "service",
+        "parent": "99831",
+        "description": "Hosting and information technology infrastructure provisioning services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 303",
+      "cells": {
+        "code": "998316",
+        "level": "service",
+        "parent": "99831",
+        "description": "Information technology infrastructure and network management services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 304",
+      "cells": {
+        "code": "998319",
+        "level": "service",
+        "parent": "99831",
+        "description": "Other information technology services nowhere else classified"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 305",
+      "cells": {
+        "code": "99832",
+        "level": "group",
+        "parent": "9983",
+        "description": "Architectural services, urban and land planning and landscape architectural services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 306",
+      "cells": {
+        "code": "998321",
+        "level": "service",
+        "parent": "99832",
+        "description": "Architectural advisory services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 307",
+      "cells": {
+        "code": "998322",
+        "level": "service",
+        "parent": "99832",
+        "description": "Architectural services for residential building projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 308",
+      "cells": {
+        "code": "998323",
+        "level": "service",
+        "parent": "99832",
+        "description": "Architectural services for non-residential building projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 309",
+      "cells": {
+        "code": "998324",
+        "level": "service",
+        "parent": "99832",
+        "description": "Historical restoration architectural services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 310",
+      "cells": {
+        "code": "998325",
+        "level": "service",
+        "parent": "99832",
+        "description": "Urban planning services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 311",
+      "cells": {
+        "code": "998326",
+        "level": "service",
+        "parent": "99832",
+        "description": "Rural land planning services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 312",
+      "cells": {
+        "code": "998327",
+        "level": "service",
+        "parent": "99832",
+        "description": "Project site master planning services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 313",
+      "cells": {
+        "code": "998328",
+        "level": "service",
+        "parent": "99832",
+        "description": "Landscape architectural services and advisory services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 314",
+      "cells": {
+        "code": "99833",
+        "level": "group",
+        "parent": "9983",
+        "description": "Engineering services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 315",
+      "cells": {
+        "code": "998331",
+        "level": "service",
+        "parent": "99833",
+        "description": "Engineering advisory services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 316",
+      "cells": {
+        "code": "998332",
+        "level": "service",
+        "parent": "99833",
+        "description": "Engineering services for building projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 317",
+      "cells": {
+        "code": "998333",
+        "level": "service",
+        "parent": "99833",
+        "description": "Engineering services for industrial and manufacturing projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 318",
+      "cells": {
+        "code": "998334",
+        "level": "service",
+        "parent": "99833",
+        "description": "Engineering services for transportation projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 319",
+      "cells": {
+        "code": "998335",
+        "level": "service",
+        "parent": "99833",
+        "description": "Engineering services for power projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 320",
+      "cells": {
+        "code": "998336",
+        "level": "service",
+        "parent": "99833",
+        "description": "Engineering services for telecommunications and broadcasting projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 321",
+      "cells": {
+        "code": "998337",
+        "level": "service",
+        "parent": "99833",
+        "description": "Engineering services for waste management projects (hazardous and non-hazardous), for water, sewerage and drainage projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 322",
+      "cells": {
+        "code": "998338",
+        "level": "service",
+        "parent": "99833",
+        "description": "Engineering services for other projects nowhere else classified"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 323",
+      "cells": {
+        "code": "998339",
+        "level": "service",
+        "parent": "99833",
+        "description": "Project management services for construction projects"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 324",
+      "cells": {
+        "code": "99834",
+        "level": "group",
+        "parent": "9983",
+        "description": "Scientific and other technical services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 325",
+      "cells": {
+        "code": "998341",
+        "level": "service",
+        "parent": "99834",
+        "description": "Geological and geophysical consulting services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 326",
+      "cells": {
+        "code": "998342",
+        "level": "service",
+        "parent": "99834",
+        "description": "Subsurface surveying services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 327",
+      "cells": {
+        "code": "998343",
+        "level": "service",
+        "parent": "99834",
+        "description": "Mineral exploration and evaluation"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 328",
+      "cells": {
+        "code": "998344",
+        "level": "service",
+        "parent": "99834",
+        "description": "Surface surveying and map-making services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 329",
+      "cells": {
+        "code": "998345",
+        "level": "service",
+        "parent": "99834",
+        "description": "Weather forecasting and meteorological services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 330",
+      "cells": {
+        "code": "998346",
+        "level": "service",
+        "parent": "99834",
+        "description": "Technical testing and analysis services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 331",
+      "cells": {
+        "code": "998347",
+        "level": "service",
+        "parent": "99834",
+        "description": "Certification of ships, aircraft, dams, and the like"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 332",
+      "cells": {
+        "code": "998348",
+        "level": "service",
+        "parent": "99834",
+        "description": "Certification and authentication of works of art"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 333",
+      "cells": {
+        "code": "998349",
+        "level": "service",
+        "parent": "99834",
+        "description": "Other technical and scientific services nowhere else classified"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 334",
+      "cells": {
+        "code": "99835",
+        "level": "group",
+        "parent": "9983",
+        "description": "Veterinary services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 335",
+      "cells": {
+        "code": "998351",
+        "level": "service",
+        "parent": "99835",
+        "description": "Veterinary services for pet animals"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 336",
+      "cells": {
+        "code": "998352",
+        "level": "service",
+        "parent": "99835",
+        "description": "Veterinary services for livestock"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 337",
+      "cells": {
+        "code": "998359",
+        "level": "service",
+        "parent": "99835",
+        "description": "Other veterinary services nowhere else classified"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 338",
+      "cells": {
+        "code": "99836",
+        "level": "group",
+        "parent": "9983",
+        "description": "Advertising services and provision of advertising space or time"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 339",
+      "cells": {
+        "code": "998361",
+        "level": "service",
+        "parent": "99836",
+        "description": "Advertising Services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 340",
+      "cells": {
+        "code": "998362",
+        "level": "service",
+        "parent": "99836",
+        "description": "Purchase or sale of advertising space or time, on commission"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 341",
+      "cells": {
+        "code": "998363",
+        "level": "service",
+        "parent": "99836",
+        "description": "Sale of advertising space in print media (except on commission)"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 342",
+      "cells": {
+        "code": "998364",
+        "level": "service",
+        "parent": "99836",
+        "description": "Sale of television and radio advertising time"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 343",
+      "cells": {
+        "code": "998365",
+        "level": "service",
+        "parent": "99836",
+        "description": "Sale of internet advertising space"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 344",
+      "cells": {
+        "code": "998366",
+        "level": "service",
+        "parent": "99836",
+        "description": "Sale of other advertising space or time (except on commission)"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 345",
+      "cells": {
+        "code": "99837",
+        "level": "group",
+        "parent": "9983",
+        "description": "Market research and public opinion polling services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 346",
+      "cells": {
+        "code": "998371",
+        "level": "service",
+        "parent": "99837",
+        "description": "Market research services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 347",
+      "cells": {
+        "code": "998372",
+        "level": "service",
+        "parent": "99837",
+        "description": "Public opinion polling services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 348",
+      "cells": {
+        "code": "99838",
+        "level": "group",
+        "parent": "9983",
+        "description": "Photography and videography and their processing services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 349",
+      "cells": {
+        "code": "998381",
+        "level": "service",
+        "parent": "99838",
+        "description": "Portrait photography services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 350",
+      "cells": {
+        "code": "998382",
+        "level": "service",
+        "parent": "99838",
+        "description": "Advertising and related photography services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 351",
+      "cells": {
+        "code": "998383",
+        "level": "service",
+        "parent": "99838",
+        "description": "Event photography and event videography services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 352",
+      "cells": {
+        "code": "998384",
+        "level": "service",
+        "parent": "99838",
+        "description": "Specialty photography services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 353",
+      "cells": {
+        "code": "998385",
+        "level": "service",
+        "parent": "99838",
+        "description": "Restoration and retouching services of photography"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 354",
+      "cells": {
+        "code": "998386",
+        "level": "service",
+        "parent": "99838",
+        "description": "Photographic and videographic processing services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 355",
+      "cells": {
+        "code": "998387",
+        "level": "service",
+        "parent": "99838",
+        "description": "Other photography and videography and their processing services nowhere else classified"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 356",
+      "cells": {
+        "code": "99839",
+        "level": "group",
+        "parent": "9983",
+        "description": "Other professional, technical and business services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 357",
+      "cells": {
+        "code": "998391",
+        "level": "service",
+        "parent": "99839",
+        "description": "Specialty design services including interior design, fashion design, industrial design and other specialty design services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 358",
+      "cells": {
+        "code": "998392",
+        "level": "service",
+        "parent": "99839",
+        "description": "Design originals"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 359",
+      "cells": {
+        "code": "998393",
+        "level": "service",
+        "parent": "99839",
+        "description": "Scientific and technical consulting services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 360",
+      "cells": {
+        "code": "998394",
+        "level": "service",
+        "parent": "99839",
+        "description": "Original compilations of facts or information"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 361",
+      "cells": {
+        "code": "998395",
+        "level": "service",
+        "parent": "99839",
+        "description": "Translation and interpretation services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 362",
+      "cells": {
+        "code": "998396",
+        "level": "service",
+        "parent": "99839",
+        "description": "Trademarks and franchises"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 363",
+      "cells": {
+        "code": "998397",
+        "level": "service",
+        "parent": "99839",
+        "description": "Sponsorship services and brand promotion services"
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 11/2017-Central Tax (Rate), Annexure: Scheme of Classification of Services, serial number 364",
+      "cells": {
+        "code": "998399",
+        "level": "service",
+        "parent": "99839",
+        "description": "Other professional, technical and business services nowhere else classified"
+      }
+    }
+  ]
+}

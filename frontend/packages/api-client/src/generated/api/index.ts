@@ -4,6 +4,8 @@
 // @ts-ignore
 import { AuthRequestBuilderNavigationMetadata, type AuthRequestBuilder } from './auth/index.js';
 // @ts-ignore
+import { ComplianceRequestBuilderNavigationMetadata, type ComplianceRequestBuilder } from './compliance/index.js';
+// @ts-ignore
 import { IdentityRequestBuilderNavigationMetadata, type IdentityRequestBuilder } from './identity/index.js';
 // @ts-ignore
 import { PlatformRequestBuilderNavigationMetadata, type PlatformRequestBuilder } from './platform/index.js';
@@ -18,6 +20,10 @@ export interface ApiRequestBuilder extends BaseRequestBuilder<ApiRequestBuilder>
      * The auth property
      */
     get auth(): AuthRequestBuilder;
+    /**
+     * The compliance property
+     */
+    get compliance(): ComplianceRequestBuilder;
     /**
      * The identity property
      */
@@ -37,6 +43,9 @@ export const ApiRequestBuilderUriTemplate = "{+baseurl}/api";
 export const ApiRequestBuilderNavigationMetadata: Record<Exclude<keyof ApiRequestBuilder, KeysToExcludeForNavigationMetadata>, NavigationMetadata> = {
     auth: {
         navigationMetadata: AuthRequestBuilderNavigationMetadata,
+    },
+    compliance: {
+        navigationMetadata: ComplianceRequestBuilderNavigationMetadata,
     },
     identity: {
         navigationMetadata: IdentityRequestBuilderNavigationMetadata,

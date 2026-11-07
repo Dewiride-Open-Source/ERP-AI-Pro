@@ -1,0 +1,175 @@
+{
+  "key": "gst.integrated-tax-rates",
+  "title": "GST rates on services: integrated tax (IGST)",
+  "description": "The rates of integrated tax on inter-State supplies of services in the Table of Notification No. 8/2017-Integrated Tax (Rate), in force from 1 July 2017, with every amendment since, for serial number 17, item (ii), serial number 21, items (i), (ia) and (ii), and serial number 38: each entry with the heading that column (2) names, the description of column (3), the rate of column (4) and the condition of column (5), where a dash means none. The Table names headings of the Scheme of Classification of Services, never six-digit codes; the notification's Explanations are not included.",
+  "basis": "law",
+  "asOf": "supplyDate",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "heading",
+      "title": "Heading",
+      "kind": "text"
+    },
+    {
+      "name": "description",
+      "title": "Description of service",
+      "kind": "text"
+    },
+    {
+      "name": "rate",
+      "title": "Rate",
+      "kind": "percent"
+    },
+    {
+      "name": "condition",
+      "title": "Condition",
+      "kind": "text",
+      "optional": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2017-07-01",
+      "instruments": [
+        "Notification No. 8/2017-Integrated Tax (Rate), 28 June 2017, G.S.R. 683(E), in force 1 July 2017",
+        "Corrigendum of 30 June 2017 to Notification No. 8/2017-Integrated Tax (Rate), reading its scheme of classification of services as the scheme annexed to Notification No. 11/2017-Central Tax (Rate), G.S.R. 690(E)"
+      ]
+    },
+    {
+      "from": "2019-01-01",
+      "instruments": [
+        "Notification No. 28/2018-Integrated Tax (Rate), 31 December 2018, in force 1 January 2019"
+      ]
+    },
+    {
+      "from": "2019-10-01",
+      "instruments": [
+        "Notification No. 19/2019-Integrated Tax (Rate), 30 September 2019, G.S.R. 730(E), in force 1 October 2019"
+      ]
+    },
+    {
+      "from": "2021-10-01",
+      "instruments": [
+        "Notification No. 6/2021-Integrated Tax (Rate), 30 September 2021, G.S.R. 689(E), in force 1 October 2021"
+      ]
+    },
+    {
+      "from": "2025-09-22",
+      "instruments": [
+        "Notification No. 15/2025-Integrated Tax (Rate), 17 September 2025, G.S.R. 664(E), in force 22 September 2025"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2017-07-01",
+      "until": "2021-09-30",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 17, item (ii)",
+      "cells": {
+        "entry": "17(ii)",
+        "heading": "9973",
+        "description": "Temporary or permanent transfer or permitting the use or enjoyment of Intellectual Property (IP) right in respect of Information Technology software. [Please refer to Explanation no. (v)]",
+        "rate": 18,
+        "condition": null
+      }
+    },
+    {
+      "from": "2021-10-01",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 17, item (ii), as substituted by Notification No. 6/2021-Integrated Tax (Rate), clause (i)(b)(ii)",
+      "cells": {
+        "entry": "17(ii)",
+        "heading": "9973",
+        "description": "Temporary or permanent transfer or permitting the use or enjoyment of Intellectual Property (IP) right.",
+        "rate": 18,
+        "condition": null
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 21, item (i)",
+      "cells": {
+        "entry": "21(i)",
+        "heading": "9983",
+        "description": "Selling of space for advertisement in print media.",
+        "rate": 5,
+        "condition": null
+      }
+    },
+    {
+      "from": "2019-10-01",
+      "until": "2025-09-21",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 21, item (ia), as inserted by Notification No. 19/2019-Integrated Tax (Rate), clause (i)(i)",
+      "cells": {
+        "entry": "21(ia)",
+        "heading": "9983",
+        "description": "Other professional, technical and business services relating to exploration, mining or drilling of petroleum crude or natural gas or both",
+        "rate": 12,
+        "condition": null
+      }
+    },
+    {
+      "from": "2017-07-01",
+      "until": "2018-12-31",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 21, item (ii)",
+      "cells": {
+        "entry": "21(ii)",
+        "heading": "9983",
+        "description": "Other professional, technical and business services other than (i) above.",
+        "rate": 18,
+        "condition": null
+      }
+    },
+    {
+      "from": "2019-01-01",
+      "until": "2019-09-30",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 21, item (ii), as amended by Notification No. 28/2018-Integrated Tax (Rate), paragraph 1(i)(f)",
+      "cells": {
+        "entry": "21(ii)",
+        "heading": "9983",
+        "description": "Other professional, technical and business services other than (i) above and serial number 38 below.",
+        "rate": 18,
+        "condition": null
+      }
+    },
+    {
+      "from": "2019-10-01",
+      "until": "2025-09-21",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 21, item (ii), as amended by Notification No. 28/2018-Integrated Tax (Rate), paragraph 1(i)(f), and Notification No. 19/2019-Integrated Tax (Rate), clause (i)(j)",
+      "cells": {
+        "entry": "21(ii)",
+        "heading": "9983",
+        "description": "Other professional, technical and business services other than (i) and (ia) above and serial number 38 below.",
+        "rate": 18,
+        "condition": null
+      }
+    },
+    {
+      "from": "2025-09-22",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 21, item (ii), as substituted by Notification No. 15/2025-Integrated Tax (Rate), paragraph (1)(a)(vii)(B)",
+      "cells": {
+        "entry": "21(ii)",
+        "heading": "9983",
+        "description": "Other professional, technical and business services other than (i) above and serial number 38 below",
+        "rate": 18,
+        "condition": null
+      }
+    },
+    {
+      "from": "2019-01-01",
+      "source": "Notification No. 8/2017-Integrated Tax (Rate), Table, serial number 38, as inserted by Notification No. 28/2018-Integrated Tax (Rate)",
+      "cells": {
+        "entry": "38",
+        "heading": "9954 or 9983 or 9987",
+        "description": "Service by way of construction or engineering or installation or other technical services, provided in relation of setting up of following, - (a) Bio-gas plant (b) Solar power based devices (c) Solar power generating system (d) Wind mills, Wind Operated Electricity Generator (WOEG) (e) Waste to energy plants / devices (f) Ocean waves/tidal waves energy devices/plants",
+        "rate": 18,
+        "condition": null
+      }
+    }
+  ]
+}

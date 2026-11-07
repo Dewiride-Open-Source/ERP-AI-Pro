@@ -13,5 +13,6 @@ public static class Modules
         new ErpModules.Platform.Jobs.JobsModule(),
         new ErpModules.Identity.Users.UsersModule(),
         new ErpModules.Platform.ReferenceData.ReferenceDataModule(),
+        new ErpModules.Compliance.StatutoryParameters.StatutoryParametersModule(),
     ];
 }

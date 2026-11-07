@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="../../../Module/Dewiride.Erp.Modules.Compliance.StatutoryParameters/Dewiride.Erp.Modules.Compliance.StatutoryParameters.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,242 @@
+{
+  "key": "gst.return-due-dates",
+  "title": "GST return due dates",
+  "description": "The standing due dates of GSTR-1 (monthly and quarterly), the invoice furnishing facility, GSTR-3B (monthly, and quarterly by the two lists of States), the PMT-06 deposit, GSTR-9 and GSTR-9C for tax periods from January 2021: each as a day of the month that falls a number of months after the tax period ends, with the words of its instrument. A tax period is a month, a quarter or a financial year, and the set answers for its first day. A due date extended for a single tax period by a later notification is not included.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "rule",
+      "title": "Rule",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Return or payment",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "form",
+      "title": "Form",
+      "kind": "code"
+    },
+    {
+      "name": "filers",
+      "title": "Filers",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "monthly",
+          "title": "Monthly filers"
+        },
+        {
+          "value": "quarterly",
+          "title": "Quarterly filers"
+        },
+        {
+          "value": "all",
+          "title": "All filers"
+        }
+      ]
+    },
+    {
+      "name": "period",
+      "title": "Tax period",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "month",
+          "title": "Month"
+        },
+        {
+          "value": "quarter",
+          "title": "Quarter"
+        },
+        {
+          "value": "firstTwoMonthsOfQuarter",
+          "title": "First two months of a quarter"
+        },
+        {
+          "value": "financialYear",
+          "title": "Financial year"
+        }
+      ]
+    },
+    {
+      "name": "opensDay",
+      "title": "Opens on day",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1,
+      "maximum": 31
+    },
+    {
+      "name": "dueDay",
+      "title": "Due on or before day",
+      "kind": "integer",
+      "minimum": 1,
+      "maximum": 31
+    },
+    {
+      "name": "monthsAfter",
+      "title": "Months after the period ends",
+      "kind": "integer",
+      "minimum": 1,
+      "maximum": 12
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2021-01-01",
+      "instruments": [
+        "Notification No. 82/2020-Central Tax, 10 November 2020, Central Goods and Services Tax (Thirteenth Amendment) Rules, 2020, substituting rules 59 and 61 from 1 January 2021",
+        "Notification No. 83/2020-Central Tax, 10 November 2020, G.S.R. 699(E), in force 1 January 2021",
+        "Notification No. 30/2021-Central Tax, 30 July 2021, substituting rule 80 from 1 August 2021"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2021-01-01",
+      "source": "Notification No. 83/2020-Central Tax, paragraph 1",
+      "cells": {
+        "rule": "gstr-1-monthly",
+        "name": "Details of outward supplies (GSTR-1), monthly filers",
+        "form": "GSTR-1",
+        "filers": "monthly",
+        "period": "month",
+        "opensDay": null,
+        "dueDay": 11,
+        "monthsAfter": 1,
+        "wording": "the Commissioner, on the recommendations of the Council, hereby extends the time limit for furnishing the details of outward supplies in FORM GSTR-1 of the Central Goods and Services Tax Rules, 2017 (hereafter in this notification referred to as the said rules), for each of the tax periods, till the eleventh day of the month succeeding such tax period"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Notification No. 83/2020-Central Tax, paragraph 1, first proviso",
+      "cells": {
+        "rule": "gstr-1-quarterly",
+        "name": "Details of outward supplies (GSTR-1), quarterly filers",
+        "form": "GSTR-1",
+        "filers": "quarterly",
+        "period": "quarter",
+        "opensDay": null,
+        "dueDay": 13,
+        "monthsAfter": 1,
+        "wording": "Provided that the time limit for furnishing the details of outward supplies in FORM GSTR-1 of the said rules for the class of registered persons required to furnish return for every quarter under proviso to sub-section (1) of section 39 of the said Act, shall be extended till the thirteenth day of the month succeeding such tax period."
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 59(2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "rule": "iff",
+        "name": "Invoice furnishing facility (IFF)",
+        "form": "IFF",
+        "filers": "quarterly",
+        "period": "firstTwoMonthsOfQuarter",
+        "opensDay": 1,
+        "dueDay": 13,
+        "monthsAfter": 1,
+        "wording": "The registered persons required to furnish return for every quarter under proviso to sub-section (1) of section 39 may furnish the details of such outward supplies of goods or services or both to a registered person, as he may consider necessary, for the first and second months of a quarter, up to a cumulative value of fifty lakh rupees in each of the months,- using invoice furnishing facility (hereafter in this notification referred to as the \"IFF\") electronically on the common portal, duly authenticated in the manner prescribed under rule 26, from the 1st day of the month succeeding such month till the 13th day of the said month."
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(i), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "rule": "gstr-3b-monthly",
+        "name": "Return (GSTR-3B), monthly filers",
+        "form": "GSTR-3B",
+        "filers": "monthly",
+        "period": "month",
+        "opensDay": null,
+        "dueDay": 20,
+        "monthsAfter": 1,
+        "wording": "shall furnish a return in FORM GSTR-3B, electronically through the common portal either directly or through a Facilitation Centre notified by the Commissioner, as specified under - (i) sub-section (1) of section 39, for each month, or part thereof, on or before the twentieth day of the month succeeding such month"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "rule": "gstr-3b-quarterly-1",
+        "name": "Return (GSTR-3B), quarterly filers in the first list of States",
+        "form": "GSTR-3B",
+        "filers": "quarterly",
+        "period": "quarter",
+        "opensDay": null,
+        "dueDay": 22,
+        "monthsAfter": 1,
+        "wording": "twenty-second day of the month succeeding such quarter."
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "rule": "gstr-3b-quarterly-2",
+        "name": "Return (GSTR-3B), quarterly filers in the second list of States",
+        "form": "GSTR-3B",
+        "filers": "quarterly",
+        "period": "quarter",
+        "opensDay": null,
+        "dueDay": 24,
+        "monthsAfter": 1,
+        "wording": "twenty-fourth day of the month succeeding such quarter."
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(3), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "rule": "pmt-06",
+        "name": "Tax deposit (PMT-06)",
+        "form": "PMT-06",
+        "filers": "quarterly",
+        "period": "firstTwoMonthsOfQuarter",
+        "opensDay": null,
+        "dueDay": 25,
+        "monthsAfter": 1,
+        "wording": "Every registered person required to furnish return, every quarter, under clause (ii) of sub-rule (1) shall pay the tax due under proviso to sub-section (7) of section 39, for each of the first two months of the quarter, by depositing the said amount in FORM GST PMT-06, by the twenty fifth day of the month succeeding such month"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 80(1), as substituted by Notification No. 30/2021-Central Tax",
+      "cells": {
+        "rule": "gstr-9",
+        "name": "Annual return (GSTR-9)",
+        "form": "GSTR-9",
+        "filers": "all",
+        "period": "financialYear",
+        "opensDay": null,
+        "dueDay": 31,
+        "monthsAfter": 9,
+        "wording": "shall furnish an annual return for every financial year as specified under section 44 electronically in FORM GSTR-9 on or before the thirty-first day of December following the end of such financial year through the common portal"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 80(3), as substituted by Notification No. 30/2021-Central Tax",
+      "cells": {
+        "rule": "gstr-9c",
+        "name": "Reconciliation statement (GSTR-9C)",
+        "form": "GSTR-9C",
+        "filers": "all",
+        "period": "financialYear",
+        "opensDay": null,
+        "dueDay": 31,
+        "monthsAfter": 9,
+        "wording": "whose aggregate turnover during a financial year exceeds five crore rupees, shall also furnish a self-certified reconciliation statement as specified under section 44 in FORM GSTR-9C along with the annual return referred to in sub-rule (1), on or before the thirty-first day of December following the end of such financial year"
+      }
+    }
+  ]
+}

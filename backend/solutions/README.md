@@ -4,6 +4,7 @@ One `.slnf` per domain keeps IDE loads small as the module count grows. Open a f
 
 | Filter | Contents |
 |---|---|
+| `Compliance.slnf` | building blocks, hosts, shared tests and the Compliance modules |
 | `Identity.slnf` | building blocks, hosts, shared tests and the Identity modules |
 | `Platform.slnf` | building blocks, hosts, shared tests and the Platform modules |
 

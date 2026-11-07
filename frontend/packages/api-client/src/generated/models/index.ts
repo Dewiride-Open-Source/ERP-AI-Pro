@@ -681,6 +681,96 @@ export function createPagedResponseOfPositionResponseFromDiscriminatorValue(pars
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterCellResponse}
+ */
+// @ts-ignore
+export function createParameterCellResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterCellResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterChoiceResponse}
+ */
+// @ts-ignore
+export function createParameterChoiceResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterChoiceResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterColumnResponse}
+ */
+// @ts-ignore
+export function createParameterColumnResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterColumnResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterRowChangeResponse}
+ */
+// @ts-ignore
+export function createParameterRowChangeResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterRowChangeResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterRowResponse}
+ */
+// @ts-ignore
+export function createParameterRowResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterRowResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterSetResponse}
+ */
+// @ts-ignore
+export function createParameterSetResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterSetResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterSetsResponse}
+ */
+// @ts-ignore
+export function createParameterSetsResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterSetsResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterSetSummaryResponse}
+ */
+// @ts-ignore
+export function createParameterSetSummaryResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterSetSummaryResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterVersionResponse}
+ */
+// @ts-ignore
+export function createParameterVersionResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterVersionResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ParameterVersionSummaryResponse}
+ */
+// @ts-ignore
+export function createParameterVersionSummaryResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoParameterVersionSummaryResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {PermissionCatalogResponse}
  */
 // @ts-ignore
@@ -1673,6 +1763,157 @@ export function deserializeIntoPagedResponseOfPositionResponse(pagedResponseOfPo
         "pageSize": n => { pagedResponseOfPositionResponse.pageSize = n.getNumberValue(); },
         "totalCount": n => { pagedResponseOfPositionResponse.totalCount = n.getNumberValue(); },
         "totalPages": n => { pagedResponseOfPositionResponse.totalPages = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterCellResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterCellResponse(parameterCellResponse: Partial<ParameterCellResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "column": n => { parameterCellResponse.column = n.getStringValue(); },
+        "value": n => { parameterCellResponse.value = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterChoiceResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterChoiceResponse(parameterChoiceResponse: Partial<ParameterChoiceResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "title": n => { parameterChoiceResponse.title = n.getStringValue(); },
+        "value": n => { parameterChoiceResponse.value = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterColumnResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterColumnResponse(parameterColumnResponse: Partial<ParameterColumnResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "choices": n => { parameterColumnResponse.choices = n.getCollectionOfObjectValues<ParameterChoiceResponse>(createParameterChoiceResponseFromDiscriminatorValue); },
+        "isKey": n => { parameterColumnResponse.isKey = n.getBooleanValue(); },
+        "isOptional": n => { parameterColumnResponse.isOptional = n.getBooleanValue(); },
+        "isRowTitle": n => { parameterColumnResponse.isRowTitle = n.getBooleanValue(); },
+        "kind": n => { parameterColumnResponse.kind = n.getEnumValue<ParameterColumnKind>(ParameterColumnKindObject); },
+        "name": n => { parameterColumnResponse.name = n.getStringValue(); },
+        "title": n => { parameterColumnResponse.title = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterRowChangeResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterRowChangeResponse(parameterRowChangeResponse: Partial<ParameterRowChangeResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "after": n => { parameterRowChangeResponse.after = n.getObjectValue<ParameterRowResponse>(createParameterRowResponseFromDiscriminatorValue); },
+        "before": n => { parameterRowChangeResponse.before = n.getObjectValue<ParameterRowResponse>(createParameterRowResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterRowResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterRowResponse(parameterRowResponse: Partial<ParameterRowResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "cells": n => { parameterRowResponse.cells = n.getCollectionOfObjectValues<ParameterCellResponse>(createParameterCellResponseFromDiscriminatorValue); },
+        "from": n => { parameterRowResponse.from = n.getDateOnlyValue(); },
+        "key": n => { parameterRowResponse.key = n.getStringValue(); },
+        "source": n => { parameterRowResponse.source = n.getStringValue(); },
+        "until": n => { parameterRowResponse.until = n.getDateOnlyValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterSetResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterSetResponse(parameterSetResponse: Partial<ParameterSetResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "asOf": n => { parameterSetResponse.asOf = n.getEnumValue<ParameterAsOf>(ParameterAsOfObject); },
+        "basis": n => { parameterSetResponse.basis = n.getEnumValue<ParameterSetBasis>(ParameterSetBasisObject); },
+        "columns": n => { parameterSetResponse.columns = n.getCollectionOfObjectValues<ParameterColumnResponse>(createParameterColumnResponseFromDiscriminatorValue); },
+        "currentFrom": n => { parameterSetResponse.currentFrom = n.getDateOnlyValue(); },
+        "description": n => { parameterSetResponse.description = n.getStringValue(); },
+        "key": n => { parameterSetResponse.key = n.getStringValue(); },
+        "shown": n => { parameterSetResponse.shown = n.getObjectValue<ParameterVersionResponse>(createParameterVersionResponseFromDiscriminatorValue); },
+        "title": n => { parameterSetResponse.title = n.getStringValue(); },
+        "versions": n => { parameterSetResponse.versions = n.getCollectionOfObjectValues<ParameterVersionSummaryResponse>(createParameterVersionSummaryResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterSetsResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterSetsResponse(parameterSetsResponse: Partial<ParameterSetsResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "sets": n => { parameterSetsResponse.sets = n.getCollectionOfObjectValues<ParameterSetSummaryResponse>(createParameterSetSummaryResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterSetSummaryResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterSetSummaryResponse(parameterSetSummaryResponse: Partial<ParameterSetSummaryResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "asOf": n => { parameterSetSummaryResponse.asOf = n.getEnumValue<ParameterAsOf>(ParameterAsOfObject); },
+        "basis": n => { parameterSetSummaryResponse.basis = n.getEnumValue<ParameterSetBasis>(ParameterSetBasisObject); },
+        "current": n => { parameterSetSummaryResponse.current = n.getObjectValue<ParameterVersionSummaryResponse>(createParameterVersionSummaryResponseFromDiscriminatorValue); },
+        "description": n => { parameterSetSummaryResponse.description = n.getStringValue(); },
+        "entryCount": n => { parameterSetSummaryResponse.entryCount = n.getNumberValue(); },
+        "firstVersionFrom": n => { parameterSetSummaryResponse.firstVersionFrom = n.getDateOnlyValue(); },
+        "key": n => { parameterSetSummaryResponse.key = n.getStringValue(); },
+        "next": n => { parameterSetSummaryResponse.next = n.getObjectValue<ParameterVersionSummaryResponse>(createParameterVersionSummaryResponseFromDiscriminatorValue); },
+        "title": n => { parameterSetSummaryResponse.title = n.getStringValue(); },
+        "versionCount": n => { parameterSetSummaryResponse.versionCount = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterVersionResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterVersionResponse(parameterVersionResponse: Partial<ParameterVersionResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "added": n => { parameterVersionResponse.added = n.getCollectionOfObjectValues<ParameterRowResponse>(createParameterRowResponseFromDiscriminatorValue); },
+        "changed": n => { parameterVersionResponse.changed = n.getCollectionOfObjectValues<ParameterRowChangeResponse>(createParameterRowChangeResponseFromDiscriminatorValue); },
+        "from": n => { parameterVersionResponse.from = n.getDateOnlyValue(); },
+        "instruments": n => { parameterVersionResponse.instruments = n.getCollectionOfPrimitiveValues<string>("string"); },
+        "removed": n => { parameterVersionResponse.removed = n.getCollectionOfObjectValues<ParameterRowResponse>(createParameterRowResponseFromDiscriminatorValue); },
+        "rows": n => { parameterVersionResponse.rows = n.getCollectionOfObjectValues<ParameterRowResponse>(createParameterRowResponseFromDiscriminatorValue); },
+        "until": n => { parameterVersionResponse.until = n.getDateOnlyValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ParameterVersionSummaryResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoParameterVersionSummaryResponse(parameterVersionSummaryResponse: Partial<ParameterVersionSummaryResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "addedCount": n => { parameterVersionSummaryResponse.addedCount = n.getNumberValue(); },
+        "changedCount": n => { parameterVersionSummaryResponse.changedCount = n.getNumberValue(); },
+        "from": n => { parameterVersionSummaryResponse.from = n.getDateOnlyValue(); },
+        "instruments": n => { parameterVersionSummaryResponse.instruments = n.getCollectionOfPrimitiveValues<string>("string"); },
+        "removedCount": n => { parameterVersionSummaryResponse.removedCount = n.getNumberValue(); },
+        "until": n => { parameterVersionSummaryResponse.until = n.getDateOnlyValue(); },
     }
 }
 /**
@@ -2697,6 +2938,233 @@ export interface PagedResponseOfPositionResponse extends AdditionalDataHolder, P
      * The totalPages property
      */
     totalPages?: number | null;
+}
+export type ParameterAsOf = (typeof ParameterAsOfObject)[keyof typeof ParameterAsOfObject];
+export interface ParameterCellResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The column property
+     */
+    column?: string | null;
+    /**
+     * The value property
+     */
+    value?: string | null;
+}
+export interface ParameterChoiceResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The title property
+     */
+    title?: string | null;
+    /**
+     * The value property
+     */
+    value?: string | null;
+}
+export type ParameterColumnKind = (typeof ParameterColumnKindObject)[keyof typeof ParameterColumnKindObject];
+export interface ParameterColumnResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The choices property
+     */
+    choices?: ParameterChoiceResponse[] | null;
+    /**
+     * The isKey property
+     */
+    isKey?: boolean | null;
+    /**
+     * The isOptional property
+     */
+    isOptional?: boolean | null;
+    /**
+     * The isRowTitle property
+     */
+    isRowTitle?: boolean | null;
+    /**
+     * The kind property
+     */
+    kind?: ParameterColumnKind | null;
+    /**
+     * The name property
+     */
+    name?: string | null;
+    /**
+     * The title property
+     */
+    title?: string | null;
+}
+export interface ParameterRowChangeResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The after property
+     */
+    after?: ParameterRowResponse | null;
+    /**
+     * The before property
+     */
+    before?: ParameterRowResponse | null;
+}
+export interface ParameterRowResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The cells property
+     */
+    cells?: ParameterCellResponse[] | null;
+    /**
+     * The from property
+     */
+    from?: DateOnly | null;
+    /**
+     * The key property
+     */
+    key?: string | null;
+    /**
+     * The source property
+     */
+    source?: string | null;
+    /**
+     * The until property
+     */
+    until?: DateOnly | null;
+}
+export type ParameterSetBasis = (typeof ParameterSetBasisObject)[keyof typeof ParameterSetBasisObject];
+export interface ParameterSetResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The asOf property
+     */
+    asOf?: ParameterAsOf | null;
+    /**
+     * The basis property
+     */
+    basis?: ParameterSetBasis | null;
+    /**
+     * The columns property
+     */
+    columns?: ParameterColumnResponse[] | null;
+    /**
+     * The currentFrom property
+     */
+    currentFrom?: DateOnly | null;
+    /**
+     * The description property
+     */
+    description?: string | null;
+    /**
+     * The key property
+     */
+    key?: string | null;
+    /**
+     * The shown property
+     */
+    shown?: ParameterVersionResponse | null;
+    /**
+     * The title property
+     */
+    title?: string | null;
+    /**
+     * The versions property
+     */
+    versions?: ParameterVersionSummaryResponse[] | null;
+}
+export interface ParameterSetsResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The sets property
+     */
+    sets?: ParameterSetSummaryResponse[] | null;
+}
+export interface ParameterSetSummaryResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The asOf property
+     */
+    asOf?: ParameterAsOf | null;
+    /**
+     * The basis property
+     */
+    basis?: ParameterSetBasis | null;
+    /**
+     * The current property
+     */
+    current?: ParameterVersionSummaryResponse | null;
+    /**
+     * The description property
+     */
+    description?: string | null;
+    /**
+     * The entryCount property
+     */
+    entryCount?: number | null;
+    /**
+     * The firstVersionFrom property
+     */
+    firstVersionFrom?: DateOnly | null;
+    /**
+     * The key property
+     */
+    key?: string | null;
+    /**
+     * The next property
+     */
+    next?: ParameterVersionSummaryResponse | null;
+    /**
+     * The title property
+     */
+    title?: string | null;
+    /**
+     * The versionCount property
+     */
+    versionCount?: number | null;
+}
+export interface ParameterVersionResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The added property
+     */
+    added?: ParameterRowResponse[] | null;
+    /**
+     * The changed property
+     */
+    changed?: ParameterRowChangeResponse[] | null;
+    /**
+     * The from property
+     */
+    from?: DateOnly | null;
+    /**
+     * The instruments property
+     */
+    instruments?: string[] | null;
+    /**
+     * The removed property
+     */
+    removed?: ParameterRowResponse[] | null;
+    /**
+     * The rows property
+     */
+    rows?: ParameterRowResponse[] | null;
+    /**
+     * The until property
+     */
+    until?: DateOnly | null;
+}
+export interface ParameterVersionSummaryResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The addedCount property
+     */
+    addedCount?: number | null;
+    /**
+     * The changedCount property
+     */
+    changedCount?: number | null;
+    /**
+     * The from property
+     */
+    from?: DateOnly | null;
+    /**
+     * The instruments property
+     */
+    instruments?: string[] | null;
+    /**
+     * The removedCount property
+     */
+    removedCount?: number | null;
+    /**
+     * The until property
+     */
+    until?: DateOnly | null;
 }
 export type Permission = (typeof PermissionObject)[keyof typeof PermissionObject];
 export interface PermissionCatalogResponse extends AdditionalDataHolder, Parsable {
@@ -3795,6 +4263,167 @@ export function serializePagedResponseOfPositionResponse(writer: SerializationWr
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterCellResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterCellResponse(writer: SerializationWriter, parameterCellResponse: Partial<ParameterCellResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterCellResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("column", parameterCellResponse.column);
+    writer.writeStringValue("value", parameterCellResponse.value);
+    writer.writeAdditionalData(parameterCellResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterChoiceResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterChoiceResponse(writer: SerializationWriter, parameterChoiceResponse: Partial<ParameterChoiceResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterChoiceResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("title", parameterChoiceResponse.title);
+    writer.writeStringValue("value", parameterChoiceResponse.value);
+    writer.writeAdditionalData(parameterChoiceResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterColumnResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterColumnResponse(writer: SerializationWriter, parameterColumnResponse: Partial<ParameterColumnResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterColumnResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<ParameterChoiceResponse>("choices", parameterColumnResponse.choices, serializeParameterChoiceResponse);
+    writer.writeBooleanValue("isKey", parameterColumnResponse.isKey);
+    writer.writeBooleanValue("isOptional", parameterColumnResponse.isOptional);
+    writer.writeBooleanValue("isRowTitle", parameterColumnResponse.isRowTitle);
+    writer.writeEnumValue<ParameterColumnKind>("kind", parameterColumnResponse.kind);
+    writer.writeStringValue("name", parameterColumnResponse.name);
+    writer.writeStringValue("title", parameterColumnResponse.title);
+    writer.writeAdditionalData(parameterColumnResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterRowChangeResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterRowChangeResponse(writer: SerializationWriter, parameterRowChangeResponse: Partial<ParameterRowChangeResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterRowChangeResponse || isSerializingDerivedType) { return; }
+    writer.writeObjectValue<ParameterRowResponse>("after", parameterRowChangeResponse.after, serializeParameterRowResponse);
+    writer.writeObjectValue<ParameterRowResponse>("before", parameterRowChangeResponse.before, serializeParameterRowResponse);
+    writer.writeAdditionalData(parameterRowChangeResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterRowResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterRowResponse(writer: SerializationWriter, parameterRowResponse: Partial<ParameterRowResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterRowResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<ParameterCellResponse>("cells", parameterRowResponse.cells, serializeParameterCellResponse);
+    writer.writeDateOnlyValue("from", parameterRowResponse.from);
+    writer.writeStringValue("key", parameterRowResponse.key);
+    writer.writeStringValue("source", parameterRowResponse.source);
+    writer.writeDateOnlyValue("until", parameterRowResponse.until);
+    writer.writeAdditionalData(parameterRowResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterSetResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterSetResponse(writer: SerializationWriter, parameterSetResponse: Partial<ParameterSetResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterSetResponse || isSerializingDerivedType) { return; }
+    writer.writeEnumValue<ParameterAsOf>("asOf", parameterSetResponse.asOf);
+    writer.writeEnumValue<ParameterSetBasis>("basis", parameterSetResponse.basis);
+    writer.writeCollectionOfObjectValues<ParameterColumnResponse>("columns", parameterSetResponse.columns, serializeParameterColumnResponse);
+    writer.writeDateOnlyValue("currentFrom", parameterSetResponse.currentFrom);
+    writer.writeStringValue("description", parameterSetResponse.description);
+    writer.writeStringValue("key", parameterSetResponse.key);
+    writer.writeObjectValue<ParameterVersionResponse>("shown", parameterSetResponse.shown, serializeParameterVersionResponse);
+    writer.writeStringValue("title", parameterSetResponse.title);
+    writer.writeCollectionOfObjectValues<ParameterVersionSummaryResponse>("versions", parameterSetResponse.versions, serializeParameterVersionSummaryResponse);
+    writer.writeAdditionalData(parameterSetResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterSetsResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterSetsResponse(writer: SerializationWriter, parameterSetsResponse: Partial<ParameterSetsResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterSetsResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<ParameterSetSummaryResponse>("sets", parameterSetsResponse.sets, serializeParameterSetSummaryResponse);
+    writer.writeAdditionalData(parameterSetsResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterSetSummaryResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterSetSummaryResponse(writer: SerializationWriter, parameterSetSummaryResponse: Partial<ParameterSetSummaryResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterSetSummaryResponse || isSerializingDerivedType) { return; }
+    writer.writeEnumValue<ParameterAsOf>("asOf", parameterSetSummaryResponse.asOf);
+    writer.writeEnumValue<ParameterSetBasis>("basis", parameterSetSummaryResponse.basis);
+    writer.writeObjectValue<ParameterVersionSummaryResponse>("current", parameterSetSummaryResponse.current, serializeParameterVersionSummaryResponse);
+    writer.writeStringValue("description", parameterSetSummaryResponse.description);
+    writer.writeNumberValue("entryCount", parameterSetSummaryResponse.entryCount);
+    writer.writeDateOnlyValue("firstVersionFrom", parameterSetSummaryResponse.firstVersionFrom);
+    writer.writeStringValue("key", parameterSetSummaryResponse.key);
+    writer.writeObjectValue<ParameterVersionSummaryResponse>("next", parameterSetSummaryResponse.next, serializeParameterVersionSummaryResponse);
+    writer.writeStringValue("title", parameterSetSummaryResponse.title);
+    writer.writeNumberValue("versionCount", parameterSetSummaryResponse.versionCount);
+    writer.writeAdditionalData(parameterSetSummaryResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterVersionResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterVersionResponse(writer: SerializationWriter, parameterVersionResponse: Partial<ParameterVersionResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterVersionResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<ParameterRowResponse>("added", parameterVersionResponse.added, serializeParameterRowResponse);
+    writer.writeCollectionOfObjectValues<ParameterRowChangeResponse>("changed", parameterVersionResponse.changed, serializeParameterRowChangeResponse);
+    writer.writeDateOnlyValue("from", parameterVersionResponse.from);
+    writer.writeCollectionOfPrimitiveValues<string>("instruments", parameterVersionResponse.instruments);
+    writer.writeCollectionOfObjectValues<ParameterRowResponse>("removed", parameterVersionResponse.removed, serializeParameterRowResponse);
+    writer.writeCollectionOfObjectValues<ParameterRowResponse>("rows", parameterVersionResponse.rows, serializeParameterRowResponse);
+    writer.writeDateOnlyValue("until", parameterVersionResponse.until);
+    writer.writeAdditionalData(parameterVersionResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param ParameterVersionSummaryResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeParameterVersionSummaryResponse(writer: SerializationWriter, parameterVersionSummaryResponse: Partial<ParameterVersionSummaryResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!parameterVersionSummaryResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("addedCount", parameterVersionSummaryResponse.addedCount);
+    writer.writeNumberValue("changedCount", parameterVersionSummaryResponse.changedCount);
+    writer.writeDateOnlyValue("from", parameterVersionSummaryResponse.from);
+    writer.writeCollectionOfPrimitiveValues<string>("instruments", parameterVersionSummaryResponse.instruments);
+    writer.writeNumberValue("removedCount", parameterVersionSummaryResponse.removedCount);
+    writer.writeDateOnlyValue("until", parameterVersionSummaryResponse.until);
+    writer.writeAdditionalData(parameterVersionSummaryResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param PermissionCatalogResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -4320,7 +4949,25 @@ export const JobRunStatusObject = {
     DeadLettered: "deadLettered",
     Cancelled: "cancelled",
 } as const;
+export const ParameterAsOfObject = {
+    SupplyDate: "supplyDate",
+    TaxPeriodStart: "taxPeriodStart",
+} as const;
+export const ParameterColumnKindObject = {
+    Text: "text",
+    Code: "code",
+    Integer: "integer",
+    Percent: "percent",
+    Amount: "amount",
+    Choice: "choice",
+    StateCode: "stateCode",
+} as const;
+export const ParameterSetBasisObject = {
+    Law: "law",
+    Interpretation: "interpretation",
+} as const;
 export const PermissionObject = {
+    ComplianceStatutoryParametersParameterSetsRead: "compliance.statutory-parameters.parameter-sets.read",
     IdentityUsersDepartmentsCreate: "identity.users.departments.create",
     IdentityUsersDepartmentsDelete: "identity.users.departments.delete",
     IdentityUsersDepartmentsRead: "identity.users.departments.read",

@@ -1,0 +1,354 @@
+{
+  "key": "gst.quarterly-return-states",
+  "title": "States for the quarterly GSTR-3B",
+  "description": "The GST State codes in the two lists of the Table of rule 61(1)(ii) of the Central Goods and Services Tax Rules, 2017, which set the due date of the quarterly GSTR-3B by the State or Union territory of the principal place of business: the twenty-second day of the month after the quarter for the first list and the twenty-fourth for the second. The rule names the Union territories of Daman and Diu and Dadra and Nagar Haveli, not the merged Union territory of code 26, and neither list names Other Territory, code 97, so neither code has a row.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "stateCode",
+      "title": "State code",
+      "kind": "stateCode",
+      "key": true
+    },
+    {
+      "name": "listedAs",
+      "title": "Named in the rule as",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "rule",
+      "title": "Due-date rule",
+      "kind": "code",
+      "references": [
+        "gst.return-due-dates"
+      ]
+    }
+  ],
+  "versions": [
+    {
+      "from": "2021-01-01",
+      "instruments": [
+        "Notification No. 82/2020-Central Tax, 10 November 2020, Central Goods and Services Tax (Thirteenth Amendment) Rules, 2020, substituting rule 61 from 1 January 2021"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "22",
+        "listedAs": "Chhattisgarh",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "23",
+        "listedAs": "Madhya Pradesh",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "24",
+        "listedAs": "Gujarat",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "27",
+        "listedAs": "Maharashtra",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "29",
+        "listedAs": "Karnataka",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "30",
+        "listedAs": "Goa",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "32",
+        "listedAs": "Kerala",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "33",
+        "listedAs": "Tamil Nadu",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "36",
+        "listedAs": "Telangana",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "37",
+        "listedAs": "Andhra Pradesh",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "34",
+        "listedAs": "Puducherry",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "35",
+        "listedAs": "Andaman and Nicobar Islands",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 1, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "31",
+        "listedAs": "Lakshadweep",
+        "rule": "gstr-3b-quarterly-1"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "02",
+        "listedAs": "Himachal Pradesh",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "03",
+        "listedAs": "Punjab",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "05",
+        "listedAs": "Uttarakhand",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "06",
+        "listedAs": "Haryana",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "08",
+        "listedAs": "Rajasthan",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "09",
+        "listedAs": "Uttar Pradesh",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "10",
+        "listedAs": "Bihar",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "11",
+        "listedAs": "Sikkim",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "12",
+        "listedAs": "Arunachal Pradesh",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "13",
+        "listedAs": "Nagaland",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "14",
+        "listedAs": "Manipur",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "15",
+        "listedAs": "Mizoram",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "16",
+        "listedAs": "Tripura",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "17",
+        "listedAs": "Meghalaya",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "18",
+        "listedAs": "Assam",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "19",
+        "listedAs": "West Bengal",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "20",
+        "listedAs": "Jharkhand",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "21",
+        "listedAs": "Odisha",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "01",
+        "listedAs": "Jammu and Kashmir",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "38",
+        "listedAs": "Ladakh",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "04",
+        "listedAs": "Chandigarh",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    },
+    {
+      "from": "2021-01-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 61(1)(ii), Table, serial number 2, column (2), as substituted by Notification No. 82/2020-Central Tax",
+      "cells": {
+        "stateCode": "07",
+        "listedAs": "Delhi",
+        "rule": "gstr-3b-quarterly-2"
+      }
+    }
+  ]
+}

@@ -7116,6 +7116,221 @@
         ]
       }
     },
+    "/api/compliance/statutory-parameters/parameter-sets": {
+      "get": {
+        "tags": [
+          "Compliance.StatutoryParameters"
+        ],
+        "summary": "Lists the statutory parameter sets by title, each with the version in force today in India and the next one.",
+        "operationId": "Compliance.StatutoryParameters.ListParameterSets",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParameterSetsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/compliance/statutory-parameters/parameter-sets/{key}": {
+      "get": {
+        "tags": [
+          "Compliance.StatutoryParameters"
+        ],
+        "summary": "Describes one statutory parameter set: its columns, its versions with what each changed, and the entries and changes of the version in force on a date.",
+        "operationId": "Compliance.StatutoryParameters.GetParameterSet",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "Key of the set, such as gst.central-tax-rates: two or more dot-separated parts of lower-case words joined by hyphens.",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "minLength": 0,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)+$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "on",
+            "in": "query",
+            "description": "Date whose version to show, as yyyy-MM-dd; absent shows the version in force today in India.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParameterSetResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
     "/api/platform/features": {
       "get": {
         "tags": [
@@ -8903,8 +9118,367 @@
           }
         }
       },
+      "ParameterAsOf": {
+        "enum": [
+          "supplyDate",
+          "taxPeriodStart"
+        ]
+      },
+      "ParameterCellResponse": {
+        "required": [
+          "column",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ParameterChoiceResponse": {
+        "required": [
+          "value",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "ParameterColumnKind": {
+        "enum": [
+          "text",
+          "code",
+          "integer",
+          "percent",
+          "amount",
+          "choice",
+          "stateCode"
+        ]
+      },
+      "ParameterColumnResponse": {
+        "required": [
+          "name",
+          "title",
+          "kind",
+          "isKey",
+          "isRowTitle",
+          "isOptional",
+          "choices"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ParameterColumnKind"
+          },
+          "isKey": {
+            "type": "boolean"
+          },
+          "isRowTitle": {
+            "type": "boolean"
+          },
+          "isOptional": {
+            "type": "boolean"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterChoiceResponse"
+            }
+          }
+        }
+      },
+      "ParameterRowChangeResponse": {
+        "required": [
+          "before",
+          "after"
+        ],
+        "type": "object",
+        "properties": {
+          "before": {
+            "$ref": "#/components/schemas/ParameterRowResponse"
+          },
+          "after": {
+            "$ref": "#/components/schemas/ParameterRowResponse"
+          }
+        }
+      },
+      "ParameterRowResponse": {
+        "required": [
+          "key",
+          "from",
+          "until",
+          "source",
+          "cells"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "until": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "source": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterCellResponse"
+            }
+          }
+        }
+      },
+      "ParameterSetBasis": {
+        "enum": [
+          "law",
+          "interpretation"
+        ]
+      },
+      "ParameterSetResponse": {
+        "required": [
+          "key",
+          "title",
+          "description",
+          "basis",
+          "asOf",
+          "columns",
+          "versions",
+          "currentFrom",
+          "shown"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/ParameterSetBasis"
+          },
+          "asOf": {
+            "$ref": "#/components/schemas/ParameterAsOf"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterColumnResponse"
+            }
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterVersionSummaryResponse"
+            }
+          },
+          "currentFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "shown": {
+            "$ref": "#/components/schemas/ParameterVersionResponse"
+          }
+        }
+      },
+      "ParameterSetsResponse": {
+        "required": [
+          "sets"
+        ],
+        "type": "object",
+        "properties": {
+          "sets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterSetSummaryResponse"
+            }
+          }
+        }
+      },
+      "ParameterSetSummaryResponse": {
+        "required": [
+          "key",
+          "title",
+          "description",
+          "basis",
+          "asOf",
+          "firstVersionFrom",
+          "versionCount",
+          "current",
+          "next",
+          "entryCount"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/ParameterSetBasis"
+          },
+          "asOf": {
+            "$ref": "#/components/schemas/ParameterAsOf"
+          },
+          "firstVersionFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "versionCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "current": {
+            "$ref": "#/components/schemas/ParameterVersionSummaryResponse"
+          },
+          "next": {
+            "$ref": "#/components/schemas/ParameterVersionSummaryResponse"
+          },
+          "entryCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ParameterVersionResponse": {
+        "required": [
+          "from",
+          "until",
+          "instruments",
+          "rows",
+          "added",
+          "changed",
+          "removed"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "until": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "instruments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterRowResponse"
+            }
+          },
+          "added": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterRowResponse"
+            }
+          },
+          "changed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterRowChangeResponse"
+            }
+          },
+          "removed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParameterRowResponse"
+            }
+          }
+        }
+      },
+      "ParameterVersionSummaryResponse": {
+        "required": [
+          "from",
+          "until",
+          "instruments",
+          "addedCount",
+          "changedCount",
+          "removedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "until": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "instruments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "addedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "changedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "removedCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "Permission": {
         "enum": [
+          "compliance.statutory-parameters.parameter-sets.read",
           "identity.users.departments.create",
           "identity.users.departments.delete",
           "identity.users.departments.read",
@@ -9819,6 +10393,9 @@
     },
     {
       "name": "Platform.ReferenceData"
+    },
+    {
+      "name": "Compliance.StatutoryParameters"
     },
     {
       "name": "Platform.Features"
