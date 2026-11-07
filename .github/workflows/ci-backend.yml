@@ -63,6 +63,8 @@ jobs:
         run: node --test "scripts/checks/tests/*.test.ts"
       - name: Migration script tests
         run: node --test "scripts/ef/tests/*.test.ts"
+      - name: Scaffolder tests
+        run: node --test "scripts/scaffold/tests/*.test.ts"
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -71,5 +73,22 @@ jobs:
           path: |
             backend/artifacts/TestResults/**/*.trx
             backend/artifacts/TestResults/**/*.cobertura.xml
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Set up frontend for the scaffolder proof
+        if: github.event_name != 'pull_request'
+        uses: ./.github/actions/setup-frontend
+      - name: Prove the module scaffolder
+        if: github.event_name != 'pull_request'
+        env:
+          ERP_TEST_SQL_CONNECTION: ${{ steps.sql.outputs.server-connection-string }}
+          ERP_TEST_BLOB_EMULATOR_HOST: ${{ steps.azurite.outputs.emulator-host }}
+        run: node scripts/scaffold/prove.ts --in-place
+      - name: Upload the scaffolder proof's test results
+        if: failure() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: scaffolder-proof-test-results
+          path: backend/artifacts/TestResults/**/*.trx
           retention-days: 14
           if-no-files-found: warn

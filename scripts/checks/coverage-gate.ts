@@ -1,8 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { parseArgs } from "node:util";
 
 import { repoRoot, walk } from "./lib/walk.ts";
 
+const { values } = parseArgs({ options: { module: { type: "string" } } });
+const onlyModule = values.module;
 const MINIMUM_LINE_COVERAGE = 80;
 const resultsRoot = join(repoRoot, "backend", "artifacts", "TestResults");
 const measuredLayers = /[\\/]backend[\\/]Modules[\\/][^\\/]+[\\/][^\\/]+[\\/]Module[\\/].*[\\/](Domain|Application)[\\/]/;
@@ -36,6 +39,7 @@ const byModule = new Map<string, { valid: number; covered: number }>();
 for (const [filename, lines] of hitsByFile) {
   const module = /[\\/]Modules[\\/]([^\\/]+)[\\/]([^\\/]+)[\\/]/.exec(filename);
   const key = module ? `${module[1]}/${module[2]}` : "unknown";
+  if (onlyModule !== undefined && key !== onlyModule) continue;
   const entry = byModule.get(key) ?? { valid: 0, covered: 0 };
   for (const hits of lines.values()) {
     entry.valid += 1;
@@ -49,6 +53,11 @@ for (const [filename, lines] of hitsByFile) {
 }
 
 if (valid === 0) {
+  if (onlyModule !== undefined) {
+    console.error(`coverage gate failed: no Domain or Application line of ${onlyModule} was measured`);
+    process.exit(1);
+  }
+
   console.log("coverage gate: no Domain or Application lines were measured");
   process.exit(0);
 }

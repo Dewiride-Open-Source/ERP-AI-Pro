@@ -69,6 +69,7 @@ steps.push(
   { name: "notices tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/notices/tests/*.test.ts"] },
   { name: "api client tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/api-client/tests/*.test.ts"] },
   { name: "ef script tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/ef/tests/*.test.ts"] },
+  { name: "scaffold tests", cwd: repoRoot, command: "node", args: ["--test", "scripts/scaffold/tests/*.test.ts"] },
   { name: "roadmap check", cwd: repoRoot, command: "node", args: ["scripts/roadmap/roadmap.ts", "check"] },
 );
 
