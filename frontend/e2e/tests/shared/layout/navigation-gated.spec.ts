@@ -3,7 +3,7 @@ import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { AppShell, showsBreadcrumbs } from "../../../pages/shared/layout/app-shell.page";
 
 // An administrator holds every permission, so only the disabled modules can keep their pages out of the shell.
-test.describe("app shell navigation with the system-info module disabled", () => {
+test.describe("app shell navigation with every module disabled", () => {
   test.skip(
     !gatedBaseURL,
     "E2E_GATED_BASE_URL is not set and Playwright did not start the gated web instance",
