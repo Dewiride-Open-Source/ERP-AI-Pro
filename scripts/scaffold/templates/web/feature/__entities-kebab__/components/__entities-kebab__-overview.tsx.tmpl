@@ -1,0 +1,120 @@
+import type { PagedResponseOf__Entity__Response } from "@dewiride/erp-api-client";
+import { Button } from "@dewiride/erp-ui/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@dewiride/erp-ui/components/ui/card";
+import { PlusIcon } from "lucide-react";
+import Link from "next/link";
+import { redirect, unstable_rethrow } from "next/navigation";
+
+import { ApiError } from "@/shared/api/problem-details";
+import { mayShow } from "@/shared/auth/permissions";
+import { requireSession } from "@/shared/auth/session";
+import { listApiParameters, type ListApiParameters } from "@/shared/lists/list-api";
+import { listHref, readListQuery, withPage, type SearchParameters } from "@/shared/lists/list-query";
+
+import { __entities__Navigation } from "../../nav";
+import { __entities__List } from "../lists/__entities-kebab__.list";
+import { get__Entities__ } from "../server/queries";
+
+import { __Entities__List } from "./__entities-kebab__-list";
+
+const listHeadingId = "__entities-kebab__-list-heading";
+
+type ListRead =
+  | { readonly status: "read"; readonly list: PagedResponseOf__Entity__Response }
+  | { readonly status: "failed"; readonly reason: unknown };
+
+export async function __Entities__Overview({ searchParameters }: { searchParameters: SearchParameters }) {
+  const { basePath, title, area, icon: Icon } = __entities__Navigation;
+  const { query, canonical } = readListQuery(searchParameters, __entities__List);
+  if (!canonical) redirect(listHref(basePath, query, __entities__List));
+
+  const session = await requireSession();
+  const canCreate = mayShow(session, "__domain-kebab__.__module-kebab__.__entities-kebab__.create");
+  const read = await readList(listApiParameters(query, __entities__List));
+  if (read.status === "read") {
+    const totalPages = read.list.totalPages ?? 0;
+    if (query.page > 1 && query.page > totalPages) {
+      redirect(listHref(basePath, withPage(query, Math.max(1, totalPages)), __entities__List));
+    }
+  }
+
+  return (
+    <div className="grid gap-section">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-eyebrow text-primary uppercase">{area.title}</p>
+          <h1 className="text-title">{title}</h1>
+        </div>
+        {canCreate ? (
+          <Button asChild>
+            <Link href="/__domain-kebab__/__module-kebab__/__entities-kebab__/new">
+              <PlusIcon aria-hidden />
+              New __entity-words__
+            </Link>
+          </Button>
+        ) : null}
+      </header>
+
+      <Card data-testid="__entities-kebab__-list-card">
+        <CardHeader>
+          <CardTitle>
+            <h2 id={listHeadingId} className="flex items-center gap-2">
+              <Icon className="size-4 text-muted-foreground" aria-hidden />
+              All __entities-words__
+            </h2>
+          </CardTitle>
+          <CardDescription>Open one by its name to see its details.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {read.status === "read" ? (
+            <__Entities__List
+              query={query}
+              page={{
+                page: read.list.page ?? query.page,
+                pageSize: read.list.pageSize ?? query.pageSize,
+                totalCount: read.list.totalCount ?? 0,
+                pageCount: read.list.totalPages ?? 0,
+              }}
+              rows={(read.list.items ?? []).flatMap(({ id, name }) => (id && name ? [{ id, name }] : []))}
+              labelledBy={listHeadingId}
+            />
+          ) : (
+            <Unavailable reason={describeFailure(read.reason)} />
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+async function readList(parameters: ListApiParameters): Promise<ListRead> {
+  try {
+    return { status: "read", list: await get__Entities__(parameters) };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { status: "failed", reason: error };
+  }
+}
+
+function describeFailure(reason: unknown): string {
+  return reason instanceof ApiError ? reason.message : "The API did not respond.";
+}
+
+function Unavailable({ reason }: { reason: string }) {
+  return (
+    <div
+      role="status"
+      data-testid="__entities-kebab__-unavailable"
+      className="rounded-lg border border-destructive/40 bg-destructive/5 p-4"
+    >
+      <p className="font-medium">__Entities-words__ are not available.</p>
+      <p className="mt-1 text-sm text-muted-foreground">{reason}</p>
+    </div>
+  );
+}

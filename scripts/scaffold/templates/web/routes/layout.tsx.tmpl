@@ -1,0 +1,9 @@
+import type { ReactNode } from "react";
+
+import { __entities__Navigation } from "@/features/__domain-kebab__/__module-kebab__";
+import { requireFeature } from "@/shared/feature-flags/require-feature";
+
+export default async function __Module__Layout({ children }: Readonly<{ children: ReactNode }>) {
+  await requireFeature(__entities__Navigation.featureFlag);
+  return children;
+}

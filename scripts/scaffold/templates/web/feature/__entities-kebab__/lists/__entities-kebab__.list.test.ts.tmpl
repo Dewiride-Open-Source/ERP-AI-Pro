@@ -1,0 +1,58 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+
+import { listApiParameters } from "@/shared/lists/list-api";
+import { listHref, readListQuery } from "@/shared/lists/list-query";
+
+import { __entities__List, __entity__NameMaxLength } from "./__entities-kebab__.list.ts";
+
+const basePath = "/__domain-kebab__/__module-kebab__/__entities-kebab__";
+
+test("__entities__List_NoParameters_ListsTwentyByNameFromAToZ", () => {
+  const { query, canonical } = readListQuery({}, __entities__List);
+
+  assert.equal(canonical, true);
+  assert.deepEqual(listApiParameters(query, __entities__List), {
+    page: 1,
+    pageSize: 20,
+    sort: "name:asc",
+    filter: undefined,
+  });
+  assert.equal(listHref(basePath, query, __entities__List), basePath);
+});
+
+test("__entities__List_NameSortSizeAndPage_ReachTheApiAsTheAddressHoldsThem", () => {
+  const { query, canonical } = readListQuery(
+    { name: "North & south", sort: "name:desc", size: "50", page: "3" },
+    __entities__List,
+  );
+
+  assert.equal(canonical, true);
+  assert.deepEqual(listApiParameters(query, __entities__List), {
+    page: 3,
+    pageSize: 50,
+    sort: "name:desc",
+    filter: "name:contains:North%20%26%20south",
+  });
+  assert.equal(
+    listHref(basePath, query, __entities__List),
+    `${basePath}?name=North+%26+south&sort=name%3Adesc&size=50&page=3`,
+  );
+});
+
+test("__entities__List_ANameLongerThanTheLimit_IsLeftOutOfTheAddress", () => {
+  const { query, canonical } = readListQuery(
+    { name: "x".repeat(__entity__NameMaxLength + 1) },
+    __entities__List,
+  );
+
+  assert.equal(canonical, false);
+  assert.deepEqual(query.filters, {});
+});
+
+test("__entities__List_ASortFieldItDoesNotOffer_FallsBackToTheNameFromAToZ", () => {
+  const { query, canonical } = readListQuery({ sort: "createdAt:desc" }, __entities__List);
+
+  assert.equal(canonical, false);
+  assert.deepEqual(query.sort, { field: "name", direction: "asc" });
+});

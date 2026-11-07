@@ -1,0 +1,38 @@
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@dewiride/erp-ui/components/ui/card";
+
+import { __entities__Navigation } from "../../nav";
+
+import { New__Entity__Form } from "./new-__entity-kebab__-form";
+
+export const new__Entity__Title = "New __entity-words__";
+
+const formHeadingId = "new-__entity-kebab__-heading";
+
+export function New__Entity__() {
+  return (
+    <div className="grid min-w-0 grid-cols-1 gap-section">
+      <header className="grid gap-2">
+        <p className="text-eyebrow text-primary uppercase">{__entities__Navigation.title}</p>
+        <h1 className="text-title">{new__Entity__Title}</h1>
+      </header>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h2 id={formHeadingId}>Details</h2>
+          </CardTitle>
+          <CardDescription>The name shows in the list and heads the page of the new record.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <New__Entity__Form labelledBy={formHeadingId} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

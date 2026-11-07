@@ -1,0 +1,13 @@
+import { z } from "zod";
+
+import { requiredText } from "@/shared/forms/schemas/field-schemas";
+
+import { __entity__NameMaxLength } from "../lists/__entities-kebab__.list.ts";
+
+export const create__Entity__Schema = z.object({
+  name: requiredText(__entity__NameMaxLength, { required: "Enter the __entity-words__'s name." }),
+});
+
+export type Create__Entity__Values = z.input<typeof create__Entity__Schema>;
+
+export const defaultCreate__Entity__Values: Create__Entity__Values = { name: "" };

@@ -1,0 +1,55 @@
+"use server";
+
+import type { __Entity__Response, Create__Entity__Request } from "@dewiride/erp-api-client";
+import { unstable_rethrow } from "next/navigation";
+import type { z } from "zod";
+
+import { callApi } from "@/shared/api/client";
+import { holdsPermission } from "@/shared/auth/permissions";
+import { requireSignedInPerson } from "@/shared/auth/session";
+import { formMessages } from "@/shared/forms/errors/form-messages";
+import { problemToFormState } from "@/shared/forms/errors/problem-to-form-state";
+import { parseSubmission } from "@/shared/forms/schemas/parse-submission";
+import {
+  formFailed,
+  type FailedFormState,
+  type FormState,
+  type InvalidFormState,
+  type SucceededFormState,
+} from "@/shared/forms/state/form-state";
+
+import { create__Entity__Schema } from "../forms/__entity-kebab__.schema";
+
+export type __Entity__CreationAnswer =
+  | InvalidFormState
+  | FailedFormState
+  | (SucceededFormState & { readonly __entity__Id: string; readonly __entity__Name: string });
+
+export async function create__Entity__(
+  _previous: FormState,
+  submission: unknown,
+): Promise<__Entity__CreationAnswer> {
+  const person = await requireSignedInPerson();
+  if (!holdsPermission(person, "__domain-kebab__.__module-kebab__.__entities-kebab__.create"))
+    return formFailed(formMessages.forbidden);
+  const parsed = await parseSubmission(create__Entity__Schema, submission, { idempotent: true });
+  if (!parsed.ok) return parsed.state;
+
+  let created: __Entity__Response;
+  try {
+    created = await callApi((client) =>
+      client.api.__domain__.__module__.__entities__.post(creation(parsed.data), {
+        headers: { "Idempotency-Key": parsed.idempotencyKey },
+      }),
+    );
+  } catch (error) {
+    unstable_rethrow(error);
+    return problemToFormState(error);
+  }
+  if (!created.id || !created.name) return formFailed(formMessages.serverFailed);
+  return { status: "succeeded", __entity__Id: created.id, __entity__Name: created.name };
+}
+
+function creation(values: z.output<typeof create__Entity__Schema>): Create__Entity__Request {
+  return { name: values.name };
+}

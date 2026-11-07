@@ -1,0 +1,15 @@
+import { defineList } from "@/shared/lists/list-definition";
+
+export const __entity__NameMaxLength = 100;
+
+export const __entities__List = defineList({
+  pageSizes: [10, 20, 50, 100],
+  defaultPageSize: 20,
+  sortFields: ["name"],
+  defaultSort: { field: "name", direction: "asc" },
+  filters: [
+    { kind: "text", param: "name", field: "name", operator: "contains", maxLength: __entity__NameMaxLength },
+  ],
+  columns: ["name"],
+  hideableColumns: [],
+});

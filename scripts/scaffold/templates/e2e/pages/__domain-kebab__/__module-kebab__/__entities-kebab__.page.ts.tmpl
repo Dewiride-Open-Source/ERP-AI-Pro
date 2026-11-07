@@ -1,0 +1,46 @@
+import { expect, type Locator, type Page } from "@playwright/test";
+
+import { DataTableRegion } from "../../shared/lists/data-table.page";
+
+export const __entities__Path = "/__domain-kebab__/__module-kebab__/__entities-kebab__";
+
+export const __entities__Api = "/api/__domain-kebab__/__module-kebab__/__entities-kebab__";
+
+export class __Entities__Page {
+  readonly heading: Locator;
+  readonly listCard: Locator;
+  readonly list: DataTableRegion;
+  readonly newLink: Locator;
+  readonly unavailable: Locator;
+
+  constructor(private readonly page: Page) {
+    this.heading = page.getByRole("heading", { name: "__Title__", level: 1 });
+    this.listCard = page.getByTestId("__entities-kebab__-list-card");
+    this.list = new DataTableRegion(page, this.listCard);
+    this.newLink = page.getByRole("main").getByRole("link", { name: "New __entity-words__", exact: true });
+    this.unavailable = page.getByTestId("__entities-kebab__-unavailable");
+  }
+
+  async goto(query = ""): Promise<void> {
+    await this.page.goto(`${__entities__Path}${query}`);
+    await expect(this.heading).toBeVisible();
+  }
+
+  // The list's controls work only through React, so they are disabled in the server's HTML and mark themselves as rendering
+  // that state until the page hydrates.
+  async waitUntilInteractive(): Promise<void> {
+    await expect(this.page.getByRole("main").locator("[data-hydrating]")).toHaveCount(0);
+  }
+
+  // The list renders its records twice, as a table and as cards, and shows one of them by the width of its card.
+  row(name: string): Locator {
+    return this.list.tableRows
+      .or(this.list.cards)
+      .filter({ visible: true })
+      .filter({ has: this.page.getByTestId("__entity-kebab__-name").getByText(name, { exact: true }) });
+  }
+
+  nameLink(name: string): Locator {
+    return this.row(name).getByRole("link", { name, exact: true });
+  }
+}

@@ -1,0 +1,35 @@
+import { DataTableSkeleton } from "@dewiride/erp-ui/components/data-table/data-table-skeleton";
+import { LoadingStatus } from "@dewiride/erp-ui/components/feedback/loading-status";
+import { Card, CardContent, CardHeader } from "@dewiride/erp-ui/components/ui/card";
+import { Skeleton } from "@dewiride/erp-ui/components/ui/skeleton";
+
+import { __entities__Navigation } from "../../nav";
+
+export function __Entities__OverviewSkeleton() {
+  return (
+    <LoadingStatus
+      label="Loading __entities-words__"
+      pageTitle={__entities__Navigation.title}
+      className="grid gap-section"
+      data-testid="__entities-kebab__-loading"
+    >
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="grid gap-2">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-9 w-36" />
+        </div>
+        <Skeleton className="h-8 w-40" />
+      </header>
+
+      <Card>
+        <CardHeader className="gap-2">
+          <Skeleton className="h-5 w-36" />
+          <Skeleton className="h-4 w-full max-w-72" />
+        </CardHeader>
+        <CardContent>
+          <DataTableSkeleton columns={1} />
+        </CardContent>
+      </Card>
+    </LoadingStatus>
+  );
+}

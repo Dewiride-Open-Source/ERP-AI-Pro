@@ -1,0 +1,31 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+
+import { __entity__NameMaxLength } from "../lists/__entities-kebab__.list.ts";
+
+import { create__Entity__Schema, defaultCreate__Entity__Values } from "./__entity-kebab__.schema.ts";
+
+function reported(values: unknown): string[] {
+  const result = create__Entity__Schema.safeParse(values);
+  return result.success
+    ? []
+    : result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`);
+}
+
+test("create__Entity__Schema_StartingValues_AsksForTheName", () => {
+  assert.deepEqual(reported(defaultCreate__Entity__Values), ["name: Enter the __entity-words__'s name."]);
+});
+
+test("create__Entity__Schema_NameWithSpaces_TrimsIt", () => {
+  assert.deepEqual(create__Entity__Schema.parse({ name: "  First of the month " }), {
+    name: "First of the month",
+  });
+});
+
+test("create__Entity__Schema_NameBlankOrOverTheLimit_IsRefusedOnTheName", () => {
+  assert.deepEqual(reported({ name: "   " }), ["name: Enter the __entity-words__'s name."]);
+  assert.deepEqual(reported({ name: "x".repeat(__entity__NameMaxLength + 1) }), [
+    `name: Use ${__entity__NameMaxLength} characters or fewer.`,
+  ]);
+  assert.deepEqual(reported({ name: "x".repeat(__entity__NameMaxLength) }), []);
+});

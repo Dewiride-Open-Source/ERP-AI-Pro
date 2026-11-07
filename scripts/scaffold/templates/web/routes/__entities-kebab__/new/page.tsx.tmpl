@@ -1,0 +1,16 @@
+import type { Metadata } from "next";
+
+import { New__Entity__, new__Entity__Title } from "@/features/__domain-kebab__/__module-kebab__";
+import { pageMetadata, RequirePermission } from "@/shared/auth/require-permission";
+
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata(new__Entity__Title, "__domain-kebab__.__module-kebab__.__entities-kebab__.create");
+}
+
+export default function New__Entity__Page() {
+  return (
+    <RequirePermission permission="__domain-kebab__.__module-kebab__.__entities-kebab__.create">
+      <New__Entity__ />
+    </RequirePermission>
+  );
+}

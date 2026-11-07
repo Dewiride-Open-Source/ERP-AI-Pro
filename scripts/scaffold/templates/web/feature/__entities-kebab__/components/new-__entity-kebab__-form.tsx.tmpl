@@ -1,0 +1,86 @@
+"use client";
+
+import { FormAlert } from "@dewiride/erp-ui/components/forms/form-alert";
+import { FormField } from "@dewiride/erp-ui/components/forms/form-field";
+import { SubmitButton } from "@dewiride/erp-ui/components/forms/submit-button";
+import { Button } from "@dewiride/erp-ui/components/ui/button";
+import { FieldGroup } from "@dewiride/erp-ui/components/ui/field";
+import { Input } from "@dewiride/erp-ui/components/ui/input";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback } from "react";
+import { toast } from "sonner";
+
+import { fieldErrorMessages } from "@/shared/forms/client/form-feedback";
+import { useActionForm, type FormAction } from "@/shared/forms/client/use-action-form";
+
+import { __entities__Navigation } from "../../nav";
+import {
+  create__Entity__Schema,
+  defaultCreate__Entity__Values,
+  type Create__Entity__Values,
+} from "../forms/__entity-kebab__.schema";
+import { __entity__NameMaxLength } from "../lists/__entities-kebab__.list";
+import { create__Entity__ } from "../server/actions";
+
+// The new record's page takes the form's place in the history, so Back leads to where the addition started.
+export function New__Entity__Form({ labelledBy }: { labelledBy: string }) {
+  const router = useRouter();
+  const action = useCallback<FormAction<Create__Entity__Values>>(
+    async (previous, submission) => {
+      const answer = await create__Entity__(previous, submission);
+      if (answer.status === "succeeded") {
+        toast.success(`Added ${answer.__entity__Name}.`);
+        router.replace(`/__domain-kebab__/__module-kebab__/__entities-kebab__/${answer.__entity__Id}`);
+      }
+      return answer;
+    },
+    [router],
+  );
+  const { form, pending, ready, onSubmit, alertRef, alert, fieldId } = useActionForm({
+    schema: create__Entity__Schema,
+    action,
+    defaultValues: defaultCreate__Entity__Values,
+    idempotent: true,
+  });
+  const {
+    register,
+    formState: { errors },
+  } = form;
+
+  return (
+    <form
+      noValidate
+      method="post"
+      onSubmit={onSubmit}
+      aria-labelledby={labelledBy}
+      data-testid="__entity-kebab__-form"
+      className="grid min-w-0 gap-6"
+    >
+      {alert ? <FormAlert ref={alertRef} {...alert} /> : null}
+
+      <FieldGroup>
+        <div className="grid min-w-0 gap-5 md:grid-cols-2">
+          <FormField
+            id={fieldId("name")}
+            label="Name"
+            description={`Up to ${__entity__NameMaxLength} characters.`}
+            required
+            errors={fieldErrorMessages(errors.name)}
+          >
+            {(frame) => <Input {...frame} {...register("name")} autoComplete="off" />}
+          </FormField>
+        </div>
+      </FieldGroup>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <SubmitButton pending={pending} ready={ready} data-testid="__entity-kebab__-save">
+          Add the __entity-words__
+        </SubmitButton>
+        <Button asChild variant="outline">
+          <Link href={__entities__Navigation.basePath}>Cancel</Link>
+        </Button>
+      </div>
+    </form>
+  );
+}

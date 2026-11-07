@@ -1,0 +1,44 @@
+import "server-only";
+
+import type { __Entity__Response } from "@dewiride/erp-api-client";
+import { unstable_rethrow } from "next/navigation";
+import { cache } from "react";
+import { z } from "zod";
+
+import { callApi } from "@/shared/api/client";
+import { ApiError } from "@/shared/api/problem-details";
+import type { ListApiParameters } from "@/shared/lists/list-api";
+
+export type __Entity__Read =
+  | { readonly status: "read"; readonly record: __Entity__Response }
+  | { readonly status: "missing" }
+  | { readonly status: "failed"; readonly reason: unknown };
+
+const recordId = z.uuid();
+
+const __entities__Page = cache((page: number, pageSize: number, sort: string, filter: string | undefined) =>
+  callApi((client) =>
+    client.api.__domain__.__module__.__entities__.get({
+      queryParameters: filter === undefined ? { page, pageSize, sort } : { page, pageSize, sort, filter },
+    }),
+  ),
+);
+
+export function get__Entities__({ page, pageSize, sort, filter }: ListApiParameters) {
+  return __entities__Page(page, pageSize, sort, filter);
+}
+
+export const get__Entity__ = cache(async (id: string): Promise<__Entity__Read> => {
+  if (!recordId.safeParse(id).success) return { status: "missing" };
+  try {
+    return {
+      status: "read",
+      record: await callApi((client) => client.api.__domain__.__module__.__entities__.byId(id).get()),
+    };
+  } catch (error) {
+    unstable_rethrow(error);
+    return error instanceof ApiError && error.status === 404
+      ? { status: "missing" }
+      : { status: "failed", reason: error };
+  }
+});

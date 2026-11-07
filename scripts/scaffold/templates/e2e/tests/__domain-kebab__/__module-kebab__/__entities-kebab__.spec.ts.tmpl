@@ -1,0 +1,241 @@
+import type { Page, Request } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+
+import { withholdClientBundles } from "../../../fixtures/client-bundles";
+import { uniquePrefix } from "../../../fixtures/person-records";
+import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
+import {
+  __entities__Api,
+  __entities__Path,
+  __Entities__Page,
+} from "../../../pages/__domain-kebab__/__module-kebab__/__entities-kebab__.page";
+import {
+  __entity__Api,
+  __entity__Path,
+  __Entity__Page,
+  isNew__Entity__Request,
+  new__Entity__Path,
+  New__Entity__Page,
+} from "../../../pages/__domain-kebab__/__module-kebab__/__entity-kebab__.page";
+import { AppShell } from "../../../pages/shared/layout/app-shell.page";
+
+type AddedRecord = { readonly id: string; readonly name: string };
+
+const addedRecordPath = /^\/__domain-kebab__\/__module-kebab__\/__entities-kebab__\/([0-9a-f-]{36})$/;
+
+const noAccess = "You do not have access to this page";
+
+async function addRecord(api: SignedInApi, name: string): Promise<AddedRecord> {
+  const response = await api.post(__entities__Api, {
+    headers: { "Idempotency-Key": randomUUID() },
+    data: { name },
+  });
+  expect(response.status(), `the addition of ${name}`).toBe(201);
+  return (await response.json()) as AddedRecord;
+}
+
+function watch(page: Page, matches: (request: Request) => boolean): { count: () => number } {
+  let count = 0;
+  page.on("request", (request) => {
+    if (matches(request)) count += 1;
+  });
+  return { count: () => count };
+}
+
+test.describe("__entities-words__", () => {
+  test.use({ persona: "administrator" });
+
+  test.describe("before the pages are interactive", () => {
+    test("keep the list and the form inert so no click is lost", async ({ page }) => {
+      const listPage = new __Entities__Page(page);
+      const newPage = new New__Entity__Page(page);
+      await withholdClientBundles(page);
+
+      await page.goto(__entities__Path);
+      await expect(listPage.heading).toBeVisible();
+      await expect(listPage.list.root).toHaveAttribute("data-hydrating", "");
+
+      await page.goto(new__Entity__Path);
+      await expect(newPage.heading).toBeVisible();
+      await expect(newPage.save).toBeDisabled();
+      await expect(newPage.save).toHaveAttribute("data-hydrating", "");
+    });
+  });
+
+  for (const theme of themes) {
+    test.describe(theme, () => {
+      test.use({ theme });
+
+      test("adds one after refusing a blank name, opens its page and finds it in the list", async ({
+        page,
+        api,
+        person,
+        capture,
+      }) => {
+        test.slow();
+        const listPage = new __Entities__Page(page);
+        const newPage = new New__Entity__Page(page);
+        const recordPage = new __Entity__Page(page);
+        const shell = new AppShell(page);
+        const { list } = listPage;
+        const prefix = uniquePrefix("__entities-kebab__");
+        const first = `${prefix} First`;
+        const sent = watch(page, isNew__Entity__Request);
+
+        await listPage.goto();
+        await listPage.waitUntilInteractive();
+        await expect(page).toHaveTitle("__Title__ · ERP-AI-Pro");
+        await expect(listPage.unavailable).toHaveCount(0);
+        await expect(listPage.newLink).toHaveAttribute("href", new__Entity__Path);
+        await expect(list.filters).toMatchAriaSnapshot(`
+          - search "Filter __entities-words__":
+            - group:
+              - text: Name
+              - group:
+                - group
+                - searchbox "Name"
+            - button "Apply filters"
+        `);
+        await capture("__entities-kebab__");
+
+        await listPage.newLink.click();
+        await expect(newPage.heading).toBeVisible();
+        await expect(newPage.save).toBeEnabled();
+        await expect(page).toHaveTitle("New __entity-words__ · ERP-AI-Pro");
+        await expect(newPage.form).toMatchAriaSnapshot(`
+          - form "Details":
+            - group:
+              - text: Name
+              - textbox "Name"
+              - paragraph: Up to 100 characters.
+            - button "Add the __entity-words__"
+            - link "Cancel":
+              - /url: ${__entities__Path}
+        `);
+        await expect(newPage.name).toHaveAttribute("aria-required", "true");
+
+        await newPage.save.click();
+        await expect(newPage.name).toBeFocused();
+        await expect(newPage.name).toHaveAttribute("aria-invalid", "true");
+        await expect(newPage.fieldOf(newPage.name)).toContainText("Enter the __entity-words__'s name.");
+        expect(sent.count(), "Server Function calls").toBe(0);
+        await capture("new-__entity-kebab__-refused-in-the-browser", newPage.form);
+
+        await newPage.name.fill(first);
+        await newPage.save.click();
+
+        await expect(shell.toast(`Added ${first}.`)).toBeVisible();
+        await expect(page).toHaveURL((url) => addedRecordPath.test(url.pathname));
+        const firstId = addedRecordPath.exec(new URL(page.url()).pathname)?.[1] ?? "";
+        await expect(recordPage.heading).toHaveText(first);
+        await expect(page).toHaveTitle(`${first} · ERP-AI-Pro`);
+        await expect(recordPage.details).toMatchAriaSnapshot(`
+          - heading "Details" [level=2]
+          - term: Name
+          - definition: ${first}
+        `);
+        await expect(recordPage.history.getByTestId("audit-change-summary")).toHaveText([
+          `${person?.name ?? ""} created the __entity-words__ ${first}.`,
+        ]);
+        await expect(recordPage.historyLink).toHaveAttribute("href", `/platform/audit?record=${firstId}`);
+        await capture("__entity-kebab__");
+
+        await page.goBack();
+        await expect(page).toHaveURL((url) => url.pathname === __entities__Path && url.search === "");
+        await listPage.waitUntilInteractive();
+
+        const second = await addRecord(api, `${prefix} Second`);
+        const nameFilter = list.textFilter("Name");
+        await nameFilter.fill(prefix);
+        await nameFilter.press("Enter");
+        await expect(page).toHaveURL(
+          (url) => url.pathname === __entities__Path && url.search === `?name=${prefix}`,
+        );
+        await expect(list.status).toHaveText("Showing all 2 __entities-words__. Sorted by Name, A to Z.");
+        await expect.poll(() => list.titles()).toEqual([first, second.name]);
+        if (await list.showsCards()) {
+          await expect(listPage.row(first)).toMatchAriaSnapshot(`
+            - listitem:
+              - link "${first}":
+                - /url: ${__entity__Path(firstId)}
+          `);
+        } else {
+          await expect(list.columnHeader("Name")).toHaveAttribute("aria-sort", "ascending");
+          await expect(listPage.row(first)).toMatchAriaSnapshot(`
+            - row:
+              - rowheader "${first}":
+                - link "${first}":
+                  - /url: ${__entity__Path(firstId)}
+          `);
+        }
+        await capture("__entities-kebab__-found", listPage.listCard);
+
+        await list.sortBy("Name", "Name, Z to A");
+        await expect(page).toHaveURL((url) => url.searchParams.get("sort") === "name:desc");
+        await expect(list.status).toHaveText("Showing all 2 __entities-words__. Sorted by Name, Z to A.");
+        await expect.poll(() => list.titles()).toEqual([second.name, first]);
+
+        await listPage.nameLink(second.name).click();
+        await expect(page).toHaveURL((url) => url.pathname === __entity__Path(second.id));
+        await expect(recordPage.heading).toHaveText(second.name);
+      });
+    });
+  }
+
+  test.describe("that does not exist", () => {
+    test.use({ expectedConsoleError: /the server responded with a status of 404/ });
+
+    test("answers the not-found page, and the API its own problem", async ({ page, api }) => {
+      for (const path of [__entity__Path(randomUUID()), __entity__Path("not-a-record")]) {
+        const response = await page.goto(path);
+
+        expect(response?.status(), path).toBe(404);
+        await expect(page.getByRole("heading", { name: "This page does not exist" }), path).toBeVisible();
+      }
+
+      const missing = __entity__Api(randomUUID());
+      const answer = await api.get(missing);
+      expect(answer.status()).toBe(404);
+      expect(await answer.json()).toMatchObject({ code: "__entity-kebab__.not-found", instance: missing });
+    });
+  });
+});
+
+test.describe("__entities-words__ for an employee", () => {
+  forEachTheme("tells them they have no access to the pages", async ({ page, capture }) => {
+    const listPage = new __Entities__Page(page);
+    await page.goto(__entities__Path);
+
+    await expect(page.getByRole("heading", { name: noAccess, level: 1 })).toBeVisible();
+    await expect(page).toHaveTitle("No access · ERP-AI-Pro");
+    await expect(listPage.listCard).toHaveCount(0);
+    await expect(listPage.newLink).toHaveCount(0);
+    await capture("__entities-kebab__-no-access");
+
+    for (const path of [new__Entity__Path, __entity__Path(randomUUID())]) {
+      await page.goto(path);
+
+      await expect(page.getByRole("heading", { name: noAccess, level: 1 }), path).toBeVisible();
+      await expect(page, path).toHaveTitle("No access · ERP-AI-Pro");
+    }
+  });
+
+  test("the API refuses them the list, a record and an addition", async ({ api }) => {
+    const answers = [
+      { request: "the list", response: await api.get(__entities__Api) },
+      { request: "a record", response: await api.get(__entity__Api(randomUUID())) },
+      {
+        request: "an addition",
+        response: await api.post(__entities__Api, {
+          headers: { "Idempotency-Key": randomUUID() },
+          data: { name: uniquePrefix("__entities-kebab__-refused") },
+        }),
+      },
+    ];
+
+    for (const { request, response } of answers) {
+      expect(response.status(), request).toBe(403);
+      expect(await response.json(), request).toMatchObject({ code: "request.forbidden" });
+    }
+  });
+});

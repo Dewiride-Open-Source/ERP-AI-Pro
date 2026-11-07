@@ -1,0 +1,18 @@
+import type { Metadata } from "next";
+
+import { __Entities__Overview, __entities__Navigation } from "@/features/__domain-kebab__/__module-kebab__";
+import { pageMetadata, RequirePermission } from "@/shared/auth/require-permission";
+
+export function generateMetadata(): Promise<Metadata> {
+  return pageMetadata(__entities__Navigation.title, __entities__Navigation.permission);
+}
+
+export default async function __Entities__Page({
+  searchParams,
+}: Readonly<PageProps<"/__domain-kebab__/__module-kebab__/__entities-kebab__">>) {
+  return (
+    <RequirePermission permission={__entities__Navigation.permission}>
+      <__Entities__Overview searchParameters={await searchParams} />
+    </RequirePermission>
+  );
+}

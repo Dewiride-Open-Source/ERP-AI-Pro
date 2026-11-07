@@ -1,0 +1,84 @@
+"use client";
+
+import type { DataTableColumn, DataTablePage } from "@dewiride/erp-ui/components/data-table/data-table";
+import { DataTableTextFilter } from "@dewiride/erp-ui/components/data-table/filters/text-filter";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@dewiride/erp-ui/components/ui/empty";
+import Link from "next/link";
+
+import type { ListQuery } from "@/shared/lists/list-query";
+import { ListTable } from "@/shared/lists/list-table";
+
+import { __entities__Navigation } from "../../nav";
+import { __entities__List, __entity__NameMaxLength } from "../lists/__entities-kebab__.list";
+
+export interface __Entity__Row {
+  readonly id: string;
+  readonly name: string;
+}
+
+const __entity__Columns: readonly DataTableColumn<__Entity__Row>[] = [
+  {
+    id: "name",
+    header: "Name",
+    cell: (row) => (
+      <Link
+        href={`/__domain-kebab__/__module-kebab__/__entities-kebab__/${row.id}`}
+        prefetch={false}
+        className="rounded-sm font-medium break-words whitespace-normal text-primary underline-offset-4 focus-ring hover:underline"
+        data-testid="__entity-kebab__-name"
+      >
+        {row.name}
+      </Link>
+    ),
+    sort: "text",
+    hideable: false,
+    role: "title",
+  },
+];
+
+export function __Entities__List({
+  query,
+  page,
+  rows,
+  labelledBy,
+}: {
+  query: ListQuery;
+  page: DataTablePage;
+  rows: readonly __Entity__Row[];
+  labelledBy: string;
+}) {
+  const { name } = query.filters;
+
+  return (
+    <ListTable
+      basePath={__entities__Navigation.basePath}
+      definition={__entities__List}
+      query={query}
+      page={page}
+      label="__Entities-words__"
+      labelledBy={labelledBy}
+      noun={{ one: "__entity-words__", other: "__entities-words__" }}
+      columns={__entity__Columns}
+      rows={rows}
+      getRowId={(row) => row.id}
+      noMatches="No __entities-words__ match these filters."
+      empty={
+        <Empty className="border" data-testid="__entities-kebab__-empty">
+          <EmptyHeader>
+            <EmptyTitle>No __entities-words__ yet.</EmptyTitle>
+            <EmptyDescription>__Entities-words__ appear here once they are added.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      }
+      filters={
+        <DataTableTextFilter
+          name="name"
+          label="Name"
+          defaultValue={typeof name === "string" ? name : ""}
+          placeholder="Search by name"
+          maxLength={__entity__NameMaxLength}
+        />
+      }
+    />
+  );
+}

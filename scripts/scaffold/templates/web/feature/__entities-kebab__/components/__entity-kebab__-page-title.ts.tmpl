@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+
+import { mayShow } from "@/shared/auth/permissions";
+import { pageMetadata } from "@/shared/auth/require-permission";
+import { requireSession } from "@/shared/auth/session";
+
+import { __entities__Navigation } from "../../nav";
+import { get__Entity__ } from "../server/queries";
+
+export const __entity__Title = "__Entity-words__";
+
+// The title is the record's name, read through the same cached request as the page, so it is ready when the page is; a
+// person without access is never read for, and an unknown record answers the page's not-found.
+export async function __entity__PageTitle(__entity__Id: string): Promise<Metadata> {
+  const { permission } = __entities__Navigation;
+  if (!mayShow(await requireSession(), permission)) return pageMetadata(__entity__Title, permission);
+  const read = await get__Entity__(__entity__Id);
+  if (read.status === "missing") notFound();
+  const name = read.status === "read" ? read.record.name : undefined;
+  return pageMetadata(name || __entity__Title, permission);
+}

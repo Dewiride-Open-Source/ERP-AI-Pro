@@ -1,0 +1,72 @@
+import { randomUUID } from "node:crypto";
+
+import { gatedBaseURL } from "../../../fixtures/targets";
+import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { __entities__Api, __entities__Path } from "../../../pages/__domain-kebab__/__module-kebab__/__entities-kebab__.page";
+import {
+  __entity__Api,
+  __entity__Path,
+  new__Entity__Path,
+} from "../../../pages/__domain-kebab__/__module-kebab__/__entity-kebab__.page";
+import { AppShell } from "../../../pages/shared/layout/app-shell.page";
+
+// An administrator holds every permission of the module, so only the disabled module can hide its pages from them.
+test.describe("__entities-words__ with the __module-words__ module disabled", () => {
+  test.skip(
+    !gatedBaseURL,
+    "E2E_GATED_BASE_URL is not set and Playwright did not start the gated web instance",
+  );
+  test.use({ baseURL: gatedBaseURL ?? "", persona: "administrator" });
+
+  test.describe("its pages", () => {
+    test.use({ expectedConsoleError: /the server responded with a status of 404/ });
+
+    forEachTheme("hide the module and answer not found inside the shell", async ({ page, capture }) => {
+      const shell = new AppShell(page);
+
+      const response = await page.goto(__entities__Path);
+
+      expect(response?.status()).toBe(404);
+      await expect(shell.banner).toBeVisible();
+      await expect(page.getByRole("heading", { name: "This page does not exist" })).toBeVisible();
+      await shell.openNavigation();
+      await expect(shell.primaryNavigation).toBeVisible();
+      await expect(shell.navigationLink("__Title__")).toHaveCount(0);
+      await expect(shell.primaryNavigation.getByRole("link")).toHaveText(["Home"]);
+      await shell.closeDrawer();
+      await capture("__entities-kebab__-disabled");
+    });
+
+    test("answer not found for the new and record pages too", async ({ page }) => {
+      for (const path of [new__Entity__Path, __entity__Path(randomUUID())]) {
+        const response = await page.goto(path);
+
+        expect(response?.status(), path).toBe(404);
+        await expect(page.getByRole("heading", { name: "This page does not exist" }), path).toBeVisible();
+      }
+    });
+  });
+
+  test("the API answers the list, a record and an addition with the disabled module's problem", async ({
+    api,
+  }) => {
+    const record = __entity__Api(randomUUID());
+    const answers = [
+      { path: __entities__Api, response: await api.get(__entities__Api) },
+      { path: record, response: await api.get(record) },
+      {
+        path: __entities__Api,
+        response: await api.post(__entities__Api, {
+          headers: { "Idempotency-Key": randomUUID() },
+          data: { name: "Refused while the module is disabled" },
+        }),
+      },
+    ];
+
+    for (const { path, response } of answers) {
+      expect(response.status(), path).toBe(404);
+      expect(response.headers()["content-type"], path).toContain("application/problem+json");
+      expect(await response.json(), path).toMatchObject({ code: "feature.disabled", instance: path });
+    }
+  });
+});

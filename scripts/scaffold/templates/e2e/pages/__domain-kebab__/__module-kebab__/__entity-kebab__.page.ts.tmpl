@@ -1,0 +1,61 @@
+import { expect, type Locator, type Page, type Request } from "@playwright/test";
+
+import { __entities__Api, __entities__Path } from "./__entities-kebab__.page";
+
+export const new__Entity__Path = `${__entities__Path}/new`;
+
+export function __entity__Path(id: string): string {
+  return `${__entities__Path}/${id}`;
+}
+
+export function __entity__Api(id: string): string {
+  return `${__entities__Api}/${id}`;
+}
+
+// A Server Function call is a POST to the page that renders the form.
+export function isNew__Entity__Request(request: Request): boolean {
+  return (
+    request.method() === "POST" &&
+    new URL(request.url()).pathname === new__Entity__Path &&
+    request.headers()["next-action"] !== undefined
+  );
+}
+
+export class __Entity__Page {
+  readonly heading: Locator;
+  readonly details: Locator;
+  readonly history: Locator;
+  readonly historyLink: Locator;
+  readonly unavailable: Locator;
+
+  constructor(private readonly page: Page) {
+    this.heading = page.getByRole("main").getByRole("heading", { level: 1 });
+    this.details = page.getByTestId("__entity-kebab__-details");
+    this.history = page.getByTestId("record-history");
+    this.historyLink = page.getByTestId("record-history-link");
+    this.unavailable = page.getByTestId("__entity-kebab__-unavailable");
+  }
+
+  async goto(id: string): Promise<void> {
+    await this.page.goto(__entity__Path(id));
+    await expect(this.heading).toBeVisible();
+  }
+}
+
+export class New__Entity__Page {
+  readonly heading: Locator;
+  readonly form: Locator;
+  readonly name: Locator;
+  readonly save: Locator;
+
+  constructor(page: Page) {
+    this.heading = page.getByRole("heading", { name: "New __entity-words__", level: 1 });
+    this.form = page.getByRole("form", { name: "Details" });
+    this.name = this.form.getByRole("textbox", { name: "Name", exact: true });
+    this.save = page.getByTestId("__entity-kebab__-save");
+  }
+
+  fieldOf(control: Locator): Locator {
+    return control.locator("xpath=ancestor::*[@data-slot='field'][1]");
+  }
+}

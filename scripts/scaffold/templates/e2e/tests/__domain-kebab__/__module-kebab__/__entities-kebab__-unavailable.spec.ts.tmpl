@@ -1,0 +1,57 @@
+import { randomUUID } from "node:crypto";
+
+import { addUnverifiedSessionCookie } from "../../../fixtures/sign-in";
+import { offlineBaseURL } from "../../../fixtures/targets";
+import { expect, forEachTheme, test } from "../../../fixtures/test";
+import { sessionRenewed } from "../../../pages/identity/auth/session.page";
+import { __Entities__Page } from "../../../pages/__domain-kebab__/__module-kebab__/__entities-kebab__.page";
+import { __Entity__Page } from "../../../pages/__domain-kebab__/__module-kebab__/__entity-kebab__.page";
+
+test.describe("__entities-words__ without the API", () => {
+  test.skip(
+    !offlineBaseURL,
+    "E2E_OFFLINE_BASE_URL is not set and Playwright did not start the offline web instance",
+  );
+  test.use({
+    baseURL: offlineBaseURL ?? "",
+    persona: null,
+    expectedConsoleError: /the server responded with a status of 500/,
+  });
+  test.beforeEach(async ({ context }) => {
+    await addUnverifiedSessionCookie(context, offlineBaseURL ?? "");
+  });
+
+  forEachTheme("explains that the list is unavailable and offers no filters", async ({ page, capture }) => {
+    const listPage = new __Entities__Page(page);
+    const renewal = sessionRenewed(page);
+    await listPage.goto();
+    expect((await renewal).status(), "the renewal the page sends without its API").toBe(500);
+
+    await expect(page).toHaveTitle("__Title__ · ERP-AI-Pro");
+    await expect(listPage.listCard).toBeVisible();
+    await expect(listPage.unavailable).toHaveRole("status");
+    await expect(listPage.unavailable).toContainText("__Entities-words__ are not available.");
+    await expect(listPage.unavailable).toContainText("The API did not respond.");
+    await expect(listPage.list.filters).toHaveCount(0);
+    await expect(listPage.list.table).toHaveCount(0);
+    await expect(listPage.list.cardList).toHaveCount(0);
+    await expect(listPage.newLink).toBeVisible();
+    await capture("__entities-kebab__-unavailable");
+  });
+
+  forEachTheme("explains that the record's details are not available", async ({ page, capture }) => {
+    const recordPage = new __Entity__Page(page);
+    const renewal = sessionRenewed(page);
+    await recordPage.goto(randomUUID());
+    expect((await renewal).status(), "the renewal the page sends without its API").toBe(500);
+
+    await expect(page).toHaveTitle("__Entity-words__ · ERP-AI-Pro");
+    await expect(recordPage.heading).toHaveText("__Entity-words__");
+    await expect(recordPage.unavailable).toHaveRole("status");
+    await expect(recordPage.unavailable).toContainText("This __entity-words__'s details are not available.");
+    await expect(recordPage.unavailable).toContainText("The API did not respond.");
+    await expect(recordPage.details).toHaveCount(0);
+    await expect(recordPage.history).toHaveCount(0);
+    await capture("__entity-kebab__-unavailable");
+  });
+});
