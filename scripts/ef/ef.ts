@@ -14,6 +14,9 @@ Commands:
   pending --context <key> | --all        fail when the model has changes no migration captures
   script --context <key>                 write the SQL of [--from <A>] [--to <B>] [--idempotent] [--output <file>]
 
+Keys: <domain>-<module> in kebab case for a module's context (identity-users), the class name without DbContext for a
+building block's (jobs).
+
 Options: --no-build, --configuration <Debug|Release>, --connection <string> (update only; passed to dotnet ef through the environment).`;
 
 const { positionals, values } = parseArgs({
@@ -47,7 +50,7 @@ switch (command) {
     for (const context of contexts) console.log(`${context.key.padEnd(24)} ${context.contextName.padEnd(28)} ${context.project}`);
     break;
   case "add":
-    if (!name) fail("add needs a migration name, for example: node scripts/ef/ef.ts add AddInvoices --context sales");
+    if (!name) fail("add needs a migration name, for example: node scripts/ef/ef.ts add AddInvoices --context finance-sales");
     run(addArguments(single(), name));
     break;
   case "update":

@@ -60,7 +60,7 @@ export function scriptArguments(context: DbContextEntry, options: ScriptOptions 
 }
 
 function target(context: DbContextEntry): string[] {
-  return ["--context", context.contextName, "--project", context.project, "--startup-project", startupProject];
+  return ["--context", context.fullName, "--project", context.project, "--startup-project", startupProject];
 }
 
 function build(options: BuildOptions): string[] {

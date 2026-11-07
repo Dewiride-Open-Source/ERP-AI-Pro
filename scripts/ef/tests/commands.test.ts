@@ -4,9 +4,21 @@ import { test } from "node:test";
 import { addArguments, connectionEnvironment, pendingArguments, scriptArguments, startupProject, updateArguments } from "../lib/commands.ts";
 import type { DbContextEntry } from "../lib/contexts.ts";
 
-const sales: DbContextEntry = { key: "sales", contextName: "SalesDbContext", project: "Modules/Finance/Sales/Module/Dewiride.Erp.Modules.Finance.Sales" };
+const sales: DbContextEntry = {
+  key: "finance-sales",
+  contextName: "SalesDbContext",
+  fullName: "Dewiride.Erp.Modules.Finance.Sales.Persistence.SalesDbContext",
+  project: "Modules/Finance/Sales/Module/Dewiride.Erp.Modules.Finance.Sales",
+};
 
-const target = ["--context", "SalesDbContext", "--project", "Modules/Finance/Sales/Module/Dewiride.Erp.Modules.Finance.Sales", "--startup-project", startupProject];
+const target = [
+  "--context",
+  "Dewiride.Erp.Modules.Finance.Sales.Persistence.SalesDbContext",
+  "--project",
+  "Modules/Finance/Sales/Module/Dewiride.Erp.Modules.Finance.Sales",
+  "--startup-project",
+  startupProject,
+];
 
 test("add writes the migration into the context project's Persistence/Migrations folder", () => {
   assert.deepEqual(addArguments(sales, "AddInvoices"), ["ef", "migrations", "add", "AddInvoices", ...target, "--output-dir", "Persistence/Migrations"]);

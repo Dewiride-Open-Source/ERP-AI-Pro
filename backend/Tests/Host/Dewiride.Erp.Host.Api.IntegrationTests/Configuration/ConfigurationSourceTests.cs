@@ -2,11 +2,15 @@ using Dewiride.Erp.BuildingBlocks.Configuration.Sources;
 using Dewiride.Erp.Testing;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
+using HostModules = Dewiride.Erp.Host.Composition.Modules;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Configuration;
 
 public sealed class ConfigurationSourceTests : IClassFixture<ErpApiFactory>
 {
+    private static readonly string[] PlatformHealthChecks =
+        ["self", "database:audit", "database:files", "database:platform_caching", "database:platform_idempotency", "database:platform_jobs", "storage:attachments"];
+
     private readonly ErpApiFactory _factory;
 
     public ConfigurationSourceTests(ErpApiFactory factory)
@@ -36,9 +40,10 @@ public sealed class ConfigurationSourceTests : IClassFixture<ErpApiFactory>
     public void Services_InMemorySource_RegistersTheSelfDatabaseAndStorageHealthChecks()
     {
         var registrations = _factory.Services.GetRequiredService<IOptions<HealthCheckServiceOptions>>().Value.Registrations;
+        var moduleDatabaseChecks = HostModules.All.Select(module => module.Descriptor.Schema).OfType<string>().Select(schema => $"database:{schema}");
 
         Assert.Equal(
-            ["database:audit", "database:files", "database:identity_users", "database:platform_caching", "database:platform_idempotency", "database:platform_jobs", "database:platform_system_info", "self", "storage:attachments"],
+            [.. PlatformHealthChecks.Concat(moduleDatabaseChecks).Order(StringComparer.Ordinal)],
             registrations.Select(r => r.Name).Order(StringComparer.Ordinal));
     }
 }

@@ -19,7 +19,7 @@ Every module belongs to one edition. Decide it by [ADR-0030](../adr/0030-communi
 3. Add `<Module>DbContext` under `Persistence/` deriving from `ModuleDbContext`, with the schema constant `SchemaName = "<domain>_<module>"`; register it in `AddServices` with `builder.AddModuleDbContext<<Module>DbContext>(<Module>DbContext.SchemaName)` and set `Schema` on the descriptor to the same constant. There is no design-time factory: `dotnet ef` runs the API host offline (`persistence.md`). Create the first migration from the repository root after `cd backend && dotnet tool restore`; `scripts/ef/ef.ts` discovers the new context by itself, and the migrator, the test databases and CI pick it up through the catalogue and the same discovery ([migrations guide](../guides/migrations.md)):
 
    ```bash
-   node scripts/ef/ef.ts add Initial<Aggregate>s --context <module-key>
+   node scripts/ef/ef.ts add Initial<Aggregate>s --context <domain>-<module>
    ```
 
    Reference data the module needs goes in an `ISeeder` registered with `builder.Services.AddSeeder<TSeeder>(order)`, idempotent and tested by running it twice.

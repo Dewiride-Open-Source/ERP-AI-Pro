@@ -73,23 +73,19 @@ jobs:
           nohup pnpm exec next start -H 127.0.0.1 -p 3101 > "$RUNNER_TEMP/web-offline.log" 2>&1 &
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:3101/healthz && break; sleep 1; done
           curl -sf http://127.0.0.1:3101/healthz
-      - name: Start API with the system-info, attachments, audit, users and jobs modules disabled
+      - name: Start API with every module disabled
         working-directory: backend
         env:
           ASPNETCORE_ENVIRONMENT: Testing
           ERP_TEST_SQL_CONNECTION: ${{ steps.sql.outputs.server-connection-string }}
           ERP_TEST_BLOB_EMULATOR_HOST: ${{ steps.azurite.outputs.emulator-host }}
-          feature_management__feature_flags__0__id: Erp.Modules.Platform.SystemInfo
-          feature_management__feature_flags__0__enabled: "false"
-          feature_management__feature_flags__1__id: Erp.Modules.Platform.Attachments
-          feature_management__feature_flags__1__enabled: "false"
-          feature_management__feature_flags__2__id: Erp.Modules.Platform.Audit
-          feature_management__feature_flags__2__enabled: "false"
-          feature_management__feature_flags__3__id: Erp.Modules.Identity.Users
-          feature_management__feature_flags__3__enabled: "false"
-          feature_management__feature_flags__4__id: Erp.Modules.Platform.Jobs
-          feature_management__feature_flags__4__enabled: "false"
         run: |
+          flags="$(jq -r '.flags[].id | select(test("^Erp\\.Modules\\.[A-Za-z0-9]+\\.[A-Za-z0-9]+$"))' "$GITHUB_WORKSPACE/infra/appconfig/feature-flags.json")"
+          index=0
+          for flag in $flags; do
+            export "feature_management__feature_flags__${index}__id=$flag" "feature_management__feature_flags__${index}__enabled=false"
+            index=$((index + 1))
+          done
           nohup dotnet run --project Tests/EndToEnd/Dewiride.Erp.Testing.EndToEndHost --no-build -c Release -- --port 5181 --web-origin https://localhost:3202 > "$RUNNER_TEMP/api-gated.log" 2>&1 &
           for i in $(seq 1 120); do curl -sf http://127.0.0.1:5181/healthz/live && break; sleep 1; done
           curl -sf http://127.0.0.1:5181/healthz/live

@@ -3,6 +3,7 @@ using System.Text.Json;
 using Dewiride.Erp.BuildingBlocks.Authentication.BearerTokens;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
+using HostModules = Dewiride.Erp.Host.Composition.Modules;
 
 namespace Dewiride.Erp.Host.Api.IntegrationTests.Features;
 
@@ -12,17 +13,11 @@ public sealed class FeatureEndpointsTests
 
     private const string AttachmentsFlag = "Erp.Modules.Platform.Attachments";
 
-    private const string AuditFlag = "Erp.Modules.Platform.Audit";
-
-    private const string JobsFlag = "Erp.Modules.Platform.Jobs";
-
-    private const string UsersFlag = "Erp.Modules.Identity.Users";
-
     private static readonly Uri FeaturesPath = new("/api/platform/features", UriKind.Relative);
     private static readonly Uri SystemInfoPath = new("/api/platform/system-info", UriKind.Relative);
 
     [Fact]
-    public async Task Get_Features_Default_ListsEveryModuleFlagEnabledAndThePlatformFlagAtItsDefault()
+    public async Task Get_Features_Default_ListsEveryModuleFlagEnabledAndEveryOtherFlagAtItsDefault()
     {
         using var factory = new ErpApiFactory();
         using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
@@ -34,7 +29,7 @@ public sealed class FeatureEndpointsTests
         Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
         var features = body.RootElement.GetProperty("features").EnumerateArray().ToList();
         Assert.Equal(
-            [(UsersFlag, true), (AttachmentsFlag, true), (AuditFlag, true), (JobsFlag, true), (SystemInfoFlag, true), (BearerTokenFeature.Name, false)],
+            [.. DefaultFeatureStates().OrderBy(f => f.Name, StringComparer.Ordinal)],
             features.Select(f => (f.GetProperty("name").GetString(), f.GetProperty("enabled").GetBoolean())).OrderBy(f => f.Item1, StringComparer.Ordinal));
     }
 
@@ -95,4 +90,12 @@ public sealed class FeatureEndpointsTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+
+    private static IEnumerable<(string Name, bool Enabled)> DefaultFeatureStates() =>
+        HostModules.All
+            .Select(module => module.Descriptor)
+            .SelectMany(descriptor => descriptor.Capabilities
+                .Select(capability => ($"{descriptor.FeatureFlag}.{capability.Name}", capability.EnabledByDefault))
+                .Prepend((descriptor.FeatureFlag, true)))
+            .Append((BearerTokenFeature.Name, false));
 }

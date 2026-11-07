@@ -1,3 +1,11 @@
+import {
+  employeeNavigation,
+  pageSearchMatches,
+  pageSearchResultsSnapshot,
+  pageSearchStatus,
+  primaryNavigationSnapshot,
+  registeredNavigation,
+} from "../../../fixtures/navigation";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { StartPage } from "../../../pages/platform/home/start.page";
 import { AppShell, showsBreadcrumbs } from "../../../pages/shared/layout/app-shell.page";
@@ -9,56 +17,29 @@ test.describe("navigation for an employee", () => {
     "lists only the pages the person may open, and a page they may not open names nothing they lack",
     async ({ page, capture }) => {
       const shell = new AppShell(page);
+      const everyPage = pageSearchMatches("", employeeNavigation);
       await new StartPage(page).goto();
       await shell.waitUntilInteractive();
 
       await shell.openNavigation();
-      await expect(shell.primaryNavigation).toMatchAriaSnapshot(`
-        - navigation "Primary":
-          - list:
-            - listitem:
-              - link "Home":
-                - /url: /
-          - text: Platform
-          - list "Platform":
-            - listitem:
-              - link "Attachments":
-                - /url: /platform/attachments
-          - text: Organisation
-          - list "Organisation":
-            - listitem:
-              - link "Organisation chart":
-                - /url: /identity/users/org-chart
-            - listitem:
-              - link "Departments":
-                - /url: /identity/users/departments
-            - listitem:
-              - link "Designations":
-                - /url: /identity/users/designations
-      `);
-      await expect(shell.navigationLink("System")).toHaveCount(0);
-      await expect(shell.navigationLink("People")).toHaveCount(0);
+      await expect(shell.primaryNavigation).toMatchAriaSnapshot(
+        primaryNavigationSnapshot(employeeNavigation),
+      );
+      for (const lacking of registeredNavigation.filter((entry) => !entry.employees)) {
+        await expect(shell.navigationLink(lacking.title)).toHaveCount(0);
+      }
       await capture("navigation-employee", shell.usesDrawer ? shell.drawerPanel : shell.sidebarPanel);
       await shell.closeDrawer();
 
       await shell.searchButton.click();
       await expect(shell.palette).toBeVisible();
-      await expect(shell.paletteResults).toMatchAriaSnapshot(`
-        - listbox "Pages":
-          - option "Home" [selected]
-          - group "Platform":
-            - text: Platform
-            - option "Attachments Upload and download the files kept with the ERP."
-          - group "Organisation":
-            - text: Organisation
-            - option "Organisation chart See who works in each department and who reports to whom."
-            - option "Departments See the company's departments and which department each one sits under."
-            - option "Designations See the designations people can hold in the company."
-      `);
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(5);
+      await expect(shell.paletteResults).toMatchAriaSnapshot(pageSearchResultsSnapshot(everyPage));
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(everyPage.length);
       await shell.paletteSearch.fill("recent starts");
-      await expect(shell.paletteEmpty).toBeVisible();
-      await expect(shell.paletteStatus).toHaveText("No page matches your search.");
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(
+        pageSearchMatches("recent starts", employeeNavigation).length,
+      );
+      await expect(shell.paletteStatus).toHaveText(pageSearchStatus("recent starts", employeeNavigation));
       await page.keyboard.press("Escape");
       await expect(shell.palette).toBeHidden();
 

@@ -8,12 +8,14 @@ export const backendRoot = join(repoRoot, "backend");
 export type DbContextEntry = {
   key: string;
   contextName: string;
+  fullName: string;
   project: string;
 };
 
 const searchRoots = ["Modules", "BuildingBlocks"];
 const skippedDirectories = new Set(["bin", "obj", "artifacts", "Tests", "node_modules"]);
 const contextDeclaration = /\bclass\s+(\w+DbContext)\b[^{]*:\s*ModuleDbContext\b/;
+const namespaceDeclaration = /^[ \t]*namespace[ \t]+([\w.]+)\s*[;{]/m;
 
 // Every catalogue context derives from ModuleDbContext (the AddModuleDbContext constraint) and sits in a Persistence folder
 // (an architecture rule for modules, the convention for building blocks), so the source tree alone names every context and
@@ -31,11 +33,14 @@ export function discoverContexts(backend: string = backendRoot): DbContextEntry[
   return entries.sort((left, right) => left.key.localeCompare(right.key));
 }
 
-export function contextKey(contextName: string): string {
-  return contextName
-    .replace(/DbContext$/, "")
-    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .toLowerCase();
+export function contextKey(location: string, contextName: string): string {
+  const [root, domain, module] = location.split(posix.sep);
+  if (root === "Modules" && domain && module) return `${kebabCase(domain)}-${kebabCase(module)}`;
+  return kebabCase(contextName.replace(/DbContext$/, ""));
+}
+
+function kebabCase(name: string): string {
+  return name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
 }
 
 function collect(directory: string, backend: string, entries: DbContextEntry[]): void {
@@ -45,12 +50,26 @@ function collect(directory: string, backend: string, entries: DbContextEntry[]):
     if (entry.isDirectory()) {
       collect(path, backend, entries);
     } else if (entry.isFile() && entry.name.endsWith("DbContext.cs") && directory.split(sep).at(-1) === "Persistence") {
-      const match = contextDeclaration.exec(readFileSync(path, "utf8"));
-      if (match?.[1]) {
-        entries.push({ key: contextKey(match[1]), contextName: match[1], project: owningProject(directory, backend) });
+      const source = readFileSync(path, "utf8");
+      const contextName = contextDeclaration.exec(source)?.[1];
+      if (contextName) {
+        const location = relative(backend, directory).split(sep).join(posix.sep);
+        const namespace = namespaceOf(source, posix.join(location, entry.name));
+        entries.push({
+          key: contextKey(location, contextName),
+          contextName,
+          fullName: `${namespace}.${contextName}`,
+          project: owningProject(directory, backend),
+        });
       }
     }
   }
+}
+
+function namespaceOf(source: string, file: string): string {
+  const namespace = namespaceDeclaration.exec(source)?.[1];
+  if (!namespace) throw new Error(`${file} declares no namespace, so dotnet ef cannot be given its context's full name.`);
+  return namespace;
 }
 
 function owningProject(directory: string, backend: string): string {

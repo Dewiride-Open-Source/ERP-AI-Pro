@@ -1,5 +1,11 @@
 import type { Page } from "@playwright/test";
 
+import {
+  drawerSnapshot,
+  pageSearchMatches,
+  registeredNavigation,
+  sidebarSnapshot,
+} from "../../../fixtures/navigation";
 import { expect, forEachTheme, holdShortcut, tabOntoLink, test } from "../../../fixtures/test";
 import { PeoplePage, peoplePath } from "../../../pages/identity/users/people.page";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
@@ -15,90 +21,6 @@ import {
 const sidebarStateCookie = "sidebar_state";
 
 const sidebarStateSeconds = 7 * 24 * 60 * 60;
-
-const sidebarSnapshot = `
-  - list:
-    - listitem:
-      - link "ERP-AI-Pro":
-        - /url: /
-  - navigation "Primary":
-    - list:
-      - listitem:
-        - link "Home":
-          - /url: /
-    - text: Platform
-    - list "Platform":
-      - listitem:
-        - link "System":
-          - /url: /platform/system-info
-      - listitem:
-        - link "Attachments":
-          - /url: /platform/attachments
-      - listitem:
-        - link "Audit trail":
-          - /url: /platform/audit
-      - listitem:
-        - link "Background jobs":
-          - /url: /platform/jobs
-    - text: Organisation
-    - list "Organisation":
-      - listitem:
-        - link "People":
-          - /url: /identity/users
-      - listitem:
-        - link "Organisation chart":
-          - /url: /identity/users/org-chart
-      - listitem:
-        - link "Departments":
-          - /url: /identity/users/departments
-      - listitem:
-        - link "Designations":
-          - /url: /identity/users/designations
-`;
-
-const drawerSnapshot = `
-  - dialog "Navigation":
-    - heading "Navigation" [level=2]
-    - paragraph: The pages you can open.
-    - list:
-      - listitem:
-        - link "ERP-AI-Pro":
-          - /url: /
-    - button "Close navigation"
-    - navigation "Primary":
-      - list:
-        - listitem:
-          - link "Home":
-            - /url: /
-      - text: Platform
-      - list "Platform":
-        - listitem:
-          - link "System":
-            - /url: /platform/system-info
-        - listitem:
-          - link "Attachments":
-            - /url: /platform/attachments
-        - listitem:
-          - link "Audit trail":
-            - /url: /platform/audit
-        - listitem:
-          - link "Background jobs":
-            - /url: /platform/jobs
-      - text: Organisation
-      - list "Organisation":
-        - listitem:
-          - link "People":
-            - /url: /identity/users
-        - listitem:
-          - link "Organisation chart":
-            - /url: /identity/users/org-chart
-        - listitem:
-          - link "Departments":
-            - /url: /identity/users/departments
-        - listitem:
-          - link "Designations":
-            - /url: /identity/users/designations
-`;
 
 const wideBannerOnTheStartPage = `
   - banner:
@@ -173,18 +95,12 @@ test.describe("app shell navigation", () => {
         await shell.waitUntilInteractive();
 
         await expect(shell.sidebar).toHaveAttribute("data-state", "expanded");
-        await expect(shell.sidebar).toMatchAriaSnapshot(sidebarSnapshot);
+        await expect(shell.sidebar).toMatchAriaSnapshot(sidebarSnapshot(registeredNavigation));
         await expect(shell.navigationLink("Attachments")).toHaveAttribute("aria-current", "page");
-        for (const other of [
-          "Home",
-          "System",
-          "Audit trail",
-          "Background jobs",
-          "People",
-          "Organisation chart",
-          "Departments",
-          "Designations",
-        ]) {
+        const others = ["Home", ...registeredNavigation.map((entry) => entry.title)].filter(
+          (title) => title !== "Attachments",
+        );
+        for (const other of others) {
           await expect(shell.navigationLink(other)).not.toHaveAttribute("aria-current");
         }
         await capture("sidebar-expanded", shell.sidebarPanel);
@@ -442,7 +358,7 @@ test.describe("app shell navigation", () => {
         await expect(shell.drawer).toBeVisible();
         await expect(shell.menuButton).toHaveAttribute("aria-expanded", "true");
         await expect(shell.drawer).toHaveAccessibleDescription("The pages you can open.");
-        await expect(shell.drawer).toMatchAriaSnapshot(drawerSnapshot);
+        await expect(shell.drawer).toMatchAriaSnapshot(drawerSnapshot(registeredNavigation));
         await expect(shell.navigationLink("System")).toHaveAttribute("aria-current", "page");
         await capture("drawer-open", shell.drawer);
 
@@ -580,6 +496,7 @@ test.describe("app shell navigation", () => {
       page,
     }) => {
       const shell = new AppShell(page);
+      const found = pageSearchMatches("att");
       await new SystemInfoPage(page).goto();
       await shell.waitUntilInteractive();
       await page.keyboard.press("ControlOrMeta+b");
@@ -590,11 +507,11 @@ test.describe("app shell navigation", () => {
       await expect(shell.palette).toBeVisible();
       await expect(shell.paletteSearch).toBeFocused();
       await page.keyboard.type("att");
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(found.length);
       await page.keyboard.press("Enter");
 
-      await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
-      await expect(new AttachmentsPage(page).heading).toBeVisible();
+      await expect(page).toHaveURL((url) => url.pathname === found[0]?.href);
+      await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
       await expect(shell.palettePanel).toHaveCount(0);
       await expect(shell.drawerPanel).toHaveCount(0);
       await expect(shell.searchButton).toBeFocused();

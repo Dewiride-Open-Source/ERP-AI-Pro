@@ -1,9 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Modules;
-using Dewiride.Erp.Modules.Identity.Users;
-using Dewiride.Erp.Modules.Platform.Attachments;
-using Dewiride.Erp.Modules.Platform.Audit;
-using Dewiride.Erp.Modules.Platform.Jobs;
-using Dewiride.Erp.Modules.Platform.SystemInfo;
+using ErpModules = Dewiride.Erp.Modules;
 
 namespace Dewiride.Erp.Host.Composition;
 
@@ -11,10 +7,10 @@ public static class Modules
 {
     public static IReadOnlyList<IModule> All { get; } =
     [
-        new SystemInfoModule(),
-        new AttachmentsModule(),
-        new AuditModule(),
-        new JobsModule(),
-        new UsersModule(),
+        new ErpModules.Platform.SystemInfo.SystemInfoModule(),
+        new ErpModules.Platform.Attachments.AttachmentsModule(),
+        new ErpModules.Platform.Audit.AuditModule(),
+        new ErpModules.Platform.Jobs.JobsModule(),
+        new ErpModules.Identity.Users.UsersModule(),
     ];
 }

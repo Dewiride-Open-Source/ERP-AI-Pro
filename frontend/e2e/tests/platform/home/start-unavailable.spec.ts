@@ -1,3 +1,4 @@
+import { registeredNavigation, startPageSnapshot } from "../../../fixtures/navigation";
 import { addUnverifiedSessionCookie } from "../../../fixtures/sign-in";
 import { offlineBaseURL } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
@@ -26,7 +27,7 @@ test.describe("start page without the API", () => {
       await start.goto();
 
       await expect(start.heading).toHaveText("Welcome");
-      await expect(start.areas).toHaveCount(8);
+      await expect(start.areas).toHaveCount(registeredNavigation.length);
       await expect(start.noAreas).toHaveCount(0);
       await expect(
         start.shell.userMenuButton,
@@ -38,46 +39,9 @@ test.describe("start page without the API", () => {
       await page.keyboard.press("Escape");
       await expect(start.shell.userMenu).toBeHidden();
       expect((await renewal).status(), "the renewal the page sends without its API").toBe(500);
-      await expect(page.getByRole("main")).toMatchAriaSnapshot(`
-        - paragraph: Home
-        - heading "Welcome" [level=1]
-        - paragraph: Choose where to start.
-        - region "Areas you can open":
-          - heading "Areas you can open" [level=2]
-          - list:
-            - listitem:
-              - heading "System" [level=3]
-              - text: /version of the ERP/
-              - link "Open System"
-            - listitem:
-              - heading "Attachments" [level=3]
-              - text: /Upload and download the files/
-              - link "Open Attachments"
-            - listitem:
-              - heading "Audit trail" [level=3]
-              - text: /who changed what in the ERP/
-              - link "Open Audit trail"
-            - listitem:
-              - heading "Background jobs" [level=3]
-              - text: /the work the ERP does on its own/
-              - link "Open Background jobs"
-            - listitem:
-              - heading "People" [level=3]
-              - text: /Register people, assign their roles/
-              - link "Open People"
-            - listitem:
-              - heading "Organisation chart" [level=3]
-              - text: /who reports to whom/
-              - link "Open Organisation chart"
-            - listitem:
-              - heading "Departments" [level=3]
-              - text: /which department each one sits under/
-              - link "Open Departments"
-            - listitem:
-              - heading "Designations" [level=3]
-              - text: /designations people can hold/
-              - link "Open Designations"
-      `);
+      await expect(page.getByRole("main")).toMatchAriaSnapshot(
+        startPageSnapshot(registeredNavigation, "Welcome"),
+      );
 
       await capture("start-unavailable");
     },

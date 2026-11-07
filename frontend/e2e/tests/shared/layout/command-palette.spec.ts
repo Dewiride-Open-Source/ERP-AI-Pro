@@ -1,12 +1,17 @@
 import type { Locator, Page } from "@playwright/test";
 
+import {
+  pageSearchArrowCycle,
+  pageSearchDialogSnapshot,
+  pageSearchMatches,
+  pageSearchResultsSnapshot,
+  pageSearchStatus,
+  registeredNavigation,
+} from "../../../fixtures/navigation";
 import { centreOf, expect, forEachTheme, holdShortcut, settleAnimations, test } from "../../../fixtures/test";
 import { AttachmentsPage, attachmentsPath } from "../../../pages/platform/attachments/files.page";
 import { homePath, StartPage } from "../../../pages/platform/home/start.page";
-import { SystemInfoPage } from "../../../pages/platform/system-info/info.page";
 import { AppShell, showsNavigationDrawer } from "../../../pages/shared/layout/app-shell.page";
-
-const systemInfoPath = "/platform/system-info";
 
 const keyboardHint = "↑ ↓ to move, Enter to open, Esc to close.";
 
@@ -22,6 +27,16 @@ async function expectActive(shell: AppShell, label: string): Promise<void> {
     "aria-activedescendant",
     (await option.getAttribute("id")) ?? "",
   );
+}
+
+async function expectFoundPages(shell: AppShell, query: string): Promise<void> {
+  const found = pageSearchMatches(query);
+  expect(found.length, `pages the search for "${query}" finds`).toBeGreaterThan(0);
+  await shell.paletteSearch.fill(query);
+  await expect(shell.paletteStatus).toHaveText(pageSearchStatus(query));
+  await expect(shell.paletteResults).toMatchAriaSnapshot(pageSearchResultsSnapshot(found));
+  await expect(shell.paletteResults.getByRole("option")).toHaveCount(found.length);
+  await expectActive(shell, found[0]?.title ?? "");
 }
 
 async function pointAt(page: Page, option: Locator): Promise<{ x: number; y: number }> {
@@ -44,6 +59,7 @@ test.describe("page search", () => {
     async ({ page, capture }) => {
       const shell = new AppShell(page);
       const hint = shell.palette.getByRole("paragraph").filter({ hasText: "to move," });
+      const everyPage = pageSearchMatches("");
       await new StartPage(page).goto();
       await shell.waitUntilInteractive();
 
@@ -62,28 +78,8 @@ test.describe("page search", () => {
       await expect(shell.palette).toBeVisible();
       await expect(shell.paletteSearch).toBeFocused();
       await expect(shell.paletteSearch).toHaveAttribute("placeholder", "Search pages…");
-      await expect(shell.palette).toMatchAriaSnapshot(`
-        - dialog "Go to a page":
-          - heading "Go to a page" [level=2]
-          - combobox "Search pages" [expanded]
-          - button "Close Esc"
-          - status
-          - listbox "Pages":
-            - option "Home" [selected]
-            - group "Platform":
-              - text: Platform
-              - option "System See which version of the ERP is running, since when, and its recent starts."
-              - option "Attachments Upload and download the files kept with the ERP."
-              - option "Audit trail See who changed what in the ERP, and when."
-              - option "Background jobs See the work the ERP does on its own, when it runs next, and how each run went."
-            - group "Organisation":
-              - text: Organisation
-              - option "People Register people, assign their roles and record their moves."
-              - option "Organisation chart See who works in each department and who reports to whom."
-              - option "Departments See the company's departments and which department each one sits under."
-              - option "Designations See the designations people can hold in the company."
-      `);
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(9);
+      await expect(shell.palette).toMatchAriaSnapshot(pageSearchDialogSnapshot(everyPage));
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(everyPage.length);
       await expectActive(shell, "Home");
       await expect(shell.paletteStatus).toHaveText("");
       await expect(shell.paletteResults.locator("[aria-describedby]")).toHaveCount(0);
@@ -92,42 +88,14 @@ test.describe("page search", () => {
       else await expect(hint).toBeHidden();
       await capture("palette-open", shell.palette);
 
-      await shell.paletteSearch.fill("plat");
-      await expect(shell.paletteStatus).toHaveText("4 pages");
-      await expect(shell.paletteResults).toMatchAriaSnapshot(`
-        - listbox "Pages":
-          - group "Platform":
-            - text: Platform
-            - option "System See which version of the ERP is running, since when, and its recent starts." [selected]
-            - option "Attachments Upload and download the files kept with the ERP."
-            - option "Audit trail See who changed what in the ERP, and when."
-            - option "Background jobs See the work the ERP does on its own, when it runs next, and how each run went."
-      `);
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(4);
-      await shell.paletteSearch.fill("plat att");
-      await expect(shell.paletteStatus).toHaveText("1 page");
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
-      await expectActive(shell, "Attachments");
+      await expectFoundPages(shell, "plat");
+      await expectFoundPages(shell, "plat att");
       await capture("palette-filtered", shell.palette);
-      await shell.paletteSearch.fill("recent starts");
-      await expect(shell.paletteStatus).toHaveText("1 page");
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
-      await expectActive(shell, "System");
-      await shell.paletteSearch.fill("organisation");
-      await expect(shell.paletteStatus).toHaveText("4 pages");
-      await expect(shell.paletteResults).toMatchAriaSnapshot(`
-        - listbox "Pages":
-          - group "Organisation":
-            - text: Organisation
-            - option "People Register people, assign their roles and record their moves." [selected]
-            - option "Organisation chart See who works in each department and who reports to whom."
-            - option "Departments See the company's departments and which department each one sits under."
-            - option "Designations See the designations people can hold in the company."
-      `);
-      await shell.paletteSearch.fill("organisation chart");
-      await expect(shell.paletteStatus).toHaveText("1 page");
-      await expectActive(shell, "Organisation chart");
+      await expectFoundPages(shell, "recent starts");
+      await expectFoundPages(shell, "organisation");
+      await expectFoundPages(shell, "organisation chart");
 
+      expect(pageSearchMatches("zzz"), 'pages the search for "zzz" finds').toEqual([]);
       await shell.paletteSearch.fill("zzz");
       await expect(shell.paletteResults).toHaveCount(0);
       await expect(shell.paletteEmpty).toBeVisible();
@@ -141,7 +109,7 @@ test.describe("page search", () => {
       await expect(page).toHaveURL((url) => url.pathname === homePath);
 
       await shell.paletteSearch.fill("");
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(9);
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(everyPage.length);
       await expect(shell.paletteStatus).toHaveText("");
       await expect(shell.paletteSearch).toHaveAttribute("aria-expanded", "true");
       await expectActive(shell, "Home");
@@ -158,43 +126,26 @@ test.describe("page search", () => {
     page,
   }) => {
     const shell = new AppShell(page);
+    const opened = registeredNavigation[0];
     await new StartPage(page).goto();
     await shell.waitUntilInteractive();
     await shell.searchButton.click();
     await expect(shell.paletteSearch).toBeFocused();
     await expectActive(shell, "Home");
 
-    for (const [key, active] of [
-      ["ArrowDown", "System"],
-      ["ArrowDown", "Attachments"],
-      ["ArrowDown", "Audit trail"],
-      ["ArrowDown", "Background jobs"],
-      ["ArrowDown", "People"],
-      ["ArrowDown", "Organisation chart"],
-      ["ArrowDown", "Departments"],
-      ["ArrowDown", "Designations"],
-      ["ArrowDown", "Home"],
-      ["ArrowUp", "Designations"],
-      ["ArrowUp", "Departments"],
-      ["ArrowUp", "Organisation chart"],
-      ["ArrowUp", "People"],
-      ["ArrowUp", "Background jobs"],
-      ["ArrowUp", "Audit trail"],
-      ["ArrowUp", "Attachments"],
-      ["ArrowUp", "System"],
-    ] as const) {
+    for (const [key, active] of pageSearchArrowCycle(registeredNavigation)) {
       await page.keyboard.press(key);
       await expectActive(shell, active);
     }
-    await expect(shell.paletteOption("System")).toHaveCSS("outline-style", "solid");
-    await expect(shell.paletteOption("System")).toHaveCSS("outline-width", "2px");
+    await expect(shell.paletteOption(opened?.title ?? "")).toHaveCSS("outline-style", "solid");
+    await expect(shell.paletteOption(opened?.title ?? "")).toHaveCSS("outline-width", "2px");
     await expect(shell.paletteOption("Home")).toHaveCSS("outline-style", "none");
     await expect(shell.paletteSearch).toBeFocused();
     await page.keyboard.press("Enter");
 
-    await expect(page).toHaveURL((url) => url.pathname === systemInfoPath);
+    await expect(page).toHaveURL((url) => url.pathname === opened?.href);
     await expect(shell.palette).toBeHidden();
-    await expect(new SystemInfoPage(page).heading).toBeVisible();
+    await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
     await expect(shell.searchButton).toBeFocused();
   });
 
@@ -276,12 +227,13 @@ test.describe("page search", () => {
 
     await expect(shell.paletteSearch).toBeFocused();
     await expect(shell.paletteSearch).toHaveValue("att");
-    await expect(shell.paletteResults.getByRole("option")).toHaveCount(1);
+    await expect(shell.paletteResults.getByRole("option")).toHaveCount(pageSearchMatches("att").length);
     await expect(shell.paletteOption("Attachments")).toBeVisible();
   });
 
   test("it fits a short screen and keeps the active page in view", async ({ page }) => {
     const screen = { width: 320, height: 256 };
+    const last = registeredNavigation.at(-1)?.title ?? "";
     await page.setViewportSize(screen);
     const shell = new AppShell(page);
     await new StartPage(page).goto();
@@ -292,9 +244,9 @@ test.describe("page search", () => {
     expect(await bottomOnceOpened(shell.palette), "bottom edge of the page search").toBeLessThanOrEqual(
       screen.height,
     );
-    for (let step = 0; step < 8; step += 1) await page.keyboard.press("ArrowDown");
-    await expectActive(shell, "Designations");
-    await expect(shell.paletteOption("Designations")).toBeInViewport({ ratio: 0.99 });
+    for (let step = 0; step < registeredNavigation.length; step += 1) await page.keyboard.press("ArrowDown");
+    await expectActive(shell, last);
+    await expect(shell.paletteOption(last)).toBeInViewport({ ratio: 0.99 });
   });
 
   test.describe("with a keyboard", () => {
@@ -337,6 +289,7 @@ test.describe("page search", () => {
     }) => {
       const shell = new AppShell(page);
       const start = new StartPage(page);
+      const [chosen] = pageSearchMatches("att");
       await start.goto();
       await shell.waitUntilInteractive();
       await start.openLink("System").focus();
@@ -344,12 +297,12 @@ test.describe("page search", () => {
       await page.keyboard.press("ControlOrMeta+k");
       await expect(shell.palette).toBeVisible();
       await shell.paletteSearch.fill("att");
-      await expectActive(shell, "Attachments");
+      await expectActive(shell, chosen?.title ?? "");
       await page.keyboard.press("Enter");
 
-      await expect(page).toHaveURL((url) => url.pathname === attachmentsPath);
+      await expect(page).toHaveURL((url) => url.pathname === chosen?.href);
       await expect(shell.palette).toBeHidden();
-      await expect(new AttachmentsPage(page).heading).toBeVisible();
+      await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
       await expect(shell.searchButton).toBeFocused();
     });
 

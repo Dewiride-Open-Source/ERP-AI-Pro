@@ -135,10 +135,10 @@ A rule that reads rows other writes change, such as a cycle over a tree, holds o
 
 ## Migrations and design time
 
-From the repository root after `cd backend && dotnet tool restore` (`dotnet-ef` is a local tool in `.config/dotnet-tools.json`), through `scripts/ef/ef.ts`, which discovers every context and passes `--context`, `--project` and `--startup-project Hosts/Api/Dewiride.Erp.Host.Api` ([migrations guide](../guides/migrations.md)):
+From the repository root after `cd backend && dotnet tool restore` (`dotnet-ef` is a local tool in `.config/dotnet-tools.json`), through `scripts/ef/ef.ts`, which discovers every context, keys a module's context by its domain and module (`platform-system-info`) and a building block's by its class name (`jobs`), and passes `--context` with the context's full class name, `--project` and `--startup-project Hosts/Api/Dewiride.Erp.Host.Api` ([migrations guide](../guides/migrations.md)):
 
 ```bash
-node scripts/ef/ef.ts add <Name> --context system-info
+node scripts/ef/ef.ts add <Name> --context platform-system-info
 node scripts/ef/ef.ts update --all
 node scripts/ef/ef.ts pending --all
 ```
