@@ -288,7 +288,14 @@ function withRepository(check: (root: string) => Promise<void>, change?: (root: 
   return async () => {
     const root = mkdtempSync(join(tmpdir(), "scaffold-cli-"));
     try {
-      for (const path of ["scripts/scaffold/new-module.ts", "scripts/scaffold/lib", "scripts/scaffold/templates/registrations", "scripts/ef/lib/contexts.ts"]) {
+      for (const path of [
+        "scripts/scaffold/new-module.ts",
+        "scripts/scaffold/lib",
+        "scripts/scaffold/templates/registrations",
+        "scripts/ef/lib/contexts.ts",
+        "scripts/checks/lib/comment-policy.ts",
+        "scripts/checks/lib/code-text.ts",
+      ]) {
         cpSync(join(repoRoot, path), join(root, path), { recursive: true });
       }
 
@@ -421,6 +428,34 @@ describe("the new-module command", { concurrency: true }, () => {
       assert.match(usage.stderr, /--read-permission is required/);
       assert.match(usage.stderr, /Usage: node scripts\/scaffold\/new-module\.ts/);
     }),
+  );
+
+  test(
+    "a malformed name is reported together with the uncommitted targets and the missing settings, and nothing is written",
+    withRepository(async (root) => {
+      writeFileSync(join(root, "docs/routing.md"), `${readFileSync(join(root, "docs/routing.md"), "utf8")}\nA note being written.\n`);
+      const environment = { ...process.env };
+      delete environment.ERP_TEST_SQL_CONNECTION;
+      const run = await scaffold(root, ["scaffold-proof/Jobs", ...newDomainArguments.slice(1)], environment);
+      assert.equal(run.status, 1);
+      assert.match(run.stderr, /the domain "scaffold-proof" is not PascalCase/);
+      assert.match(run.stderr, /docs\/routing\.md has uncommitted changes/);
+      assert.match(run.stderr, /ERP_TEST_SQL_CONNECTION is not set/);
+      assert.deepEqual(await changedFiles(root), ["docs/routing.md"]);
+    }),
+  );
+
+  test(
+    "a module whose files git would ignore is refused, naming the rule, so no commit can leave them out",
+    withRepository(
+      async (root) => {
+        const run = await scaffold(root, [...newDomainArguments.slice(0, 1), "--entity", "TestResult", ...newDomainArguments.slice(3), "--files-only"]);
+        assert.equal(run.status, 1);
+        assert.match(run.stderr, /TestResults\/Persistence\/TestResultConfiguration\.cs matches the git ignore rule TestResults\/ \(\.gitignore:1\), so a commit would leave it out/);
+        assert.deepEqual(await changedFiles(root), []);
+      },
+      (root) => writeFileSync(join(root, ".gitignore"), "TestResults/\n"),
+    ),
   );
 
   test(

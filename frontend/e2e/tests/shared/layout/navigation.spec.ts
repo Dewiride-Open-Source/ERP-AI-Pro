@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 
 import {
   drawerSnapshot,
+  expectDestinationPage,
   pageSearchMatches,
   registeredNavigation,
   sidebarSnapshot,
@@ -511,7 +512,7 @@ test.describe("app shell navigation", () => {
       await page.keyboard.press("Enter");
 
       await expect(page).toHaveURL((url) => url.pathname === found[0]?.href);
-      await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
+      await expectDestinationPage(page);
       await expect(shell.palettePanel).toHaveCount(0);
       await expect(shell.drawerPanel).toHaveCount(0);
       await expect(shell.searchButton).toBeFocused();

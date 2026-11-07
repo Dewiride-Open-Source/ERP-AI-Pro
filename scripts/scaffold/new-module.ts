@@ -2,6 +2,7 @@ import { dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
 
+import { IncompleteRollbackError } from "./lib/change-set.ts";
 import { commandLines, completionSteps, quoted, runCompletion, spawnStep } from "./lib/completion.ts";
 import type { ScaffoldInput } from "./lib/names.ts";
 import { completionOutputs, planModule } from "./lib/scaffold.ts";
@@ -42,16 +43,24 @@ const plan = planModule(repoRoot, input, { filesOnly, environment: process.env }
 if (plan.problems.length > 0 || plan.module === undefined) refuse(plan.problems, false);
 const module = plan.module;
 const changes = plan.changes.changes;
+const created = changes.filter(({ kind }) => kind === "create");
+const edited = changes.filter(({ kind }) => kind === "edit");
 
 try {
   await plan.changes.apply();
 } catch (error) {
-  console.error(`✖ the files could not be written, and every file this run touched is back as it was: ${(error as Error).message}`);
+  console.error(`✖ the files could not be written: ${(error as Error).message}`);
+  if (error instanceof IncompleteRollbackError) {
+    console.error("These could not be put back:");
+    for (const path of error.leftOver) console.error(`  ${path}`);
+  } else {
+    console.error("Every file this run touched is back as it was.");
+  }
+
+  printUndo();
   process.exit(1);
 }
 
-const created = changes.filter(({ kind }) => kind === "create");
-const edited = changes.filter(({ kind }) => kind === "edit");
 console.log(`✔ ${module.domain.pascal}/${module.module.pascal}: created ${created.length} files and registered the module in ${edited.length} more`);
 for (const { kind, path } of [...created, ...edited]) console.log(`  ${kind === "create" ? "created" : "edited "} ${path}`);
 
@@ -68,9 +77,7 @@ if (!filesOnly) {
 if (remaining.length > 0) for (const line of commandLines(remaining)) console.log(`  ${line}`);
 else console.log(`\n✔ ${module.domain.pascal}/${module.module.pascal} is written, registered, migrated and in the OpenAPI contract and the web client`);
 
-console.log("\nTo undo this run entirely:");
-console.log(`  git restore -- ${[...edited.map(({ path }) => path), ...completionOutputs].map(quoted).join(" ")}`);
-console.log(`  git clean -fd -- ${[...plan.createdRoots, completionOutputs[1]].map(quoted).join(" ")}`);
+printUndo();
 console.log(`\nBefore it ships, seed ${module.featureFlag} into App Configuration, with the owner's consent:`);
 console.log("  bash scripts/azure/seed.sh --dry-run --label all");
 console.log("  bash scripts/azure/seed.sh --label all");
@@ -128,6 +135,12 @@ function parseCommandLine(): { input: ScaffoldInput; filesOnly: boolean } | stri
       icon: text("icon") ?? defaultIcon,
     },
   };
+}
+
+function printUndo(): void {
+  console.log("\nTo undo this run entirely:");
+  console.log(`  git restore -- ${[...edited.map(({ path }) => path), ...completionOutputs].map(quoted).join(" ")}`);
+  console.log(`  git clean -fd -- ${[...plan.createdRoots, completionOutputs[1]].map(quoted).join(" ")}`);
 }
 
 function pluralOf(entity: string): string {

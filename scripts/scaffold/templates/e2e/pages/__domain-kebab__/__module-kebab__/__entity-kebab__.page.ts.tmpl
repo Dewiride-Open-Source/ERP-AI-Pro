@@ -47,12 +47,14 @@ export class New__Entity__Page {
   readonly form: Locator;
   readonly name: Locator;
   readonly save: Locator;
+  readonly cancel: Locator;
 
   constructor(page: Page) {
     this.heading = page.getByRole("heading", { name: "New __entity-words__", level: 1 });
     this.form = page.getByRole("form", { name: "Details" });
     this.name = this.form.getByRole("textbox", { name: "Name", exact: true });
     this.save = page.getByTestId("__entity-kebab__-save");
+    this.cancel = this.form.getByRole("link", { name: "Cancel", exact: true });
   }
 
   fieldOf(control: Locator): Locator {

@@ -10,6 +10,7 @@ import {
   productionURL,
   startServers,
   unreachableApiURL,
+  webPorts,
 } from "./fixtures/targets";
 
 const isCI = Boolean(process.env.CI);
@@ -19,7 +20,6 @@ const runnerStartsServers = startServers && process.env.TEST_WORKER_INDEX === un
 const endToEndHost =
   "dotnet run --project ../../backend/Tests/EndToEnd/Dewiride.Erp.Testing.EndToEndHost --no-build --";
 const testingEnvironment = { ASPNETCORE_ENVIRONMENT: "Testing" };
-const webPorts = { primary: 3100, offline: 3101, gated: 3102 };
 
 const portOf = (origin: string | undefined) => new URL(origin ?? "").port;
 const webOrigin = (port: number) => `http://127.0.0.1:${port}`;

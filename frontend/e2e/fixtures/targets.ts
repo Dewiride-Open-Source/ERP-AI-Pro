@@ -17,6 +17,7 @@ export const startServers = !process.env.E2E_BASE_URL && !productionURL;
 export const offlineBaseURL =
   process.env.E2E_OFFLINE_BASE_URL ?? (startServers ? "https://localhost:3201" : undefined);
 export const unreachableApiURL = "http://127.0.0.1:1";
+export const webPorts = { primary: 3100, offline: 3101, gated: 3102 } as const;
 export const gatedApiBaseURL = process.env.E2E_GATED_API_BASE_URL ?? "http://127.0.0.1:5181";
 export const gatedBaseURL =
   process.env.E2E_GATED_BASE_URL ?? (startServers ? "https://localhost:3202" : undefined);

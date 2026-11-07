@@ -35,10 +35,16 @@ test.describe("navigation for an employee", () => {
       await expect(shell.palette).toBeVisible();
       await expect(shell.paletteResults).toMatchAriaSnapshot(pageSearchResultsSnapshot(everyPage));
       await expect(shell.paletteResults.getByRole("option")).toHaveCount(everyPage.length);
-      await shell.paletteSearch.fill("recent starts");
-      await expect(shell.paletteResults.getByRole("option")).toHaveCount(
-        pageSearchMatches("recent starts", employeeNavigation).length,
+      expect(pageSearchMatches("recent starts"), 'pages the search for "recent starts" finds').not.toEqual(
+        [],
       );
+      expect(
+        pageSearchMatches("recent starts", employeeNavigation),
+        'pages the search for "recent starts" finds for an employee',
+      ).toEqual([]);
+      await shell.paletteSearch.fill("recent starts");
+      await expect(shell.paletteEmpty).toBeVisible();
+      await expect(shell.paletteResults.getByRole("option")).toHaveCount(0);
       await expect(shell.paletteStatus).toHaveText(pageSearchStatus("recent starts", employeeNavigation));
       await page.keyboard.press("Escape");
       await expect(shell.palette).toBeHidden();

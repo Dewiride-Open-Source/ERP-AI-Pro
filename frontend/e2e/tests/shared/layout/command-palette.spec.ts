@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 
 import {
+  expectDestinationPage,
   pageSearchArrowCycle,
   pageSearchDialogSnapshot,
   pageSearchMatches,
@@ -145,7 +146,7 @@ test.describe("page search", () => {
 
     await expect(page).toHaveURL((url) => url.pathname === opened?.href);
     await expect(shell.palette).toBeHidden();
-    await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
+    await expectDestinationPage(page);
     await expect(shell.searchButton).toBeFocused();
   });
 
@@ -302,7 +303,7 @@ test.describe("page search", () => {
 
       await expect(page).toHaveURL((url) => url.pathname === chosen?.href);
       await expect(shell.palette).toBeHidden();
-      await expect(page.getByRole("main").getByRole("heading", { level: 1 })).toBeVisible();
+      await expectDestinationPage(page);
       await expect(shell.searchButton).toBeFocused();
     });
 

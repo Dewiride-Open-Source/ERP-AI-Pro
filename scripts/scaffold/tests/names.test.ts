@@ -65,6 +65,24 @@ test("a single-word domain, module or plural that becomes a reserved word of the
   assert.deepEqual(nameProblems({ ...valid, module: "DefaultSettings", entities: "Returns", entity: "Return" }), []);
 });
 
+test("a domain or module holding Tests, the layer folder Hosting and prose holding a word the comment policy refuses are refused", () => {
+  const problemsOf = (input: ScaffoldInput) => nameProblems(input).join("\n");
+  assert.match(problemsOf({ ...valid, module: "SkillTests" }), /the module "SkillTests" contains Tests/);
+  assert.match(problemsOf({ ...valid, domain: "LabTests" }), /the domain "LabTests" contains Tests/);
+  assert.match(problemsOf({ ...valid, module: "Hosting" }), /the module "Hosting" would shadow/);
+  assert.match(problemsOf({ ...valid, entity: "LegacyVoucher", entities: "LegacyVouchers" }), /the singular "legacy voucher" holds words the comment policy refuses/);
+  assert.match(problemsOf({ ...valid, plural: "deprecated notes" }), /the plural "deprecated notes" holds words the comment policy refuses/);
+  assert.deepEqual(nameProblems({ ...valid, entity: "Contest", entities: "Contests" }), []);
+});
+
+test("prose may hold acronyms in capitals, which the capitalised forms keep, while a word of mixed case is refused", () => {
+  const acronyms = { ...valid, entity: "GstReturn", entities: "GstReturns", singular: "GST return", plural: "GST returns" };
+  assert.deepEqual(nameProblems(acronyms), []);
+  assert.equal(tokensOf(acronyms).get("__entity-words__"), "GST return");
+  assert.equal(tokensOf(acronyms).get("__Entities-words__"), "GST returns");
+  assert.match(nameProblems({ ...valid, singular: "Gst return" }).join("\n"), /the singular "Gst return" is not words separated by single spaces, each in lower case or an acronym in capitals/);
+});
+
 test("a sentence with a character that would break a string literal or a table of the docs is refused, while every sentence the modules use passes", () => {
   for (const sentence of ['Says "hello".', "A back\\slash.", "A | pipe.", "A {brace}.", "A `tick`."]) {
     assert.equal(nameProblems({ ...valid, readSentence: sentence }).length, 1, sentence);

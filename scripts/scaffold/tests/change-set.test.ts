@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
-import { ChangeSet } from "../lib/change-set.ts";
+import { ChangeSet, IncompleteRollbackError } from "../lib/change-set.ts";
 
 function withRoot(body: (root: string) => Promise<void> | void): () => Promise<void> {
   return async () => {
@@ -71,5 +71,26 @@ test(
     assert.equal(readFileSync(join(root, "list.txt"), "utf8"), "original");
     assert.equal(existsSync(join(root, "Modules")), false);
     assert.equal(readFileSync(join(root, "blocker"), "utf8"), "a file where a folder is needed");
+  }),
+);
+
+test(
+  "a rollback that cannot put a path back goes on with the rest and names what is left",
+  withRoot(async (root) => {
+    writeFileSync(join(root, "list.txt"), "original");
+    const changes = new ChangeSet(root);
+    changes.edit("list.txt", () => "changed");
+    changes.create("Modules/Jobs/README.md", "Jobs");
+    changes.create("Modules/Jobs/notes.txt", "notes");
+    mkdirSync(join(root, "Modules", "Jobs", "notes.txt", "kept"), { recursive: true });
+
+    await assert.rejects(
+      () => changes.apply(),
+      (error: unknown) => error instanceof IncompleteRollbackError && error.leftOver.length === 1 && error.leftOver[0] === "Modules/Jobs/notes.txt",
+    );
+
+    assert.equal(readFileSync(join(root, "list.txt"), "utf8"), "original");
+    assert.equal(existsSync(join(root, "Modules", "Jobs", "README.md")), false);
+    assert.equal(existsSync(join(root, "Modules", "Jobs", "notes.txt", "kept")), true);
   }),
 );

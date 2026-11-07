@@ -79,16 +79,24 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: ./.github/actions/setup-frontend
       - name: Prove the module scaffolder
+        id: scaffold-proof
         if: github.event_name != 'pull_request'
         env:
           ERP_TEST_SQL_CONNECTION: ${{ steps.sql.outputs.server-connection-string }}
           ERP_TEST_BLOB_EMULATOR_HOST: ${{ steps.azurite.outputs.emulator-host }}
         run: node scripts/scaffold/prove.ts --in-place
-      - name: Upload the scaffolder proof's test results
-        if: failure() && github.event_name != 'pull_request'
+      - name: Upload the scaffolder proof's results
+        if: always() && (steps.scaffold-proof.outcome == 'failure' || steps.scaffold-proof.outcome == 'cancelled')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: scaffolder-proof-test-results
-          path: backend/artifacts/TestResults/**/*.trx
+          name: scaffolder-proof-results
+          path: |
+            backend/artifacts/TestResults/scaffold-proof-*.trx
+            backend/artifacts/TestResults/scaffold-proof-*.cobertura.xml
+            backend/Modules/ScaffoldProof/
+            frontend/apps/web/src/features/scaffold-proof/
+            frontend/apps/web/src/app/(app)/scaffold-proof/
+            frontend/e2e/pages/scaffold-proof/
+            frontend/e2e/tests/scaffold-proof/
           retention-days: 14
           if-no-files-found: warn

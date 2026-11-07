@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 import { AppShell } from "../pages/shared/layout/app-shell.page";
 
@@ -104,6 +104,13 @@ export async function registeredNavigationEntries(page: Page): Promise<Navigatio
     );
   await shell.closeDrawer();
   return entries;
+}
+
+export async function expectDestinationPage(page: Page): Promise<void> {
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(main.getByRole("heading", { name: "This page does not exist" })).toHaveCount(0);
+  await expect(main.getByRole("heading", { name: "You do not have access to this page" })).toHaveCount(0);
 }
 
 export function primaryNavigationSnapshot(entries: readonly RegisteredNavigation[]): string {

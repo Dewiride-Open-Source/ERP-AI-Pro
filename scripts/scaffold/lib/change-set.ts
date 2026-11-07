@@ -7,8 +7,18 @@ const transientWriteErrors = new Set(["EPERM", "EBUSY", "EACCES"]);
 const writeAttempts = 5;
 const retryDelayMilliseconds = 200;
 
+export class IncompleteRollbackError extends Error {
+  readonly leftOver: readonly string[];
+
+  constructor(cause: unknown, leftOver: readonly string[]) {
+    super((cause as Error).message, { cause });
+    this.leftOver = leftOver;
+  }
+}
+
 // Every change is planned in memory first, so a refused plan writes nothing, and a write that fails part of the way restores the
-// files it edited and removes the files and folders it created.
+// files it edited and removes the files and folders it created, each on its own, so a path that cannot be put back leaves the
+// rest restored and is named in the IncompleteRollbackError.
 export class ChangeSet {
   private readonly root: string;
 
@@ -76,15 +86,34 @@ export class ChangeSet {
         await writeAtomically(target, change.contents);
       }
     } catch (error) {
-      for (const target of edited) {
-        const original = this.planned.get(target)?.original;
-        if (original !== undefined) await writeAtomically(target, original);
-      }
-
-      for (const target of created) rmSync(target, { force: true });
-      for (const folder of folders.reverse()) if (existsSync(folder)) rmdirSync(folder);
+      const leftOver = await this.rollBack(edited, created, folders);
+      if (leftOver.length > 0) throw new IncompleteRollbackError(error, leftOver);
       throw error;
     }
+  }
+
+  private async rollBack(edited: readonly string[], created: readonly string[], folders: readonly string[]): Promise<string[]> {
+    const leftOver: string[] = [];
+    for (const target of edited) {
+      const original = this.planned.get(target)?.original;
+      if (original === undefined) continue;
+      try {
+        await writeAtomically(target, original);
+      } catch {
+        leftOver.push(this.display(target));
+      }
+    }
+
+    for (const target of created) if (!removed(target)) leftOver.push(this.display(target));
+    for (const folder of folders.toReversed()) {
+      try {
+        if (existsSync(folder)) rmdirSync(folder);
+      } catch {
+        leftOver.push(this.display(folder));
+      }
+    }
+
+    return leftOver;
   }
 
   private inside(path: string): string | undefined {
@@ -110,7 +139,13 @@ function missingFolders(folder: string): string[] {
 
 async function writeAtomically(target: string, contents: string): Promise<void> {
   const temporary = `${target}.scaffold-${process.pid}`;
-  writeFileSync(temporary, contents, "utf8");
+  try {
+    writeFileSync(temporary, contents, "utf8");
+  } catch (error) {
+    removed(temporary);
+    throw error;
+  }
+
   for (let attempt = 1; ; attempt += 1) {
     try {
       renameSync(temporary, target);
@@ -118,11 +153,20 @@ async function writeAtomically(target: string, contents: string): Promise<void> 
     } catch (error) {
       const code = (error as NodeJS.ErrnoException).code ?? "";
       if (attempt >= writeAttempts || !transientWriteErrors.has(code)) {
-        rmSync(temporary, { force: true });
+        removed(temporary);
         throw error;
       }
 
       await new Promise((resolveDelay) => setTimeout(resolveDelay, retryDelayMilliseconds * attempt));
     }
+  }
+}
+
+function removed(path: string): boolean {
+  try {
+    rmSync(path, { force: true });
+    return true;
+  } catch {
+    return false;
   }
 }

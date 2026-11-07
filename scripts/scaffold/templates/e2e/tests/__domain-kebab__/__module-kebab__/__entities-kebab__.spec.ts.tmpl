@@ -25,6 +25,8 @@ const addedRecordPath = /^\/__domain-kebab__\/__module-kebab__\/__entities-kebab
 
 const noAccess = "You do not have access to this page";
 
+const filtersLabel = `Filter ${"__Entities-words__".toLowerCase()}`;
+
 async function addRecord(api: SignedInApi, name: string): Promise<AddedRecord> {
   const response = await api.post(__entities__Api, {
     headers: { "Idempotency-Key": randomUUID() },
@@ -88,7 +90,7 @@ test.describe("__entities-words__", () => {
         await expect(listPage.unavailable).toHaveCount(0);
         await expect(listPage.newLink).toHaveAttribute("href", new__Entity__Path);
         await expect(list.filters).toMatchAriaSnapshot(`
-          - search "Filter __entities-words__":
+          - search "${filtersLabel}":
             - group:
               - text: Name
               - group:
@@ -147,7 +149,7 @@ test.describe("__entities-words__", () => {
         const second = await addRecord(api, `${prefix} Second`);
         const nameFilter = list.textFilter("Name");
         await nameFilter.fill(prefix);
-        await nameFilter.press("Enter");
+        await list.applyFilters.click();
         await expect(page).toHaveURL(
           (url) => url.pathname === __entities__Path && url.search === `?name=${prefix}`,
         );
@@ -175,12 +177,32 @@ test.describe("__entities-words__", () => {
         await expect(list.status).toHaveText("Showing all 2 __entities-words__. Sorted by Name, Z to A.");
         await expect.poll(() => list.titles()).toEqual([second.name, first]);
 
+        await list.choosePageSize(50);
+        await expect(page).toHaveURL((url) => url.searchParams.get("size") === "50");
+        await expect(list.status).toHaveText("Showing all 2 __entities-words__. Sorted by Name, Z to A.");
+        await expect.poll(() => list.titles()).toEqual([second.name, first]);
+
         await listPage.nameLink(second.name).click();
         await expect(page).toHaveURL((url) => url.pathname === __entity__Path(second.id));
         await expect(recordPage.heading).toHaveText(second.name);
       });
     });
   }
+
+  test("the add page's Cancel goes back to the list and adds nothing", async ({ page }) => {
+    const listPage = new __Entities__Page(page);
+    const newPage = new New__Entity__Page(page);
+    const sent = watch(page, isNew__Entity__Request);
+
+    await page.goto(new__Entity__Path);
+    await expect(newPage.save).toBeEnabled();
+    await newPage.name.fill(uniquePrefix("__entities-kebab__-cancelled"));
+    await newPage.cancel.click();
+
+    await expect(page).toHaveURL((url) => url.pathname === __entities__Path);
+    await expect(listPage.heading).toBeVisible();
+    expect(sent.count(), "Server Function calls").toBe(0);
+  });
 
   test.describe("that does not exist", () => {
     test.use({ expectedConsoleError: /the server responded with a status of 404/ });

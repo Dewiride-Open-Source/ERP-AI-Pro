@@ -1,3 +1,5 @@
+import { bannedPatterns } from "../../checks/lib/comment-policy.ts";
+
 export type NameForms = {
   readonly pascal: string;
   readonly camel: string;
@@ -23,7 +25,8 @@ export type ScaffoldInput = {
 
 const pascalName = /^(?:[A-Z][a-z0-9]+)+$/;
 const wordBoundary = /(?<=[a-z0-9])(?=[A-Z])/;
-const proseWords = /^[a-z][a-z0-9]*(?: [a-z][a-z0-9]*)*$/;
+const proseWord = "(?:[a-z][a-z0-9]*|[A-Z][A-Z0-9]+)";
+const proseWords = new RegExp(`^${proseWord}(?: ${proseWord})*$`);
 const oneSentence = /^[A-Z][A-Za-z0-9 ,;:'()/-]*\.$/;
 const shortTitle = /^[A-Z][A-Za-z0-9]*(?: [A-Za-z0-9]+)*$/;
 const iconName = /^[A-Z][A-Za-z0-9]*Icon$/;
@@ -121,6 +124,7 @@ const reservedNames = new Set([
   "Errors",
   "Exception",
   "Guid",
+  "Hosting",
   "Hosts",
   "Integration",
   "IntegrationTests",
@@ -158,10 +162,18 @@ export function formsOf(pascal: string): NameForms {
   };
 }
 
+export function isPascalName(name: string): boolean {
+  return pascalName.test(name);
+}
+
+export function wellFormed(input: ScaffoldInput): boolean {
+  return [input.domain, input.module, input.entity, input.entities].every(isPascalName);
+}
+
 export function nameProblems(input: ScaffoldInput): string[] {
   const names = { domain: input.domain, module: input.module, entity: input.entity, entities: input.entities };
   const malformed = Object.entries(names).flatMap(([role, name]) =>
-    pascalName.test(name) ? [] : [`the ${role} "${name}" is not PascalCase words of letters and digits, each starting with a capital`],
+    isPascalName(name) ? [] : [`the ${role} "${name}" is not PascalCase words of letters and digits, each starting with a capital`],
   );
 
   return [...malformed, ...namingClashes(input), ...textProblems(input)];
@@ -172,6 +184,9 @@ function namingClashes(input: ScaffoldInput): string[] {
   const names = { domain: input.domain, module: input.module, entity: input.entity, entities: input.entities };
   for (const [role, name] of Object.entries(names).filter(([, name]) => pascalName.test(name))) {
     if (reservedNames.has(name)) problems.push(`the ${role} "${name}" would shadow a type or namespace the generated code uses`);
+    if ((role === "domain" || role === "module") && name.includes("Tests")) {
+      problems.push(`the ${role} "${name}" contains Tests, so the build would make its projects test projects and the architecture tests would skip them`);
+    }
     if (role !== "entity" && reservedClientNames.has(formsOf(name).camel)) {
       problems.push(`the ${role} "${name}" becomes the API client property "${formsOf(name).camel}", a word the client generator renames`);
     }
@@ -204,7 +219,18 @@ function namingClashes(input: ScaffoldInput): string[] {
 function textProblems(input: ScaffoldInput): string[] {
   const problems: string[] = [];
   for (const [role, words] of Object.entries({ singular: input.singular, plural: input.plural })) {
-    if (words !== undefined && !proseWords.test(words)) problems.push(`the ${role} "${words}" is not lower-case words separated by single spaces`);
+    if (words !== undefined && !proseWords.test(words)) {
+      problems.push(`the ${role} "${words}" is not words separated by single spaces, each in lower case or an acronym in capitals`);
+    }
+  }
+
+  const prose = {
+    singular: input.singular ?? (isPascalName(input.entity) ? formsOf(input.entity).words : undefined),
+    plural: input.plural ?? (isPascalName(input.entities) ? formsOf(input.entities).words : undefined),
+  };
+  for (const [role, words] of Object.entries(prose)) {
+    const banned = words === undefined ? undefined : bannedPatterns.find(({ pattern }) => pattern.test(words));
+    if (banned !== undefined) problems.push(`the ${role} "${words}" holds words the comment policy refuses (${banned.reason}), and the generated code names the record in its comments`);
   }
 
   for (const [role, sentence] of Object.entries({ description: input.description, "read permission": input.readSentence, "create permission": input.createSentence })) {

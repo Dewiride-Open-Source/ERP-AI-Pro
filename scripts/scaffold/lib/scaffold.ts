@@ -6,13 +6,14 @@ import { fileURLToPath } from "node:url";
 import { ChangeSet } from "./change-set.ts";
 import { collisionProblems, domainStateOf } from "./collisions.ts";
 import { completionProblems } from "./completion.ts";
-import { nameProblems, type ScaffoldInput } from "./names.ts";
+import { isPascalName, nameProblems, type ScaffoldInput, wellFormed } from "./names.ts";
 import { domainFilter, registerFilterInReadme, registerInComposition, registerInDomainFilter, registerInModulesAll, registerInSolution } from "./registrations/backend.ts";
 import { describeModule, type ScaffoldModule } from "./registrations/module.ts";
 import { domainFilterPath, paths } from "./registrations/paths.ts";
 import { registerFlag, registerFlagRow, registerRoutes } from "./registrations/repository.ts";
 import { registerChangeKey, registerInNavigationFixture, registerInRegistry, registerRecordType } from "./registrations/web.ts";
 import { renderText, renderTree } from "./templates.ts";
+import { typeNameProblems } from "./type-names.ts";
 
 export type PlanOptions = {
   readonly filesOnly: boolean;
@@ -42,18 +43,26 @@ const templateRoots = [
 // What the completion rewrites besides the planned files, so a run starts only where git restore and git clean undo it all.
 export const completionOutputs = [paths.openApi, paths.generatedClient, ":(glob)backend/**/packages.lock.json"] as const;
 
+// The files every run edits whatever its names, so a run refused for a malformed name still reports their uncommitted changes.
+const registrationTargets = [paths.modulesAll, paths.composition, paths.solution, paths.flags, paths.configuration, paths.routing, paths.registry, paths.navigationFixture, paths.changeKeys, paths.recordTypes] as const;
+
 export function planModule(root: string, input: ScaffoldInput, options: PlanOptions): Plan {
   const changes = new ChangeSet(root);
+  const templates = options.templates ?? defaultTemplates;
   const named = nameProblems(input);
-  if (named.length > 0) return { module: undefined, changes, problems: named, createdRoots: [] };
+  const environment = options.filesOnly ? [] : completionProblems(root, options.environment, options.dotnetVersion);
+  if (!wellFormed(input)) {
+    const domainProblems = isPascalName(input.domain) ? domainStateOf(root, input).problems : [];
+    return { module: undefined, changes, problems: [...named, ...domainProblems, ...uncommittedProblems(root, [...registrationTargets, ...completionOutputs]), ...environment], createdRoots: [] };
+  }
 
   const domain = domainStateOf(root, input);
   const module = describeModule(input, domain);
-  const problems = [...domain.problems, ...collisionProblems(root, module)];
+  const problems = [...named, ...typeNameProblems(root, input, templates), ...domain.problems, ...collisionProblems(root, module)];
   for (const { template, output, newDomainOnly } of templateRoots) {
     if (newDomainOnly && !module.newDomain) continue;
     try {
-      for (const file of renderTree(join(options.templates ?? defaultTemplates, template), join(root, renderText(output, module.tokens, output)), module.tokens)) {
+      for (const file of renderTree(join(templates, template), join(root, renderText(output, module.tokens, output)), module.tokens)) {
         changes.create(file.output, file.contents);
       }
     } catch (error) {
@@ -63,8 +72,8 @@ export function planModule(root: string, input: ScaffoldInput, options: PlanOpti
 
   planRegistrations(root, module, changes, problems);
   const edited = changes.changes.filter(({ kind }) => kind === "edit").map(({ path }) => path);
-  problems.push(...changes.problems, ...uncommittedProblems(root, [...edited, ...completionOutputs]));
-  if (!options.filesOnly) problems.push(...completionProblems(root, options.environment, options.dotnetVersion));
+  const created = changes.changes.filter(({ kind }) => kind === "create").map(({ path }) => path);
+  problems.push(...changes.problems, ...ignoredProblems(root, created), ...uncommittedProblems(root, [...edited, ...completionOutputs]), ...environment);
   return { module, changes, problems, createdRoots: createdRootsOf(root, changes) };
 }
 
@@ -105,6 +114,24 @@ export function uncommittedProblems(root: string, pathspecs: readonly string[]):
   }
 
   return changed.map((path) => `${path} has uncommitted changes; commit or stash them first, so git restore and git clean can undo this run`);
+}
+
+// A created file that git ignores would build here but be left out of every commit, so the module would reach main without it.
+export function ignoredProblems(root: string, paths: readonly string[]): string[] {
+  if (paths.length === 0) return [];
+  const check = spawnSync("git", ["check-ignore", "--stdin", "--verbose", "-z"], { cwd: root, input: paths.map((path) => `${path}\0`).join(""), encoding: "utf8", shell: false });
+  if (check.error !== undefined || (check.status !== 0 && check.status !== 1)) return [`git cannot tell whether it ignores the files this run creates: ${(check.stderr ?? "").trim() || check.error?.message}`];
+  const fields = check.stdout.split("\0");
+  const ignored = new Map<string, string[]>();
+  for (let index = 0; index + 3 < fields.length; index += 4) {
+    const rule = `${fields[index + 2] as string} (${fields[index] as string}:${fields[index + 1] as string})`;
+    ignored.set(rule, [...(ignored.get(rule) ?? []), fields[index + 3] as string]);
+  }
+
+  return [...ignored].map(([rule, matched]) => {
+    const subject = matched.length > 1 ? `${matched[0] as string} and ${matched.length - 1} more planned files match` : `${matched[0] as string} matches`;
+    return `${subject} the git ignore rule ${rule}, so a commit would leave ${matched.length > 1 ? "them" : "it"} out; choose other names`;
+  });
 }
 
 // The highest folder each created file brings into being, or the file itself in a folder that exists, so git clean removes
