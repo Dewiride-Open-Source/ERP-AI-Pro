@@ -9,7 +9,7 @@ import {
   registerPersonRecord,
   removeRecords,
   uniquePrefix,
-} from "../../../fixtures/person-records";
+} from "../../../fixtures/records/person-records";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { expect, test, themes, type SignedInApi } from "../../../fixtures/test";
 import { InvitationDialog, isPeopleServerFunctionCall } from "../../../pages/identity/users/invitation.page";

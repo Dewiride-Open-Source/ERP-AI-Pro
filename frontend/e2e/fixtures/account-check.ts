@@ -5,7 +5,7 @@ import { join } from "node:path";
 
 import { turnFolderVariable } from "../global-setup";
 import { addDirectoryPerson, type DirectoryAccountState } from "./directory";
-import { peopleApi, type PersonRecord } from "./person-records";
+import { peopleApi, type PersonRecord } from "./records/person-records";
 import type { SignedInApi } from "./test";
 
 export const accountCheckApi = `${peopleApi}/directory/account-check`;

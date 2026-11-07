@@ -12,7 +12,7 @@ import {
   uniquePrefix,
   type NamedRecord,
   type PersonRole,
-} from "../../../fixtures/person-records";
+} from "../../../fixtures/records/person-records";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
 import { PeoplePage, peoplePath } from "../../../pages/identity/users/people.page";
 

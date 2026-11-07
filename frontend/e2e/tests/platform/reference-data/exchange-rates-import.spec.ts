@@ -1,10 +1,11 @@
-import { expect, test, themes } from "../../../fixtures/test";
 import {
   exchangeRatesApi,
   rateDays,
   removeRates,
   typedDate,
-} from "../../../pages/platform/reference-data/exchange-rate-records";
+} from "../../../fixtures/records/exchange-rate-records";
+import { expect, forEachTheme, test, themes } from "../../../fixtures/test";
+import { ExchangeRatePage } from "../../../pages/platform/reference-data/exchange-rate.page";
 import {
   exchangeRatesPath,
   ExchangeRatesPage,
@@ -18,9 +19,56 @@ import {
 
 const template = `${byteOrderMark}date,currency,unit,rate,source\r\n31-03-2026,USD,1,85.0000,Example: replace this row with your own rates\r\n`;
 
-// The test records rates of HKD and NZD, currencies no other test uses, on days of its own window (rateDays).
+const notCsv =
+  "rates.xlsx is not a CSV file. In Excel, save the sheet as CSV UTF-8 (Comma delimited), then choose that file.";
+
+const notUtf8 =
+  "rates.csv is not saved as UTF-8 text. In Excel, save it as CSV UTF-8 (Comma delimited), then choose it again.";
+
+// The test that imports records rates of HKD and NZD, currencies no other test uses, on days of its own window (rateDays).
 test.describe("importing exchange rates", () => {
   test.use({ persona: "administrator" });
+
+  forEachTheme(
+    "refuses a workbook and a file not saved as UTF-8, and says so again on every attempt",
+    async ({ page, capture }) => {
+      const importPage = new ImportExchangeRatesPage(page);
+      const workbook = {
+        name: "rates.xlsx",
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        buffer: Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+      };
+      const windows1252 = {
+        name: "rates.csv",
+        mimeType: "text/csv",
+        buffer: Buffer.from(
+          "date,currency,unit,rate,source\r\n01-01-1901,CHF,1,95,Zürich desk\r\n",
+          "latin1",
+        ),
+      };
+      await importPage.goto();
+      await importPage.waitUntilInteractive();
+
+      await importPage.chooseThroughButton(workbook);
+      await expect(importPage.refusal).toHaveText(notCsv);
+      await expect(importPage.status).toHaveText("");
+      const firstRefusal = await importPage.refusal.elementHandle();
+      await importPage.chooseThroughButton(workbook);
+      await expect
+        .poll(() => firstRefusal.evaluate((element) => element.isConnected), {
+          message: "the second refusal is a new alert",
+        })
+        .toBe(false);
+      await firstRefusal.dispose();
+      await expect(importPage.refusal).toHaveText(notCsv);
+
+      await importPage.chooseThroughButton(windows1252);
+      await expect(importPage.refusal).toHaveText(notUtf8);
+      await expect(importPage.file).toHaveCount(0);
+      await expect(importPage.importButton).toHaveCount(0);
+      await capture("import-exchange-rates-refusal", importPage.chooser);
+    },
+  );
 
   for (const theme of themes) {
     test.describe(theme, () => {
@@ -34,6 +82,7 @@ test.describe("importing exchange rates", () => {
         test.slow();
         const importPage = new ImportExchangeRatesPage(page);
         const listPage = new ExchangeRatesPage(page);
+        const ratePage = new ExchangeRatePage(page);
         const days = rateDays(testInfo, theme, 3);
         const [first = "", second = "", third = ""] = days;
         await removeRates(api, "HKD", days);
@@ -86,7 +135,7 @@ test.describe("importing exchange rates", () => {
             `${byteOrderMark}Currency,Date,Rate,Unit,Source`,
             `HKD,${typedDate(first)},10.5,1,"FBIL reference rate, 1:30 PM"`,
             `hkd,${second},10.75,1,`,
-            `NZD,${typedDate(first).replaceAll("-", "/")},48.1234,"1",Test desk`,
+            `NZD,${typedDate(first).replaceAll("-", "/")},48.1234,"100",Test desk`,
           ]);
           await importPage.choose(good);
           await expect(importPage.status).toHaveText("rates.csv holds 3 rates, ready to import.");
@@ -121,7 +170,7 @@ test.describe("importing exchange rates", () => {
                   - cell "${typedDate(first)}"
                   - cell "NZD"
                   - cell "₹48.1234"
-                  - cell "1"
+                  - cell "100"
                   - cell "Test desk"
           `);
           await expect(importPage.importButton).toHaveText("Import 3 rates");
@@ -153,6 +202,10 @@ test.describe("importing exchange rates", () => {
           await expect
             .poll(() => listPage.list.titles())
             .toEqual([typedDate(second), typedDate(first), typedDate(first)]);
+          const importedNzd = `NZD on ${typedDate(first)}`;
+          await listPage.rateLink(importedNzd).click();
+          await expect(ratePage.heading).toHaveText(importedNzd);
+          await expect(ratePage.details).toContainText("₹48.1234 for 100 NZD");
 
           await importPage.goto();
           await importPage.waitUntilInteractive();

@@ -10,6 +10,7 @@ import {
   readCurrencies,
   readFinancialYears,
   readIndianStates,
+  todayInIndia,
 } from "../../../pages/platform/reference-data/reference-lists.page";
 
 const notADate = "Enter a real date as day-month-year, for example 31-07-2020.";
@@ -25,10 +26,12 @@ test.describe("reference pickers", () => {
       const currencies = await readCurrencies(page.request);
       const [year] = await readFinancialYears(page.request, "2025-26", "2025-26");
       const india = countries.find((country) => country.code === "IN");
+      const korea = countries.find((country) => country.code === "KR");
       const maharashtra = states.find((state) => state.gstCode === "27" && state.validUntil === null);
       const dollar = currencies.find((currency) => currency.code === "USD");
       const rupee = currencies.find((currency) => currency.code === "INR");
       expect(india, "the country IN").toBeDefined();
+      expect(korea, "the country KR").toBeDefined();
       expect(maharashtra, "the GST State code 27 in force today").toBeDefined();
       expect(dollar, "the currency USD").toBeDefined();
       expect(rupee, "the currency INR").toBeDefined();
@@ -109,8 +112,23 @@ test.describe("reference pickers", () => {
       await page.keyboard.type("IN");
       await expect(pickers.option("Country", indiaLabel)).toBeVisible();
       await expect(country).toHaveAttribute("aria-expanded", "true");
+      expect((await pickers.optionLabels("Country"))[0], "the country whose code was typed in full").toBe(
+        indiaLabel,
+      );
       await capture("reference-pickers-countries", pickers.listbox("Country"));
-      await pickers.chooseByKeyboard("Country", "IN", indiaLabel);
+      await country.press("ArrowDown");
+      await expect(pickers.option("Country", indiaLabel)).toHaveAttribute("aria-selected", "true");
+      await country.press("Enter");
+      await expect(pickers.listbox("Country")).toBeHidden();
+      await expect(country).toHaveValue(indiaLabel);
+      await expect(pickers.chosen("country")).toHaveText("IN");
+
+      await country.fill("korea republic");
+      await expect(pickers.option("Country", `${korea!.name} (KR)`)).toBeVisible();
+      await country.press("Escape");
+      await expect(pickers.listbox("Country")).toBeHidden();
+      await country.press("Escape");
+      await expect(country).toHaveValue(indiaLabel);
       await expect(pickers.chosen("country")).toHaveText("IN");
 
       const stateLabel = `27 ${maharashtra!.name}`;
@@ -124,6 +142,14 @@ test.describe("reference pickers", () => {
       await expect(pickers.statusOf("Currency")).toHaveText("No currency matches.");
       await pickers.chooseByKeyboard("Currency", "USD", `USD ${dollar!.name}`);
       await expect(pickers.chosen("currency")).toHaveText("USD");
+      await pickers.optionsToggle("Currency").click();
+      await expect(pickers.listbox("Currency")).toBeVisible();
+      await expect(pickers.option("Currency", `USD ${dollar!.name}`)).toBeVisible();
+      await expect(pickers.option("Currency", `INR ${rupee!.name}`)).toHaveCount(0);
+      await expect(currency).toBeFocused();
+      await pickers.optionsToggle("Currency").click();
+      await expect(pickers.listbox("Currency")).toBeHidden();
+      await expect(currency).toHaveValue(`USD ${dollar!.name}`);
 
       await pickers.chooseByKeyboard("Financial year", "2025-26", "2025-26");
       await expect(pickers.chosen("financial-year")).toHaveText("2025-26");
@@ -175,6 +201,14 @@ test.describe("reference pickers", () => {
     await state.press("Escape");
     await expect(state).toHaveValue("");
 
+    await pickers.documentDateTrigger.focus();
+    await page.keyboard.press("Enter");
+    await expect(pickers.calendar).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(pickers.calendar).toBeHidden();
+    await expect(pickers.documentDateTrigger).toBeFocused();
+    await expect(pickers.chosen("document-date")).toHaveText("None");
+
     await pickers.documentDate.fill(dayMonthYear(lastDay));
     await expect(pickers.chosen("document-date")).toHaveText(lastDay);
     await pickers.chooseByKeyboard("State or union territory", "25", label);
@@ -182,7 +216,7 @@ test.describe("reference pickers", () => {
 
     await pickers.documentDate.fill(dayMonthYear(dayAfter(lastDay)));
     await expect(pickers.chosen("document-date")).toHaveText(dayAfter(lastDay));
-    await expect(state).toHaveValue("25 (name not available)");
+    await expect(state).toHaveValue(`${label} (not in force on ${dayMonthYear(dayAfter(lastDay))})`);
     await expect(pickers.chosen("indian-state")).toHaveText("25");
 
     await pickers.documentDate.fill("31-02-2020");
@@ -190,7 +224,7 @@ test.describe("reference pickers", () => {
     await expect(pickers.form.getByText(notADate, { exact: true })).toBeVisible();
     await expect(pickers.documentDate).toHaveAttribute("aria-invalid", "true");
     await expect(pickers.chosen("document-date")).toHaveText("None");
-    await expect(state).toHaveValue("25 (name not available)");
+    await expect(state).toHaveValue(`${label} (not in force on ${dayMonthYear(todayInIndia())})`);
   });
 
   test("offers the periods of the chosen financial year and clears the period when the year changes", async ({

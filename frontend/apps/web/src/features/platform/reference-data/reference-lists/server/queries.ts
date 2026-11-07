@@ -15,18 +15,15 @@ import type {
   IndianStateItem,
   ListRead,
 } from "../components/reference-options";
+import { settleList, type ListSettling } from "../components/settle-list";
 
-// A list that cannot be read, or whose module is switched off, is answered as such instead of thrown, so the page around a
-// picker still renders and the other lists stay usable.
-async function read<T>(load: () => Promise<readonly T[]>): Promise<ListRead<T>> {
-  const flags = await getFeatureFlags();
-  if (flags.get(referenceListsNavigation.featureFlag) === false) return { status: "disabled" };
-  try {
-    return { status: "read", items: await load() };
-  } catch (error) {
-    unstable_rethrow(error);
-    return { status: "failed" };
-  }
+const settling: ListSettling = {
+  switchedOn: async () => (await getFeatureFlags()).get(referenceListsNavigation.featureFlag) !== false,
+  rethrow: unstable_rethrow,
+};
+
+function read<T>(load: () => Promise<readonly T[]>): Promise<ListRead<T>> {
+  return settleList(load, settling);
 }
 
 function required(value: string | undefined): string {

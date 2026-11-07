@@ -1,3 +1,8 @@
+import type { IndianStateKind } from "@dewiride/erp-api-client";
+import { isIsoDate } from "@dewiride/erp-ui/lib/calendar-date";
+
+import { searchReferenceList } from "../../list-pages/components/reference-list-view.ts";
+
 export type ListRead<T> =
   | { readonly status: "read"; readonly items: readonly T[] }
   | { readonly status: "failed" }
@@ -8,12 +13,10 @@ export interface CountryItem {
   readonly name: string;
 }
 
-export type TerritoryKindName = "state" | "unionTerritory" | "otherTerritory";
-
 export interface IndianStateItem {
   readonly gstCode: string;
   readonly name: string;
-  readonly kind: TerritoryKindName;
+  readonly kind: IndianStateKind;
   readonly validFrom: string;
   readonly validUntil: string | null;
 }
@@ -60,21 +63,45 @@ export interface ReferenceOption {
   readonly description?: string;
 }
 
+type FallbackLabel = (value: string) => string | undefined;
+
+const periodMonth = new Intl.DateTimeFormat("en-IN", { month: "long", year: "numeric", timeZone: "UTC" });
+
 export function displayDate(isoDate: string): string {
   const [year, month, day] = isoDate.split("-");
   return `${day}-${month}-${year}`;
 }
 
-// The combobox searches labels alone, so every label carries the code a person types; and a value the list does not hold
-// (a code the list dropped, or a list that could not be read) stays chosen under its own code, so editing a record never
-// loses what the record holds.
-function keepChosen(options: readonly ReferenceOption[], value: string | null): readonly ReferenceOption[] {
+// A value the options lack stays chosen, and first, so editing a record never loses what the record holds: named as the list
+// still names it, or by its code alone when no entry does (a code the list dropped, or a list that could not be read).
+function keepChosen(
+  options: readonly ReferenceOption[],
+  value: string | null,
+  fallbackLabel: FallbackLabel = () => undefined,
+): readonly ReferenceOption[] {
   if (value === null || options.some((option) => option.value === value)) return options;
-  return [{ value, label: `${value} (name not available)` }, ...options];
+  return [{ value, label: fallbackLabel(value) ?? `${value} (name not available)` }, ...options];
 }
 
 function itemsOf<T>(list: ListRead<T>): readonly T[] {
   return list.status === "read" ? list.items : [];
+}
+
+function latestEntry(states: readonly IndianStateItem[], code: string): IndianStateItem | undefined {
+  let latest: IndianStateItem | undefined;
+  for (const state of states.filter((entry) => entry.gstCode === code)) {
+    if (latest === undefined || state.validFrom > latest.validFrom) latest = state;
+  }
+  return latest;
+}
+
+// The pickers search as the reference list pages do, an option's value being its code, so a code typed in full puts its
+// entry first: typing IN offers India before every name that holds "in".
+export function matchReferenceOptions<T extends { readonly value: string; readonly label: string }>(
+  options: readonly T[],
+  typed: string,
+): readonly T[] {
+  return searchReferenceList(options, typed, (option) => ({ code: option.value, name: option.label }));
 }
 
 export function countryOptions(
@@ -94,14 +121,22 @@ export function appliesOn(state: IndianStateItem, isoDate: string): boolean {
 export function indianStateOptions(
   list: ListRead<IndianStateItem>,
   on: string | null,
+  today: string,
   value: string | null,
 ): readonly ReferenceOption[] {
-  const inForce = itemsOf(list).filter((state) =>
-    on === null ? state.validUntil === null : appliesOn(state, on),
-  );
+  const day = on ?? today;
+  const states = itemsOf(list);
   return keepChosen(
-    inForce.map((state) => ({ value: state.gstCode, label: `${state.gstCode} ${state.name}` })),
+    states
+      .filter((state) => appliesOn(state, day))
+      .map((state) => ({ value: state.gstCode, label: `${state.gstCode} ${state.name}` })),
     value,
+    (code) => {
+      const latest = latestEntry(states, code);
+      return latest === undefined
+        ? undefined
+        : `${code} ${latest.name} (not in force on ${displayDate(day)})`;
+    },
   );
 }
 
@@ -110,11 +145,17 @@ export function currencyOptions(
   value: string | null,
   excluded: readonly string[] = [],
 ): readonly ReferenceOption[] {
+  const currencies = itemsOf(list);
+  const label = (currency: CurrencyItem) => `${currency.code} ${currency.name}`;
   return keepChosen(
-    itemsOf(list)
+    currencies
       .filter((currency) => !excluded.includes(currency.code))
-      .map((currency) => ({ value: currency.code, label: `${currency.code} ${currency.name}` })),
+      .map((currency) => ({ value: currency.code, label: label(currency) })),
     value,
+    (code) => {
+      const held = currencies.find((currency) => currency.code === code);
+      return held === undefined ? undefined : label(held);
+    },
   );
 }
 
@@ -132,6 +173,8 @@ export function financialYearOptions(
   );
 }
 
+// A period is named after the month it covers, as the API names it, so a kept period is named from its first day even when
+// the list does not hold its year.
 export function financialPeriodOptions(
   list: ListRead<FinancialYearItem>,
   year: string | null,
@@ -145,6 +188,10 @@ export function financialPeriodOptions(
       description: `Period ${period.number}, quarter ${period.quarter} of ${year}`,
     })),
     value,
+    (start) =>
+      isIsoDate(start) && start.endsWith("-01")
+        ? periodMonth.format(new Date(`${start}T00:00:00Z`))
+        : undefined,
   );
 }
 

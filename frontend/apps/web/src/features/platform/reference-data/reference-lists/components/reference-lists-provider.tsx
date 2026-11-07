@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { istDateKey } from "@/shared/format/dates";
+
 import { readCountries, readCurrencies, readFinancialYears, readIndianStates } from "../server/queries";
 import { ReferenceListsContextProvider } from "./reference-lists-context";
 import type { ReferenceLists } from "./reference-options";
@@ -12,7 +14,8 @@ export interface ReferenceListNeeds {
 }
 
 // Another module's page wraps the form that holds pickers in this provider, naming the lists it needs, so the lists are
-// read on the server with the page and the module's queries stay its own.
+// read on the server with the page and the module's queries stay its own; today's date in India is fixed there too, so the
+// pickers offer what the server rendered even when midnight passes before the page hydrates.
 export async function ReferenceListsProvider({
   needs,
   children,
@@ -30,5 +33,9 @@ export async function ReferenceListsProvider({
     ...(financialYears === undefined ? {} : { financialYears }),
   };
 
-  return <ReferenceListsContextProvider lists={lists}>{children}</ReferenceListsContextProvider>;
+  return (
+    <ReferenceListsContextProvider lists={lists} today={istDateKey(new Date())}>
+      {children}
+    </ReferenceListsContextProvider>
+  );
 }

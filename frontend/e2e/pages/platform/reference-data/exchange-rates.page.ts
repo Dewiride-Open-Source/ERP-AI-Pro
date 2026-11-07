@@ -24,6 +24,7 @@ export function ratesOf(currencies: readonly string[], from: string, to: string)
 export class ExchangeRatesPage {
   readonly heading: Locator;
   readonly listCard: Locator;
+  readonly listDescription: Locator;
   readonly list: DataTableRegion;
   readonly recordLink: Locator;
   readonly importLink: Locator;
@@ -33,6 +34,7 @@ export class ExchangeRatesPage {
     const main = page.getByRole("main");
     this.heading = main.getByRole("heading", { name: "Exchange rates", level: 1 });
     this.listCard = page.getByTestId("exchange-rates-list-card");
+    this.listDescription = this.listCard.locator("[data-slot='card-description']");
     this.list = new DataTableRegion(page, this.listCard);
     this.recordLink = main.getByRole("link", { name: "Record a rate", exact: true });
     this.importLink = main.getByRole("link", { name: "Import rates", exact: true });

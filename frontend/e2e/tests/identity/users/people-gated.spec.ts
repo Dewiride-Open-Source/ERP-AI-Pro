@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { peopleApi } from "../../../fixtures/person-records";
+import { peopleApi } from "../../../fixtures/records/person-records";
 import { gatedBaseURL } from "../../../fixtures/targets";
 import { expect, forEachTheme, test } from "../../../fixtures/test";
 import { peoplePath } from "../../../pages/identity/users/people.page";

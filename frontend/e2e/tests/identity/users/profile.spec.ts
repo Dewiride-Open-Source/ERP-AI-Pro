@@ -12,7 +12,7 @@ import {
   registerPersonRecord,
   removeRecords,
   uniquePrefix,
-} from "../../../fixtures/person-records";
+} from "../../../fixtures/records/person-records";
 import { expect, pressArrowUntilChecked, test, themes, type SignedInApi } from "../../../fixtures/test";
 import {
   ownPhoto,

@@ -2,7 +2,7 @@ import type { Page, Request } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
 import { withholdClientBundles } from "../../../fixtures/client-bundles";
-import { uniquePrefix } from "../../../fixtures/person-records";
+import { uniquePrefix } from "../../../fixtures/records/person-records";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
 import {
   __entities__Api,

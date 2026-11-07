@@ -22,8 +22,8 @@ const currenciesPerPage = 20;
 const listHeadingId = "currencies-heading";
 
 const currencyColumns: readonly ReferenceListColumn[] = [
-  { id: "code", header: "Code" },
   { id: "name", header: "Name", title: true },
+  { id: "code", header: "Code" },
   { id: "decimals", header: "Decimal places" },
 ];
 

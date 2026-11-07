@@ -11,7 +11,7 @@ import {
   seedJobSchedule,
   type JobRunSeed,
   type JobRunStatus,
-} from "../../../fixtures/job-runs";
+} from "../../../fixtures/records/job-runs";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
 import { JobRunPage } from "../../../pages/platform/jobs/run.page";

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { Page } from "@playwright/test";
 
-import { departmentIdsNamed } from "../../../../fixtures/organisation-records";
+import { departmentIdsNamed } from "../../../../fixtures/records/organisation-records";
 import {
   createDepartmentRecord,
   departmentsApi,
@@ -11,7 +11,7 @@ import {
   removeRecords,
   uniquePrefix,
   type NamedRecord,
-} from "../../../../fixtures/person-records";
+} from "../../../../fixtures/records/person-records";
 import { signIn } from "../../../../fixtures/sign-in";
 import { expect, test, themes, type SignedInApi } from "../../../../fixtures/test";
 import { DepartmentsPage, departmentsPath } from "../../../../pages/identity/users/departments.page";

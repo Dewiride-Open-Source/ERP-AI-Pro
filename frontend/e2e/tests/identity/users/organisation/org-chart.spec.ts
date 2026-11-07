@@ -9,7 +9,7 @@ import {
   uniquePrefix,
   type NamedRecord,
   type PersonRecord,
-} from "../../../../fixtures/person-records";
+} from "../../../../fixtures/records/person-records";
 import { signIn } from "../../../../fixtures/sign-in";
 import { expect, test, themes, type SignedInApi } from "../../../../fixtures/test";
 import {

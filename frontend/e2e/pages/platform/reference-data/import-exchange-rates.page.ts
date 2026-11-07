@@ -72,6 +72,13 @@ export class ImportExchangeRatesPage {
     await this.fileInput.setInputFiles(file);
   }
 
+  async chooseThroughButton(file: RatesCsv): Promise<void> {
+    await expect(this.chooseFile).toBeEnabled();
+    const chooser = this.page.waitForEvent("filechooser");
+    await this.chooseFile.click();
+    await (await chooser).setFiles(file);
+  }
+
   problemTexts(): Promise<string[]> {
     return this.problems.getByRole("listitem").allInnerTexts();
   }

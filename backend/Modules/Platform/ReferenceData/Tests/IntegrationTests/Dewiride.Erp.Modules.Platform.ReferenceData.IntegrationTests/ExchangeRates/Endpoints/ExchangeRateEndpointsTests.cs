@@ -274,5 +274,22 @@ public sealed class ExchangeRateEndpointsTests(ErpApiFactory factory) : IClassFi
         await ExchangeRatesApi.AssertProblemAsync(response, HttpStatusCode.NotFound, "exchange-rate.not-found");
     }
 
+    [Fact]
+    public async Task CorrectOrRemove_RateRemovedMeanwhile_Returns404NotFound()
+    {
+        using var client = Administrator();
+        var recorded = await ExchangeRatesApi.RecordAsync(client, "HUF", ExchangeRatesApi.UniqueDay(), 23.5m, 100);
+        using (var removed = await client.DeleteAsync(ExchangeRatesApi.Path($"/{recorded.Id}"), TestContext.Current.CancellationToken))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+        }
+
+        using var corrected = await ExchangeRatesApi.CorrectAsync(client, recorded.Id, new { rate = 24m, unit = 100, version = recorded.Version });
+        using var removedAgain = await client.DeleteAsync(ExchangeRatesApi.Path($"/{recorded.Id}"), TestContext.Current.CancellationToken);
+
+        await ExchangeRatesApi.AssertProblemAsync(corrected, HttpStatusCode.NotFound, "exchange-rate.not-found");
+        await ExchangeRatesApi.AssertProblemAsync(removedAgain, HttpStatusCode.NotFound, "exchange-rate.not-found");
+    }
+
     private HttpClient Administrator() => factory.CreateClient().AsUser(TestUsers.Administrator);
 }

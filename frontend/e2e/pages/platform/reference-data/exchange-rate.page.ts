@@ -22,6 +22,7 @@ export class NewExchangeRatePage {
   readonly currency: Locator;
   readonly day: Locator;
   readonly dayTrigger: Locator;
+  readonly dayCalendar: Locator;
   readonly rate: Locator;
   readonly unit: Locator;
   readonly source: Locator;
@@ -38,6 +39,7 @@ export class NewExchangeRatePage {
     const form = page.getByTestId("exchange-rate-form");
     this.day = form.locator("input[id$='-rateDate']");
     this.dayTrigger = form.locator("button[aria-label='Choose date']");
+    this.dayCalendar = page.getByRole("dialog", { name: "Choose date", exact: true });
     this.rate = this.form.getByRole("textbox", { name: "Rate" });
     this.unit = this.form.getByRole("combobox", { name: "Units" });
     this.source = this.form.getByRole("textbox", { name: "Source" });
@@ -105,6 +107,7 @@ export class ExchangeRatePage {
   readonly correctClose: Locator;
   readonly showLatest: Locator;
   readonly history: Locator;
+  readonly historyOrItsLoading: Locator;
   readonly historyLink: Locator;
   readonly unavailable: Locator;
 
@@ -127,6 +130,11 @@ export class ExchangeRatePage {
     this.correctClose = this.correctDialog.getByRole("button", { name: "Close", exact: true });
     this.showLatest = this.correctDialog.getByTestId("exchange-rate-reload");
     this.history = page.getByTestId("record-history");
+    // The history streams in after the rest of the page, so a page that shows it holds either the history or its loading
+    // state from the moment its heading shows.
+    this.historyOrItsLoading = page
+      .getByTestId("record-history")
+      .or(page.getByTestId("record-history-loading"));
     this.historyLink = page.getByTestId("record-history-link");
     this.unavailable = page.getByTestId("exchange-rate-unavailable");
   }

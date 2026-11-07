@@ -26,16 +26,17 @@ import { followPointer, type PointerRest } from "@dewiride/erp-ui/lib/pointer/po
 import { ComboboxList } from "./combobox-list";
 import {
   chosenOptionLabel,
-  filterComboboxOptions,
   firstEnabledIndex,
   lastEnabledIndex,
   nextEnabledIndex,
   rememberChosenOption,
+  visibleComboboxOptions,
   type ComboboxDirection,
+  type ComboboxFilter,
   type ComboboxOption,
 } from "./combobox-options";
 
-export type { ComboboxOption } from "./combobox-options";
+export type { ComboboxFilter, ComboboxOption } from "./combobox-options";
 
 export type ComboboxProps = Omit<
   ComponentProps<"input">,
@@ -55,6 +56,7 @@ export type ComboboxProps = Omit<
   value: string | null;
   onValueChange: (value: string | null) => void;
   emptyMessage: string;
+  filter?: ComboboxFilter | undefined;
   inputValue?: string | undefined;
   onInputValueChange?: ((text: string) => void) | undefined;
   loading?: boolean | undefined;
@@ -94,6 +96,7 @@ export function Combobox({
   value,
   onValueChange,
   emptyMessage,
+  filter,
   inputValue,
   onInputValueChange,
   loading = false,
@@ -142,8 +145,7 @@ export function Combobox({
 
   const selectedLabel = chosenOptionLabel(value, chosen);
   const text = inputValue ?? typed ?? selectedLabel;
-  const visibleOptions =
-    onInputValueChange === undefined ? filterComboboxOptions(options, typed ?? "") : options;
+  const visibleOptions = visibleComboboxOptions(options, typed, filter, onInputValueChange !== undefined);
   const activeIndex =
     activeValue === null ? -1 : visibleOptions.findIndex((option) => option.value === activeValue);
   const locked = disabled || readOnly;

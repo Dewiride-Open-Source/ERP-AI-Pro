@@ -8,7 +8,7 @@ import {
   registerPersonRecord,
   removeRecords,
   uniquePrefix,
-} from "../../../fixtures/person-records";
+} from "../../../fixtures/records/person-records";
 import { expect, forEachTheme, test, themes } from "../../../fixtures/test";
 import { peoplePath } from "../../../pages/identity/users/people.page";
 import { PersonPage } from "../../../pages/identity/users/person.page";

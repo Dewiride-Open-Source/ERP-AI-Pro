@@ -22,8 +22,8 @@ const countriesPerPage = 20;
 const listHeadingId = "countries-heading";
 
 const countryColumns: readonly ReferenceListColumn[] = [
-  { id: "code", header: "Code" },
   { id: "name", header: "Name", title: true },
+  { id: "code", header: "Code" },
 ];
 
 export async function CountriesOverview({ searchParameters }: { searchParameters: SearchParameters }) {

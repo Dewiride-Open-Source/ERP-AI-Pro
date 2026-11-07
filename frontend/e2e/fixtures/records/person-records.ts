@@ -1,8 +1,8 @@
 import { expect, type APIResponse } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-import type { SignedInPerson } from "./sign-in";
-import type { SignedInApi } from "./test";
+import type { SignedInPerson } from "../sign-in";
+import type { SignedInApi } from "../test";
 
 export const peopleApi = "/api/identity/users";
 

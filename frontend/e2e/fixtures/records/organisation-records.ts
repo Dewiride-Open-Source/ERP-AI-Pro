@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 import { departmentsApi, designationsApi } from "./person-records";
-import type { SignedInApi } from "./test";
+import type { SignedInApi } from "../test";
 
 type Listed = { readonly id: string; readonly name: string; readonly parentId?: string | null };
 

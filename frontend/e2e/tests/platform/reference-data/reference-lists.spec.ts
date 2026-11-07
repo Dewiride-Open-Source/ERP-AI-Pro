@@ -111,7 +111,8 @@ test.describe("reference lists", () => {
       await expect(list.searchBox).toBeFocused();
 
       const byCode = expectedMatches(countries, "IN", (country) => country);
-      await list.searchFor("IN");
+      await list.searchBox.fill("IN");
+      await list.searchButton.click();
       await expect(page).toHaveURL((url) => url.searchParams.get("q") === "IN");
       await expect.poll(() => list.rows()).toEqual(byCode.slice(0, countriesPerPage).map(countryRow));
       expect((await list.rows())[0], "the country whose code was typed in full").toEqual(countryRow(india!));
@@ -239,8 +240,8 @@ test.describe("reference lists", () => {
       } else {
         await expect(list.row(ended!.name)).toMatchAriaSnapshot(`
           - row:
-            - cell ${quoted(shown["GST State code"])}
             - rowheader ${quoted(shown["Name"])}
+            - cell ${quoted(shown["GST State code"])}
             - cell ${quoted(shown["Type"])}
             - cell ${quoted(shown["From"])}
             - cell ${quoted(shown["Until"])}

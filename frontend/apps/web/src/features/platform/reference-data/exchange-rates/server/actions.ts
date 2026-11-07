@@ -34,7 +34,9 @@ import {
   correctExchangeRateSchema,
   importExchangeRatesProblemMessages,
   importExchangeRatesSchema,
+  recordExchangeRateProblemMessages,
   recordExchangeRateSchema,
+  removeExchangeRateProblemMessages,
   type RecordedExchangeRate,
 } from "../forms/exchange-rate.schema";
 
@@ -77,7 +79,7 @@ export async function recordExchangeRate(
     );
   } catch (error) {
     unstable_rethrow(error);
-    return problemToFormState(error);
+    return problemToFormState(error, { messages: recordExchangeRateProblemMessages });
   }
   if (!recorded.id) return formFailed(formMessages.serverFailed);
   return { status: "succeeded", exchangeRateId: recorded.id };
@@ -144,7 +146,7 @@ export async function removeExchangeRate(id: string): Promise<ExchangeRateRemova
     unstable_rethrow(error);
     if (error instanceof ApiError && error.problem.code === rateGone)
       return { done: true, alreadyRemoved: true };
-    return refusal(problemToFormState(error));
+    return refusal(problemToFormState(error, { messages: removeExchangeRateProblemMessages }));
   }
   return { done: true, alreadyRemoved: false };
 }

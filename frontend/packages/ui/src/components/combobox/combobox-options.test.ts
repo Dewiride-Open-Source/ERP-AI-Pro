@@ -8,6 +8,8 @@ import {
   lastEnabledIndex,
   nextEnabledIndex,
   rememberChosenOption,
+  visibleComboboxOptions,
+  type ComboboxFilter,
   type ComboboxOption,
 } from "./combobox-options.ts";
 
@@ -51,6 +53,38 @@ test("filterComboboxOptions_DisabledOption_StillListed", () => {
     filterComboboxOptions(categories, "freight").map((option) => option.value),
     ["freight"],
   );
+});
+
+test("visibleComboboxOptions_NoFilterGiven_MatchesTheLabelsAsFilterComboboxOptionsDoes", () => {
+  for (const typed of ["CAFE", "ic", "terial", "audit", "   "]) {
+    assert.deepEqual(
+      visibleComboboxOptions(categories, typed, undefined, false),
+      filterComboboxOptions(categories, typed),
+      typed,
+    );
+  }
+  assert.equal(visibleComboboxOptions(categories, null, undefined, false), categories);
+});
+
+test("visibleComboboxOptions_FilterGiven_ListsWhatItPicksInItsOrder", () => {
+  const byValue: ComboboxFilter = (options, typed) =>
+    [...options].filter((option) => option.value.startsWith(typed)).reverse();
+
+  assert.deepEqual(
+    visibleComboboxOptions(categories, "s", byValue, false).map((option) => option.value),
+    ["software", "services"],
+  );
+  assert.deepEqual(
+    visibleComboboxOptions(categories, null, byValue, false).map((option) => option.value),
+    ["software", "freight", "cafe", "services", "raw"],
+  );
+});
+
+test("visibleComboboxOptions_CallerSearchesItself_ListsTheOptionsAsGiven", () => {
+  const nothing: ComboboxFilter = () => [];
+
+  assert.equal(visibleComboboxOptions(categories, "zzz", undefined, true), categories);
+  assert.equal(visibleComboboxOptions(categories, "zzz", nothing, true), categories);
 });
 
 test("nextEnabledIndex_Forward_SkipsDisabledAndWraps", () => {

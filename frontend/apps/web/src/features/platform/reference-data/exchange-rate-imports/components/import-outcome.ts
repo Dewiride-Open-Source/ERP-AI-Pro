@@ -13,8 +13,9 @@ import {
 import { exchangeRatesList } from "../../exchange-rates/lists/exchange-rates.list.ts";
 
 import { unitChoices, type RatesFile, type RatesFileColumn, type RatesFileRow } from "./rates-file.ts";
+import type { FileTextRefusal } from "./rates-file-text.ts";
 
-export type FileRefusal = FileRejection | "not-csv" | "not-utf8" | "unreadable";
+export type FileRefusal = FileRejection | FileTextRefusal;
 
 export interface ColumnHelp {
   readonly column: RatesFileColumn;

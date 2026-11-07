@@ -9,8 +9,10 @@ import {
   correctExchangeRateValues,
   importExchangeRatesSchema,
   maxImportedRates,
+  recordExchangeRateProblemMessages,
   recordExchangeRateSchema,
   recordExchangeRateValues,
+  removeExchangeRateProblemMessages,
   sourceMaxLength,
 } from "./exchange-rate.schema.ts";
 
@@ -141,6 +143,20 @@ test("correctExchangeRateProblemMessages_ChangedMeanwhile_OffersTheLatestRate", 
   assert.equal(
     correctExchangeRateProblemMessages[changedMeanwhileCode],
     "Someone changed this rate after the page was loaded. Show the latest rate, then correct it again.",
+  );
+});
+
+test("recordExchangeRateProblemMessages_RecordedMeanwhile_SaysTheRateWasNotRecordedInPlainWords", () => {
+  assert.equal(
+    recordExchangeRateProblemMessages[changedMeanwhileCode],
+    "Someone recorded a rate of this currency for that day while this one was being saved, so it was not recorded. Open the exchange rates to see that rate.",
+  );
+});
+
+test("removeExchangeRateProblemMessages_ChangedMeanwhile_AsksToReloadInPlainWords", () => {
+  assert.equal(
+    removeExchangeRateProblemMessages[changedMeanwhileCode],
+    "Someone changed this rate after the page was loaded, so it was not removed. Reload the page, then remove it again.",
   );
 });
 

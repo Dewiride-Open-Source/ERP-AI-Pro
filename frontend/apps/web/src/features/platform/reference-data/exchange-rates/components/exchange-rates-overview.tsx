@@ -29,7 +29,12 @@ import { readCurrencies } from "../../reference-lists/server/queries";
 import { exchangeRatesList } from "../lists/exchange-rates.list";
 import { getExchangeRates } from "../server/queries";
 
-import { currencyFilterOptions, exchangeRateListRow, knownCurrencies } from "./exchange-rate-display";
+import {
+  currencyFilterNote,
+  currencyFilterOptions,
+  exchangeRateListRow,
+  knownCurrencies,
+} from "./exchange-rate-display";
 import { ExchangeRatesList } from "./exchange-rates-list";
 
 const listHeadingId = "exchange-rates-list-heading";
@@ -94,8 +99,7 @@ export async function ExchangeRatesOverview({ searchParameters }: { searchParame
             </h2>
           </CardTitle>
           <CardDescription>
-            The rupees for foreign currencies, the newest day first. Open a rate to see its details and its
-            changes.
+            The rupees for foreign currencies, the newest day first. Open a rate to see its details.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -110,6 +114,7 @@ export async function ExchangeRatesOverview({ searchParameters }: { searchParame
               }}
               rows={(read.list.items ?? []).flatMap((item) => exchangeRateListRow(item) ?? [])}
               currencyOptions={currencyFilterOptions(currencies, chosen)}
+              currencyNote={currencyFilterNote(currencies, chosen)}
               labelledBy={listHeadingId}
             />
           ) : (

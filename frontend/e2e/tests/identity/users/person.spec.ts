@@ -17,7 +17,7 @@ import {
   uniquePrefix,
   type NamedRecord,
   type PersonRecord,
-} from "../../../fixtures/person-records";
+} from "../../../fixtures/records/person-records";
 import { holdServerFunctionCalls } from "../../../fixtures/server-functions";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
 import { EditPersonPage, editPersonPath } from "../../../pages/identity/users/edit-person.page";

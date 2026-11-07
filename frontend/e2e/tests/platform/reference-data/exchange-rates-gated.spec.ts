@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import { gatedBaseURL } from "../../../fixtures/targets";
-import { expect, forEachTheme, test } from "../../../fixtures/test";
 import {
   exchangeRateApi,
   exchangeRateImportsApi,
   exchangeRatesApi,
-} from "../../../pages/platform/reference-data/exchange-rate-records";
+} from "../../../fixtures/records/exchange-rate-records";
+import { gatedBaseURL } from "../../../fixtures/targets";
+import { expect, forEachTheme, test } from "../../../fixtures/test";
 import {
   exchangeRatePath,
   exchangeRatesPath,

@@ -3,12 +3,16 @@
 import { Combobox, type ComboboxProps } from "@dewiride/erp-ui/components/combobox/combobox";
 import { useMemo } from "react";
 
-import { countryOptions, listMessage } from "../../reference-lists/components/reference-options";
+import {
+  countryOptions,
+  listMessage,
+  matchReferenceOptions,
+} from "../../reference-lists/components/reference-options";
 import { useReferenceList } from "../../reference-lists/hooks/use-reference-list";
 
 export type CountryPickerProps = Omit<
   ComboboxProps,
-  "options" | "emptyMessage" | "loading" | "loadingMessage"
+  "options" | "emptyMessage" | "loading" | "loadingMessage" | "filter"
 >;
 
 export function CountryPicker({ value, ...comboboxProps }: CountryPickerProps) {
@@ -20,6 +24,7 @@ export function CountryPicker({ value, ...comboboxProps }: CountryPickerProps) {
       {...comboboxProps}
       value={value}
       options={options}
+      filter={matchReferenceOptions}
       emptyMessage={listMessage(list, "countries", "No country matches.")}
     />
   );

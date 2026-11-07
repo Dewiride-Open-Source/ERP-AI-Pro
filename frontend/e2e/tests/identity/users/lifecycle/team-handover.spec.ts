@@ -16,7 +16,7 @@ import {
   removeRecords,
   uniquePrefix,
   type PersonRecord,
-} from "../../../../fixtures/person-records";
+} from "../../../../fixtures/records/person-records";
 import { holdServerFunctionCalls } from "../../../../fixtures/server-functions";
 import { expect, test, themes, type SignedInApi } from "../../../../fixtures/test";
 import { AccountCheckDialog } from "../../../../pages/identity/users/account-check.page";

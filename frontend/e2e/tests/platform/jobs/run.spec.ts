@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { accountCheckJob, retiredJob, runKeyPrefix, seedJobRun } from "../../../fixtures/job-runs";
+import { accountCheckJob, retiredJob, runKeyPrefix, seedJobRun } from "../../../fixtures/records/job-runs";
 import { expect, forEachTheme, test, themes, type SignedInApi } from "../../../fixtures/test";
 import { JobRunPage } from "../../../pages/platform/jobs/run.page";
 import { jobRunApi, jobRunPath, jobsApi } from "../../../pages/platform/jobs/runs.page";

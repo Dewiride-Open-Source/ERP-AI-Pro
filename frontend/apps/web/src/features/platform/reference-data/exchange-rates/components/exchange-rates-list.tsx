@@ -68,56 +68,69 @@ export function ExchangeRatesList({
   page,
   rows,
   currencyOptions,
+  currencyNote,
   labelledBy,
 }: {
   query: ListQuery;
   page: DataTablePage;
   rows: readonly ExchangeRateListRow[];
   currencyOptions: readonly DataTableFilterOption[];
+  currencyNote: string | undefined;
   labelledBy: string;
 }) {
   const { currency, day } = query.filters;
 
   return (
-    <ListTable
-      basePath={exchangeRatesNavigation.basePath}
-      definition={exchangeRatesList}
-      query={query}
-      page={page}
-      label="Exchange rates"
-      labelledBy={labelledBy}
-      noun={{ one: "exchange rate", other: "exchange rates" }}
-      columns={exchangeRateColumns}
-      rows={rows}
-      getRowId={(row) => row.id}
-      noMatches="No exchange rates match these filters."
-      empty={
-        <Empty className="border" data-testid="exchange-rates-empty">
-          <EmptyHeader>
-            <EmptyTitle>No exchange rates yet.</EmptyTitle>
-            <EmptyDescription>
-              Rates appear here once they are recorded by hand or imported from a file.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      }
-      filters={
-        <>
-          {currencyOptions.length > 0 ? (
-            <DataTableOptionsFilter
-              name="currency"
-              label="Currency"
-              options={currencyOptions}
-              defaultValues={Array.isArray(currency) ? currency : noChoices}
+    <>
+      {currencyNote === undefined ? null : (
+        <p
+          role="status"
+          data-testid="exchange-rates-filters-unavailable"
+          className="mb-4 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+        >
+          {currencyNote}
+        </p>
+      )}
+      <ListTable
+        basePath={exchangeRatesNavigation.basePath}
+        definition={exchangeRatesList}
+        query={query}
+        page={page}
+        label="Exchange rates"
+        labelledBy={labelledBy}
+        noun={{ one: "exchange rate", other: "exchange rates" }}
+        columns={exchangeRateColumns}
+        rows={rows}
+        getRowId={(row) => row.id}
+        noMatches="No exchange rates match these filters."
+        empty={
+          <Empty className="border" data-testid="exchange-rates-empty">
+            <EmptyHeader>
+              <EmptyTitle>No exchange rates yet.</EmptyTitle>
+              <EmptyDescription>
+                Rates appear here once they are recorded by hand or imported from a file.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        }
+        filters={
+          <>
+            {currencyOptions.length > 0 ? (
+              <DataTableOptionsFilter
+                name="currency"
+                label="Currency"
+                options={currencyOptions}
+                defaultValues={Array.isArray(currency) ? currency : noChoices}
+              />
+            ) : null}
+            <DataTableDateRangeFilter
+              name="day"
+              label="Days between"
+              defaultValue={day !== undefined && isDateRange(day) ? day : { from: "", to: "" }}
             />
-          ) : null}
-          <DataTableDateRangeFilter
-            name="day"
-            label="Days between"
-            defaultValue={day !== undefined && isDateRange(day) ? day : { from: "", to: "" }}
-          />
-        </>
-      }
-    />
+          </>
+        }
+      />
+    </>
   );
 }

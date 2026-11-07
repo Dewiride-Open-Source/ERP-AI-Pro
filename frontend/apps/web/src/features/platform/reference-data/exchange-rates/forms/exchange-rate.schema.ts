@@ -134,6 +134,16 @@ export function importExchangeRatesSchema(today: string) {
 
 export type ImportExchangeRatesValues = z.input<ReturnType<typeof importExchangeRatesSchema>>;
 
+export const recordExchangeRateProblemMessages: ProblemMessages = {
+  [changedMeanwhileCode]:
+    "Someone recorded a rate of this currency for that day while this one was being saved, so it was not recorded. Open the exchange rates to see that rate.",
+};
+
+export const removeExchangeRateProblemMessages: ProblemMessages = {
+  [changedMeanwhileCode]:
+    "Someone changed this rate after the page was loaded, so it was not removed. Reload the page, then remove it again.",
+};
+
 export const correctExchangeRateProblemMessages: ProblemMessages = {
   [changedMeanwhileCode]:
     "Someone changed this rate after the page was loaded. Show the latest rate, then correct it again.",

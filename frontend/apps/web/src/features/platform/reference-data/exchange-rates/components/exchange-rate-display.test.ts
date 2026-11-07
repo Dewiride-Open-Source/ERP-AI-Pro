@@ -6,6 +6,7 @@ import { apiDateOf } from "@/shared/api/dates/date-only";
 
 import {
   correctedMessage,
+  currencyFilterNote,
   currencyFilterOptions,
   exchangeRateListRow,
   exchangeRateName,
@@ -144,6 +145,18 @@ test("currencyFilterOptions_ListThatCouldNotBeRead_KeepsTheChosenCodesUnderTheir
     { value: "SEK", label: "SEK" },
     { value: "CHF", label: "CHF" },
   ]);
+});
+
+test("currencyFilterNote_CurrenciesThatCouldNotBeReadAndNoChoice_ExplainsTheMissingFilter", () => {
+  assert.equal(
+    currencyFilterNote({ status: "failed" }, []),
+    "Currencies could not be read, so the list cannot be filtered by currency now.",
+  );
+});
+
+test("currencyFilterNote_ChoiceOrCurrenciesRead_NeedsNoNote", () => {
+  assert.equal(currencyFilterNote({ status: "failed" }, ["CHF"]), undefined);
+  assert.equal(currencyFilterNote(currencies, []), undefined);
 });
 
 test("knownCurrencies_ReadList_LeavesOutCodesItDoesNotHoldAndTheRupee", () => {

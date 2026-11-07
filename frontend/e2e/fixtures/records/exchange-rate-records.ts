@@ -1,14 +1,9 @@
 import { expect, type APIRequestContext, type TestInfo } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
-import { ownPersonRecordId, peopleApi } from "../../../fixtures/person-records";
-import {
-  requestTokenCookie,
-  requestTokenHeader,
-  signIn,
-  type SignedInPerson,
-} from "../../../fixtures/sign-in";
-import type { SignedInApi, Theme } from "../../../fixtures/test";
+import { ownPersonRecordId, peopleApi, type PersonRole } from "./person-records";
+import { requestTokenCookie, requestTokenHeader, signIn, type SignedInPerson } from "../sign-in";
+import type { SignedInApi, Theme } from "../test";
 
 export const exchangeRatesApi = "/api/platform/reference-data/exchange-rates";
 
@@ -97,11 +92,12 @@ export async function removeRates(
   }
 }
 
-// An administrator assigns the role from a request context of their own, so the browser keeps the accountant's session, and
-// the role counts from the accountant's next request.
-export async function grantFinanceRole(
+// An administrator assigns the roles from a request context of their own, so the browser keeps the accountant's session, and
+// the roles count from the accountant's next request.
+export async function assignRoles(
   request: APIRequestContext,
   accountant: SignedInPerson | undefined,
+  roles: readonly PersonRole[],
 ): Promise<void> {
   await signIn(request, "administrator");
   const id = await ownPersonRecordId(request, accountant);
@@ -112,7 +108,7 @@ export async function grantFinanceRole(
   expect(token, "the administrator's request token").toBeDefined();
   const assigned = await request.put(`${peopleApi}/${id}/roles`, {
     headers: { [requestTokenHeader]: decodeURIComponent(token?.value ?? "") },
-    data: { roles: ["finance"], version },
+    data: { roles, version },
   });
-  expect(assigned.status(), "the Finance role of the accountant").toBe(200);
+  expect(assigned.status(), `the roles [${roles.join(", ")}] of the accountant`).toBe(200);
 }

@@ -2,6 +2,17 @@ import type { Page, Request } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 
 import { withholdClientBundles } from "../../../fixtures/client-bundles";
+import {
+  assignRoles,
+  exchangeRateApi,
+  exchangeRateImportsApi,
+  exchangeRatesApi,
+  rateDays,
+  readRate,
+  recordRate,
+  removeRates,
+  typedDate,
+} from "../../../fixtures/records/exchange-rate-records";
 import { expect, forEachTheme, test, themes } from "../../../fixtures/test";
 import {
   ExchangeRatePage,
@@ -9,17 +20,6 @@ import {
   isServerFunctionCall,
   NewExchangeRatePage,
 } from "../../../pages/platform/reference-data/exchange-rate.page";
-import {
-  exchangeRateApi,
-  exchangeRateImportsApi,
-  exchangeRatesApi,
-  grantFinanceRole,
-  rateDays,
-  readRate,
-  recordRate,
-  removeRates,
-  typedDate,
-} from "../../../pages/platform/reference-data/exchange-rate-records";
 import {
   exchangeRatePath,
   exchangeRatesPath,
@@ -165,6 +165,13 @@ test.describe("exchange rates", () => {
           expect(sent.count(), "Server Function calls").toBe(0);
           await capture("new-exchange-rate-refused", newPage.form);
 
+          await newPage.dayTrigger.focus();
+          await page.keyboard.press("Enter");
+          await expect(newPage.dayCalendar).toBeVisible();
+          await page.keyboard.press("Escape");
+          await expect(newPage.dayCalendar).toBeHidden();
+          await expect(newPage.dayTrigger).toBeFocused();
+
           await newPage.day.fill("01-01-2999");
           await expect(newPage.fieldOf(newPage.day).getByText(laterDay)).toBeVisible();
           await newPage.fill({
@@ -174,6 +181,7 @@ test.describe("exchange rates", () => {
             rate: "95.1234",
             source: "Test desk, Zürich",
           });
+          await newPage.chooseUnit("100");
           await newPage.save.click();
 
           await expect(shell.toast(`Recorded the rate of CHF for ${typedDate(day)}.`)).toBeVisible();
@@ -183,16 +191,17 @@ test.describe("exchange rates", () => {
           await expect(page).toHaveTitle(`${name} · ERP-AI-Pro`);
           await expect(ratePage.details).toMatchAriaSnapshot(`
             - heading "Details" [level=2]
-            - text: The rate is in rupees for 1 CHF on ${typedDate(day)}, as its source published it.
+            - text: The rate is in rupees for 100 CHF on ${typedDate(day)}, as its source published it.
             - term: Currency
             - definition: CHF
             - term: Day
             - definition: ${typedDate(day)}
             - term: Rate
-            - definition: ₹95.1234 for 1 CHF
+            - definition: ₹95.1234 for 100 CHF
             - term: Source
             - definition: Test desk, Zürich
           `);
+          expect((await readRate(api, id)).unit, "the unit recorded").toBe(100);
           await expect(ratePage.history.getByTestId("audit-change-summary")).toHaveText([
             `${person?.name ?? ""} created the exchange rate ${name}.`,
           ]);
@@ -313,6 +322,43 @@ test.describe("exchange rates", () => {
             "Showing all 12 exchange rates. Sorted by Day, earliest first.",
           );
           await expect.poll(() => list.titles()).toEqual([typedDate(first), ...days.map(typedDate)]);
+
+          const firstNok = listPage.row(`NOK on ${typedDate(first)}`);
+          await list.setColumnVisible("Source", false);
+          await expect(page).toHaveURL((url) => url.searchParams.get("hide") === "source");
+          if (await list.showsCards()) {
+            await expect(firstNok.getByRole("term")).toHaveText(["Currency", "Rate", "Per"]);
+          } else {
+            await expect(list.columnHeader("Source")).toHaveCount(0);
+            await expect(firstNok.getByRole("cell")).toHaveText(["NOK", "₹7.5000", "1"]);
+          }
+          await list.setColumnVisible("Source", true);
+          await expect(page).toHaveURL(
+            (url) => !url.searchParams.has("hide") && url.searchParams.get("size") === "20",
+          );
+          if (await list.showsCards()) {
+            await expect(firstNok.getByRole("term")).toHaveText(["Currency", "Rate", "Per", "Source"]);
+          } else {
+            await expect(list.columnHeader("Source")).toBeVisible();
+          }
+
+          const rangeCalendar = page.getByRole("dialog", { name: "Choose dates", exact: true });
+          await list.rangeTrigger.focus();
+          await page.keyboard.press("Enter");
+          await expect(rangeCalendar).toBeVisible();
+          await page.keyboard.press("Escape");
+          await expect(rangeCalendar).toBeHidden();
+          await expect(list.rangeTrigger).toBeFocused();
+
+          await listPage.goto(ratesOf(["NOK"], last, last));
+          await listPage.waitUntilInteractive();
+          await expect(list.noMatches).toContainText("No exchange rates match these filters.");
+          await expect(list.status).toHaveText("No exchange rates to show.");
+          await capture("exchange-rates-no-matches", listPage.listCard);
+          await list.noMatches.getByRole("link", { name: "Clear filters" }).click();
+          await expect(page).toHaveURL((url) => url.pathname === exchangeRatesPath && url.search === "");
+          await expect(list.noMatches).toHaveCount(0);
+          await expect(list.optionsFilter("Currency")).toHaveAccessibleName("Currency Any");
         } finally {
           await removeRates(api, "SEK", days);
           await removeRates(api, "NOK", days);
@@ -377,6 +423,24 @@ test.describe("exchange rates", () => {
           `);
           await capture("exchange-rate-correct", ratePage.correctDialog);
 
+          await ratePage.correctRate.fill("99");
+          await ratePage.correctCancel.click();
+          await expect(ratePage.correctDialog).toBeHidden();
+          await expect(ratePage.correct).toBeFocused();
+          await expect(ratePage.details).toContainText("₹12.3456 for 1 DKK");
+          expect(corrections.count(), "Server Function calls").toBe(0);
+
+          await ratePage.correct.click();
+          await expect(ratePage.correctRate, "the dialog opens on the rate the page shows").toHaveValue(
+            "12.3456",
+          );
+          await ratePage.correctClose.click();
+          await expect(ratePage.correctDialog).toBeHidden();
+          await expect(ratePage.correct).toBeFocused();
+          expect(corrections.count(), "Server Function calls").toBe(0);
+
+          await ratePage.correct.click();
+          await expect(ratePage.correctDialog).toBeVisible();
           await ratePage.correctRate.fill("0");
           await ratePage.correctSave.click();
           await expect(ratePage.correctRate).toBeFocused();
@@ -419,6 +483,14 @@ test.describe("exchange rates", () => {
           const confirmation = ratePage.confirmation(`Remove the rate of ${name}?`);
           await ratePage.remove.click();
           await expect(confirmation).toBeVisible();
+          await confirmation.getByRole("button", { name: "Keep the rate", exact: true }).click();
+          await expect(confirmation).toBeHidden();
+          await expect(ratePage.remove).toBeFocused();
+          await expect(ratePage.heading).toHaveText(name);
+          expect((await api.get(exchangeRateApi(recorded.id))).status(), "the rate kept").toBe(200);
+
+          await ratePage.remove.click();
+          await expect(confirmation).toBeVisible();
           await expect(confirmation).toContainText(
             `The rate leaves the list, and its history stays in the audit trail. A rate of DKK can then be recorded for ${typedDate(day)} again.`,
           );
@@ -431,6 +503,59 @@ test.describe("exchange rates", () => {
           expect((await api.get(exchangeRateApi(recorded.id))).status(), "the removed rate").toBe(404);
         } finally {
           await removeRates(api, "DKK", [day]);
+        }
+      });
+
+      test("says a rate removed elsewhere can no longer be corrected, and counts removing it again as done", async ({
+        page,
+        api,
+        capture,
+      }, testInfo) => {
+        test.slow();
+        const ratePage = new ExchangeRatePage(page);
+        const listPage = new ExchangeRatesPage(page);
+        const shell = new AppShell(page);
+        const days = rateDays(testInfo, theme, 2);
+        const [correctedDay = "", removedDay = ""] = days;
+        const removedName = `PLN on ${typedDate(removedDay)}`;
+        await removeRates(api, "PLN", days);
+        try {
+          const corrected = await recordRate(api, { currency: "PLN", rateDate: correctedDay, rate: 21.5 });
+          const removed = await recordRate(api, { currency: "PLN", rateDate: removedDay, rate: 21.75 });
+
+          await ratePage.goto(corrected.id);
+          await ratePage.waitUntilInteractive();
+          await ratePage.correct.click();
+          await expect(ratePage.correctDialog).toBeVisible();
+          const removedElsewhere = await api.delete(exchangeRateApi(corrected.id));
+          expect(removedElsewhere.status(), "the removal made elsewhere").toBe(204);
+          await ratePage.correctRate.fill("22");
+          await ratePage.correctSave.click();
+          await expect(ratePage.correctSummary).toBeFocused();
+          await expect(ratePage.correctSummary).toContainText(
+            "This rate was removed after the page was loaded, so it can no longer be corrected.",
+          );
+          await expect(ratePage.showLatest).toHaveCount(0);
+          await capture("exchange-rate-correct-removed", ratePage.correctDialog);
+          await ratePage.correctCancel.click();
+          await expect(ratePage.correctDialog).toBeHidden();
+
+          await ratePage.goto(removed.id);
+          await ratePage.waitUntilInteractive();
+          const removedFirst = await api.delete(exchangeRateApi(removed.id));
+          expect(removedFirst.status(), "the removal made elsewhere").toBe(204);
+          const confirmation = ratePage.confirmation(`Remove the rate of ${removedName}?`);
+          await ratePage.remove.click();
+          await expect(confirmation).toBeVisible();
+          await confirmation.getByRole("button", { name: "Remove the rate", exact: true }).click();
+
+          await expect(shell.toast(`Removed the rate of ${removedName}.`)).toContainText(
+            "It had already been removed.",
+          );
+          await expect(page).toHaveURL((url) => url.pathname === exchangeRatesPath);
+          await expect(listPage.heading).toBeVisible();
+        } finally {
+          await removeRates(api, "PLN", days);
         }
       });
     });
@@ -551,7 +676,7 @@ test.describe("exchange rates for a finance person", () => {
         const ratePage = new ExchangeRatePage(page);
         const [day = ""] = rateDays(testInfo, theme, 1);
         const name = `CZK on ${typedDate(day)}`;
-        await grantFinanceRole(request, person);
+        await assignRoles(request, person, ["finance"]);
         await removeRates(api, "CZK", [day]);
         try {
           await page.goto("/");
@@ -560,6 +685,9 @@ test.describe("exchange rates for a finance person", () => {
           await shell.navigationLink("Exchange rates").click();
           await expect(page).toHaveURL((url) => url.pathname === exchangeRatesPath);
           await expect(listPage.heading).toBeVisible();
+          await expect(listPage.listDescription, "a rate's changes are an administrator's").toHaveText(
+            "The rupees for foreign currencies, the newest day first. Open a rate to see its details.",
+          );
 
           await listPage.recordLink.click();
           await expect(newPage.heading).toBeVisible();
@@ -568,7 +696,7 @@ test.describe("exchange rates for a finance person", () => {
           await newPage.save.click();
           await expect(shell.toast(`Recorded the rate of CZK for ${typedDate(day)}.`)).toBeVisible();
           await expect(ratePage.heading).toHaveText(name);
-          await expect(ratePage.history, "the audit trail is an administrator's").toHaveCount(0);
+          await expect(ratePage.historyOrItsLoading, "the audit trail is an administrator's").toHaveCount(0);
 
           await ratePage.waitUntilInteractive();
           await ratePage.correct.click();
@@ -577,9 +705,45 @@ test.describe("exchange rates for a finance person", () => {
           await expect(shell.toast(`Corrected the rate of ${name}.`)).toBeVisible();
           await expect(ratePage.correctDialog).toBeHidden();
           await expect(ratePage.details).toContainText("₹3.7500 for 1 CZK");
+          await expect(ratePage.historyOrItsLoading, "the audit trail is an administrator's").toHaveCount(0);
           await capture("exchange-rate-finance");
         } finally {
           await removeRates(api, "CZK", [day]);
+        }
+      });
+
+      test("is told a rate was not removed when an administrator took the Finance role away while its page was open", async ({
+        page,
+        api,
+        person,
+        request,
+        capture,
+      }, testInfo) => {
+        test.slow();
+        const ratePage = new ExchangeRatePage(page);
+        const [day = ""] = rateDays(testInfo, theme, 1);
+        const name = `HUF on ${typedDate(day)}`;
+        await assignRoles(request, person, ["finance"]);
+        await removeRates(api, "HUF", [day]);
+        try {
+          const recorded = await recordRate(api, { currency: "HUF", rateDate: day, rate: 0.2468 });
+          await ratePage.goto(recorded.id);
+          await ratePage.waitUntilInteractive();
+          await assignRoles(request, person, []);
+
+          const confirmation = ratePage.confirmation(`Remove the rate of ${name}?`);
+          await ratePage.remove.click();
+          await expect(confirmation).toBeVisible();
+          await confirmation.getByRole("button", { name: "Remove the rate", exact: true }).click();
+          await expect(confirmation).toBeHidden();
+          await expect(ratePage.removeError).toHaveText("You do not have permission to do this.");
+          await expect(ratePage.remove).toBeFocused();
+          await expect(ratePage.heading).toHaveText(name);
+          await capture("exchange-rate-remove-refused", ratePage.actions);
+          expect((await request.get(exchangeRateApi(recorded.id))).status(), "the rate kept").toBe(200);
+        } finally {
+          await assignRoles(request, person, ["finance"]);
+          await removeRates(api, "HUF", [day]);
         }
       });
     });

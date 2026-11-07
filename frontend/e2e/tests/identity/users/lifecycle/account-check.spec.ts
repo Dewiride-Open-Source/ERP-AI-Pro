@@ -10,7 +10,7 @@ import {
 } from "../../../../fixtures/account-check";
 import { withholdClientBundles } from "../../../../fixtures/client-bundles";
 import { setApplicationAccess } from "../../../../fixtures/directory";
-import { removeRecords, uniquePrefix } from "../../../../fixtures/person-records";
+import { removeRecords, uniquePrefix } from "../../../../fixtures/records/person-records";
 import { holdServerFunctionCalls } from "../../../../fixtures/server-functions";
 import { expect, test, themes, type SignedInApi } from "../../../../fixtures/test";
 import { AccountCheckDialog } from "../../../../pages/identity/users/account-check.page";

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { designationIdsNamed } from "../../../../fixtures/organisation-records";
+import { designationIdsNamed } from "../../../../fixtures/records/organisation-records";
 import {
   createDesignationRecord,
   designationsApi,
@@ -8,7 +8,7 @@ import {
   registerPersonRecord,
   removeRecords,
   uniquePrefix,
-} from "../../../../fixtures/person-records";
+} from "../../../../fixtures/records/person-records";
 import { signIn } from "../../../../fixtures/sign-in";
 import { expect, test, themes, type SignedInApi } from "../../../../fixtures/test";
 import { DesignationsPage, designationsPath } from "../../../../pages/identity/users/designations.page";

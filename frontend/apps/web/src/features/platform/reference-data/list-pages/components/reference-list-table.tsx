@@ -10,7 +10,8 @@ import {
 import type { ReferenceListColumn, ReferenceListRow } from "./reference-list-view";
 
 // The rows are drawn twice, as a table and as cards, and the width of the list's own box shows one of them, at the width
-// the data table changes at, so a list keeps its shape wherever a page places it.
+// the data table changes at, so a list keeps its shape wherever a page places it. The title column leads the table, because
+// a row header names only the cells after it in its row.
 export function ReferenceListTable({
   labelledBy,
   columns,
@@ -24,6 +25,7 @@ export function ReferenceListTable({
 }) {
   const title = columns.find((column) => column.title === true) ?? columns[0];
   const details = columns.filter((column) => column !== title);
+  const tableColumns = title === undefined ? details : [title, ...details];
 
   return (
     <div
@@ -38,7 +40,7 @@ export function ReferenceListTable({
       >
         <TableHeader>
           <TableRow>
-            {columns.map((column) => (
+            {tableColumns.map((column) => (
               <TableHead key={column.id} scope="col">
                 {column.header}
               </TableHead>
@@ -48,7 +50,7 @@ export function ReferenceListTable({
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id} data-testid="reference-list-row">
-              {columns.map((column) =>
+              {tableColumns.map((column) =>
                 column === title ? (
                   <TableHead key={column.id} scope="row" className="h-auto p-2 whitespace-normal">
                     {row.cells[column.id]}

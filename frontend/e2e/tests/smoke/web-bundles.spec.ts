@@ -1,7 +1,7 @@
 import type { APIRequestContext } from "@playwright/test";
 
-import { retiredJob, runKeyPrefix, seedJobRun } from "../../fixtures/job-runs";
-import { ownPersonRecordId } from "../../fixtures/person-records";
+import { retiredJob, runKeyPrefix, seedJobRun } from "../../fixtures/records/job-runs";
+import { ownPersonRecordId } from "../../fixtures/records/person-records";
 import { signIn, type SignedInPerson } from "../../fixtures/sign-in";
 import { expect, test } from "../../fixtures/test";
 import { personPath } from "../../pages/identity/users/person.page";

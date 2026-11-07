@@ -14,6 +14,8 @@ export class ReferencePickersPage {
   readonly form: Locator;
   readonly card: Locator;
   readonly documentDate: Locator;
+  readonly documentDateTrigger: Locator;
+  readonly calendar: Locator;
   readonly values: Locator;
 
   constructor(private readonly page: Page) {
@@ -23,6 +25,12 @@ export class ReferencePickersPage {
       .locator("[data-slot='card']")
       .filter({ has: page.getByTestId("reference-pickers-form") });
     this.documentDate = this.form.getByRole("textbox", { name: "Document date", exact: true });
+    // While the calendar is open the rest of the page is hidden from assistive technology, so its trigger is found by its
+    // label attribute rather than by role.
+    this.documentDateTrigger = page
+      .getByTestId("reference-pickers-form")
+      .locator("button[aria-label='Choose date']");
+    this.calendar = page.getByRole("dialog", { name: "Choose date", exact: true });
     this.values = page.getByTestId("reference-pickers-values");
   }
 
@@ -43,6 +51,10 @@ export class ReferencePickersPage {
 
   listbox(name: PickerName): Locator {
     return this.page.getByRole("listbox", { name, exact: true });
+  }
+
+  optionsToggle(name: PickerName): Locator {
+    return this.form.getByRole("button", { name: `Show options ${name}`, exact: true });
   }
 
   option(name: PickerName, label: string): Locator {

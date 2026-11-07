@@ -9,6 +9,8 @@ export interface ComboboxOption {
 
 export type ComboboxDirection = 1 | -1;
 
+export type ComboboxFilter = (options: readonly ComboboxOption[], typed: string) => readonly ComboboxOption[];
+
 export function filterComboboxOptions(
   options: readonly ComboboxOption[],
   query: string,
@@ -16,6 +18,18 @@ export function filterComboboxOptions(
   const needle = searchText(query);
   if (needle === "") return options;
   return options.filter((option) => searchText(option.label).includes(needle));
+}
+
+// A caller that follows the typed text itself searches for its own options, so they are listed as given; otherwise the
+// caller's filter, or the label match, picks them from the typed text.
+export function visibleComboboxOptions(
+  options: readonly ComboboxOption[],
+  typed: string | null,
+  filter: ComboboxFilter | undefined,
+  searchedByCaller: boolean,
+): readonly ComboboxOption[] {
+  if (searchedByCaller) return options;
+  return (filter ?? filterComboboxOptions)(options, typed ?? "");
 }
 
 export function nextEnabledIndex(

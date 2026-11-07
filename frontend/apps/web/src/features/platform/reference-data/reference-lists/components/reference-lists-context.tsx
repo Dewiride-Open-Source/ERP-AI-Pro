@@ -1,14 +1,22 @@
 "use client";
 
-import { createContext, type ReactNode } from "react";
+import { createContext, useMemo, type ReactNode } from "react";
 
 import type { ReferenceLists } from "./reference-options";
 
-export const ReferenceListsContext = createContext<ReferenceLists | null>(null);
+export interface ReferenceListsValue {
+  readonly lists: ReferenceLists;
+  readonly today: string;
+}
+
+export const ReferenceListsContext = createContext<ReferenceListsValue | null>(null);
 
 export function ReferenceListsContextProvider({
   lists,
+  today,
   children,
-}: Readonly<{ lists: ReferenceLists; children: ReactNode }>) {
-  return <ReferenceListsContext value={lists}>{children}</ReferenceListsContext>;
+}: Readonly<{ lists: ReferenceLists; today: string; children: ReactNode }>) {
+  const value = useMemo(() => ({ lists, today }), [lists, today]);
+
+  return <ReferenceListsContext value={value}>{children}</ReferenceListsContext>;
 }

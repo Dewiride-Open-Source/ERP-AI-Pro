@@ -53,7 +53,6 @@ import {
   ratesFileColumnHelp,
   ratesFileLayout,
   withFileLines,
-  type FileRefusal,
 } from "./import-outcome";
 import {
   maxRatesFileBytes,
@@ -64,22 +63,15 @@ import {
   type RatesFileProblem,
   type RatesFileRow,
 } from "./rates-file";
+import { ratesFileTypes, readFileText } from "./rates-file-text";
 
 type Choice =
   | { readonly status: "none" }
   | { readonly status: "reading"; readonly name: string }
-  | { readonly status: "refused"; readonly message: string }
-  | { readonly status: "read"; readonly name: string; readonly file: RatesFile; readonly reading: number };
-
-type FileText = { readonly text: string } | { readonly refusal: FileRefusal };
+  | { readonly status: "refused"; readonly message: string; readonly attempt: number }
+  | { readonly status: "read"; readonly name: string; readonly file: RatesFile; readonly attempt: number };
 
 type Outcome = { readonly recorded: number; readonly unchanged: number };
-
-// Windows names a .csv file's type after the program that opens it, often Excel's, so the type alone cannot tell a CSV file
-// from a workbook; the file's name decides, and the reading of its text decides the rest.
-const csvTypes: readonly string[] = ["text/csv", "application/vnd.ms-excel", "text/plain"];
-
-const csvName = /\.(?:csv|txt)$/i;
 
 // No event tells a page when the browser has finished reading the file a click saves, so its address stays valid for a
 // minute instead of being released at once.
@@ -93,21 +85,22 @@ export function ImportExchangeRatesForm({ today }: { today: string }) {
   const [choice, setChoice] = useState<Choice>({ status: "none" });
   const latest = useRef(0);
 
-  // A file chosen while an earlier one is still being read replaces it, so a late read is dropped.
+  // A file chosen while an earlier one is still being read replaces it, so a late read is dropped; every refusal is a new
+  // alert, so a person who chooses the same wrong file again hears it again.
   const take = (file: File) => {
     latest.current += 1;
-    const reading = latest.current;
+    const attempt = latest.current;
     setChoice({ status: "reading", name: file.name });
-    void fileText(file).then((read) => {
-      if (reading !== latest.current) return;
+    void readFileText(file.name, () => file.arrayBuffer()).then((read) => {
+      if (attempt !== latest.current) return;
       setChoice(
         "refusal" in read
-          ? { status: "refused", message: fileRefusalText(file.name, read.refusal) }
+          ? { status: "refused", message: fileRefusalText(file.name, read.refusal), attempt }
           : {
               status: "read",
               name: file.name,
               file: readRatesFile(read.text, { today, currencies: known }),
-              reading,
+              attempt,
             },
       );
     });
@@ -115,7 +108,11 @@ export function ImportExchangeRatesForm({ today }: { today: string }) {
 
   const refuse = (file: File, rejection: FileRejection) => {
     latest.current += 1;
-    setChoice({ status: "refused", message: fileRefusalText(file.name, rejection) });
+    setChoice({
+      status: "refused",
+      message: fileRefusalText(file.name, rejection),
+      attempt: latest.current,
+    });
   };
 
   return (
@@ -141,7 +138,7 @@ export function ImportExchangeRatesForm({ today }: { today: string }) {
           </dl>
           <TemplateDownload />
           <FileDropZone
-            accept={csvTypes}
+            accept={ratesFileTypes}
             maxSizeBytes={maxRatesFileBytes}
             label="Drop a CSV file here"
             hint="Or choose one. In Excel, save the sheet as CSV UTF-8 (Comma delimited)."
@@ -152,7 +149,12 @@ export function ImportExchangeRatesForm({ today }: { today: string }) {
             {statusText(choice)}
           </p>
           {choice.status === "refused" ? (
-            <p role="alert" className="text-sm text-destructive" data-testid="exchange-rate-file-refusal">
+            <p
+              key={choice.attempt}
+              role="alert"
+              className="text-sm text-destructive"
+              data-testid="exchange-rate-file-refusal"
+            >
               {choice.message}
             </p>
           ) : null}
@@ -160,7 +162,7 @@ export function ImportExchangeRatesForm({ today }: { today: string }) {
       </Card>
 
       {choice.status === "read" ? (
-        <FileCheck key={choice.reading} name={choice.name} file={choice.file} today={today} />
+        <FileCheck key={choice.attempt} name={choice.name} file={choice.file} today={today} />
       ) : null}
     </>
   );
@@ -382,19 +384,4 @@ function statusText(choice: Choice): string {
 
 function currencyCodes(list: ListRead<CurrencyItem>): ReadonlySet<string> | undefined {
   return list.status === "read" ? new Set(list.items.map((item) => item.code)) : undefined;
-}
-
-async function fileText(file: File): Promise<FileText> {
-  if (!csvName.test(file.name)) return { refusal: "not-csv" };
-  let bytes: ArrayBuffer;
-  try {
-    bytes = await file.arrayBuffer();
-  } catch {
-    return { refusal: "unreadable" };
-  }
-  try {
-    return { text: new TextDecoder("utf-8", { fatal: true }).decode(bytes) };
-  } catch {
-    return { refusal: "not-utf8" };
-  }
 }

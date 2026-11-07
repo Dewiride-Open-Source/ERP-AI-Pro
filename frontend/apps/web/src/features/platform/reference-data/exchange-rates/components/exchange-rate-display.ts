@@ -48,6 +48,9 @@ export interface Removal {
 
 export const sourceNotGiven = "Not given";
 
+export const currenciesUnavailable =
+  "Currencies could not be read, so the list cannot be filtered by currency now.";
+
 export function exchangeRateRecord(response: ExchangeRateResponse): ExchangeRateRecord | undefined {
   const { id, currency, rate, unit, version } = response;
   const rateDate = isoDateOf(response.rateDate);
@@ -134,6 +137,13 @@ export function currencyFilterOptions(
     ...chosen.filter((code) => !offered.has(code)).map((code) => ({ value: code, label: code })),
     ...known,
   ];
+}
+
+export function currencyFilterNote(
+  list: ListRead<CurrencyItem>,
+  chosen: readonly string[],
+): string | undefined {
+  return list.status === "failed" && chosen.length === 0 ? currenciesUnavailable : undefined;
 }
 
 // A code the read list does not hold, the rupee included, matches no rate and would make the API refuse the whole filter, so
