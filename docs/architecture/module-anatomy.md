@@ -1,6 +1,6 @@
 # Module anatomy
 
-A module is a bounded context inside a domain. The Finance / Sales module shows the full shape of a Community module; every module uses the same one, omitting folders it does not need, and only an [Enterprise module](#enterprise-modules) adds `Ai/` folders.
+A module is a bounded context inside a domain. The Finance / Sales module shows the full shape of a Community module; every module uses the same one, omitting folders it does not need, and only an [Enterprise module](#enterprise-modules) adds `Ai/` folders. `node scripts/scaffold/new-module.ts` generates this shape with one feature ([adding a module](adding-a-module.md), section "Generating a module").
 
 ## Backend
 

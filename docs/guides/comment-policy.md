@@ -31,3 +31,5 @@ XML documentation comments are never mandatory. They are used only where they ca
 ## Exempt files
 
 Generated files: EF Core migrations, shadcn `components/ui`, generated API clients, `docs/roadmap/ROADMAP.md`, lockfiles.
+
+The module scaffolder's templates (`scripts/scaffold/templates/**/*.tmpl`) are not exempt: `comment-policy.ts` reads `x.cs.tmpl` as C# and `x.tsx.tmpl` as TypeScript, as the files they render, so a generated module never starts with a comment the policy refuses.

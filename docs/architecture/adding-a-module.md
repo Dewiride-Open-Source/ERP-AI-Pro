@@ -1,6 +1,24 @@
 # Adding a module
 
-Use `backend/Modules/Platform/SystemInfo` as the reference implementation. A scaffolder (`scripts/new-module`) arrives with the business building blocks phase; until then follow these steps by hand.
+A Community module starts from one command, which writes it and registers it everywhere ([ADR-0061](../adr/0061-a-module-scaffolder-that-registers-what-it-writes-proven-on-every-push.md)); the sections after "Generating a module" are what it automates, and what a module that grows beyond its first feature keeps following by hand. `backend/Modules/Platform/SystemInfo` remains the smallest reference implementation.
+
+## Generating a module
+
+```bash
+node scripts/scaffold/new-module.ts <Domain>/<Module> --entity <Entity> \
+  --title "<navigation title>" --description "<one sentence>" \
+  --read-permission "<one sentence>" --create-permission "<one sentence>" \
+  [--entities <Entities>] [--singular "<words>"] [--plural "<words>"] \
+  [--area-title "<title>"] [--icon <LucideIcon>] [--files-only]
+```
+
+- **Names.** PascalCase words: `Clients/Core --entity Client`. The plural defaults to an English plural of the entity and the prose to its words in lower case (`--singular person --plural people` where English differs); `--area-title` is required for a new domain and refused for an existing one; the icon is a `lucide-react` export, `FileTextIcon` by default. A module may share its name with a module of another domain (`Clients/Core`, `Vendors/Core`); its schema, route, flag, context key and API model names may not clash with any other.
+- **Texts the owner approves first.** The navigation title and description and the two permission sentences (one sentence each, ADR-0045) are shown to people, so they are agreed with the owner before the command runs.
+- **What it writes.** The module's four projects and README in the anatomy of [module anatomy](module-anatomy.md), with one feature that lists, opens and adds one kind of record (an `IAuditable` aggregate with a required `Name` of at most 100 characters, recorded under `<domain>.<module>.<entities>`, read and create permissions held by administrators alone), its unit and integration tests, its first migration, the web module with its list, record and add pages behind the module flag, and its Playwright page objects and specs, gated and API-unavailable included. Edit, delete and every business rule are the module's own to add.
+- **What it registers.** `Modules.All` and the composition project, `backend/Dewiride.Erp.slnx` and the domain's solution filter (a new domain gets its filter and its row in `backend/solutions/README.md`), the host lock files, `infra/appconfig/feature-flags.json`, `docs/configuration.md`, `docs/routing.md`, the web registry and, for a new domain, its area, the e2e navigation list `registeredNavigation`, the audit trail's record types and labels, `docs/openapi/erp.json` and the generated client.
+- **Before it writes.** It refuses, listing every problem and changing nothing, a malformed or reserved name, a clash, a missing anchor in a file it edits, and a file it edits or regenerates that has uncommitted changes, so the `git restore` and `git clean` lines it prints at the end undo it whole. Without `--files-only` it also needs `ERP_TEST_SQL_CONNECTION`, `ERP_TEST_BLOB_EMULATOR_HOST` and `dotnet`, because it then restores, formats the C# it wrote, adds the migration (`ef.ts add Initial<Entities>`) and regenerates the contract and the client; `--files-only` stops after writing and prints those commands. Either way it reads the icons from `frontend/apps/web/node_modules`, so `pnpm install` comes first.
+- **After it writes.** The new flag still has to reach the configuration store: `bash scripts/azure/seed.sh --dry-run --label all`, then the same without `--dry-run`, with the owner's consent ([adding a setting](../guides/adding-a-setting.md)).
+- **Proof.** `node scripts/scaffold/prove.ts [--e2e [--all-projects]]` generates the throwaway module `ScaffoldProof/Jobs` in a worktree of HEAD beside the repository and runs every check over it; ci-backend runs it on every push to `main`.
 
 ## Edition
 
