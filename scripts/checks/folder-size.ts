@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import { hasSegment, repoRoot, toRepoPath, walk } from "./lib/walk.ts";
 
 const MAX_SOURCE_FILES_PER_FOLDER = 12;
-const sourceExtensions = [".cs", ".ts", ".tsx"];
+const sourceExtensions = [".cs", ".ts", ".tsx", ".cs.tmpl", ".ts.tmpl", ".tsx.tmpl"];
 const generatedFolders = ["Migrations"];
 const generatedPaths = ["/components/ui", "/packages/api-client/src/generated"];
 

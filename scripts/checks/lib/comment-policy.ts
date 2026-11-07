@@ -126,8 +126,11 @@ const syntaxes: readonly CommentSyntax[] = [
   { kind: "lines", extensions: [".conf"], patterns: [/^\s*#/, /^\s*\/\//] },
 ];
 
+const templateSuffix = ".tmpl";
+
 function syntaxOf(path: string): CommentSyntax | undefined {
-  return syntaxes.find((syntax) => syntax.extensions.some((extension) => path.endsWith(extension)));
+  const rendered = path.endsWith(templateSuffix) ? path.slice(0, -templateSuffix.length) : path;
+  return syntaxes.find((syntax) => syntax.extensions.some((extension) => rendered.endsWith(extension)));
 }
 
 export function isScanned(path: string): boolean {

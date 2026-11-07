@@ -73,3 +73,10 @@ test("only the languages with a comment syntax are scanned", () => {
   }
   for (const path of ["a.json", "a.md", "COPYING", "a.txt"]) assert.equal(isScanned(path), false, path);
 });
+
+test("a scaffolder template is read in the language of the file it renders, and a template of an unscanned file is not", () => {
+  assert.equal(isScanned("scripts/scaffold/templates/backend/__Module__Module.cs.tmpl"), true);
+  assert.deepEqual(reasonsOf("scripts/scaffold/templates/backend/__Module__Module.cs.tmpl", 'var name = "__Module__";\n// TODO: name it'), [`2: ${taskMarker}`]);
+  assert.deepEqual(reasonsOf("scripts/scaffold/templates/web/feature/nav.ts.tmpl", "/* Legacy entry. */\nexport const id = 1;"), [`1: ${history}`]);
+  for (const path of ["scripts/scaffold/templates/registrations/routing-row.md.tmpl", "a.tmpl", "a.json.tmpl"]) assert.equal(isScanned(path), false, path);
+});
