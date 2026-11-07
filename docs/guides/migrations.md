@@ -4,7 +4,7 @@ How to change the database schema, apply it, check it and seed reference data. T
 
 ## The tooling: `scripts/ef/ef.ts`
 
-Every command runs from the repository root and wraps the pinned `dotnet ef` local tool (`cd backend && dotnet tool restore` once) with the API host as startup project. Contexts are discovered from the source tree: every class deriving from `ModuleDbContext` in a `Persistence` folder under `backend/Modules` or `backend/BuildingBlocks`. A module's context is keyed by its domain and module folders in kebab case (`backend/Modules/Identity/Users` → `identity-users`) and a building block's by its class name without `DbContext` in kebab case (`JobsDbContext` → `jobs`), and `dotnet ef` receives the context's full class name, namespace included, so two modules of one name in different domains (`Clients/Core` and `Vendors/Core`, each with a `CoreDbContext`) keep a key and a context of their own. Today `list` prints seven:
+Every command runs from the repository root and wraps the pinned `dotnet ef` local tool (`cd backend && dotnet tool restore` once) with the API host as startup project. Contexts are discovered from the source tree: every class deriving from `ModuleDbContext` in a `Persistence` folder under `backend/Modules` or `backend/BuildingBlocks`. A module's context is keyed by its domain and module folders in kebab case (`backend/Modules/Identity/Users` → `identity-users`) and a building block's by its class name without `DbContext` in kebab case (`JobsDbContext` → `jobs`), and `dotnet ef` receives the context's full class name, namespace included, so two modules of one name in different domains (`Clients/Core` and `Vendors/Core`, each with a `CoreDbContext`) keep a key and a context of their own. `list` prints every key: one `<domain>-<module>` per module (`identity-users`, `platform-system-info`) and these of the building blocks:
 
 | Key | Context | Project | Schema |
 |---|---|---|---|
@@ -12,11 +12,9 @@ Every command runs from the repository root and wraps the pinned `dotnet ef` loc
 | `auditing` | `AuditingDbContext` | `BuildingBlocks/Auditing/Dewiride.Erp.BuildingBlocks.Auditing` | `audit` (`SecurityEvents`, `ChangeRecords`, and the role `erp_audit_append_only` denied `UPDATE`, `DELETE` and `ALTER` on the schema) |
 | `caching` | `CachingDbContext` | `BuildingBlocks/Caching/Dewiride.Erp.BuildingBlocks.Caching` | `platform_caching` (`DistributedCacheEntries`) |
 | `idempotency` | `IdempotencyDbContext` | `BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency` | `platform_idempotency` |
-| `identity-users` | `UsersDbContext` | `Modules/Identity/Users/Module/Dewiride.Erp.Modules.Identity.Users` | `identity_users` (`Users`, `Departments`, `Designations`, `Positions`, `PersonThemes`) |
 | `jobs` | `JobsDbContext` | `BuildingBlocks/Jobs/Dewiride.Erp.BuildingBlocks.Jobs` | `platform_jobs` (`JobRuns`, `JobRunEvents`, `JobSchedules`) |
-| `platform-system-info` | `SystemInfoDbContext` | `Modules/Platform/SystemInfo/Module/Dewiride.Erp.Modules.Platform.SystemInfo` | `platform_system_info` |
 
-The migrator applies them in catalogue order, `platform_caching`, `platform_idempotency`, `audit`, `files`, `platform_jobs`, `platform_system_info`, `identity_users`, which is the order `AddErpPlatform` registers them in (building blocks first, then `Modules.All`). A building block's key comes from its class name and every schema from its context, so the `attachments` key names the `files` schema.
+The migrator applies them in catalogue order, which is the order `AddErpPlatform` registers them in: the building blocks first (`platform_caching`, `platform_idempotency`, `audit`, `files`, `platform_jobs`), then the modules in the order of `Modules.All`. A building block's key comes from its class name and every schema from its context, so the `attachments` key names the `files` schema.
 
 | Task | Command |
 |---|---|

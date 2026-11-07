@@ -35,10 +35,16 @@ A key that must differ per environment gets its unlabelled default in `defaults.
 ## Add a feature flag
 
 1. Declare the module or capability on the module descriptor: the module flag `Erp.Modules.<Domain>.<Module>` exists for every registered module and evaluates enabled until a source switches it off; a `ModuleCapability(Name, EnabledByDefault)` becomes `Erp.Modules.<Domain>.<Module>.<Name>` with the declared default (ADR-0012). A building block declares its own flag with `services.AddErpPlatformFeature("Erp.Platform.<Concern>.<Capability>", enabledByDefault)`, which puts it in the same catalog with that default (ADR-0034; `Erp.Platform.Identity.BearerTokens` is the example).
-2. Add it to `infra/appconfig/feature-flags.json` with an explicit boolean for both `local-dev` and `production`:
+2. Add it to `infra/appconfig/feature-flags.json` with an explicit boolean for both `local-dev` and `production`, in the layout `JSON.stringify` writes with two spaces, the only one the module scaffolder edits:
 
    ```json
-   { "id": "Erp.Modules.Finance.Sales", "enabled": { "local-dev": true, "production": false } }
+   {
+     "id": "Erp.Modules.Finance.Sales",
+     "enabled": {
+       "local-dev": true,
+       "production": false
+     }
+   }
    ```
 
 3. Register it in [docs/configuration.md](../configuration.md) under Feature flags.

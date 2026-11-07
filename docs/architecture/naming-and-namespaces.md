@@ -51,7 +51,7 @@ Route exemptions: `/api/auth/*` (authentication endpoints owned by the host) and
 | Workspace package | `@dewiride/erp-<name>` | `@dewiride/erp-web`, `@dewiride/erp-ui` |
 | Feature folder | `features/<domain>/<module>/<feature>/` kebab-case | `features/finance/sales/invoices/` |
 | Domain shared folder | `features/<domain>/_shared/` | `features/finance/_shared/` |
-| Navigation manifest | `nav.ts` exporting `<module>Navigation` | `attachmentsNavigation`, `systemInfoNavigation` |
+| Navigation manifest | `nav.ts` exporting one `<page>Navigation` per navigation entry, named after the page it opens and unique across the web app | `peopleNavigation`, `departmentsNavigation`, `systemInfoNavigation` |
 | Route folder | mirrors the API resource; kebab-case segments, camelCase dynamic segments | `app/(app)/finance/sales/invoices/[invoiceId]/page.tsx` |
 | Component file | kebab-case, PascalCase export | `invoice-table.tsx` → `InvoiceTable` |
 | Loading skeleton | `components/<name>-skeleton.tsx`, exported through the module `index.ts` and rendered by the segment's `loading.tsx` | `attachments-overview-skeleton.tsx` → `AttachmentsOverviewSkeleton` |
