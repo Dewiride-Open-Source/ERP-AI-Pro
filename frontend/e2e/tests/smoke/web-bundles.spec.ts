@@ -4,6 +4,8 @@ import { retiredJob, runKeyPrefix, seedJobRun } from "../../fixtures/records/job
 import { ownPersonRecordId } from "../../fixtures/records/person-records";
 import { signIn, type SignedInPerson } from "../../fixtures/sign-in";
 import { expect, test } from "../../fixtures/test";
+import { centralTaxRatesKey } from "../../pages/compliance/statutory-parameters/parameter-set.page";
+import { parameterSetPath } from "../../pages/compliance/statutory-parameters/parameter-sets.page";
 import { personPath } from "../../pages/identity/users/person.page";
 import { jobRunPath } from "../../pages/platform/jobs/runs.page";
 
@@ -46,6 +48,8 @@ const referenceDataMarkers = [
   referencePickersMarker,
 ];
 
+const parameterSetVersionsMarker = "parameter-set-versions";
+
 const otherModuleMarkers = [
   "supplier-example-form",
   "motion-demo-preference",
@@ -55,6 +59,7 @@ const otherModuleMarkers = [
   "No people match these filters.",
   ...organisationMarkers,
   jobRunsMarker,
+  parameterSetVersionsMarker,
 ];
 
 function otherReferenceDataMarkers(...own: readonly string[]): string[] {
@@ -67,6 +72,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["supplier-example-form"],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "motion-demo-preference",
       "overlay-hover-card",
       "upload-progress",
@@ -84,6 +90,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["No bills match these filters."],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "supplier-example-form",
       "motion-demo-preference",
       "upload-progress",
@@ -100,6 +107,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["animated-list-item", "Enter a reminder.", "Restore the requests"],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "supplier-example-form",
       "motion-demo-preference",
       "upload-progress",
@@ -116,6 +124,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["motion-demo-preference"],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "supplier-example-form",
       "upload-progress",
       "system-info-refresh",
@@ -132,6 +141,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["system-info-refresh"],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "upload-progress",
       "Delete this attachment?",
       "supplier-example-form",
@@ -147,6 +157,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["upload-progress", "No files match these filters."],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "system-info-refresh",
       "supplier-example-form",
       "motion-demo-preference",
@@ -163,6 +174,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["audit-export"],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "upload-progress",
       "Delete this attachment?",
       "system-info-refresh",
@@ -180,6 +192,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: [jobRunsMarker, runActionsMarker],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "upload-progress",
       "Delete this attachment?",
       "system-info-refresh",
@@ -205,6 +218,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: [runActionsMarker],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       jobRunsMarker,
       "audit-export",
       "No people match these filters.",
@@ -223,6 +237,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["No people match these filters."],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "upload-progress",
       "Delete this attachment?",
       "No files match these filters.",
@@ -242,6 +257,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: ["record-move", "assign-roles"],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       "audit-export",
       "No people match these filters.",
       "upload-progress",
@@ -261,6 +277,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: [departmentsMarker],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       designationsMarker,
       orgChartMarker,
       "record-move",
@@ -279,6 +296,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: [designationsMarker],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       departmentsMarker,
       orgChartMarker,
       "record-move",
@@ -297,6 +315,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: [orgChartMarker],
     foreignMarkers: [
       ...referenceDataMarkers,
+      parameterSetVersionsMarker,
       departmentsMarker,
       designationsMarker,
       "record-move",
@@ -337,6 +356,22 @@ const routes: readonly WebRoute[] = [
     path: "/design/reference-pickers",
     ownMarkers: [referencePickersMarker],
     foreignMarkers: [...otherReferenceDataMarkers(referencePickersMarker), ...otherModuleMarkers],
+  },
+  // The list of sets renders on the web server alone and ships no client code of its own, so only what it must leave out is
+  // looked for.
+  {
+    path: "/compliance/statutory-parameters/parameter-sets",
+    ownMarkers: [],
+    foreignMarkers: [...referenceDataMarkers, ...otherModuleMarkers],
+  },
+  {
+    path: "/compliance/statutory-parameters/parameter-sets/[setKey]",
+    address: () => Promise.resolve(parameterSetPath(centralTaxRatesKey)),
+    ownMarkers: [parameterSetVersionsMarker],
+    foreignMarkers: [
+      ...referenceDataMarkers,
+      ...otherModuleMarkers.filter((marker) => marker !== parameterSetVersionsMarker),
+    ],
   },
 ];
 

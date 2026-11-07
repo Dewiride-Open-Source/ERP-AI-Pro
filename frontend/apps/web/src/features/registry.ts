@@ -1,3 +1,4 @@
+import { parameterSetsNavigation } from "@/features/compliance/statutory-parameters";
 import {
   departmentsNavigation,
   designationsNavigation,
@@ -22,4 +23,5 @@ export const navigation: readonly NavigationEntry[] = [
   orgChartNavigation,
   departmentsNavigation,
   designationsNavigation,
+  parameterSetsNavigation,
 ];

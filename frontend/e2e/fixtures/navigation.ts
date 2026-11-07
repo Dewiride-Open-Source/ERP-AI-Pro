@@ -92,6 +92,14 @@ export const registeredNavigation: readonly RegisteredNavigation[] = [
     description: "See the designations people can hold in the company.",
     employees: true,
   },
+  {
+    area: "Compliance",
+    title: "Statutory parameters",
+    href: "/compliance/statutory-parameters/parameter-sets",
+    description:
+      "See the government rates, codes and due dates the ERP uses, with the date each applies from and what changed.",
+    employees: false,
+  },
 ];
 
 export const employeeNavigation: readonly RegisteredNavigation[] = registeredNavigation.filter(

@@ -14,6 +14,9 @@ export const changeKeys = [
   "platform.reference-data.countries",
   "platform.reference-data.indian-states",
   "platform.reference-data.exchange-rates",
+  "compliance.statutory-parameters.parameter-sets",
+  "compliance.statutory-parameters.parameter-versions",
+  "compliance.statutory-parameters.parameter-rows",
 ] as const;
 
 export const changeOperations: readonly ChangeOperation[] = ["created", "updated", "deleted", "restored"];

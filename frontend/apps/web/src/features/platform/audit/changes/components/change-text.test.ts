@@ -44,6 +44,12 @@ test("recordTypeLabel_EveryChangeKeyTheHistoryRecords_HasAName", () => {
   assert.equal(recordTypeLabel("identity.users.positions"), "Move");
   assert.equal(recordTypeLabel("identity.users.themes"), "Colour theme");
   assert.equal(recordTypeLabel("platform.attachments.files"), "File");
+  assert.equal(recordTypeLabel("compliance.statutory-parameters.parameter-sets"), "Parameter set");
+  assert.equal(
+    recordTypeLabel("compliance.statutory-parameters.parameter-versions"),
+    "Parameter set version",
+  );
+  assert.equal(recordTypeLabel("compliance.statutory-parameters.parameter-rows"), "Parameter set entry");
 });
 
 test("recordTypeLabel_AChangeKeyItDoesNotKnow_IsTheKeyItself", () => {
@@ -132,6 +138,30 @@ test("changeSentence_ARecordFiledUnderAnother_NamesTheRecordItIsFiledUnder", () 
     action: "deleted a move of a person",
     subject: undefined,
   });
+});
+
+test("changeSentence_AVersionOrEntryOfAStatutoryParameterSet_NamesTheSetItIsFiledUnder", () => {
+  const version = change({
+    actorKind: "system",
+    actorName: null,
+    entityType: "compliance.statutory-parameters.parameter-versions",
+    subjectType: "compliance.statutory-parameters.parameter-sets",
+    subjectName: "SAC codes",
+  });
+
+  assert.deepEqual(changeSentence(version), {
+    actor: "The ERP",
+    action: "created a version of",
+    subject: "SAC codes",
+  });
+  assert.deepEqual(
+    changeSentence({
+      ...version,
+      entityType: "compliance.statutory-parameters.parameter-rows",
+      operation: "updated",
+    }),
+    { actor: "The ERP", action: "changed an entry of", subject: "SAC codes" },
+  );
 });
 
 test("changeSentence_ARecordItsSubjectHoldsOneOf_IsTheOneOfThatSubject", () => {

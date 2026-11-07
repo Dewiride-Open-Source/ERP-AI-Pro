@@ -11,7 +11,8 @@ import type { SearchedListColumn, SearchedListRow } from "./searched-list-view.t
 
 // The rows are drawn twice, as a table and as cards, and the width of the list's own box shows one of them, at the width
 // the data table changes at, so a list keeps its shape wherever a page places it. The title column leads the table, because
-// a row header names only the cells after it in its row.
+// a row header names only the cells after it in its row. Headings and cells wrap and a row's cells start at its top, because
+// a cell may hold a sentence, which on one line would push the other columns out of sight.
 export function SearchedListTable({
   labelledBy,
   columns,
@@ -41,7 +42,7 @@ export function SearchedListTable({
         <TableHeader>
           <TableRow>
             {tableColumns.map((column) => (
-              <TableHead key={column.id} scope="col">
+              <TableHead key={column.id} scope="col" className="whitespace-normal">
                 {column.header}
               </TableHead>
             ))}
@@ -52,11 +53,13 @@ export function SearchedListTable({
             <TableRow key={row.id} data-testid="searched-list-row">
               {tableColumns.map((column) =>
                 column === title ? (
-                  <TableHead key={column.id} scope="row" className="h-auto p-2 whitespace-normal">
+                  <TableHead key={column.id} scope="row" className="h-auto p-2 align-top whitespace-normal">
                     {row.cells[column.id]}
                   </TableHead>
                 ) : (
-                  <TableCell key={column.id}>{row.cells[column.id]}</TableCell>
+                  <TableCell key={column.id} className="align-top whitespace-normal">
+                    {row.cells[column.id]}
+                  </TableCell>
                 ),
               )}
             </TableRow>

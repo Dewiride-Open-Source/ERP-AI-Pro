@@ -31,6 +31,9 @@ const recordTypes = new Map<string, RecordType>([
   ["platform.reference-data.countries", { label: "Country", noun: "country" }],
   ["platform.reference-data.indian-states", { label: "GST State code", noun: "GST State code" }],
   ["platform.reference-data.exchange-rates", { label: "Exchange rate", noun: "exchange rate" }],
+  ["compliance.statutory-parameters.parameter-sets", { label: "Parameter set", noun: "parameter set" }],
+  ["compliance.statutory-parameters.parameter-versions", { label: "Parameter set version", noun: "version" }],
+  ["compliance.statutory-parameters.parameter-rows", { label: "Parameter set entry", noun: "entry" }],
 ]);
 
 const operationLabels: Readonly<Record<ChangeOperation, string>> = {
