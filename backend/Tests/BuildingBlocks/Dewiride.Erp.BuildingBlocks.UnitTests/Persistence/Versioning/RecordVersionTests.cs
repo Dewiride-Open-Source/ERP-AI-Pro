@@ -1,6 +1,6 @@
-using Dewiride.Erp.Modules.Identity.Users.Shared.Versioning;
+using Dewiride.Erp.BuildingBlocks.Persistence.Versioning;
 
-namespace Dewiride.Erp.Modules.Identity.Users.UnitTests.Shared.Versioning;
+namespace Dewiride.Erp.BuildingBlocks.UnitTests.Persistence.Versioning;
 
 public sealed class RecordVersionTests
 {

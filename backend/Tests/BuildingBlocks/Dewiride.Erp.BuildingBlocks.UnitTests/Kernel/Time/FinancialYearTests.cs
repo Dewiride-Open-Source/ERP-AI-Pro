@@ -135,6 +135,52 @@ public sealed class FinancialYearTests
     }
 
     [Fact]
+    public void Periods_Year_AreTwelveContiguousMonthsCoveringTheYear()
+    {
+        var periods = Year2026.Periods;
+
+        Assert.Equal(12, periods.Count);
+        Assert.Equal(Year2026.Start, periods[0].Start);
+        Assert.Equal(Year2026.End, periods[^1].End);
+        for (var index = 0; index < periods.Count; index++)
+        {
+            Assert.Equal(index + 1, periods[index].Number);
+            Assert.Equal(Year2026, periods[index].Year);
+            if (index > 0)
+            {
+                Assert.Equal(periods[index - 1].End.AddDays(1), periods[index].Start);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("2026-04-01", 1)]
+    [InlineData("2026-04-30", 1)]
+    [InlineData("2026-05-01", 2)]
+    [InlineData("2026-12-31", 9)]
+    [InlineData("2027-01-01", 10)]
+    [InlineData("2027-03-31", 12)]
+    public void PeriodOf_DateInsideTheYear_ReturnsThePeriodHoldingIt(string date, int expectedNumber)
+    {
+        var period = Year2026.PeriodOf(Date(date));
+
+        Assert.Equal(new FinancialPeriod(Year2026, expectedNumber), period);
+        Assert.True(period.Contains(Date(date)));
+    }
+
+    [Theory]
+    [InlineData("2026-03-31")]
+    [InlineData("2027-04-01")]
+    public void PeriodOf_DateOutsideTheYear_ThrowsNamingTheDateAndTheYear(string date)
+    {
+        var exception = Assert.Throws<ArgumentOutOfRangeException>(() => Year2026.PeriodOf(Date(date)));
+
+        Assert.Equal("date", exception.ParamName);
+        Assert.Contains(date, exception.Message, StringComparison.Ordinal);
+        Assert.Contains("2026-27", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Comparisons_Years_FollowTheStartYear()
     {
         var earlier = new FinancialYear(2025);

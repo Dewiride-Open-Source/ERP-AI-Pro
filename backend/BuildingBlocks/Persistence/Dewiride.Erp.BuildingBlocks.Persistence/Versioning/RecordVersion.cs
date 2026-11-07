@@ -1,8 +1,8 @@
-namespace Dewiride.Erp.Modules.Identity.Users.Shared.Versioning;
+namespace Dewiride.Erp.BuildingBlocks.Persistence.Versioning;
 
 // The version is the record's SQL Server rowversion, eight bytes, carried as Base64 so that an edit names the state it was
 // made from.
-internal static class RecordVersion
+public static class RecordVersion
 {
     public const int InputMaxLength = 64;
 

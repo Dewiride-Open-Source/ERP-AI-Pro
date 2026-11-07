@@ -1,5 +1,5 @@
+using Dewiride.Erp.BuildingBlocks.Persistence.Versioning;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
-using Dewiride.Erp.Modules.Identity.Users.Shared.Versioning;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application;
 

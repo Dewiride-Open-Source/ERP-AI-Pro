@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
 
 namespace Dewiride.Erp.BuildingBlocks.Application.Queries.Filtering;
 
@@ -78,6 +79,10 @@ internal static class FieldValueParser
             case var _ when target == typeof(DateTimeOffset):
                 parsed = DateTimeOffset.TryParse(text, culture, Dates, out var instant);
                 value = instant;
+                break;
+            case var _ when target == typeof(Currency):
+                parsed = Currency.TryFromCode(text, out var currency);
+                value = currency;
                 break;
             default:
                 return false;

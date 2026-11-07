@@ -14,6 +14,12 @@ public sealed class CurrencyTests
     [InlineData("AUD", 2)]
     [InlineData("CAD", 2)]
     [InlineData("JPY", 0)]
+    [InlineData("CHF", 2)]
+    [InlineData("KRW", 0)]
+    [InlineData("VND", 0)]
+    [InlineData("BHD", 3)]
+    [InlineData("KWD", 3)]
+    [InlineData("TND", 3)]
     public void FromCode_TableEntry_ExposesTheCodeAndMinorUnits(string code, int minorUnits)
     {
         var currency = Currency.FromCode(code);
@@ -25,16 +31,67 @@ public sealed class CurrencyTests
         Assert.Contains(currency, Currency.All);
     }
 
-    [Fact]
-    public void All_HoldsExactlyTheStaticTableEntries()
+    [Theory]
+    [InlineData("INR", "Indian Rupee")]
+    [InlineData("USD", "US Dollar")]
+    [InlineData("GBP", "Pound Sterling")]
+    [InlineData("JPY", "Yen")]
+    [InlineData("AED", "UAE Dirham")]
+    [InlineData("EUR", "Euro")]
+    public void Name_TableEntry_IsTheIsoEnglishName(string code, string name)
     {
-        Currency[] expected = [Currency.Aed, Currency.Aud, Currency.Cad, Currency.Eur, Currency.Gbp, Currency.Inr, Currency.Jpy, Currency.Sgd, Currency.Usd];
+        Assert.Equal(name, Currency.FromCode(code).Name);
+    }
 
-        Assert.Equal(expected, Currency.All.OrderBy(currency => currency.Code, StringComparer.Ordinal));
+    [Fact]
+    public void All_HoldsTheOrdinaryIsoCurrenciesOncePerCodeInCodeOrder()
+    {
+        var codes = Currency.All.Select(currency => currency.Code).ToList();
+
+        Assert.Equal(155, codes.Count);
+        Assert.Equal(codes.Order(StringComparer.Ordinal), codes);
+        Assert.Equal(codes.Count, codes.Distinct(StringComparer.Ordinal).Count());
+        Assert.All(Currency.All, currency =>
+        {
+            Assert.Matches("^[A-Z]{3}$", currency.Code);
+            Assert.True(currency.MinorUnits is 0 or 2 or 3, $"{currency.Code} has {currency.MinorUnits} minor units.");
+            Assert.False(string.IsNullOrWhiteSpace(currency.Name));
+        });
+    }
+
+    [Fact]
+    public void All_IsExactlyTheOrdinaryCurrenciesOfListOne()
+    {
+        const string expected =
+            "AED AFN ALL AMD AOA ARS AUD AWG AZN BAM BBD BDT BHD BIF BMD BND "
+            + "BOB BRL BSD BTN BWP BYN BZD CAD CDF CHF CLP CNY COP CRC CUP CVE "
+            + "CZK DJF DKK DOP DZD EGP ERN ETB EUR FJD FKP GBP GEL GHS GIP GMD "
+            + "GNF GTQ GYD HKD HNL HTG HUF IDR ILS INR IQD IRR ISK JMD JOD JPY "
+            + "KES KGS KHR KMF KPW KRW KWD KYD KZT LAK LBP LKR LRD LSL LYD MAD "
+            + "MDL MGA MKD MMK MNT MOP MRU MUR MVR MWK MXN MYR MZN NAD NGN NIO "
+            + "NOK NPR NZD OMR PAB PEN PGK PHP PKR PLN PYG QAR RON RSD RUB RWF "
+            + "SAR SBD SCR SDG SEK SGD SHP SLE SOS SRD SSP STN SVC SYP SZL THB "
+            + "TJS TMT TND TOP TRY TTD TWD TZS UAH UGX USD UYU UZS VED VES VND "
+            + "VUV WST XAF XCD XCG XOF XPF YER ZAR ZMW ZWG";
+
+        Assert.Equal(expected, string.Join(' ', Currency.All.Select(currency => currency.Code)));
+    }
+
+    [Fact]
+    public void All_HoldsEveryNamedCurrency()
+    {
+        Currency[] named = [Currency.Aed, Currency.Aud, Currency.Cad, Currency.Eur, Currency.Gbp, Currency.Inr, Currency.Jpy, Currency.Sgd, Currency.Usd];
+
+        Assert.All(named, currency => Assert.Contains(currency, Currency.All));
+        Assert.All(named, currency => Assert.Equal(Currency.FromCode(currency.Code).Name, currency.Name));
     }
 
     [Theory]
     [InlineData("XXX")]
+    [InlineData("XAU")]
+    [InlineData("CLF")]
+    [InlineData("XDR")]
+    [InlineData("BGN")]
     [InlineData("inr")]
     [InlineData("")]
     [InlineData("INRR")]

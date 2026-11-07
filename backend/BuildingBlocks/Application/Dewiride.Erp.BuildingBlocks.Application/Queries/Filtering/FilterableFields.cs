@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
 
 namespace Dewiride.Erp.BuildingBlocks.Application.Queries.Filtering;
 
@@ -40,7 +41,7 @@ public sealed class FilterableFields<T>
             return FilterOperators.Flag;
         }
 
-        if (type.IsEnum || type == typeof(Guid) || IsStronglyTypedId(type))
+        if (type.IsEnum || type == typeof(Guid) || type == typeof(Currency) || IsStronglyTypedId(type))
         {
             return FilterOperators.Equality;
         }

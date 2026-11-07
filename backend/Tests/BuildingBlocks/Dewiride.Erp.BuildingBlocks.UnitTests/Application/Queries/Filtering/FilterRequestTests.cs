@@ -1,6 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Filtering;
 using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
 
 namespace Dewiride.Erp.BuildingBlocks.UnitTests.Application.Queries.Filtering;
 
@@ -14,13 +15,14 @@ public sealed class FilterRequestTests
         .Add("born", r => r.Born)
         .Add("status", r => r.Status)
         .Add("score", r => r.Score)
-        .Add("code", r => r.Code, FilterOperator.Equal);
+        .Add("code", r => r.Code, FilterOperator.Equal)
+        .Add("currency", r => r.Currency);
 
     private static readonly Row[] Rows =
     [
-        new("Alice", 30, true, RowId.From(new Guid("11111111-1111-1111-1111-111111111111")), new DateOnly(1996, 4, 1), Status.Open, 1.5m, "a;b"),
-        new("Bob", 25, false, RowId.From(new Guid("22222222-2222-2222-2222-222222222222")), new DateOnly(2001, 3, 31), Status.Closed, null, "x:y"),
-        new("Carol", 41, true, RowId.From(new Guid("33333333-3333-3333-3333-333333333333")), new DateOnly(1985, 1, 15), Status.Open, 9m, "p|q"),
+        new("Alice", 30, true, RowId.From(new Guid("11111111-1111-1111-1111-111111111111")), new DateOnly(1996, 4, 1), Status.Open, 1.5m, "a;b", Currency.Inr),
+        new("Bob", 25, false, RowId.From(new Guid("22222222-2222-2222-2222-222222222222")), new DateOnly(2001, 3, 31), Status.Closed, null, "x:y", Currency.Usd),
+        new("Carol", 41, true, RowId.From(new Guid("33333333-3333-3333-3333-333333333333")), new DateOnly(1985, 1, 15), Status.Open, 9m, "p|q", Currency.Inr),
     ];
 
     [Theory]
@@ -85,6 +87,9 @@ public sealed class FilterRequestTests
     [InlineData("status:in:closed", "Bob")]
     [InlineData("score:gt:2", "Carol")]
     [InlineData("code:eq:x%3Ay", "Bob")]
+    [InlineData("currency:eq:USD", "Bob")]
+    [InlineData("currency:ne:USD", "Alice,Carol")]
+    [InlineData("currency:in:EUR|INR", "Alice,Carol")]
     public void Resolve_KnownFieldsAndOperators_FiltersTheRows(string text, string expected)
     {
         var filter = FilterRequest.Parse(text).Value.Resolve(Fields).Value;
@@ -109,6 +114,9 @@ public sealed class FilterRequestTests
     [InlineData("id:gt:11111111-1111-1111-1111-111111111111", QueryErrors.InvalidOperator, "eq, ne, in")]
     [InlineData("status:contains:op", QueryErrors.InvalidOperator, "eq, ne, in")]
     [InlineData("code:contains:a", QueryErrors.InvalidOperator, "eq")]
+    [InlineData("currency:gt:INR", QueryErrors.InvalidOperator, "eq, ne, in")]
+    [InlineData("currency:eq:usd", QueryErrors.InvalidValue, "Currency")]
+    [InlineData("currency:eq:XAU", QueryErrors.InvalidValue, "Currency")]
     [InlineData("age:eq:old", QueryErrors.InvalidValue, "Int32")]
     [InlineData("active:eq:yes", QueryErrors.InvalidValue, "Boolean")]
     [InlineData("id:eq:not-a-guid", QueryErrors.InvalidValue, "RowId")]
@@ -137,5 +145,5 @@ public sealed class FilterRequestTests
         public static RowId From(Guid value) => new(value);
     }
 
-    private sealed record Row(string Name, int Age, bool Active, RowId Id, DateOnly Born, Status Status, decimal? Score, string Code);
+    private sealed record Row(string Name, int Age, bool Active, RowId Id, DateOnly Born, Status Status, decimal? Score, string Code, Currency Currency);
 }

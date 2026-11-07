@@ -39,6 +39,20 @@ public readonly record struct FinancialYear : IComparable<FinancialYear>, IParsa
 
     public IReadOnlyList<FinancialQuarter> Quarters => [new(this, 1), new(this, 2), new(this, 3), new(this, 4)];
 
+    public IReadOnlyList<FinancialPeriod> Periods
+    {
+        get
+        {
+            var periods = new FinancialPeriod[FinancialPeriod.PeriodsInYear];
+            for (var number = 1; number <= periods.Length; number++)
+            {
+                periods[number - 1] = new FinancialPeriod(this, number);
+            }
+
+            return periods;
+        }
+    }
+
     public static FinancialYear FromDate(DateOnly date) => new(date.Month >= StartMonth ? date.Year : date.Year - 1);
 
     public static FinancialYear Current(TimeProvider timeProvider) => FromDate(IndianStandardTime.Today(timeProvider));
@@ -48,6 +62,11 @@ public readonly record struct FinancialYear : IComparable<FinancialYear>, IParsa
     public FinancialQuarter QuarterOf(DateOnly date) =>
         Contains(date)
             ? new FinancialQuarter(this, ((date.Month - StartMonth + 12) % 12 / 3) + 1)
+            : throw new ArgumentOutOfRangeException(nameof(date), date, string.Create(CultureInfo.InvariantCulture, $"{date:yyyy-MM-dd} is outside financial year {Label}."));
+
+    public FinancialPeriod PeriodOf(DateOnly date) =>
+        Contains(date)
+            ? new FinancialPeriod(this, ((date.Month - StartMonth + 12) % 12) + 1)
             : throw new ArgumentOutOfRangeException(nameof(date), date, string.Create(CultureInfo.InvariantCulture, $"{date:yyyy-MM-dd} is outside financial year {Label}."));
 
     public int CompareTo(FinancialYear other) => StartYear.CompareTo(other.StartYear);

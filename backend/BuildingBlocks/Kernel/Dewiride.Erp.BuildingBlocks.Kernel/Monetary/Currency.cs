@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
@@ -11,64 +10,45 @@ public readonly record struct Currency
 {
     public const int CodeLength = 3;
 
-    public static readonly Currency Inr = new("INR", 2);
+    public static readonly Currency Inr = Iso4217Currencies.Find("INR");
 
-    public static readonly Currency Usd = new("USD", 2);
+    public static readonly Currency Usd = Iso4217Currencies.Find("USD");
 
-    public static readonly Currency Eur = new("EUR", 2);
+    public static readonly Currency Eur = Iso4217Currencies.Find("EUR");
 
-    public static readonly Currency Gbp = new("GBP", 2);
+    public static readonly Currency Gbp = Iso4217Currencies.Find("GBP");
 
-    public static readonly Currency Aed = new("AED", 2);
+    public static readonly Currency Aed = Iso4217Currencies.Find("AED");
 
-    public static readonly Currency Sgd = new("SGD", 2);
+    public static readonly Currency Sgd = Iso4217Currencies.Find("SGD");
 
-    public static readonly Currency Aud = new("AUD", 2);
+    public static readonly Currency Aud = Iso4217Currencies.Find("AUD");
 
-    public static readonly Currency Cad = new("CAD", 2);
+    public static readonly Currency Cad = Iso4217Currencies.Find("CAD");
 
-    public static readonly Currency Jpy = new("JPY", 0);
+    public static readonly Currency Jpy = Iso4217Currencies.Find("JPY");
 
-    private static readonly ReadOnlyDictionary<string, Currency> ByCode = new(new Dictionary<string, Currency>(StringComparer.Ordinal)
-    {
-        [Inr.Code] = Inr,
-        [Usd.Code] = Usd,
-        [Eur.Code] = Eur,
-        [Gbp.Code] = Gbp,
-        [Aed.Code] = Aed,
-        [Sgd.Code] = Sgd,
-        [Aud.Code] = Aud,
-        [Cad.Code] = Cad,
-        [Jpy.Code] = Jpy,
-    });
-
-    private Currency(string code, int minorUnits)
+    internal Currency(string code, int minorUnits, string name)
     {
         Code = code;
         MinorUnits = minorUnits;
+        Name = name;
     }
 
     public string Code { get; }
 
     public int MinorUnits { get; }
 
-    public static IReadOnlyCollection<Currency> All => ByCode.Values;
+    public string Name { get; }
+
+    public static IReadOnlyList<Currency> All => Iso4217Currencies.All;
 
     public static Currency FromCode(string code) =>
         TryFromCode(code, out var currency)
             ? currency
-            : throw new ArgumentException($"'{code}' is not a supported ISO 4217 currency code; supported codes are {string.Join(", ", ByCode.Keys)}.", nameof(code));
+            : throw new ArgumentException($"'{code}' is not the code of an ISO 4217 currency such as 'INR'.", nameof(code));
 
-    public static bool TryFromCode(string? code, out Currency currency)
-    {
-        if (code is not null && ByCode.TryGetValue(code, out currency))
-        {
-            return true;
-        }
-
-        currency = default;
-        return false;
-    }
+    public static bool TryFromCode(string? code, out Currency currency) => Iso4217Currencies.TryFind(code, out currency);
 
     public bool Equals(Currency other) => string.Equals(Code, other.Code, StringComparison.Ordinal);
 
@@ -76,6 +56,6 @@ public readonly record struct Currency
 
     public override string ToString() => Code ?? string.Empty;
 
-    [MemberNotNullWhen(true, nameof(Code))]
+    [MemberNotNullWhen(true, nameof(Code), nameof(Name))]
     public bool IsDefined => Code is not null;
 }

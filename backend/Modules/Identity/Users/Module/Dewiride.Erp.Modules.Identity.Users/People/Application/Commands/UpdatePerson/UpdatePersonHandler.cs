@@ -1,8 +1,8 @@
 using Dewiride.Erp.BuildingBlocks.Application.Commands;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+using Dewiride.Erp.BuildingBlocks.Persistence.Versioning;
 using Dewiride.Erp.Modules.Identity.Users.People.Domain;
 using Dewiride.Erp.Modules.Identity.Users.Persistence;
-using Dewiride.Erp.Modules.Identity.Users.Shared.Versioning;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Identity.Users.People.Application.Commands.UpdatePerson;
