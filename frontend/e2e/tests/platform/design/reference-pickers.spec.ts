@@ -156,8 +156,8 @@ test.describe("reference pickers", () => {
       await pickers.chooseByKeyboard("Period", april.label, april.label);
       await expect(pickers.chosen("period")).toHaveText(april.start);
 
-      await page.keyboard.press("Tab");
-      await expect(pickers.picker("Period")).not.toBeFocused();
+      await page.keyboard.press("Shift+Tab");
+      await expect(pickers.picker("Financial year")).toBeFocused();
       await expect(country).toHaveValue(indiaLabel);
       await expect(pickers.picker("State or union territory")).toHaveValue(stateLabel);
       await expect(currency).toHaveValue(`USD ${dollar!.name}`);

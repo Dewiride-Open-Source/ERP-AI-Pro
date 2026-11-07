@@ -340,6 +340,7 @@ test.describe("login page", () => {
             "identity.users.org-chart.read",
             "platform.attachments.files.read",
             "platform.attachments.files.upload",
+            "platform.reference-data.lists.read",
           ],
         },
       });
