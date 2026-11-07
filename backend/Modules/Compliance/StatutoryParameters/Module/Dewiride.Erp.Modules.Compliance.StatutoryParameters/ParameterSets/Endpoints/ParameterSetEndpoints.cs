@@ -27,13 +27,13 @@ internal static class ParameterSetEndpoints
             .WithName("Compliance.StatutoryParameters.ListParameterSets")
             .WithSummary("Lists the statutory parameter sets by title, each with the version in force today in India and the next one.")
             .RequirePermission(StatutoryParametersPermissions.ReadParameterSets)
-            .WithReferenceDataCaching(ParameterSetCaching.MaxAge);
+            .WithCallerDataCaching(ParameterSetCaching.MaxAge);
 
         routes.MapGet("/{key}", GetAsync)
             .WithName("Compliance.StatutoryParameters.GetParameterSet")
             .WithSummary("Describes one statutory parameter set: its columns, its versions with what each changed, and the entries and changes of the version in force on a date.")
             .RequirePermission(StatutoryParametersPermissions.ReadParameterSets)
-            .WithReferenceDataCaching(ParameterSetCaching.MaxAge);
+            .WithCallerDataCaching(ParameterSetCaching.MaxAge);
     }
 
     private static async Task<Results<Ok<ParameterSetsResponse>, ProblemHttpResult>> ListAsync(

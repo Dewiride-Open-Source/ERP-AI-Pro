@@ -8,10 +8,10 @@ using Dewiride.Erp.Testing;
 
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Gst;
 
-// Golden values of the rate notifications' Tables (owner decision of 2026-11-07: a golden test of a statutory dataset writes
-// each pinned value beside its instrument). Each case is an entry on a day at the edge of a rate or a wording: its rate and the
-// words of column (3) as the Table prints them, and the instrument its source cites; an entry the Table did not hold that day
-// has no rate, and the instrument is then the one the version in force that day cites.
+// Golden values of the rate notifications' Tables, each pinned beside its instrument so that a wrong edit of a seed file fails a
+// test (ADR-0063). Each case is an entry on a day at the edge of a rate or a wording: its rate and the words of column (3) as the
+// Table prints them, and the instrument its source cites; an entry the Table did not hold that day has no rate, and the
+// instrument is then the one the version in force that day cites.
 [Collection(StatutoryRows.Name)]
 public sealed class ServiceRateGoldenTests(ErpApiFactory factory)
 {
@@ -133,7 +133,7 @@ public sealed class ServiceRateGoldenTests(ErpApiFactory factory)
     [InlineData(Central, "9983", "9973", "9954 or 9983 or 9987")]
     [InlineData(Integrated, "9983", "9973", "9954 or 9983 or 9987")]
     [InlineData(UnionTerritory, "9983", "9973", "9954 or 9983 or 9987")]
-    public async Task Entries_NameTheHeadingsOfColumnTwoAndNoSixDigitCode(string key, string residualHeading, string intellectualPropertyHeading, string renewableEnergyHeadings)
+    public async Task Entries_NameTheHeadingsOfColumnTwo(string key, string residualHeading, string intellectualPropertyHeading, string renewableEnergyHeadings)
     {
         await using var scope = factory.Services.CreateAsyncScope();
 
@@ -142,7 +142,26 @@ public sealed class ServiceRateGoldenTests(ErpApiFactory factory)
         Assert.Equal(residualHeading, Assert.Single(entries, entry => entry.Entry == "21(ii)").Heading);
         Assert.Equal(intellectualPropertyHeading, Assert.Single(entries, entry => entry.Entry == "17(ii)").Heading);
         Assert.Equal(renewableEnergyHeadings, Assert.Single(entries, entry => entry.Entry == "38").Heading);
-        Assert.DoesNotContain(entries, entry => entry.Heading.Split(" or ").Any(heading => heading.Length > 4));
+    }
+
+    [Theory]
+    [InlineData(Central)]
+    [InlineData(Integrated)]
+    [InlineData(UnionTerritory)]
+    public async Task Entries_OnEveryVersionsDate_NameFourDigitHeadingsAndNeverASixDigitCode(string key)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var store = scope.ServiceProvider.GetRequiredService<IStatutoryParameters>();
+
+        var set = await scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>().GetSetAsync(key, new DateOnly(2026, 11, 7), TestContext.Current.CancellationToken);
+
+        Assert.NotEmpty(set!.Versions);
+        foreach (var version in set.Versions)
+        {
+            Assert.All(
+                await EntriesAsync(store, key, version.From),
+                entry => Assert.All(entry.Heading.Split(" or "), heading => Assert.Matches("^[0-9]{4}$", heading)));
+        }
     }
 
     private static async Task<IReadOnlyList<ServiceRateEntry>> EntriesAsync(IStatutoryParameters store, string key, DateOnly day) =>

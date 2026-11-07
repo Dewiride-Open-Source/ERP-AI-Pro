@@ -5,8 +5,8 @@ using Dewiride.Erp.Testing;
 
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Gst;
 
-// Golden versions of every set: the dates its instruments brought them into force, and what each changed (owner decision of
-// 2026-11-07: each pinned value beside its instrument).
+// Golden versions of every set: the dates its instruments brought them into force, and what each changed, each pinned beside its
+// instrument so that a wrong edit of a seed file fails a test (ADR-0063).
 [Collection(StatutoryRows.Name)]
 public sealed class VersionChangeGoldenTests(ErpApiFactory factory)
 {
@@ -62,13 +62,14 @@ public sealed class VersionChangeGoldenTests(ErpApiFactory factory)
     }
 
     [Fact]
-    public async Task Description_OfTheErpsReading_CitesTheCorrigendaThatTieTheTaxesToOneAnnexure()
+    public async Task Description_OfTheErpsReading_CitesTheCorrigendaAndDatesTheEntriesThatApplyByWhatASupplyIs()
     {
         await using var scope = factory.Services.CreateAsyncScope();
 
         var set = await scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>().GetSetAsync("gst.sac-rate-entries", new DateOnly(2026, 11, 7), TestContext.Current.CancellationToken);
 
         Assert.Contains("the corrigenda of 30 June 2017 to Notification No. 8/2017-Integrated Tax (Rate) and Notification No. 11/2017-Union Territory Tax (Rate)", set!.Description, StringComparison.Ordinal);
+        Assert.Contains("Item (ia) of serial number 21, from 1 October 2019 to 21 September 2025, and serial number 38, from 1 January 2019, apply by what a particular supply is", set.Description, StringComparison.Ordinal);
     }
 
     private static string[] Keys(string keys) => keys.Length == 0 ? [] : keys.Split(',');

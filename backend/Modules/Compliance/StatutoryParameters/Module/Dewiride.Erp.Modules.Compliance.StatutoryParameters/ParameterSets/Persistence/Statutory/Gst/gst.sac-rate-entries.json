@@ -1,7 +1,7 @@
 {
   "key": "gst.sac-rate-entries",
   "title": "Rate entries of SAC codes",
-  "description": "The ERP's reading, not a government table: for each six-digit code of Heading 9983, for the heading itself and for code 997331, the rate entry its services fall under by default. The rate notifications name headings and describe services, never six-digit codes. Explanation (ii) in paragraph 4 of Notification No. 11/2017-Central Tax (Rate) reads a heading of its Table as a heading of the annexed Scheme of Classification of Services, and the corrigenda of 30 June 2017 to Notification No. 8/2017-Integrated Tax (Rate) and Notification No. 11/2017-Union Territory Tax (Rate) read their scheme of classification of services as that Annexure, so a code's entry is the same in all three taxes. Item (ia) of serial number 21 and serial number 38 apply by what a particular supply is and are no code's default.",
+  "description": "The ERP's reading, not a government table: for each six-digit code of Heading 9983, for the heading itself and for code 997331, the rate entry its services fall under by default. The rate notifications name headings and describe services, never six-digit codes. Explanation (ii) in paragraph 4 of Notification No. 11/2017-Central Tax (Rate) reads a heading of its Table as a heading of the annexed Scheme of Classification of Services, and the corrigenda of 30 June 2017 to Notification No. 8/2017-Integrated Tax (Rate) and Notification No. 11/2017-Union Territory Tax (Rate) read their scheme of classification of services as that Annexure, so a code's entry is the same in all three taxes. Item (ia) of serial number 21, from 1 October 2019 to 21 September 2025, and serial number 38, from 1 January 2019, apply by what a particular supply is and are no code's default.",
   "basis": "interpretation",
   "asOf": "supplyDate",
   "columns": [
@@ -54,7 +54,7 @@
       "cells": {
         "code": "9983",
         "entry": "21(ii)",
-        "basis": "Serial number 21 of the Table names Heading 9983 in column (2); item (ii) is the heading's residual item, and a supply that item (i), item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Serial number 21 of the Table names Heading 9983 in column (2); item (ii) is the heading's residual item, and a supply that item (i) describes, that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -63,7 +63,7 @@
       "cells": {
         "code": "998311",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 298 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 298 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -72,7 +72,7 @@
       "cells": {
         "code": "998312",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 299 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 299 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -81,7 +81,7 @@
       "cells": {
         "code": "998313",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 300 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 300 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -90,7 +90,7 @@
       "cells": {
         "code": "998314",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 301 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 301 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -99,7 +99,7 @@
       "cells": {
         "code": "998315",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 302 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 302 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -108,7 +108,7 @@
       "cells": {
         "code": "998316",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 303 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 303 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -117,7 +117,7 @@
       "cells": {
         "code": "998319",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 304 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 304 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -126,7 +126,7 @@
       "cells": {
         "code": "998321",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 306 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 306 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -135,7 +135,7 @@
       "cells": {
         "code": "998322",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 307 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 307 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -144,7 +144,7 @@
       "cells": {
         "code": "998323",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 308 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 308 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -153,7 +153,7 @@
       "cells": {
         "code": "998324",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 309 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 309 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -162,7 +162,7 @@
       "cells": {
         "code": "998325",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 310 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 310 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -171,7 +171,7 @@
       "cells": {
         "code": "998326",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 311 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 311 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -180,7 +180,7 @@
       "cells": {
         "code": "998327",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 312 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 312 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -189,7 +189,7 @@
       "cells": {
         "code": "998328",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 313 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 313 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -198,7 +198,7 @@
       "cells": {
         "code": "998331",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 315 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 315 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -207,7 +207,7 @@
       "cells": {
         "code": "998332",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 316 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 316 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -216,7 +216,7 @@
       "cells": {
         "code": "998333",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 317 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 317 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -225,7 +225,7 @@
       "cells": {
         "code": "998334",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 318 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 318 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -234,7 +234,7 @@
       "cells": {
         "code": "998335",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 319 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 319 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -243,7 +243,7 @@
       "cells": {
         "code": "998336",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 320 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 320 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -252,7 +252,7 @@
       "cells": {
         "code": "998337",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 321 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 321 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -261,7 +261,7 @@
       "cells": {
         "code": "998338",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 322 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 322 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -270,7 +270,7 @@
       "cells": {
         "code": "998339",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 323 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 323 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -279,7 +279,7 @@
       "cells": {
         "code": "998341",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 325 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 325 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -288,7 +288,7 @@
       "cells": {
         "code": "998342",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 326 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 326 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -297,7 +297,7 @@
       "cells": {
         "code": "998343",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 327 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 327 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -306,7 +306,7 @@
       "cells": {
         "code": "998344",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 328 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 328 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -315,7 +315,7 @@
       "cells": {
         "code": "998345",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 329 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 329 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -324,7 +324,7 @@
       "cells": {
         "code": "998346",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 330 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 330 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -333,7 +333,7 @@
       "cells": {
         "code": "998347",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 331 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 331 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -342,7 +342,7 @@
       "cells": {
         "code": "998348",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 332 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 332 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -351,7 +351,7 @@
       "cells": {
         "code": "998349",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 333 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 333 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -360,7 +360,7 @@
       "cells": {
         "code": "998351",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 335 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 335 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -369,7 +369,7 @@
       "cells": {
         "code": "998352",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 336 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 336 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -378,7 +378,7 @@
       "cells": {
         "code": "998359",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 337 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 337 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -387,7 +387,7 @@
       "cells": {
         "code": "998361",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 339 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 339 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -396,7 +396,7 @@
       "cells": {
         "code": "998362",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 340 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 340 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -414,7 +414,7 @@
       "cells": {
         "code": "998364",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 342 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 342 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -423,7 +423,7 @@
       "cells": {
         "code": "998365",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 343 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 343 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -432,7 +432,7 @@
       "cells": {
         "code": "998366",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 344 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 344 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -441,7 +441,7 @@
       "cells": {
         "code": "998371",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 346 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 346 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -450,7 +450,7 @@
       "cells": {
         "code": "998372",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 347 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 347 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -459,7 +459,7 @@
       "cells": {
         "code": "998381",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 349 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 349 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -468,7 +468,7 @@
       "cells": {
         "code": "998382",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 350 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 350 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -477,7 +477,7 @@
       "cells": {
         "code": "998383",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 351 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 351 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -486,7 +486,7 @@
       "cells": {
         "code": "998384",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 352 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 352 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -495,7 +495,7 @@
       "cells": {
         "code": "998385",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 353 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 353 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -504,7 +504,7 @@
       "cells": {
         "code": "998386",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 354 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 354 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -513,7 +513,7 @@
       "cells": {
         "code": "998387",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 355 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 355 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -522,7 +522,7 @@
       "cells": {
         "code": "998391",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 357 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 357 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -531,7 +531,7 @@
       "cells": {
         "code": "998392",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 358 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 358 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -540,7 +540,7 @@
       "cells": {
         "code": "998393",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 359 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 359 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -549,7 +549,7 @@
       "cells": {
         "code": "998394",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 360 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 360 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -558,7 +558,7 @@
       "cells": {
         "code": "998395",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 361 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 361 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -567,7 +567,7 @@
       "cells": {
         "code": "998396",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 362 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 362 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -576,7 +576,7 @@
       "cells": {
         "code": "998397",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 363 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 363 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     },
     {
@@ -585,7 +585,7 @@
       "cells": {
         "code": "998399",
         "entry": "21(ii)",
-        "basis": "Annexure serial number 364 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that item (ia) or serial number 38 describes falls under that entry instead."
+        "basis": "Annexure serial number 364 places the code under Heading 9983, which serial number 21 of the Table names in column (2); item (ii) is the heading's residual item, and a supply that serial number 38 describes from 1 January 2019, or that item (ia) describes from 1 October 2019 to 21 September 2025, falls under that entry instead."
       }
     }
   ]

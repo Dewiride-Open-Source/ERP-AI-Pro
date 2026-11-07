@@ -8,7 +8,8 @@ using Dewiride.Erp.Testing;
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Gst;
 
 // Golden values of the Scheme of Classification of Services, the Annexure to Notification No. 11/2017-Central Tax (Rate), and of
-// the ERP's reading of the entry each code falls under (owner decision of 2026-11-07: each pinned value beside its instrument).
+// the ERP's reading of the entry each code falls under, each pinned beside its instrument so that a wrong edit of a seed file
+// fails a test (ADR-0063).
 [Collection(StatutoryRows.Name)]
 public sealed class SacCodeGoldenTests(ErpApiFactory factory)
 {
@@ -73,6 +74,19 @@ public sealed class SacCodeGoldenTests(ErpApiFactory factory)
         var mapped = Assert.Single(entries!.Entries, candidate => candidate.Code == code);
         Assert.Equal(entry, mapped.Entry);
         Assert.Contains("Explanation (ii)", await SourceOfMappingAsync(scope, code), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task RateEntries_ResidualOfHeading9983_DateTheEntriesThatApplyByWhatASupplyIs()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var entries = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<SacRateEntries>(new DateOnly(2026, 11, 7), TestContext.Current.CancellationToken))!.Entries;
+
+        var residual = entries.Where(entry => entry.Entry == "21(ii)").ToList();
+        Assert.Contains(residual, entry => entry.Code == "9983");
+        Assert.All(residual, entry => Assert.Contains("that serial number 38 describes from 1 January 2019", entry.Basis, StringComparison.Ordinal));
+        Assert.All(residual, entry => Assert.Contains("that item (ia) describes from 1 October 2019 to 21 September 2025", entry.Basis, StringComparison.Ordinal));
     }
 
     [Theory]

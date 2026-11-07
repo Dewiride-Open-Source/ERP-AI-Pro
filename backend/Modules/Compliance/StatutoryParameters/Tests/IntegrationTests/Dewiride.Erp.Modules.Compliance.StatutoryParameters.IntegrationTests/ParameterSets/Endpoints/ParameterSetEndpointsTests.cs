@@ -3,6 +3,7 @@ using System.Net;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.History.Definitions;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Seeding;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Endpoints.Responses;
 using Dewiride.Erp.Testing;
 using Dewiride.Erp.Testing.Authentication;
 using Dewiride.Erp.Testing.Authorization;
@@ -38,7 +39,7 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
     [InlineData("")]
     [InlineData("/" + CentralTaxRates)]
     [InlineData("/" + CentralTaxRates + "?on=2019-10-01")]
-    public async Task Get_AsAdministrator_AnswersWithAResponseKeptForAnHour(string suffix)
+    public async Task Get_AsAdministrator_AnswersWithAResponseKeptAnHourForTheSignInThatReadIt(string suffix)
     {
         using var client = Administrator();
 
@@ -47,6 +48,7 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.True(response.Headers.CacheControl?.Private);
         Assert.Equal(TimeSpan.FromHours(1), response.Headers.CacheControl?.MaxAge);
+        Assert.Equal(["Authorization", "Cookie"], response.Headers.Vary);
     }
 
     [Theory]
@@ -84,14 +86,9 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
         Assert.Equal((set.Title, set.Description, set.Basis, set.AsOf), (summary.Title, summary.Description, summary.Basis, summary.AsOf));
         Assert.Equal(set.Versions.Count, summary.VersionCount);
         Assert.Equal(set.Versions[^1].From, summary.FirstVersionFrom);
-        var current = set.Versions.Single(version => version.From == set.CurrentFrom);
-        Assert.NotNull(summary.Current);
-        Assert.Equal(
-            (current.From, current.Until, current.AddedCount, current.ChangedCount, current.RemovedCount),
-            (summary.Current.From, summary.Current.Until, summary.Current.AddedCount, summary.Current.ChangedCount, summary.Current.RemovedCount));
-        Assert.Equal(current.Instruments, summary.Current.Instruments);
-        Assert.Null(summary.Next);
-        Assert.Equal(set.Shown!.Rows.Count, summary.EntryCount);
+        AssertSameVersion(set.Versions.SingleOrDefault(version => version.From == set.CurrentFrom), summary.Current);
+        AssertSameVersion(set.Versions.Where(version => set.CurrentFrom is not { } current || version.From > current).MinBy(version => version.From), summary.Next);
+        Assert.Equal(set.Shown?.Rows.Count ?? 0, summary.EntryCount);
     }
 
     [Theory]
@@ -157,17 +154,34 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
         Assert.DoesNotContain("references", body, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [MemberData(nameof(Keys))]
+    public async Task Get_EachSet_DescribesItselfAndItsColumnsWithTheirChoicesAsItsFileDeclaresThem(string key)
+    {
+        using var client = Administrator();
+        var file = SeedFileSets.Of(key).Set;
+
+        var set = await ParameterSetsApi.GetAsync(client, key);
+
+        Assert.Equal((file.Title, file.Description, file.Basis.ToString(), file.AsOf.ToString()), (set.Title, set.Description, set.Basis.ToString(), set.AsOf.ToString()));
+        Assert.Equal(
+            file.Columns.Columns.Select(column => (column.Name, column.Title, column.Kind.ToString(), column.IsKey, column.IsRowTitle, column.IsOptional)),
+            set.Columns.Select(column => (column.Name, column.Title, column.Kind.ToString(), column.IsKey, column.IsRowTitle, column.IsOptional)));
+        Assert.Equal(
+            file.Columns.Columns.Select(column => string.Join("; ", column.Choices.Select(choice => $"{choice.Value}={choice.Title}"))),
+            set.Columns.Select(column => string.Join("; ", column.Choices.Select(choice => $"{choice.Value}={choice.Title}"))));
+    }
+
     [Fact]
-    public async Task Get_ChoiceColumn_ListsItsChoicesWithTheirTitles()
+    public async Task Get_SacCodes_TitlesEachLevelOfItsChoiceColumn()
     {
         using var client = Administrator();
 
-        var set = await ParameterSetsApi.GetAsync(client, "gst.sac-rate-entries");
         var codes = await ParameterSetsApi.GetAsync(client, "gst.sac-codes");
 
-        Assert.Equal(ParameterSetBasis.Interpretation, set.Basis);
-        Assert.All(set.Columns, column => Assert.Empty(column.Choices));
-        Assert.Equal(["heading", "group", "service"], Assert.Single(codes.Columns, column => column.Kind == ParameterColumnKind.Choice).Choices.Select(choice => choice.Value));
+        Assert.Equal(
+            [("heading", "Heading"), ("group", "Group"), ("service", "Service")],
+            Assert.Single(codes.Columns, column => column.Kind == ParameterColumnKind.Choice).Choices.Select(choice => (choice.Value, choice.Title)));
     }
 
     [Fact]
@@ -210,6 +224,21 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
     }
 
     public static TheoryData<string> Keys() => [.. SeededKeys];
+
+    private static void AssertSameVersion(ParameterVersionSummaryResponse? expected, ParameterVersionSummaryResponse? actual)
+    {
+        if (expected is null)
+        {
+            Assert.Null(actual);
+            return;
+        }
+
+        Assert.NotNull(actual);
+        Assert.Equal(
+            (expected.From, expected.Until, expected.AddedCount, expected.ChangedCount, expected.RemovedCount),
+            (actual.From, actual.Until, actual.AddedCount, actual.ChangedCount, actual.RemovedCount));
+        Assert.Equal(expected.Instruments, actual.Instruments);
+    }
 
     private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 

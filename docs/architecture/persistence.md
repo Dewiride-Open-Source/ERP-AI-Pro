@@ -153,7 +153,7 @@ node scripts/ef/ef.ts pending --all
 
 ## Test databases
 
-`SqlTestDatabase` in `Tests/Shared/Dewiride.Erp.Testing` is an xunit v3 assembly fixture, declared with `[assembly: AssemblyFixture(typeof(SqlTestDatabase))]` in every SQL-backed test project (`Tests/Host`, the SystemInfo, Attachments, Users, Audit, Jobs and ReferenceData integration tests, `Tests/Architecture`, the BuildingBlocks integration tests):
+`SqlTestDatabase` in `Tests/Shared/Dewiride.Erp.Testing` is an xunit v3 assembly fixture, declared with `[assembly: AssemblyFixture(typeof(SqlTestDatabase))]` in every SQL-backed test project (`Tests/Host`, the SystemInfo, Attachments, Users, Audit, Jobs, ReferenceData and StatutoryParameters integration tests, `Tests/Architecture`, the BuildingBlocks integration tests):
 
 - it reads `ERP_TEST_SQL_CONNECTION`, a server-level connection string with rights to create databases and no `Database=` part (on the owner's machine `Server=localhost;Integrated Security=True;Encrypt=True;TrustServerCertificate=True`), and fails with a message naming the variable and `docs/guides/testing.md` when it is missing;
 - it drops leftover databases named `ErpAiProTest_%` older than 24 hours, creates `ErpAiProTest_<yyyyMMddHHmmss>_<8 hex>` and migrates every catalogue context and runs every seeder, but no retention sweep, through `TestDatabaseHost`, a non-started host built with `AddErpPlatform`;

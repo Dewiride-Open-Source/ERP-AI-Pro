@@ -1,10 +1,7 @@
-using System.Globalization;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Returns;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Services;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Seeding;
-using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Persistence.Seeding;
-using Dewiride.Erp.Modules.Platform.ReferenceData.Contracts.IndianStates;
 using Dewiride.Erp.Testing;
 
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.PublicApi;
@@ -13,18 +10,13 @@ namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.P
 [Collection(StatutoryRows.Name)]
 public sealed class StatutoryParameterStoreTests(ErpApiFactory factory)
 {
-    private static readonly IReadOnlyList<IndianStateEntry> AnyStateCode =
-        [.. Enumerable.Range(0, 100).Select(code => new IndianStateEntry(code.ToString("00", CultureInfo.InvariantCulture), "Any territory", IndianStateKind.State, DateOnly.MinValue, null))];
-
-    private static readonly IReadOnlyList<SeededSet> Files = StatutorySeedFiles.Read(StatutorySeedFiles.Embedded(), AnyStateCode);
-
-    public static TheoryData<string> Keys() => [.. Files.Select(file => file.Set.Key)];
+    public static TheoryData<string> Keys() => [.. SeedFileSets.All.Select(file => file.Set.Key)];
 
     [Theory]
     [MemberData(nameof(Keys))]
     public async Task GetAsOfAsync_DayBeforeTheFirstVersion_AnswersNothing(string key)
     {
-        var first = Files.Single(file => file.Set.Key == key).Versions.Min(version => version.From);
+        var first = SeedFileSets.All.Single(file => file.Set.Key == key).Versions.Min(version => version.From);
 
         Assert.Null(await ReadAsync(key, first.AddDays(-1)));
     }
@@ -33,7 +25,7 @@ public sealed class StatutoryParameterStoreTests(ErpApiFactory factory)
     [MemberData(nameof(Keys))]
     public async Task GetAsOfAsync_EachVersionsDate_AnswersThatVersionWithTheFilesRowsOfThatDay(string key)
     {
-        var file = Files.Single(seeded => seeded.Set.Key == key);
+        var file = SeedFileSets.All.Single(seeded => seeded.Set.Key == key);
         var dates = file.Versions.Select(version => version.From).Order().ToList();
 
         for (var index = 0; index < dates.Count; index++)

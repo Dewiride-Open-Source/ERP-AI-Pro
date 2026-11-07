@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
@@ -86,6 +87,120 @@ public sealed class StatutoryParameterSeederTests(ErpApiFactory factory)
     }
 
     [Fact]
+    public async Task Seeder_RowMissingFromTheTable_AddsItBackAsTheFileHoldsIt()
+    {
+        string expected;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<StatutoryParametersDbContext>();
+            var row = await RowOfAsync(context, "21(ia)");
+            expected = Describe(row);
+            context.ParameterRows.Remove(row);
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await SeedAsync();
+
+        await using var check = factory.Services.CreateAsyncScope();
+        var added = await RowOfAsync(check.ServiceProvider.GetRequiredService<StatutoryParametersDbContext>(), "21(ia)");
+        Assert.Equal(expected, Describe(added));
+        var created = (await ChangesOfAsync(added.SetId.Value)).Last(change => change.EntityId == added.Id.Value);
+        Assert.Equal((ChangeOperation.Created, ParameterSetsApi.RowChangeKey, ParameterSetsApi.SetChangeKey, ActorIds.System), (created.Operation, created.EntityType, created.SubjectType, created.ActorId));
+        Assert.Contains(created.Changes, value => value is { Property: "until", Kind: ChangeValueKind.Date, Before: null } && value.After == Day(added.Until!.Value));
+    }
+
+    [Fact]
+    public async Task Seeder_RowWhoseEndDiffersFromTheFile_TakesTheFilesEndBack()
+    {
+        DateOnly until;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<StatutoryParametersDbContext>();
+            var set = await context.ParameterSets.SingleAsync(s => s.Key == CentralTaxRates, TestContext.Current.CancellationToken);
+            var row = await RowOfAsync(context, "21(ia)");
+            until = row.Until!.Value;
+            row.Revise(set, until.AddDays(-1), row.Cells, row.Source);
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await SeedAsync();
+
+        await using var check = factory.Services.CreateAsyncScope();
+        var stored = await RowOfAsync(check.ServiceProvider.GetRequiredService<StatutoryParametersDbContext>(), "21(ia)");
+        Assert.Equal(until, stored.Until);
+        var updated = (await ChangesOfAsync(stored.SetId.Value)).Last(change => change.EntityId == stored.Id.Value);
+        Assert.Equal((ChangeOperation.Updated, ParameterSetsApi.RowChangeKey, ParameterSetsApi.SetChangeKey, ActorIds.System), (updated.Operation, updated.EntityType, updated.SubjectType, updated.ActorId));
+        Assert.Equal(new RecordedValue("until", ChangeValueKind.Date, Day(until.AddDays(-1)), Day(until)), Assert.Single(updated.Changes));
+    }
+
+    [Fact]
+    public async Task Seeder_VersionWhoseInstrumentsDifferFromTheFile_TakesTheFilesInstrumentsBack()
+    {
+        Guid versionId;
+        IReadOnlyList<string> instruments;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<StatutoryParametersDbContext>();
+            var set = await context.ParameterSets.SingleAsync(s => s.Key == CentralTaxRates, TestContext.Current.CancellationToken);
+            var version = await context.ParameterVersions.Where(v => v.SetId == set.Id).OrderByDescending(v => v.From).FirstAsync(TestContext.Current.CancellationToken);
+            versionId = version.Id.Value;
+            instruments = [.. version.Instruments];
+            version.Revise(["An instrument the file does not cite"]);
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await SeedAsync();
+
+        await using var check = factory.Services.CreateAsyncScope();
+        var stored = await check.ServiceProvider.GetRequiredService<StatutoryParametersDbContext>().ParameterVersions
+            .AsNoTracking()
+            .SingleAsync(v => v.Id == ParameterVersionId.From(versionId), TestContext.Current.CancellationToken);
+        Assert.Equal(instruments, stored.Instruments);
+        var updated = (await ChangesOfAsync(stored.SetId.Value)).Last(change => change.EntityId == versionId);
+        Assert.Equal((ChangeOperation.Updated, ParameterSetsApi.VersionChangeKey, ParameterSetsApi.SetChangeKey, ActorIds.System), (updated.Operation, updated.EntityType, updated.SubjectType, updated.ActorId));
+        var value = Assert.Single(updated.Changes);
+        Assert.Equal(("instruments", ChangeValueKind.List), (value.Property, value.Kind));
+        Assert.Contains("An instrument the file does not cite", value.Before, StringComparison.Ordinal);
+        Assert.Contains(instruments[0], value.After, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Seeder_SetWhoseTitleAndColumnsDifferFromTheFile_TakesTheFilesBack()
+    {
+        Guid setId;
+        string title;
+        string rateTitle;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<StatutoryParametersDbContext>();
+            var set = await context.ParameterSets.SingleAsync(s => s.Key == CentralTaxRates, TestContext.Current.CancellationToken);
+            setId = set.Id.Value;
+            title = set.Title;
+            rateTitle = set.Columns.Find("rate")!.Title;
+            var columns = ParameterColumnSet.Create(set.Columns.Columns.Select(column => column.Name == "rate"
+                ? new ParameterColumn(column.Name, "A column title the file does not hold", column.Kind, column.IsKey, column.IsRowTitle, column.IsOptional, column.Minimum, column.Maximum, column.Choices)
+                : column));
+            set.Revise("A title the file does not hold", set.Description, set.Basis, set.AsOf, columns);
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await SeedAsync();
+
+        await using var check = factory.Services.CreateAsyncScope();
+        var stored = await check.ServiceProvider.GetRequiredService<StatutoryParametersDbContext>().ParameterSets
+            .AsNoTracking()
+            .SingleAsync(s => s.Key == CentralTaxRates, TestContext.Current.CancellationToken);
+        Assert.Equal((title, rateTitle), (stored.Title, stored.Columns.Find("rate")!.Title));
+        var updated = (await ChangesOfAsync(setId)).Last(change => change.EntityId == setId);
+        Assert.Equal((ChangeOperation.Updated, ParameterSetsApi.SetChangeKey, ParameterSetsApi.SetChangeKey, title, ActorIds.System), (updated.Operation, updated.EntityType, updated.SubjectType, updated.SubjectName, updated.ActorId));
+        Assert.Equal(["columns", "title"], updated.Changes.Select(value => value.Property).Order(StringComparer.Ordinal));
+        Assert.Contains(updated.Changes, value => value is { Property: "title", Kind: ChangeValueKind.Text, Before: "A title the file does not hold" } && value.After == title);
+        Assert.Contains(updated.Changes, value => value is { Property: "columns", Kind: ChangeValueKind.Text }
+            && value.Before!.Contains("A column title the file does not hold", StringComparison.Ordinal)
+            && value.After!.Contains($"\"title\":\"{rateTitle}\"", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Seeder_RowTheFileDoesNotHold_DeletesIt()
     {
         Guid strayId;
@@ -139,9 +254,10 @@ public sealed class StatutoryParameterSeederTests(ErpApiFactory factory)
         Assert.False(await stored.ParameterSets.AnyAsync(s => s.Id == id, TestContext.Current.CancellationToken));
         Assert.False(await stored.ParameterVersions.AnyAsync(v => v.SetId == id, TestContext.Current.CancellationToken));
         Assert.False(await stored.ParameterRows.AnyAsync(r => r.SetId == id, TestContext.Current.CancellationToken));
-        Assert.Equal(
-            [ChangeOperation.Deleted, ChangeOperation.Deleted, ChangeOperation.Deleted],
-            (await ChangesOfAsync(strayId)).Where(change => change.ActorId == ActorIds.System && change.Operation == ChangeOperation.Deleted).Select(change => change.Operation));
+        var deleted = (await ChangesOfAsync(strayId)).Where(change => change.Operation == ChangeOperation.Deleted).ToList();
+        Assert.Equal([ParameterSetsApi.RowChangeKey, ParameterSetsApi.SetChangeKey, ParameterSetsApi.VersionChangeKey], deleted.Select(change => change.EntityType).Order(StringComparer.Ordinal));
+        Assert.All(deleted, change => Assert.Equal((ParameterSetsApi.SetChangeKey, ActorIds.System), (change.SubjectType, change.ActorId)));
+        Assert.Equal(strayId, Assert.Single(deleted, change => change.EntityType == ParameterSetsApi.SetChangeKey).EntityId);
     }
 
     [Fact]
@@ -184,6 +300,20 @@ public sealed class StatutoryParameterSeederTests(ErpApiFactory factory)
               "rows": [{ "from": "2001-01-01", "source": "Probe source", "cells": { "entry": "a", "rate": {{rate}} } }]
             }
             """));
+
+    private static async Task<ParameterRow> RowOfAsync(StatutoryParametersDbContext context, string rowKey)
+    {
+        var set = await context.ParameterSets.AsNoTracking().SingleAsync(s => s.Key == CentralTaxRates, TestContext.Current.CancellationToken);
+
+        return await context.ParameterRows.Where(r => r.SetId == set.Id && r.RowKey == rowKey).SingleAsync(TestContext.Current.CancellationToken);
+    }
+
+    private static string Describe(ParameterRow row) =>
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"{row.RowKey} from {row.From:yyyy-MM-dd} until {row.Until:yyyy-MM-dd} by {row.Source}: {string.Join("; ", row.Cells.Values.Select(cell => $"{cell.Key}={cell.Value ?? "null"}"))}");
+
+    private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static async Task<DateOnly> FirstVersionAsync(StatutoryParametersDbContext context, ParameterSet set) =>
         await context.ParameterVersions.Where(v => v.SetId == set.Id).OrderBy(v => v.From).Select(v => v.From).FirstAsync(TestContext.Current.CancellationToken);

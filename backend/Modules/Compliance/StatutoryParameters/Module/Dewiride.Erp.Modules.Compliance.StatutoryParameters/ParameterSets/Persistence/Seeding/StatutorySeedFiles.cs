@@ -8,11 +8,13 @@ using Dewiride.Erp.Modules.Platform.ReferenceData.Contracts.IndianStates;
 
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Persistence.Seeding;
 
-// Every seed file is embedded in this assembly as statutory/<key>.json, read strictly and checked whole, and every defect of every
-// file is reported together before anything is written: a member the shape does not know, a member written twice, a number in
-// quotes, a value that breaks its column, a row off a version's boundary, rows of a key that overlap, a version that changes
-// nothing and a reference or GST State code that does not hold on every day of its row. A defect stops the migrator, and with it
-// the deployment, before any write.
+// Every seed file is embedded in this assembly as statutory/<key>.json and read strictly: a member the shape does not know, a
+// member written twice, a number in quotes, a value that breaks its column, a row off a version's boundary, rows of a key that
+// overlap, a version that changes nothing and a reference or GST State code that does not hold on every day of its row are each
+// refused. The checks run in stages, each only on what the stages before it passed: a file's shape and its set's definition,
+// then its versions and rows with their cells, then its date rules, then the references and State codes across the files; every
+// defect a stage finds in any file is reported together. A defect stops the seeder before it writes anything, and with it the
+// migrator; the migrations and the seeders ordered before it stay applied.
 internal static class StatutorySeedFiles
 {
     public const string ResourcePrefix = "statutory/";

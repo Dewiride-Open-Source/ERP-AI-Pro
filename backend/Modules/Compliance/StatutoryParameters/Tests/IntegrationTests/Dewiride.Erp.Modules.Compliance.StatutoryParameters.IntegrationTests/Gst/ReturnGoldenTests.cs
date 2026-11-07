@@ -9,8 +9,8 @@ using Dewiride.Erp.Testing;
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Gst;
 
 // Golden values of the standing GST return due dates, the two State lists of the quarterly GSTR-3B and the turnover limits for
-// tax periods from January 2021 (owner decision of 2026-11-07: each pinned value beside its instrument). The GSTR-9 exemption is
-// left out of every year (owner decision of 2026-11-07), so no limit of that name exists on any day.
+// tax periods from January 2021, each pinned beside its instrument so that a wrong edit of a seed file fails a test (ADR-0063).
+// The GSTR-9 exemption is not seeded for any year, so no limit of that name exists on any day.
 [Collection(StatutoryRows.Name)]
 public sealed class ReturnGoldenTests(ErpApiFactory factory)
 {

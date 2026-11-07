@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Persistence.Seeding;
 
-// The tables follow the files, which no person edits in the ERP: every file is read and checked before anything is written,
-// then a set is known by its key, a version by its set and date and a row by its set, key and start, a missing one is added,
-// the rest of one follows its file and one no file holds any more is deleted, rows and versions before their set, each change
+// The tables follow the files, which no person edits in the ERP: every file is read and checked before the seeder writes
+// anything, then a set is known by its key, a version by its set and date and a row by its set, key and start, a missing one is
+// added, the rest of one follows its file and one no file holds is deleted, rows and versions before their set, each change
 // recorded, all in one save. A corrected date is therefore a deletion and an addition. It runs after the GST State codes are
 // seeded, because a row's State code must be in force on every day of the row.
 internal sealed class StatutoryParameterSeeder(StatutoryParametersDbContext context, IIndianStates indianStates) : ISeeder

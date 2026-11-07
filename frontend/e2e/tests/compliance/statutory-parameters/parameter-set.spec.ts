@@ -16,6 +16,7 @@ import {
   ParameterSetPage,
   readParameterSet,
   sacCodesKey,
+  versionAddress,
   versionsSnapshot,
   type ParameterSet,
   type ShownValue,
@@ -106,6 +107,8 @@ async function expectChanges(
 ): Promise<void> {
   if (set.versions.at(-1)?.from === shown.from) {
     await expect(setPage.firstVersion).toHaveText("This is the first version of the set.");
+    for (const section of [setPage.added, setPage.changed, setPage.removed])
+      await expect(section).toHaveCount(0);
     await expect(setPage.changeEntries(setPage.changesCard)).toHaveCount(0);
     return;
   }
@@ -264,6 +267,27 @@ test.describe("a statutory parameter set", () => {
     await expect(entries.searchBox).toBeFocused();
   });
 
+  test("says the first version of the central tax set is its first and lists no change for it", async ({
+    page,
+  }) => {
+    const set = await readParameterSet(page.request, centralTaxRatesKey);
+    const first = set.versions.at(-1);
+    expect(first, "the first version").toBeDefined();
+    const shown = shownVersionOf(await readParameterSet(page.request, set.key, first!.from));
+    expect(shown.from, "the version the API shows on the first version's first day").toBe(first!.from);
+    const setPage = new ParameterSetPage(page);
+    const entries = setPage.entries(set);
+
+    await setPage.goto(versionAddress(set, first!), set.title);
+    await setPage.waitUntilInteractive();
+    await expect(setPage.versionLink(first!)).toHaveAttribute("aria-current", "page");
+    await expect(entries.status).toHaveText(shownCount(shown.rows.length));
+    expect(await entries.rows()).toEqual(
+      shown.rows.slice(0, entriesPerPage).map((row) => entryRow(set, row)),
+    );
+    await expectChanges(setPage, set, shown);
+  });
+
   test("keeps an earlier version of the SAC codes while searching and paging their entries", async ({
     page,
   }) => {
@@ -291,11 +315,22 @@ test.describe("a statutory parameter set", () => {
     await expect
       .poll(() => entries.rows())
       .toEqual(rowsOf(shown.rows.slice((pageCount - 1) * entriesPerPage)));
+    await entries.pageLink("Previous page").click();
+    await expect(page).toHaveURL((url) => url.search === `?version=${earlier.from}&page=${pageCount - 1}`);
+    await expect
+      .poll(() => entries.rows())
+      .toEqual(rowsOf(shown.rows.slice((pageCount - 2) * entriesPerPage, (pageCount - 1) * entriesPerPage)));
+    await entries.pageLink("First page").click();
+    await expect(page).toHaveURL((url) => url.search === `?version=${earlier.from}`);
+    await expect.poll(() => entries.rows()).toEqual(rowsOf(shown.rows.slice(0, entriesPerPage)));
+    await expect(entries.pageLink("First page")).toHaveAttribute("aria-disabled", "true");
+    await expect(entries.pageLink("Previous page")).toHaveAttribute("aria-disabled", "true");
 
     const word = commonWord(set, shown);
     const found = expectedMatches(shown.rows, word, (row) => entryKeys(set, row));
     expect(found.length, `entries holding "${word}"`).toBeGreaterThan(entriesPerPage);
-    await entries.searchFor(word);
+    await entries.searchBox.fill(word);
+    await entries.searchButton.click();
     await expect(page).toHaveURL((url) => url.search === query({ version: earlier.from, q: word }));
     await expect.poll(() => entries.rows()).toEqual(rowsOf(found.slice(0, entriesPerPage)));
     await entries.pageLink("Next page").click();
