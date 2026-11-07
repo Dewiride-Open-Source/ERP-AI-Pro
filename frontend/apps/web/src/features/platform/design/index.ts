@@ -3,5 +3,6 @@ export { DataTableDemoSkeleton } from "./data-table/components/data-table-demo-s
 export { FeedbackDemo } from "./feedback/components/feedback-demo";
 export { FormKit } from "./form-kit/components/form-kit";
 export { KitchenSink } from "./kitchen-sink/components/kitchen-sink";
+export { ReferencePickers } from "./reference-pickers/components/reference-pickers";
 export { SlowReport } from "./feedback/components/slow-report";
 export { SlowReportSkeleton } from "./feedback/components/slow-report-skeleton";

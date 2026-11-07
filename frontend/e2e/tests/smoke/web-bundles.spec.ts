@@ -28,11 +28,45 @@ const jobRunsMarker = "No runs match these filters.";
 
 const runActionsMarker = "job-run-rerun";
 
+const referenceListMarker = "reference-list-no-matches";
+
+const financialYearChooserMarker = "financial-year-chooser";
+
+const exchangeRatesMarker = "No exchange rates match these filters.";
+
+const exchangeRateImportMarker = "exchange-rate-template";
+
+const referencePickersMarker = "reference-pickers-form";
+
+const referenceDataMarkers = [
+  referenceListMarker,
+  financialYearChooserMarker,
+  exchangeRatesMarker,
+  exchangeRateImportMarker,
+  referencePickersMarker,
+];
+
+const otherModuleMarkers = [
+  "supplier-example-form",
+  "motion-demo-preference",
+  "upload-progress",
+  "system-info-refresh",
+  "audit-export",
+  "No people match these filters.",
+  ...organisationMarkers,
+  jobRunsMarker,
+];
+
+function otherReferenceDataMarkers(own: string): string[] {
+  return referenceDataMarkers.filter((marker) => marker !== own);
+}
+
 const routes: readonly WebRoute[] = [
   {
     path: "/design/form-kit",
     ownMarkers: ["supplier-example-form"],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "motion-demo-preference",
       "overlay-hover-card",
       "upload-progress",
@@ -49,6 +83,7 @@ const routes: readonly WebRoute[] = [
     path: "/design/data-table",
     ownMarkers: ["No bills match these filters."],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "supplier-example-form",
       "motion-demo-preference",
       "upload-progress",
@@ -64,6 +99,7 @@ const routes: readonly WebRoute[] = [
     path: "/design/feedback",
     ownMarkers: ["animated-list-item", "Enter a reminder.", "Restore the requests"],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "supplier-example-form",
       "motion-demo-preference",
       "upload-progress",
@@ -79,6 +115,7 @@ const routes: readonly WebRoute[] = [
     path: "/design/kitchen-sink",
     ownMarkers: ["motion-demo-preference"],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "supplier-example-form",
       "upload-progress",
       "system-info-refresh",
@@ -94,6 +131,7 @@ const routes: readonly WebRoute[] = [
     path: "/platform/system-info",
     ownMarkers: ["system-info-refresh"],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "upload-progress",
       "Delete this attachment?",
       "supplier-example-form",
@@ -108,6 +146,7 @@ const routes: readonly WebRoute[] = [
     path: "/platform/attachments",
     ownMarkers: ["upload-progress", "No files match these filters."],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "system-info-refresh",
       "supplier-example-form",
       "motion-demo-preference",
@@ -123,6 +162,7 @@ const routes: readonly WebRoute[] = [
     path: "/platform/audit",
     ownMarkers: ["audit-export"],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "upload-progress",
       "Delete this attachment?",
       "system-info-refresh",
@@ -139,6 +179,7 @@ const routes: readonly WebRoute[] = [
     path: "/platform/jobs",
     ownMarkers: [jobRunsMarker, runActionsMarker],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "upload-progress",
       "Delete this attachment?",
       "system-info-refresh",
@@ -163,6 +204,7 @@ const routes: readonly WebRoute[] = [
       ),
     ownMarkers: [runActionsMarker],
     foreignMarkers: [
+      ...referenceDataMarkers,
       jobRunsMarker,
       "audit-export",
       "No people match these filters.",
@@ -180,6 +222,7 @@ const routes: readonly WebRoute[] = [
     path: "/identity/users",
     ownMarkers: ["No people match these filters."],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "upload-progress",
       "Delete this attachment?",
       "No files match these filters.",
@@ -198,6 +241,7 @@ const routes: readonly WebRoute[] = [
     address: async (request, administrator) => personPath(await ownPersonRecordId(request, administrator)),
     ownMarkers: ["record-move", "assign-roles"],
     foreignMarkers: [
+      ...referenceDataMarkers,
       "audit-export",
       "No people match these filters.",
       "upload-progress",
@@ -216,6 +260,7 @@ const routes: readonly WebRoute[] = [
     path: "/identity/users/departments",
     ownMarkers: [departmentsMarker],
     foreignMarkers: [
+      ...referenceDataMarkers,
       designationsMarker,
       orgChartMarker,
       "record-move",
@@ -233,6 +278,7 @@ const routes: readonly WebRoute[] = [
     path: "/identity/users/designations",
     ownMarkers: [designationsMarker],
     foreignMarkers: [
+      ...referenceDataMarkers,
       departmentsMarker,
       orgChartMarker,
       "record-move",
@@ -250,6 +296,7 @@ const routes: readonly WebRoute[] = [
     path: "/identity/users/org-chart",
     ownMarkers: [orgChartMarker],
     foreignMarkers: [
+      ...referenceDataMarkers,
       departmentsMarker,
       designationsMarker,
       "record-move",
@@ -262,6 +309,31 @@ const routes: readonly WebRoute[] = [
       "animated-list-item",
       jobRunsMarker,
     ],
+  },
+  {
+    path: "/platform/reference-data",
+    ownMarkers: [referenceListMarker],
+    foreignMarkers: [...otherReferenceDataMarkers(referenceListMarker), ...otherModuleMarkers],
+  },
+  {
+    path: "/platform/reference-data/financial-years",
+    ownMarkers: [financialYearChooserMarker],
+    foreignMarkers: [...otherReferenceDataMarkers(financialYearChooserMarker), ...otherModuleMarkers],
+  },
+  {
+    path: "/platform/reference-data/exchange-rates",
+    ownMarkers: [exchangeRatesMarker],
+    foreignMarkers: [...otherReferenceDataMarkers(exchangeRatesMarker), ...otherModuleMarkers],
+  },
+  {
+    path: "/platform/reference-data/exchange-rates/import",
+    ownMarkers: [exchangeRateImportMarker],
+    foreignMarkers: [...otherReferenceDataMarkers(exchangeRateImportMarker), ...otherModuleMarkers],
+  },
+  {
+    path: "/design/reference-pickers",
+    ownMarkers: [referencePickersMarker],
+    foreignMarkers: [...otherReferenceDataMarkers(referencePickersMarker), ...otherModuleMarkers],
   },
 ];
 

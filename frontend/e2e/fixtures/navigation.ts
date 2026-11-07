@@ -50,6 +50,21 @@ export const registeredNavigation: readonly RegisteredNavigation[] = [
     employees: false,
   },
   {
+    area: "Platform",
+    title: "Reference lists",
+    href: "/platform/reference-data",
+    description:
+      "See the countries, Indian states and union territories with their GST codes, and the currencies the ERP knows.",
+    employees: true,
+  },
+  {
+    area: "Platform",
+    title: "Exchange rates",
+    href: "/platform/reference-data/exchange-rates",
+    description: "Record the rupee value of foreign currencies by date, by hand or from a file.",
+    employees: false,
+  },
+  {
     area: "Organisation",
     title: "People",
     href: "/identity/users",

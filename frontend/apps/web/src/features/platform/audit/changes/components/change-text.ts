@@ -28,6 +28,9 @@ const recordTypes = new Map<string, RecordType>([
     { label: "Colour theme", noun: "colour theme", createdVerb: "set", onePerSubject: true },
   ],
   ["platform.attachments.files", { label: "File", noun: "file", createdVerb: "uploaded" }],
+  ["platform.reference-data.countries", { label: "Country", noun: "country" }],
+  ["platform.reference-data.indian-states", { label: "GST State code", noun: "GST State code" }],
+  ["platform.reference-data.exchange-rates", { label: "Exchange rate", noun: "exchange rate" }],
 ]);
 
 const operationLabels: Readonly<Record<ChangeOperation, string>> = {

@@ -11,6 +11,9 @@ export const changeKeys = [
   "identity.users.positions",
   "identity.users.themes",
   "platform.attachments.files",
+  "platform.reference-data.countries",
+  "platform.reference-data.indian-states",
+  "platform.reference-data.exchange-rates",
 ] as const;
 
 export const changeOperations: readonly ChangeOperation[] = ["created", "updated", "deleted", "restored"];
