@@ -1,0 +1,12 @@
+using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+using Microsoft.EntityFrameworkCore;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.Persistence;
+
+internal sealed class __Module__DbContext(DbContextOptions<__Module__DbContext> options) : ModuleDbContext(options, SchemaName)
+{
+    public const string SchemaName = "__domain_snake_____module_snake__";
+
+    public DbSet<__Entity__> __Entities__ => Set<__Entity__>();
+}

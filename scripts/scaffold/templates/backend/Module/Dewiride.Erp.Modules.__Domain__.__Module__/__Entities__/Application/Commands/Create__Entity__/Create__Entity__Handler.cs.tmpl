@@ -1,0 +1,24 @@
+using Dewiride.Erp.BuildingBlocks.Application.Commands;
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+using Dewiride.Erp.Modules.__Domain__.__Module__.Persistence;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Application.Commands.Create__Entity__;
+
+internal sealed class Create__Entity__Handler(__Module__DbContext context) : ICommandHandler<Create__Entity__Command, Guid>
+{
+    public Task<Result<Guid>> HandleAsync(Create__Entity__Command command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        var created = __Entity__.Create(command.Name);
+        if (created.IsFailure)
+        {
+            return Task.FromResult<Result<Guid>>(created.Error!);
+        }
+
+        context.__Entities__.Add(created.Value);
+
+        return Task.FromResult<Result<Guid>>(created.Value.Id.Value);
+    }
+}

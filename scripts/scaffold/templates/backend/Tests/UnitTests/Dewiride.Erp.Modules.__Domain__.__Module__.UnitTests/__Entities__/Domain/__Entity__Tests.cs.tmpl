@@ -1,0 +1,49 @@
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.UnitTests.__Entities__.Domain;
+
+public sealed class __Entity__Tests
+{
+    [Fact]
+    public void Create_NameWithSpacesAround_KeepsItTrimmedUnderAVersion7Id()
+    {
+        var result = __Entity__.Create("  First __entity-words__ ");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("First __entity-words__", result.Value.Name);
+        Assert.Equal(7, result.Value.Id.Value.Version);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Create_BlankName_FailsWithNameRequiredKeyedByName(string name)
+    {
+        var result = __Entity__.Create(name);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("__entity-kebab__.name-required", result.Error!.Code);
+        Assert.Equal(nameof(__Entity__.Name), Assert.Single(result.Error.Fields.Keys));
+    }
+
+    [Fact]
+    public void Create_NameOfTheLimitWithSpacesAround_KeepsTheTrimmedName()
+    {
+        var name = new string('a', __Entity__.NameMaxLength);
+
+        var result = __Entity__.Create($" {name} ");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(name, result.Value.Name);
+    }
+
+    [Fact]
+    public void Create_NameLongerThanTheLimit_FailsWithNameTooLongKeyedByName()
+    {
+        var result = __Entity__.Create(new string('a', __Entity__.NameMaxLength + 1));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("__entity-kebab__.name-too-long", result.Error!.Code);
+        Assert.Equal(nameof(__Entity__.Name), Assert.Single(result.Error.Fields.Keys));
+    }
+}

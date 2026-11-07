@@ -1,0 +1,12 @@
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.IntegrationTests.__Entities__.Endpoints;
+
+internal sealed record RecordedChange(
+    ChangeOperation Operation,
+    string EntityType,
+    Guid EntityId,
+    string SubjectType,
+    string? SubjectName,
+    Guid ActorId,
+    IReadOnlyList<RecordedValue> Changes);

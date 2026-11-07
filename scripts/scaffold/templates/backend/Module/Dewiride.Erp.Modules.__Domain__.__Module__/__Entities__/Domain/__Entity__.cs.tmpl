@@ -1,0 +1,40 @@
+using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+
+internal sealed class __Entity__ : AggregateRoot<__Entity__Id>, IAuditable
+{
+    public const int NameMaxLength = 100;
+
+    private __Entity__(__Entity__Id id)
+        : base(id)
+    {
+    }
+
+    public string Name { get; private set; } = string.Empty;
+
+    public DateTimeOffset CreatedAt { get; private set; }
+
+    public Guid CreatedBy { get; private set; }
+
+    public DateTimeOffset? ModifiedAt { get; private set; }
+
+    public Guid? ModifiedBy { get; private set; }
+
+    public static Result<__Entity__> Create(string name)
+    {
+        var trimmed = name?.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+        {
+            return __Entity__Errors.NameRequired;
+        }
+
+        if (trimmed.Length > NameMaxLength)
+        {
+            return __Entity__Errors.NameTooLong;
+        }
+
+        return new __Entity__(__Entity__Id.Create()) { Name = trimmed };
+    }
+}

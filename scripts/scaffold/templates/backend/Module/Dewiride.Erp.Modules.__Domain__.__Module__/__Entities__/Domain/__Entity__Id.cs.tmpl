@@ -1,0 +1,10 @@
+using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+
+internal readonly record struct __Entity__Id(Guid Value) : IStronglyTypedId<__Entity__Id>
+{
+    public static __Entity__Id Create() => new(Guid.CreateVersion7());
+
+    public static __Entity__Id From(Guid value) => new(value);
+}

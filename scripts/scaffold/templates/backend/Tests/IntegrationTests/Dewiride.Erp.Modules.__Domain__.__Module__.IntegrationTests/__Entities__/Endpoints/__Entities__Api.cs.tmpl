@@ -1,0 +1,96 @@
+using System.Net;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Endpoints.Responses;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.IntegrationTests.__Entities__.Endpoints;
+
+// Every host of the test process keeps its records and their change records in the one test database, so a test reads only
+// the records it made itself: by their ids, or by names it made unique.
+internal static class __Entities__Api
+{
+    public const string Route = "/api/__domain-kebab__/__module-kebab__/__entities-kebab__";
+
+    public const string ChangeKey = "__domain-kebab__.__module-kebab__.__entities-kebab__";
+
+    public const string IdempotencyReplayedHeader = "Idempotency-Replayed";
+
+    private const string IdempotencyKeyHeader = "Idempotency-Key";
+
+    private const string ChangesRoute = "/api/platform/audit/changes";
+
+    private static JsonSerializerOptions Json { get; } = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false) },
+    };
+
+    public static Uri Path(string suffix = "") => new(Route + suffix, UriKind.Relative);
+
+    public static string UniqueName(string prefix) => $"{prefix} {Guid.CreateVersion7():N}";
+
+    public static string Filter(string filter) => Uri.EscapeDataString(filter);
+
+    public static async Task<HttpResponseMessage> PostAsync(HttpClient client, object body, string? idempotencyKey = null)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, Path()) { Content = JsonContent.Create(body, options: Json) };
+        request.Headers.Add(IdempotencyKeyHeader, idempotencyKey ?? Guid.CreateVersion7().ToString());
+
+        return await client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    public static async Task<__Entity__Response> CreateAsync(HttpClient client, string name)
+    {
+        using var response = await PostAsync(client, new { name });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        return await ReadAsync<__Entity__Response>(response);
+    }
+
+    public static async Task<PagedResponse<__Entity__Response>> ListAsync(HttpClient client, string query)
+    {
+        using var response = await client.GetAsync(Path($"?{query}"), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        return await ReadAsync<PagedResponse<__Entity__Response>>(response);
+    }
+
+    public static async Task<IReadOnlyList<RecordedChange>> ChangesOfAsync(HttpClient administrator, Guid subjectId)
+    {
+        var filter = Filter($"subjectId:eq:{subjectId}");
+        using var response = await administrator.GetAsync(new Uri($"{ChangesRoute}?sort=occurredAt:asc&pageSize=200&filter={filter}", UriKind.Relative), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        return (await ReadAsync<PagedResponse<RecordedChange>>(response)).Items;
+    }
+
+    public static async Task<T> ReadAsync<T>(HttpResponseMessage response)
+    {
+        var value = await response.Content.ReadFromJsonAsync<T>(Json, TestContext.Current.CancellationToken);
+        Assert.NotNull(value);
+
+        return value;
+    }
+
+    public static Task<ProblemDetails> AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status, string code) =>
+        ReadProblemAsync<ProblemDetails>(response, status, code);
+
+    public static Task<HttpValidationProblemDetails> AssertInvalidRequestAsync(HttpResponseMessage response) =>
+        ReadProblemAsync<HttpValidationProblemDetails>(response, HttpStatusCode.BadRequest, "request.invalid");
+
+    private static async Task<TProblem> ReadProblemAsync<TProblem>(HttpResponseMessage response, HttpStatusCode status, string code)
+        where TProblem : ProblemDetails
+    {
+        Assert.Equal(status, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        var problem = await response.Content.ReadFromJsonAsync<TProblem>(TestContext.Current.CancellationToken);
+        Assert.NotNull(problem);
+        Assert.Equal((int)status, problem.Status);
+        Assert.Equal($"/problems/{code}", problem.Type);
+        Assert.Equal(code, problem.Extensions[ResultExtensions.CodeExtension]?.ToString());
+
+        return problem;
+    }
+}

@@ -1,0 +1,101 @@
+using Dewiride.Erp.BuildingBlocks.Application.Commands;
+using Dewiride.Erp.BuildingBlocks.Application.Queries;
+using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Authorization;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Paging;
+using Dewiride.Erp.BuildingBlocks.Endpoints.Results;
+using Dewiride.Erp.BuildingBlocks.Idempotency.Http;
+using Dewiride.Erp.Modules.__Domain__.__Module__.Contracts;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Application;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Application.Commands.Create__Entity__;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Application.Queries.Get__Entity__;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Application.Queries.List__Entities__;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Endpoints.Requests;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Endpoints.Responses;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Routing;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Endpoints;
+
+internal static class __Entity__Endpoints
+{
+    public const string GetRouteName = "__Domain__.__Module__.Get__Entity__";
+
+    public static void Map(RouteGroupBuilder group)
+    {
+        var routes = group.MapGroup("/__entities-kebab__");
+
+        routes.MapGet("/", ListAsync)
+            .WithName("__Domain__.__Module__.List__Entities__")
+            .WithSummary("Lists the __entities-words__, by name unless the caller sorts them.")
+            .RequirePermission(__Module__Permissions.Read__Entities__);
+
+        routes.MapGet("/{id:guid}", GetAsync)
+            .WithName(GetRouteName)
+            .WithSummary("Describes one __entity-words__.")
+            .RequirePermission(__Module__Permissions.Read__Entities__);
+
+        routes.MapPost("/", CreateAsync)
+            .WithName("__Domain__.__Module__.Create__Entity__")
+            .WithSummary("Adds one __entity-words__.")
+            .RequirePermission(__Module__Permissions.Create__Entities__)
+            .RequireIdempotencyKey();
+    }
+
+    private static __Entity__Response ToResponse(__Entity__Details details) =>
+        new(details.Id, details.Name);
+
+    private static async Task<Results<Ok<PagedResponse<__Entity__Response>>, ProblemHttpResult>> ListAsync(
+        [AsParameters] PagingParameters paging,
+        IQueryHandler<List__Entities__Query, PagedResult<__Entity__Details>> handler,
+        CancellationToken cancellationToken)
+    {
+        var request = paging.ToListRequest();
+        if (request.IsFailure)
+        {
+            return request.Error!.ToProblem();
+        }
+
+        var result = await handler.HandleAsync(new List__Entities__Query(request.Value), cancellationToken);
+
+        return result.IsSuccess ? TypedResults.Ok(result.Value.ToResponse(ToResponse)) : result.Error!.ToProblem();
+    }
+
+    private static async Task<Results<Ok<__Entity__Response>, ProblemHttpResult>> GetAsync(
+        Guid id,
+        IQueryHandler<Get__Entity__Query, __Entity__Details> handler,
+        CancellationToken cancellationToken)
+    {
+        var result = await handler.HandleAsync(new Get__Entity__Query(id), cancellationToken);
+
+        return result.IsSuccess ? TypedResults.Ok(ToResponse(result.Value)) : result.Error!.ToProblem();
+    }
+
+    private static async Task<Results<Created<__Entity__Response>, ProblemHttpResult>> CreateAsync(
+        Create__Entity__Request request,
+        ICommandHandler<Create__Entity__Command, Guid> handler,
+        IQueryHandler<Get__Entity__Query, __Entity__Details> records,
+        LinkGenerator links,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var created = await handler.HandleAsync(new Create__Entity__Command(request.Name!), cancellationToken);
+        if (created.IsFailure)
+        {
+            return created.Error!.ToProblem();
+        }
+
+        var saved = await records.HandleAsync(new Get__Entity__Query(created.Value), cancellationToken);
+        if (saved.IsFailure)
+        {
+            return saved.Error!.ToProblem();
+        }
+
+        var location = links.GetPathByName(httpContext, GetRouteName, new { id = created.Value })
+            ?? throw new InvalidOperationException($"No endpoint is named '{GetRouteName}'.");
+
+        return TypedResults.Created(location, ToResponse(saved.Value));
+    }
+}

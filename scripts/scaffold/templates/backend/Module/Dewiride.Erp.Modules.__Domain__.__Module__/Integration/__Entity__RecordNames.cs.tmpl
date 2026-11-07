@@ -1,0 +1,46 @@
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+using Dewiride.Erp.Modules.__Domain__.__Module__.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.Integration;
+
+// The change key is the one the entity configuration declares, read from the model rather than written twice.
+internal sealed class __Entity__RecordNames : IRecordNames
+{
+    private readonly __Module__DbContext _context;
+
+    private readonly string _key;
+
+    public __Entity__RecordNames(__Module__DbContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        _context = context;
+        _key = context.Model.FindEntityType(typeof(__Entity__)) is { } recorded && RecordedEntityTypes.KeyOf(recorded) is { } key
+            ? key
+            : throw new InvalidOperationException($"{nameof(__Module__DbContext)} maps no change key for {nameof(__Entity__)}.");
+        EntityTypes = new HashSet<string>(StringComparer.Ordinal) { _key };
+    }
+
+    public IReadOnlySet<string> EntityTypes { get; }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> NamesAsync(string entityType, IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        if (!string.Equals(entityType, _key, StringComparison.Ordinal))
+        {
+            throw new ArgumentException($"{nameof(__Entity__RecordNames)} names {_key} only, not {entityType}.", nameof(entityType));
+        }
+
+        var recordIds = ids.Select(__Entity__Id.From).ToList();
+        var named = await _context.__Entities__
+            .AsNoTracking()
+            .Where(e => recordIds.Contains(e.Id))
+            .Select(e => new { e.Id, e.Name })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return named.ToDictionary(e => e.Id.Value, e => e.Name);
+    }
+}

@@ -1,0 +1,15 @@
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+
+internal static class __Entity__Errors
+{
+    public static readonly Error NameRequired = Field("__entity-kebab__.name-required", nameof(__Entity__.Name), "The name of the __entity-words__ must not be empty.");
+
+    public static readonly Error NameTooLong = Field("__entity-kebab__.name-too-long", nameof(__Entity__.Name), $"The name of the __entity-words__ has at most {__Entity__.NameMaxLength} characters.");
+
+    public static readonly Error NotFound = Error.NotFound("__entity-kebab__.not-found", "No __entity-words__ has this id.");
+
+    private static Error Field(string code, string member, string message) =>
+        Error.Validation(code, message, new Dictionary<string, string[]>(StringComparer.Ordinal) { [member] = [message] });
+}

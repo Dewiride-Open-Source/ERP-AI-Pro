@@ -1,0 +1,20 @@
+using Dewiride.Erp.BuildingBlocks.Application.Queries;
+using Dewiride.Erp.BuildingBlocks.Kernel.Results;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+using Dewiride.Erp.Modules.__Domain__.__Module__.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Application.Queries.Get__Entity__;
+
+internal sealed class Get__Entity__Handler(__Module__DbContext context) : IQueryHandler<Get__Entity__Query, __Entity__Details>
+{
+    public async Task<Result<__Entity__Details>> HandleAsync(Get__Entity__Query query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var id = __Entity__Id.From(query.Id);
+        var found = await context.__Entities__.AsNoTracking().SingleOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false);
+
+        return found is null ? __Entity__Errors.NotFound : __Entity__Details.From(found);
+    }
+}

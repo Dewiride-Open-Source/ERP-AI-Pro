@@ -1,0 +1,187 @@
+using System.Net;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Dewiride.Erp.Modules.__Domain__.__Module__.Contracts;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Application;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Endpoints.Responses;
+using Dewiride.Erp.Testing;
+using Dewiride.Erp.Testing.Authentication;
+using Dewiride.Erp.Testing.Authorization;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.IntegrationTests.__Entities__.Endpoints;
+
+public sealed class __Entity__EndpointsTests(ErpApiFactory factory) : IClassFixture<ErpApiFactory>
+{
+    [Theory]
+    [InlineData("GET", __Entities__Api.Route, __Module__Permissions.Read__Entities__)]
+    [InlineData("GET", __Entities__Api.Route + "/{id:guid}", __Module__Permissions.Read__Entities__)]
+    [InlineData("POST", __Entities__Api.Route, __Module__Permissions.Create__Entities__)]
+    public void Route_OfEachUseCase_RequiresItsOwnPermission(string method, string route, string permission)
+    {
+        Assert.Equal(permission, RoutePermissions.Of(factory.Services, method, route));
+    }
+
+    [Theory]
+    [InlineData("GET", "")]
+    [InlineData("GET", "/{id}")]
+    [InlineData("POST", "")]
+    public async Task EveryRoute_AsEmployee_Returns403RequestForbidden(string method, string suffix)
+    {
+        using var client = factory.CreateClient().AsUser(TestUsers.Accountant);
+        using var request = new HttpRequestMessage(new HttpMethod(method), __Entities__Api.Path(suffix.Replace("{id}", Guid.CreateVersion7().ToString(), StringComparison.Ordinal)));
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        await __Entities__Api.AssertProblemAsync(response, HttpStatusCode.Forbidden, "request.forbidden");
+    }
+
+    [Fact]
+    public async Task Create_AsAdministrator_Returns201WithTheLocationOfTheTrimmedRecord()
+    {
+        using var client = Administrator();
+        var name = __Entities__Api.UniqueName("__Entity-words__");
+
+        using var response = await __Entities__Api.PostAsync(client, new { name = $" {name}  " });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var created = await __Entities__Api.ReadAsync<__Entity__Response>(response);
+        Assert.Equal(__Entities__Api.Path($"/{created.Id}"), response.Headers.Location);
+        Assert.Equal(name, created.Name);
+        Assert.Equal(7, created.Id.Version);
+    }
+
+    [Fact]
+    public async Task Create_SameIdempotencyKeyTwice_AddsTheRecordOnceAndReplaysTheAnswer()
+    {
+        using var client = Administrator();
+        var name = __Entities__Api.UniqueName("__Entity-words__");
+        var key = Guid.CreateVersion7().ToString();
+
+        using var first = await __Entities__Api.PostAsync(client, new { name }, key);
+        using var second = await __Entities__Api.PostAsync(client, new { name }, key);
+
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, second.StatusCode);
+        Assert.Equal("true", Assert.Single(second.Headers.GetValues(__Entities__Api.IdempotencyReplayedHeader)));
+        var created = await __Entities__Api.ReadAsync<__Entity__Response>(first);
+        Assert.Equal(created, await __Entities__Api.ReadAsync<__Entity__Response>(second));
+        var page = await __Entities__Api.ListAsync(client, $"filter={__Entities__Api.Filter($"name:eq:{name}")}");
+        Assert.Equal(created.Id, Assert.Single(page.Items).Id);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Create_BlankName_Returns400KeyedByName(string name)
+    {
+        using var client = Administrator();
+
+        using var response = await __Entities__Api.PostAsync(client, new { name });
+
+        var problem = await __Entities__Api.AssertInvalidRequestAsync(response);
+        Assert.Equal("name", Assert.Single(problem.Errors.Keys));
+    }
+
+    [Fact]
+    public async Task Create_NameLongerThanTheLimit_Returns400KeyedByName()
+    {
+        using var client = Administrator();
+
+        using var response = await __Entities__Api.PostAsync(client, new { name = new string('a', __Entity__Limits.NameMaxLength + 1) });
+
+        var problem = await __Entities__Api.AssertInvalidRequestAsync(response);
+        Assert.Equal("name", Assert.Single(problem.Errors.Keys));
+    }
+
+    [Fact]
+    public async Task Create_AsAdministrator_RecordsTheNameUnderTheModulesChangeKey()
+    {
+        using var client = Administrator();
+
+        var created = await __Entities__Api.CreateAsync(client, __Entities__Api.UniqueName("__Entity-words__"));
+
+        var change = Assert.Single(await __Entities__Api.ChangesOfAsync(client, created.Id));
+        Assert.Equal(ChangeOperation.Created, change.Operation);
+        Assert.Equal(__Entities__Api.ChangeKey, change.EntityType);
+        Assert.Equal(created.Id, change.EntityId);
+        Assert.Equal(__Entities__Api.ChangeKey, change.SubjectType);
+        Assert.Equal(created.Name, change.SubjectName);
+        Assert.Equal(TestUsers.Administrator.ObjectId, change.ActorId);
+        Assert.Equal(new RecordedValue("name", ChangeValueKind.Text, null, created.Name), Assert.Single(change.Changes));
+    }
+
+    [Fact]
+    public async Task Get_CreatedRecord_ReturnsItAtItsLocation()
+    {
+        using var client = Administrator();
+        using var created = await __Entities__Api.PostAsync(client, new { name = __Entities__Api.UniqueName("__Entity-words__") });
+        var added = await __Entities__Api.ReadAsync<__Entity__Response>(created);
+
+        using var response = await client.GetAsync(created.Headers.Location, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(added, await __Entities__Api.ReadAsync<__Entity__Response>(response));
+    }
+
+    [Fact]
+    public async Task Get_UnknownId_Returns404NotFound()
+    {
+        using var client = Administrator();
+
+        using var response = await client.GetAsync(__Entities__Api.Path($"/{Guid.CreateVersion7()}"), TestContext.Current.CancellationToken);
+
+        await __Entities__Api.AssertProblemAsync(response, HttpStatusCode.NotFound, "__entity-kebab__.not-found");
+    }
+
+    [Fact]
+    public async Task List_FilteredByName_ReturnsOnlyThatRecord()
+    {
+        using var client = Administrator();
+        var created = await __Entities__Api.CreateAsync(client, __Entities__Api.UniqueName("__Entity-words__"));
+        await __Entities__Api.CreateAsync(client, __Entities__Api.UniqueName("__Entity-words__"));
+
+        var page = await __Entities__Api.ListAsync(client, $"filter={__Entities__Api.Filter($"name:eq:{created.Name}")}");
+
+        Assert.Equal(created, Assert.Single(page.Items));
+        Assert.Equal(1, page.TotalCount);
+    }
+
+    [Fact]
+    public async Task List_WithoutASort_ReturnsTheRecordsByNameWhateverOrderTheyWereAddedIn()
+    {
+        using var client = Administrator();
+        var probe = Guid.CreateVersion7().ToString("N");
+        var second = await __Entities__Api.CreateAsync(client, $"B {probe}");
+        var first = await __Entities__Api.CreateAsync(client, $"A {probe}");
+
+        var page = await __Entities__Api.ListAsync(client, $"filter={__Entities__Api.Filter($"name:contains:{probe}")}");
+
+        Assert.Equal([first.Id, second.Id], page.Items.Select(item => item.Id));
+    }
+
+    [Fact]
+    public async Task List_SortedByNameDescending_ReturnsTheRecordsInThatOrder()
+    {
+        using var client = Administrator();
+        var probe = Guid.CreateVersion7().ToString("N");
+        var first = await __Entities__Api.CreateAsync(client, $"A {probe}");
+        var second = await __Entities__Api.CreateAsync(client, $"B {probe}");
+
+        var page = await __Entities__Api.ListAsync(client, $"sort=name:desc&filter={__Entities__Api.Filter($"name:contains:{probe}")}");
+
+        Assert.Equal([second.Id, first.Id], page.Items.Select(item => item.Id));
+    }
+
+    [Theory]
+    [InlineData("?sort=createdAt:asc")]
+    [InlineData("?filter=createdAt%3Agt%3A2026-04-01")]
+    public async Task List_FieldItDoesNotSortOrFilterBy_Returns400InvalidField(string query)
+    {
+        using var client = Administrator();
+
+        using var response = await client.GetAsync(__Entities__Api.Path(query), TestContext.Current.CancellationToken);
+
+        await __Entities__Api.AssertProblemAsync(response, HttpStatusCode.BadRequest, "query.invalid-field");
+    }
+
+    private HttpClient Administrator() => factory.CreateClient().AsUser(TestUsers.Administrator);
+}

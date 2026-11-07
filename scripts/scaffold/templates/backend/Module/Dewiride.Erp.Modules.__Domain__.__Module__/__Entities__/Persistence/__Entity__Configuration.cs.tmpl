@@ -1,0 +1,18 @@
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Domain;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Persistence;
+
+internal sealed class __Entity__Configuration : IEntityTypeConfiguration<__Entity__>
+{
+    public void Configure(EntityTypeBuilder<__Entity__> builder)
+    {
+        builder.ToTable("__Entities__");
+        builder.RecordChangesAs("__domain-kebab__.__module-kebab__.__entities-kebab__");
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Name).HasMaxLength(__Entity__.NameMaxLength);
+        builder.HasIndex(e => e.Name);
+    }
+}

@@ -1,0 +1,49 @@
+using Dewiride.Erp.BuildingBlocks.Application.DependencyInjection;
+using Dewiride.Erp.BuildingBlocks.Modules;
+using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Dewiride.Erp.Modules.__Domain__.__Module__.Contracts;
+using Dewiride.Erp.Modules.__Domain__.__Module__.Integration;
+using Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Endpoints;
+using Dewiride.Erp.Modules.__Domain__.__Module__.Persistence;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__;
+
+public sealed class __Module__Module : IModule
+{
+    public const string FeatureFlag = "Erp.Modules.__Domain__.__Module__";
+
+    public ModuleDescriptor Descriptor { get; } = new(
+        Domain: "__Domain__",
+        Name: "__Module__",
+        Schema: __Module__DbContext.SchemaName,
+        RoutePrefix: "/__domain-kebab__/__module-kebab__",
+        FeatureFlag: FeatureFlag,
+        Permissions:
+        [
+            new(__Module__Permissions.Read__Entities__, [], "__ReadSentence__"),
+            new(__Module__Permissions.Create__Entities__, [], "__CreateSentence__"),
+        ],
+        Capabilities: []);
+
+    public void AddServices(IHostApplicationBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        builder.AddModuleDbContext<__Module__DbContext>(__Module__DbContext.SchemaName);
+        builder.Services.AddHandlersFromAssembly(typeof(__Module__Module).Assembly);
+        builder.Services.TryAddEnumerable(ServiceDescriptor.Scoped<IRecordNames, __Entity__RecordNames>());
+        builder.Services.AddValidation();
+    }
+
+    public void MapEndpoints(RouteGroupBuilder group)
+    {
+        ArgumentNullException.ThrowIfNull(group);
+
+        __Entity__Endpoints.Map(group);
+    }
+}

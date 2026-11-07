@@ -1,0 +1,6 @@
+using Dewiride.Erp.BuildingBlocks.Application.Queries;
+using Dewiride.Erp.BuildingBlocks.Application.Queries.Paging;
+
+namespace Dewiride.Erp.Modules.__Domain__.__Module__.__Entities__.Application.Queries.List__Entities__;
+
+internal sealed record List__Entities__Query(ListRequest Request) : IQuery<PagedResult<__Entity__Details>>;

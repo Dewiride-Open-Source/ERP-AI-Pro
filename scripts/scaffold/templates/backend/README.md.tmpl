@@ -1,0 +1,16 @@
+# __Domain__ / __Module__
+
+__Description__ Each of the __entities-words__ is a record known by its name, which administrators list, open and add.
+
+| Aspect | Value |
+|---|---|
+| Assembly | `Dewiride.Erp.Modules.__Domain__.__Module__` |
+| Schema | `__domain_snake_____module_snake__` (`__Module__DbContext`): `__Entities__` (the name, trimmed and at most 100 characters, indexed for the list; audited) |
+| Route group | `/api/__domain-kebab__/__module-kebab__`, each route requiring its permission: `GET /__entities-kebab__` (paged: `page`, `pageSize`, `sort` on `name`, by name by default with the id breaking ties, `filter` on `name` with `eq`, `ne`, `in` and `contains`) and `GET /__entities-kebab__/{id}` (`read`), `POST /__entities-kebab__` (with `Idempotency-Key`, answering 201 with the record's location; `create`) |
+| Feature flag | `Erp.Modules.__Domain__.__Module__` |
+| Permissions | `__domain-kebab__.__module-kebab__.__entities-kebab__.read` and `__domain-kebab__.__module-kebab__.__entities-kebab__.create`, Administrator's alone (declared in `__Module__Permissions`, [ADR-0041](../../../../docs/adr/0041-roles-and-permissions.md)); anyone else answers 403 `request.forbidden` |
+| Answers | each of the __entities-words__ is `__Entity__Response` (its id and name); an id that no record has answers 404 `__entity-kebab__.not-found`, and a name that is missing, blank or longer than 100 characters 400 `request.invalid` keyed `name` |
+| Change records | every addition is a row of `audit.ChangeRecords` under the key `__domain-kebab__.__module-kebab__.__entities-kebab__` (`RecordChangesAs` in `__Entity__Configuration`), written by the persistence building block in the same save ([ADR-0043](../../../../docs/adr/0043-change-records-and-the-append-only-audit-schema.md)) |
+| Names for the history | `__Entity__RecordNames` (`Integration/`) implements `IRecordNames` of `BuildingBlocks.Persistence` and names each record by its name, so `Platform/Audit` names them without referencing this module |
+| Contract | `__Module__Permissions` |
+| Events | none |
