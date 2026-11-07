@@ -19,6 +19,8 @@ const usingDirective = /^using ([A-Za-z_][A-Za-z0-9_.]*);/gm;
 const fileScopedNamespace = /^namespace ([A-Za-z_][A-Za-z0-9_.]*);/m;
 const publicTopLevelType = /^public (?:(?:abstract|partial|readonly|ref|sealed|static|unsafe) )*(?:record (?:class|struct)|class|enum|interface|record|struct) (?!(?:class|struct)\b)([A-Za-z_][A-Za-z0-9_]*)(?![A-Za-z0-9_<])/gm;
 const memberDeclaration = /^ {4}(?:public|private|protected|internal)\b[^=(;{\n]*?\b([A-Z][A-Za-z0-9_]*)\s*(?:[({=;]|$)/gm;
+const positionalRecord = /^(?:public|internal) [^\n(]*\brecord\b[^\n(]*\(([^)]*)\)/gm;
+const parameterName = /([A-Za-z_][A-Za-z0-9_]*)\s*(?:=[^,]*)?$/;
 const repositoryFolders = ["backend/BuildingBlocks", "backend/Tests/Shared"] as const;
 const skippedFolders = new Set(["bin", "obj", "artifacts", "node_modules"]);
 
@@ -65,9 +67,21 @@ export function repositoryTypeNames(root: string, namespaces: readonly string[])
   return types;
 }
 
-export function entityMemberNamesOf(templateRoot: string): string[] {
-  const entity = backendTemplates(templateRoot).find((template) => posix.basename(template.path) === "__Entity__.cs.tmpl");
-  return entity === undefined ? [] : [...new Set([...entity.text.matchAll(memberDeclaration)].map((match) => match[1] as string))].sort();
+// The members, and the positional record parameters, of every generated type whose file names the entity on its own: there C#
+// reads the entity's name as that member (CS0542 in the entity itself, CS0119 where a member access follows).
+export function entityScopeMemberNamesOf(templateRoot: string): string[] {
+  const names = new Set<string>();
+  for (const template of backendTemplates(templateRoot).filter((file) => entityReference.test(file.text))) {
+    for (const match of template.text.matchAll(memberDeclaration)) names.add(match[1] as string);
+    for (const match of template.text.matchAll(positionalRecord)) {
+      for (const parameter of (match[1] as string).split(",")) {
+        const name = parameterName.exec(parameter.trim())?.[1];
+        if (name !== undefined && /^[A-Z]/.test(name)) names.add(name);
+      }
+    }
+  }
+
+  return [...names].sort();
 }
 
 export function typeNameProblems(root: string, input: ScaffoldInput, templateRoot: string): string[] {
@@ -81,7 +95,9 @@ export function typeNameProblems(root: string, input: ScaffoldInput, templateRoo
   if (isPascalName(input.entity)) {
     const holder = holderOf(input.entity, external, dotnet) ?? holderOf(input.entity, repository, declared);
     if (holder !== undefined) problems.push(`the entity "${input.entity}" is also the type ${holder}.${input.entity}, which the generated files that use the entity import, so the name would be ambiguous there`);
-    if (entityMemberNamesOf(templateRoot).includes(input.entity)) problems.push(`the entity "${input.entity}" would be a class declaring a member of its own name, which C# refuses`);
+    if (entityScopeMemberNamesOf(templateRoot).includes(input.entity)) {
+      problems.push(`the entity "${input.entity}" is also a member of a generated type that names the entity, where C# would read the name as that member`);
+    }
   }
 
   const parents = { domain: "Dewiride.Erp.Modules", module: `Dewiride.Erp.Modules.${input.domain}`, entities: `Dewiride.Erp.Modules.${input.domain}.${input.module}` };

@@ -431,14 +431,16 @@ describe("the new-module command", { concurrency: true }, () => {
   );
 
   test(
-    "a malformed name is reported together with the uncommitted targets and the missing settings, and nothing is written",
+    "a malformed name is reported together with the clashes of the well-formed names and texts, the uncommitted targets and the missing settings, and nothing is written",
     withRepository(async (root) => {
       writeFileSync(join(root, "docs/routing.md"), `${readFileSync(join(root, "docs/routing.md"), "utf8")}\nA note being written.\n`);
       const environment = { ...process.env };
       delete environment.ERP_TEST_SQL_CONNECTION;
-      const run = await scaffold(root, ["scaffold-proof/Jobs", ...newDomainArguments.slice(1)], environment);
+      const run = await scaffold(root, ["ScaffoldProof/Lock", "--entity", "ledgerNote", "--entities", "LedgerNotes", "--title", "System", ...newDomainArguments.slice(5)], environment);
       assert.equal(run.status, 1);
-      assert.match(run.stderr, /the domain "scaffold-proof" is not PascalCase/);
+      assert.match(run.stderr, /the entity "ledgerNote" is not PascalCase/);
+      assert.match(run.stderr, /the module "Lock" makes the namespace Dewiride\.Erp\.Modules\.ScaffoldProof\.Lock, which hides the type System\.Threading\.Lock/);
+      assert.match(run.stderr, /the navigation title "System" is already used/);
       assert.match(run.stderr, /docs\/routing\.md has uncommitted changes/);
       assert.match(run.stderr, /ERP_TEST_SQL_CONNECTION is not set/);
       assert.deepEqual(await changedFiles(root), ["docs/routing.md"]);

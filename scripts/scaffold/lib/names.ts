@@ -34,6 +34,7 @@ const titleMaxLength = 40;
 const changeKeyMaxLength = 64;
 
 const reservedRouteDomains = new Set(["auth", "api", "login", "profile", "design", "healthz", "openapi", "scalar"]);
+const generatedFolderNames = new Set(["Bin", "Migrations", "Obj"]);
 const reservedClientNames = new Set([
   "any",
   "as",
@@ -180,17 +181,10 @@ export function nameProblems(input: ScaffoldInput): string[] {
 }
 
 function namingClashes(input: ScaffoldInput): string[] {
-  const problems: string[] = [];
   const names = { domain: input.domain, module: input.module, entity: input.entity, entities: input.entities };
-  for (const [role, name] of Object.entries(names).filter(([, name]) => pascalName.test(name))) {
-    if (reservedNames.has(name)) problems.push(`the ${role} "${name}" would shadow a type or namespace the generated code uses`);
-    if ((role === "domain" || role === "module") && name.includes("Tests")) {
-      problems.push(`the ${role} "${name}" contains Tests, so the build would make its projects test projects and the architecture tests would skip them`);
-    }
-    if (role !== "entity" && reservedClientNames.has(formsOf(name).camel)) {
-      problems.push(`the ${role} "${name}" becomes the API client property "${formsOf(name).camel}", a word the client generator renames`);
-    }
-  }
+  const problems = Object.entries(names)
+    .filter(([, name]) => isPascalName(name))
+    .flatMap(([role, name]) => clashesOf(role, name));
 
   for (const [role, name] of Object.entries({ module: input.module, domain: input.domain })) {
     if (input.entity === name) problems.push(`the entity "${input.entity}" is also the ${role}, whose namespace would hide the entity's type`);
@@ -211,6 +205,24 @@ function namingClashes(input: ScaffoldInput): string[] {
   const changeKey = keyNames.map((name) => formsOf(name).kebab).join(".");
   if (keyNames.every((name) => pascalName.test(name)) && changeKey.length > changeKeyMaxLength) {
     problems.push(`the change key "${changeKey}" is longer than the ${changeKeyMaxLength} characters a change record keeps`);
+  }
+
+  return problems;
+}
+
+function clashesOf(role: string, name: string): string[] {
+  const problems: string[] = [];
+  if (reservedNames.has(name)) problems.push(`the ${role} "${name}" would shadow a type or namespace the generated code uses`);
+  if ((role === "domain" || role === "module") && name.includes("Tests")) {
+    problems.push(`the ${role} "${name}" contains Tests, and the architecture tests skip every assembly whose name holds Tests (a name ending in it also makes the projects test projects)`);
+  }
+
+  if (role !== "entity" && generatedFolderNames.has(name)) {
+    problems.push(`the ${role} "${name}" names a folder that git or the repository checks treat as generated (bin, obj, Migrations), so they would skip the module's files in it`);
+  }
+
+  if (role !== "entity" && reservedClientNames.has(formsOf(name).camel)) {
+    problems.push(`the ${role} "${name}" becomes the API client property "${formsOf(name).camel}", a word the client generator renames`);
   }
 
   return problems;

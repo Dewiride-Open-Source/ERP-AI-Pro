@@ -7,8 +7,8 @@ import { fileURLToPath } from "node:url";
 import type { ScaffoldInput } from "../lib/names.ts";
 import {
   dotnetTypeNamesFile,
-  entityMemberNamesOf,
   entityNamespacesOf,
+  entityScopeMemberNamesOf,
   implicitNamespaces,
   repositoryTypeNames,
   testNamespaces,
@@ -63,8 +63,14 @@ test("the building blocks' types are read from their sources, public, at the top
   assert.equal(types.get("Dewiride.Erp.BuildingBlocks.Kernel.Domain")?.has("IAuditable"), true);
 });
 
-test("the members the entity declares are read from its template", () => {
-  assert.deepEqual(entityMemberNamesOf(templates), ["Create", "CreatedAt", "CreatedBy", "ModifiedAt", "ModifiedBy", "Name", "NameMaxLength"]);
+test("the members and positional record parameters of every generated type whose file names the entity are read from the templates", () => {
+  const members = entityScopeMemberNamesOf(templates);
+  for (const member of ["Create", "CreatedAt", "CreatedBy", "ModifiedAt", "ModifiedBy", "Name", "NameMaxLength", "Field", "NotFound", "Configure", "HandleAsync", "Id"]) {
+    assert.ok(members.includes(member), member);
+  }
+
+  assert.equal(members.includes("LedgerNote"), false);
+  assert.equal(members.some((member) => member.includes("__")), false);
 });
 
 test("an entity, domain, module or plural the compiler would misread is refused, naming the type it meets, and a plain name is not", () => {
@@ -73,7 +79,8 @@ test("an entity, domain, module or plural the compiler would misread is refused,
   assert.match(problemsOf({ ...valid, entity: "Environment", entities: "Environments" }), /the entity "Environment" is also the type System\.Environment/);
   assert.match(problemsOf({ ...valid, entity: "Record", entities: "Records" }), /the entity "Record" is also the type Xunit\.Record/);
   assert.match(problemsOf({ ...valid, entity: "PageRequest", entities: "PageRequests" }), /the entity "PageRequest" is also the type Dewiride\.Erp\.BuildingBlocks\.Application\.Queries\.Paging\.PageRequest/);
-  assert.match(problemsOf({ ...valid, entity: "Name", entities: "Names" }), /the entity "Name" would be a class declaring a member of its own name/);
+  assert.match(problemsOf({ ...valid, entity: "Name", entities: "Names" }), /the entity "Name" is also a member of a generated type that names the entity/);
+  assert.match(problemsOf({ ...valid, entity: "Field", entities: "Fields" }), /the entity "Field" is also a member of a generated type that names the entity/);
   assert.match(problemsOf({ ...valid, domain: "Environment" }), /the domain "Environment" makes the namespace Dewiride\.Erp\.Modules\.Environment, which hides the type System\.Environment/);
   assert.match(problemsOf({ ...valid, module: "Lock" }), /the module "Lock" makes the namespace Dewiride\.Erp\.Modules\.ScaffoldProof\.Lock, which hides the type System\.Threading\.Lock/);
   assert.match(problemsOf({ ...valid, entities: "Path" }), /the entities "Path" makes the namespace Dewiride\.Erp\.Modules\.ScaffoldProof\.Jobs\.Path, which hides the type System\.IO\.Path/);

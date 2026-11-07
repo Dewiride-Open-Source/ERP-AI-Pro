@@ -70,6 +70,9 @@ test("a domain or module holding Tests, the layer folder Hosting and prose holdi
   assert.match(problemsOf({ ...valid, module: "SkillTests" }), /the module "SkillTests" contains Tests/);
   assert.match(problemsOf({ ...valid, domain: "LabTests" }), /the domain "LabTests" contains Tests/);
   assert.match(problemsOf({ ...valid, module: "Hosting" }), /the module "Hosting" would shadow/);
+  assert.match(problemsOf({ ...valid, module: "Migrations" }), /the module "Migrations" names a folder that git or the repository checks treat as generated/);
+  assert.match(problemsOf({ ...valid, domain: "Bin" }), /the domain "Bin" names a folder/);
+  assert.match(problemsOf({ ...valid, entity: "Migration", entities: "Migrations" }), /the entities "Migrations" names a folder/);
   assert.match(problemsOf({ ...valid, entity: "LegacyVoucher", entities: "LegacyVouchers" }), /the singular "legacy voucher" holds words the comment policy refuses/);
   assert.match(problemsOf({ ...valid, plural: "deprecated notes" }), /the plural "deprecated notes" holds words the comment policy refuses/);
   assert.deepEqual(nameProblems({ ...valid, entity: "Contest", entities: "Contests" }), []);

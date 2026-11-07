@@ -108,6 +108,7 @@ export async function registeredNavigationEntries(page: Page): Promise<Navigatio
 
 export async function expectDestinationPage(page: Page): Promise<void> {
   const main = page.getByRole("main");
+  await expect(page.getByRole("status", { name: /^Loading/ })).toHaveCount(0);
   await expect(main.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(main.getByRole("heading", { name: "This page does not exist" })).toHaveCount(0);
   await expect(main.getByRole("heading", { name: "You do not have access to this page" })).toHaveCount(0);

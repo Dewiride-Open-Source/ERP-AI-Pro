@@ -4,7 +4,7 @@ import { dirname, join, posix, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { ChangeSet } from "./change-set.ts";
-import { collisionProblems, domainStateOf } from "./collisions.ts";
+import { collisionProblems, domainStateOf, textCollisionProblems } from "./collisions.ts";
 import { completionProblems } from "./completion.ts";
 import { isPascalName, nameProblems, type ScaffoldInput, wellFormed } from "./names.ts";
 import { domainFilter, registerFilterInReadme, registerInComposition, registerInDomainFilter, registerInModulesAll, registerInSolution } from "./registrations/backend.ts";
@@ -49,16 +49,17 @@ const registrationTargets = [paths.modulesAll, paths.composition, paths.solution
 export function planModule(root: string, input: ScaffoldInput, options: PlanOptions): Plan {
   const changes = new ChangeSet(root);
   const templates = options.templates ?? defaultTemplates;
-  const named = nameProblems(input);
+  const named = [...nameProblems(input), ...typeNameProblems(root, input, templates)];
   const environment = options.filesOnly ? [] : completionProblems(root, options.environment, options.dotnetVersion);
   if (!wellFormed(input)) {
     const domainProblems = isPascalName(input.domain) ? domainStateOf(root, input).problems : [];
-    return { module: undefined, changes, problems: [...named, ...domainProblems, ...uncommittedProblems(root, [...registrationTargets, ...completionOutputs]), ...environment], createdRoots: [] };
+    const problems = [...named, ...domainProblems, ...textCollisionProblems(root, input), ...uncommittedProblems(root, [...registrationTargets, ...completionOutputs]), ...environment];
+    return { module: undefined, changes, problems, createdRoots: [] };
   }
 
   const domain = domainStateOf(root, input);
   const module = describeModule(input, domain);
-  const problems = [...named, ...typeNameProblems(root, input, templates), ...domain.problems, ...collisionProblems(root, module)];
+  const problems = [...named, ...domain.problems, ...collisionProblems(root, module)];
   for (const { template, output, newDomainOnly } of templateRoots) {
     if (newDomainOnly && !module.newDomain) continue;
     try {
@@ -124,6 +125,7 @@ export function ignoredProblems(root: string, paths: readonly string[]): string[
   const fields = check.stdout.split("\0");
   const ignored = new Map<string, string[]>();
   for (let index = 0; index + 3 < fields.length; index += 4) {
+    if ((fields[index + 2] as string).startsWith("!")) continue;
     const rule = `${fields[index + 2] as string} (${fields[index] as string}:${fields[index + 1] as string})`;
     ignored.set(rule, [...(ignored.get(rule) ?? []), fields[index + 3] as string]);
   }

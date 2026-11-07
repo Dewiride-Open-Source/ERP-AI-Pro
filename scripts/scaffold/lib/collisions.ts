@@ -33,7 +33,24 @@ export function domainStateOf(root: string, input: ScaffoldInput): DomainState {
 }
 
 export function collisionProblems(root: string, module: ScaffoldModule): string[] {
-  return [...folderProblems(root, module), ...backendProblems(root, module), ...contractProblems(root, module), ...webProblems(root, module)];
+  return [...folderProblems(root, module), ...backendProblems(root, module), ...contractProblems(root, module), ...webProblems(root, module), ...textCollisionProblems(root, module.input)];
+}
+
+export function textCollisionProblems(root: string, input: ScaffoldInput): string[] {
+  const problems: string[] = [];
+  const sentences = [input.readSentence, input.createSentence];
+  if (sameText(input.readSentence, input.createSentence)) problems.push("the read and create permissions are described by the same sentence");
+  for (const permission of permissionsOf(productSources(root))) {
+    for (const sentence of sentences) if (sameText(permission.description, sentence)) problems.push(`the permission ${permission.name} already says "${permission.description}"`);
+  }
+
+  for (const title of shellTitlesOf(root)) if (sameText(title, input.title)) problems.push(`the navigation title "${input.title}" is the shell's own ${title} link`);
+  for (const manifest of navigationOf(root).manifests) if (sameText(manifest.title, input.title)) problems.push(`the navigation title "${manifest.title}" is already used (${manifest.file})`);
+
+  const icons = iconExportsOf(root);
+  if (icons === undefined) problems.push(`${paths.lucide} is missing, so the icon cannot be checked; run pnpm install in frontend first`);
+  else if (!icons.has(input.icon)) problems.push(`lucide-react exports no icon named ${input.icon}`);
+  return problems;
 }
 
 function folderProblems(root: string, module: ScaffoldModule): string[] {
@@ -59,12 +76,6 @@ function backendProblems(root: string, module: ScaffoldModule): string[] {
   for (const { schema, file } of schemasOf(sources)) if (sameText(schema, module.schema)) problems.push(`the schema ${module.schema} is already used (${file})`);
   for (const { prefix, file } of routePrefixesOf(sources)) if (sameText(prefix, module.routePrefix)) problems.push(`the route prefix ${module.routePrefix} is already used (${file})`);
   for (const { flag, file } of featureFlagsOf(sources)) if (sameText(flag, module.featureFlag)) problems.push(`the feature flag ${module.featureFlag} is already declared (${file})`);
-  const sentences = [module.input.readSentence, module.input.createSentence];
-  if (sameText(module.input.readSentence, module.input.createSentence)) problems.push("the read and create permissions are described by the same sentence");
-  for (const permission of permissionsOf(sources)) {
-    for (const sentence of sentences) if (sameText(permission.description, sentence)) problems.push(`the permission ${permission.name} already says "${permission.description}"`);
-  }
-
   try {
     const taken = discoverContexts(join(root, "backend")).find((context) => context.key === module.contextKey);
     if (taken !== undefined) problems.push(`the migration key ${module.contextKey} already belongs to ${taken.contextName} (${taken.project})`);
@@ -101,9 +112,7 @@ function contractProblems(root: string, module: ScaffoldModule): string[] {
 function webProblems(root: string, module: ScaffoldModule): string[] {
   const problems: string[] = [];
   const { manifests, areas } = navigationOf(root);
-  for (const title of shellTitlesOf(root)) if (sameText(title, module.input.title)) problems.push(`the navigation title "${module.input.title}" is the shell's own ${title} link`);
   for (const manifest of manifests) {
-    if (sameText(manifest.title, module.input.title)) problems.push(`the navigation title "${manifest.title}" is already used (${manifest.file})`);
     if (manifest.id === module.navigationId) problems.push(`the navigation id ${manifest.id} is already used (${manifest.file})`);
     if (manifest.name === module.navigationExport) problems.push(`the navigation export ${manifest.name} already exists (${manifest.file}), and the registry imports every one by name`);
   }
@@ -115,8 +124,5 @@ function webProblems(root: string, module: ScaffoldModule): string[] {
     }
   }
 
-  const icons = iconExportsOf(root);
-  if (icons === undefined) problems.push(`${paths.lucide} is missing, so the icon cannot be checked; run pnpm install in frontend first`);
-  else if (!icons.has(module.input.icon)) problems.push(`lucide-react exports no icon named ${module.input.icon}`);
   return problems;
 }
