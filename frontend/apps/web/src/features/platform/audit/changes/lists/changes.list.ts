@@ -9,6 +9,7 @@ export const changeKeys = [
   "identity.users.departments",
   "identity.users.designations",
   "identity.users.positions",
+  "identity.users.themes",
   "platform.attachments.files",
 ] as const;
 
