@@ -683,6 +683,7 @@ Id `business-building-blocks` · Milestone: M4 Master data live · Edition: Mixe
 - [ ] **P08.6** Statutory datasets: direct tax and labour (`business-building-blocks-statutory-datasets-direct-tax-and-labour`) <a id="business-building-blocks-statutory-datasets-direct-tax-and-labour"></a>
   Seed and golden-test TDS sections with the ITA-1961 to ITA-2025 crosswalk, rates, per-FY thresholds, no/inoperative-PAN and 206AB non-filer rates, company income-tax rates and surcharge, advance-tax schedule, professional-tax State slabs, PF/ESI ceilings and rates (including the pending PF ceiling revision), LWF, gratuity and bonus parameters, and Companies Act Schedule II useful lives with income-tax block rates.
   - Edition: Community (confirmed 2026-11-01)
+  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): each dataset is a seed file under ParameterSets/Persistence/Statutory/<area>/ with a typed Contracts record and its boundary and golden-value tests; the cell kinds are text, code, integer, percent, amount (whole rupees), choice and stateCode with one key column, so a day and month, a date, amounts in paise and composite keys come with this item, and a set of thousands of rows needs paging in the API.
 - [ ] **P08.7** Document numbering series (`business-building-blocks-document-numbering-series`) <a id="business-building-blocks-document-numbering-series"></a>
   Provide configurable number series per document type and financial year (max 16 characters, unique per FY, prefix and reset rules) with gap-free concurrent allocation proven by a parallel integration test.
   - Edition: Community (confirmed 2026-11-01)
@@ -841,15 +842,18 @@ Id `finance-core` · Milestone: M6 Finance live · Edition: Mixed · Status: pla
 - [ ] **P12.5** GST tax engine (`finance-core-gst-tax-engine`) <a id="finance-core-gst-tax-engine"></a>
   Implement Finance/Core/Tax determining place of supply (Section 12 intra/inter-State, Section 13 export and SEZ zero-rated with LUT), splitting CGST/SGST/IGST with rounding, applying RCM and exemption flags, resolving rates by date from the statutory store and computing tax on advances, with fixture-driven golden tests reused by sales, expenses and procurement.
   - Edition: Community (recommended)
+  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): rates come from CentralTaxRates, IntegratedTaxRates and UnionTerritoryTaxRates of IStatutoryParameters for the date of supply, and a SAC code's default entry from SacRateEntries, the ERP's reading; entries 21(ia) and 38 apply by what a supply is, not by its code, and section 14 (a change of rate) is this item's. Not seeded: compensation cess (Nil on these services, 2/2017-Compensation Cess (Rate) S.No. 3), the exemptions of 12/2017-Central Tax (Rate) and the reverse charge of 13/2017-Central Tax (Rate), exports (zero-rated under section 16 of the IGST Act), entry 39 and the notifications' Explanations (the print media definition of 3/2022 narrows 21(i) from 18 July 2022).
 - [ ] **P12.6** Company profile (`finance-core-company-profile`) <a id="finance-core-company-profile"></a>
   Model the legal entity (legal name, CIN, PAN, TAN, GSTINs per State, LUT number per FY, IEC, Udyam, PF/ESI/PT registrations, registered address, signatory, logo, bank-account references) with multi-GSTIN readiness, identifier format validation and admin API.
   - Edition: Community (recommended)
+  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): each State's SGST rate entries come from that State's own notification, because each tax is levied by its own notification, and become a parameter set for every State in which the company holds a GSTIN, beside the CGST, IGST and UTGST sets the store already holds; none is seeded yet.
 - [ ] **P12.7** Financial reports (`finance-core-financial-reports`) <a id="finance-core-financial-reports"></a>
   Deliver trial balance, P&L, balance sheet (Schedule III layout) and GL detail reports with period filters and Excel/CSV export, with fixture-based tests.
   - Edition: Community (recommended)
 - [ ] **P12.8** Web: finance admin (`finance-core-web-finance-admin`) <a id="finance-core-web-finance-admin"></a>
   Build screens for accounts, journals and posting, periods and close checklist, statutory parameter sets, company profile and the four reports, covered by Playwright on desktop and mobile with screenshots.
   - Edition: Community (recommended)
+  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): the statutory parameter sets screen exists at /compliance/statutory-parameters/parameter-sets; this item links to it rather than building another.
 - [ ] **P12.9** AI: ledger assistant (`finance-core-ai-ledger-assistant`) <a id="finance-core-ai-ledger-assistant"></a>
   Add Finance/Core/Ai translating natural-language questions into safe parameterised report definitions with a preview step and flagging unusual journal entries with explanations.
   - Edition: Enterprise (recommended)
@@ -864,6 +868,7 @@ Id `finance-sales` · Milestone: M6 Finance live · Edition: Mixed · Status: pl
 - [ ] **P13.1** Invoice aggregate and lifecycle (`finance-sales-invoice-aggregate-and-lifecycle`) <a id="finance-sales-invoice-aggregate-and-lifecycle"></a>
   Create backend/Modules/Finance/Sales/Invoicing in schema `sales` with the Rule 46 field set, client snapshot, line items (SAC, quantity, unit, taxable value, discount), tax computed by `finance-core-gst-tax-engine`, RCM flag, export endorsement text and LUT reference, foreign currency with INR conversion, a draft/issued/paid/cancelled state machine, numbering via `business-building-blocks-document-numbering-series` and the Rule 47 30-day issuance warning, all covered by golden tax-computation tests.
   - Edition: Community (recommended)
+  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): SacCodes of IStatutoryParameters lists the SAC codes for a picker; the HSN digits an invoice must carry by turnover (78/2020-Central Tax, from 1 April 2021) are not seeded.
 - [ ] **P13.2** Invoice PDF rendering (`finance-sales-invoice-pdf-rendering`) <a id="finance-sales-invoice-pdf-rendering"></a>
   Render invoices as PDF in the Rule 46 layout with branding, export endorsement and a QR placeholder through a Finance/Sales/Documents service, with snapshot tests of rendered output (consolidated by `documents-generated-documents-service` later).
   - Edition: Community (recommended)
@@ -1055,6 +1060,7 @@ Id `compliance` · Milestone: M7 Payroll and compliance live · Edition: Mixed �
 - [ ] **P18.1** Compliance calendar engine (`compliance-compliance-calendar-engine`) <a id="compliance-compliance-calendar-engine"></a>
   Create backend/Modules/Compliance/Calendar in schema `compliance` with rule-driven obligations keyed to the financial year (monthly, quarterly, half-yearly, annual, State-specific), owner assignment, reminders and escalation via `business-building-blocks-background-jobs-and-scheduling` and `business-building-blocks-minimal-transactional-email-sender`, evidence attachments (challan/ARN/SRN), completion audit and weekend/holiday adjustment, seeded from a tested JSON rule set.
   - Edition: Community (recommended)
+  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): the standing GST return due dates for tax periods from January 2021 are the parameter set gst.return-due-dates (GstReturnDueDates: the due day and the months after the period's last month, IFF's opening day, the instrument's words), answered by IStatutoryParameters for the first day of a tax period; the quarterly GSTR-3B day follows a registration's State through gst.quarterly-return-states, which holds no row for 26 (the rule names its two former Union Territories) or 97 (Other Territory); the turnover limits are gst.return-thresholds. Not seeded, so this item researches them from the notifications: the GSTR-9 exemption of every year (15/2025-Central Tax, which carries it from 2024-25, was read only in a GST Council newsletter; owner decision of 2026-11-07), one-off extensions as overrides by return, filer type, period and scope (national, State codes and districts; 09, 26, 29 and 30/2024 and 01 and 02/2025 were read in full, 12 and 17/2025 and 01/2026 only in newsletters), the three-year bar of sections 37(5), 39(11) and 44(2) from 1 October 2023, weekends and holidays, and every Central Tax notification after 22 April 2026.
 - [ ] **P18.2** GST filing packs (`compliance-gst-filing-packs`) <a id="compliance-gst-filing-packs"></a>
   Produce GSTR-1/IFF and GSTR-3B computations (outward, RCM 3.1(d), ITC 4, set-off order) for monthly and QRMP modes, GSTR-9/9C threshold checks, LUT renewal reminders, amendment cut-off tracking and an RFD-01 export refund data pack, exported as offline-tool JSON and reconciled against filed figures.
   - Edition: Enterprise (recommended)
@@ -1085,6 +1091,7 @@ Id `compliance` · Milestone: M7 Payroll and compliance live · Edition: Mixed �
   Add Compliance/Ai for deadline-risk scoring, a 'what changed' digest generated from statutory parameter-set diffs and draft board-resolution text from templates.
   - Edition: Enterprise (recommended)
   - Tags: ai
+  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): IStatutoryParameterHistory of the Compliance/StatutoryParameters Contracts answers each set's versions with their instruments and the rows each added, changed and removed.
 
 ## P19 — Timesheets <a id="phase-timesheets"></a>
 
