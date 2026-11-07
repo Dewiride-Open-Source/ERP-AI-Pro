@@ -78,13 +78,17 @@ jobs:
       - name: Set up frontend for the scaffolder proof
         if: github.event_name != 'pull_request'
         uses: ./.github/actions/setup-frontend
+      - name: Install Firefox for the scaffolder proof's specs
+        if: github.event_name != 'pull_request'
+        working-directory: frontend/e2e
+        run: pnpm exec playwright install --with-deps firefox
       - name: Prove the module scaffolder
         id: scaffold-proof
         if: github.event_name != 'pull_request'
         env:
           ERP_TEST_SQL_CONNECTION: ${{ steps.sql.outputs.server-connection-string }}
           ERP_TEST_BLOB_EMULATOR_HOST: ${{ steps.azurite.outputs.emulator-host }}
-        run: node scripts/scaffold/prove.ts --in-place
+        run: node scripts/scaffold/prove.ts --in-place --e2e --project=firefox
       - name: Upload the scaffolder proof's results
         if: always() && (steps.scaffold-proof.outcome == 'failure' || steps.scaffold-proof.outcome == 'cancelled')
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -98,5 +102,7 @@ jobs:
             frontend/apps/web/src/app/(app)/scaffold-proof/
             frontend/e2e/pages/scaffold-proof/
             frontend/e2e/tests/scaffold-proof/
+            frontend/e2e/test-results/
+            frontend/e2e/blob-report/
           retention-days: 14
           if-no-files-found: warn
