@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { fileURLToPath } from "node:url";
@@ -118,16 +118,20 @@ try {
 
   for (const step of steps) if (!run(step)) break;
 } finally {
-  if (!values["in-place"] && existsSync(worktree)) {
-    spawnSync("dotnet", ["build-server", "shutdown"], { cwd: join(worktree, "backend"), stdio: "ignore" });
-    const removed = spawnSync("git", ["worktree", "remove", "--force", worktree], { cwd: repoRoot, stdio: "inherit" });
-    if (removed.status !== 0) console.error(`✖ remove the proof worktree with: git worktree remove --force "${worktree}"`);
-  }
+  if (!values["in-place"] && existsSync(worktree)) removeWorktree();
 }
 
 console.log("\nSummary");
 for (const result of results) console.log(`  ${result.ok ? "✔" : "✖"} ${result.name.padEnd(34)} ${result.seconds.toFixed(1)}s`);
 process.exit(results.every((result) => result.ok) ? 0 : 1);
+
+function removeWorktree(): void {
+  spawnSync("dotnet", ["build-server", "shutdown"], { cwd: join(worktree, "backend"), stdio: "ignore" });
+  spawnSync("git", ["worktree", "remove", "--force", worktree], { cwd: repoRoot, stdio: "ignore" });
+  if (existsSync(worktree)) rmSync(worktree, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 });
+  spawnSync("git", ["worktree", "prune"], { cwd: repoRoot, stdio: "ignore" });
+  if (existsSync(worktree)) console.error(`✖ remove the proof worktree with: git worktree remove --force "${worktree}"`);
+}
 
 function run(step: Step): boolean {
   console.log(`\n▶ ${step.name}`);
