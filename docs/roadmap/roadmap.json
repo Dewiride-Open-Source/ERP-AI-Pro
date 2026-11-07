@@ -1390,7 +1390,7 @@
           "id": "business-building-blocks-module-and-feature-scaffolders",
           "title": "Module and feature scaffolders",
           "scope": "Create a `dotnet new erp-module` template package (templates/erp-module) generating Domain/Application/Infrastructure/Endpoints/Ai folders, DbContext with schema and migrations factory, IModule registration and matching test projects under backend/Modules/<Domain>/<Feature>/, and a `pnpm scaffold:feature` script generating frontend/apps/web/src/features/<domain>/<feature>/ with route, list/detail pages and an e2e spec, both derived from the `user-management` reference module and verified by architecture tests on generated output.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [
@@ -1402,7 +1402,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-11-07",
-          "notes": "Edition split (ADR-0030): the Community templates generate no Ai or web ai folder; the template for an Enterprise companion module (<Domain>/<Module>Ai) belongs to the private repository. Owner decision of 2026-11-06: the backend generator is a zero-dependency Node script in scripts/ that also registers the module everywhere it must be listed, not a dotnet new template package; the scope wording that names dotnet new and templates/erp-module is superseded, and the generated module follows the current four-project anatomy."
+          "completedOn": "2026-11-07",
+          "notes": "Edition split (ADR-0030): the Community templates generate no Ai or web ai folder; the template for an Enterprise companion module (<Domain>/<Module>Ai) belongs to the private repository. Owner decision of 2026-11-06: the backend generator is a zero-dependency Node script in scripts/ that also registers the module everywhere it must be listed, not a dotnet new template package; the scope wording that names dotnet new and templates/erp-module is superseded, and the generated module follows the current four-project anatomy. Done, pushed as 7f6f357..a55fec3 with main's checks green on 23b217e and a55fec3: `node scripts/scaffold/new-module.ts` writes a Community module (four projects, a list, record and add slice with its first migration, the web pages behind the module flag, page objects and specs) and registers it in `Modules.All` through the `ErpModules` alias, the composition project, the solution and its domain filter, the host lock files, the flag seed, `docs/configuration.md`, `docs/routing.md`, the web registry, the e2e navigation list, the audit trail's keys and labels, the OpenAPI contract and the client; it refuses malformed, reserved and misreadable names (the .NET type names of `scripts/scaffold/lib/dotnet-type-names.json`, written by `scripts/scaffold/type-names.ts`, and the building blocks' own types), clashes, paths git ignores, uncommitted targets and missing anchors, and `registrationAudit` checks every module's registrations. `scripts/scaffold/prove.ts` proves it in a worktree; ci-backend runs it in place on every push to `main` with the generated specs on Firefox (owner decision of 2026-11-07), and they passed locally on the other five projects (ADR-0061)."
         },
         {
           "id": "business-building-blocks-reference-data-module",
