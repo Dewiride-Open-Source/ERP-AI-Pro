@@ -1409,7 +1409,7 @@
           "id": "business-building-blocks-reference-data-module",
           "title": "Reference data module",
           "scope": "Create backend/Modules/ReferenceData with countries, Indian States and UTs with GST State codes, currencies, a dated exchange-rate table with manual entry and file import, fiscal-year and period services (April to March), seed migrations, cached read endpoints and reusable UI pickers, with tests.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [
@@ -1421,7 +1421,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-11-07",
-          "notes": "From backend-platform-migration-tooling-and-seeding (ADR-0021): reference rows (countries, states and UTs, currencies) are seeded by ISeeder classes registered with services.AddSeeder<TSeeder>(order) in the module AddServices, never by seed migrations; each seeder inserts what is missing by natural key and ships a run-twice test (the SeedingTests pattern), and the migrator and the test database host run it after every migration."
+          "completedOn": "2026-11-07",
+          "notes": "Platform/ReferenceData exists (ADR-0062): CountrySeeder and IndianStateSeeder keep the 250 countries of the GST e-invoice master and the dated GST State codes 01 to 27, 29 to 38 and 97 equal to their embedded files; the currencies are the kernel's 155 ISO 4217 currencies (Iso4217Currencies), not seeded rows; financial years carry their quarters and monthly periods (FinancialPeriod); Finance records, imports from the ERP's CSV template, corrects and removes exchange rates; ICountries, IIndianStates and IExchangeRates.RateOnAsync answer other modules, and ReferenceListsProvider with CountryPicker, IndianStatePicker, CurrencyPicker, FinancialYearPicker and FinancialPeriodPicker serves web forms. Owner-verified on 2026-11-07; main green at 783bff8, the full Playwright matrix included."
         },
         {
           "id": "business-building-blocks-statutory-parameter-store-and-gst-datasets",
