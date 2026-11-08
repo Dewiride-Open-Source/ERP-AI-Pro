@@ -2039,7 +2039,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): SacCodes of IStatutoryParameters lists the SAC codes for a picker; the HSN digits an invoice must carry by turnover (78/2020-Central Tax, from 1 April 2021) are not seeded."
+          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): SacCodes of IStatutoryParameters lists the SAC codes for a picker; the HSN digits an invoice must carry by turnover (78/2020-Central Tax, from 1 April 2021) are not seeded. From business-building-blocks-document-numbering-series (ADR-0066): the module declares each kind of document it numbers with services.AddNumberedDocument(new NumberedDocument(key, title, description, clause)) (the tax invoice under clause 46(b) of gst.document-serial-numbers, a bill of supply 49(b), a revised tax invoice 53(1)(d)), maps NumberSeries and NumberSeriesYears in its context (left out of its migrations) and calls IDocumentNumbers.NextAsync(context, key, issueDate) last in the issuing command, keeping DocumentNumber's Text, Year and Sequence on the invoice; Finance or an administrator sets each kind's numbering up on /platform/numbering, and a kind not set up answers 422 numbering.not-set-up."
         },
         {
           "id": "finance-sales-invoice-pdf-rendering",
@@ -2059,7 +2059,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-document-numbering-series (ADR-0066): credit and debit notes are a kind of document of their own under clause 53(1A)(c) of gst.document-serial-numbers, numbered through IDocumentNumbers.NextAsync in the issuing command's unit of work, so their numbering is separate from the invoices'."
         },
         {
           "id": "finance-sales-advances-and-receipt-vouchers",
@@ -2100,7 +2101,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-document-numbering-series (ADR-0066): each numbered document keeps its number's Text, Year and Sequence, and each kind's numbering keeps per financial year its format and its first and next running number (NumberSeriesYearDetails), from which Table 13's serial numbers from and to are read."
         },
         {
           "id": "finance-sales-e-invoicing-adapter",

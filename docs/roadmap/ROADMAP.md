@@ -895,13 +895,14 @@ Id `finance-sales` · Milestone: M6 Finance live · Edition: Mixed · Status: pl
 - [ ] **P13.1** Invoice aggregate and lifecycle (`finance-sales-invoice-aggregate-and-lifecycle`) <a id="finance-sales-invoice-aggregate-and-lifecycle"></a>
   Create backend/Modules/Finance/Sales/Invoicing in schema `sales` with the Rule 46 field set, client snapshot, line items (SAC, quantity, unit, taxable value, discount), tax computed by `finance-core-gst-tax-engine`, RCM flag, export endorsement text and LUT reference, foreign currency with INR conversion, a draft/issued/paid/cancelled state machine, numbering via `business-building-blocks-document-numbering-series` and the Rule 47 30-day issuance warning, all covered by golden tax-computation tests.
   - Edition: Community (recommended)
-  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): SacCodes of IStatutoryParameters lists the SAC codes for a picker; the HSN digits an invoice must carry by turnover (78/2020-Central Tax, from 1 April 2021) are not seeded.
+  - Note: From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): SacCodes of IStatutoryParameters lists the SAC codes for a picker; the HSN digits an invoice must carry by turnover (78/2020-Central Tax, from 1 April 2021) are not seeded. From business-building-blocks-document-numbering-series (ADR-0066): the module declares each kind of document it numbers with services.AddNumberedDocument(new NumberedDocument(key, title, description, clause)) (the tax invoice under clause 46(b) of gst.document-serial-numbers, a bill of supply 49(b), a revised tax invoice 53(1)(d)), maps NumberSeries and NumberSeriesYears in its context (left out of its migrations) and calls IDocumentNumbers.NextAsync(context, key, issueDate) last in the issuing command, keeping DocumentNumber's Text, Year and Sequence on the invoice; Finance or an administrator sets each kind's numbering up on /platform/numbering, and a kind not set up answers 422 numbering.not-set-up.
 - [ ] **P13.2** Invoice PDF rendering (`finance-sales-invoice-pdf-rendering`) <a id="finance-sales-invoice-pdf-rendering"></a>
   Render invoices as PDF in the Rule 46 layout with branding, export endorsement and a QR placeholder through a Finance/Sales/Documents service, with snapshot tests of rendered output (consolidated by `documents-generated-documents-service` later).
   - Edition: Community (recommended)
 - [ ] **P13.3** Credit and debit notes (`finance-sales-credit-and-debit-notes`) <a id="finance-sales-credit-and-debit-notes"></a>
   Implement notes linked to one or more original invoices with reason codes, partial amounts, tax recomputation, a separate numbering series and 30-November cut-off warnings for the previous financial year, with tests.
   - Edition: Community (recommended)
+  - Note: From business-building-blocks-document-numbering-series (ADR-0066): credit and debit notes are a kind of document of their own under clause 53(1A)(c) of gst.document-serial-numbers, numbered through IDocumentNumbers.NextAsync in the issuing command's unit of work, so their numbering is separate from the invoices'.
 - [ ] **P13.4** Advances and receipt vouchers (`finance-sales-advances-and-receipt-vouchers`) <a id="finance-sales-advances-and-receipt-vouchers"></a>
   Record advances received against engagements with GST receipt vouchers and tax on advance where applicable, refund vouchers, and automatic adjustment of the advance and its tax on the subsequent invoice, with golden tests.
   - Edition: Community (recommended)
@@ -915,6 +916,7 @@ Id `finance-sales` · Milestone: M6 Finance live · Edition: Mixed · Status: pl
 - [ ] **P13.7** GSTR-1 extracts (`finance-sales-gstr-1-extracts`) <a id="finance-sales-gstr-1-extracts"></a>
   Generate GSTR-1 tables (B2B 4A, B2CL/B2CS, EXP 6A, CDNR 9B, HSN 12, document summary 13) for monthly or quarterly periods as JSON/Excel matching the GST offline tool, with fixture-based tests.
   - Edition: Community (recommended)
+  - Note: From business-building-blocks-document-numbering-series (ADR-0066): each numbered document keeps its number's Text, Year and Sequence, and each kind's numbering keeps per financial year its format and its first and next running number (NumberSeriesYearDetails), from which Table 13's serial numbers from and to are read.
 - [ ] **P13.8** E-invoicing adapter (`finance-sales-e-invoicing-adapter`) <a id="finance-sales-e-invoicing-adapter"></a>
   Model the IRP e-invoice schema payload, IRN and signed QR storage and printing, and a sandbox client abstraction behind an AATO-driven feature flag, with contract tests that need no live credentials.
   - Edition: Enterprise (recommended)
