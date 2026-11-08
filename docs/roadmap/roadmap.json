@@ -1454,7 +1454,19 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): each dataset is a seed file under ParameterSets/Persistence/Statutory/<area>/ with a typed Contracts record and its boundary and golden-value tests; the cell kinds are text, code, integer, percent, amount (whole rupees), choice and stateCode with one key column, so a day and month, a date, amounts in paise and composite keys come with this item, and a set of thousands of rows needs paging in the API."
+          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): each dataset is a seed file under ParameterSets/Persistence/Statutory/<area>/ with a typed Contracts record and its boundary and golden-value tests; the cell kinds are text, code, integer, percent, amount (whole rupees), choice and stateCode with one key column, so a day and month, a date, amounts in paise and composite keys come with this item, and a set of thousands of rows needs paging in the API. Owner decisions of 2026-11-08: every dataset starts with the law in force on 1 April 2026, the first tax year of the Income-tax Act, 2025, and the Income-tax Act, 1961 appears only as the crosswalk's provisions; PF, ESI, professional tax, the labour welfare fund, gratuity and bonus belong to business-building-blocks-statutory-datasets-labour."
+        },
+        {
+          "id": "business-building-blocks-statutory-datasets-labour",
+          "title": "Statutory datasets: labour",
+          "scope": "Seed and golden-test, from the law in force on 1 April 2026, the provident fund (EPF, EPS and EDLI) and ESI contributions, wage ceilings and rates under the Code on Social Security, 2020 with its schemes and rules, the Codes' wage definition, professional-tax State slabs and exemptions, labour welfare fund contributions by State, and gratuity and bonus parameters under the Code on Social Security, 2020 and the Code on Wages, 2019.",
+          "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-11-08",
+          "acceptance": [],
+          "tags": [],
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): each dataset is a seed file under ParameterSets/Persistence/Statutory/<area>/ with a typed Contracts record and its boundary and golden-value tests. Split from business-building-blocks-statutory-datasets-direct-tax-and-labour by the owner's decisions of 2026-11-08, which also start every dataset with the law in force on 1 April 2026."
         },
         {
           "id": "business-building-blocks-document-numbering-series",
