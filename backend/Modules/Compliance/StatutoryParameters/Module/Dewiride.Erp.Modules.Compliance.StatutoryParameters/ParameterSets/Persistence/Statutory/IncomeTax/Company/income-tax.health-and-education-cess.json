@@ -1,7 +1,7 @@
 {
   "key": "income-tax.health-and-education-cess",
   "title": "Health and Education Cess on income-tax",
-  "description": "The additional surcharge called the Health and Education Cess on income-tax, levied for tax years from 2026-27 at a rate of the income-tax and its surcharge, in the words of section 3 of the Finance Act, 2026: on the tax charged for the tax year (section 3(15)) and on the advance tax, whose cess section 3(16) levies with the exception of section 3(17)(ii). The cess on tax deducted at source is held with the deduction's surcharge in the set income-tax.tds-surcharge-and-cess, which answers for the date of the deduction. The cess is the Finance Act's for the tax year 2026-27 alone, so every row ends on 31 March 2027. The tax period is the tax year, and the set answers for its first day.",
+  "description": "The additional surcharge called the Health and Education Cess on income-tax, levied for tax years from 2026-27 at a rate of the income-tax and its surcharge, in the words of section 3 of the Finance Act, 2026: on the tax charged for the tax year (section 3(15)), and, by section 3(16), on the tax charged at the rates of sections 69, 170(5) and 352 with the surcharge of section 3(6) and on the advance tax, the latter with the exception of section 3(17)(ii). The cess on tax deducted at source is held with the deduction's surcharge in the set income-tax.tds-surcharge-and-cess, which answers for the date of the deduction. The cess is the Finance Act's for the tax year 2026-27 alone, so every row ends on 31 March 2027. The tax period is the tax year, and the set answers for its first day.",
   "basis": "law",
   "asOf": "taxPeriodStart",
   "columns": [
@@ -54,6 +54,17 @@
         "name": "Income-tax charged for the tax year, with its surcharge",
         "rate": 4,
         "wording": "(15) The amount of income-tax as specified in sub-sections (1) to (5) and as increased by the applicable surcharge, for the purposes of the Union, calculated in the manner provided therein, shall be further increased by an additional surcharge, for the purposes of the Union, to be called the “Health and Education Cess on income-tax”, calculated at the rate of 4% of such income-tax and surcharge so as to fulfil the commitment of the Government to provide and finance quality health services and universalised quality basic education and secondary and higher education."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(16), as it applies to the income-tax of section 3(6)",
+      "cells": {
+        "cess": "section-rates",
+        "name": "Income-tax charged at the rates of section 69, 170(5) or 352, with its surcharge",
+        "rate": 4,
+        "wording": "(16) The amount of income-tax as specified in sub-sections (6) to (14) and as increased by the applicable surcharge, for the purposes of the Union, calculated in the manner provided therein, shall be further increased by an additional surcharge, for the purposes of the Union, to be called the “Health and Education Cess on income-tax”, calculated at the rate of 4% of such income-tax and surcharge so as to fulfil the commitment of the Government to provide and finance quality health services and universalised quality basic education and secondary and higher education."
       }
     },
     {

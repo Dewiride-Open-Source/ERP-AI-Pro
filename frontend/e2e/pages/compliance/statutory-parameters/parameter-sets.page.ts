@@ -111,6 +111,52 @@ export function setRow(set: ParameterSetSummary): ShownRow {
   };
 }
 
+const setHeadings = ["Set", "Kind", "In force today", "Next change", "Entries in force today"] as const;
+
+function setLinkSnapshot(set: ParameterSetSummary, indent: string): string[] {
+  return [
+    `${indent}- ${yamlKey(`link ${quoted(set.title)}`)}:`,
+    `${indent}  - /url: ${parameterSetPath(set.key)}`,
+  ];
+}
+
+export function setRowsSnapshot(sets: readonly ParameterSetSummary[], cards: boolean): string {
+  const [, ...detailHeadings] = setHeadings;
+  if (cards) {
+    return [
+      `- list "Parameter sets":`,
+      ...sets.flatMap((set) => {
+        const row = setRow(set);
+        return [
+          "  - listitem:",
+          "    - paragraph:",
+          ...setLinkSnapshot(set, "      "),
+          ...detailHeadings.flatMap((heading) => [
+            `    - term: ${quoted(heading)}`,
+            `    - definition: ${quoted(row[heading] ?? "")}`,
+          ]),
+        ];
+      }),
+    ].join("\n");
+  }
+  return [
+    `- table "Parameter sets":`,
+    "  - rowgroup:",
+    "    - row:",
+    ...setHeadings.map((heading) => `      - ${yamlKey(`columnheader ${quoted(heading)}`)}`),
+    "  - rowgroup:",
+    ...sets.flatMap((set) => {
+      const row = setRow(set);
+      return [
+        "    - row:",
+        "      - rowheader:",
+        ...setLinkSnapshot(set, "        "),
+        ...detailHeadings.map((heading) => `      - ${yamlKey(`cell ${quoted(row[heading] ?? "")}`)}`),
+      ];
+    }),
+  ].join("\n");
+}
+
 // What a search finds a set by: its key, and the words of its title and description.
 export function setKeys(set: ParameterSetSummary): { readonly code: string; readonly name: string } {
   return { code: set.key, name: `${set.title} ${set.description}` };
@@ -153,5 +199,9 @@ export class ParameterSetsPage {
   // The list draws each set's link twice, in its table and in its cards, and shows one of them by the width of its box.
   setLink(title: string): Locator {
     return this.region.getByRole("link", { name: title, exact: true }).filter({ visible: true });
+  }
+
+  shownList(cards: boolean): Locator {
+    return this.region.getByTestId(cards ? "searched-list-cards" : "searched-list-table");
   }
 }

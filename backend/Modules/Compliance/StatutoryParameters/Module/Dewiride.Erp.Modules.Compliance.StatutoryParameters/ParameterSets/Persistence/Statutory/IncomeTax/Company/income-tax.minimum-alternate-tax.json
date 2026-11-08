@@ -62,7 +62,7 @@
       "source": "Income-tax Act, 2025, section 206(1)(b)(ii), as amended by the Finance Act, 2026, section 59(a)(i)",
       "cells": {
         "rule": "book-profit-rate",
-        "name": "Rate on book profit: any company other than an IFSC unit",
+        "name": "Rate on book profit: any company other than an IFSC unit deriving its income solely in convertible foreign exchange",
         "percent": 14,
         "taxYears": null,
         "wording": "(b) For the purposes of clause (a), the expressions “minimum alternate tax” means the amount of tax computed on the book profit— (ii) in case of any other company, at a rate of 14%."

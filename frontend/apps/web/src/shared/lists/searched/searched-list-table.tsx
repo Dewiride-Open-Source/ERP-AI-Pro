@@ -13,7 +13,8 @@ import type { SearchedListColumn, SearchedListLayout, SearchedListRow } from "./
 // the data table changes at, so a list keeps its shape wherever a page places it; a list laid out as cards draws only the
 // cards. The title column leads the table, because a row header names only the cells after it in its row. Headings and
 // cells wrap and a row's cells start at its top, because a cell may hold a sentence, which on one line would push the other
-// columns out of sight.
+// columns out of sight. A card puts each heading above its value on a narrow box and beside it on a wider one, the heading
+// taking at most two fifths of the width, so a long heading never leaves its value without room.
 export function SearchedListTable({
   labelledBy,
   columns,
@@ -88,9 +89,12 @@ export function SearchedListTable({
               {title === undefined ? null : row.cells[title.id]}
             </p>
             {details.length > 0 ? (
-              <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">
+              <dl className="grid grid-cols-[minmax(0,1fr)] gap-y-2 text-sm @md/searched-list:grid-cols-[fit-content(40%)_minmax(0,1fr)] @md/searched-list:gap-x-4 @md/searched-list:gap-y-1.5">
                 {details.map((column) => (
-                  <div key={column.id} className="contents">
+                  <div
+                    key={column.id}
+                    className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-y-0.5 @md/searched-list:col-span-2 @md/searched-list:grid-cols-subgrid"
+                  >
                     <dt className="text-muted-foreground">{column.header}</dt>
                     <dd className="min-w-0 break-words">{row.cells[column.id]}</dd>
                   </div>

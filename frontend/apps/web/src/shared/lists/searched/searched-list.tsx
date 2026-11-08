@@ -9,7 +9,7 @@ import {
 } from "./searched-list-view.ts";
 
 // The list arrives whole from the API and is searched and paged here, on the web server, so the browser receives one page
-// of plain rows; a page past the last answers with the last one.
+// of rows, each cell its text or the link or badge rendered here; a page past the last answers with the last one.
 export function SearchedList<T>({
   items,
   pageSize,

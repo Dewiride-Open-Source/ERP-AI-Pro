@@ -6,7 +6,7 @@ using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain.C
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Persistence.Seeding;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.UnitTests.ParameterSets.Seeding;
 
-namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.UnitTests.Gst;
+namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.UnitTests.PublicApi;
 
 // Every typed set of the Contracts reads one seed file, whose columns its row record holds one by one, in order, each of its
 // kind's type and nullable exactly when the column is optional, so a typed read can never meet a cell its record does not fit.

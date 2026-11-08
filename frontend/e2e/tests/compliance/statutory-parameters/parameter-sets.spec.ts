@@ -13,6 +13,7 @@ import {
   readParameterSets,
   setKeys,
   setRow,
+  setRowsSnapshot,
   setsPerPage,
   setsShownCount,
 } from "../../../pages/compliance/statutory-parameters/parameter-sets.page";
@@ -65,6 +66,10 @@ test.describe("statutory parameters for a finance person", () => {
         `);
         await expect(listPage.entries.status).toHaveText(setsShownCount(sets.length));
         expect(await listPage.entries.rows()).toEqual(sets.slice(0, setsPerPage).map(setRow));
+        const cards = await listPage.entries.showsCards();
+        await expect(listPage.shownList(cards)).toMatchAriaSnapshot(
+          setRowsSnapshot(sets.slice(0, setsPerPage), cards),
+        );
         await capture("parameter-sets");
 
         if (pageCount > 1) {

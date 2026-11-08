@@ -6,4 +6,5 @@ public enum TdsSurchargeKind
     Cap = 2,
     Cess = 3,
     CessNotApplied = 4,
+    PartTwoRates = 5,
 }

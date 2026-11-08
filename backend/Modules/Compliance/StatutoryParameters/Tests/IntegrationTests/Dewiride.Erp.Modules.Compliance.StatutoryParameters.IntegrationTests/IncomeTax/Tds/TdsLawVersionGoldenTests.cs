@@ -37,7 +37,7 @@ public sealed class TdsLawVersionGoldenTests(ErpApiFactory factory)
     [InlineData("income-tax.tds-rates", "2026-04-01", 61, 0, 0, "Income-tax Act, 2025 (30 of 2025), sections 392 and 393 and Schedule XI")]
     [InlineData("income-tax.tds-higher-rates", "2026-04-01", 8, 0, 0, "Income-tax Act, 2025 (30 of 2025), section 397(2)|Income-tax Rules, 2026, G.S.R. 198(E), 20 March 2026 (Notification No. 22/2026)")]
     [InlineData("income-tax.tds-threshold-limits", "2026-04-01", 36, 0, 0, "Income-tax Act, 2025 (30 of 2025), sections 392 and 393|Finance Act, 2026 (4 of 2026), section 84(a)")]
-    [InlineData("income-tax.tds-no-deduction-cases", "2026-04-01", 25, 0, 0, "Income-tax Act, 2025 (30 of 2025), section 393(4), (5), (8) and (9)|Corrigenda to the Income-tax Act, 2025, Ministry of Law and Justice, 30 January 2026|Finance Act, 2026 (4 of 2026), section 84(b)")]
+    [InlineData("income-tax.tds-no-deduction-cases", "2026-04-01", 28, 0, 0, "Income-tax Act, 2025 (30 of 2025), section 393(4), (5), (8) and (9)|Corrigenda to the Income-tax Act, 2025, Ministry of Law and Justice, 30 January 2026|Finance Act, 2026 (4 of 2026), section 84(b)")]
     [InlineData("income-tax.tds-declarations", "2026-04-01", 3, 0, 0, "Income-tax Act, 2025 (30 of 2025), section 393(6)")]
     [InlineData("income-tax.tds-declarations", "2027-04-01", 1, 0, 0, "Finance Act, 2026 (4 of 2026), section 84(c)")]
     [InlineData("income-tax.tds-terms", "2026-04-01", 8, 0, 0, "Income-tax Act, 2025 (30 of 2025), sections 2(100) and 402|Finance Act, 2026 (4 of 2026), section 90(b)")]

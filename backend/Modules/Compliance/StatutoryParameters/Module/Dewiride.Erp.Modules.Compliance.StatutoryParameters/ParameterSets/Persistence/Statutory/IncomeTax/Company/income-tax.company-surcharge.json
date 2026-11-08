@@ -1,7 +1,7 @@
 {
   "key": "income-tax.company-surcharge",
   "title": "Surcharge on a domestic company's income-tax",
-  "description": "The surcharge for the purposes of the Union on a domestic company's income-tax for tax years from 2026-27, by the income-tax it is levied on and the company's total income, with the marginal relief the Finance Act gives, each in the instrument's words: Paragraph F of Part I-B of the First Schedule to the Finance Act, 2026 and the Table of its section 3(4)(b), as amended from 1 April 2026 by section 6 of the Taxation and Other Laws (Amendment) Act, 2026. Part III and section 3(12) state the same bands for advance tax; the words are those of the tax charged for the tax year. The bands are for the tax year 2026-27 alone, so every row ends on 31 March 2027. A company taxed under section 200 or 201 has no income band. The tax period is the tax year, and the set answers for its first day.",
+  "description": "The surcharge for the purposes of the Union on a domestic company's income-tax for tax years from 2026-27, by the income-tax it is levied on and the company's total income, with the marginal relief the Finance Act gives, each in the instrument's words: Paragraph F of Part I-B of the First Schedule to the Finance Act, 2026, the Table of its section 3(4)(b), as amended from 1 April 2026 by section 6 of the Taxation and Other Laws (Amendment) Act, 2026, whose Sl. No. 8 levies 25% on tax under section 195(1)(i), and its section 3(6), which adds 12% to tax charged at the rates of sections 69, 170(5) and 352. Part III and section 3(12) state the same bands for advance tax, none for section 3(6); the words are those of the tax charged for the tax year. The bands are for the tax year 2026-27 alone, so every row ends on 31 March 2027. Only the bands of Paragraph F and of Sl. No. 6 turn on the total income. The tax period is the tax year, and the set answers for its first day.",
   "basis": "law",
   "asOf": "taxPeriodStart",
   "columns": [
@@ -33,6 +33,14 @@
         {
           "value": "newRegimeOptions",
           "title": "Tax of a company that opted for section 200 or 201"
+        },
+        {
+          "value": "section195",
+          "title": "Tax under section 195(1)(i)"
+        },
+        {
+          "value": "sectionRates",
+          "title": "Tax charged at the rates of section 69, 170(5) or 352"
         }
       ]
     },
@@ -74,7 +82,7 @@
     {
       "from": "2026-04-01",
       "instruments": [
-        "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, sections 3(4), 3(5), 3(12) and 3(13) and First Schedule, Part I-B, Paragraph F and Part III, Paragraph F, in force 1 April 2026 (section 1(2)(a))",
+        "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, sections 3(4), 3(5), 3(6), 3(12) and 3(13) and First Schedule, Part I-B, Paragraph F and Part III, Paragraph F, in force 1 April 2026 (section 1(2)(a))",
         "Taxation and Other Laws (Amendment) Act, 2026 (No. 21 of 2026), 17 August 2026, section 6, substituting serial numbers 9 and 9A for serial number 9 in the Tables of sections 3(4)(b) and 3(12)(b) of the Finance Act, 2026, deemed in force 1 April 2026 (section 1(2))"
       ]
     },
@@ -155,6 +163,22 @@
     {
       "from": "2026-04-01",
       "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(4)(b), Table, Sl. No. 8, and section 3(12)(b), Table, Sl. No. 8 (advance tax)",
+      "cells": {
+        "band": "section-195-1-i",
+        "name": "Tax under section 195(1)(i), whatever the total income",
+        "taxOn": "section195",
+        "rate": 25,
+        "incomeAbove": null,
+        "incomeUpTo": null,
+        "persons": "Any assessee.",
+        "wording": "(4) For the purposes of sub-section (3),— (b) in respect of income chargeable to tax under the section as specified in column B of the Table below, in the case of a person as specified in column C of the said Table, the amount of income-tax computed shall be increased by a surcharge, for the purposes of the Union, calculated at the rate or rates as specified in column D of the said Table, of such income-tax. [Sl. No. 8.B] 195(1)(i). [Sl. No. 8.D] 25%.",
+        "marginalRelief": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
       "source": "Finance Act, 2026, section 3(4)(b), Table, Sl. No. 9, and section 3(12)(b), Table, Sl. No. 9 (advance tax), as substituted by the Taxation and Other Laws (Amendment) Act, 2026, section 6(a) and (b)",
       "cells": {
         "band": "new-regime-options",
@@ -181,6 +205,22 @@
         "incomeUpTo": null,
         "persons": "Every domestic company, being a special purpose vehicle referred to in Schedule V [Note 2].",
         "wording": "(4) For the purposes of sub-section (3),— (b) in respect of income chargeable to tax under the section as specified in column B of the Table below, in the case of a person as specified in column C of the said Table, the amount of income-tax computed shall be increased by a surcharge, for the purposes of the Union, calculated at the rate or rates as specified in column D of the said Table, of such income-tax. [Sl. No. 9A.B] 200 or 201. [Sl. No. 9A.D] 25%.",
+        "marginalRelief": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(6)",
+      "cells": {
+        "band": "section-rates",
+        "name": "Tax charged at the rates of section 69, 170(5) or 352",
+        "taxOn": "sectionRates",
+        "rate": 12,
+        "incomeAbove": null,
+        "incomeUpTo": null,
+        "persons": "In cases in which tax has to be charged and paid under section 69 or section 170(5) or section 352 of the said Act",
+        "wording": "(6) In cases in which tax has to be charged and paid under section 69 or section 170(5) or section 352 of the said Act, the tax shall be charged and paid at the rates as specified in those sections and shall be increased by a surcharge, for the purposes of the Union, calculated at the rate of 12% of such tax.",
         "marginalRelief": null
       }
     }

@@ -357,7 +357,7 @@ const routes: readonly WebRoute[] = [
     ownMarkers: [referencePickersMarker],
     foreignMarkers: [...otherReferenceDataMarkers(referencePickersMarker), ...otherModuleMarkers],
   },
-  // The list of sets renders on the web server alone and ships no client code of its own, so only what it must leave out is
+  // The list of sets ships no client code of its own, only the shared searched list's, so only what it must leave out is
   // looked for.
   {
     path: "/compliance/statutory-parameters/parameter-sets",

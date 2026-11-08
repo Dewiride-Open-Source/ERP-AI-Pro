@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import type { ParameterColumn, ParameterRow, ShownVersion } from "../../parameter-sets/components/set-items";
 
@@ -79,11 +79,17 @@ function ChangeSection({ title, testId, children }: { title: string; testId: str
 
 function ChangedEntry({ title, values }: { title: string; values: readonly ShownValue[] }) {
   return (
-    <li className="grid min-w-0 gap-2 rounded-lg border p-3" data-testid="parameter-set-change">
+    <li
+      className="@container/change grid min-w-0 gap-2 rounded-lg border p-3"
+      data-testid="parameter-set-change"
+    >
       <p className="font-medium wrap-anywhere">{title}</p>
-      <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
+      <dl className="grid grid-cols-[minmax(0,1fr)] gap-y-2 text-sm @md/change:grid-cols-[fit-content(40%)_minmax(0,1fr)] @md/change:gap-x-4 @md/change:gap-y-1">
         {values.map((value, index) => (
-          <Fragment key={`${value.label}-${index}`}>
+          <div
+            key={`${value.label}-${index}`}
+            className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-y-0.5 @md/change:col-span-2 @md/change:grid-cols-subgrid"
+          >
             <dt className="text-muted-foreground">{value.label}</dt>
             <dd className="min-w-0 wrap-anywhere">
               {value.value}
@@ -94,7 +100,7 @@ function ChangedEntry({ title, values }: { title: string; values: readonly Shown
                 </>
               )}
             </dd>
-          </Fragment>
+          </div>
         ))}
       </dl>
     </li>

@@ -76,10 +76,13 @@ public sealed class TdsLimitGoldenTests(ErpApiFactory factory)
     [InlineData("393(4)-6", "Interest on securities referred to in section 393(1) [Table: Sl. No. 5(i)].", "393(1)-5(i)", null, null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 6]")]
     [InlineData("393(4)-7(a)", "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].", null, null, null, "Finance Act, 2026, section 84(b)(i)")]
     [InlineData("393(4)-7(b)", "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].", null, "500000000", null, "Corrigenda of 30 January 2026")]
-    [InlineData("393(4)-7(c)", "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].", null, "50000", null, "Finance Act, 2026, section 84(b)(ii)")]
-    [InlineData("393(4)-8", "Payments to contractors referred to in section 393(1) [Table: Sl. No. 6(i)].", "393(1)-6(i)", null, 10, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 8]")]
+    [InlineData("393(4)-7(c)", "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].", null, null, null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 7.C(c)] without item (iv)(B), item (iv) as substituted by the Finance Act, 2026, section 84(b)(ii)")]
+    [InlineData("393(4)-7(c)(iv)(B)", "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].", null, "50000", null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 7.C(c)(iv)(B)], as substituted by the Finance Act, 2026, section 84(b)(ii)")]
+    [InlineData("393(4)-8(a)", "Payments to contractors referred to in section 393(1) [Table: Sl. No. 6(i)].", "393(1)-6(i)", null, 10, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 8.C(a)]")]
+    [InlineData("393(4)-8(b)", "Payments to contractors referred to in section 393(1) [Table: Sl. No. 6(i)].", "393(1)-6(i)", null, null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 8.C(b)]")]
     [InlineData("393(4)-9", "Fees for professional or technical services referred to in section 393(1) [Table: Sl. No. 6(iii)].", "393(1)-6(iii)", null, null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 9]")]
-    [InlineData("393(4)-10", "Dividend referred to in section 393(1) (Table: Sl. No. 7).", "393(1)-7", "10000", null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 10]")]
+    [InlineData("393(4)-10", "Dividend referred to in section 393(1) (Table: Sl. No. 7).", "393(1)-7", null, null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 10.C(a) to (e)]")]
+    [InlineData("393(4)-10(f)", "Dividend referred to in section 393(1) (Table: Sl. No. 7).", "393(1)-7", "10000", null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 10.C(f)]")]
     [InlineData("393(4)-11", "Payment by e-commerce operator to e-commerce participant referred to in section 393(1) [Table: Sl. No. 8(v)].", "393(1)-8(v)", "500000", null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 11]")]
     [InlineData("393(4)-12(a)", "Payment on transfer of virtual digital asset referred to in section 393(1) [Table: Sl. No. 8(vi)].", "393(1)-8(vi)", "50000", null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 12.C(a)]")]
     [InlineData("393(4)-12(b)", "Payment on transfer of virtual digital asset referred to in section 393(1) [Table: Sl. No. 8(vi)].", "393(1)-8(vi)", "10000", null, "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 12.C(b)]")]
@@ -102,6 +105,24 @@ public sealed class TdsLimitGoldenTests(ErpApiFactory factory)
         var found = Assert.Single(cases, candidate => candidate.Case == key);
         Assert.Equal((provisions, entry, RupeesOf(rupees), count), (found.Provisions, found.Entry, found.Amount, found.Count));
         Assert.Contains(instrument, await SourceAsync(scope, TdsNoDeductionCases.Key, ActInForce, key), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("393(4)-7(c)", "(iv) on the compensation amount awarded by a Motor Accidents Claims Tribunal— (A) to an individual; or (v) or payable by an infrastructure capital company;", "(B) to a person other than an individual")]
+    [InlineData("393(4)-7(c)(iv)(B)", "(c) interest income credited or paid— (iv) on the compensation amount awarded by a Motor Accidents Claims Tribunal— (B) to a person other than an individual, where the aggregate interest on such compensation does not exceed ₹ 50000 during the tax year;", "(A) to an individual")]
+    [InlineData("393(4)-8(a)", "(ii) that contractor owns ten or less goods carriages at any time during the tax year;", "(b) where such sum")]
+    [InlineData("393(4)-8(b)", "(b) where such sum is credited or paid by individual or Hindu undivided family exclusively for personal purposes of such individual or any member of Hindu undivided family.", "goods carriages")]
+    [InlineData("393(4)-10", "(e) any other person as may be notified by the Central Government in this behalf;", "(f) a shareholder, being an individual")]
+    [InlineData("393(4)-10(f)", "Dividend income credited or paid to— (f) a shareholder, being an individual, if— (I) the dividend is paid by the company by any mode other than cash; and (II) amount or aggregate of amounts of such dividend distributed or paid or likely to be distributed or paid during the tax year does not exceed ₹10,000.", "(e) any other person")]
+    public async Task NoDeductionCase_OfAClauseItsFigureBoundsAlone_IsACaseOfItsOwnAndLeavesTheOtherClausesOut(string key, string words, string leftOut)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var cases = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<TdsNoDeductionCases>(ActInForce, TestContext.Current.CancellationToken))!.Cases;
+
+        var condition = Assert.Single(cases, candidate => candidate.Case == key).Condition;
+        Assert.Contains(words, condition, StringComparison.Ordinal);
+        Assert.DoesNotContain(leftOut, condition, StringComparison.Ordinal);
     }
 
     [Theory]

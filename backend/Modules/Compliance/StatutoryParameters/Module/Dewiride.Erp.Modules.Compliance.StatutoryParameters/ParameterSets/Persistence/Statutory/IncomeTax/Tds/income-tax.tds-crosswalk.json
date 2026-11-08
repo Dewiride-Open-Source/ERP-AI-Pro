@@ -1,7 +1,7 @@
 {
   "key": "income-tax.tds-crosswalk",
   "title": "TDS provisions: Income-tax Act, 1961 to Income-tax Act, 2025",
-  "description": "The ERP's reading, not a government table: for each provision of the Income-tax Act, 1961 under which tax was deducted at source up to 31 March 2026, and for its section 197, the provision of the Income-tax Act, 2025 that governs the same payment from 1 April 2026, or none. Section 536 of the 2025 Act repeals the 1961 Act and saves what was done under it but names no corresponding provision, and no complete official mapping was read. Each row says what ties the pair: a statement of the Income Tax Department's e-filing pages, the department's forms, or the words of the two Acts, where the Finance Act, 2025 (section 2(5), (6) and (9)) lists each 1961 section in the place where the Finance Act, 2026 (section 3(7) and (10)) lists its 2025 entry. The 1961 headings are those the department's TRACES pages show. Pairs whose 1961 side no instrument read states are left out: section 195(6), 197A and 206AA and the first proviso to section 194N.",
+  "description": "The ERP's reading, not a government table: for each provision of the Income-tax Act, 1961 under which tax was deducted at source up to 31 March 2026, and for its section 197, the provision of the Income-tax Act, 2025 that governs the same payment from 1 April 2026, or none. Section 536 of the 2025 Act repeals the 1961 Act and saves what was done under it but names no corresponding provision, and no complete official mapping was read. Each row says what ties the pair: a statement of the Income Tax Department's e-filing pages, the department's forms, or the words of the two Acts, where the Finance Act, 2025 (section 2(5), (6) and (9)) lists each 1961 section in the place where the Finance Act, 2026 (section 3(7) and (10)) lists its 2025 entry. Each 1961 provision is described as the department's TRACES pages describe it, not always by its heading. Pairs whose 1961 side no instrument read states are left out: section 195(6), 197A and 206AA and the first proviso to section 194N.",
   "basis": "interpretation",
   "asOf": "deductionDate",
   "columns": [
@@ -17,8 +17,8 @@
       "kind": "code"
     },
     {
-      "name": "heading1961",
-      "title": "Heading in the 1961 Act, as TRACES shows it",
+      "name": "oldDescription",
+      "title": "The 1961 provision, as TRACES describes it",
       "kind": "text",
       "optional": true
     },
@@ -108,8 +108,8 @@
         "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7) and (10) and sections 84, 86 and 90, in force 1 April 2026 (section 1(2)(a))",
         "Finance Act, 2025 (7 of 2025), 29 March 2025, section 2(5), (6) and (9), sections 56 to 71 and First Schedule, Part II",
         "Finance (No. 2) Act, 2024 (15 of 2024), 16 August 2024, sections 50 to 65",
-        "TRACES, Income Tax Department, “Financial Year 2025-2026 Non-Salary” (https://traces61contents.tdscpc.gov.in/en/tds-2025-2026.html), “Last reviewed and updated on : 31-March-2026”: the 1961 headings, an official secondary text",
-        "TRACES, Income Tax Department, section codes (https://traces61contents.tdscpc.gov.in/en/section-codes-26A.html), “Last reviewed and updated on : 31-March-2026”: the heading of section 192, which the rates page does not give",
+        "TRACES, Income Tax Department, “Financial Year 2025-2026 Non-Salary” (https://traces61contents.tdscpc.gov.in/en/tds-2025-2026.html), “Last reviewed and updated on : 31-March-2026”: its descriptions of the 1961 provisions, an official secondary text",
+        "TRACES, Income Tax Department, section codes (https://traces61contents.tdscpc.gov.in/en/section-codes-26A.html), “Last reviewed and updated on : 31-March-2026”: its description of section 192, which the rates page does not give",
         "Income Tax Department, e-filing portal, TDS Compliance, Tax Payments, Income Tax Forms and Form 141 FAQs, read 8 November 2026: the pairs the department states and the forms it replaces"
       ]
     }
@@ -121,7 +121,7 @@
       "cells": {
         "pair": "192.392(1)",
         "oldProvision": "192",
-        "heading1961": "Salary",
+        "oldDescription": "Salary",
         "newProvision": "392(1)",
         "newEntry": "392(1)",
         "newCitation": "section 392(1)",
@@ -138,7 +138,7 @@
       "cells": {
         "pair": "192A.392(7)",
         "oldProvision": "192A",
-        "heading1961": "Payment of accumulated balance due to an employee.(applicable from 01.06.2015)",
+        "oldDescription": "Payment of accumulated balance due to an employee.(applicable from 01.06.2015)",
         "newProvision": "392(7)",
         "newEntry": "392(7)",
         "newCitation": "section 392(7)",
@@ -155,7 +155,7 @@
       "cells": {
         "pair": "194D.393(1)-1(i)",
         "oldProvision": "194D",
-        "heading1961": "Insurance Commission",
+        "oldDescription": "Insurance Commission",
         "newProvision": "393(1)-1(i)",
         "newEntry": "393(1)-1(i)",
         "newCitation": "section 393(1) [Table: Sl. No. 1(i)]",
@@ -172,7 +172,7 @@
       "cells": {
         "pair": "194H.393(1)-1(ii)",
         "oldProvision": "194H",
-        "heading1961": "Commission / Brokerage",
+        "oldDescription": "Commission / Brokerage",
         "newProvision": "393(1)-1(ii)",
         "newEntry": "393(1)-1(ii)",
         "newCitation": "section 393(1) [Table: Sl. No. 1(ii)]",
@@ -189,7 +189,7 @@
       "cells": {
         "pair": "194-IB.393(1)-2(i)",
         "oldProvision": "194-IB",
-        "heading1961": "Payment of rent by certain individuals or Hindu undivided family",
+        "oldDescription": "Payment of rent by certain individuals or Hindu undivided family",
         "newProvision": "393(1)-2(i)",
         "newEntry": "393(1)-2(i)",
         "newCitation": "section 393(1) [Table: Sl. No. 2(i)]",
@@ -206,7 +206,7 @@
       "cells": {
         "pair": "194-I.393(1)-2(ii)",
         "oldProvision": "194-I",
-        "heading1961": "Rent",
+        "oldDescription": "Rent",
         "newProvision": "393(1)-2(ii)",
         "newEntry": "393(1)-2(ii)",
         "newCitation": "section 393(1) [Table: Sl. No. 2(ii)]",
@@ -223,7 +223,7 @@
       "cells": {
         "pair": "194-IA.393(1)-3(i)",
         "oldProvision": "194-IA",
-        "heading1961": "Transfer of certain immovable property other than agriculture land (w.e.f. 1-6-2013)",
+        "oldDescription": "Transfer of certain immovable property other than agriculture land (w.e.f. 1-6-2013)",
         "newProvision": "393(1)-3(i)",
         "newEntry": "393(1)-3(i)",
         "newCitation": "section 393(1) [Table: Sl. No. 3(i)]",
@@ -240,7 +240,7 @@
       "cells": {
         "pair": "194-IC.393(1)-3(ii)",
         "oldProvision": "194-IC",
-        "heading1961": "Payment under Specified agreement",
+        "oldDescription": "Payment under Specified agreement",
         "newProvision": "393(1)-3(ii)",
         "newEntry": "393(1)-3(ii)",
         "newCitation": "section 393(1) [Table: Sl. No. 3(ii)]",
@@ -257,7 +257,7 @@
       "cells": {
         "pair": "194LA.393(1)-3(iii)",
         "oldProvision": "194LA",
-        "heading1961": "Immovable Property",
+        "oldDescription": "Immovable Property",
         "newProvision": "393(1)-3(iii)",
         "newEntry": "393(1)-3(iii)",
         "newCitation": "section 393(1) [Table: Sl. No. 3(iii)]",
@@ -274,7 +274,7 @@
       "cells": {
         "pair": "194K.393(1)-4(i)",
         "oldProvision": "194K",
-        "heading1961": "Payment of Dividend by Mutual Funds (Applicable From 01-Apr-2020)",
+        "oldDescription": "Payment of Dividend by Mutual Funds (Applicable From 01-Apr-2020)",
         "newProvision": "393(1)-4(i)",
         "newEntry": "393(1)-4(i)",
         "newCitation": "section 393(1) [Table: Sl. No. 4(i)]",
@@ -291,7 +291,7 @@
       "cells": {
         "pair": "194LBA.393(1)-4(ii)",
         "oldProvision": "194LBA",
-        "heading1961": "Certain income from units of a business trust to Residents",
+        "oldDescription": "Certain income from units of a business trust to Residents",
         "newProvision": "393(1)-4(ii)",
         "newEntry": "393(1)-4(ii)",
         "newCitation": "section 393(1) [Table: Sl. No. 4(ii)]",
@@ -308,7 +308,7 @@
       "cells": {
         "pair": "194LBB.393(1)-4(iii)",
         "oldProvision": "194LBB",
-        "heading1961": "Income in respect of units of investment fund.",
+        "oldDescription": "Income in respect of units of investment fund.",
         "newProvision": "393(1)-4(iii)",
         "newEntry": "393(1)-4(iii)",
         "newCitation": "section 393(1) [Table: Sl. No. 4(iii)]",
@@ -325,7 +325,7 @@
       "cells": {
         "pair": "194LBC.393(1)-4(iv)",
         "oldProvision": "194LBC",
-        "heading1961": "Income in respect of investment in securitisation trust.",
+        "oldDescription": "Income in respect of investment in securitisation trust.",
         "newProvision": "393(1)-4(iv)",
         "newEntry": "393(1)-4(iv)",
         "newCitation": "section 393(1) [Table: Sl. No. 4(iv)]",
@@ -342,7 +342,7 @@
       "cells": {
         "pair": "193.393(1)-5(i)",
         "oldProvision": "193",
-        "heading1961": "Interest on securities",
+        "oldDescription": "Interest on securities",
         "newProvision": "393(1)-5(i)",
         "newEntry": "393(1)-5(i)",
         "newCitation": "section 393(1) [Table: Sl. No. 5(i)]",
@@ -359,7 +359,7 @@
       "cells": {
         "pair": "194A.393(1)-5(ii)",
         "oldProvision": "194A",
-        "heading1961": "Banks / Co-operative society engaged in business of banking / Post Office",
+        "oldDescription": "Banks / Co-operative society engaged in business of banking / Post Office",
         "newProvision": "393(1)-5(ii)",
         "newEntry": "393(1)-5(ii)",
         "newCitation": "section 393(1) [Table: Sl. No. 5(ii)]",
@@ -376,7 +376,7 @@
       "cells": {
         "pair": "194A.393(1)-5(iii)",
         "oldProvision": "194A",
-        "heading1961": "Interest other than interest on securities - in any Others Case",
+        "oldDescription": "Interest other than interest on securities - in any Others Case",
         "newProvision": "393(1)-5(iii)",
         "newEntry": "393(1)-5(iii)",
         "newCitation": "section 393(1) [Table: Sl. No. 5(iii)]",
@@ -393,7 +393,7 @@
       "cells": {
         "pair": "194C.393(1)-6(i)",
         "oldProvision": "194C",
-        "heading1961": "Payment to Contractors",
+        "oldDescription": "Payment to Contractors",
         "newProvision": "393(1)-6(i)",
         "newEntry": "393(1)-6(i)",
         "newCitation": "section 393(1) [Table: Sl. No. 6(i)]",
@@ -410,7 +410,7 @@
       "cells": {
         "pair": "194M.393(1)-6(ii)",
         "oldProvision": "194M",
-        "heading1961": "Payment of certain sums by certain individuals or Hindu undivided family",
+        "oldDescription": "Payment of certain sums by certain individuals or Hindu undivided family",
         "newProvision": "393(1)-6(ii)",
         "newEntry": "393(1)-6(ii)",
         "newCitation": "section 393(1) [Table: Sl. No. 6(ii)]",
@@ -427,7 +427,7 @@
       "cells": {
         "pair": "194J.393(1)-6(iii)",
         "oldProvision": "194J",
-        "heading1961": "Fees for Professional/Technical Services",
+        "oldDescription": "Fees for Professional/Technical Services",
         "newProvision": "393(1)-6(iii)",
         "newEntry": "393(1)-6(iii)",
         "newCitation": "section 393(1) [Table: Sl. No. 6(iii)]",
@@ -444,7 +444,7 @@
       "cells": {
         "pair": "194.393(1)-7",
         "oldProvision": "194",
-        "heading1961": "Dividends",
+        "oldDescription": "Dividends",
         "newProvision": "393(1)-7",
         "newEntry": "393(1)-7",
         "newCitation": "section 393(1) (Table: Sl. No. 7)",
@@ -461,7 +461,7 @@
       "cells": {
         "pair": "194DA.393(1)-8(i)",
         "oldProvision": "194DA",
-        "heading1961": "Payment in respect of life insurance policy (applicable from 01.10.2014)",
+        "oldDescription": "Payment in respect of life insurance policy (applicable from 01.10.2014)",
         "newProvision": "393(1)-8(i)",
         "newEntry": "393(1)-8(i)",
         "newCitation": "section 393(1) [Table: Sl. No. 8(i)]",
@@ -478,7 +478,7 @@
       "cells": {
         "pair": "194Q.393(1)-8(ii)",
         "oldProvision": "194Q",
-        "heading1961": "TDS on Purchase of Goods exceeding Rs. 50 Lakhs (Applicable From 01-July-2021)",
+        "oldDescription": "TDS on Purchase of Goods exceeding Rs. 50 Lakhs (Applicable From 01-July-2021)",
         "newProvision": "393(1)-8(ii)",
         "newEntry": "393(1)-8(ii)",
         "newCitation": "section 393(1) [Table: Sl. No. 8(ii)]",
@@ -495,7 +495,7 @@
       "cells": {
         "pair": "194P.393(1)-8(iii)",
         "oldProvision": "194P",
-        "heading1961": "TDS in case of Specified Senior Citizen",
+        "oldDescription": "TDS in case of Specified Senior Citizen",
         "newProvision": "393(1)-8(iii)",
         "newEntry": "393(1)-8(iii)",
         "newCitation": "section 393(1) [Table: Sl. No. 8(iii)]",
@@ -512,7 +512,7 @@
       "cells": {
         "pair": "194R.393(1)-8(iv)",
         "oldProvision": "194R",
-        "heading1961": "TDS in case any benefit or perquisite (arising from business or the exercise of a profession) is provided (Applicable From 01-July-2022)",
+        "oldDescription": "TDS in case any benefit or perquisite (arising from business or the exercise of a profession) is provided (Applicable From 01-July-2022)",
         "newProvision": "393(1)-8(iv)",
         "newEntry": "393(1)-8(iv)",
         "newCitation": "section 393(1) [Table: Sl. No. 8(iv)]",
@@ -529,7 +529,7 @@
       "cells": {
         "pair": "194-O.393(1)-8(v)",
         "oldProvision": "194-O",
-        "heading1961": "TDS on e-commerce participants (Applicable From 01-Oct-2020)",
+        "oldDescription": "TDS on e-commerce participants (Applicable From 01-Oct-2020)",
         "newProvision": "393(1)-8(v)",
         "newEntry": "393(1)-8(v)",
         "newCitation": "section 393(1) [Table: Sl. No. 8(v)]",
@@ -546,7 +546,7 @@
       "cells": {
         "pair": "194S.393(1)-8(vi)",
         "oldProvision": "194S",
-        "heading1961": "TDS on payment on transfer of Virtual Digital Asset ( Applicable From 01-July-2022)",
+        "oldDescription": "TDS on payment on transfer of Virtual Digital Asset ( Applicable From 01-July-2022)",
         "newProvision": "393(1)-8(vi)",
         "newEntry": "393(1)-8(vi)",
         "newCitation": "section 393(1) [Table: Sl. No. 8(vi)]",
@@ -563,7 +563,7 @@
       "cells": {
         "pair": "194E.393(2)-1",
         "oldProvision": "194E",
-        "heading1961": "Payment to Non-Resident Sportsmen or Sports Association",
+        "oldDescription": "Payment to Non-Resident Sportsmen or Sports Association",
         "newProvision": "393(2)-1",
         "newEntry": "393(2)-1",
         "newCitation": "section 393(2) (Table: Sl. No. 1)",
@@ -580,7 +580,7 @@
       "cells": {
         "pair": "194LC.393(2)-2",
         "oldProvision": "194LC",
-        "heading1961": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
+        "oldDescription": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
         "newProvision": "393(2)-2",
         "newEntry": "393(2)-2",
         "newCitation": "section 393(2) (Table: Sl. No. 2)",
@@ -597,7 +597,7 @@
       "cells": {
         "pair": "194LC.393(2)-3",
         "oldProvision": "194LC",
-        "heading1961": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
+        "oldDescription": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
         "newProvision": "393(2)-3",
         "newEntry": "393(2)-3",
         "newCitation": "section 393(2) (Table: Sl. No. 3)",
@@ -614,7 +614,7 @@
       "cells": {
         "pair": "194LC.393(2)-4",
         "oldProvision": "194LC",
-        "heading1961": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
+        "oldDescription": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
         "newProvision": "393(2)-4",
         "newEntry": "393(2)-4",
         "newCitation": "section 393(2) (Table: Sl. No. 4)",
@@ -631,7 +631,7 @@
       "cells": {
         "pair": "194LB.393(2)-5",
         "oldProvision": "194LB",
-        "heading1961": "Income by way of interest from infrastructure debt fund (non-resident)",
+        "oldDescription": "Income by way of interest from infrastructure debt fund (non-resident)",
         "newProvision": "393(2)-5",
         "newEntry": "393(2)-5",
         "newCitation": "section 393(2) (Table: Sl. No. 5)",
@@ -648,7 +648,7 @@
       "cells": {
         "pair": "194LBA.393(2)-6",
         "oldProvision": "194LBA",
-        "heading1961": "Certain income from units of a business trust to Non Resident :-",
+        "oldDescription": "Certain income from units of a business trust to Non Resident :-",
         "newProvision": "393(2)-6",
         "newEntry": "393(2)-6",
         "newCitation": "section 393(2) (Table: Sl. No. 6)",
@@ -665,7 +665,7 @@
       "cells": {
         "pair": "194LBA.393(2)-7",
         "oldProvision": "194LBA",
-        "heading1961": "Payment of the nature referred to in section 10(23FCA) by business trust to unit holders",
+        "oldDescription": "Payment of the nature referred to in section 10(23FCA) by business trust to unit holders",
         "newProvision": "393(2)-7",
         "newEntry": "393(2)-7",
         "newCitation": "section 393(2) (Table: Sl. No. 7)",
@@ -682,7 +682,7 @@
       "cells": {
         "pair": "194LBB.393(2)-8",
         "oldProvision": "194LBB",
-        "heading1961": "Income in respect of units of investment fund.",
+        "oldDescription": "Income in respect of units of investment fund.",
         "newProvision": "393(2)-8",
         "newEntry": "393(2)-8",
         "newCitation": "section 393(2) (Table: Sl. No. 8)",
@@ -699,7 +699,7 @@
       "cells": {
         "pair": "194LBC.393(2)-9",
         "oldProvision": "194LBC",
-        "heading1961": "Income in respect of investment in securitisation trust.",
+        "oldDescription": "Income in respect of investment in securitisation trust.",
         "newProvision": "393(2)-9",
         "newEntry": "393(2)-9",
         "newCitation": "section 393(2) (Table: Sl. No. 9)",
@@ -716,7 +716,7 @@
       "cells": {
         "pair": "196A.393(2)-10",
         "oldProvision": "196A",
-        "heading1961": "Foreign comp unit holder of MF",
+        "oldDescription": "Foreign comp unit holder of MF",
         "newProvision": "393(2)-10",
         "newEntry": "393(2)-10",
         "newCitation": "section 393(2) (Table: Sl. No. 10)",
@@ -733,7 +733,7 @@
       "cells": {
         "pair": "196B.393(2)-11",
         "oldProvision": "196B",
-        "heading1961": "Income from units",
+        "oldDescription": "Income from units",
         "newProvision": "393(2)-11",
         "newEntry": "393(2)-11",
         "newCitation": "section 393(2) (Table: Sl. No. 11)",
@@ -750,7 +750,7 @@
       "cells": {
         "pair": "196B.393(2)-12",
         "oldProvision": "196B",
-        "heading1961": "Income from units",
+        "oldDescription": "Income from units",
         "newProvision": "393(2)-12",
         "newEntry": "393(2)-12",
         "newCitation": "section 393(2) (Table: Sl. No. 12)",
@@ -767,7 +767,7 @@
       "cells": {
         "pair": "196C.393(2)-13",
         "oldProvision": "196C",
-        "heading1961": "Income from foreign currency bonds or GDR (including long-term capital gains on transfer of such bonds) (not being dividend)",
+        "oldDescription": "Income from foreign currency bonds or GDR (including long-term capital gains on transfer of such bonds) (not being dividend)",
         "newProvision": "393(2)-13",
         "newEntry": "393(2)-13",
         "newCitation": "section 393(2) (Table: Sl. No. 13)",
@@ -784,7 +784,7 @@
       "cells": {
         "pair": "196C.393(2)-14",
         "oldProvision": "196C",
-        "heading1961": "Income from foreign currency bonds or GDR (including long-term capital gains on transfer of such bonds) (not being dividend)",
+        "oldDescription": "Income from foreign currency bonds or GDR (including long-term capital gains on transfer of such bonds) (not being dividend)",
         "newProvision": "393(2)-14",
         "newEntry": "393(2)-14",
         "newCitation": "section 393(2) (Table: Sl. No. 14)",
@@ -801,7 +801,7 @@
       "cells": {
         "pair": "196D.393(2)-15",
         "oldProvision": "196D",
-        "heading1961": "Income of foreign institutional investors from securities under sub-section (1)",
+        "oldDescription": "Income of foreign institutional investors from securities under sub-section (1)",
         "newProvision": "393(2)-15",
         "newEntry": "393(2)-15",
         "newCitation": "section 393(2) (Table: Sl. No. 15)",
@@ -818,7 +818,7 @@
       "cells": {
         "pair": "196D.393(2)-16",
         "oldProvision": "196D",
-        "heading1961": "Income of specified fund from securities referred to in clause (a) of sub-section (1) of section 115AD (other than interest income referred to in section 194LD)",
+        "oldDescription": "Income of specified fund from securities referred to in clause (a) of sub-section (1) of section 115AD (other than interest income referred to in section 194LD)",
         "newProvision": "393(2)-16",
         "newEntry": "393(2)-16",
         "newCitation": "section 393(2) (Table: Sl. No. 16)",
@@ -835,7 +835,7 @@
       "cells": {
         "pair": "195.393(2)-17",
         "oldProvision": "195",
-        "heading1961": "Other Sums",
+        "oldDescription": "Other Sums",
         "newProvision": "393(2)-17",
         "newEntry": "393(2)-17",
         "newCitation": "section 393(2) (Table: Sl. No. 17)",
@@ -852,7 +852,7 @@
       "cells": {
         "pair": "194B.393(3)-1",
         "oldProvision": "194B",
-        "heading1961": "Winning from Lotteries or crossword puzzle, etc.",
+        "oldDescription": "Winning from Lotteries or crossword puzzle, etc.",
         "newProvision": "393(3)-1",
         "newEntry": "393(3)-1",
         "newCitation": "section 393(3) (Table: Sl. No. 1)",
@@ -869,7 +869,7 @@
       "cells": {
         "pair": "194BA.393(3)-2",
         "oldProvision": "194BA",
-        "heading1961": "Winnings from online games (Applicable From 01-April-2023)",
+        "oldDescription": "Winnings from online games (Applicable From 01-April-2023)",
         "newProvision": "393(3)-2",
         "newEntry": "393(3)-2",
         "newCitation": "section 393(3) (Table: Sl. No. 2)",
@@ -886,7 +886,7 @@
       "cells": {
         "pair": "194BB.393(3)-3",
         "oldProvision": "194BB",
-        "heading1961": "Winnings from Horse Race",
+        "oldDescription": "Winnings from Horse Race",
         "newProvision": "393(3)-3",
         "newEntry": "393(3)-3",
         "newCitation": "section 393(3) (Table: Sl. No. 3)",
@@ -903,7 +903,7 @@
       "cells": {
         "pair": "194G.393(3)-4",
         "oldProvision": "194G",
-        "heading1961": "Commission - Lottery",
+        "oldDescription": "Commission - Lottery",
         "newProvision": "393(3)-4",
         "newEntry": "393(3)-4",
         "newCitation": "section 393(3) (Table: Sl. No. 4)",
@@ -920,7 +920,7 @@
       "cells": {
         "pair": "194N.393(3)-5",
         "oldProvision": "194N",
-        "heading1961": "Payment of certain amounts in cash.",
+        "oldDescription": "Payment of certain amounts in cash.",
         "newProvision": "393(3)-5",
         "newEntry": "393(3)-5",
         "newCitation": "section 393(3) (Table: Sl. No. 5)",
@@ -937,7 +937,7 @@
       "cells": {
         "pair": "194EE.393(3)-6",
         "oldProvision": "194EE",
-        "heading1961": "Payments out of deposits under NSS",
+        "oldDescription": "Payments out of deposits under NSS",
         "newProvision": "393(3)-6",
         "newEntry": "393(3)-6",
         "newCitation": "section 393(3) (Table: Sl. No. 6)",
@@ -954,7 +954,7 @@
       "cells": {
         "pair": "194T.393(3)-7",
         "oldProvision": "194T",
-        "heading1961": "Payment of salary, remuneration, commission, bonus or interest to a partner of firm",
+        "oldDescription": "Payment of salary, remuneration, commission, bonus or interest to a partner of firm",
         "newProvision": "393(3)-7",
         "newEntry": "393(3)-7",
         "newCitation": "section 393(3) (Table: Sl. No. 7)",
@@ -971,7 +971,7 @@
       "cells": {
         "pair": "194LD.none",
         "oldProvision": "194LD",
-        "heading1961": "Interest on certain bonds and govt. Securities (from 01-06-2013)",
+        "oldDescription": "Interest on certain bonds and govt. Securities (from 01-06-2013)",
         "newProvision": null,
         "newEntry": null,
         "newCitation": null,
@@ -988,7 +988,7 @@
       "cells": {
         "pair": "197.395(1)",
         "oldProvision": "197",
-        "heading1961": null,
+        "oldDescription": null,
         "newProvision": "395(1)",
         "newEntry": null,
         "newCitation": "section 395(1)",

@@ -436,6 +436,10 @@ test.describe("the direct-tax sets", () => {
     await expect(setPage.asOf).toHaveText(asOfTexts[set.asOf]);
     await expect(setPage.versions).toMatchAriaSnapshot(versionsSnapshot(set));
     expect(await entries.showsCards(), "entries of many columns as cards at every width").toBe(true);
+    expect(
+      await entries.narrowestValueShare(entryTitle(set, shown.rows[0]!)),
+      "every value of a card keeps more than a third of the card's width",
+    ).toBeGreaterThan(1 / 3);
     await expect(entries.status).toHaveText(shownCount(shown.rows.length));
     expect(await entries.rows()).toEqual(
       shown.rows.slice(0, entriesPerPage).map((row) => entryRow(set, row)),
@@ -444,27 +448,31 @@ test.describe("the direct-tax sets", () => {
     await capture("tds-entries-entry", entries.row(entryTitle(set, shown.rows[0]!)));
   });
 
-  test("marks the crosswalk as the ERP's reading and finds a pair by its old section", async ({ page }) => {
-    const set = await readParameterSet(page.request, tdsCrosswalkKey);
-    const shown = shownVersionOf(set);
-    const target = shown.rows[0];
-    expect(target, "a pair of the crosswalk").toBeDefined();
-    const setPage = new ParameterSetPage(page);
-    const entries = setPage.entries(set);
+  forEachTheme(
+    "mark the crosswalk as the ERP's reading and find a pair by its old section",
+    async ({ page, capture }) => {
+      const set = await readParameterSet(page.request, tdsCrosswalkKey);
+      const shown = shownVersionOf(set);
+      const target = shown.rows[0];
+      expect(target, "a pair of the crosswalk").toBeDefined();
+      const oldSection = valueOf(target!, "oldProvision");
+      expect(oldSection, "the pair's provision of the Income-tax Act, 1961").not.toBeNull();
+      const found = expectedMatches(shown.rows, oldSection!, (row) => entryKeys(set, row));
+      const setPage = new ParameterSetPage(page);
+      const entries = setPage.entries(set);
 
-    await setPage.goto(parameterSetPath(set.key), set.title);
-    await setPage.waitUntilInteractive();
-    await expect(setPage.basis).toHaveText(basisLabel("interpretation"));
-    await expect(setPage.asOf).toHaveText(asOfTexts[set.asOf]);
-    await entries.searchFor(target!.key);
-    await expect
-      .poll(() => entries.rows())
-      .toEqual(
-        expectedMatches(shown.rows, target!.key, (row) => entryKeys(set, row))
-          .slice(0, entriesPerPage)
-          .map((row) => entryRow(set, row)),
-      );
-  });
+      await setPage.goto(parameterSetPath(set.key), set.title);
+      await setPage.waitUntilInteractive();
+      await expect(setPage.basis).toHaveText(basisLabel("interpretation"));
+      await expect(setPage.asOf).toHaveText(asOfTexts[set.asOf]);
+      await capture("tds-crosswalk-header", setPage.overview.locator("header"));
+      await entries.searchFor(oldSection!);
+      await expect
+        .poll(() => entries.rows())
+        .toEqual(found.slice(0, entriesPerPage).map((row) => entryRow(set, row)));
+      await capture("tds-crosswalk-found", entries.row(entryTitle(set, found[0]!)));
+    },
+  );
 
   forEachTheme("show Schedule II's useful lives by financial year", async ({ page, capture }) => {
     const set = await readParameterSet(page.request, usefulLivesKey);

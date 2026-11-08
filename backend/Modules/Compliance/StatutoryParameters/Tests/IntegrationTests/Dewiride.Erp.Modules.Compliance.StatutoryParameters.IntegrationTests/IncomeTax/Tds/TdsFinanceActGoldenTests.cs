@@ -144,6 +144,7 @@ public sealed class TdsFinanceActGoldenTests(ErpApiFactory factory)
     [InlineData("3(7)-7", TdsSurchargeProvision.Section3Sub7, TdsSurchargeKind.Band, "10000000", null, TdsSurchargeScope.AllIncome, "12", SectionThreeSeven)]
     [InlineData("3(7)-8(i)", TdsSurchargeProvision.Section3Sub7, TdsSurchargeKind.Band, "10000000", "100000000", TdsSurchargeScope.AllIncome, "2", SectionThreeSeven)]
     [InlineData("3(7)-8(ii)", TdsSurchargeProvision.Section3Sub7, TdsSurchargeKind.Band, "100000000", null, TdsSurchargeScope.AllIncome, "5", SectionThreeSeven)]
+    [InlineData("3(8)", TdsSurchargeProvision.Section3Sub8, TdsSurchargeKind.PartTwoRates, null, null, null, null, "Finance Act, 2026, section 3(8)")]
     [InlineData("3(16)", TdsSurchargeProvision.Section3Sub16, TdsSurchargeKind.Cess, null, null, null, "4", "Finance Act, 2026, section 3(16)")]
     [InlineData("3(17)(i)", TdsSurchargeProvision.Section3Sub16, TdsSurchargeKind.CessNotApplied, null, null, null, null, "Finance Act, 2026, section 3(17)(i)")]
     public async Task SurchargeOrCess_OnTheFirstAndLastDayOfTaxYear2026_IsWhatItsProvisionPrints(
@@ -170,6 +171,32 @@ public sealed class TdsFinanceActGoldenTests(ErpApiFactory factory)
 
         Assert.DoesNotContain((await store.GetAsOfAsync<TdsSurchargesAndCess>(EndDay, TestContext.Current.CancellationToken))!.Clauses, candidate => candidate.Clause == clause);
         Assert.StartsWith(instrument, await SourceAsync(scope, SurchargeAndCess, clause), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Section3Sub8_OnTheFirstDayOfTaxYear2026_SendsTheCollectionsItNamesToTheRatesAndSurchargeOfPartTwo()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var clauses = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<TdsSurchargesAndCess>(FirstDay, TestContext.Current.CancellationToken))!.Clauses;
+
+        var found = Assert.Single(clauses, candidate => candidate.Clause == "3(8)");
+        Assert.Null(found.Person);
+        Assert.Equal("section 393(1) [Table: Sl. No. 8(iv). Note 2, Sl. No. 8(iv). Note 6 and Sl. No. 8(vi). Note 6] and 393(3) [Table: Sl. No. 1. Note 2 and Sl. No. 2. Note 2]", found.AppliesTo);
+        Assert.Equal("(8) In cases in which tax has to be collected under section 393(1) [Table: Sl. No. 8(iv). Note 2, Sl. No. 8(iv). Note 6 and Sl. No. 8(vi). Note 6] and 393(3) [Table: Sl. No. 1. Note 2 and Sl. No. 2. Note 2] of the said Act, the collection shall be made at the rates specified in Part II of the First Schedule, and shall be increased by a surcharge, for the purposes of the Union, calculated, in cases wherever prescribed, in the manner provided therein.", found.Words);
+    }
+
+    [Theory]
+    [InlineData(SurchargeAndCess, "section 3(8), which sends the tax collected on a benefit or perquisite, on a virtual digital asset paid for in kind and on winnings in kind to the rates and surcharge of Part II;")]
+    [InlineData(Readings, "Section 393(1)'s readings cover a resident other than a company and a domestic company, not a resident company that is not a domestic company;")]
+    [InlineData(Readings, "Section 3(8) sends a benefit or perquisite and a virtual digital asset paid for in kind (393(1) [Table: Sl. No. 8(iv). Note 2, Sl. No. 8(iv). Note 6 and Sl. No. 8(vi). Note 6]) to the rates of Part II, whose item for them is not read here; winnings in kind (393(3), Sl. Nos. 1 and 2, Note 2) take their winnings' items.")]
+    public async Task Description_OfEachFinanceActSet_SaysWhatItCoversAndLeavesOut(string key, string words)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var set = await scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>().GetSetAsync(key, FirstDay, TestContext.Current.CancellationToken);
+
+        Assert.Contains(words, set!.Description, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -227,13 +254,13 @@ public sealed class TdsFinanceActGoldenTests(ErpApiFactory factory)
     }
 
     [Theory]
-    [InlineData(RatesInForce, "2026-04-01", 57, 0, 0, "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), Table, Sl. No. 1, and First Schedule, Part II")]
-    [InlineData(RatesInForce, "2027-04-01", 0, 0, 57, "Income-tax Act, 2025 (30 of 2025), section 2(90)(a)(iv) and (c)")]
-    [InlineData(SurchargeAndCess, "2026-04-01", 36, 0, 0, "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), (16) and (17) and First Schedule, Part II")]
-    [InlineData(SurchargeAndCess, "2027-04-01", 0, 0, 36, "Finance Act, 2026 (4 of 2026), long title")]
-    [InlineData(Readings, "2026-04-01", 24, 0, 0, "Income-tax Act, 2025 (30 of 2025), 21 August 2025, section 393(1) and (3), Tables")]
-    [InlineData(Readings, "2027-04-01", 0, 0, 24, "Income-tax Act, 2025 (30 of 2025), section 2(90)(a)(iv) and (c)")]
-    public async Task Changes_OfAVersion_AreTheRowsItsInstrumentAddedChangedAndRemoved(string key, string from, int added, int changed, int removed, string instrument)
+    [InlineData(RatesInForce, "2026-04-01", 57, 0, 0, "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), Table, Sl. No. 1, and First Schedule, Part II, in force 1 April 2026 (section 1(2)(a))|Income-tax Act, 2025 (30 of 2025), 21 August 2025, section 2(90), in force 1 April 2026 (section 1(3))")]
+    [InlineData(RatesInForce, "2027-04-01", 0, 0, 57, "Income-tax Act, 2025 (30 of 2025), section 2(90)(a)(iv) and (c): the rates in force for deducting tax under these entries are|" + LongTitle)]
+    [InlineData(SurchargeAndCess, "2026-04-01", 37, 0, 0, "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), (8), (16) and (17) and First Schedule, Part II, in force 1 April 2026 (section 1(2)(a))")]
+    [InlineData(SurchargeAndCess, "2027-04-01", 0, 0, 37, LongTitle)]
+    [InlineData(Readings, "2026-04-01", 24, 0, 0, "Income-tax Act, 2025 (30 of 2025), 21 August 2025, section 393(1) and (3), Tables, in force 1 April 2026 (section 1(3))|Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), Table, Sl. No. 1, and First Schedule, Part II, in force 1 April 2026 (section 1(2)(a))")]
+    [InlineData(Readings, "2027-04-01", 0, 0, 24, "Income-tax Act, 2025 (30 of 2025), section 2(90)(a)(iv) and (c): the rates in force for deducting tax under these entries are|" + LongTitle)]
+    public async Task Changes_OfAVersion_AreTheRowsItsInstrumentsAddedChangedAndRemoved(string key, string from, int added, int changed, int removed, string instruments)
     {
         var date = DateOnly.Parse(from, CultureInfo.InvariantCulture);
         await using var scope = factory.Services.CreateAsyncScope();
@@ -242,7 +269,9 @@ public sealed class TdsFinanceActGoldenTests(ErpApiFactory factory)
 
         Assert.NotNull(view);
         Assert.Equal(date, view.From);
-        Assert.Contains(view.Instruments, cited => cited.StartsWith(instrument, StringComparison.Ordinal));
+        var openings = instruments.Split('|');
+        Assert.Equal(openings.Length, view.Instruments.Count);
+        Assert.All(openings.Zip(view.Instruments), pair => Assert.StartsWith(pair.First, pair.Second, StringComparison.Ordinal));
         Assert.Equal((added, changed, removed), (view.Added.Count, view.Changed.Count, view.Removed.Count));
         Assert.All(view.Removed, row => Assert.Equal(LastDay, row.Until));
     }
@@ -273,7 +302,7 @@ public sealed class TdsFinanceActGoldenTests(ErpApiFactory factory)
         var clauses = await store.GetAsOfAsync<TdsSurchargesAndCess>(FirstDay, TestContext.Current.CancellationToken);
         var readings = await store.GetAsOfAsync<TdsRateInForceReadings>(FirstDay, TestContext.Current.CancellationToken);
 
-        Assert.Equal((57, 36, 24), (rates!.Rates.Count, clauses!.Clauses.Count, readings!.Readings.Count));
+        Assert.Equal((57, 37, 24), (rates!.Rates.Count, clauses!.Clauses.Count, readings!.Readings.Count));
         Assert.Equal(LastDay, rates.Version.Until);
         Assert.Equal(LastDay, clauses.Version.Until);
         Assert.Equal(LastDay, readings.Version.Until);

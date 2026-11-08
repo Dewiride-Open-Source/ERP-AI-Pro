@@ -1,7 +1,7 @@
 {
   "key": "income-tax.tds-no-deduction-cases",
   "title": "Cases with no TDS under the Income-tax Act, 2025",
-  "description": "The cases in which the Income-tax Act, 2025 says tax shall not be deducted at source, in force from 1 April 2026: every serial number of the Table of section 393(4) (“FOR NO DEDUCTION AT SOURCE”), with the provision it switches off and its condition as printed, and the payees of sections 393(5), 393(8) and 393(9). Serial number 7 reads as the Finance Act, 2026, section 84(b), amended it and as the Corrigenda of 30 January 2026 corrected it, and is split into its clauses (a), (b) and (c); serial number 12 is split into its clauses (a) and (b). The amount is the figure the condition names: the turnover above which a co-operative society loses the exception of serial number 7, clause (b), and elsewhere the most that may be paid without deduction.",
+  "description": "The cases in which the Income-tax Act, 2025 says tax shall not be deducted at source, in force from 1 April 2026: every serial number of the Table of section 393(4) (“FOR NO DEDUCTION AT SOURCE”), with the provision it switches off and its condition as printed, and the payees of sections 393(5), 393(8) and 393(9). Serial number 7 reads as the Finance Act, 2026, section 84(b), amended it and as the Corrigenda of 30 January 2026 corrected it, and is split into its clauses (a), (b) and (c), with item (iv)(B) of clause (c) apart; serial number 10 is split into its clauses (a) to (e) and its clause (f), and serial number 12 into its clauses (a) and (b), so that each row's figure holds for the whole of its condition. The amount is the figure the row's condition names: the turnover above which a co-operative society loses the exception of serial number 7, clause (b), and elsewhere the most that may be paid without deduction.",
   "basis": "law",
   "asOf": "deductionDate",
   "columns": [
@@ -167,28 +167,54 @@
     },
     {
       "from": "2026-04-01",
-      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 7.C(c)], item (iv) as substituted by the Finance Act, 2026, section 84(b)(ii)",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 7.C(c)] without item (iv)(B), item (iv) as substituted by the Finance Act, 2026, section 84(b)(ii)",
       "cells": {
         "case": "393(4)-7(c)",
-        "name": "Interest paid by the Central Government, on notified schemes, on bank deposits other than time deposits, on accident-claim compensation, on zero coupon bonds, under Schedule V and by firms to partners",
+        "name": "Interest paid by the Central Government, on notified schemes, on bank deposits other than time deposits, on accident-claim compensation to an individual, on zero coupon bonds, under Schedule V and by firms to partners",
         "provisions": "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].",
         "entry": null,
-        "condition": "(c) interest income credited or paid— (i) by the Central Government under any provision of this Act or the Income-tax Act, 1961 (43 of 1961), or the Estate Duty Act, 1953 (34 of 1953), or the Wealth-tax Act, 1957 (27 of 1957), or the Gift-tax Act, 1958 (18 of 1958), the Companies (Profits) Surtax Act, 1964 (7 of 1964), or the Interest-tax Act, 1974 (45 of 1974); (ii) in respect of deposits under any scheme framed by the Central Government and notified by it in this behalf; (iii) in respect of deposits (other than time deposits made on or after the 1st July, 1995) with a banking company; (iv) on the compensation amount awarded by a Motor Accidents Claims Tribunal— (A) to an individual; or (B) to a person other than an individual, where the aggregate interest on such compensation does not exceed ₹ 50000 during the tax year; (v) or payable by an infrastructure capital company; or infrastructure capital fund; or infrastructure debt fund; or a public sector company; or scheduled bank in relation to a zero coupon bond issued on or after the 1st June, 2005 by such company or fund or public sector company or scheduled bank; (vi) as referred to in Schedule V (Table: Sl. No. 3); (vii) by a firm to a partner of the firm.",
+        "condition": "(c) interest income credited or paid— (i) by the Central Government under any provision of this Act or the Income-tax Act, 1961 (43 of 1961), or the Estate Duty Act, 1953 (34 of 1953), or the Wealth-tax Act, 1957 (27 of 1957), or the Gift-tax Act, 1958 (18 of 1958), the Companies (Profits) Surtax Act, 1964 (7 of 1964), or the Interest-tax Act, 1974 (45 of 1974); (ii) in respect of deposits under any scheme framed by the Central Government and notified by it in this behalf; (iii) in respect of deposits (other than time deposits made on or after the 1st July, 1995) with a banking company; (iv) on the compensation amount awarded by a Motor Accidents Claims Tribunal— (A) to an individual; or (v) or payable by an infrastructure capital company; or infrastructure capital fund; or infrastructure debt fund; or a public sector company; or scheduled bank in relation to a zero coupon bond issued on or after the 1st June, 2005 by such company or fund or public sector company or scheduled bank; (vi) as referred to in Schedule V (Table: Sl. No. 3); (vii) by a firm to a partner of the firm.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 7.C(c)(iv)(B)], as substituted by the Finance Act, 2026, section 84(b)(ii)",
+      "cells": {
+        "case": "393(4)-7(c)(iv)(B)",
+        "name": "Small interest on accident-claim compensation awarded to a person other than an individual",
+        "provisions": "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].",
+        "entry": null,
+        "condition": "(c) interest income credited or paid— (iv) on the compensation amount awarded by a Motor Accidents Claims Tribunal— (B) to a person other than an individual, where the aggregate interest on such compensation does not exceed ₹ 50000 during the tax year;",
         "amount": 50000,
         "count": null
       }
     },
     {
       "from": "2026-04-01",
-      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 8]",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 8.C(a)]",
       "cells": {
-        "case": "393(4)-8",
-        "name": "Contractors owning ten or fewer goods carriages; contracts for personal purposes",
+        "case": "393(4)-8(a)",
+        "name": "Contractors owning ten or fewer goods carriages",
         "provisions": "Payments to contractors referred to in section 393(1) [Table: Sl. No. 6(i)].",
         "entry": "393(1)-6(i)",
-        "condition": "(a) Where–– (i) any sum credited or paid or likely to be credited or paid during the tax year to the account of a contractor during the course of business of plying, hiring or leasing goods carriages; and (ii) that contractor owns ten or less goods carriages at any time during the tax year; and (iii) furnishes a declaration to that effect along with his Permanent Account Number to the person paying or crediting the sum; and (iv) the person responsible for paying to the contractor furnishes to the prescribed income-tax authority the particulars in such form and within such time as may be prescribed; (b) where such sum is credited or paid by individual or Hindu undivided family exclusively for personal purposes of such individual or any member of Hindu undivided family.",
+        "condition": "(a) Where–– (i) any sum credited or paid or likely to be credited or paid during the tax year to the account of a contractor during the course of business of plying, hiring or leasing goods carriages; and (ii) that contractor owns ten or less goods carriages at any time during the tax year; and (iii) furnishes a declaration to that effect along with his Permanent Account Number to the person paying or crediting the sum; and (iv) the person responsible for paying to the contractor furnishes to the prescribed income-tax authority the particulars in such form and within such time as may be prescribed;",
         "amount": null,
         "count": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 8.C(b)]",
+      "cells": {
+        "case": "393(4)-8(b)",
+        "name": "Contracts paid for personal purposes by an individual or a Hindu undivided family",
+        "provisions": "Payments to contractors referred to in section 393(1) [Table: Sl. No. 6(i)].",
+        "entry": "393(1)-6(i)",
+        "condition": "(b) where such sum is credited or paid by individual or Hindu undivided family exclusively for personal purposes of such individual or any member of Hindu undivided family.",
+        "amount": null,
+        "count": null
       }
     },
     {
@@ -206,13 +232,26 @@
     },
     {
       "from": "2026-04-01",
-      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 10]",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 10.C(a) to (e)]",
       "cells": {
         "case": "393(4)-10",
-        "name": "Dividends paid to insurers, business trusts and notified persons, and small dividends paid to individuals other than in cash",
+        "name": "Dividends paid to insurers, business trusts and notified persons",
         "provisions": "Dividend referred to in section 393(1) (Table: Sl. No. 7).",
         "entry": "393(1)-7",
-        "condition": "Dividend income credited or paid to— (a) the Life Insurance Corporation of India established under the Life Insurance Corporation Act, 1956 (31 of 1956), in respect of any shares owned by it or in which it has full beneficial interest; (b) the General Insurance Corporation of India or to any of the four companies, formed by virtue of the schemes made under section 16(1) of the General Insurance Business (Nationalisation) Act, 1972 (57 of 1972), in respect of any shares owned by the Corporation or such company or in which the Corporation or such company has full beneficial interest; (c) any other insurer in respect of any shares owned by it or in which it has full beneficial interest; (d) a “business trust”, as defined in section 2(21), by a special purpose vehicle referred to in Schedule V (Note 2); (e) any other person as may be notified by the Central Government in this behalf; (f) a shareholder, being an individual, if— (I) the dividend is paid by the company by any mode other than cash; and (II) amount or aggregate of amounts of such dividend distributed or paid or likely to be distributed or paid during the tax year does not exceed ₹10,000.",
+        "condition": "Dividend income credited or paid to— (a) the Life Insurance Corporation of India established under the Life Insurance Corporation Act, 1956 (31 of 1956), in respect of any shares owned by it or in which it has full beneficial interest; (b) the General Insurance Corporation of India or to any of the four companies, formed by virtue of the schemes made under section 16(1) of the General Insurance Business (Nationalisation) Act, 1972 (57 of 1972), in respect of any shares owned by the Corporation or such company or in which the Corporation or such company has full beneficial interest; (c) any other insurer in respect of any shares owned by it or in which it has full beneficial interest; (d) a “business trust”, as defined in section 2(21), by a special purpose vehicle referred to in Schedule V (Note 2); (e) any other person as may be notified by the Central Government in this behalf;",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 10.C(f)]",
+      "cells": {
+        "case": "393(4)-10(f)",
+        "name": "Small dividends paid to individuals other than in cash",
+        "provisions": "Dividend referred to in section 393(1) (Table: Sl. No. 7).",
+        "entry": "393(1)-7",
+        "condition": "Dividend income credited or paid to— (f) a shareholder, being an individual, if— (I) the dividend is paid by the company by any mode other than cash; and (II) amount or aggregate of amounts of such dividend distributed or paid or likely to be distributed or paid during the tax year does not exceed ₹10,000.",
         "amount": 10000,
         "count": null
       }

@@ -38,7 +38,7 @@ test.describe("statutory parameters without the API", () => {
       "The statutory parameter sets could not be read. Try again later.",
     );
     await expect(listPage.region).toHaveCount(0);
-    await expect(listPage.entries.root).toHaveCount(0);
+    await expect(page.getByTestId("searched-list")).toHaveCount(0);
     await capture("parameter-sets-unavailable");
   });
 

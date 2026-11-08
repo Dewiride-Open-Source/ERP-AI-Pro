@@ -48,8 +48,8 @@ async function rowsShown(table: Locator, cardList: Locator): Promise<void> {
     .toBe(true);
 }
 
-// A list draws its rows twice, as a table and as cards, and shows one of them by the width of its box; each row is read
-// from whichever is shown, as its values by column heading.
+// A list draws its rows as a table and as cards and shows one of them by the width of its box, or draws only the cards when
+// it is laid out as cards; each row is read from whichever is shown, as its values by column heading.
 export async function shownRows(container: Locator, titleHeading: string): Promise<ShownRow[]> {
   const table = container.getByTestId("searched-list-table");
   const cardList = container.getByTestId("searched-list-cards");
@@ -133,11 +133,27 @@ export class SearchedListRegion {
     await this.searchBox.press("Enter");
   }
 
-  // The rows are a table on a wide screen and cards on a narrow one.
+  // The rows are a table on a wide box and cards on a narrow one, or cards at every width when the list is laid out as cards.
   async showsCards(): Promise<boolean> {
     const cardList = this.root.getByTestId("searched-list-cards");
     await rowsShown(this.root.getByTestId("searched-list-table"), cardList);
     return cardList.isVisible();
+  }
+
+  async narrowestValueShare(text: string): Promise<number> {
+    return this.root
+      .getByTestId("searched-list-card")
+      .filter({ visible: true })
+      .filter({ hasText: text })
+      .first()
+      .evaluate((card) => {
+        const width = card.getBoundingClientRect().width;
+        const values = Array.from(
+          card.querySelectorAll("dd"),
+          (value) => value.getBoundingClientRect().width,
+        );
+        return values.length === 0 || width === 0 ? 0 : Math.min(...values) / width;
+      });
   }
 
   row(text: string): Locator {

@@ -1,7 +1,7 @@
 {
   "key": "income-tax.tds-surcharge-and-cess",
   "title": "Surcharge and cess on TDS (Finance Act)",
-  "description": "The surcharge on tax deducted at source from payments to non-residents, under section 3(7) of the Finance Act, 2026 for the entries of the Income-tax Act, 2025 deducted at the rates those entries specify and under Part II of its First Schedule for the entries deducted at the rates in force, by payee and by the income or aggregate of incomes subject to the deduction; and the Health and Education Cess of 4% that section 3(16) adds to the tax and surcharge, which section 3(17)(i) does not add where the income is paid to a domestic company and any other person who is resident in India. The rows apply from 1 April 2026; the Finance Act, 2026 gives effect to the proposals for the financial year 2026-27, so they end on 31 March 2027 and the set holds none after that day until the next Finance Act is added.",
+  "description": "The surcharge on tax deducted at source from payments to non-residents, under section 3(7) of the Finance Act, 2026 for the entries of the Income-tax Act, 2025 deducted at the rates those entries specify and under Part II of its First Schedule for the entries deducted at the rates in force, by payee and by the income or aggregate of incomes subject to the deduction; section 3(8), which sends the tax collected on a benefit or perquisite, on a virtual digital asset paid for in kind and on winnings in kind to the rates and surcharge of Part II; and the Health and Education Cess of 4% that section 3(16) adds to the tax and surcharge, which section 3(17)(i) does not add where the income is paid to a domestic company and any other person who is resident in India. The rows apply from 1 April 2026; the Finance Act, 2026 gives effect to the proposals for the financial year 2026-27, so they end on 31 March 2027 and the set holds none after that day until the next Finance Act is added.",
   "basis": "law",
   "asOf": "deductionDate",
   "columns": [
@@ -27,6 +27,10 @@
         {
           "value": "section3Sub16",
           "title": "Finance Act, 2026, section 3(16) and (17)"
+        },
+        {
+          "value": "section3Sub8",
+          "title": "Finance Act, 2026, section 3(8)"
         }
       ]
     },
@@ -61,6 +65,10 @@
         {
           "value": "cessNotApplied",
           "title": "Cess not added"
+        },
+        {
+          "value": "partTwoRates",
+          "title": "Rates and surcharge of Part II"
         }
       ]
     },
@@ -121,7 +129,7 @@
     {
       "from": "2026-04-01",
       "instruments": [
-        "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), (16) and (17) and First Schedule, Part II, in force 1 April 2026 (section 1(2)(a))"
+        "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), (8), (16) and (17) and First Schedule, Part II, in force 1 April 2026 (section 1(2)(a))"
       ]
     },
     {
@@ -708,6 +716,23 @@
         "scope": "allIncome",
         "percent": 5,
         "words": "(ii) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 100000000, at the rate of 5%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(8)",
+      "cells": {
+        "clause": "3(8)",
+        "provision": "section3Sub8",
+        "person": null,
+        "appliesTo": "section 393(1) [Table: Sl. No. 8(iv). Note 2, Sl. No. 8(iv). Note 6 and Sl. No. 8(vi). Note 6] and 393(3) [Table: Sl. No. 1. Note 2 and Sl. No. 2. Note 2]",
+        "kind": "partTwoRates",
+        "above": null,
+        "upTo": null,
+        "scope": null,
+        "percent": null,
+        "words": "(8) In cases in which tax has to be collected under section 393(1) [Table: Sl. No. 8(iv). Note 2, Sl. No. 8(iv). Note 6 and Sl. No. 8(vi). Note 6] and 393(3) [Table: Sl. No. 1. Note 2 and Sl. No. 2. Note 2] of the said Act, the collection shall be made at the rates specified in Part II of the First Schedule, and shall be increased by a surcharge, for the purposes of the Union, calculated, in cases wherever prescribed, in the manner provided therein."
       }
     },
     {

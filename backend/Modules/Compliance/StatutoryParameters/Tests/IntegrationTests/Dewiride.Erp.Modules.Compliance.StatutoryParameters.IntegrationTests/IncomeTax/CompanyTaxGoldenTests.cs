@@ -102,6 +102,8 @@ public sealed class CompanyTaxGoldenTests(ErpApiFactory factory)
     [InlineData("special-sections-above-10-crore", CompanySurchargeTaxOn.SpecialSections, "12", "100000000", null, "Every domestic company except such domestic company whose income is chargeable to tax under section 200 or 201 of the said Act.", "(ii) where the total income exceeds ₹ 100000000, at the rate of 12%.", "Tn = Rn + Sn", "section 3(4)(b), Table, Sl. No. 6(ii), with section 3(5), Table, Sl. No. 5")]
     [InlineData("new-regime-options", CompanySurchargeTaxOn.NewRegimeOptions, "10", null, null, "Every domestic company other than a special purpose vehicle referred to in Schedule V [Note 2].", "[Sl. No. 9.B] 200 or 201. [Sl. No. 9.D] 10%.", null, "as substituted by the Taxation and Other Laws (Amendment) Act, 2026, section 6(a) and (b)")]
     [InlineData("new-regime-options-special-purpose-vehicle", CompanySurchargeTaxOn.NewRegimeOptions, "25", null, null, "Every domestic company, being a special purpose vehicle referred to in Schedule V [Note 2].", "[Sl. No. 9A.B] 200 or 201. [Sl. No. 9A.D] 25%.", null, "as substituted by the Taxation and Other Laws (Amendment) Act, 2026, section 6(a) and (b)")]
+    [InlineData("section-195-1-i", CompanySurchargeTaxOn.Section195, "25", null, null, "Any assessee.", "of such income-tax. [Sl. No. 8.B] 195(1)(i). [Sl. No. 8.D] 25%.", null, "Finance Act, 2026, section 3(4)(b), Table, Sl. No. 8, and section 3(12)(b), Table, Sl. No. 8 (advance tax)")]
+    [InlineData("section-rates", CompanySurchargeTaxOn.SectionRates, "12", null, null, "In cases in which tax has to be charged and paid under section 69 or section 170(5) or section 352 of the said Act", "the tax shall be charged and paid at the rates as specified in those sections and shall be increased by a surcharge, for the purposes of the Union, calculated at the rate of 12% of such tax.", null, "Finance Act, 2026, section 3(6)")]
     public async Task Surcharge_OfEachBandInTheFirstTaxYear_IsTheRateAndBoundsItsInstrumentSets(string band, CompanySurchargeTaxOn taxOn, string rate, string? incomeAbove, string? incomeUpTo, string persons, string words, string? marginalRelief, string instrument)
     {
         await using var scope = factory.Services.CreateAsyncScope();
@@ -127,8 +129,21 @@ public sealed class CompanyTaxGoldenTests(ErpApiFactory factory)
         Assert.Contains(instrument, await SourceAsync(scope, SurchargeKey, band), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Surcharge_Description_NamesTheSurchargeOnTaxUnderSection195AndTheOneSection3Sub6Adds()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var set = await scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>().GetSetAsync(SurchargeKey, FirstTaxYear, TestContext.Current.CancellationToken);
+
+        Assert.Contains("whose Sl. No. 8 levies 25% on tax under section 195(1)(i)", set!.Description, StringComparison.Ordinal);
+        Assert.Contains("its section 3(6), which adds 12% to tax charged at the rates of sections 69, 170(5) and 352", set.Description, StringComparison.Ordinal);
+        Assert.Contains("Part III and section 3(12) state the same bands for advance tax, none for section 3(6)", set.Description, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("charge", "4", "(15) The amount of income-tax as specified in sub-sections (1) to (5) and as increased by the applicable surcharge", "Finance Act, 2026, section 3(15)")]
+    [InlineData("section-rates", "4", "(16) The amount of income-tax as specified in sub-sections (6) to (14) and as increased by the applicable surcharge", "Finance Act, 2026, section 3(16), as it applies to the income-tax of section 3(6)")]
     [InlineData("advance-tax", "4", "(16) The amount of income-tax as specified in sub-sections (6) to (14) and as increased by the applicable surcharge", "Finance Act, 2026, section 3(16)")]
     public async Task Cess_OnEachTaxInTheFirstTaxYear_IsTheRateOfTheIncomeTaxAndSurchargeItsInstrumentSets(string cess, string rate, string words, string instrument)
     {
@@ -155,6 +170,19 @@ public sealed class CompanyTaxGoldenTests(ErpApiFactory factory)
         Assert.DoesNotContain("is paid to a domestic company and any other person who is resident in India", wording, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Cess_OnTheTaxOfSection3Sub6_IsSection3Sub16WithNeitherExceptionOfSection3Sub17()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var rates = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<HealthAndEducationCess>(FirstTaxYear, TestContext.Current.CancellationToken))!.Rates;
+
+        var found = Assert.Single(rates, rate => rate.Cess == "section-rates");
+        Assert.Equal("Income-tax charged at the rates of section 69, 170(5) or 352, with its surcharge", found.Name);
+        Assert.EndsWith("universalised quality basic education and secondary and higher education.", found.Wording, StringComparison.Ordinal);
+        Assert.DoesNotContain("(17)", found.Wording, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("when-payable", null, null, "the income-tax payable on the total income as computed under this Act for a tax year is less than the minimum alternate tax payable for such tax year", "Income-tax Act, 2025, section 206(1)(a)")]
     [InlineData("book-profit-rate", "14", null, "(ii) in case of any other company, at a rate of 14%.", "Income-tax Act, 2025, section 206(1)(b)(ii), as amended by the Finance Act, 2026, section 59(a)(i)")]
@@ -178,6 +206,18 @@ public sealed class CompanyTaxGoldenTests(ErpApiFactory factory)
     }
 
     [Theory]
+    [InlineData("book-profit-rate", "Rate on book profit: any company other than an IFSC unit deriving its income solely in convertible foreign exchange")]
+    [InlineData("book-profit-rate-ifsc-unit", "Rate on book profit: IFSC unit deriving its income solely in convertible foreign exchange")]
+    public async Task Rule_OfEachRateOnBookProfit_NamesTheCompaniesSection206Sub1bGivesItTo(string rule, string name)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var rules = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<MinimumAlternateTax>(FirstTaxYear, TestContext.Current.CancellationToken))!.Rules;
+
+        Assert.Equal(name, Assert.Single(rules, candidate => candidate.Rule == rule).Name);
+    }
+
+    [Theory]
     [InlineData(RatesKey, "turnover-within-limit")]
     [InlineData(RatesKey, "other-domestic")]
     [InlineData(SurchargeKey, "schedule-rates-above-1-crore")]
@@ -186,7 +226,10 @@ public sealed class CompanyTaxGoldenTests(ErpApiFactory factory)
     [InlineData(SurchargeKey, "special-sections-above-10-crore")]
     [InlineData(SurchargeKey, "new-regime-options")]
     [InlineData(SurchargeKey, "new-regime-options-special-purpose-vehicle")]
+    [InlineData(SurchargeKey, "section-195-1-i")]
+    [InlineData(SurchargeKey, "section-rates")]
     [InlineData(CessKey, "charge")]
+    [InlineData(CessKey, "section-rates")]
     [InlineData(CessKey, "advance-tax")]
     public async Task FinanceActRow_OnTheLastDayOfItsTaxYearAndTheFirstDayOfTheNext_IsInForceThenGone(string key, string row)
     {
@@ -246,10 +289,10 @@ public sealed class CompanyTaxGoldenTests(ErpApiFactory factory)
     [Theory]
     [InlineData(RatesKey, "2026-04-01", 8, 0, 0, "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, sections 3(1), 3(3) and 3(10)|Income-tax Act, 2025 (No. 30 of 2025), 21 August 2025, sections 199, 200, 201 and 205")]
     [InlineData(RatesKey, "2027-04-01", 0, 0, 2, "Finance Act, 2026 (No. 4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”|Finance Act, 2026 (No. 4 of 2026), section 3(1): “for the tax year commencing on the 1st day of April, 2026, income-tax shall be charged|Finance Act, 2026 (No. 4 of 2026), section 3(10)(iv)")]
-    [InlineData(SurchargeKey, "2026-04-01", 6, 0, 0, "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, sections 3(4), 3(5), 3(12) and 3(13)|Taxation and Other Laws (Amendment) Act, 2026 (No. 21 of 2026), 17 August 2026, section 6")]
-    [InlineData(SurchargeKey, "2027-04-01", 0, 0, 6, "Finance Act, 2026 (No. 4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”|Finance Act, 2026 (No. 4 of 2026), section 3(1): “for the tax year commencing on the 1st day of April, 2026, income-tax shall be charged”|Finance Act, 2026 (No. 4 of 2026), section 3(10)(iv)")]
-    [InlineData(CessKey, "2026-04-01", 2, 0, 0, "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, section 3(15), (16) and (17)")]
-    [InlineData(CessKey, "2027-04-01", 0, 0, 2, "Finance Act, 2026 (No. 4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”|Finance Act, 2026 (No. 4 of 2026), section 3(15)|Finance Act, 2026 (No. 4 of 2026), section 3(16)")]
+    [InlineData(SurchargeKey, "2026-04-01", 8, 0, 0, "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, sections 3(4), 3(5), 3(6), 3(12) and 3(13) and First Schedule, Part I-B, Paragraph F and Part III, Paragraph F|Taxation and Other Laws (Amendment) Act, 2026 (No. 21 of 2026), 17 August 2026, section 6")]
+    [InlineData(SurchargeKey, "2027-04-01", 0, 0, 8, "Finance Act, 2026 (No. 4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”|Finance Act, 2026 (No. 4 of 2026), section 3(1): “for the tax year commencing on the 1st day of April, 2026, income-tax shall be charged”|Finance Act, 2026 (No. 4 of 2026), section 3(10)(iv)")]
+    [InlineData(CessKey, "2026-04-01", 3, 0, 0, "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, section 3(15), (16) and (17)")]
+    [InlineData(CessKey, "2027-04-01", 0, 0, 3, "Finance Act, 2026 (No. 4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”|Finance Act, 2026 (No. 4 of 2026), section 3(15)|Finance Act, 2026 (No. 4 of 2026), section 3(16)")]
     [InlineData(MinimumAlternateTaxKey, "2026-04-01", 8, 0, 0, "Income-tax Act, 2025 (No. 30 of 2025), 21 August 2025, section 206(1) and (3)|Finance Act, 2026 (No. 4 of 2026), 30 March 2026, section 59")]
     public async Task Version_OfEachSet_CitesItsInstrumentsAndChangesTheRowsTheyChange(string key, string from, int added, int changed, int removed, string instruments)
     {

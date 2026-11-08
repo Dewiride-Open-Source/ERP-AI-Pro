@@ -243,7 +243,7 @@ public sealed class DepreciationGoldenTests(ErpApiFactory factory)
     [InlineData("half-rate", 50, 180, "restricted to 50% of the prescribed rate", "for less than one hundred and eighty days in that tax year", "Income-tax Act, 2025, section 33(4)")]
     [InlineData("additional", 20, null, "(a) 20% of the actual cost of the new machinery or plant", "in the tax year when it is acquired and put to use", "Income-tax Act, 2025, section 33(9)(a), read with section 33(8)")]
     [InlineData("additional-short-use", 10, 180, "(b) 10% of the actual cost", "for less than one hundred and eighty days in the relevant tax year", "Income-tax Act, 2025, section 33(9)(b), read with section 33(8)")]
-    [InlineData("additional-balance", 10, null, "and 10% of the actual cost", "shall be allowed in the immediately succeeding tax year.", "Income-tax Act, 2025, section 33(9)(b), read with section 33(8)")]
+    [InlineData("additional-balance", 10, 180, "and 10% of the actual cost", "for less than one hundred and eighty days in the relevant tax year, and 10% of the actual cost shall be allowed in the immediately succeeding tax year.", "Income-tax Act, 2025, section 33(9)(b), read with section 33(8)")]
     [InlineData("cap-domestic-company", 40, null, CapOf40Percent, "(a) section 199(3); or (b) section 200(5); or (c) section 201(2).", "Income-tax Rules, 2026, rule 25(2) [Table: Sl. No. 1]")]
     [InlineData("cap-section-202", 40, null, CapOf40Percent, "Whose income is chargeable to tax under section 202(1).", "Income-tax Rules, 2026, rule 25(2) [Table: Sl. No. 2]")]
     [InlineData("cap-cooperative-society", 40, null, CapOf40Percent, "Cooperative society resident in India", "Income-tax Rules, 2026, rule 25(2) [Table: Sl. No. 3]")]
@@ -259,6 +259,16 @@ public sealed class DepreciationGoldenTests(ErpApiFactory factory)
         Assert.Contains(percentWords, found.Test, StringComparison.Ordinal);
         Assert.Contains(conditionWords, found.Test, StringComparison.Ordinal);
         Assert.Equal(source, await SourceAsync(scope, Allowances, allowance));
+    }
+
+    [Fact]
+    public async Task Allowances_Description_LeavesWhoMayClaimAdditionalDepreciationAndTheTotalIncomeComputedWithoutItToTheAct()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var set = await scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>().GetSetAsync(Allowances, FirstTaxYear, TestContext.Current.CancellationToken);
+
+        Assert.EndsWith("Who may claim additional depreciation is set by section 33(8), and the total income for the purposes of sections 199(1)(c)(i)(C), 200(1)(a)(iii), 201(3)(a)(iii), 202(1), 203(1)(a)(ii) and 204(3)(a)(ii) is computed without any deduction under it (sections 205(1)(a) and 202(2)(a)(vi)); neither is repeated here.", set!.Description, StringComparison.Ordinal);
     }
 
     [Theory]

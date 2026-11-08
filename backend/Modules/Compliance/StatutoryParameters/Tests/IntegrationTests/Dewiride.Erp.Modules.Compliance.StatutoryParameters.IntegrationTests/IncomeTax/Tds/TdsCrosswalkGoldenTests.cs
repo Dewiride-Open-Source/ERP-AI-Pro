@@ -8,7 +8,7 @@ namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.I
 
 // Golden values of the ERP's reading of which provision of the Income-tax Act, 2025 governs a payment on which tax was deducted
 // under the Income-tax Act, 1961, each pinned beside the provisions its source names so that a wrong edit of a seed file fails a
-// test (ADR-0063). The pairs hold from the day the 2025 Act came into force with no end, and the 1961 headings are TRACES's.
+// test (ADR-0063). The pairs hold from the day the 2025 Act came into force with no end, and the 1961 descriptions are TRACES's.
 [Collection(StatutoryRows.Name)]
 public sealed class TdsCrosswalkGoldenTests(ErpApiFactory factory)
 {
@@ -17,6 +17,16 @@ public sealed class TdsCrosswalkGoldenTests(ErpApiFactory factory)
     private const string FinanceActSections = "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7) and (10) and sections 84, 86 and 90, in force 1 April 2026 (section 1(2)(a))";
 
     private const string TracesReviewed = "“Last reviewed and updated on : 31-March-2026”";
+
+    private const string Instruments =
+        "Income-tax Act, 2025 (30 of 2025), 21 August 2025, sections 392, 393, 395, 397, 402 and 536, in force 1 April 2026 (section 1(3))"
+        + "|Corrigenda to the Income-tax Act, 2025, Gazette of India Extraordinary, Part II, Section 1, No. 2, 30 January 2026"
+        + "|" + FinanceActSections
+        + "|Finance Act, 2025 (7 of 2025), 29 March 2025, section 2(5), (6) and (9), sections 56 to 71 and First Schedule, Part II"
+        + "|Finance (No. 2) Act, 2024 (15 of 2024), 16 August 2024, sections 50 to 65"
+        + "|TRACES, Income Tax Department, “Financial Year 2025-2026 Non-Salary” (https://traces61contents.tdscpc.gov.in/en/tds-2025-2026.html), " + TracesReviewed + ": its descriptions of the 1961 provisions, an official secondary text"
+        + "|TRACES, Income Tax Department, section codes (https://traces61contents.tdscpc.gov.in/en/section-codes-26A.html), " + TracesReviewed + ": its description of section 192, which the rates page does not give"
+        + "|Income Tax Department, e-filing portal, TDS Compliance, Tax Payments, Income Tax Forms and Form 141 FAQs, read 8 November 2026";
 
     private static readonly DateOnly ActInForce = new(2026, 4, 1);
 
@@ -143,11 +153,22 @@ public sealed class TdsCrosswalkGoldenTests(ErpApiFactory factory)
     [InlineData("194T.393(3)-7", "Payment of salary, remuneration, commission, bonus or interest to a partner of firm")]
     [InlineData("194LD.none", "Interest on certain bonds and govt. Securities (from 01-06-2013)")]
     [InlineData("197.395(1)", null)]
-    public async Task Heading_OfEachPair_IsTheTextTracesShowsForThe1961Provision(string pair, string? heading)
+    public async Task OldDescription_OfEachPair_IsTheTextTracesShowsForThe1961Provision(string pair, string? description)
     {
         await using var scope = factory.Services.CreateAsyncScope();
 
-        Assert.Equal(heading, Assert.Single(await PairsAsync(scope, ActInForce), candidate => candidate.Pair == pair).Heading1961);
+        Assert.Equal(description, Assert.Single(await PairsAsync(scope, ActInForce), candidate => candidate.Pair == pair).OldDescription);
+    }
+
+    [Fact]
+    public async Task Description_OfTheCrosswalk_SaysTheTracesTextIsNotAlwaysTheHeading()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var set = await scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>().GetSetAsync(Crosswalk, ActInForce, TestContext.Current.CancellationToken);
+
+        Assert.Contains("Each 1961 provision is described as the department's TRACES pages describe it, not always by its heading.", set!.Description, StringComparison.Ordinal);
+        Assert.DoesNotContain("1961 headings", set.Description, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -167,7 +188,7 @@ public sealed class TdsCrosswalkGoldenTests(ErpApiFactory factory)
     }
 
     [Fact]
-    public async Task Version_OfTheCrosswalk_CitesTheFinanceAct2026BySection3AndTheTracesPagesAsReviewed()
+    public async Task Version_OfTheCrosswalk_CitesItsEightInstrumentsInOrderAndTheTracesPagesAsReviewed()
     {
         await using var scope = factory.Services.CreateAsyncScope();
         var history = scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>();
@@ -177,10 +198,10 @@ public sealed class TdsCrosswalkGoldenTests(ErpApiFactory factory)
 
         Assert.Equal([ActInForce], set!.Versions.Select(version => version.From));
         Assert.Equal((52, 0, 0), (view!.Added.Count, view.Changed.Count, view.Removed.Count));
-        Assert.Contains(FinanceActSections, view.Instruments);
+        var openings = Instruments.Split('|');
+        Assert.Equal(openings.Length, view.Instruments.Count);
+        Assert.All(openings.Zip(view.Instruments), pair => Assert.StartsWith(pair.First, pair.Second, StringComparison.Ordinal));
         Assert.DoesNotContain(view.Instruments, cited => cited.StartsWith("Finance Act, 2026", StringComparison.Ordinal) && cited.Contains("section 2(", StringComparison.Ordinal));
-        Assert.Contains(view.Instruments, cited => cited.Contains("https://traces61contents.tdscpc.gov.in/en/tds-2025-2026.html", StringComparison.Ordinal) && cited.Contains(TracesReviewed, StringComparison.Ordinal));
-        Assert.Contains(view.Instruments, cited => cited.Contains("https://traces61contents.tdscpc.gov.in/en/section-codes-26A.html", StringComparison.Ordinal) && cited.Contains(TracesReviewed, StringComparison.Ordinal));
     }
 
     [Fact]

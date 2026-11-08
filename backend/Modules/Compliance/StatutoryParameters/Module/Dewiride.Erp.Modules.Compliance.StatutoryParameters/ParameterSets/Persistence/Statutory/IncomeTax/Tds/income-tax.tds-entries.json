@@ -1093,8 +1093,8 @@
         "payer": "Any person, being a firm.",
         "rate": "Rate: 10%",
         "threshold": "Threshold limit: ₹ 20000.",
-        "timing": "payment",
-        "timingWords": "at the time of payment thereof in cash or by way of a cheque or a draft or by any other mode, or as specified therein",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of payment thereof in cash or by way of a cheque or a draft or by any other mode, or as specified therein [Table: Sl. No. 7.B] paid to a partner of the firm or credited to his account (including capital account)",
         "notes": null
       }
     }

@@ -68,7 +68,7 @@ public sealed class TdsEntryGoldenTests(ErpApiFactory factory)
     [InlineData("393(3)-4", "section 393(3) (Table: Sl. No. 4)", TdsTable.AnyPerson, TdsTiming.CreditOrPayment, "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 4) and Note 3 of the Table")]
     [InlineData("393(3)-5", "section 393(3) (Table: Sl. No. 5)", TdsTable.AnyPerson, TdsTiming.Payment, "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 5)")]
     [InlineData("393(3)-6", "section 393(3) (Table: Sl. No. 6)", TdsTable.AnyPerson, TdsTiming.Payment, "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 6)")]
-    [InlineData("393(3)-7", "section 393(3) (Table: Sl. No. 7)", TdsTable.AnyPerson, TdsTiming.Payment, "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 7)")]
+    [InlineData("393(3)-7", "section 393(3) (Table: Sl. No. 7)", TdsTable.AnyPerson, TdsTiming.CreditOrPayment, "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 7)")]
     public async Task Entry_OnTheDayTheActCameIntoForce_IsAsTheActPrintsIt(string entry, string citation, TdsTable table, TdsTiming timing, string instrument)
     {
         await using var scope = factory.Services.CreateAsyncScope();
@@ -105,6 +105,18 @@ public sealed class TdsEntryGoldenTests(ErpApiFactory factory)
         var notes = Assert.Single(entries, entry => entry.Entry == "393(1)-3(i)").Notes;
         Assert.Contains("Note 3.––For the purposes of serial number 3(i), the income-tax shall be deducted", notes, StringComparison.Ordinal);
         Assert.DoesNotContain("serial number 3(iii), the income-tax", notes, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task TimingOfThePartnersEntry_OnTheDayTheActCameIntoForce_QuotesSection393Sub3cAndTheCreditColumnBNames()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var entries = await EntriesAsync(scope);
+
+        Assert.Equal(
+            "at the time of payment thereof in cash or by way of a cheque or a draft or by any other mode, or as specified therein [Table: Sl. No. 7.B] paid to a partner of the firm or credited to his account (including capital account)",
+            Assert.Single(entries, entry => entry.Entry == "393(3)-7").TimingWords);
     }
 
     private static async Task<IReadOnlyList<TdsEntry>> EntriesAsync(AsyncServiceScope scope) =>
