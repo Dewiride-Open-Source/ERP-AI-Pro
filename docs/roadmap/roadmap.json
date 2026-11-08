@@ -1511,12 +1511,18 @@
           "id": "business-building-blocks-document-numbering-series",
           "title": "Document numbering series",
           "scope": "Provide configurable number series per document type and financial year (max 16 characters, unique per FY, prefix and reset rules) with gap-free concurrent allocation proven by a parallel integration test.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
-          "acceptance": [],
+          "acceptance": [
+            "A module declares each kind of document it numbers, and Finance and administrators set its numbering up on `/platform/numbering`: a fixed start, the financial year shown as 2026-27, 26-27 or not at all, a separator after the year, the digits of the running number and the next number of the current year, with a preview of the first number and the last that fits; the API refuses a format whose numbers break that year's serial-number rule in the statutory parameter set `gst.document-serial-numbers` (at most 16 characters of letters, numerals, \"-\" and \"/\").",
+            "Every financial year starts again at 1 unless its next number was set before its first number was issued; once a year has issued a number its format and next number stay fixed and a change applies from the next year, so numbers are consecutive and unique within each financial year.",
+            "`IDocumentNumbers.NextAsync` gives the next number inside the issuing command's transaction under an application lock per document type, so a rolled-back issue gives its number back: a parallel integration test of concurrent issues, some rolled back, commits exactly the numbers 1 to n with no gap or repeat.",
+            "Every set-up and change is a change record on the audit trail; the routes require `platform.numbering.series.read` or `platform.numbering.series.change`, held by Finance and administrators, proven by integration tests and by a Playwright spec on every project in light and dark that sets numbering up, fails one validation and shows a year whose numbers are in use."
+          ],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "startedOn": "2026-11-08"
         },
         {
           "id": "business-building-blocks-shared-minimal-approvals-building-block",
