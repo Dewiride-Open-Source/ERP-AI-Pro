@@ -1428,7 +1428,7 @@
           "id": "business-building-blocks-statutory-parameter-store-and-gst-datasets",
           "title": "Statutory parameter store and GST datasets",
           "scope": "Create backend/Modules/Compliance/StatutoryParameters with effective-dated, versioned parameter sets seeded from statutory/*.json, an `IStatutoryParameters.GetAsOf(date)` service, list/read endpoints, an admin viewer page with version diff, and the first datasets (GST rate schedule with history, SAC/HSN master seeded with 9983xx and 997331, State codes, GST due-date rules) pinned by golden-value tests.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [
@@ -1441,7 +1441,8 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-11-07",
-          "notes": "From business-building-blocks-reference-data-module (ADR-0062): the GST State codes live in Platform/ReferenceData (`IndianStates`, each row dated by and citing its instrument, read by other modules through `IIndianStates` of its Contracts), so this item's \"State codes\" dataset is that module's, never a second copy."
+          "completedOn": "2026-11-08",
+          "notes": "From business-building-blocks-reference-data-module (ADR-0062): the GST State codes live in Platform/ReferenceData (`IndianStates`, each row dated by and citing its instrument, read by other modules through `IIndianStates` of its Contracts), so this item's \"State codes\" dataset is that module's, never a second copy. Done (ADR-0063): `Compliance/StatutoryParameters` holds eight parameter sets that `StatutoryParameterSeeder` (order 200) makes equal to the embedded `statutory/<key>.json` files: `gst.sac-codes`, `gst.sac-rate-entries` (the ERP's reading), `gst.central-tax-rates`, `gst.integrated-tax-rates`, `gst.union-territory-tax-rates`, `gst.return-due-dates`, `gst.quarterly-return-states` and `gst.return-thresholds`; other modules read them by date through `IStatutoryParameters.GetAsOfAsync<TSet>` and their versions and changes through `IStatutoryParameterHistory`; `GET /api/compliance/statutory-parameters/parameter-sets` and `/parameter-sets/{key}?on=` under `compliance.statutory-parameters.parameter-sets.read` (Finance) and the pages `/compliance/statutory-parameters/parameter-sets` and `/[setKey]` show them; the flag `Erp.Modules.Compliance.StatutoryParameters` is seeded on under both labels; main's CI passed on f2ad042, its six-project Playwright matrix included."
         },
         {
           "id": "business-building-blocks-statutory-datasets-direct-tax-and-labour",
