@@ -13,8 +13,9 @@ Every command runs from the repository root and wraps the pinned `dotnet ef` loc
 | `caching` | `CachingDbContext` | `BuildingBlocks/Caching/Dewiride.Erp.BuildingBlocks.Caching` | `platform_caching` (`DistributedCacheEntries`) |
 | `idempotency` | `IdempotencyDbContext` | `BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency` | `platform_idempotency` |
 | `jobs` | `JobsDbContext` | `BuildingBlocks/Jobs/Dewiride.Erp.BuildingBlocks.Jobs` | `platform_jobs` (`JobRuns`, `JobRunEvents`, `JobSchedules`) |
+| `numbering` | `NumberingDbContext` | `BuildingBlocks/Numbering/Dewiride.Erp.BuildingBlocks.Numbering` | `platform_numbering` (`NumberSeries`, `NumberSeriesYears`, which the contexts of the modules that number their documents map without creating) |
 
-The migrator applies them in catalogue order, which is the order `AddErpPlatform` registers them in: the building blocks first (`platform_caching`, `platform_idempotency`, `audit`, `files`, `platform_jobs`), then the modules in the order of `Modules.All`. A building block's key comes from its class name and every schema from its context, so the `attachments` key names the `files` schema.
+The migrator applies them in catalogue order, which is the order `AddErpPlatform` registers them in: the building blocks first (`platform_caching`, `platform_idempotency`, `audit`, `files`, `platform_jobs`, `platform_numbering`), then the modules in the order of `Modules.All`. A building block's key comes from its class name and every schema from its context, so the `attachments` key names the `files` schema.
 
 | Task | Command |
 |---|---|

@@ -4,6 +4,8 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
 using Dewiride.Erp.BuildingBlocks.Numbering.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
+using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
+using Dewiride.Erp.BuildingBlocks.Persistence.Versioning;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Numbering;
@@ -65,6 +67,42 @@ public sealed class DocumentNumberTests
     }
 
     [Fact]
+    public async Task NextAsync_TwoNumbersOfAYearNotYetOpenInOneUnitOfWork_OpenTheYearOnceAndFollowEachOther()
+    {
+        await using var database = await SetUpAsync();
+        var day = new DateOnly(2027, 4, 1);
+
+        var taken = await database.RunUnitAsync(async (context, numbers, token) =>
+        {
+            var first = await numbers.NextAsync(context, database.Document.Key, day, token);
+            var second = await numbers.NextAsync(context, database.Document.Key, day, token);
+            context.Invoices.Add(SampleInvoice.Issue(database.Document.Key, first.Value));
+            context.Invoices.Add(SampleInvoice.Issue(database.Document.Key, second.Value));
+
+            return $"{first.Value.Text} {second.Value.Text}";
+        });
+
+        Assert.Equal("TI.2027-28.001 TI.2027-28.002", taken.Value);
+        var opened = await database.QueryAsync((context, token) => context.Years.AsNoTracking().Where(y => y.Year == NumberingDatabase.CurrentYear.Next && context.Series.Any(s => s.Id == y.SeriesId && s.DocumentType == database.Document.Key)).ToListAsync(token));
+        Assert.Equal(3, Assert.Single(opened).NextNumber);
+    }
+
+    [Fact]
+    public async Task NextAsync_ANewYear_OpensUnderItsOwnYearsRuleForTheKindsClause()
+    {
+        await using var database = await SetUpAsync();
+        var nextYear = NumberingDatabase.CurrentYear.Next;
+        database.Rules.Set(nextYear, NumberingDatabase.Rule with { MaxLength = NumberingDatabase.Rule.MaxLength + 2 });
+
+        await database.IssueAsync(new DateOnly(2027, 4, 1));
+
+        var years = await database.QueryAsync((context, token) => context.Years.AsNoTracking().Where(y => context.Series.Any(s => s.Id == y.SeriesId && s.DocumentType == database.Document.Key)).ToDictionaryAsync(y => y.Year, token));
+        Assert.Equal(NumberingDatabase.Rule.MaxLength, years[NumberingDatabase.CurrentYear].MaxLength);
+        Assert.Equal(NumberingDatabase.Rule.MaxLength + 2, years[nextYear].MaxLength);
+        Assert.Contains((database.Document.SerialNumberRule, nextYear), database.Rules.Asked);
+    }
+
+    [Fact]
     public async Task NextAsync_ADocumentOfTheNextFinancialYear_StartsThatYearAtOneInItsFormat()
     {
         await using var database = await SetUpAsync();
@@ -120,11 +158,13 @@ public sealed class DocumentNumberTests
     public async Task NextAsync_AYearWhoseRuleRefusesTheFormat_IsRefused()
     {
         await using var database = await SetUpAsync();
-        database.Rules.Current = NumberingDatabase.Rule with { MaxLength = Format.FixedLength };
+        database.Rules.Set(NumberingDatabase.CurrentYear.Next, NumberingDatabase.Rule with { MaxLength = Format.FixedLength });
 
         var refused = await database.IssueAsync(new DateOnly(2027, 4, 1));
+        var thisYear = await database.IssueAsync(NumberingDatabase.Today);
 
         Assert.Equal("numbering.format-not-allowed", refused.Error!.Code);
+        Assert.Equal("TI.2026-27.001", thisYear.Value.Text);
     }
 
     [Fact]
@@ -141,6 +181,33 @@ public sealed class DocumentNumberTests
         var record = Assert.Single(await database.ChangeRecordsOfAsync(opened.Id.Value));
         Assert.Equal((ChangeOperation.Created, NumberingTables.YearsChangeKey, database.Actor.ActorId), (record.Operation, record.EntityType, record.ActorId));
         Assert.Equal(4, opened.NextNumber);
+    }
+
+    [Fact]
+    public async Task NumbersAndChanges_WhileAnotherSaveHoldsTheKindsLock_AreRefusedAsBusyAndChangeNothing()
+    {
+        await using var database = await SetUpAsync();
+        await using var fresh = await NumberingDatabase.CreateAsync();
+        var details = Assert.Single(await database.AdministerAsync((administration, token) => administration.ListAsync(token)));
+        var version = RecordVersion.TryDecode(details.Series!.Version, out var bytes) ? bytes : throw new InvalidOperationException("The listed version is not a record version.");
+
+        var locked = database.WhileLockedAsync(async () =>
+        {
+            var issue = database.IssueAsync(NumberingDatabase.Today);
+            var change = database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series.Id, version, Format with { Digits = 2 }, null, token));
+
+            return (Issued: await issue, Changed: await change);
+        });
+        var setUp = fresh.WhileLockedAsync(() => fresh.AdministerAsync((administration, token) => administration.SetUpAsync(fresh.Document.Key, Format, 1, token)));
+        var (issued, changed) = await locked;
+        var refusedSetUp = await setUp;
+
+        Assert.Equal((EfUnitOfWork.ConcurrencyConflictCode, ErrorKind.Conflict), (issued.Error!.Code, issued.Error.Kind));
+        Assert.Equal(EfUnitOfWork.ConcurrencyConflictCode, changed.Error!.Code);
+        Assert.Equal(EfUnitOfWork.ConcurrencyConflictCode, refusedSetUp.Error!.Code);
+        Assert.Empty(await database.InvoicesAsync());
+        Assert.Equal(Format, Assert.Single(await database.AdministerAsync((administration, token) => administration.ListAsync(token))).Series!.Format);
+        Assert.Null(Assert.Single(await fresh.AdministerAsync((administration, token) => administration.ListAsync(token))).Series);
     }
 
     [Fact]

@@ -40,7 +40,9 @@ public sealed class NumberingAdministrationTests
         Assert.Equal(
             (NumberingDatabase.CurrentYear, 38L, 38L, 999L, false, "TI.2026-27.038", "TI.2026-27.038", "TI.2026-27.999", (string?)null),
             (year.Year, year.FirstNumber, year.NextNumber, year.LastNumber, year.InUse, year.FirstText, year.NextText, year.LastText, year.LastIssuedText));
-        Assert.Equal(ChangeOperation.Created, Assert.Single(await database.ChangeRecordsOfAsync(series.Id.Value)).Operation);
+        Assert.Equal(
+            [(NumberingTables.SeriesChangeKey, ChangeOperation.Created), (NumberingTables.YearsChangeKey, ChangeOperation.Created)],
+            (await database.ChangeRecordsUnderAsync(series.Id.Value)).Select(record => (record.EntityType, record.Operation)));
     }
 
     [Fact]
@@ -190,7 +192,43 @@ public sealed class NumberingAdministrationTests
         var unchanged = await database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series!.Id, Version(details), Format, null, token));
 
         Assert.True(unchanged.IsSuccess);
-        Assert.Equal([ChangeOperation.Created], (await database.ChangeRecordsOfAsync(details.Series!.Id.Value)).Select(record => record.Operation));
+        Assert.Equal([ChangeOperation.Created, ChangeOperation.Created], (await database.ChangeRecordsUnderAsync(details.Series!.Id.Value)).Select(record => record.Operation));
+    }
+
+    [Theory]
+    [InlineData(7L, "TX27-28-0007")]
+    [InlineData(null, "TX27-28-0001")]
+    public async Task Change_InAYearNotYetOpen_OpensItInTheNewFormatAtItsNextNumber(long? nextNumber, string firstText)
+    {
+        await using var database = await SetUpAsync();
+        var details = await ListedAsync(database);
+        database.Clock.SetUtcNow(new DateTimeOffset(2027, 4, 2, 6, 0, 0, TimeSpan.Zero));
+
+        var changed = await database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series!.Id, Version(details), Changed, nextNumber, token));
+
+        var years = changed.Value.Series!.Years;
+        Assert.Equal([NumberingDatabase.CurrentYear.Next, NumberingDatabase.CurrentYear], years.Select(year => year.Year));
+        Assert.Equal((Changed, firstText), (years[0].Format, years[0].FirstText));
+        Assert.Equal(Format, years[1].Format);
+    }
+
+    [Fact]
+    public async Task Change_AFormatTheRuleRefusesANextNumberPastTheLastOrAYearWithoutARule_IsRefused()
+    {
+        await using var database = await SetUpAsync();
+        var details = await ListedAsync(database);
+
+        var badFormat = await database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series!.Id, Version(details), Format with { Prefix = "ti." }, null, token));
+        var pastLast = await database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series!.Id, Version(details), Format, 1000, token));
+        database.Rules.Current = null;
+        var noRule = await database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series!.Id, Version(details), Format, null, token));
+
+        Assert.Equal("numbering.format-invalid", badFormat.Error!.Code);
+        Assert.Equal([NumberFormat.PrefixField], badFormat.Error.Fields.Keys);
+        Assert.Equal("numbering.next-number-out-of-range", pastLast.Error!.Code);
+        Assert.Equal([NumberingErrors.NextNumberField], pastLast.Error.Fields.Keys);
+        Assert.Equal(("numbering.no-rule", ErrorKind.Failure), (noRule.Error!.Code, noRule.Error.Kind));
+        Assert.Equal(details.Series!.Version, (await ListedAsync(database)).Series!.Version);
     }
 
     [Fact]

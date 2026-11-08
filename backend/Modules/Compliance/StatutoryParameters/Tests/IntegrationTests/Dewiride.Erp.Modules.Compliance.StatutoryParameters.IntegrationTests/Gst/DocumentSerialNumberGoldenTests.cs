@@ -42,6 +42,19 @@ public sealed class DocumentSerialNumberGoldenTests(ErpApiFactory factory)
     }
 
     [Fact]
+    public async Task SerialNumbers_HoldOneVersionFrom202627WithTheSevenClauses()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var history = scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>();
+
+        var set = await history.GetSetAsync("gst.document-serial-numbers", new DateOnly(2026, 11, 8), TestContext.Current.CancellationToken);
+        var view = await history.GetVersionAsync("gst.document-serial-numbers", FirstYear, TestContext.Current.CancellationToken);
+
+        Assert.Equal([FirstYear], set!.Versions.Select(version => version.From));
+        Assert.Equal(["46(b)", "49(b)", "50(b)", "51(b)", "52(b)", "53(1)(d)", "53(1A)(c)"], view!.Rows.Select(row => row.Key));
+    }
+
+    [Fact]
     public async Task SerialNumbers_BeforeTheFinancialYear202627_AreNotHeld()
     {
         await using var scope = factory.Services.CreateAsyncScope();

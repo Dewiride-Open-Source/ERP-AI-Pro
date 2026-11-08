@@ -9,7 +9,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Dewiride.Erp.BuildingBlocks.Numbering.Allocation;
 
 // A financial year opens with its first number, in the format its numbering has then, checked against that year's rule, and
-// starts at 1 unless its next number was set before; the year that opened stays as it opened.
+// starts at 1 unless its next number was set before; the year that opened stays as it opened. A command that takes several numbers
+// finds the year its first number opened among the unit of work's tracked rows, because a query never returns a row not yet saved.
 internal sealed class DocumentNumbers(NumberedDocumentCatalog catalog, ISerialNumberRules rules) : IDocumentNumbers
 {
     public async Task<Result<DocumentNumber>> NextAsync(ModuleDbContext context, string documentType, DateOnly documentDate, CancellationToken cancellationToken)
@@ -40,7 +41,8 @@ internal sealed class DocumentNumbers(NumberedDocumentCatalog catalog, ISerialNu
         }
 
         var year = FinancialYear.FromDate(documentDate);
-        var opened = await context.Set<NumberSeriesYear>().SingleOrDefaultAsync(y => y.SeriesId == series.Id && y.Year == year, cancellationToken).ConfigureAwait(false);
+        var opened = context.Set<NumberSeriesYear>().Local.FirstOrDefault(y => y.SeriesId == series.Id && y.Year == year)
+            ?? await context.Set<NumberSeriesYear>().SingleOrDefaultAsync(y => y.SeriesId == series.Id && y.Year == year, cancellationToken).ConfigureAwait(false);
         if (opened is null)
         {
             var rule = await rules.RuleForAsync(document.SerialNumberRule, year, cancellationToken).ConfigureAwait(false);

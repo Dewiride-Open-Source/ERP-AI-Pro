@@ -9,7 +9,7 @@ namespace Dewiride.Erp.Host.Api.IntegrationTests.Configuration;
 public sealed class ConfigurationSourceTests : IClassFixture<ErpApiFactory>
 {
     private static readonly string[] PlatformHealthChecks =
-        ["self", "database:audit", "database:files", "database:platform_caching", "database:platform_idempotency", "database:platform_jobs", "storage:attachments"];
+        ["self", "database:audit", "database:files", "database:platform_caching", "database:platform_idempotency", "database:platform_jobs", "database:platform_numbering", "storage:attachments"];
 
     private readonly ErpApiFactory _factory;
 

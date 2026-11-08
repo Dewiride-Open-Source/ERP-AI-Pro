@@ -2,7 +2,6 @@ using System.Globalization;
 using Dewiride.Erp.BuildingBlocks.Kernel.Time;
 using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
-using Dewiride.Erp.BuildingBlocks.Persistence.Conventions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,8 +18,7 @@ internal sealed class NumberSeriesYearConfiguration : IEntityTypeConfiguration<N
         builder.RecordChangesAs(NumberingTables.YearsChangeKey);
         builder.FileChangesUnder(y => y.SeriesId);
         builder.HasKey(y => y.Id);
-        builder.Property(y => y.Id).HasConversion<StronglyTypedIdConverter<NumberSeriesYearId>>().ValueGeneratedNever();
-        builder.Property(y => y.SeriesId).HasConversion<StronglyTypedIdConverter<NumberSeriesId>>();
+        builder.Property(y => y.Id).ValueGeneratedNever();
         builder.Property(y => y.Year)
             .HasConversion(year => year.Label, label => FinancialYear.Parse(label, CultureInfo.InvariantCulture))
             .HasMaxLength(NumberingTables.YearLength)

@@ -9,8 +9,12 @@ import {
   changeNumberSeriesValues,
   nextNumberFixed,
   nextNumberLimit,
+  numberSeriesProblemMessages,
+  pageOutOfDateCodes,
   setUpNumberSeriesSchema,
   setUpNumberSeriesValues,
+  yearInUseCode,
+  yearInUseMessage,
   type ChangeNumberSeriesValues,
   type NumberingRules,
   type SetUpNumberSeriesValues,
@@ -106,8 +110,8 @@ test("setUpNumberSeriesSchema_EachFieldTheRuleRefuses_HoldsTheApisMessage", () =
   );
 
   assert.deepEqual(fieldErrors, {
-    "format.prefix": ['Use at most 32 characters, each a capital letter, a digit or "-" or ".".'],
-    "format.separator": ['Use "-" or ".", or nothing.'],
+    "format.prefix": ["Use only capital letters, digits, - (hyphen) and . (full stop)."],
+    "format.separator": ["Use - (hyphen) or . (full stop), or nothing."],
     "format.digits": ["Use 1 to 18 digits for the running number."],
     nextNumber: ["Enter the next number."],
   });
@@ -275,4 +279,19 @@ test("nextNumberLimit_AFormatTheRuleRefusesOrNoRule_IsWhatTheRequestKeeps", () =
   assert.equal(nextNumberLimit(format, undefined), 9_007_199_254_740_991n);
   assert.equal(nextNumberLimit({ ...format, prefix: "ti." }, rules), 9_007_199_254_740_991n);
   assert.equal(nextNumberLimit(undefined, rules), 9_007_199_254_740_991n);
+});
+
+test("pageOutOfDateCodes_ANextNumberRefusedForAYearInUse_OffersTheLatestNumbering", () => {
+  assert.equal(pageOutOfDateCodes.has(yearInUseCode), true);
+  assert.equal(numberSeriesProblemMessages[yearInUseCode], yearInUseMessage);
+  assert.equal(
+    yearInUseMessage,
+    "Numbers were given in this financial year after the page was loaded, so its next number can no longer change. Show the latest numbering, then try again.",
+  );
+  assert.deepEqual([...pageOutOfDateCodes].sort(), [
+    "concurrency.conflict",
+    "numbering.already-set-up",
+    "numbering.series-not-found",
+    "numbering.year-in-use",
+  ]);
 });

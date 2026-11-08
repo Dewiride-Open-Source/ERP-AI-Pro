@@ -7,10 +7,11 @@ using Dewiride.Erp.Testing.Numbering;
 
 namespace Dewiride.Erp.Modules.Platform.Numbering.IntegrationTests.Series.Endpoints;
 
-// Each test that sets a numbering up takes a test kind of document no other test of the process takes.
+// Each test that sets a numbering up takes a test kind of document no other test of the process takes. The formats use letters and
+// digits alone, because the characters a number may contain besides them are statutory and come from the parameter store.
 public sealed class SeriesEndpointsTests(NumberingHost host) : IClassFixture<NumberingHost>
 {
-    private static readonly object Format = NumberingApi.Format("TI/", "abbreviated", "/", 3);
+    private static readonly object Format = NumberingApi.Format("TI", "none", "", 3);
 
     private FinancialYear CurrentYear => FinancialYear.Current(host.Factory.Services.GetRequiredService<TimeProvider>());
 
@@ -34,15 +35,14 @@ public sealed class SeriesEndpointsTests(NumberingHost host) : IClassFixture<Num
         using var client = host.Administrator();
         var document = TestNumberedDocuments.Numbered(2);
         var year = CurrentYear;
-        var shortYear = year.Label[2..];
 
         using var response = await NumberingApi.SetUpAsync(client, document, Format, 38);
 
         var created = await NumberingApi.ReadAsync<NumberedDocumentResponse>(response, HttpStatusCode.Created);
         var series = created.Series!;
-        Assert.Equal(new NumberFormatResponse("TI/", NumberYearStyle.Abbreviated, "/", 3), series.Format);
+        Assert.Equal(new NumberFormatResponse("TI", NumberYearStyle.None, "", 3), series.Format);
         var opened = Assert.Single(series.Years);
-        Assert.Equal((year.Label, 38L, 38L, false, $"TI/{shortYear}/038", (string?)null), (opened.Year, opened.FirstNumber, opened.NextNumber, opened.InUse, opened.FirstText, opened.LastIssuedText));
+        Assert.Equal((year.Label, 38L, 38L, false, "TI038", (string?)null), (opened.Year, opened.FirstNumber, opened.NextNumber, opened.InUse, opened.FirstText, opened.LastIssuedText));
         Assert.Equal(NumberingApi.SeriesPath(series.Id).OriginalString, response.Headers.Location?.OriginalString);
         using var read = await client.GetAsync(response.Headers.Location, TestContext.Current.CancellationToken);
         Assert.Equal(series.Id, (await NumberingApi.ReadAsync<NumberedDocumentResponse>(read, HttpStatusCode.OK)).Series!.Id);
@@ -71,7 +71,7 @@ public sealed class SeriesEndpointsTests(NumberingHost host) : IClassFixture<Num
         var document = TestNumberedDocuments.Numbered(4);
         var rule = await NumberingApi.RuleOfAsync(host.Factory.Services, document, CurrentYear);
 
-        using var lowerCase = await NumberingApi.SetUpAsync(client, document, NumberingApi.Format("ti/", "full", "/", 3), 1);
+        using var lowerCase = await NumberingApi.SetUpAsync(client, document, NumberingApi.Format("ti", "none", "", 3), 1);
         using var tooLong = await NumberingApi.SetUpAsync(client, document, NumberingApi.Format(new string('A', rule.MaxLength), "none", "", 1), 1);
 
         var lowerProblem = await NumberingApi.AssertProblemAsync(lowerCase, HttpStatusCode.BadRequest, "numbering.format-invalid");
@@ -102,10 +102,10 @@ public sealed class SeriesEndpointsTests(NumberingHost host) : IClassFixture<Num
         var document = TestNumberedDocuments.Numbered(6);
         var series = await SetUpAsync(client, document);
 
-        using var response = await NumberingApi.ChangeAsync(client, series.Id, NumberingApi.Format("TX-", "none", "", 5), 7, series.Version);
+        using var response = await NumberingApi.ChangeAsync(client, series.Id, NumberingApi.Format("TX", "none", "", 5), 7, series.Version);
 
         var changed = await NumberingApi.ReadAsync<NumberedDocumentResponse>(response, HttpStatusCode.OK);
-        Assert.Equal("TX-00007", Assert.Single(changed.Series!.Years).FirstText);
+        Assert.Equal("TX00007", Assert.Single(changed.Series!.Years).FirstText);
     }
 
     [Fact]
@@ -116,17 +116,16 @@ public sealed class SeriesEndpointsTests(NumberingHost host) : IClassFixture<Num
         var series = await SetUpAsync(client, document);
         var issued = await NumberIssuer.IssueAsync(host.Factory.Services, document.Key, 2, TestContext.Current.CancellationToken);
         Assert.True(issued.IsSuccess, issued.Error?.Message);
-        var shortYear = CurrentYear.Label[2..];
 
         using var refused = await NumberingApi.ChangeAsync(client, series.Id, Format, 1, series.Version);
-        using var accepted = await NumberingApi.ChangeAsync(client, series.Id, NumberingApi.Format("TX-", "none", "", 5), 3, series.Version);
+        using var accepted = await NumberingApi.ChangeAsync(client, series.Id, NumberingApi.Format("TX", "none", "", 5), 3, series.Version);
 
         var problem = await NumberingApi.AssertProblemAsync(refused, HttpStatusCode.BadRequest, "numbering.year-in-use");
         Assert.Equal(["nextNumber"], problem.Errors.Keys);
         var changed = await NumberingApi.ReadAsync<NumberedDocumentResponse>(accepted, HttpStatusCode.OK);
-        Assert.Equal(new NumberFormatResponse("TX-", NumberYearStyle.None, "", 5), changed.Series!.Format);
+        Assert.Equal(new NumberFormatResponse("TX", NumberYearStyle.None, "", 5), changed.Series!.Format);
         var year = Assert.Single(changed.Series.Years);
-        Assert.Equal((true, $"TI/{shortYear}/002", $"TI/{shortYear}/003"), (year.InUse, year.LastIssuedText, year.NextText));
+        Assert.Equal((true, "TI002", "TI003"), (year.InUse, year.LastIssuedText, year.NextText));
     }
 
     [Fact]
@@ -135,7 +134,7 @@ public sealed class SeriesEndpointsTests(NumberingHost host) : IClassFixture<Num
         using var client = host.Administrator();
         var document = TestNumberedDocuments.Numbered(8);
         var series = await SetUpAsync(client, document);
-        using var first = await NumberingApi.ChangeAsync(client, series.Id, NumberingApi.Format("TX/", "full", "/", 2), null, series.Version);
+        using var first = await NumberingApi.ChangeAsync(client, series.Id, NumberingApi.Format("TX", "none", "", 2), null, series.Version);
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
 
         using var stale = await NumberingApi.ChangeAsync(client, series.Id, Format, null, series.Version);

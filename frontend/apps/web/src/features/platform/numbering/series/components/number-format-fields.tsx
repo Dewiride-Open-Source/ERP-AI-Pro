@@ -19,14 +19,14 @@ import { fieldErrorMessages } from "@/shared/forms/client/form-feedback";
 
 import { formatOf, type NumberFormatValues } from "../forms/number-series.schema";
 
-import { maxDigits, prefixMaxLength, yearLabel, type SerialNumberRule } from "./number-format";
+import { characterName, maxDigits, prefixMaxLength, yearLabel, type SerialNumberRule } from "./number-format";
 import {
   appliesFrom,
-  characterLabel,
   digitsDescription,
   fixedNextNumberDescription,
   nextNumberDescription,
   prefixDescription,
+  previewStatus,
   previewText,
   separatorChoiceDescription,
   yearChoiceDescription,
@@ -70,7 +70,7 @@ export function NumberFormatFields({
     { value: noSeparator, label: "Nothing" },
     ...rule.specialCharacters
       .split("")
-      .map((character) => ({ value: character, label: characterLabel(character) })),
+      .map((character) => ({ value: character, label: characterName(character) })),
   ];
 
   return (
@@ -201,20 +201,18 @@ function NumberPreview({
   nextNumberFixed: boolean;
 }) {
   const { control } = useFormContext<NumberSeriesFieldValues>();
-  const [format, nextNumber] = useWatch({ control, name: ["format", "nextNumber"] });
+  const [values, nextNumber] = useWatch({ control, name: ["format", "nextNumber"] });
+  const format = formatOf(values);
+  const year = appliesFrom(currentYear, nextNumberFixed);
 
   return (
     <div className="grid gap-1 rounded-lg border bg-muted/50 p-3" data-testid="numbering-preview">
       <p className="text-sm font-medium">Preview</p>
       <p className="text-sm wrap-anywhere text-muted-foreground">
-        <SegmentedText
-          segments={previewText(
-            formatOf(format),
-            nextNumberFixed ? "" : nextNumber,
-            rule,
-            appliesFrom(currentYear, nextNumberFixed),
-          )}
-        />
+        <SegmentedText segments={previewText(format, nextNumberFixed ? "" : nextNumber, rule, year)} />
+      </p>
+      <p role="status" aria-atomic="true" className="sr-only" data-testid="numbering-preview-status">
+        {previewStatus(format, rule, year)}
       </p>
     </div>
   );

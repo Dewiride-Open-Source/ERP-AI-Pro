@@ -10,6 +10,7 @@ import { unstable_rethrow } from "next/navigation";
 import type { z } from "zod";
 
 import { callApi } from "@/shared/api/client";
+import { ApiError } from "@/shared/api/problem-details";
 import { holdsPermission } from "@/shared/auth/permissions";
 import { requireSignedInPerson } from "@/shared/auth/session";
 import { formMessages } from "@/shared/forms/errors/form-messages";
@@ -22,6 +23,8 @@ import {
   changeNumberSeriesSchema,
   numberSeriesProblemMessages,
   setUpNumberSeriesSchema,
+  yearInUseCode,
+  yearInUseMessage,
 } from "../forms/number-series.schema";
 
 export async function setUpNumberSeries(_previous: FormState, submission: unknown): Promise<FormState> {
@@ -56,6 +59,11 @@ export async function changeNumberSeries(_previous: FormState, submission: unkno
     );
   } catch (error) {
     unstable_rethrow(error);
+    // The API names the next number in this refusal, but no next number can pass it: the year gave a number after the page
+    // was loaded, so the page is out of date.
+    if (error instanceof ApiError && error.problem.code === yearInUseCode) {
+      return formFailed(yearInUseMessage, { code: yearInUseCode, reference: error.problem.traceId });
+    }
     return problemToFormState(error, { messages: numberSeriesProblemMessages });
   }
   refresh();

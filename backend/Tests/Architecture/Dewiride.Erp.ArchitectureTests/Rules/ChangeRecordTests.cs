@@ -1,6 +1,8 @@
+using System.Reflection;
 using Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
+using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
@@ -99,7 +101,7 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
 
         foreach (var module in HostModules.All)
         {
-            var own = recorded.Where(pair => pair.Registration.ContextType.Assembly == module.GetType().Assembly).Select(pair => pair.EntityType).ToList();
+            var own = OwnedBy(recorded.Where(pair => pair.Registration.ContextType.Assembly == module.GetType().Assembly).Select(pair => pair.EntityType), module.GetType().Assembly);
             moduleTypes.AddRange(own);
             violations.AddRange(KeysOutside(own, module.Descriptor.PermissionPrefix));
         }
@@ -116,6 +118,18 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
         var outside = Assert.Single(KeysOutside(RecordedTypesOf(probe), ProbeContext.PermissionPrefix));
 
         Assert.Equal($"{nameof(ProbeStray)} records its changes as {ProbeContext.StrayKey}, outside {ProbeContext.PermissionPrefix}", outside);
+    }
+
+    [Fact]
+    public void KeysOutside_AModuleContextMappingTheNumbering_LeavesTheNumberingsKeysToItsBuildingBlock()
+    {
+        using var probe = new ProbeContexts.Numbered();
+        var recorded = RecordedTypesOf(probe).ToList();
+
+        Assert.Contains(recorded, entityType => entityType.ClrType == typeof(NumberSeries));
+        Assert.Contains(recorded, entityType => entityType.ClrType == typeof(NumberSeriesYear));
+        Assert.Empty(KeysOutside(OwnedBy(recorded, typeof(ProbeContexts.Numbered).Assembly), ProbeContext.PermissionPrefix));
+        Assert.Empty(recorded.SelectMany(RecordedEntityTypes.ProblemsOf));
     }
 
     [Fact]
@@ -171,6 +185,11 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
         [.. model.GetEntityTypes()
             .Where(entityType => !typeof(IAuditable).IsAssignableFrom(entityType.ClrType) && !typeof(IAppendOnly).IsAssignableFrom(entityType.ClrType) && entityType.ClrType != typeof(OutboxMessage))
             .Select(entityType => $"{contextType.Name} maps {entityType.DisplayName()}, which is neither auditable nor append-only")];
+
+    // A module's change keys are those of its own types: a type a building block lends every context, such as the numbering's, keeps
+    // the key of its building block's module.
+    private static List<IEntityType> OwnedBy(IEnumerable<IEntityType> recordedTypes, Assembly assembly) =>
+        [.. recordedTypes.Where(entityType => entityType.ClrType.Assembly == assembly)];
 
     private static IEnumerable<IEntityType> RecordedTypesOf(DbContext context) => context.Model.GetEntityTypes().Where(RecordedEntityTypes.IsRecorded);
 

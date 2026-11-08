@@ -191,6 +191,11 @@ export function nextNumberLimit(format: NumberFormat | undefined, rules: Numberi
   return last < largestSentNumber ? last : largestSentNumber;
 }
 
+export const yearInUseCode = "numbering.year-in-use";
+
+export const yearInUseMessage =
+  "Numbers were given in this financial year after the page was loaded, so its next number can no longer change. Show the latest numbering, then try again.";
+
 export const numberSeriesProblemMessages: ProblemMessages = {
   "concurrency.conflict":
     "Someone changed this numbering, or a document of this kind was being numbered, while you worked. Show the latest numbering, then try again.",
@@ -198,6 +203,7 @@ export const numberSeriesProblemMessages: ProblemMessages = {
     "Someone set this numbering up after the page was loaded. Show the latest numbering, then change it if needed.",
   "numbering.series-not-found":
     "This numbering no longer exists. Show the latest numbering, then set it up again.",
+  [yearInUseCode]: yearInUseMessage,
 };
 
 export const pageOutOfDateCodes: ReadonlySet<string> = new Set(Object.keys(numberSeriesProblemMessages));

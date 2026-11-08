@@ -1,10 +1,11 @@
 import {
   lastNumberWithin,
+  listOf,
   maxDigits,
-  prefixMaxLength,
   renderNumber,
   runningNumberOf,
   sameFormat,
+  specialCharacterNames,
   type NumberFormat,
   type SerialNumberRule,
 } from "./number-format.ts";
@@ -42,18 +43,7 @@ export const incompletePreview = "Enter the digits of the running number to see 
 
 const counted = new Intl.NumberFormat("en-IN");
 
-const characterNames = new Map([
-  ["/", "slash"],
-  ["-", "hyphen"],
-  [".", "full stop"],
-  ["_", "underscore"],
-]);
-
 const wholeNumber = /^\d+$/;
-
-export function plainText(segments: readonly TextSegment[]): string {
-  return segments.map((segment) => segment.text).join("");
-}
 
 export function noRuleText(document: Pick<NumberedDocument, "currentYear" | "series">): string {
   return document.series === null
@@ -153,9 +143,8 @@ export function dialogDescription(document: NumberedDocument, nextNumberFixed: b
 }
 
 export function prefixDescription(rule: SerialNumberRule): string {
-  const characters = rule.specialCharacters.split("").map((character) => `"${character}"`);
-  const allowed = ["capital letters", "digits", ...characters];
-  return `Optional. Up to ${prefixMaxLength} characters: ${allowed.slice(0, -1).join(", ")} and ${allowed.at(-1) ?? ""}.`;
+  const allowed = listOf(["Capital letters", "digits", ...specialCharacterNames(rule)], "and");
+  return `Optional. ${allowed}; the whole number may have at most ${rule.maxLength} characters.`;
 }
 
 export function nextNumberDescription(currentYear: string): string {
@@ -166,11 +155,6 @@ export function fixedNextNumberDescription(currentYear: string, nextText: string
   return nextText === null
     ? `${currentYear} has used every number that fits, so its next number cannot change.`
     : `${currentYear} has given numbers, so it goes on from ${nextText}.`;
-}
-
-export function characterLabel(character: string): string {
-  const name = characterNames.get(character);
-  return name === undefined ? `"${character}"` : `${character} (${name})`;
 }
 
 // The year starts at the next number typed when that number fits, and at 1 otherwise, which is where a year the change waits
@@ -201,6 +185,19 @@ export function previewText(
     number(renderNumber(format, financialYear, last)),
     words("."),
   ];
+}
+
+// A live region announces every change of its text, so it holds one sentence for each kind of problem, never the number being
+// typed: a person hears a sentence when a problem appears or changes, and nothing at each keystroke or when the region empties.
+export function previewStatus(
+  format: NumberFormat | undefined,
+  rule: SerialNumberRule,
+  financialYear: string,
+): string {
+  if (format === undefined) return incompletePreview;
+  return renderNumber(format, financialYear, 1n).length > rule.maxLength
+    ? `The numbers would have more than the ${rule.maxLength} characters a number may have.`
+    : "";
 }
 
 function firstWillBe(text: string): readonly TextSegment[] {

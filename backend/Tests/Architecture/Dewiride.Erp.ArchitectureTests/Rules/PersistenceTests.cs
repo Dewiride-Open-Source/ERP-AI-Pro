@@ -46,8 +46,10 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
     {
         using var recording = new ProbeContexts.Recording();
         using var foreign = new ProbeContexts.Foreign();
+        using var numbered = new ProbeContexts.Numbered();
 
         Assert.Empty(ForeignEntityTypes(recording.Model, typeof(ProbeContexts.Recording)));
+        Assert.Empty(ForeignEntityTypes(numbered.Model, typeof(ProbeContexts.Numbered)));
         Assert.Contains(ProbeContexts.Foreign.BagName, Assert.Single(ForeignEntityTypes(foreign.Model, typeof(ProbeContexts.Foreign))), StringComparison.Ordinal);
     }
 

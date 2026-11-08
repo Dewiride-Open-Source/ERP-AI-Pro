@@ -32,9 +32,16 @@ const abbreviatedYearLength = "26-27".length;
 
 const upperCaseLetter = /^[A-Z]$/;
 
-const asciiDigit = /^[0-9]$/;
+const asciiDigit = /^\d$/;
 
 const numberStart = /^[A-Z1-9]/;
+
+const characterNames = new Map([
+  ["-", "hyphen"],
+  ["/", "slash"],
+  [".", "full stop"],
+  ["_", "underscore"],
+]);
 
 export function isYearStyle(value: string): value is NumberYearStyle {
   return (yearStyles as readonly string[]).includes(value);
@@ -95,69 +102,109 @@ export function sameFormat(first: NumberFormat, second: NumberFormat): boolean {
 }
 
 // NumberFormat.ProblemsUnder, keyed and worded as the API answers them, so a rule the browser finds reads as the API would put
-// it. A number begins with a capital letter or a digit from 1 to 9 because the Invoice Registration Portal refuses an
-// e-invoice whose number begins with "0", "/" or "-" (Generate IRN API 1.03, validation 8).
+// it; the whole number is checked only once every part is allowed.
 export function formatProblems(
   format: TypedFormat,
   rule: SerialNumberRule,
   financialYear: string,
 ): ReadonlyMap<FormatField, string> {
+  const named = specialCharacterNames(rule);
   const problems = new Map<FormatField, string>();
-  const { prefix, year, separator, digits } = format;
-  if (prefix.length > prefixMaxLength || !prefix.split("").every((character) => isAllowed(character, rule))) {
-    problems.set(
-      "format.prefix",
-      `Use at most ${prefixMaxLength} characters, each a capital letter, a digit or ${describe(rule.specialCharacters)}.`,
-    );
+  const parts: readonly (readonly [FormatField, string | undefined])[] = [
+    ["format.prefix", prefixProblem(format.prefix, rule, named)],
+    ["format.year", yearProblem(format.year, rule)],
+    ["format.separator", separatorProblem(format, rule, named)],
+    ["format.digits", digitsProblem(format.digits)],
+  ];
+  for (const [field, problem] of parts) {
+    if (problem !== undefined) problems.set(field, problem);
   }
+  if (problems.size > 0 || !isYearStyle(format.year)) return problems;
 
-  if (!isYearStyle(year)) {
-    problems.set("format.year", "Choose how the financial year is shown, or that it is not shown.");
-  } else if (year !== "none" && !rule.specialCharacters.includes(yearHyphen)) {
-    problems.set(
-      "format.year",
-      `The financial year is written with "${yearHyphen}", which a number may not contain, so leave the year out.`,
-    );
-  }
+  const whole = wholeNumberProblem({ ...format, year: format.year }, rule, financialYear);
+  if (whole !== undefined) problems.set(whole.field, whole.message);
+  return problems;
+}
 
+export function characterName(character: string): string {
+  const name = characterNames.get(character);
+  return name === undefined ? `"${character}"` : `${character} (${name})`;
+}
+
+export function specialCharacterNames(rule: SerialNumberRule): readonly string[] {
+  return rule.specialCharacters.split("").map(characterName);
+}
+
+export function listOf(items: readonly string[], conjunction: "and" | "or"): string {
+  return items.length < 2
+    ? (items[0] ?? "")
+    : `${items.slice(0, -1).join(", ")} ${conjunction} ${items.at(-1) ?? ""}`;
+}
+
+function prefixProblem(prefix: string, rule: SerialNumberRule, named: readonly string[]): string | undefined {
+  if (prefix.length > prefixMaxLength) return `Use at most ${prefixMaxLength} characters.`;
+  return prefix.split("").every((character) => isAllowed(character, rule))
+    ? undefined
+    : `Use only ${listOf(["capital letters", "digits", ...named], "and")}.`;
+}
+
+function yearProblem(year: string, rule: SerialNumberRule): string | undefined {
+  if (!isYearStyle(year)) return "Choose how the financial year is shown, or that it is not shown.";
+  return year === "none" || rule.specialCharacters.includes(yearHyphen)
+    ? undefined
+    : `The financial year is written with ${characterName(yearHyphen)}, which a number may not contain, so leave the year out.`;
+}
+
+function separatorProblem(
+  format: TypedFormat,
+  rule: SerialNumberRule,
+  named: readonly string[],
+): string | undefined {
+  const { separator, year } = format;
   if (
     separator.length > separatorMaxLength ||
     (separator.length === 1 && !rule.specialCharacters.includes(separator))
   ) {
-    problems.set("format.separator", `Use ${describe(rule.specialCharacters)}, or nothing.`);
-  } else if (year === "none" && separator.length > 0) {
-    problems.set(
-      "format.separator",
-      "The separator follows the financial year, so leave it empty when the year is not shown.",
-    );
+    return named.length === 0
+      ? "Leave it empty, because a number may contain only capital letters and digits."
+      : `Use ${listOf(named, "or")}, or nothing.`;
   }
-
-  if (!Number.isInteger(digits) || digits < 1 || digits > maxDigits) {
-    problems.set("format.digits", `Use 1 to ${maxDigits} digits for the running number.`);
-  }
-
-  if (problems.size > 0 || !isYearStyle(year)) return problems;
-
-  const first = renderNumber({ ...format, year }, financialYear, 1n);
-  if (first.length > rule.maxLength) {
-    problems.set(
-      "format",
-      `The first number, ${first}, has ${first.length} characters; a number may have at most ${rule.maxLength}.`,
-    );
-  } else if (!numberStart.test(first)) {
-    const field = prefix.length > 0 ? "format.prefix" : year === "none" ? "format.digits" : "format.year";
-    problems.set(field, `A number must begin with a letter or a digit other than 0, and ${first} does not.`);
-  }
-  return problems;
+  return year === "none" && separator.length > 0
+    ? "The separator follows the financial year, so leave it empty when the year is not shown."
+    : undefined;
 }
 
-export function describe(specialCharacters: string): string {
-  return specialCharacters.length === 0
-    ? "no other character"
-    : specialCharacters
-        .split("")
-        .map((character) => `"${character}"`)
-        .join(" or ");
+function digitsProblem(digits: number): string | undefined {
+  return Number.isInteger(digits) && digits >= 1 && digits <= maxDigits
+    ? undefined
+    : `Use 1 to ${maxDigits} digits for the running number.`;
+}
+
+// A number begins with a capital letter or a digit from 1 to 9 because the Invoice Registration Portal refuses an e-invoice
+// whose number begins with "0", "/" or "-" (Generate IRN API 1.03, validation 8).
+function wholeNumberProblem(
+  format: NumberFormat,
+  rule: SerialNumberRule,
+  financialYear: string,
+): { readonly field: FormatField; readonly message: string } | undefined {
+  const first = renderNumber(format, financialYear, 1n);
+  if (first.length > rule.maxLength) {
+    return {
+      field: "format",
+      message: `The first number, ${first}, has ${first.length} characters; a number may have at most ${rule.maxLength}.`,
+    };
+  }
+  if (numberStart.test(first)) return undefined;
+
+  return {
+    field: firstCharacterField(format),
+    message: `A number must begin with a letter or a digit other than 0, and ${first} does not.`,
+  };
+}
+
+function firstCharacterField(format: NumberFormat): FormatField {
+  if (format.prefix.length > 0) return "format.prefix";
+  return format.year === "none" ? "format.digits" : "format.year";
 }
 
 function isAllowed(character: string, rule: SerialNumberRule): boolean {

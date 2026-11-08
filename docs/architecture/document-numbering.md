@@ -12,13 +12,13 @@ In one paragraph: a module declares each kind of document it numbers; Finance or
 
 ```csharp
 builder.Services.AddNumberedDocument(new NumberedDocument(
-    "finance.sales.tax-invoices",        // three lower-case kebab segments, the module's permission prefix first
+    "finance.sales.tax-invoices",        // three lower-case kebab segments, by convention the module's permission prefix first
     "Tax invoices",                      // what the documents are called, plural
     "Invoices issued for taxable supplies.",
     "46(b)"));                           // the clause of gst.document-serial-numbers its numbers follow
 ```
 
-The key names the kind in its numbering's row and never follows a class name; a key declared twice, malformed or with a blank title, description or rule fails when the host is built.
+The key names the kind in its numbering's row and never follows a class name; a key declared twice, malformed or with a blank title, description or rule fails when the host is built. Its first two segments are by convention the declaring module's permission prefix, as a change key's are; nothing checks that, because a key only names a numbering and the catalogue refuses a key declared twice.
 
 ## Numbering a document
 

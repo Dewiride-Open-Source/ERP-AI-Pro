@@ -22,6 +22,7 @@ import { assignRoles } from "../../../fixtures/records/person-records";
 import { expect, forEachTheme, pressArrowUntilChecked, test, themes } from "../../../fixtures/test";
 import {
   allowedCharacters,
+  characterName,
   eitherCharacter,
   followingYear,
   isNumberingSave,
@@ -29,7 +30,6 @@ import {
   NumberingPage,
   numberingPath,
   numberText,
-  separatorLabel,
   yearText,
 } from "../../../pages/platform/numbering/numbering.page";
 import { AppShell } from "../../../pages/shared/layout/app-shell.page";
@@ -84,6 +84,14 @@ function previewOf({ rule }: Rules, format: NumberFormat, financialYear: string,
   return `${financialYear} starts at ${numberText(format, financialYear, start)}; the last number that fits in ${rule.maxLength} characters is ${numberText(format, financialYear, last)}.`;
 }
 
+function capitalised(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function tooLongStatus(rule: SerialNumberRule): string {
+  return `The numbers would have more than the ${rule.maxLength} characters a number may have.`;
+}
+
 function setUpDialogSnapshot(kind: TestKind, { rule, currentYear }: Rules): string {
   const title = `Set up the numbering of ${kind.title}`;
   return [
@@ -93,7 +101,7 @@ function setUpDialogSnapshot(kind: TestKind, { rule, currentYear }: Rules): stri
     "  - group:",
     "    - text: Starts with",
     '    - textbox "Starts with"',
-    `    - paragraph: ${quoted(`Optional. Up to 32 characters: ${allowedCharacters(rule.specialCharacters)}.`)}`,
+    `    - paragraph: ${quoted(`Optional. ${capitalised(allowedCharacters(rule.specialCharacters))}; the whole number may have at most ${rule.maxLength} characters.`)}`,
     '  - group "Financial year":',
     "    - text: Financial year",
     '    - radiogroup "Financial year":',
@@ -114,6 +122,7 @@ function setUpDialogSnapshot(kind: TestKind, { rule, currentYear }: Rules): stri
     `    - paragraph: ${quoted(`The running number of the next document in ${currentYear}: 1, or the number after the last one given outside the ERP this year.`)}`,
     "  - paragraph: Preview",
     `  - paragraph: ${quoted(previewOf({ rule, currentYear }, plainFormat, currentYear))}`,
+    "  - status",
     '  - button "Cancel"',
     '  - button "Set up the numbering"',
     '  - button "Close"',
@@ -201,7 +210,7 @@ test.describe("document numbering for a finance person", () => {
           await expect(numbering.prefix).toBeFocused();
           await expect(numbering.prefix).toHaveAttribute("aria-invalid", "true");
           await expect(numbering.fieldOf(numbering.prefix)).toContainText(
-            `Use at most 32 characters, each a capital letter, a digit or ${eitherCharacter(rule.specialCharacters)}.`,
+            `Use only ${allowedCharacters(rule.specialCharacters)}.`,
           );
           expect(saves.count(), "Server Function calls").toBe(0);
           await capture("numbering-set-up-refused", numbering.dialog);
@@ -209,10 +218,11 @@ test.describe("document numbering for a finance person", () => {
           const tooLong = { ...plainFormat, prefix: "X".repeat(rule.maxLength) };
           const tooLongFirst = numberText(tooLong, currentYear, 1n);
           await numbering.prefix.fill(tooLong.prefix);
-          await expect(numbering.fieldOf(numbering.prefix)).not.toContainText("Use at most 32 characters");
+          await expect(numbering.fieldOf(numbering.prefix)).not.toContainText("Use only");
           await expect(numbering.preview).toContainText(
             `${tooLongFirst} has ${tooLongFirst.length} characters, more than the ${rule.maxLength} a number may have.`,
           );
+          await expect(numbering.previewStatus).toHaveText(tooLongStatus(rule));
           await numbering.save.click();
           await expect(numbering.summary).toBeFocused();
           await expect(numbering.summary).toContainText(
@@ -220,8 +230,18 @@ test.describe("document numbering for a finance person", () => {
           );
           expect(saves.count(), "Server Function calls").toBe(0);
 
+          await numbering.prefix.press("End");
+          await numbering.prefix.press("Backspace");
+          await numbering.prefix.pressSequentially("y");
+          await expect(numbering.prefix).toHaveValue(`${"X".repeat(rule.maxLength - 1)}Y`);
+          await expect(
+            numbering.previewStatus,
+            "the status keeps its sentence while the problem lasts, so typing announces nothing new",
+          ).toHaveText(tooLongStatus(rule));
+
           await numbering.prefix.fill(format.prefix.toLowerCase());
           await expect(numbering.prefix).toHaveValue(format.prefix);
+          await expect(numbering.previewStatus, "the problem cleared").toHaveText("");
           await numbering.yearChoice("Not shown").focus();
           await pressArrowUntilChecked(
             page,
@@ -234,7 +254,7 @@ test.describe("document numbering for a finance person", () => {
             numbering.yearChoice(yearText(currentYear, "abbreviated")),
           );
           await expect(numbering.separatorChoice("Nothing")).toBeChecked();
-          await numbering.separatorChoice(separatorLabel(format.separator)).check();
+          await numbering.separatorChoice(characterName(format.separator)).check();
           await numbering.digits.fill(String(format.digits));
           await expect(numbering.preview).toContainText(previewOf(rules, format, currentYear));
           await numbering.save.click();
@@ -297,7 +317,7 @@ test.describe("document numbering for a finance person", () => {
           );
           await expect(numbering.prefix).toHaveValue(format.prefix);
           await expect(numbering.yearChoice(yearText(currentYear, "abbreviated"))).toBeChecked();
-          await expect(numbering.separatorChoice(separatorLabel(format.separator))).toBeChecked();
+          await expect(numbering.separatorChoice(characterName(format.separator))).toBeChecked();
           await expect(numbering.digits).toHaveValue(String(format.digits));
           await expect(numbering.nextNumber).toHaveValue("1");
 
@@ -347,6 +367,35 @@ test.describe("document numbering for a finance person", () => {
           expect((await readNumberedDocument(api, kind)).series?.format, "the changed format").toEqual(
             changed,
           );
+
+          const number = (running: bigint) => numberText(changed, currentYear, running);
+          await numbering.action(kind.title).click();
+          await expect(numbering.dialog).toContainText(
+            `${currentYear} has given no number yet, so a change applies to it at once.`,
+          );
+          await expect(numbering.nextNumber).toHaveValue("101");
+          expect(await issueNumbers(api, kind, 2), "the numbers given meanwhile").toEqual([
+            number(101n),
+            number(102n),
+          ]);
+          await numbering.nextNumber.fill("201");
+          await numbering.save.click();
+          await expect(numbering.summary).toBeFocused();
+          await expect(numbering.summary).toContainText(
+            "Numbers were given in this financial year after the page was loaded, so its next number can no longer change. Show the latest numbering, then try again.",
+          );
+          await expect(numbering.fieldOf(numbering.nextNumber)).not.toHaveAttribute("data-invalid", "true");
+          await capture("numbering-year-in-use", numbering.dialog);
+          await numbering.reload.click();
+          await numbering.expectDialogClosed();
+          await expect(numbering.years(kind.title)).toContainText(
+            givenText(number(101n), number(102n), 2, number(103n)),
+          );
+          await numbering.action(kind.title).click();
+          await expect(numbering.nextNumber).toBeDisabled();
+          await expect(numbering.nextNumber).toHaveValue("103");
+          await numbering.close.click();
+          await numbering.expectDialogClosed();
         } finally {
           await resetNumbering(api, kind);
         }
@@ -484,6 +533,40 @@ test.describe("document numbering for a finance person", () => {
           );
           await numbering.close.click();
           await numbering.expectDialogClosed();
+        } finally {
+          await resetNumbering(api, kind);
+        }
+      });
+
+      test("the API refuses characters the rule does not allow in the words the page uses", async ({
+        api,
+        person,
+        request,
+      }, testInfo) => {
+        const kind = numberingKind(testInfo, theme);
+        await assignRoles(request, person, ["finance"]);
+        await resetNumbering(api, kind);
+        try {
+          const { rule } = rulesOf(await readNumberedDocument(api, kind));
+          const refused = unusedCharacter(rule);
+          const response = await api.post(numberSeriesApi, {
+            headers: { "Idempotency-Key": randomUUID() },
+            data: {
+              documentType: kind.documentType,
+              format: { prefix: `INV${refused}`, year: "full", separator: refused, digits: 3 },
+              nextNumber: 1,
+            },
+          });
+
+          expect(response.status(), "the set-up refused").toBe(400);
+          expect(await response.json()).toMatchObject({
+            code: "numbering.format-invalid",
+            errors: {
+              "format.prefix": [`Use only ${allowedCharacters(rule.specialCharacters)}.`],
+              "format.separator": [`Use ${eitherCharacter(rule.specialCharacters)}, or nothing.`],
+            },
+          });
+          expect((await readNumberedDocument(api, kind)).series, "the numbering left unset").toBeNull();
         } finally {
           await resetNumbering(api, kind);
         }

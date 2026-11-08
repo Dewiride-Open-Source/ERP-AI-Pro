@@ -3,7 +3,7 @@ import { test } from "node:test";
 
 import type { NumberedDocumentResponse, NumberSeriesYearResponse } from "@dewiride/erp-api-client";
 
-import { numberedDocumentOf } from "./numbering-items.ts";
+import { numberedDocumentOf, UnreadableAnswerError } from "./numbering-items.ts";
 
 const seriesId = "0192f3c4-5b6a-7d8e-9f01-23456789abcd";
 
@@ -148,5 +148,5 @@ test("numberedDocumentOf_AnAnswerWithoutAMemberTheContractNames_Throws", () => {
     }),
   ];
 
-  for (const answer of incomplete) assert.throws(() => numberedDocumentOf(answer), TypeError);
+  for (const answer of incomplete) assert.throws(() => numberedDocumentOf(answer), UnreadableAnswerError);
 });

@@ -5,7 +5,6 @@ import type { NumberFormat } from "./number-format.ts";
 import type { NumberedDocument, NumberingYear, NumberSeries } from "./numbering-items.ts";
 import {
   appliesFrom,
-  characterLabel,
   dialogDescription,
   fixedNextNumberDescription,
   followingYear,
@@ -13,13 +12,17 @@ import {
   noRuleText,
   numbersGiven,
   pendingFormatText,
-  plainText,
   prefixDescription,
+  previewStatus,
   previewText,
   yearLines,
   yearText,
   type TextSegment,
 } from "./numbering-text.ts";
+
+function plainText(segments: readonly TextSegment[]): string {
+  return segments.map((segment) => segment.text).join("");
+}
 
 const abbreviated: NumberFormat = { prefix: "TI.", year: "abbreviated", separator: ".", digits: 3 };
 
@@ -279,11 +282,11 @@ test("dialogDescription_EachStateOfTheNumbering_SaysWhenTheChangeApplies", () =>
 test("prefixDescription_TheRulesCharacters_AreListedWithLettersAndDigits", () => {
   assert.equal(
     prefixDescription({ maxLength: 14, specialCharacters: "-." }),
-    'Optional. Up to 32 characters: capital letters, digits, "-" and ".".',
+    "Optional. Capital letters, digits, - (hyphen) and . (full stop); the whole number may have at most 14 characters.",
   );
   assert.equal(
-    prefixDescription({ maxLength: 14, specialCharacters: "" }),
-    "Optional. Up to 32 characters: capital letters and digits.",
+    prefixDescription({ maxLength: 12, specialCharacters: "" }),
+    "Optional. Capital letters and digits; the whole number may have at most 12 characters.",
   );
 });
 
@@ -298,8 +301,12 @@ test("fixedNextNumberDescription_AYearThatGaveNumbers_NamesItsNextOrSaysItIsUsed
   );
 });
 
-test("characterLabel_ACharacterWithAName_ShowsTheName", () => {
-  assert.equal(characterLabel("/"), "/ (slash)");
-  assert.equal(characterLabel("."), ". (full stop)");
-  assert.equal(characterLabel("#"), '"#"');
+test("previewStatus_EachKindOfProblem_HoldsOneSentenceWhateverIsTyped", () => {
+  const rule = { maxLength: 14, specialCharacters: "-." };
+  const tooLong = "The numbers would have more than the 14 characters a number may have.";
+
+  assert.equal(previewStatus(abbreviated, rule, "2026-27"), "");
+  assert.equal(previewStatus({ ...abbreviated, prefix: "INVOICES." }, rule, "2026-27"), tooLong);
+  assert.equal(previewStatus({ ...abbreviated, prefix: "INVOICES.TO." }, rule, "2026-27"), tooLong);
+  assert.equal(previewStatus(undefined, rule, "2026-27"), incompletePreview);
 });

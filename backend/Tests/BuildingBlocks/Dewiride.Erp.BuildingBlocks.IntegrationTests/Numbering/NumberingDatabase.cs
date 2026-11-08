@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.BuildingBlocks.Application.Events;
@@ -194,6 +195,40 @@ internal sealed class NumberingDatabase : IAsyncDisposable
             .ToListAsync(TestContext.Current.CancellationToken);
     }
 
+    // Holds the kind's numbering lock in a transaction of its own while the action runs, as a save that numbers this kind does.
+    public async Task<T> WhileLockedAsync<T>(Func<Task<T>> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        await using var scope = _provider.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<NumberingDbContext>();
+
+        return await context.Database.CreateExecutionStrategy().ExecuteAsync(
+            async token =>
+            {
+                await using var transaction = await context.Database.BeginTransactionAsync(token);
+                Assert.True(await TransactionLocks.TryAcquireExclusiveAsync(context, NumberingLock.ResourceOf(Document), TimeSpan.FromSeconds(5), token));
+                var result = await action();
+                await transaction.RollbackAsync(token);
+
+                return result;
+            },
+            TestContext.Current.CancellationToken);
+    }
+
+    // The records of a numbering and of its years, filed under it, oldest first.
+    public async Task<IReadOnlyList<ChangeRecord>> ChangeRecordsUnderAsync(Guid seriesId)
+    {
+        await using var scope = _provider.CreateAsyncScope();
+
+        return await scope.ServiceProvider.GetRequiredService<AuditingDbContext>().ChangeRecords
+            .AsNoTracking()
+            .Where(record => record.EntityId == seriesId || record.SubjectId == seriesId)
+            .OrderBy(record => record.OccurredAt)
+            .ThenBy(record => record.EntityType)
+            .ToListAsync(TestContext.Current.CancellationToken);
+    }
+
     public async Task<IReadOnlyList<ChangeRecord>> ChangeRecordsOfAsync(Guid entityId)
     {
         await using var scope = _provider.CreateAsyncScope();
@@ -216,11 +251,23 @@ internal sealed class NumberingDatabase : IAsyncDisposable
 
     public ValueTask DisposeAsync() => _provider.DisposeAsync();
 
-    // Answers the made-up rule for every key and year, unless a test takes it away.
+    // Answers the made-up rule for every key and year, unless a test sets another for one year or takes them away, and keeps every
+    // clause and year it was asked for.
     internal sealed class SwitchableRules : ISerialNumberRules
     {
+        private readonly ConcurrentDictionary<FinancialYear, SerialNumberRule?> _byYear = new();
+
         public SerialNumberRule? Current { get; set; } = Rule;
 
-        public Task<SerialNumberRule?> RuleForAsync(string rule, FinancialYear year, CancellationToken cancellationToken) => Task.FromResult(Current);
+        public ConcurrentQueue<(string Rule, FinancialYear Year)> Asked { get; } = new();
+
+        public void Set(FinancialYear year, SerialNumberRule? rule) => _byYear[year] = rule;
+
+        public Task<SerialNumberRule?> RuleForAsync(string rule, FinancialYear year, CancellationToken cancellationToken)
+        {
+            Asked.Enqueue((rule, year));
+
+            return Task.FromResult(_byYear.TryGetValue(year, out var answer) ? answer : Current);
+        }
     }
 }

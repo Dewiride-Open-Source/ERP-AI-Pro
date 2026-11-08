@@ -85,19 +85,44 @@ public sealed class NumberFormatTests
     {
         var rule = Rule with { SpecialCharacters = "." };
 
-        Assert.Equal([NumberFormat.YearField], new NumberFormat("TI.", NumberYearStyle.Full, ".", 3).ProblemsUnder(rule, Year).Keys);
+        var problems = new NumberFormat("TI.", NumberYearStyle.Full, ".", 3).ProblemsUnder(rule, Year);
+
+        Assert.Equal("The financial year is written with - (hyphen), which a number may not contain, so leave the year out.", Assert.Single(Assert.Single(problems).Value));
+        Assert.Equal(NumberFormat.YearField, Assert.Single(problems).Key);
         Assert.Empty(new NumberFormat("TI.", NumberYearStyle.None, "", 3).ProblemsUnder(rule, Year));
     }
 
     [Fact]
-    public void ProblemsUnder_ARuleWithoutSpecialCharacters_SaysSoAndAllowsLettersAndDigits()
+    public void ProblemsUnder_ARuleWithoutSpecialCharacters_AllowsOnlyLettersAndDigits()
     {
         var rule = Rule with { SpecialCharacters = string.Empty };
 
-        var problems = new NumberFormat("TI.", NumberYearStyle.None, "", 3).ProblemsUnder(rule, Year);
+        var prefix = new NumberFormat("TI.", NumberYearStyle.None, "", 3).ProblemsUnder(rule, Year);
+        var separator = new NumberFormat("TI", NumberYearStyle.Full, ".", 3).ProblemsUnder(rule, Year);
 
-        Assert.Contains("no other character", Assert.Single(problems[NumberFormat.PrefixField]), StringComparison.Ordinal);
+        Assert.Equal("Use only capital letters and digits.", Assert.Single(prefix[NumberFormat.PrefixField]));
+        Assert.Equal("Leave it empty, because a number may contain only capital letters and digits.", Assert.Single(separator[NumberFormat.SeparatorField]));
         Assert.Empty(new NumberFormat("TI9", NumberYearStyle.None, "", 3).ProblemsUnder(rule, Year));
+    }
+
+    [Fact]
+    public void ProblemsUnder_ACharacterTheRuleRefuses_NamesTheAllowedCharactersInWords()
+    {
+        var prefix = new NumberFormat("T/I", NumberYearStyle.None, "", 3).ProblemsUnder(Rule, Year);
+        var separator = new NumberFormat("TI", NumberYearStyle.Full, "/", 3).ProblemsUnder(Rule, Year);
+        var other = new NumberFormat("T/I", NumberYearStyle.None, "", 3).ProblemsUnder(Rule with { SpecialCharacters = "_+" }, Year);
+
+        Assert.Equal("Use only capital letters, digits, - (hyphen) and . (full stop).", Assert.Single(prefix[NumberFormat.PrefixField]));
+        Assert.Equal("Use - (hyphen) or . (full stop), or nothing.", Assert.Single(separator[NumberFormat.SeparatorField]));
+        Assert.Equal("Use only capital letters, digits, _ (underscore) and \"+\".", Assert.Single(other[NumberFormat.PrefixField]));
+    }
+
+    [Fact]
+    public void ProblemsUnder_APrefixLongerThanAPrefixMayBe_SaysHowLongItMayBe()
+    {
+        var problems = new NumberFormat(new string('T', NumberFormat.PrefixMaxLength + 1), NumberYearStyle.None, "", 1).ProblemsUnder(Rule, Year);
+
+        Assert.Equal($"Use at most {NumberFormat.PrefixMaxLength} characters.", Assert.Single(problems[NumberFormat.PrefixField]));
     }
 
     [Fact]

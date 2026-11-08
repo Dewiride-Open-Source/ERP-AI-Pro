@@ -5,8 +5,8 @@ import type { NumberFormat, YearStyle } from "../../../fixtures/records/numberin
 export const numberingPath = "/platform/numbering";
 
 const characterNames = new Map([
-  ["/", "slash"],
   ["-", "hyphen"],
+  ["/", "slash"],
   [".", "full stop"],
   ["_", "underscore"],
 ]);
@@ -45,25 +45,23 @@ export function followingYear(financialYear: string): string {
   return `${start}-${String((start + 1) % 100).padStart(2, "0")}`;
 }
 
-export function separatorLabel(character: string): string {
+export function characterName(character: string): string {
   const name = characterNames.get(character);
   return name === undefined ? `"${character}"` : `${character} (${name})`;
 }
 
-export function eitherCharacter(specialCharacters: string): string {
-  return specialCharacters
-    .split("")
-    .map((character) => `"${character}"`)
-    .join(" or ");
+export function listOf(items: readonly string[], conjunction: "and" | "or"): string {
+  return items.length < 2
+    ? (items[0] ?? "")
+    : `${items.slice(0, -1).join(", ")} ${conjunction} ${items.at(-1) ?? ""}`;
 }
 
 export function allowedCharacters(specialCharacters: string): string {
-  const allowed = [
-    "capital letters",
-    "digits",
-    ...specialCharacters.split("").map((character) => `"${character}"`),
-  ];
-  return `${allowed.slice(0, -1).join(", ")} and ${allowed.at(-1) ?? ""}`;
+  return listOf(["capital letters", "digits", ...specialCharacters.split("").map(characterName)], "and");
+}
+
+export function eitherCharacter(specialCharacters: string): string {
+  return listOf(specialCharacters.split("").map(characterName), "or");
 }
 
 export class NumberingPage {
@@ -82,6 +80,7 @@ export class NumberingPage {
   readonly digits: Locator;
   readonly nextNumber: Locator;
   readonly preview: Locator;
+  readonly previewStatus: Locator;
   readonly save: Locator;
   readonly cancel: Locator;
   readonly close: Locator;
@@ -104,6 +103,7 @@ export class NumberingPage {
     this.digits = this.dialog.getByRole("textbox", { name: "Digits" });
     this.nextNumber = this.dialog.getByRole("textbox", { name: "Next number" });
     this.preview = page.getByTestId("numbering-preview");
+    this.previewStatus = page.getByTestId("numbering-preview-status");
     this.save = page.getByTestId("numbering-save");
     this.cancel = this.dialog.getByRole("button", { name: "Cancel", exact: true });
     this.close = this.dialog.getByRole("button", { name: "Close", exact: true });

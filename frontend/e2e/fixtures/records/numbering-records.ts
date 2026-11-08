@@ -56,15 +56,21 @@ export function numberSeriesApiOf(id: string): string {
 }
 
 // The end-to-end host declares sixteen kinds of document of its own, and every project, theme and repetition writes into one
-// database, so the tests that change a numbering take the kind of their project and theme, which no other test running beside
-// them takes, and run one after another; kinds 13 to 16 are left to the API's own tests. A repetition takes the kind of a later
-// project, which is free while one project's test is repeated on its own, as a flake is investigated.
+// database. Kinds 1 to 12 belong to the projects and themes: the tests that change a numbering take the kind of their project and
+// theme, which no other test running beside them takes, and run one after another. Kind 13 is the untouched kind that only
+// read-only tests look at, and kinds 14 to 16 are unused in the end-to-end host's database. A repetition takes the kind of a
+// later project, which is free while one project's test is repeated on its own, as a flake is investigated; the seventh
+// repetition would come back to the first project's kind, so --repeat-each above six fails at once.
 export function numberingKind(testInfo: TestInfo, theme: Theme): TestKind {
   const project = projects.indexOf(testInfo.project.name);
   expect(
     project,
     `${testInfo.project.name} is a project with a kind of document of its own`,
   ).toBeGreaterThanOrEqual(0);
+  expect(
+    testInfo.repeatEachIndex,
+    `repetition ${testInfo.repeatEachIndex + 1} has a kind of document of its own`,
+  ).toBeLessThan(projects.length);
   const slot = (project + testInfo.repeatEachIndex) % projects.length;
   return testKind(slot * 2 + (theme === "dark" ? 2 : 1));
 }

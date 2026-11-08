@@ -4,14 +4,17 @@ import { test } from "node:test";
 import type { NumberYearStyle } from "@dewiride/erp-api-client";
 
 import {
-  describe,
+  characterName,
   fixedLength,
   formatProblems,
   isYearStyle,
   lastNumberWithin,
+  listOf,
+  prefixMaxLength,
   renderNumber,
   runningNumberOf,
   sameFormat,
+  specialCharacterNames,
   yearLabel,
   type NumberFormat,
   type SerialNumberRule,
@@ -146,12 +149,16 @@ test("formatProblems_AFormatTheRuleRefuses_NamesTheFieldAtFault", () => {
 
 test("formatProblems_EachRefusal_SaysWhatTheApiSays", () => {
   assert.equal(
+    formatProblems(format("A".repeat(prefixMaxLength + 1), "none", "", 1), rule, year).get("format.prefix"),
+    `Use at most ${prefixMaxLength} characters.`,
+  );
+  assert.equal(
     formatProblems(format("ti", "none", "", 3), rule, year).get("format.prefix"),
-    'Use at most 32 characters, each a capital letter, a digit or "-" or ".".',
+    "Use only capital letters, digits, - (hyphen) and . (full stop).",
   );
   assert.equal(
     formatProblems(format("TI", "full", "/", 3), rule, year).get("format.separator"),
-    'Use "-" or ".", or nothing.',
+    "Use - (hyphen) or . (full stop), or nothing.",
   );
   assert.equal(
     formatProblems(format("TI", "none", ".", 3), rule, year).get("format.separator"),
@@ -171,11 +178,33 @@ test("formatProblems_EachRefusal_SaysWhatTheApiSays", () => {
   );
 });
 
+test("formatProblems_ARuleWithOneOrNoSpecialCharacter_NamesWhatItAllows", () => {
+  const slashOnly: SerialNumberRule = { maxLength: 14, specialCharacters: "/" };
+  const lettersOnly: SerialNumberRule = { maxLength: 14, specialCharacters: "" };
+
+  assert.equal(
+    formatProblems(format("T-I", "none", "", 3), slashOnly, year).get("format.prefix"),
+    "Use only capital letters, digits and / (slash).",
+  );
+  assert.equal(
+    formatProblems(format("TI", "full", "-", 3), slashOnly, year).get("format.separator"),
+    "Use / (slash), or nothing.",
+  );
+  assert.equal(
+    formatProblems(format("T/I", "none", "", 3), lettersOnly, year).get("format.prefix"),
+    "Use only capital letters and digits.",
+  );
+  assert.equal(
+    formatProblems(format("TI", "full", "/", 3), lettersOnly, year).get("format.separator"),
+    "Leave it empty, because a number may contain only capital letters and digits.",
+  );
+});
+
 test("formatProblems_ARuleWithoutTheYearsHyphen_RefusesTheYear", () => {
   const withoutHyphen: SerialNumberRule = { maxLength: 14, specialCharacters: "." };
   assert.equal(
     formatProblems(format("TI", "abbreviated", "", 3), withoutHyphen, year).get("format.year"),
-    'The financial year is written with "-", which a number may not contain, so leave the year out.',
+    "The financial year is written with - (hyphen), which a number may not contain, so leave the year out.",
   );
   assert.equal(formatProblems(format("TI", "none", "", 3), withoutHyphen, year).size, 0);
 });
@@ -184,7 +213,21 @@ test("formatProblems_AYearThatBeginsTheNumber_IsAllowed", () => {
   assert.equal(formatProblems(format("", "abbreviated", "-", 3), rule, year).size, 0);
 });
 
-test("describe_TheRulesCharacters_QuotesEachOne", () => {
-  assert.equal(describe("-."), '"-" or "."');
-  assert.equal(describe(""), "no other character");
+test("characterName_EachCharacter_IsNamedOrQuoted", () => {
+  assert.deepEqual(["-", "/", ".", "_", "#"].map(characterName), [
+    "- (hyphen)",
+    "/ (slash)",
+    ". (full stop)",
+    "_ (underscore)",
+    '"#"',
+  ]);
+  assert.deepEqual(specialCharacterNames(rule), ["- (hyphen)", ". (full stop)"]);
+});
+
+test("listOf_OneTwoOrMoreItems_JoinsThemWithTheConjunction", () => {
+  assert.equal(listOf([], "and"), "");
+  assert.equal(listOf(["A"], "or"), "A");
+  assert.equal(listOf(["A", "B"], "and"), "A and B");
+  assert.equal(listOf(["A", "B", "C"], "and"), "A, B and C");
+  assert.equal(listOf(["A", "B", "C"], "or"), "A, B or C");
 });

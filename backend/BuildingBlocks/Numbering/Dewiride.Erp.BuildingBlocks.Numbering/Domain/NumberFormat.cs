@@ -80,9 +80,13 @@ public readonly record struct NumberFormat(string Prefix, NumberYearStyle Year, 
         ArgumentNullException.ThrowIfNull(rule);
 
         var problems = new Dictionary<string, string[]>(StringComparer.Ordinal);
-        if (Prefix.Length > PrefixMaxLength || !Prefix.All(character => IsAllowed(character, rule)))
+        if (Prefix.Length > PrefixMaxLength)
         {
-            problems[PrefixField] = [$"Use at most {PrefixMaxLength} characters, each a capital letter, a digit or {Describe(rule.SpecialCharacters)}."];
+            problems[PrefixField] = [$"Use at most {PrefixMaxLength} characters."];
+        }
+        else if (!Prefix.All(character => IsAllowed(character, rule)))
+        {
+            problems[PrefixField] = [$"Use only {Join(["capital letters", "digits", .. rule.SpecialCharacters.Select(Name)], "and")}."];
         }
 
         if (!Enum.IsDefined(Year))
@@ -91,12 +95,14 @@ public readonly record struct NumberFormat(string Prefix, NumberYearStyle Year, 
         }
         else if (Year != NumberYearStyle.None && !rule.SpecialCharacters.Contains(YearHyphen, StringComparison.Ordinal))
         {
-            problems[YearField] = [$"The financial year is written with \"{YearHyphen}\", which a number may not contain, so leave the year out."];
+            problems[YearField] = [$"The financial year is written with {Name(YearHyphen)}, which a number may not contain, so leave the year out."];
         }
 
         if (Separator.Length > SeparatorMaxLength || (Separator.Length == 1 && !rule.SpecialCharacters.Contains(Separator[0], StringComparison.Ordinal)))
         {
-            problems[SeparatorField] = [$"Use {Describe(rule.SpecialCharacters)}, or nothing."];
+            problems[SeparatorField] = [rule.SpecialCharacters.Length == 0
+                ? "Leave it empty, because a number may contain only capital letters and digits."
+                : $"Use {Join([.. rule.SpecialCharacters.Select(Name)], "or")}, or nothing."];
         }
         else if (Year == NumberYearStyle.None && Separator.Length > 0)
         {
@@ -132,8 +138,16 @@ public readonly record struct NumberFormat(string Prefix, NumberYearStyle Year, 
 
     private static bool IsLetterOrNonZeroNumeral(char character) => char.IsAsciiLetterUpper(character) || character is >= '1' and <= '9';
 
-    private static string Describe(string specialCharacters) =>
-        specialCharacters.Length == 0
-            ? "no other character"
-            : string.Join(" or ", specialCharacters.Select(character => $"\"{character}\""));
+    // A character is named in words, because a screen reader at its usual settings reads out neither a hyphen nor a quotation mark.
+    private static string Name(char character) => character switch
+    {
+        '-' => "- (hyphen)",
+        '/' => "/ (slash)",
+        '.' => ". (full stop)",
+        '_' => "_ (underscore)",
+        _ => $"\"{character}\"",
+    };
+
+    private static string Join(IReadOnlyList<string> items, string conjunction) =>
+        items.Count == 1 ? items[0] : $"{string.Join(", ", items.Take(items.Count - 1))} {conjunction} {items[^1]}";
 }
