@@ -18,8 +18,10 @@ internal static class TestSets
         IEnumerable<ParameterChoice>? choices = null) =>
         new(name, $"Column {name}", kind, isKey, isRowTitle, isOptional, minimum, maximum, choices ?? []);
 
-    public static ParameterSet Set(params ParameterColumn[] columns) =>
-        ParameterSet.Create("test.probe-set", "Probe set", "A set the tests build.", SetBasis.Law, AsOfDate.SupplyDate, ParameterColumnSet.Create(columns));
+    public static ParameterSet Set(params ParameterColumn[] columns) => Set(AsOfDate.SupplyDate, columns);
+
+    public static ParameterSet Set(AsOfDate asOf, params ParameterColumn[] columns) =>
+        ParameterSet.Create("test.probe-set", "Probe set", "A set the tests build.", SetBasis.Law, asOf, ParameterColumnSet.Create(columns));
 
     public static ParameterSet RateSet() =>
         Set(Column("entry", CellKind.Code, isKey: true), Column("rate", CellKind.Percent), Column("note", CellKind.Text, isOptional: true));

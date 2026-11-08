@@ -3,7 +3,8 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain;
 
 // A version of a set is a legal change: the date from which it applies, known with its set by that date, and the instruments
-// that brought it. It runs until the day before the set's next version.
+// that brought it. It runs until the day before the set's next version. A set dated by financial year changes only on the 1 April
+// that opens one (Companies Act, 2013, section 2(41)).
 internal sealed class ParameterVersion : AggregateRoot<ParameterVersionId>, IAuditable
 {
     public const int InstrumentMaxLength = 400;
@@ -32,6 +33,11 @@ internal sealed class ParameterVersion : AggregateRoot<ParameterVersionId>, IAud
     public static ParameterVersion Create(ParameterSet set, DateOnly from, IEnumerable<string> instruments)
     {
         ArgumentNullException.ThrowIfNull(set);
+
+        if (set.AsOf == AsOfDate.FinancialYearStart && (from.Month != 4 || from.Day != 1))
+        {
+            throw new ArgumentException($"The version from {from:yyyy-MM-dd} of a set dated by financial year does not start on 1 April.", nameof(from));
+        }
 
         var version = new ParameterVersion(ParameterVersionId.Create()) { SetId = set.Id, From = from };
         version.Revise(instruments);

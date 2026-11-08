@@ -4952,6 +4952,8 @@ export const JobRunStatusObject = {
 export const ParameterAsOfObject = {
     SupplyDate: "supplyDate",
     TaxPeriodStart: "taxPeriodStart",
+    DeductionDate: "deductionDate",
+    FinancialYearStart: "financialYearStart",
 } as const;
 export const ParameterColumnKindObject = {
     Text: "text",
@@ -4961,6 +4963,7 @@ export const ParameterColumnKindObject = {
     Amount: "amount",
     Choice: "choice",
     StateCode: "stateCode",
+    Date: "date",
 } as const;
 export const ParameterSetBasisObject = {
     Law: "law",

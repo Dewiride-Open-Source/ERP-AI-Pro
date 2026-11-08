@@ -1,10 +1,12 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain.Columns;
 
 // A column of a set, declared in its seed file beside the data. A value is checked as canonical text: a number without
-// trailing zeros and in its column's range, a code, a GST State code or a choice as written, and a text in the shape every
-// text of a set keeps. A percent is 0 to 100 with at most four decimals and an amount is whole rupees, never negative.
+// trailing zeros and in its column's range, a code, a GST State code or a choice as written, a date as yyyy-MM-dd, and a
+// text in the shape every text of a set keeps. A percent is 0 to 100 with at most four decimals and an amount is whole
+// rupees, never negative.
 internal sealed partial record ParameterColumn
 {
     public const int NameMaxLength = 40;
@@ -16,6 +18,8 @@ internal sealed partial record ParameterColumn
     public const int CodeMaxLength = 64;
 
     public const int PercentMaxDecimals = 4;
+
+    public const string DateFormat = "yyyy-MM-dd";
 
     public ParameterColumn(
         string name,
@@ -119,6 +123,7 @@ internal sealed partial record ParameterColumn
             CellKind.Code => CodePattern().IsMatch(value) ? null : $"'{value}' is not a code of 1 to {CodeMaxLength} letters, digits, brackets, dots and hyphens",
             CellKind.StateCode => StateCodePattern().IsMatch(value) ? null : $"'{value}' is not a GST State code of two digits",
             CellKind.Choice => Choices.Any(choice => string.Equals(choice.Value, value, StringComparison.Ordinal)) ? null : $"'{value}' is not one of the column's choices",
+            CellKind.Date => IsDate(value) ? null : $"'{value}' is not a date written yyyy-MM-dd",
             _ => NumberValueProblem(value),
         };
     }
@@ -136,6 +141,10 @@ internal sealed partial record ParameterColumn
         && Choices.SequenceEqual(other.Choices);
 
     public override int GetHashCode() => HashCode.Combine(Name, Title, Kind, IsKey, IsRowTitle, IsOptional, Choices.Count);
+
+    private static bool IsDate(string value) =>
+        DateOnly.TryParseExact(value, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+        && string.Equals(date.ToString(DateFormat, CultureInfo.InvariantCulture), value, StringComparison.Ordinal);
 
     private static string? NumberProblem(CellKind kind, decimal value) => kind switch
     {

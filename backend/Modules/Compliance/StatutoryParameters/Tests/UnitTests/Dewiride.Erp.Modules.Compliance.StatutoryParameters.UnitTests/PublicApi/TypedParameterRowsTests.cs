@@ -34,6 +34,23 @@ public sealed class TypedParameterRowsTests
         TestSets.Column("amount", CellKind.Amount),
         TestSets.Column("test", CellKind.Text));
 
+    private static readonly ParameterSet WindowSet = TestSets.Set(
+        TestSets.Column("option", CellKind.Code, isKey: true),
+        TestSets.Column("setUpOnOrAfter", CellKind.Date),
+        TestSets.Column("productionBy", CellKind.Date, isOptional: true));
+
+    [Fact]
+    public void Read_DateCells_AsDatesAndAnEmptyOneAsNull()
+    {
+        var rows = new TypedParameterRows(WindowSet, [
+            Row(WindowSet, ("option", "probe-a"), ("setUpOnOrAfter", "2019-10-01"), ("productionBy", "2024-03-31")),
+            Row(WindowSet, ("option", "probe-b"), ("setUpOnOrAfter", "2016-03-01"), ("productionBy", null))]);
+
+        Assert.Equal(
+            [new ProbeWindow("probe-a", new DateOnly(2019, 10, 1), new DateOnly(2024, 3, 31)), new ProbeWindow("probe-b", new DateOnly(2016, 3, 1), null)],
+            rows.Read<ProbeWindow>());
+    }
+
     [Fact]
     public void Read_PercentCells_AsPercentagesAndAnEmptyConditionAsNull()
     {
@@ -125,4 +142,6 @@ public sealed class TypedParameterRowsTests
 
     private static ParameterRow Row(ParameterSet set, params (string Column, string? Value)[] cells) =>
         ParameterRow.Create(set, TestSets.Day("2017-07-01"), null, TestSets.Cells(cells), "Probe source");
+
+    private sealed record ProbeWindow(string Option, DateOnly SetUpOnOrAfter, DateOnly? ProductionBy);
 }

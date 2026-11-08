@@ -25,6 +25,14 @@ test("asOfText_EachMeaning_SaysWhatTheDayAVersionStartsGoverns", () => {
     asOfText("taxPeriodStart"),
     "Each version applies to the tax periods that begin on or after the day it starts: a month, a quarter or a financial year.",
   );
+  assert.equal(
+    asOfText("deductionDate"),
+    "Each version applies to tax deducted on or after the day it starts: on the credit or the payment at which the Act requires the deduction.",
+  );
+  assert.equal(
+    asOfText("financialYearStart"),
+    "Each version applies to the financial years that begin on or after the day it starts.",
+  );
 });
 
 test("longDate_IsoDate_IsTheDayMonthAndYearInWords", () => {

@@ -9,7 +9,7 @@ using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain.C
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.PublicApi;
 
 // The canonical cells are written as the JSON of their kinds, a percent and an integer as numbers, an amount as Money in INR and
-// every other kind as its text, and read into the row type as strictly as a seed file is read: a cell the type lacks, a parameter
+// every other kind as its text, a date's yyyy-MM-dd reading as DateOnly, and read into the row type as strictly as a seed file is read: a cell the type lacks, a parameter
 // no cell fills, null where the type allows none or a choice the enum lacks is an error. A typed set and its seed file are held
 // to each other by a test, so a row type that does not fit is a defect of the release.
 internal sealed class TypedParameterRows(ParameterSet set, IReadOnlyList<ParameterRow> rows) : IStatutoryParameterRows

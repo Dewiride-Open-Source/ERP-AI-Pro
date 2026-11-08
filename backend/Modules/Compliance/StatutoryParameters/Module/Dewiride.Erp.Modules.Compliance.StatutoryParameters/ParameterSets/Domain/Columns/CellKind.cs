@@ -9,4 +9,5 @@ internal enum CellKind
     Amount = 5,
     Choice = 6,
     StateCode = 7,
+    Date = 8,
 }

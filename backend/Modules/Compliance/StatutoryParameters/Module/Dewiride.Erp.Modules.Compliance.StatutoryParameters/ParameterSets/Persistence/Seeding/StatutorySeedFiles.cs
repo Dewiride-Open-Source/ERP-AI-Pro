@@ -102,7 +102,7 @@ internal static class StatutorySeedFiles
         var asOf = Named<AsOfDate>(file.AsOf);
         if (asOf is null)
         {
-            Problem("asOf", $"'{file.AsOf}' is neither supplyDate nor taxPeriodStart.");
+            Problem("asOf", $"'{file.AsOf}' is not supplyDate, taxPeriodStart, deductionDate or financialYearStart.");
         }
 
         var references = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);

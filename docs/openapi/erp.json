@@ -9121,7 +9121,9 @@
       "ParameterAsOf": {
         "enum": [
           "supplyDate",
-          "taxPeriodStart"
+          "taxPeriodStart",
+          "deductionDate",
+          "financialYearStart"
         ]
       },
       "ParameterCellResponse": {
@@ -9165,7 +9167,8 @@
           "percent",
           "amount",
           "choice",
-          "stateCode"
+          "stateCode",
+          "date"
         ]
       },
       "ParameterColumnResponse": {

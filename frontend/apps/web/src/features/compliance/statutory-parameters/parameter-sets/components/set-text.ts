@@ -20,6 +20,9 @@ const asOfTexts: Readonly<Record<ParameterAsOf, string>> = {
   supplyDate: "Each version applies to supplies made on or after the day it starts.",
   taxPeriodStart:
     "Each version applies to the tax periods that begin on or after the day it starts: a month, a quarter or a financial year.",
+  deductionDate:
+    "Each version applies to tax deducted on or after the day it starts: on the credit or the payment at which the Act requires the deduction.",
+  financialYearStart: "Each version applies to the financial years that begin on or after the day it starts.",
 };
 
 const longDates = new Intl.DateTimeFormat("en-IN", {

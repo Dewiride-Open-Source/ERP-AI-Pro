@@ -7,6 +7,7 @@ import type {
 } from "@/shared/lists/searched/searched-list-view";
 
 import type { ParameterColumn, ParameterRow } from "../../parameter-sets/components/set-items.ts";
+import { longDate } from "../../parameter-sets/components/set-text.ts";
 
 export const noValue = "None";
 
@@ -21,9 +22,9 @@ export function cellValue(row: ParameterRow, column: string): string | null {
   return row.cells.find((cell) => cell.column === column)?.value ?? null;
 }
 
-// A value arrives as the canonical text the API keeps (a percentage "2.5", an amount in rupees "50000000"), never as a
-// number, so it is shown without rounding: a percentage with its sign, an amount in rupees grouped in lakhs and crores, with
-// paise only when it has them, and a choice by its title.
+// A value arrives as the canonical text the API keeps (a percentage "2.5", an amount in rupees "50000000", a date
+// "2019-10-01"), never as a number, so it is shown without rounding: a percentage with its sign, an amount in rupees grouped
+// in lakhs and crores, with paise only when it has them, a date in words and a choice by its title.
 export function cellText(column: ParameterColumn, value: string | null): string {
   if (value === null) return noValue;
   switch (column.kind) {
@@ -31,6 +32,8 @@ export function cellText(column: ParameterColumn, value: string | null): string 
       return `${value}%`;
     case "amount":
       return `₹${groupIndian(value, value.includes(".") ? 2 : 0)}`;
+    case "date":
+      return longDate(value);
     case "choice":
       return column.choices.find((choice) => choice.value === value)?.title ?? value;
     default:

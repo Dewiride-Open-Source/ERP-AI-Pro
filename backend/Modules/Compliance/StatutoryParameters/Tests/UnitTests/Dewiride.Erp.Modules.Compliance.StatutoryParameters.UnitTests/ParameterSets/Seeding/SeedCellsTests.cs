@@ -18,6 +18,7 @@ public sealed class SeedCellsTests
     [InlineData(nameof(CellKind.Text), "\"Selling of space for advertisement in print media.\"", "Selling of space for advertisement in print media.")]
     [InlineData(nameof(CellKind.Code), "\"21(ia)\"", "21(ia)")]
     [InlineData(nameof(CellKind.StateCode), "\"07\"", "07")]
+    [InlineData(nameof(CellKind.Date), "\"2019-10-01\"", "2019-10-01")]
     public void Read_ValueOfItsKind_KeepsItsCanonicalText(string kindName, string json, string expected)
     {
         var kind = Enum.Parse<CellKind>(kindName);
@@ -42,6 +43,7 @@ public sealed class SeedCellsTests
     [InlineData(nameof(CellKind.StateCode), "27")]
     [InlineData(nameof(CellKind.Text), "true")]
     [InlineData(nameof(CellKind.Text), "[\"a\"]")]
+    [InlineData(nameof(CellKind.Date), "20191001")]
     public void Read_ValueOfTheWrongJsonType_IsRefused(string kindName, string json)
     {
         var kind = Enum.Parse<CellKind>(kindName);
@@ -61,6 +63,7 @@ public sealed class SeedCellsTests
     [InlineData(nameof(CellKind.Text), "\"two  spaces\"")]
     [InlineData(nameof(CellKind.Code), "\"21 (ii)\"")]
     [InlineData(nameof(CellKind.StateCode), "\"7\"")]
+    [InlineData(nameof(CellKind.Date), "\"2019-10-1\"")]
     public void Read_ValueThatBreaksItsKind_IsRefused(string kindName, string json)
     {
         var kind = Enum.Parse<CellKind>(kindName);

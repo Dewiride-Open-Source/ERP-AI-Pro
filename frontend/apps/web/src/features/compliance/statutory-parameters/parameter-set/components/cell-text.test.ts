@@ -39,6 +39,8 @@ const cadence = column("cadence", "choice", {
 
 const day = column("day", "integer");
 
+const opened = column("opened", "date");
+
 const state = column("state", "stateCode");
 
 const reference = column("reference", "code");
@@ -73,13 +75,14 @@ test("cellText_EachKind_IsWrittenAsAPersonReadsIt", () => {
   assert.equal(cellText(limit, "0"), "₹0");
   assert.equal(cellText(cadence, "everyQuarter"), "Every quarter");
   assert.equal(cellText(day, "28"), "28");
+  assert.equal(cellText(opened, "2019-10-01"), "1 October 2019");
   assert.equal(cellText(state, "09"), "09");
   assert.equal(cellText(code, "alpha-1"), "alpha-1");
   assert.equal(cellText(note, "As written, with (brackets)."), "As written, with (brackets).");
 });
 
 test("cellText_EmptyCell_IsNone", () => {
-  for (const kind of [note, share, limit, cadence, day]) assert.equal(cellText(kind, null), noValue);
+  for (const kind of [note, share, limit, cadence, day, opened]) assert.equal(cellText(kind, null), noValue);
   assert.equal(noValue, "None");
 });
 

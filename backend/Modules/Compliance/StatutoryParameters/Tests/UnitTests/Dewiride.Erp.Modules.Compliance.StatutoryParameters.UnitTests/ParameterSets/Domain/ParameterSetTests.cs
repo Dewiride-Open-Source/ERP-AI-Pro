@@ -74,6 +74,33 @@ public sealed class ParameterSetTests
         Assert.Equal(7, version.Id.Value.Version);
     }
 
+    [Theory]
+    [InlineData("2014-04-01")]
+    [InlineData("2026-04-01")]
+    public void CreateVersion_OfASetDatedByFinancialYearOnThe1stApril_IsCreated(string from)
+    {
+        var version = ParameterVersion.Create(FinancialYearSet(), TestSets.Day(from), ["An instrument"]);
+
+        Assert.Equal(TestSets.Day(from), version.From);
+    }
+
+    [Theory]
+    [InlineData("2014-08-29")]
+    [InlineData("2016-03-31")]
+    [InlineData("2026-01-01")]
+    public void CreateVersion_OfASetDatedByFinancialYearOnAnotherDay_IsRefused(string from)
+    {
+        Assert.Throws<ArgumentException>(() => ParameterVersion.Create(FinancialYearSet(), TestSets.Day(from), ["An instrument"]));
+    }
+
+    [Fact]
+    public void CreateVersion_OfASetDatedByDeduction_TakesAnyDay()
+    {
+        var set = TestSets.Set(AsOfDate.DeductionDate, TestSets.Column("entry", CellKind.Code, isKey: true));
+
+        Assert.Equal(TestSets.Day("2026-10-01"), ParameterVersion.Create(set, TestSets.Day("2026-10-01"), ["An instrument"]).From);
+    }
+
     [Fact]
     public void CreateVersion_NoInstrument_IsRefused()
     {
@@ -150,4 +177,7 @@ public sealed class ParameterSetTests
 
         Assert.Equal((TestSets.Day("2025-09-21"), cells, "Another source"), (row.Until, row.Cells, row.Source));
     }
+
+    private static ParameterSet FinancialYearSet() =>
+        TestSets.Set(AsOfDate.FinancialYearStart, TestSets.Column("entry", CellKind.Code, isKey: true), TestSets.Column("years", CellKind.Integer));
 }

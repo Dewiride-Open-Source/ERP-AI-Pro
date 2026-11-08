@@ -40,7 +40,9 @@ internal static class HistoryEntries
     {
         AsOfDate.SupplyDate => ParameterAsOf.SupplyDate,
         AsOfDate.TaxPeriodStart => ParameterAsOf.TaxPeriodStart,
-        _ => throw new ArgumentOutOfRangeException(nameof(asOf), asOf, "A set answers for the date of a supply or the first day of a tax period."),
+        AsOfDate.DeductionDate => ParameterAsOf.DeductionDate,
+        AsOfDate.FinancialYearStart => ParameterAsOf.FinancialYearStart,
+        _ => throw new ArgumentOutOfRangeException(nameof(asOf), asOf, "A set answers for one of the store's as-of dates."),
     };
 
     private static ParameterColumnKind KindOf(CellKind kind) => kind switch
@@ -52,6 +54,7 @@ internal static class HistoryEntries
         CellKind.Amount => ParameterColumnKind.Amount,
         CellKind.Choice => ParameterColumnKind.Choice,
         CellKind.StateCode => ParameterColumnKind.StateCode,
+        CellKind.Date => ParameterColumnKind.Date,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "A column is of one of the store's kinds."),
     };
 }
