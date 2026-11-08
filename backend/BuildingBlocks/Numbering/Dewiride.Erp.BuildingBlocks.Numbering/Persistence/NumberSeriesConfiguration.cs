@@ -12,7 +12,7 @@ internal sealed class NumberSeriesConfiguration : IEntityTypeConfiguration<Numbe
     public void Configure(EntityTypeBuilder<NumberSeries> builder)
     {
         builder.ToTable(NumberingTables.Series, NumberingTables.Schema, table => table.ExcludeFromMigrations());
-        builder.RecordChangesAs(NumberingTables.SeriesChangeKey);
+        builder.RecordChangesAs("platform.numbering.series");
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id).ValueGeneratedNever();
         builder.Property(s => s.DocumentType).HasMaxLength(NumberSeries.DocumentTypeMaxLength).IsUnicode(false);

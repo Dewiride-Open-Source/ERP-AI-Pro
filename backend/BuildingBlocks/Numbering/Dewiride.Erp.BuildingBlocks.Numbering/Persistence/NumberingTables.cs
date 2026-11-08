@@ -8,9 +8,5 @@ public static class NumberingTables
 
     public const string Years = "NumberSeriesYears";
 
-    public const string SeriesChangeKey = "platform.numbering.series";
-
-    public const string YearsChangeKey = "platform.numbering.series-years";
-
     public const int YearLength = 7;
 }

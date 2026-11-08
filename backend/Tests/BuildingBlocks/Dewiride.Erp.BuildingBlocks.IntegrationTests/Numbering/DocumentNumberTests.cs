@@ -2,7 +2,6 @@ using Dewiride.Erp.BuildingBlocks.Auditing.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationTests.Numbering.Sample;
 using Dewiride.Erp.BuildingBlocks.Kernel.Results;
 using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
-using Dewiride.Erp.BuildingBlocks.Numbering.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.UnitOfWork;
 using Dewiride.Erp.BuildingBlocks.Persistence.Versioning;
@@ -12,6 +11,8 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Numbering;
 
 public sealed class DocumentNumberTests
 {
+    private const string YearsKey = "platform.numbering.series-years";
+
     private static readonly NumberFormat Format = new("TI.", NumberYearStyle.Full, ".", 3);
 
     [Fact]
@@ -179,7 +180,7 @@ public sealed class DocumentNumberTests
 
         var opened = await database.QueryAsync((context, token) => context.Years.AsNoTracking().SingleAsync(y => y.Year == NumberingDatabase.CurrentYear.Next && context.Series.Any(s => s.Id == y.SeriesId && s.DocumentType == database.Document.Key), token));
         var record = Assert.Single(await database.ChangeRecordsOfAsync(opened.Id.Value));
-        Assert.Equal((ChangeOperation.Created, NumberingTables.YearsChangeKey, database.Actor.ActorId), (record.Operation, record.EntityType, record.ActorId));
+        Assert.Equal((ChangeOperation.Created, YearsKey, database.Actor.ActorId), (record.Operation, record.EntityType, record.ActorId));
         Assert.Equal(4, opened.NextNumber);
     }
 

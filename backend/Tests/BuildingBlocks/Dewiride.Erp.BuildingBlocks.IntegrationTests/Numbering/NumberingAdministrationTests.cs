@@ -11,6 +11,10 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Numbering;
 
 public sealed class NumberingAdministrationTests
 {
+    private const string SeriesKey = "platform.numbering.series";
+
+    private const string YearsKey = "platform.numbering.series-years";
+
     private static readonly NumberFormat Format = new("TI.", NumberYearStyle.Full, ".", 3);
 
     private static readonly NumberFormat Changed = new("TX", NumberYearStyle.Abbreviated, "-", 4);
@@ -41,7 +45,7 @@ public sealed class NumberingAdministrationTests
             (NumberingDatabase.CurrentYear, 38L, 38L, 999L, false, "TI.2026-27.038", "TI.2026-27.038", "TI.2026-27.999", (string?)null),
             (year.Year, year.FirstNumber, year.NextNumber, year.LastNumber, year.InUse, year.FirstText, year.NextText, year.LastText, year.LastIssuedText));
         Assert.Equal(
-            [(NumberingTables.SeriesChangeKey, ChangeOperation.Created), (NumberingTables.YearsChangeKey, ChangeOperation.Created)],
+            [(SeriesKey, ChangeOperation.Created), (YearsKey, ChangeOperation.Created)],
             (await database.ChangeRecordsUnderAsync(series.Id.Value)).Select(record => (record.EntityType, record.Operation)));
     }
 
@@ -262,8 +266,8 @@ public sealed class NumberingAdministrationTests
         var details = await ListedAsync(database);
         var year = await database.QueryAsync((context, token) => context.Years.AsNoTracking().SingleAsync(y => y.SeriesId == details.Series!.Id, token));
 
-        var names = await database.QueryAsync((context, token) => new NumberingRecordNames(context, new([new(database.Document)])).NamesAsync(NumberingTables.SeriesChangeKey, [details.Series!.Id.Value], token));
-        var yearNames = await database.QueryAsync((context, token) => new NumberingRecordNames(context, new([new(database.Document)])).NamesAsync(NumberingTables.YearsChangeKey, [year.Id.Value], token));
+        var names = await database.QueryAsync((context, token) => new NumberingRecordNames(context, new([new(database.Document)])).NamesAsync(SeriesKey, [details.Series!.Id.Value], token));
+        var yearNames = await database.QueryAsync((context, token) => new NumberingRecordNames(context, new([new(database.Document)])).NamesAsync(YearsKey, [year.Id.Value], token));
 
         Assert.Equal("Test invoices", names[details.Series!.Id.Value]);
         Assert.Equal("Test invoices 2026-27", yearNames[year.Id.Value]);

@@ -15,7 +15,7 @@ internal sealed class NumberSeriesYearConfiguration : IEntityTypeConfiguration<N
     public void Configure(EntityTypeBuilder<NumberSeriesYear> builder)
     {
         builder.ToTable(NumberingTables.Years, NumberingTables.Schema, table => table.ExcludeFromMigrations());
-        builder.RecordChangesAs(NumberingTables.YearsChangeKey);
+        builder.RecordChangesAs("platform.numbering.series-years");
         builder.FileChangesUnder(y => y.SeriesId);
         builder.HasKey(y => y.Id);
         builder.Property(y => y.Id).ValueGeneratedNever();
