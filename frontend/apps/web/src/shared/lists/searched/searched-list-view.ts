@@ -1,6 +1,7 @@
 import type { DataTablePage } from "@dewiride/erp-ui/components/data-table/data-table";
 import { searchText } from "@dewiride/erp-ui/lib/search/search-text";
 import type { Route } from "next";
+import type { ReactNode } from "react";
 
 import type { SearchParameters } from "../list-query.ts";
 
@@ -35,10 +36,15 @@ export interface SearchedListColumn {
   readonly title?: boolean | undefined;
 }
 
+// A cell is usually its text; a list whose rows open a page or carry a badge renders those in the cell instead.
 export interface SearchedListRow {
   readonly id: string;
-  readonly cells: Readonly<Record<string, string>>;
+  readonly cells: Readonly<Record<string, ReactNode>>;
 }
+
+// A list shows its rows as a table on a wide box and as cards on a narrow one, unless its rows hold so many columns of
+// sentences that no table could show them legibly, which shows them as cards at every width.
+export type SearchedListLayout = "responsive" | "cards";
 
 export const searchedListParameters = { search: "q", page: "page" } as const;
 

@@ -1,12 +1,16 @@
 import { expect, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 
+import { SearchedListRegion, type ShownRow } from "../../shared/lists/searched-list.page";
+
 export const parameterSetsPath = "/compliance/statutory-parameters/parameter-sets";
 
 export const parameterSetsApi = "/api/compliance/statutory-parameters/parameter-sets";
 
+export const setsPerPage = 10;
+
 export type ParameterSetBasis = "law" | "interpretation";
 
-export type ParameterAsOf = "supplyDate" | "taxPeriodStart";
+export type ParameterAsOf = "supplyDate" | "taxPeriodStart" | "deductionDate" | "financialYearStart";
 
 export type VersionSummary = {
   readonly from: string;
@@ -95,69 +99,59 @@ export async function readParameterSets(request: APIRequestContext): Promise<Par
   return [...(sets ?? [])];
 }
 
-function versionSnapshot(version: VersionSummary): string[] {
-  return [
-    `      - text: ${quoted(fromText(version.from))}`,
-    ...(version.instruments.length === 0
-      ? []
-      : [
-          "      - list:",
-          ...version.instruments.map((instrument) => `        - listitem: ${quoted(instrument)}`),
-        ]),
-  ];
+// A set as the list shows it, built from the API's own answer: its title, whether it is a government table or the ERP's
+// reading, the version in force today, the next change and the entries in force today.
+export function setRow(set: ParameterSetSummary): ShownRow {
+  return {
+    Set: set.title,
+    Kind: basisLabels[set.basis],
+    "In force today": set.current === null ? "Nothing is in force yet." : fromText(set.current.from),
+    "Next change": set.next === null ? "None" : fromText(set.next.from),
+    "Entries in force today": entryCountText(set.entryCount),
+  };
 }
 
-// The list as a person meets it, built from the API's own answer: each set's title as a link to its page, whether it is a
-// government table or the ERP's reading, its description, the version in force today with its instruments, the next
-// change when one is coming, and the entries in force today.
-export function parameterSetsSnapshot(sets: readonly ParameterSetSummary[]): string {
-  return [
-    `- list "Parameter sets":`,
-    ...sets.flatMap((set) => [
-      "  - listitem:",
-      `    - ${yamlKey(`heading ${quoted(set.title)} [level=2]`)}:`,
-      `      - ${yamlKey(`link ${quoted(set.title)}`)}:`,
-      `        - /url: ${parameterSetPath(set.key)}`,
-      `    - text: ${quoted(basisLabels[set.basis])}`,
-      `    - paragraph: ${quoted(set.description)}`,
-      "    - term: In force today",
-      ...(set.current === null
-        ? ["    - definition: Nothing is in force yet."]
-        : ["    - definition:", ...versionSnapshot(set.current)]),
-      ...(set.next === null
-        ? []
-        : ["    - term: Next change", "    - definition:", ...versionSnapshot(set.next)]),
-      "    - term: Entries in force today",
-      `    - definition: ${quoted(entryCountText(set.entryCount))}`,
-    ]),
-  ].join("\n");
+// What a search finds a set by: its key, and the words of its title and description.
+export function setKeys(set: ParameterSetSummary): { readonly code: string; readonly name: string } {
+  return { code: set.key, name: `${set.title} ${set.description}` };
+}
+
+export function setsShownCount(total: number): string {
+  if (total === 1) return "Showing 1 set.";
+  if (total <= setsPerPage) return `Showing all ${counts.format(total)} sets.`;
+  return `Showing 1–${counts.format(setsPerPage)} of ${counts.format(total)} sets.`;
 }
 
 export class ParameterSetsPage {
   readonly heading: Locator;
   readonly overview: Locator;
-  readonly list: Locator;
-  readonly cards: Locator;
+  readonly region: Locator;
+  readonly entries: SearchedListRegion;
   readonly unavailable: Locator;
 
   constructor(private readonly page: Page) {
     this.heading = page.getByRole("heading", { name: "Statutory parameters", level: 1 });
     this.overview = page.getByTestId("parameter-sets-overview");
-    this.list = page.getByRole("list", { name: "Parameter sets", exact: true });
-    this.cards = page.getByTestId("parameter-set-card");
+    this.region = page.getByRole("region", { name: "Parameter sets", exact: true });
+    this.entries = new SearchedListRegion(this.region, {
+      label: "Parameter sets",
+      searchLabel: "Title or words",
+      titleHeading: "Set",
+    });
     this.unavailable = page.getByTestId("parameter-sets-unavailable");
   }
 
-  async goto(): Promise<void> {
-    await this.page.goto(parameterSetsPath);
+  async goto(address = parameterSetsPath): Promise<void> {
+    await this.page.goto(address);
     await expect(this.heading).toBeVisible();
   }
 
-  card(title: string): Locator {
-    return this.cards.filter({ has: this.page.getByRole("heading", { name: title, exact: true, level: 2 }) });
+  async waitUntilInteractive(): Promise<void> {
+    await expect(this.page.getByRole("main").locator("[data-hydrating]")).toHaveCount(0);
   }
 
-  cardLink(title: string): Locator {
-    return this.card(title).getByRole("link", { name: title, exact: true });
+  // The list draws each set's link twice, in its table and in its cards, and shows one of them by the width of its box.
+  setLink(title: string): Locator {
+    return this.region.getByRole("link", { name: title, exact: true }).filter({ visible: true });
   }
 }

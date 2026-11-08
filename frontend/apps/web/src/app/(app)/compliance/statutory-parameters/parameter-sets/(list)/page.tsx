@@ -7,10 +7,12 @@ export function generateMetadata(): Promise<Metadata> {
   return pageMetadata(parameterSetsNavigation.title, parameterSetsNavigation.permission);
 }
 
-export default function ParameterSetsPage() {
+export default async function ParameterSetsPage({
+  searchParams,
+}: Readonly<PageProps<"/compliance/statutory-parameters/parameter-sets">>) {
   return (
     <RequirePermission permission={parameterSetsNavigation.permission}>
-      <ParameterSetsOverview />
+      <ParameterSetsOverview searchParameters={await searchParams} />
     </RequirePermission>
   );
 }

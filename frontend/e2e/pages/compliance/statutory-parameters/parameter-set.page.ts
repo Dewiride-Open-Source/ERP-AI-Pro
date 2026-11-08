@@ -5,6 +5,7 @@ import { SearchedListRegion, type ShownRow } from "../../shared/lists/searched-l
 import {
   basisLabels,
   changeCounts,
+  longDate,
   parameterSetApi,
   parameterSetPath,
   quoted,
@@ -19,9 +20,18 @@ export const centralTaxRatesKey = "gst.central-tax-rates";
 
 export const sacCodesKey = "gst.sac-codes";
 
+export const tdsEntriesKey = "income-tax.tds-entries";
+
+export const tdsCrosswalkKey = "income-tax.tds-crosswalk";
+
+export const companyRatesKey = "income-tax.company-rates";
+
+export const usefulLivesKey = "companies.schedule-ii-useful-lives";
+
 export const entriesPerPage = 10;
 
-export type ParameterColumnKind = "text" | "code" | "integer" | "percent" | "amount" | "choice" | "stateCode";
+export type ParameterColumnKind =
+  "text" | "code" | "integer" | "percent" | "amount" | "choice" | "stateCode" | "date";
 
 export type ParameterColumn = {
   readonly name: string;
@@ -71,6 +81,9 @@ export const asOfTexts: Readonly<Record<ParameterAsOf, string>> = {
   supplyDate: "Each version applies to supplies made on or after the day it starts.",
   taxPeriodStart:
     "Each version applies to the tax periods that begin on or after the day it starts: a month, a quarter or a financial year.",
+  deductionDate:
+    "Each version applies to tax deducted on or after the day it starts: on the credit or the payment at which the Act requires the deduction.",
+  financialYearStart: "Each version applies to the financial years that begin on or after the day it starts.",
 };
 
 const indianGrouping = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2, minimumFractionDigits: 0 });
@@ -105,7 +118,7 @@ export function valueOf(row: ParameterRow, column: string): string | null {
 }
 
 // How each kind of value reads on the page, written apart from the page's own code: a percentage with its sign, rupees grouped
-// in lakhs and crores with paise only when there are some, a choice by its title and an empty value as None.
+// in lakhs and crores with paise only when there are some, a date in words, a choice by its title and an empty value as None.
 export function cellText(column: ParameterColumn, value: string | null): string {
   if (value === null) return "None";
   switch (column.kind) {
@@ -113,6 +126,8 @@ export function cellText(column: ParameterColumn, value: string | null): string 
       return `${value}%`;
     case "amount":
       return `₹${(value.includes(".") ? withPaise : indianGrouping).format(Number(value))}`;
+    case "date":
+      return longDate(value);
     case "choice":
       return column.choices.find((choice) => choice.value === value)?.title ?? value;
     default:

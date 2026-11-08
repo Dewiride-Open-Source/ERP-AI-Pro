@@ -15,7 +15,13 @@ import {
   parameterSetAddress,
   ParameterSetPage,
   readParameterSet,
+  cellText,
+  companyRatesKey,
   sacCodesKey,
+  tdsCrosswalkKey,
+  tdsEntriesKey,
+  usefulLivesKey,
+  valueOf,
   versionAddress,
   versionsSnapshot,
   type ParameterSet,
@@ -410,5 +416,91 @@ test.describe("a statutory parameter set", () => {
       expect(answer.status()).toBe(404);
       expect(await answer.json()).toMatchObject({ code: "parameter-set.not-found", instance: missing });
     });
+  });
+});
+
+// The direct-tax sets (ADR-0064): entries of many columns read as cards at every width, the crosswalk is the ERP's reading, the
+// Schedule II lives answer by financial year, and a date reads in words; every expectation is built from the API's answer.
+test.describe("the direct-tax sets", () => {
+  test.use({ persona: "administrator" });
+
+  forEachTheme("show the TDS entries as cards, each value under its heading", async ({ page, capture }) => {
+    const set = await readParameterSet(page.request, tdsEntriesKey);
+    const shown = shownVersionOf(set);
+    const setPage = new ParameterSetPage(page);
+    const entries = setPage.entries(set);
+
+    await setPage.goto(parameterSetPath(set.key), set.title);
+    await setPage.waitUntilInteractive();
+    await expect(setPage.basis).toHaveText(basisLabel(set.basis));
+    await expect(setPage.asOf).toHaveText(asOfTexts[set.asOf]);
+    await expect(setPage.versions).toMatchAriaSnapshot(versionsSnapshot(set));
+    expect(await entries.showsCards(), "entries of many columns as cards at every width").toBe(true);
+    await expect(entries.status).toHaveText(shownCount(shown.rows.length));
+    expect(await entries.rows()).toEqual(
+      shown.rows.slice(0, entriesPerPage).map((row) => entryRow(set, row)),
+    );
+    await capture("tds-entries-header", setPage.overview.locator("header"));
+    await capture("tds-entries-entry", entries.row(entryTitle(set, shown.rows[0]!)));
+  });
+
+  test("marks the crosswalk as the ERP's reading and finds a pair by its old section", async ({ page }) => {
+    const set = await readParameterSet(page.request, tdsCrosswalkKey);
+    const shown = shownVersionOf(set);
+    const target = shown.rows[0];
+    expect(target, "a pair of the crosswalk").toBeDefined();
+    const setPage = new ParameterSetPage(page);
+    const entries = setPage.entries(set);
+
+    await setPage.goto(parameterSetPath(set.key), set.title);
+    await setPage.waitUntilInteractive();
+    await expect(setPage.basis).toHaveText(basisLabel("interpretation"));
+    await expect(setPage.asOf).toHaveText(asOfTexts[set.asOf]);
+    await entries.searchFor(target!.key);
+    await expect
+      .poll(() => entries.rows())
+      .toEqual(
+        expectedMatches(shown.rows, target!.key, (row) => entryKeys(set, row))
+          .slice(0, entriesPerPage)
+          .map((row) => entryRow(set, row)),
+      );
+  });
+
+  forEachTheme("show Schedule II's useful lives by financial year", async ({ page, capture }) => {
+    const set = await readParameterSet(page.request, usefulLivesKey);
+    const shown = shownVersionOf(set);
+    const setPage = new ParameterSetPage(page);
+    const entries = setPage.entries(set);
+
+    await setPage.goto(parameterSetPath(set.key), set.title);
+    await setPage.waitUntilInteractive();
+    await expect(setPage.asOf).toHaveText(asOfTexts.financialYearStart);
+    await expect(setPage.versions).toMatchAriaSnapshot(versionsSnapshot(set));
+    await expect(entries.status).toHaveText(shownCount(shown.rows.length));
+    expect(await entries.rows()).toEqual(
+      shown.rows.slice(0, entriesPerPage).map((row) => entryRow(set, row)),
+    );
+    await capture("schedule-ii-useful-lives-versions", setPage.versionsCard);
+  });
+
+  test("writes the company options' dates in words", async ({ page }) => {
+    const set = await readParameterSet(page.request, companyRatesKey);
+    const shown = shownVersionOf(set);
+    const dated = set.columns.filter((column) => column.kind === "date");
+    expect(dated.length, "the date columns of the company rates").toBeGreaterThan(0);
+    const setPage = new ParameterSetPage(page);
+    const entries = setPage.entries(set);
+
+    await setPage.goto(parameterSetPath(set.key), set.title);
+    await setPage.waitUntilInteractive();
+    expect(await entries.rows()).toEqual(
+      shown.rows.slice(0, entriesPerPage).map((row) => entryRow(set, row)),
+    );
+    const withDate = shown.rows.find((row) => dated.some((column) => valueOf(row, column.name) !== null));
+    expect(withDate, "an option with a date").toBeDefined();
+    const column = dated.find((candidate) => valueOf(withDate!, candidate.name) !== null)!;
+    await expect(entries.row(entryTitle(set, withDate!))).toContainText(
+      cellText(column, valueOf(withDate!, column.name)),
+    );
   });
 });

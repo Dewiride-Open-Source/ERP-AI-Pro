@@ -3,7 +3,7 @@ import type { SearchedListView } from "@/shared/lists/searched/searched-list-vie
 
 import type { ParameterColumn, ParameterRow } from "../../parameter-sets/components/set-items";
 
-import { entryColumns, entryRow, entrySearchKeys } from "./cell-text";
+import { entryColumns, entryLayout, entryRow, entrySearchKeys } from "./cell-text";
 import { parameterSetAddress } from "./parameter-set-view";
 
 const entriesPerPage = 10;
@@ -43,6 +43,7 @@ export function VersionEntries({
       noun={{ one: "entry", other: "entries" }}
       search={entriesSearch}
       columns={entryColumns(columns)}
+      layout={entryLayout(columns)}
       outerNavigation
     />
   );

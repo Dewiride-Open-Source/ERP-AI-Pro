@@ -2,6 +2,7 @@ import { groupIndian } from "@dewiride/erp-ui/lib/indian-number";
 
 import type {
   SearchedListColumn,
+  SearchedListLayout,
   SearchedListRow,
   SearchKeys,
 } from "@/shared/lists/searched/searched-list-view";
@@ -59,6 +60,14 @@ export function entryColumns(columns: readonly ParameterColumn[]): readonly Sear
     ...columns.map((column) => ({ id: column.name, header: column.title, title: column === title })),
     { id: sourceColumnId, header: sourceHeader },
   ];
+}
+
+export const tableColumnsMax = 6;
+
+// A set whose entries hold more columns than a table shows legibly side by side, its source included, is shown as cards at
+// every width, each entry's values under their headings.
+export function entryLayout(columns: readonly ParameterColumn[]): SearchedListLayout {
+  return entryColumns(columns).length > tableColumnsMax ? "cards" : "responsive";
 }
 
 export function entryRow(columns: readonly ParameterColumn[], row: ParameterRow): SearchedListRow {

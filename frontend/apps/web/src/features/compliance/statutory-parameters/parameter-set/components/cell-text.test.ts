@@ -6,6 +6,7 @@ import type { ParameterColumn, ParameterRow } from "../../parameter-sets/compone
 import {
   cellText,
   entryColumns,
+  entryLayout,
   entryRow,
   entrySearchKeys,
   entryTitle,
@@ -96,6 +97,12 @@ test("titleColumn_SetWithARowTitleColumn_IsThatColumn", () => {
 
 test("titleColumn_SetWithoutOne_IsTheKeyColumn", () => {
   assert.equal(titleColumn([share, code]), code);
+});
+
+test("entryLayout_SixColumnsWithTheSource_IsATableOnAWideScreenAndMore_AreCards", () => {
+  const five = [code, label, share, limit, day];
+  assert.equal(entryLayout(five), "responsive");
+  assert.equal(entryLayout([...five, cadence]), "cards");
 });
 
 test("entryColumns_Columns_AreTheSetsInOrderTitledByOneAndEndWithTheSource", () => {

@@ -28,6 +28,7 @@ import {
   searchMaxLength,
   type SearchedListAddress,
   type SearchedListColumn,
+  type SearchedListLayout,
   type SearchedListRow,
   type SearchedListView,
 } from "./searched-list-view.ts";
@@ -48,6 +49,7 @@ export interface SearchedListBrowserProps {
   readonly search: SearchedListSearch;
   readonly columns: readonly SearchedListColumn[];
   readonly rows: readonly SearchedListRow[];
+  readonly layout?: SearchedListLayout | undefined;
   readonly outerNavigation?: boolean | undefined;
 }
 
@@ -80,6 +82,7 @@ function SearchedListContent({
   search,
   columns,
   rows,
+  layout,
 }: SearchedListContentProps) {
   const hydrated = useHydrated();
   const { pending } = useListNavigation();
@@ -102,7 +105,13 @@ function SearchedListContent({
         onClear={searchForm.onClear}
       />
       {rows.length > 0 ? (
-        <SearchedListTable labelledBy={labelledBy} columns={columns} rows={rows} pending={pending} />
+        <SearchedListTable
+          labelledBy={labelledBy}
+          columns={columns}
+          rows={rows}
+          pending={pending}
+          layout={layout}
+        />
       ) : view.search === undefined ? (
         <Empty className="border" data-testid="searched-list-empty">
           <EmptyHeader>

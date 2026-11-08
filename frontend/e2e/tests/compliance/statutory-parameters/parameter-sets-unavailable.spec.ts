@@ -37,8 +37,8 @@ test.describe("statutory parameters without the API", () => {
     await expect(listPage.unavailable).toHaveText(
       "The statutory parameter sets could not be read. Try again later.",
     );
-    await expect(listPage.list).toHaveCount(0);
-    await expect(listPage.cards).toHaveCount(0);
+    await expect(listPage.region).toHaveCount(0);
+    await expect(listPage.entries.root).toHaveCount(0);
     await capture("parameter-sets-unavailable");
   });
 

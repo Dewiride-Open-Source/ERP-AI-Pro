@@ -1,13 +1,36 @@
-import { Empty, EmptyHeader, EmptyTitle } from "@dewiride/erp-ui/components/ui/empty";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import type { SearchParameters } from "@/shared/lists/list-query";
+import { SearchedList } from "@/shared/lists/searched/searched-list";
+import type { SearchedListView } from "@/shared/lists/searched/searched-list-view";
 
 import { parameterSetsNavigation } from "../../nav";
+import { parameterSetPath } from "../../parameter-set/components/parameter-set-view";
 import { listParameterSets, type ParameterSetsRead } from "../server/queries";
 
-import { ParameterSetCard } from "./parameter-set-card";
-import { parameterSetsDescription, parameterSetsUnavailable } from "./set-text";
+import { SetBasisBadge } from "./set-basis-badge";
+import type { ParameterSetSummary } from "./set-items";
+import {
+  currentText,
+  nextText,
+  parameterSetsAddress,
+  parameterSetsHref,
+  readParameterSetsView,
+  setColumns,
+  setSearchKeys,
+  setsPerPage,
+  setsSearch,
+} from "./set-list";
+import { entryCountText, parameterSetsDescription, parameterSetsUnavailable } from "./set-text";
 
-export async function ParameterSetsOverview() {
+const setsHeadingId = "parameter-sets-heading";
+
+export async function ParameterSetsOverview({ searchParameters }: { searchParameters: SearchParameters }) {
   const { title, area } = parameterSetsNavigation;
+  const { view, canonical } = readParameterSetsView(searchParameters);
+  if (!canonical) redirect(parameterSetsHref(view));
+
   const read = await listParameterSets();
 
   return (
@@ -20,12 +43,13 @@ export async function ParameterSetsOverview() {
         <p className="max-w-prose text-body text-muted-foreground">{parameterSetsDescription}</p>
       </header>
 
-      <ParameterSets read={read} />
+      <ParameterSets read={read} view={view} />
     </div>
   );
 }
 
-function ParameterSets({ read }: { read: ParameterSetsRead }) {
+// The sets are searched and paged like any list, so the page stays one screen's height however many sets the ERP holds.
+function ParameterSets({ read, view }: { read: ParameterSetsRead; view: SearchedListView }) {
   if (read.status === "failed") {
     return (
       <div
@@ -37,22 +61,43 @@ function ParameterSets({ read }: { read: ParameterSetsRead }) {
       </div>
     );
   }
-  if (read.sets.length === 0) {
-    return (
-      <Empty className="border" data-testid="parameter-sets-empty">
-        <EmptyHeader>
-          <EmptyTitle>No statutory parameter sets are listed.</EmptyTitle>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
+
   return (
-    <ul role="list" aria-label="Parameter sets" className="grid gap-4 xl:grid-cols-2">
-      {read.sets.map((set) => (
-        <li key={set.key} className="min-w-0">
-          <ParameterSetCard set={set} />
-        </li>
-      ))}
-    </ul>
+    <section aria-labelledby={setsHeadingId} className="grid min-w-0 gap-4">
+      <h2 id={setsHeadingId} className="sr-only">
+        Parameter sets
+      </h2>
+      <SearchedList
+        items={read.sets}
+        pageSize={setsPerPage}
+        keysOf={setSearchKeys}
+        rowOf={(set) => ({ id: set.key, cells: setCells(set) })}
+        address={parameterSetsAddress}
+        view={view}
+        label="Parameter sets"
+        labelledBy={setsHeadingId}
+        noun={{ one: "set", other: "sets" }}
+        search={setsSearch}
+        columns={setColumns}
+      />
+    </section>
   );
+}
+
+function setCells(set: ParameterSetSummary) {
+  return {
+    set: (
+      <Link
+        href={parameterSetPath(set.key)}
+        prefetch={false}
+        className="rounded-sm wrap-anywhere text-primary underline-offset-4 focus-ring hover:underline"
+      >
+        {set.title}
+      </Link>
+    ),
+    basis: <SetBasisBadge basis={set.basis} />,
+    current: currentText(set),
+    next: nextText(set),
+    entries: entryCountText(set.entryCount),
+  };
 }
