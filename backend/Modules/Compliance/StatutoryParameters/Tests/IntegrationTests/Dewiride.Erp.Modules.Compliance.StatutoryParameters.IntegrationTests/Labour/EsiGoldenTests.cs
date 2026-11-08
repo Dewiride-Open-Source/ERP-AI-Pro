@@ -44,11 +44,21 @@ public sealed class EsiGoldenTests(ErpApiFactory factory)
 
     private const string Supersession = "made “in supersession of the— … (iii) Employees' State Insurance (Central) Rules, 1950”";
 
-    private const string Continuation = "Code on Social Security, 2020 (36 of 2020), section 164(2)(a) and (b), keeping in force the rules and regulations made under the Employees' State Insurance Act, 1948, which section 164(1) repeals; in force from “the 21st day of November, 2025” by S.O. 5319(E), 21 November 2025, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025";
+    private const string Code = "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: ";
 
-    private const string YearOfSection164 = "Code on Social Security, 2020 (36 of 2020), section 164(2)(b): the rules, regulations and schemes made or framed under the Employees' State Insurance Act, 1948 “shall remain in force, to the extent they are not inconsistent with the provisions of this Code for a period of one year from the date of commencement of this Code”";
+    private const string KeptInForce = "section 164(2)(a) and (b), which keep in force the rules and regulations made under the Employees' State Insurance Act, 1948, repealed by section 164(1)";
 
-    private const string CommencementOfSection164 = "Code on Social Security, 2020 (36 of 2020), section 1(3): “any reference in any such provision to the commencement of this Code shall be construed as a reference to the coming into force of that provision”; S.O. 5319(E), 21 November 2025, serial number 8, as corrected by S.O. 5936(E), 19 December 2025, brought section 164(2) into force on 21 November 2025";
+    private const string Continuation = Code + KeptInForce;
+
+    private const string Commencement = "S.O. 5319(E), 21 November 2025, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025, No. 5739 of 20 December 2025: ";
+
+    private const string ExceptedAndInForce = " “except the provisions of the Code specified” in S.O. 2060(E), dated the 3rd May, 2023, in force from 21 November 2025";
+
+    private const string CommencementOfSection164 = Commencement + "section 164" + ExceptedAndInForce;
+
+    private const string YearOfSection164 = Code + "section 164(2)(b): the rules and regulations made under the Employees' State Insurance Act, 1948 “shall remain in force, to the extent they are not inconsistent with the provisions of this Code for a period of one year from the date of commencement of this Code”";
+
+    private const string ReferenceToCommencement = Code + "section 1(3): “any reference in any such provision to the commencement of this Code shall be construed as a reference to the coming into force of that provision”";
 
     private const string TimeRate = "the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;";
 
@@ -288,16 +298,16 @@ public sealed class EsiGoldenTests(ErpApiFactory factory)
 
     [Theory]
     [InlineData(RatesKey, "2026-05-08", 2, 0, 0, new[] { NotificationOfRules2026 + "rule 19(1); rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”" })]
-    [InlineData(ExemptionsKey, "2026-04-01", 2, 0, 0, new[] { ConsolidatedRules + "rule 51A, inserted by G.S.R. 254(E), 31 March 2008, w.e.f. 1 April 2008, and renumbered by G.S.R. 959(E), 6 October 2016; rule 52, its amount substituted by G.S.R. 638(E), 6 September 2019, w.e.f. 6 September 2019", Continuation })]
+    [InlineData(ExemptionsKey, "2026-04-01", 2, 0, 0, new[] { ConsolidatedRules + "rule 51A, inserted by G.S.R. 254(E), 31 March 2008, w.e.f. 1 April 2008, and renumbered by G.S.R. 959(E), 6 October 2016; rule 52, its amount substituted by G.S.R. 638(E), 6 September 2019, w.e.f. 6 September 2019", Continuation, CommencementOfSection164 })]
     [InlineData(ExemptionsKey, "2026-05-08", 0, 1, 1, new[] { NotificationOfRules2026 + Supersession + ", rule 19(2) and (3); rule 1(2)" })]
-    [InlineData(DivisorsKey, "2026-04-01", 9, 0, 0, new[] { ConsolidatedRules + "rule 2(1B), inserted by G.S.R. 76, 22 January 1991, w.e.f. 1 February 1991", Continuation })]
+    [InlineData(DivisorsKey, "2026-04-01", 9, 0, 0, new[] { ConsolidatedRules + "rule 2(1B), inserted by G.S.R. 76, 22 January 1991, w.e.f. 1 February 1991", Continuation, CommencementOfSection164 })]
     [InlineData(DivisorsKey, "2026-05-08", 0, 9, 0, new[] { NotificationOfRules2026 + Supersession + ", rule 2(1)(h); rule 1(2)" })]
-    [InlineData(CoverageKey, "2026-04-01", 3, 0, 0, new[] { ConsolidatedRules + "rule 50, inserted by G.S.R. 76, 22 January 1991, w.e.f. 1 February 1991, its limit substituted by G.S.R. 1166(E), 22 December 2016, w.e.f. 1 January 2017, and its second proviso inserted by G.S.R. 254(E), 31 March 2008, w.e.f. 1 April 2008", Continuation })]
+    [InlineData(CoverageKey, "2026-04-01", 3, 0, 0, new[] { ConsolidatedRules + "rule 50, inserted by G.S.R. 76, 22 January 1991, w.e.f. 1 February 1991, its limit substituted by G.S.R. 1166(E), 22 December 2016, w.e.f. 1 January 2017, and its second proviso inserted by G.S.R. 254(E), 31 March 2008, w.e.f. 1 April 2008", Continuation, CommencementOfSection164 })]
     [InlineData(CoverageKey, "2026-05-08", 0, 1, 2, new[] { NotificationOfRules2026 + Supersession + "; rule 1(2)", "S.O. 2351(E), 8 May 2026, Ministry of Labour and Employment, under the first proviso to section 2(26) of the Code on Social Security, 2020, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 2260, 8 May 2026, without words of commencement" })]
-    [InlineData(PeriodsKey, "2026-04-01", 3, 0, 0, new[] { ConsolidatedRegulations + "regulation 4", Continuation })]
-    [InlineData(PeriodsKey, "2026-11-21", 0, 0, 3, new[] { YearOfSection164, CommencementOfSection164 })]
-    [InlineData(DueDatesKey, "2026-04-01", 4, 0, 0, new[] { "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020, section 29(4), in force from “the 21st day of November, 2025” by S.O. 5319(E), 21 November 2025, serial number 4: “sections 17 to 141”", ConsolidatedRegulations + "regulations 31 and 36", Continuation })]
-    [InlineData(DueDatesKey, "2026-11-21", 0, 0, 3, new[] { YearOfSection164, CommencementOfSection164 })]
+    [InlineData(PeriodsKey, "2026-04-01", 3, 0, 0, new[] { ConsolidatedRegulations + "regulation 4", Continuation, CommencementOfSection164 })]
+    [InlineData(PeriodsKey, "2026-11-21", 0, 0, 3, new[] { YearOfSection164, ReferenceToCommencement, CommencementOfSection164 })]
+    [InlineData(DueDatesKey, "2026-04-01", 4, 0, 0, new[] { ConsolidatedRegulations + "regulations 31 and 36", Code + "section 29(4), and " + KeptInForce, Commencement + "section 29, and section 164" + ExceptedAndInForce })]
+    [InlineData(DueDatesKey, "2026-11-21", 0, 0, 3, new[] { YearOfSection164, ReferenceToCommencement, CommencementOfSection164 })]
     public async Task Version_OfEachSet_CitesItsInstrumentsInOrderAndChangesTheRowsTheyChange(string key, string from, int added, int changed, int removed, string[] instruments)
     {
         await using var scope = factory.Services.CreateAsyncScope();
@@ -360,8 +370,15 @@ public sealed class EsiGoldenTests(ErpApiFactory factory)
 
     private static Money? Rupees(string? value) => value is null ? null : new Money(Number(value), Currency.Inr);
 
-    private static DayAndMonth? DayMonth(string? value) =>
-        value is null ? null : DayAndMonth.TryParse(value, out var day) ? day : throw new ArgumentException($"'{value}' is not a day and month written MM-dd.", nameof(value));
+    private static DayAndMonth? DayMonth(string? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        return DayAndMonth.TryParse(value, out var day) ? day : throw new ArgumentException($"'{value}' is not a day and month written MM-dd.", nameof(value));
+    }
 
     private static async Task<ParameterVersionView> VersionAsync(AsyncServiceScope scope, string key, DateOnly day)
     {

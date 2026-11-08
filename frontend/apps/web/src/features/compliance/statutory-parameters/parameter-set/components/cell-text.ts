@@ -65,7 +65,8 @@ export function entryTitle(columns: readonly ParameterColumn[], row: ParameterRo
   const title = columns.find((column) => column.isRowTitle);
   if (title !== undefined) return rowCellText(title, row);
   const key = columns.find((column) => column.isKey);
-  return key === undefined ? row.key : `${key.title} ${row.key}`;
+  if (key === undefined) return row.key;
+  return key.kind === "stateCode" ? rowCellText(key, row) : `${key.title} ${row.key}`;
 }
 
 export function entryColumns(columns: readonly ParameterColumn[]): readonly SearchedListColumn[] {

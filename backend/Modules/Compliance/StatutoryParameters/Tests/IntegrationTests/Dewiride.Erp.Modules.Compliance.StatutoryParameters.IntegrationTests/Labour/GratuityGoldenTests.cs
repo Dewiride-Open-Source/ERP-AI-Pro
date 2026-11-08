@@ -26,7 +26,7 @@ public sealed class GratuityGoldenTests(ErpApiFactory factory)
 
     private const string GratuityCeiling = "S.O. 1420(E), 29 March 2018, Ministry of Labour and Employment, under section 4(3) of the Payment of Gratuity Act, 1972, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 1283";
 
-    private const string SocialSecurityCentralRules = "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3(i), No. 310: rule 33(1)(a) and (2)(a), superseding the Payment of Gratuity (Central) Rules, 1972";
+    private const string SocialSecurityCentralRules = "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3(i), No. 310: rule 33(1)(a), second proviso";
 
     private static readonly DateOnly FirstDay = new(2026, 4, 1);
 
@@ -39,7 +39,7 @@ public sealed class GratuityGoldenTests(ErpApiFactory factory)
     [InlineData("53(1)", 5, GratuityUnit.Years, GratuityBound.AtLeast, null, null, "after he has rendered continuous service for not less than five years,—", "Code on Social Security, 2020, section 53(1)")]
     [InlineData("53(1)-proviso-1", 3, GratuityUnit.Years, GratuityBound.AtLeast, null, null, "the expression “five years” occurring in this sub-section shall be deemed to be three years:", "Code on Social Security, 2020, section 53(1), first proviso")]
     [InlineData("53(1)-proviso-2", null, null, null, null, null, "the completion of continuous service of five years shall not be necessary where the termination of the employment of any employee is due to death or disablement or expiration of fixed term employment", "Code on Social Security, 2020, section 53(1), second proviso")]
-    [InlineData("irc-2(o)(c)", 1, GratuityUnit.Years, GratuityBound.AtLeast, null, null, "(c) he shall be eligible for gratuity if he renders service under the contract for a period of one year;", "Industrial Relations Code, 2020, section 2(o), proviso, clause (c)")]
+    [InlineData("irc-2(o)(c)", 1, GratuityUnit.Years, GratuityBound.AtLeast, null, null, "(c) he shall be eligible for gratuity if he renders service under the contract for a period of one year;", "Industrial Relations Code, 2020, section 2(o), proviso, clause (c), for a worker as its section 2(zr) defines one, which leaves out a person employed mainly in a managerial or administrative capacity and a supervisor drawing wages above the amount of its item (iv)")]
     [InlineData("53(2)", 15, GratuityUnit.DaysWages, null, null, null, "the employer shall pay gratuity to an employee at the rate of fifteen days' wages or such number of days as may be notified by the Central Government, based on the rate of wages last drawn", "Code on Social Security, 2020, section 53(2)")]
     [InlineData("53(2)-part-of-a-year", 6, GratuityUnit.Months, GratuityBound.MoreThan, null, null, "(2) For every completed year of service or part thereof in excess of six months,", "Code on Social Security, 2020, section 53(2), “part thereof in excess of six months”")]
     [InlineData("53(2)-proviso-1", 3, GratuityUnit.Months, null, null, null, "daily wages shall be computed on the average of the total wages received by him for a period of three months immediately preceding the termination of his employment", "Code on Social Security, 2020, section 53(2), first proviso")]
@@ -76,8 +76,6 @@ public sealed class GratuityGoldenTests(ErpApiFactory factory)
 
     [Theory]
     [InlineData("rule-33(1)(a)-proviso-2", 6, GratuityUnit.Months, GratuityBound.MoreThan, "if he renders service under the contract for a period of at least one year and for subsequent period in excess of six months and more, but less than one year, shall be rounded off to one additional year.", "Social Security (Central) Rules, 2026, rule 33(1)(a), second proviso")]
-    [InlineData("rule-33(2)(a)", 15, GratuityUnit.Days, GratuityBound.AtMost, "(2) (a) within fifteen days of the receipt of an application under sub-rule (1) for payment of gratuity, the employer shall—", "Social Security (Central) Rules, 2026, rule 33(2)(a)")]
-    [InlineData("rule-33(2)(a)(i)", 30, GratuityUnit.Days, GratuityBound.AtMost, "fixing a date, not being later than the thirtieth day after the date of receipt of the application, for payment thereof; or", "Social Security (Central) Rules, 2026, rule 33(2)(a)(i)")]
     public async Task Rule_OfTheCentralRulesFromTheirPublication_IsTheFigureAndWordsTheyWriteForTheCentralSphere(string provision, int count, GratuityUnit unit, GratuityBound bound, string words, string source)
     {
         await using var scope = factory.Services.CreateAsyncScope();
@@ -94,7 +92,7 @@ public sealed class GratuityGoldenTests(ErpApiFactory factory)
     [Theory]
     [InlineData("2026-04-01", 27, 0)]
     [InlineData("2026-05-07", 27, 0)]
-    [InlineData("2026-05-08", 30, 3)]
+    [InlineData("2026-05-08", 28, 1)]
     public async Task Rules_OnTheFirstDayOfEachVersionAndTheDayBefore_AreTheRulesInForceThatDay(string day, int rules, int centralRules)
     {
         await using var scope = factory.Services.CreateAsyncScope();
@@ -115,7 +113,7 @@ public sealed class GratuityGoldenTests(ErpApiFactory factory)
 
     [Theory]
     [InlineData("2026-04-01", "2026-05-07", 27, CodeOnSocialSecurity + "|" + CodeCommencement + "|" + IndustrialRelationsCode + "|" + GratuityCeiling)]
-    [InlineData("2026-05-08", null, 3, SocialSecurityCentralRules)]
+    [InlineData("2026-05-08", null, 1, SocialSecurityCentralRules)]
     public async Task Version_OfTheRules_CitesItsInstrumentsInOrderAndAddsItsRules(string from, string? until, int added, string instruments)
     {
         await using var scope = factory.Services.CreateAsyncScope();
@@ -130,6 +128,21 @@ public sealed class GratuityGoldenTests(ErpApiFactory factory)
         var cited = instruments.Split('|');
         Assert.Equal(cited.Length, version.Instruments.Count);
         Assert.All(cited.Zip(version.Instruments), pair => Assert.StartsWith(pair.First, pair.Second, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Rule_OfTheIndustrialRelationsCode_BindsAFixedTermWorkerAndOtherFixedTermEmployeesHaveTheCodesRulesAlone()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var rules = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<GratuityRules>(FirstDay, TestContext.Current.CancellationToken))!.Rules;
+        var set = await scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>().GetSetAsync(RulesKey, FirstDay, TestContext.Current.CancellationToken);
+
+        var worker = Assert.Single(rules, rule => rule.Provision == "irc-2(o)(c)");
+        Assert.Equal("Service under the contract after which a fixed-term worker is eligible", worker.Name);
+        Assert.StartsWith("(o) “fixed term employment” means the engagement of a worker on the basis of a written contract of employment for a fixed period:", worker.Wording, StringComparison.Ordinal);
+        Assert.Equal("Five years' continuous service not needed on death, disablement, the end of a fixed term or a notified event", Assert.Single(rules, rule => rule.Provision == "53(1)-proviso-2").Name);
+        Assert.Contains("Section 2(o)(c) of the Industrial Relations Code, 2020 makes a fixed-term worker, as its section 2(zr) defines one, eligible after a year's service; other fixed-term employees have the Code's rules alone.", set!.Description, StringComparison.Ordinal);
     }
 
     [Fact]

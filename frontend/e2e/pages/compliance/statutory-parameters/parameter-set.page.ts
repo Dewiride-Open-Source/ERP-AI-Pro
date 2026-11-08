@@ -35,6 +35,35 @@ export const esiContributionPeriodsKey = "esi.contribution-periods";
 
 export const welfareFundContributionsKey = "labour-welfare-fund.contributions";
 
+export const bonusStateReadingsKey = "bonus.state-wage-limit-readings";
+
+export const labourSetKeys = [
+  "bonus.prior-charges",
+  "bonus.rules",
+  "bonus.state-wage-limit-readings",
+  "bonus.wage-limits",
+  "esi.average-daily-wage-divisors",
+  "esi.contribution-due-dates",
+  "esi.contribution-exemptions",
+  "esi.contribution-periods",
+  "esi.contribution-rates",
+  "esi.coverage-wage-limits",
+  "gratuity.rules",
+  "labour-codes.wage-definition",
+  "labour-welfare-fund.contributions",
+  "labour-welfare-fund.coverage",
+  "labour-welfare-fund.due-days",
+  "professional-tax.exemptions",
+  "professional-tax.levies",
+  "professional-tax.salary-slabs",
+  "provident-fund.charges",
+  "provident-fund.contribution-rates",
+  "provident-fund.due-dates",
+  "provident-fund.membership-limits",
+  "provident-fund.rounding",
+  "provident-fund.ten-per-cent-establishments",
+];
+
 export const labourSetPrefixes = [
   "bonus.",
   "esi.",
@@ -211,7 +240,8 @@ export function entryTitle(set: ParameterSet, row: ParameterRow): string {
   const rowTitle = set.columns.find((column) => column.isRowTitle);
   if (rowTitle !== undefined) return rowCellText(rowTitle, row);
   const key = set.columns.find((column) => column.isKey);
-  return key === undefined ? row.key : `${key.title} ${row.key}`;
+  if (key === undefined) return row.key;
+  return key.kind === "stateCode" ? rowCellText(key, row) : `${key.title} ${row.key}`;
 }
 
 export function entryValues(set: ParameterSet, row: ParameterRow): ShownValue[] {

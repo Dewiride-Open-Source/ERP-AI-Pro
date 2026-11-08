@@ -68,9 +68,11 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
 
     private const string InspectionCorrigendum = "S.O. 4602(E), 20 August 2026, corrigendum, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 4422";
 
-    private const string NotificationsContinued = "Code on Social Security, 2020, section 164(2)(a)";
+    private const string CodeOnNotificationsContinued = "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 164(2)(a)";
 
-    private const string ContinuedDueDateSchemes = "Employees' Provident Funds Scheme, 1952, paragraph 38(1), and Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 8(1)";
+    private const string ContinuedDueDateSchemes = "Employees' Provident Funds Scheme, 1952, paragraph 38(1), Employees' Pension Scheme, 1995, paragraph 3(1), and Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 8(1)";
+
+    private const string Section164InForce = "section 164 “except the provisions of the Code specified” in S.O. 2060(E), dated the 3rd May, 2023, in force from 21 November 2025";
 
     private const string ContinuedRoundingSchemes = "Employees' Provident Funds Scheme, 1952, paragraph 29, Employees' Pension Scheme, 1995, paragraph 3(3), and Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 7(2)";
 
@@ -83,6 +85,10 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
     private const string SecondCeilingWords = "rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III";
 
     private const string JointOptionWageWords = "such increased contribution shall be applicable to wages exceeding fifteen thousand rupees per month.";
+
+    private const string ContinuedJointOptionWageWords = "the increased contribution shall be applicable to basic wages, dearness allowance and retaining allowance to the extent such basic wages, dearness allowance and retaining allowance exceed fifteen thousand rupees per month.";
+
+    private const string ContinuedJointOptionSource = "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023 after paragraph 12, continued by section 164(2) of the Code on Social Security, 2020";
 
     private const string TwelvePerCentWords = "shall be at the rate of twelve per cent of the wages payable to the employee";
 
@@ -129,8 +135,8 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
     [InlineData("2026-06-28", "provident-fund-employee", ContributionPayer.Employee, ContributionFund.ProvidentFund, ContributionShare.EqualToEmployers, null, "15000", null, "the employee's contribution shall be equal to the contribution payable by the employer in respect of him", MemberPayAboveFifteenThousand, "Code on Social Security, 2020, section 16(1)(a), with its first proviso and S.O. 3582(E)")]
     [InlineData("2026-04-01", "pension-fund-employer", ContributionPayer.Employer, ContributionFund.PensionFund, ContributionShare.PartOfEmployers, "8.33", "15000", null, "a part of contribution representing 8.33 per cent. of the Employee's pay shall be remitted by the employer", PensionPayUpToFifteenThousand, "Employees' Pension Scheme, 1995, paragraph 3(1) and the proviso to paragraph 3(2)")]
     [InlineData("2026-06-28", "pension-fund-employer", ContributionPayer.Employer, ContributionFund.PensionFund, ContributionShare.PartOfEmployers, "8.33", "15000", null, "a part of contribution representing 8.33 per cent. of the Employee's pay shall be remitted by the employer", PensionPayUpToFifteenThousand, "Employees' Pension Scheme, 1995, paragraph 3(1) and the proviso to paragraph 3(2)")]
-    [InlineData("2026-04-01", "pension-fund-employer-joint-option", ContributionPayer.Employer, ContributionFund.PensionFund, ContributionShare.PartOfEmployers, "9.49", null, "15000", "the employer's contribution shall be nine and forty-ninth per cent. (9.49%) of the basic wages", JointOptionWageWords, "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023")]
-    [InlineData("2026-06-28", "pension-fund-employer-joint-option", ContributionPayer.Employer, ContributionFund.PensionFund, ContributionShare.PartOfEmployers, "9.49", null, "15000", "the employer's contribution shall be nine and forty-ninth per cent. (9.49%) of the basic wages", JointOptionWageWords, "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023")]
+    [InlineData("2026-04-01", "pension-fund-employer-joint-option", ContributionPayer.Employer, ContributionFund.PensionFund, ContributionShare.PartOfEmployers, "9.49", null, "15000", "the employer's contribution shall be nine and forty-ninth per cent. (9.49%) of the basic wages", ContinuedJointOptionWageWords, ContinuedJointOptionSource)]
+    [InlineData("2026-06-28", "pension-fund-employer-joint-option", ContributionPayer.Employer, ContributionFund.PensionFund, ContributionShare.PartOfEmployers, "9.49", null, "15000", "the employer's contribution shall be nine and forty-ninth per cent. (9.49%) of the basic wages", ContinuedJointOptionWageWords, ContinuedJointOptionSource)]
     [InlineData("2026-04-01", "pension-fund-central-government", ContributionPayer.CentralGovernment, ContributionFund.PensionFund, ContributionShare.PerCentOfWages, "1.16", "15000", null, "The Central Government shall also contribute at the rate of 1.16 per cent. of the pay of the members", PensionPayUpToFifteenThousand, "Employees' Pension Scheme, 1995, paragraph 3(2) and its proviso")]
     [InlineData("2026-06-28", "pension-fund-central-government", ContributionPayer.CentralGovernment, ContributionFund.PensionFund, ContributionShare.PerCentOfWages, "1.16", "15000", null, "The Central Government shall also contribute at the rate of 1.16 per cent. of the pay of the members", PensionPayUpToFifteenThousand, "Employees' Pension Scheme, 1995, paragraph 3(2) and its proviso")]
     [InlineData("2026-06-29", "provident-fund-employer", ContributionPayer.Employer, ContributionFund.ProvidentFund, ContributionShare.PerCentOfWages, "12", "15000", null, TwelvePerCentWords, FirstCeilingWords, "Employees' Provident Funds Scheme, 2026, paragraph 18(2) and (3), the latter as corrected by G.S.R. 703(E), item 8")]
@@ -169,6 +175,21 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
         Assert.Contains(words, found.Wording, StringComparison.Ordinal);
         Assert.Contains(limitWords, found.Wording, StringComparison.Ordinal);
         Assert.Contains(instrument, await SourceAsync(scope, RatesKey, contribution, date), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("2026-04-01")]
+    [InlineData("2026-06-28")]
+    public async Task Rate_OfTheJointOptionBeforeTheSchemesOf2026_CitesTheContinuedSchemeAlone(string day)
+    {
+        var date = Day(day);
+        await using var scope = factory.Services.CreateAsyncScope();
+
+        var rates = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<ProvidentFundContributionRates>(date, TestContext.Current.CancellationToken))!.Rates;
+
+        var wording = Assert.Single(rates, rate => rate.Contribution == "pension-fund-employer-joint-option").Wording;
+        Assert.DoesNotContain("Employees' Pension Scheme, 2026", wording, StringComparison.Ordinal);
+        Assert.DoesNotContain("Employees' Pension Scheme, 2026", await SourceAsync(scope, RatesKey, "pension-fund-employer-joint-option", date), StringComparison.Ordinal);
     }
 
     [Theory]
@@ -280,6 +301,10 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
     [InlineData("2026-05-28", "provident-fund", 15, DueDayCounting.AfterTheMonthCloses, "He shall within fifteen days of the close of every month pay the same to the fund", "Employees' Provident Funds Scheme, 1952, paragraph 38(1), in EPFO's consolidated text")]
     [InlineData("2026-05-29", "provident-fund", 15, DueDayCounting.AfterTheMonthCloses, "He shall within fifteen days of the close of every month pay the same to the fund", "Employees' Provident Funds Scheme, 1952, paragraph 38(1), in EPFO's consolidated text")]
     [InlineData("2026-06-28", "provident-fund", 15, DueDayCounting.AfterTheMonthCloses, "He shall within fifteen days of the close of every month pay the same to the fund", "Employees' Provident Funds Scheme, 1952, paragraph 38(1), in EPFO's consolidated text")]
+    [InlineData("2026-04-01", "pension-fund", 15, DueDayCounting.AfterTheMonthCloses, "shall be remitted by the employer to the Employees' Pension Fund within 15 days of the close of every month", "Employees' Pension Scheme, 1995, paragraph 3(1), printed as 4(1) in EPFO's consolidated text")]
+    [InlineData("2026-05-28", "pension-fund", 15, DueDayCounting.AfterTheMonthCloses, "shall be remitted by the employer to the Employees' Pension Fund within 15 days of the close of every month", "Employees' Pension Scheme, 1995, paragraph 3(1), printed as 4(1) in EPFO's consolidated text")]
+    [InlineData("2026-05-29", "pension-fund", 15, DueDayCounting.AfterTheMonthCloses, "shall be remitted by the employer to the Employees' Pension Fund within 15 days of the close of every month", "Employees' Pension Scheme, 1995, paragraph 3(1), printed as 4(1) in EPFO's consolidated text")]
+    [InlineData("2026-06-28", "pension-fund", 15, DueDayCounting.AfterTheMonthCloses, "shall be remitted by the employer to the Employees' Pension Fund within 15 days of the close of every month", "Employees' Pension Scheme, 1995, paragraph 3(1), printed as 4(1) in EPFO's consolidated text")]
     [InlineData("2026-04-01", "insurance-fund", 15, DueDayCounting.AfterTheMonthCloses, "to the Insurance Fund within fifteen days of the close of every month", "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 8(1), in EPFO's consolidated text")]
     [InlineData("2026-05-28", "insurance-fund", 15, DueDayCounting.AfterTheMonthCloses, "to the Insurance Fund within fifteen days of the close of every month", "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 8(1), in EPFO's consolidated text")]
     [InlineData("2026-05-29", "insurance-fund", 15, DueDayCounting.AfterTheMonthCloses, "to the Insurance Fund within fifteen days of the close of every month", "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 8(1), in EPFO's consolidated text")]
@@ -305,16 +330,16 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
     }
 
     [Theory]
-    [InlineData("2026-04-01", "provident-fund", RoundingMethod.NearestRupeeFiftyPaiseUp, "Each contribution shall be calculated to the nearest rupee, 50 paise or more to be counted as the next higher rupee", "Employees' Provident Funds Scheme, 1952, paragraph 29, in EPFO's consolidated text")]
-    [InlineData("2026-06-28", "provident-fund", RoundingMethod.NearestRupeeFiftyPaiseUp, "Each contribution shall be calculated to the nearest rupee, 50 paise or more to be counted as the next higher rupee", "Employees' Provident Funds Scheme, 1952, paragraph 29, in EPFO's consolidated text")]
-    [InlineData("2026-04-01", "pension-fund", RoundingMethod.NearestRupee, "Each contribution payable under sub-paragraphs (1) and (2) shall be calculated to the nearest rupee", "Employees' Pension Scheme, 1995, paragraph 3(3), printed as 4(3) in EPFO's consolidated text")]
-    [InlineData("2026-06-28", "pension-fund", RoundingMethod.NearestRupee, "Each contribution payable under sub-paragraphs (1) and (2) shall be calculated to the nearest rupee", "Employees' Pension Scheme, 1995, paragraph 3(3), printed as 4(3) in EPFO's consolidated text")]
-    [InlineData("2026-04-01", "insurance-fund", RoundingMethod.NearestRupeeFiftyPaiseUp, "50 paise or more to be counted as the next higher rupee and fraction of a rupee less than 50 paise to be ignored.", "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 7(2), in EPFO's consolidated text")]
-    [InlineData("2026-06-28", "insurance-fund", RoundingMethod.NearestRupeeFiftyPaiseUp, "50 paise or more to be counted as the next higher rupee and fraction of a rupee less than 50 paise to be ignored.", "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 7(2), in EPFO's consolidated text")]
-    [InlineData("2026-06-29", "provident-fund", RoundingMethod.NearestRupeeFiftyPaiseUp, "with fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored.", "Employees' Provident Funds Scheme, 2026, paragraph 18(5)")]
-    [InlineData("2026-06-29", "pension-fund", RoundingMethod.NearestRupeeFiftyPaiseUp, "fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise being ignored.", "Employees' Pension Scheme, 2026, paragraph 4(3)")]
-    [InlineData("2026-06-29", "insurance-fund", RoundingMethod.NearestRupeeFiftyPaiseUp, "fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored.", "Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 5(3)")]
-    public async Task Rounding_OfEachFundsContributionsOnTheFirstDayOfItsVersionAndTheDayBeforeTheNext_IsTheMethodItsSchemeSets(string day, string contributions, RoundingMethod method, string words, string instrument)
+    [InlineData("2026-04-01", "provident-fund", "0.5", "Each contribution shall be calculated to the nearest rupee, 50 paise or more to be counted as the next higher rupee", "Employees' Provident Funds Scheme, 1952, paragraph 29, in EPFO's consolidated text")]
+    [InlineData("2026-06-28", "provident-fund", "0.5", "Each contribution shall be calculated to the nearest rupee, 50 paise or more to be counted as the next higher rupee", "Employees' Provident Funds Scheme, 1952, paragraph 29, in EPFO's consolidated text")]
+    [InlineData("2026-04-01", "pension-fund", "0.5", "Each contribution payable under sub-paragraphs (1) and (2) shall be calculated to the nearest rupee, fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored.", "Employees' Pension Scheme, 1995, paragraph 3(3), printed as 4(3) in EPFO's consolidated text")]
+    [InlineData("2026-06-28", "pension-fund", "0.5", "Each contribution payable under sub-paragraphs (1) and (2) shall be calculated to the nearest rupee, fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored.", "Employees' Pension Scheme, 1995, paragraph 3(3), printed as 4(3) in EPFO's consolidated text")]
+    [InlineData("2026-04-01", "insurance-fund", "0.5", "50 paise or more to be counted as the next higher rupee and fraction of a rupee less than 50 paise to be ignored.", "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 7(2), in EPFO's consolidated text")]
+    [InlineData("2026-06-28", "insurance-fund", "0.5", "50 paise or more to be counted as the next higher rupee and fraction of a rupee less than 50 paise to be ignored.", "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 7(2), in EPFO's consolidated text")]
+    [InlineData("2026-06-29", "provident-fund", "0.5", "with fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored.", "Employees' Provident Funds Scheme, 2026, paragraph 18(5)")]
+    [InlineData("2026-06-29", "pension-fund", "0.5", "fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise being ignored.", "Employees' Pension Scheme, 2026, paragraph 4(3)")]
+    [InlineData("2026-06-29", "insurance-fund", "0.5", "fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored.", "Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 5(3)")]
+    public async Task Rounding_OfEachFundsContributionsOnTheFirstDayOfItsVersionAndTheDayBeforeTheNext_CountsAsTheNextRupeeTheFractionItsSchemeNames(string day, string contributions, string nextRupeeFrom, string words, string instrument)
     {
         var date = Day(day);
         await using var scope = factory.Services.CreateAsyncScope();
@@ -322,7 +347,7 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
         var roundings = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<ProvidentFundRounding>(date, TestContext.Current.CancellationToken))!.Contributions;
 
         var found = Assert.Single(roundings, candidate => candidate.Contributions == contributions);
-        Assert.Equal(method, found.Method);
+        Assert.Equal(Amount(nextRupeeFrom), found.NextRupeeFrom);
         Assert.Contains(words, found.Wording, StringComparison.Ordinal);
         Assert.Contains(instrument, await SourceAsync(scope, RoundingKey, contributions, date), StringComparison.Ordinal);
     }
@@ -347,10 +372,10 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
     [InlineData(ChargesKey, "2026-05-29", "insurance-fund-inspection,provident-fund-administrative,provident-fund-administrative-non-functional,provident-fund-inspection")]
     [InlineData(ChargesKey, "2026-06-28", "insurance-fund-inspection,provident-fund-administrative,provident-fund-administrative-non-functional,provident-fund-inspection")]
     [InlineData(ChargesKey, "2026-06-29", "insurance-fund-inspection,provident-fund-administrative,provident-fund-administrative-non-functional,provident-fund-inspection")]
-    [InlineData(DueDatesKey, "2026-04-01", "insurance-fund,provident-fund")]
-    [InlineData(DueDatesKey, "2026-05-28", "insurance-fund,provident-fund")]
-    [InlineData(DueDatesKey, "2026-05-29", "inspection-charges,insurance-fund,provident-fund")]
-    [InlineData(DueDatesKey, "2026-06-28", "inspection-charges,insurance-fund,provident-fund")]
+    [InlineData(DueDatesKey, "2026-04-01", "insurance-fund,pension-fund,provident-fund")]
+    [InlineData(DueDatesKey, "2026-05-28", "insurance-fund,pension-fund,provident-fund")]
+    [InlineData(DueDatesKey, "2026-05-29", "inspection-charges,insurance-fund,pension-fund,provident-fund")]
+    [InlineData(DueDatesKey, "2026-06-28", "inspection-charges,insurance-fund,pension-fund,provident-fund")]
     [InlineData(DueDatesKey, "2026-06-29", "exempted-fund-to-trustees,inspection-charges,insurance-fund,pension-fund,provident-fund")]
     [InlineData(RoundingKey, "2026-04-01", "insurance-fund,pension-fund,provident-fund")]
     [InlineData(RoundingKey, "2026-06-28", "insurance-fund,pension-fund,provident-fund")]
@@ -387,18 +412,18 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
     [InlineData(RatesKey, "2026-04-01", 6, 0, 0, new[] { CodeOnRatesAndContinuation, CodesCommencement, TenPerCentNotification, ContinuedRateSchemes })]
     [InlineData(RatesKey, "2026-06-29", 1, 6, 0, new[] { ProvidentFundsScheme2026, PensionScheme2026, InsuranceScheme2026, PensionRateNotification, InsuranceRateNotification, FirstWageCeiling })]
     [InlineData(RatesKey, "2026-09-17", 0, 6, 0, new[] { SecondWageCeiling, CentralGovernmentLimit })]
-    [InlineData(EstablishmentsKey, "2026-04-01", 6, 0, 0, new[] { TenPerCentNotification, CodeOnTheTenPerCent })]
-    [InlineData(LimitsKey, "2026-04-01", 3, 0, 0, new[] { ContinuedMembershipSchemes, CodeOnContinuation })]
+    [InlineData(EstablishmentsKey, "2026-04-01", 6, 0, 0, new[] { TenPerCentNotification, CodeOnTheTenPerCent, CodesCommencement })]
+    [InlineData(LimitsKey, "2026-04-01", 3, 0, 0, new[] { ContinuedMembershipSchemes, CodeOnContinuation, CodesCommencement })]
     [InlineData(LimitsKey, "2026-05-29", 1, 0, 0, new[] { FirstWageCeiling })]
     [InlineData(LimitsKey, "2026-06-29", 0, 2, 1, new[] { ProvidentFundsScheme2026, PensionScheme2026 })]
     [InlineData(LimitsKey, "2026-09-17", 1, 3, 0, new[] { SecondWageCeiling, NewCeilingMembership })]
-    [InlineData(ChargesKey, "2026-04-01", 2, 0, 0, new[] { AdministrativeCharges, CodeOnContinuation })]
+    [InlineData(ChargesKey, "2026-04-01", 2, 0, 0, new[] { AdministrativeCharges, CodeOnContinuation, CodesCommencement })]
     [InlineData(ChargesKey, "2026-05-29", 2, 0, 0, new[] { InspectionCharges, InspectionCorrigendum })]
-    [InlineData(ChargesKey, "2026-06-29", 0, 4, 0, new[] { ProvidentFundsScheme2026, InsuranceScheme2026, NotificationsContinued })]
-    [InlineData(DueDatesKey, "2026-04-01", 2, 0, 0, new[] { ContinuedDueDateSchemes, CodeOnContinuation })]
+    [InlineData(ChargesKey, "2026-06-29", 0, 4, 0, new[] { ProvidentFundsScheme2026, InsuranceScheme2026, CodeOnNotificationsContinued, CodesCommencement })]
+    [InlineData(DueDatesKey, "2026-04-01", 3, 0, 0, new[] { ContinuedDueDateSchemes, CodeOnContinuation, CodesCommencement })]
     [InlineData(DueDatesKey, "2026-05-29", 1, 0, 0, new[] { InspectionCharges })]
-    [InlineData(DueDatesKey, "2026-06-29", 2, 2, 0, new[] { ProvidentFundsScheme2026, PensionScheme2026, InsuranceScheme2026 })]
-    [InlineData(RoundingKey, "2026-04-01", 3, 0, 0, new[] { ContinuedRoundingSchemes, CodeOnContinuation })]
+    [InlineData(DueDatesKey, "2026-06-29", 1, 3, 0, new[] { ProvidentFundsScheme2026, PensionScheme2026, InsuranceScheme2026 })]
+    [InlineData(RoundingKey, "2026-04-01", 3, 0, 0, new[] { ContinuedRoundingSchemes, CodeOnContinuation, CodesCommencement })]
     [InlineData(RoundingKey, "2026-06-29", 0, 3, 0, new[] { ProvidentFundsScheme2026, PensionScheme2026, InsuranceScheme2026 })]
     public async Task Version_OfEachSet_CitesItsInstrumentsInOrderAndChangesTheEntriesTheyChange(string key, string from, int added, int changed, int removed, string[] instruments)
     {
@@ -415,6 +440,14 @@ public sealed class ProvidentFundGoldenTests(ErpApiFactory factory)
     [Theory]
     [InlineData(RatesKey, "2026-04-01", TenPerCentNotification, "“This notification shall be deemed to come into force from the 21st day of November, 2025.”")]
     [InlineData(EstablishmentsKey, "2026-04-01", TenPerCentNotification, "“This notification shall be deemed to come into force from the 21st day of November, 2025.”")]
+    [InlineData(RatesKey, "2026-04-01", CodesCommencement, "sections 16 and 164 “except the provisions of the Code specified” in S.O. 2060(E), dated the 3rd May, 2023, in force from 21 November 2025")]
+    [InlineData(EstablishmentsKey, "2026-04-01", CodesCommencement, "section 16 “except the provisions of the Code specified” in S.O. 2060(E), dated the 3rd May, 2023, in force from 21 November 2025")]
+    [InlineData(LimitsKey, "2026-04-01", CodesCommencement, Section164InForce)]
+    [InlineData(ChargesKey, "2026-04-01", CodesCommencement, Section164InForce)]
+    [InlineData(ChargesKey, "2026-06-29", CodesCommencement, Section164InForce)]
+    [InlineData(ChargesKey, "2026-06-29", CodeOnNotificationsContinued, "“shall be in force to the extent they are not contrary to the provisions of this Code … till they are repealed under the corresponding provisions of this Code”")]
+    [InlineData(DueDatesKey, "2026-04-01", CodesCommencement, Section164InForce)]
+    [InlineData(RoundingKey, "2026-04-01", CodesCommencement, Section164InForce)]
     [InlineData(RatesKey, "2026-06-29", ProvidentFundsScheme2026, "“It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 703(E), 4 August 2026, No. 639")]
     [InlineData(RatesKey, "2026-06-29", PensionScheme2026, "“It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 704(E), 4 August 2026, No. 640")]
     [InlineData(RatesKey, "2026-06-29", InsuranceScheme2026, "“It shall come into force on the date of its publication in the Official Gazette.”")]

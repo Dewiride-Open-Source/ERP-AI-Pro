@@ -1,7 +1,7 @@
 {
   "key": "gratuity.rules",
   "title": "Gratuity under the Code on Social Security, 2020",
-  "description": "Gratuity under Chapter V of the Code on Social Security, 2020, in force from 21 November 2025, each rule in the instrument's words: the establishments covered, the continuous service that earns gratuity, how it is computed and capped, and the time to pay it and to appeal; with section 2(o)(c) of the Industrial Relations Code, 2020, under which a fixed-term employee is eligible after a year's service. The ceiling is S.O. 1420(E) of 29 March 2018 under the repealed Payment of Gratuity Act, 1972, kept in force by section 164(2)(a). From 8 May 2026 the Social Security (Central) Rules, 2026 add, where the Central Government is the appropriate Government, the rounding of a fixed term's service and the employer's limits to answer an application; the Central Rules of 1972 they superseded are not held. No rate of interest on gratuity paid late is held: section 56(4) caps it at a rate the Central Government notifies for long-term deposits. The set answers for the day employment ends.",
+  "description": "Gratuity under Chapter V of the Code on Social Security, 2020, in force from 21 November 2025, in the instrument's words: who is covered, the service that earns gratuity, how it is computed and capped, and the time to pay and to appeal. Section 2(o)(c) of the Industrial Relations Code, 2020 makes a fixed-term worker, as its section 2(zr) defines one, eligible after a year's service; other fixed-term employees have the Code's rules alone. The ceiling is S.O. 1420(E) of 29 March 2018, kept in force by section 164(2)(a). From 8 May 2026 rule 33(1)(a) of the Social Security (Central) Rules, 2026 requires, where the Central Government is the appropriate Government, a year's service of every fixed-term employee and rounds a further part above six months up to one more year. No rate of interest on gratuity paid late is held: section 56(4) caps it at a rate the Central Government notifies for long-term deposits. The set answers for the day employment ends.",
   "basis": "law",
   "asOf": "employmentEndDate",
   "columns": [
@@ -126,7 +126,7 @@
     {
       "from": "2026-05-08",
       "instruments": [
-        "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3(i), No. 310: rule 33(1)(a) and (2)(a), superseding the Payment of Gratuity (Central) Rules, 1972; rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”"
+        "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3(i), No. 310: rule 33(1)(a), second proviso; rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”"
       ]
     }
   ],
@@ -211,7 +211,7 @@
       "source": "Code on Social Security, 2020, section 53(1), second proviso",
       "cells": {
         "provision": "53(1)-proviso-2",
-        "name": "No minimum continuous service on death, disablement, the end of a fixed term or a notified event",
+        "name": "Five years' continuous service not needed on death, disablement, the end of a fixed term or a notified event",
         "sphere": "everyEstablishment",
         "count": null,
         "unit": null,
@@ -223,10 +223,10 @@
     },
     {
       "from": "2026-04-01",
-      "source": "Industrial Relations Code, 2020, section 2(o), proviso, clause (c)",
+      "source": "Industrial Relations Code, 2020, section 2(o), proviso, clause (c), for a worker as its section 2(zr) defines one, which leaves out a person employed mainly in a managerial or administrative capacity and a supervisor drawing wages above the amount of its item (iv)",
       "cells": {
         "provision": "irc-2(o)(c)",
-        "name": "Service under the contract after which a fixed-term employee is eligible",
+        "name": "Service under the contract after which a fixed-term worker is eligible",
         "sphere": "everyEstablishment",
         "count": 1,
         "unit": "years",
@@ -549,36 +549,6 @@
         "percent": null,
         "amount": null,
         "wording": "Provided further that an employee on fixed term employment shall be eligible for gratuity, if he renders service under the contract for a period of at least one year and for subsequent period in excess of six months and more, but less than one year, shall be rounded off to one additional year."
-      }
-    },
-    {
-      "from": "2026-05-08",
-      "source": "Social Security (Central) Rules, 2026, rule 33(2)(a)",
-      "cells": {
-        "provision": "rule-33(2)(a)",
-        "name": "Employer's notice of the amount, or of why the claim is refused, from receiving the application",
-        "sphere": "centralSphere",
-        "count": 15,
-        "unit": "days",
-        "bound": "atMost",
-        "percent": null,
-        "amount": null,
-        "wording": "(2) (a) within fifteen days of the receipt of an application under sub-rule (1) for payment of gratuity, the employer shall— (i) if the claim is found admissible on verification, issue a notice in Form-V to the applicant employee, nominee or legal heir, as the case may be, specifying the amount of gratuity payable and fixing a date, not being later than the thirtieth day after the date of receipt of the application, for payment thereof; or (ii) if the claim for gratuity is not found admissible, issue a notice in Form-V to the applicant employee, nominee or legal heir, as the case may be, specifying the reasons why the claim for gratuity is not considered admissible and a copy of the notice shall be endorsed to the competent authority."
-      }
-    },
-    {
-      "from": "2026-05-08",
-      "source": "Social Security (Central) Rules, 2026, rule 33(2)(a)(i)",
-      "cells": {
-        "provision": "rule-33(2)(a)(i)",
-        "name": "Latest date for payment the employer's notice may fix, from receiving the application",
-        "sphere": "centralSphere",
-        "count": 30,
-        "unit": "days",
-        "bound": "atMost",
-        "percent": null,
-        "amount": null,
-        "wording": "(2) (a) within fifteen days of the receipt of an application under sub-rule (1) for payment of gratuity, the employer shall— (i) if the claim is found admissible on verification, issue a notice in Form-V to the applicant employee, nominee or legal heir, as the case may be, specifying the amount of gratuity payable and fixing a date, not being later than the thirtieth day after the date of receipt of the application, for payment thereof; or"
       }
     }
   ]

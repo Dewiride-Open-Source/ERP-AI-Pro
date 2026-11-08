@@ -151,6 +151,12 @@ test("entryTitle_SetWithARowTitleColumn_IsThatCellsText", () => {
   assert.equal(entryTitle(columns, row), "Monthly statement of sales");
 });
 
+test("entryTitle_SetKeyedByAGstStateCodeWithoutATitleColumn_IsTheStatesNameAndItsCode", () => {
+  const stateKey = column("state", "stateCode", { isKey: true, title: "State or Union territory" });
+
+  assert.equal(entryTitle([stateKey, share], row), "Uttar Pradesh (09)");
+});
+
 test("entryTitle_SetWithoutOne_IsTheKeyColumnsTitleAndTheKey", () => {
   assert.equal(entryTitle([code, share], row), "Code alpha-1");
 });

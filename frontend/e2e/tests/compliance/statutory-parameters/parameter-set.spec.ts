@@ -4,6 +4,7 @@ import { expect, forEachTheme, tabOntoLink, test } from "../../../fixtures/test"
 import {
   asOfTexts,
   basisLabel,
+  bonusStateReadingsKey,
   centralTaxRatesKey,
   changedValues,
   changeEntrySnapshot,
@@ -18,6 +19,7 @@ import {
   cellText,
   companyRatesKey,
   esiContributionPeriodsKey,
+  labourSetKeys,
   labourSetPrefixes,
   professionalTaxSlabsKey,
   sacCodesKey,
@@ -521,7 +523,7 @@ test.describe("the labour sets", () => {
   test.use({ persona: "administrator" });
 
   forEachTheme(
-    "show the professional-tax slabs with each State named beside its code, found by its name",
+    "show the professional-tax slabs with each State named beside its code",
     async ({ page, capture }) => {
       const set = await readParameterSet(page.request, professionalTaxSlabsKey);
       const shown = shownVersionOf(set);
@@ -545,16 +547,38 @@ test.describe("the labour sets", () => {
     },
   );
 
+  test("find a State's bonus limits by the State's name, which no other cell holds", async ({ page }) => {
+    const set = await readParameterSet(page.request, bonusStateReadingsKey);
+    const shown = shownVersionOf(set);
+    const kerala = shown.rows.find((row) => valueOf(row, "stateCode") === "32");
+    expect(kerala, "Kerala's reading").toBeDefined();
+    const found = expectedMatches(shown.rows, "Kerala", (row) => entryKeys(set, row));
+    expect(found, "the readings Kerala's name finds").toContainEqual(kerala);
+    const setPage = new ParameterSetPage(page);
+    const entries = setPage.entries(set);
+
+    await setPage.goto(parameterSetPath(set.key), set.title);
+    await setPage.waitUntilInteractive();
+    await expect(setPage.basis).toHaveText(basisLabel("interpretation"));
+    await entries.searchFor("Kerala");
+    await expect
+      .poll(() => entries.rows())
+      .toEqual(found.slice(0, entriesPerPage).map((row) => entryRow(set, row)));
+    await expect(entries.row("Kerala (32)")).toBeVisible();
+  });
+
   forEachTheme("show the ESI contribution periods' days and months in words", async ({ page, capture }) => {
     const set = await readParameterSet(page.request, esiContributionPeriodsKey);
-    const shown = shownVersionOf(set);
+    const first = set.versions.at(-1);
+    expect(first, "the version of the 1950 Regulations' periods").toBeDefined();
+    const shown = shownVersionOf(await readParameterSet(page.request, set.key, first!.from));
     const dayMonths = set.columns.filter((column) => column.kind === "dayMonth");
     const april = shown.rows.find((row) => dayMonths.some((column) => valueOf(row, column.name) === "04-01"));
     expect(april, "the period that opens on 1 April").toBeDefined();
     const setPage = new ParameterSetPage(page);
     const entries = setPage.entries(set);
 
-    await setPage.goto(parameterSetPath(set.key), set.title);
+    await setPage.goto(versionAddress(set, first!), set.title);
     await setPage.waitUntilInteractive();
     await expect(setPage.asOf).toHaveText(asOfTexts.wagePeriodEnd);
     await expect(setPage.versions).toMatchAriaSnapshot(versionsSnapshot(set));
@@ -582,22 +606,35 @@ test.describe("the labour sets", () => {
     await expect(entries.row(entryTitle(set, delhi!))).toContainText("₹0.75");
   });
 
-  test("open every labour set with its basis, the days it answers for and today's entries", async ({
-    page,
-  }) => {
-    const summaries = (await readParameterSets(page.request)).filter((summary) =>
-      labourSetPrefixes.some((prefix) => summary.key.startsWith(prefix)),
-    );
-    expect(summaries.length, "the labour sets").toBeGreaterThan(0);
-    const setPage = new ParameterSetPage(page);
+  test("open, below, every labour set the API lists", async ({ page }) => {
+    const keys = (await readParameterSets(page.request))
+      .map((summary) => summary.key)
+      .filter((key) => labourSetPrefixes.some((prefix) => key.startsWith(prefix)));
 
-    for (const summary of summaries) {
-      const set = await readParameterSet(page.request, summary.key);
-      const shown = shownVersionOf(set);
-      await setPage.goto(parameterSetPath(set.key), set.title);
-      await expect(setPage.basis).toHaveText(basisLabel(set.basis));
-      await expect(setPage.asOf).toHaveText(asOfTexts[set.asOf]);
-      await expect(setPage.entries(set).status).toHaveText(shownCount(shown.rows.length));
-    }
+    expect([...keys].sort()).toEqual([...labourSetKeys].sort());
   });
+
+  for (const key of labourSetKeys) {
+    forEachTheme(
+      `open ${key} with its basis, the days it answers for and today's entries`,
+      async ({ page, capture }) => {
+        const set = await readParameterSet(page.request, key);
+        const shown = shownVersionOf(set);
+        const setPage = new ParameterSetPage(page);
+
+        await setPage.goto(parameterSetPath(key), set.title);
+        await setPage.waitUntilInteractive();
+        await expect(setPage.basis).toHaveText(basisLabel(set.basis));
+        await expect(setPage.asOf).toHaveText(asOfTexts[set.asOf]);
+        await expect(setPage.entries(set).status).toHaveText(shownCount(shown.rows.length));
+        await capture(`${key} header`, setPage.overview.locator("header"));
+        await capture(`${key} first entry`, firstEntryOrEmptyList(setPage, set, shown));
+      },
+    );
+  }
 });
+
+function firstEntryOrEmptyList(setPage: ParameterSetPage, set: ParameterSet, shown: ShownVersion): Locator {
+  const first = shown.rows[0];
+  return first === undefined ? setPage.entriesCard : setPage.entries(set).row(entryTitle(set, first)).first();
+}

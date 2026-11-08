@@ -76,7 +76,7 @@
         "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975 (Mah. XVI of 1975), sections 2(h) and 3(1), text as on 16 July 2025, as consolidated by the Goods and Services Tax Department",
         "Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976 (Karnataka Act 35 of 1976), sections 2(j) and 3(1), as consolidated by the Commercial Taxes Department",
         "Tamil Nadu Urban Local Bodies Act, 1998, sections 117-B(1) and 117-I(1) of Chapter VI-A, inserted by the Tamil Nadu Urban Local Bodies (Amendment) Act, 1999 (Tamil Nadu Act 54 of 1999), as consolidated by the Tamil Nadu State Finance Commission",
-        "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, section 4(1), in the consolidated text of the Commercial Taxes Department, Telangana"
+        "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, sections 2 and 4(1), in the consolidated text of the Commercial Taxes Department, Telangana"
       ]
     }
   ],
@@ -252,7 +252,7 @@
     },
     {
       "from": "2026-04-01",
-      "source": "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, section 4(1), in the consolidated text of the Commercial Taxes Department",
+      "source": "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, section 4(1) and section 2, clause 15 on the department's page, of which the ERP holds only the closing words, in the consolidated text of the Commercial Taxes Department",
       "cells": {
         "stateCode": "36",
         "name": "Telangana levies it under its Act of 1987",
@@ -260,7 +260,7 @@
         "law": "The Telangana Tax on Professions, Trades, Callings and Employments Act, 1987",
         "words": "There shall be levied and collected a tax on professions, trades, callings and employments for the benefit of the State.",
         "extent": null,
-        "salary": null
+        "salary": "… but does not include bonus in any form and on any account or gratuity"
       }
     }
   ]

@@ -24,6 +24,20 @@ public sealed class BonusGoldenTests(ErpApiFactory factory)
 
     private const string PriorChargesKey = "bonus.prior-charges";
 
+    private const string Delhi = "07";
+
+    private const string ReadingSource = "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them";
+
+    private const string DelhiAdvisory = "Labour Department, Government of NCT of Delhi, advisory F.No. 15(46)/Lab/2020/800-805, 2 November 2026, for the accounting year 2025-26: “The wage ceiling of ₹21,000 is still applicable in GNCTD.”";
+
+    private const string ReadingWhy = "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held.";
+
+    private const string DelhiWhy = "The Labour Department of the Government of NCT of Delhi reads it so in its advisory of 2 November 2026: “The wage ceiling of ₹21,000 is still applicable in GNCTD.”";
+
+    private const string EligibilityWords = "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.";
+
+    private const string CalculationWords = "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;";
+
     private const string CodeOnWagesChapterIV = "Code on Wages, 2019 (No. 29 of 2019), 8 August 2019, Gazette of India, Extraordinary, Part II, Section 1, No. 48: sections 2(a) and 26 to 41";
 
     private const string CodeOnWagesSection26 = "Code on Wages, 2019 (No. 29 of 2019), 8 August 2019, Gazette of India, Extraordinary, Part II, Section 1, No. 48: sections 2(d) and 26(1) and (2)";
@@ -115,37 +129,25 @@ public sealed class BonusGoldenTests(ErpApiFactory factory)
     }
 
     [Fact]
-    public async Task Readings_OfTheStates_HoldEveryStateAndUnionTerritoryButBiharAtTheRepealedActsAmounts()
+    public async Task Readings_OfTheStates_HoldEveryStateAndUnionTerritoryButBiharAndCiteDelhisAdvisoryForDelhiAlone()
     {
         await using var scope = factory.Services.CreateAsyncScope();
 
         var readings = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<StateWageLimitReadings>(YearEnd, TestContext.Current.CancellationToken))!.Readings;
+        var sources = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameterHistory>().GetVersionAsync(ReadingsKey, YearEnd, TestContext.Current.CancellationToken))!.Rows
+            .ToDictionary(row => row.Key, row => row.Source, StringComparer.Ordinal);
 
         Assert.Equal(
             ["01", "02", "03", "04", "05", "06", "07", "08", "09", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "26", "27", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38"],
             readings.Select(reading => reading.StateCode));
         Assert.All(readings, reading =>
         {
+            var delhi = reading.StateCode == Delhi;
             Assert.Equal((new Money(21000m, Currency.Inr), new Money(7000m, Currency.Inr)), (reading.EligibilityLimit, reading.CalculationWage));
-            Assert.EndsWith("for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.", reading.EligibilityWording, StringComparison.Ordinal);
-            Assert.Contains("the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;", reading.CalculationWording, StringComparison.Ordinal);
-            Assert.StartsWith("Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force", reading.Why, StringComparison.Ordinal);
+            Assert.Equal((EligibilityWords, CalculationWords), (reading.EligibilityWording, reading.CalculationWording));
+            Assert.Equal(delhi ? ReadingWhy + " " + DelhiWhy : ReadingWhy, reading.Why);
+            Assert.Equal(delhi ? ReadingSource + "; " + DelhiAdvisory : ReadingSource, sources[reading.StateCode]);
         });
-        Assert.DoesNotContain(readings, reading => reading.StateCode is "10" or "97");
-    }
-
-    [Theory]
-    [InlineData("07", "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them; Labour Department, Government of NCT of Delhi, advisory F.No. 15(46)/Lab/2020/800-805, 2 November 2026, for the accounting year 2025-26: “The wage ceiling of ₹21,000 is still applicable in GNCTD.”")]
-    [InlineData("27", "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them")]
-    public async Task Reading_OfAState_CitesTheSavingsAndTheAmendingActAndDelhisAdvisoryForDelhiAlone(string stateCode, string source)
-    {
-        await using var scope = factory.Services.CreateAsyncScope();
-
-        var readings = (await scope.ServiceProvider.GetRequiredService<IStatutoryParameters>().GetAsOfAsync<StateWageLimitReadings>(YearEnd, TestContext.Current.CancellationToken))!.Readings;
-
-        var found = Assert.Single(readings, reading => reading.StateCode == stateCode);
-        Assert.Equal(stateCode == "07", found.Why.EndsWith("The Labour Department of the Government of NCT of Delhi reads it so in its advisory of 2 November 2026: “The wage ceiling of ₹21,000 is still applicable in GNCTD.”", StringComparison.Ordinal));
-        Assert.Equal(source, await SourceAsync(scope, ReadingsKey, stateCode, YearEnd));
     }
 
     [Theory]

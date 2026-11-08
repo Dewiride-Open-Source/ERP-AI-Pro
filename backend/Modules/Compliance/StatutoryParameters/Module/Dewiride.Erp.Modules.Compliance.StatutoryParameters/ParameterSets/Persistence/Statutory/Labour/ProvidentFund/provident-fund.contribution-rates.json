@@ -103,7 +103,7 @@
       "from": "2026-04-01",
       "instruments": [
         "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 16(1), and section 164(2), which keeps in force the schemes and notifications of the repealed Employees' Provident Funds and Miscellaneous Provisions Act, 1952",
-        "S.O. 5319(E), 21 November 2025, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025, No. 5739 of 20 December 2025: sections 16 and 164 in force from 21 November 2025, “except the provisions of the Code specified” in S.O. 2060(E), dated the 3rd May, 2023",
+        "S.O. 5319(E), 21 November 2025, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025, No. 5739 of 20 December 2025: sections 16 and 164 “except the provisions of the Code specified” in S.O. 2060(E), dated the 3rd May, 2023, in force from 21 November 2025",
         "S.O. 3582(E), 1 July 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 3447, under the first proviso to section 16(1)(a) of the Code, superseding S.O. 320(E) of 9 April 1997: “This notification shall be deemed to come into force from the 21st day of November, 2025.”",
         "Employees' Provident Funds Scheme, 1952, paragraphs 26A and 29, and Employees' Pension Scheme, 1995, paragraph 3, with S.O. 2061(E) of 3 May 2023, as EPFO's consolidated texts print them, in force until the Schemes of 2026 superseded them on 29 June 2026"
       ]
@@ -195,7 +195,7 @@
     {
       "from": "2026-04-01",
       "until": "2026-06-28",
-      "source": "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023, continued by section 164(2) of the Code on Social Security, 2020; the wage limit as paragraph 4(2), second proviso, of the Employees' Pension Scheme, 2026 states it with effect from 1 September 2014",
+      "source": "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023 after paragraph 12, continued by section 164(2) of the Code on Social Security, 2020",
       "cells": {
         "contribution": "pension-fund-employer-joint-option",
         "name": "Part of the employer's contribution, into the Pension Fund, for a member who exercised the joint option",
@@ -205,7 +205,7 @@
         "rate": 9.49,
         "wagesUpTo": null,
         "wagesAbove": 15000,
-        "wording": "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023: … the employer's contribution shall be nine and forty-ninth per cent. (9.49%) of the basic wages … Employees' Pension Scheme, 2026, paragraph 4(2), second proviso: Provided further that with effect from 1st of September, 2014, in respect of members who have exercised joint option for contributing under the provisions of paragraph 11 of the erstwhile Employees' Pension Scheme, 1995 and are found eligible, the contribution of the employer shall be nine and forty-nine hundredths per cent. of the wages of each member by increasing it by one and sixteen hundredths per cent. from the extant eight and thirty-three hundredths per cent. and such increased contribution shall be applicable to wages exceeding fifteen thousand rupees per month."
+        "wording": "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023 after paragraph 12: … the employer's contribution shall be nine and forty-ninth per cent. (9.49%) of the basic wages … the increased contribution shall be applicable to basic wages, dearness allowance and retaining allowance to the extent such basic wages, dearness allowance and retaining allowance exceed fifteen thousand rupees per month."
       }
     },
     {

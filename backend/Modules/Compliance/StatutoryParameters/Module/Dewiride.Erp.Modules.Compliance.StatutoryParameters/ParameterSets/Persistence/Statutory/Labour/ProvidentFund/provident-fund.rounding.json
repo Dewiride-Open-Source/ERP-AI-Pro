@@ -1,7 +1,7 @@
 {
   "key": "provident-fund.rounding",
   "title": "Rounding of provident fund contributions",
-  "description": "How each provident fund, pension and insurance contribution is rounded, in its scheme's words: until 28 June 2026 the Employees' Provident Funds Scheme, 1952, the Employees' Pension Scheme, 1995 and the Employees' Deposit-Linked Insurance Scheme, 1976, continued by section 164(2) of the Code on Social Security, 2020, and from 29 June 2026 the Schemes of 2026. The words read of the Scheme of 1995 round to the nearest rupee without saying where half a rupee goes. The rounding of the administrative charges was not read in an instrument.",
+  "description": "How each provident fund, pension and insurance contribution is rounded, in its scheme's words: to the nearest rupee, a fraction of a rupee from the amount held counting as the next higher rupee and a smaller fraction being ignored. Until 28 June 2026 the Employees' Provident Funds Scheme, 1952, the Employees' Pension Scheme, 1995 and the Employees' Deposit-Linked Insurance Scheme, 1976, continued by section 164(2) of the Code on Social Security, 2020, set the rule, and from 29 June 2026 the Schemes of 2026. The rounding of the administrative charges was not read in an instrument.",
   "basis": "law",
   "asOf": "wageDate",
   "columns": [
@@ -18,19 +18,9 @@
       "rowTitle": true
     },
     {
-      "name": "method",
-      "title": "Rounded",
-      "kind": "choice",
-      "choices": [
-        {
-          "value": "nearestRupeeFiftyPaiseUp",
-          "title": "To the nearest rupee, fifty paise or more upwards"
-        },
-        {
-          "value": "nearestRupee",
-          "title": "To the nearest rupee"
-        }
-      ]
+      "name": "nextRupeeFrom",
+      "title": "Fraction counted as the next higher rupee from (₹)",
+      "kind": "amount"
     },
     {
       "name": "wording",
@@ -43,7 +33,8 @@
       "from": "2026-04-01",
       "instruments": [
         "Employees' Provident Funds Scheme, 1952, paragraph 29, Employees' Pension Scheme, 1995, paragraph 3(3), and Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 7(2), as EPFO's consolidated texts print them, in force until the Schemes of 2026 superseded them on 29 June 2026",
-        "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 164(2), which keeps in force the schemes of the repealed Employees' Provident Funds and Miscellaneous Provisions Act, 1952, in force from 21 November 2025 by S.O. 5319(E), 21 November 2025, as corrected by S.O. 5936(E), 19 December 2025"
+        "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 164(2), which keeps in force the schemes of the repealed Employees' Provident Funds and Miscellaneous Provisions Act, 1952",
+        "S.O. 5319(E), 21 November 2025, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025, No. 5739 of 20 December 2025: section 164 “except the provisions of the Code specified” in S.O. 2060(E), dated the 3rd May, 2023, in force from 21 November 2025"
       ]
     },
     {
@@ -63,7 +54,7 @@
       "cells": {
         "contributions": "provident-fund",
         "name": "Provident Fund contributions",
-        "method": "nearestRupeeFiftyPaiseUp",
+        "nextRupeeFrom": 0.5,
         "wording": "Employees' Provident Funds Scheme, 1952, paragraph 29: Each contribution shall be calculated to the nearest rupee, 50 paise or more to be counted as the next higher rupee …"
       }
     },
@@ -74,8 +65,8 @@
       "cells": {
         "contributions": "pension-fund",
         "name": "Pension Fund contributions of the employer and the Central Government",
-        "method": "nearestRupee",
-        "wording": "Employees' Pension Scheme, 1995, paragraph 3(3): Each contribution payable under sub-paragraphs (1) and (2) shall be calculated to the nearest rupee …"
+        "nextRupeeFrom": 0.5,
+        "wording": "Employees' Pension Scheme, 1995, paragraph 3(3): Each contribution payable under sub-paragraphs (1) and (2) shall be calculated to the nearest rupee, fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored."
       }
     },
     {
@@ -85,7 +76,7 @@
       "cells": {
         "contributions": "insurance-fund",
         "name": "Insurance Fund contributions",
-        "method": "nearestRupeeFiftyPaiseUp",
+        "nextRupeeFrom": 0.5,
         "wording": "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 7(2): Each contribution shall be calculated to the nearest rupee, 50 paise or more to be counted as the next higher rupee and fraction of a rupee less than 50 paise to be ignored."
       }
     },
@@ -95,7 +86,7 @@
       "cells": {
         "contributions": "provident-fund",
         "name": "Provident Fund contributions",
-        "method": "nearestRupeeFiftyPaiseUp",
+        "nextRupeeFrom": 0.5,
         "wording": "Employees' Provident Funds Scheme, 2026, paragraph 18(5): Each contribution shall be calculated to the nearest rupee, with fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored."
       }
     },
@@ -105,7 +96,7 @@
       "cells": {
         "contributions": "pension-fund",
         "name": "Pension Fund contributions of the employer and the Central Government",
-        "method": "nearestRupeeFiftyPaiseUp",
+        "nextRupeeFrom": 0.5,
         "wording": "Employees' Pension Scheme, 2026, paragraph 4(3): Each contribution payable under sub-paragraphs (1) and (2) shall be calculated to the nearest rupee, fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise being ignored."
       }
     },
@@ -115,7 +106,7 @@
       "cells": {
         "contributions": "insurance-fund",
         "name": "Insurance Fund contributions",
-        "method": "nearestRupeeFiftyPaiseUp",
+        "nextRupeeFrom": 0.5,
         "wording": "Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 5(3): Each contribution shall be calculated to the nearest rupee, fifty paise or more to be counted as the next higher rupee and fraction of a rupee less than fifty paise to be ignored."
       }
     }

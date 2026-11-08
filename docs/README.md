@@ -80,5 +80,6 @@
 | [0062](adr/0062-reference-data-seeded-lists-every-iso-currency-dated-exchange-rates-and-financial-periods.md) | Reference data: seeded lists, every ISO currency, dated exchange rates and financial periods |
 | [0063](adr/0063-statutory-parameters-dated-rows-in-versioned-sets-typed-reads-by-date-and-the-first-gst-datasets.md) | Statutory parameters: dated rows in versioned sets, typed reads by date and the first GST datasets |
 | [0064](adr/0064-statutory-datasets-tds-under-the-income-tax-act-2025-company-tax-and-depreciation.md) | Statutory datasets: TDS under the Income-tax Act, 2025, company tax and depreciation |
+| [0065](adr/0065-statutory-datasets-labour-provident-fund-esi-gratuity-bonus-professional-tax-and-welfare-funds.md) | Statutory datasets: provident fund, ESI, gratuity, bonus, professional tax and labour welfare funds |
 
 New decisions use [0000-template.md](adr/0000-template.md).
