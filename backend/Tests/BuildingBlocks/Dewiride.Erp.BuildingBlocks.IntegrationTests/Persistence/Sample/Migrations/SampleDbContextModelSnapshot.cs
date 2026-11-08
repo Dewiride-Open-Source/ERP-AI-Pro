@@ -155,6 +155,41 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                     b.HasAnnotation("Erp:ChangeRecords:Key", "test.events.shipments");
                 });
 
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Numbering.Sample.SampleInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<long>("Sequence")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Year")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .IsUnicode(false)
+                        .HasColumnType("char(7)")
+                        .IsFixedLength();
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentType", "Year", "Number")
+                        .IsUnique();
+
+                    b.ToTable("Invoices", "test_sample");
+                });
+
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Notes.SampleNote", b =>
                 {
                     b.Property<Guid>("Id")
@@ -296,6 +331,152 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                     b.ToTable("SampleLines", "test_sample");
                 });
 
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Numbering.Domain.NumberSeries", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Format", "Dewiride.Erp.BuildingBlocks.Numbering.Domain.NumberSeries.Format#NumberFormat", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int>("Digits")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Prefix")
+                                .IsRequired()
+                                .HasMaxLength(32)
+                                .IsUnicode(false)
+                                .HasColumnType("varchar(32)");
+
+                            b1.Property<string>("Separator")
+                                .IsRequired()
+                                .HasMaxLength(1)
+                                .IsUnicode(false)
+                                .HasColumnType("varchar(1)");
+
+                            b1.Property<byte>("Year")
+                                .HasColumnType("tinyint");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentType")
+                        .IsUnique();
+
+                    b.ToTable("NumberSeries", "platform_numbering", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+
+                    b.HasAnnotation("Erp:ChangeRecords:Key", "platform.numbering.series");
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Numbering.Domain.NumberSeriesYear", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("FirstNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("MaxLength")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("NextNumber")
+                        .HasColumnType("bigint")
+                        .HasAnnotation("Erp:ChangeRecords:Excluded", true);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("SeriesId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Year")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .IsUnicode(false)
+                        .HasColumnType("char(7)")
+                        .IsFixedLength();
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Format", "Dewiride.Erp.BuildingBlocks.Numbering.Domain.NumberSeriesYear.Format#NumberFormat", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int>("Digits")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Prefix")
+                                .IsRequired()
+                                .HasMaxLength(32)
+                                .IsUnicode(false)
+                                .HasColumnType("varchar(32)");
+
+                            b1.Property<string>("Separator")
+                                .IsRequired()
+                                .HasMaxLength(1)
+                                .IsUnicode(false)
+                                .HasColumnType("varchar(1)");
+
+                            b1.Property<byte>("Year")
+                                .HasColumnType("tinyint");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SeriesId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("NumberSeriesYears", "platform_numbering", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+
+                    b
+                        .HasAnnotation("Erp:ChangeRecords:Key", "platform.numbering.series-years")
+                        .HasAnnotation("Erp:ChangeRecords:Subject", "SeriesId");
+                });
+
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes.ChangeRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -380,6 +561,15 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                         .WithMany("Lines")
                         .HasForeignKey("SampleId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Numbering.Domain.NumberSeriesYear", b =>
+                {
+                    b.HasOne("Dewiride.Erp.BuildingBlocks.Numbering.Domain.NumberSeries", null)
+                        .WithMany()
+                        .HasForeignKey("SeriesId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

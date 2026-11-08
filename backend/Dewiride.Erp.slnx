@@ -12,6 +12,7 @@
     <Project Path="BuildingBlocks/Jobs/Dewiride.Erp.BuildingBlocks.Jobs/Dewiride.Erp.BuildingBlocks.Jobs.csproj" />
     <Project Path="BuildingBlocks/Kernel/Dewiride.Erp.BuildingBlocks.Kernel/Dewiride.Erp.BuildingBlocks.Kernel.csproj" />
     <Project Path="BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
+    <Project Path="BuildingBlocks/Numbering/Dewiride.Erp.BuildingBlocks.Numbering/Dewiride.Erp.BuildingBlocks.Numbering.csproj" />
     <Project Path="BuildingBlocks/Observability/Dewiride.Erp.BuildingBlocks.Observability/Dewiride.Erp.BuildingBlocks.Observability.csproj" />
     <Project Path="BuildingBlocks/Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
   </Folder>
@@ -60,6 +61,14 @@
   <Folder Name="/Modules/Platform/Jobs/Tests/">
     <Project Path="Modules/Platform/Jobs/Tests/UnitTests/Dewiride.Erp.Modules.Platform.Jobs.UnitTests/Dewiride.Erp.Modules.Platform.Jobs.UnitTests.csproj" />
     <Project Path="Modules/Platform/Jobs/Tests/IntegrationTests/Dewiride.Erp.Modules.Platform.Jobs.IntegrationTests/Dewiride.Erp.Modules.Platform.Jobs.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/Numbering/">
+    <Project Path="Modules/Platform/Numbering/Contracts/Dewiride.Erp.Modules.Platform.Numbering.Contracts/Dewiride.Erp.Modules.Platform.Numbering.Contracts.csproj" />
+    <Project Path="Modules/Platform/Numbering/Module/Dewiride.Erp.Modules.Platform.Numbering/Dewiride.Erp.Modules.Platform.Numbering.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/Numbering/Tests/">
+    <Project Path="Modules/Platform/Numbering/Tests/UnitTests/Dewiride.Erp.Modules.Platform.Numbering.UnitTests/Dewiride.Erp.Modules.Platform.Numbering.UnitTests.csproj" />
+    <Project Path="Modules/Platform/Numbering/Tests/IntegrationTests/Dewiride.Erp.Modules.Platform.Numbering.IntegrationTests/Dewiride.Erp.Modules.Platform.Numbering.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/Modules/Platform/ReferenceData/">
     <Project Path="Modules/Platform/ReferenceData/Contracts/Dewiride.Erp.Modules.Platform.ReferenceData.Contracts/Dewiride.Erp.Modules.Platform.ReferenceData.Contracts.csproj" />

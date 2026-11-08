@@ -7331,6 +7331,487 @@
         ]
       }
     },
+    "/api/platform/numbering/documents": {
+      "get": {
+        "tags": [
+          "Platform.Numbering"
+        ],
+        "summary": "Lists the kinds of document the ERP numbers, by title, each with the rule its numbers follow this financial year and its numbering once it is set up.",
+        "operationId": "Platform.Numbering.ListNumberedDocuments",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NumberedDocumentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/numbering/series/{id}": {
+      "get": {
+        "tags": [
+          "Platform.Numbering"
+        ],
+        "summary": "Describes one numbering with the kind of document it numbers and the financial years it has opened.",
+        "operationId": "Platform.Numbering.GetNumberSeries",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberedDocumentResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Platform.Numbering"
+        ],
+        "summary": "Changes a numbering: the current financial year takes the new format and next number while it has given no number, and otherwise the format applies from the next year.",
+        "operationId": "Platform.Numbering.ChangeNumberSeries",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeNumberSeriesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberedDocumentResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/platform/numbering/series": {
+      "post": {
+        "tags": [
+          "Platform.Numbering"
+        ],
+        "summary": "Sets up the numbering of a kind of document, opening the current financial year at its next number.",
+        "operationId": "Platform.Numbering.SetUpNumberSeries",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "A UUID chosen by the client for this request; repeating the request with the same key replays the first response instead of acting twice.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUpNumberSeriesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NumberedDocumentResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
     "/api/platform/features": {
       "get": {
         "tags": [
@@ -7502,6 +7983,37 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ChangeNumberSeriesRequest": {
+        "required": [
+          "format",
+          "nextNumber",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "format": {
+            "description": "How the numbers look: from the current financial year while it has given no number, otherwise from the next.",
+            "$ref": "#/components/schemas/NumberFormatRequest"
+          },
+          "nextNumber": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Running number the current financial year starts at, which changes only while the year has given no number; absent to keep it.",
+            "format": "int64"
+          },
+          "version": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Version of the numbering the change was made from, as the API last returned it."
           }
         }
       },
@@ -8751,6 +9263,199 @@
           }
         }
       },
+      "NumberedDocumentResponse": {
+        "required": [
+          "documentType",
+          "title",
+          "description",
+          "currentYear",
+          "rule",
+          "series"
+        ],
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "currentYear": {
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/SerialNumberRuleResponse"
+          },
+          "series": {
+            "$ref": "#/components/schemas/NumberSeriesResponse"
+          }
+        }
+      },
+      "NumberFormatRequest": {
+        "required": [
+          "prefix",
+          "year",
+          "separator",
+          "digits"
+        ],
+        "type": "object",
+        "properties": {
+          "prefix": {
+            "maxLength": 32,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Fixed text every number begins with: capital letters, digits and the special characters the rule allows, such as INV/; empty for none."
+          },
+          "year": {
+            "description": "How the financial year follows the fixed text: none, full (2026-27) or abbreviated (26-27).",
+            "$ref": "#/components/schemas/NumberYearStyle"
+          },
+          "separator": {
+            "maxLength": 1,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Character between the financial year and the running number, such as /; empty for none, and empty when the year is not shown."
+          },
+          "digits": {
+            "maximum": 18,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Fewest digits of the running number, which zeros fill in front, from 1 to 18.",
+            "format": "int32"
+          }
+        }
+      },
+      "NumberFormatResponse": {
+        "required": [
+          "prefix",
+          "year",
+          "separator",
+          "digits"
+        ],
+        "type": "object",
+        "properties": {
+          "prefix": {
+            "type": "string"
+          },
+          "year": {
+            "$ref": "#/components/schemas/NumberYearStyle"
+          },
+          "separator": {
+            "type": "string"
+          },
+          "digits": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "NumberSeriesResponse": {
+        "required": [
+          "id",
+          "format",
+          "version",
+          "years"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "format": {
+            "$ref": "#/components/schemas/NumberFormatResponse"
+          },
+          "version": {
+            "type": "string"
+          },
+          "years": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NumberSeriesYearResponse"
+            }
+          }
+        }
+      },
+      "NumberSeriesYearResponse": {
+        "required": [
+          "year",
+          "format",
+          "maxLength",
+          "firstNumber",
+          "nextNumber",
+          "lastNumber",
+          "inUse",
+          "firstText",
+          "nextText",
+          "lastText",
+          "lastIssuedText"
+        ],
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "string"
+          },
+          "format": {
+            "$ref": "#/components/schemas/NumberFormatResponse"
+          },
+          "maxLength": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "firstNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nextNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastNumber": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "inUse": {
+            "type": "boolean"
+          },
+          "firstText": {
+            "type": "string"
+          },
+          "nextText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastText": {
+            "type": "string"
+          },
+          "lastIssuedText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "NumberYearStyle": {
+        "enum": [
+          "none",
+          "full",
+          "abbreviated"
+        ]
+      },
       "OrgChartPersonResponse": {
         "required": [
           "id",
@@ -9521,6 +10226,8 @@
           "platform.jobs.runs.cancel",
           "platform.jobs.runs.read",
           "platform.jobs.runs.rerun",
+          "platform.numbering.series.change",
+          "platform.numbering.series.read",
           "platform.reference-data.exchange-rates.correct",
           "platform.reference-data.exchange-rates.read",
           "platform.reference-data.exchange-rates.record",
@@ -10095,6 +10802,22 @@
           }
         }
       },
+      "SerialNumberRuleResponse": {
+        "required": [
+          "maxLength",
+          "specialCharacters"
+        ],
+        "type": "object",
+        "properties": {
+          "maxLength": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "specialCharacters": {
+            "type": "string"
+          }
+        }
+      },
       "SessionResponse": {
         "required": [
           "expiresAt",
@@ -10109,6 +10832,37 @@
           "lifetimeEndsAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "SetUpNumberSeriesRequest": {
+        "required": [
+          "documentType",
+          "format",
+          "nextNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Key of the kind of document to number, as the list of numbered documents gives it."
+          },
+          "format": {
+            "description": "How the numbers look.",
+            "$ref": "#/components/schemas/NumberFormatRequest"
+          },
+          "nextNumber": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Running number the current financial year starts at, from 1 to the last the format can give: 1, or the number after the last one given outside the ERP this year.",
+            "format": "int64"
           }
         }
       },
@@ -10412,6 +11166,9 @@
     },
     {
       "name": "Compliance.StatutoryParameters"
+    },
+    {
+      "name": "Platform.Numbering"
     },
     {
       "name": "Platform.Features"

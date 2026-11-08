@@ -1,11 +1,13 @@
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
+using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
+using Dewiride.Erp.BuildingBlocks.Numbering.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
 
 // Contexts built as a module's is, each mapping what one rule on a module's model accepts or refuses, for the rules that would
-// otherwise only meet the product's contexts, none of which maps the integration-event tables yet.
+// otherwise only meet the product's contexts, none of which maps the integration-event or the numbering tables yet.
 public static class ProbeContexts
 {
     public sealed class Recording() : ModuleDbContext(Options<Recording>(), SchemaName)
@@ -66,6 +68,39 @@ public static class ProbeContexts
                 bag.Property<Guid>("Id");
                 bag.HasKey("Id");
             });
+        }
+    }
+
+    public sealed class Numbered() : ModuleDbContext(Options<Numbered>(), "probe_numbered")
+    {
+        public DbSet<NumberSeries> NumberSeries => Set<NumberSeries>();
+
+        public DbSet<NumberSeriesYear> NumberSeriesYears => Set<NumberSeriesYear>();
+    }
+
+    public sealed class Renumbered() : ModuleDbContext(Options<Renumbered>(), "probe_renumbered")
+    {
+        public DbSet<NumberSeries> NumberSeries => Set<NumberSeries>();
+
+        public DbSet<NumberSeriesYear> NumberSeriesYears => Set<NumberSeriesYear>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<NumberSeriesYear>().ToTable("Years", "probe_renumbered", table => table.ExcludeFromMigrations());
+        }
+    }
+
+    public sealed class Migrating() : ModuleDbContext(Options<Migrating>(), "probe_migrating")
+    {
+        public DbSet<NumberSeries> NumberSeries => Set<NumberSeries>();
+
+        public DbSet<NumberSeriesYear> NumberSeriesYears => Set<NumberSeriesYear>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<NumberSeries>().ToTable(NumberingTables.Series, NumberingTables.Schema, table => table.ExcludeFromMigrations(false));
         }
     }
 

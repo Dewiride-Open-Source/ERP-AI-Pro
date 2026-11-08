@@ -12,7 +12,7 @@ Comments describe the current code only. The policy is enforced by review and by
 
 - A *why*: a constraint or trade-off that the code cannot express.
 - An invariant the reader must not break.
-- A statutory citation: `CGST Rule 46(1)(b)`, `IGST Act s.13(2)`.
+- A statutory citation: `CGST Rule 46(b)`, `IGST Act s.13(2)`.
 - A reference to a non-obvious algorithm or specification.
 
 ## Banned

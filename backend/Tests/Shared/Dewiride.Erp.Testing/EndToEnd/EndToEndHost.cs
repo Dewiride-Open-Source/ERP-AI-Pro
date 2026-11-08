@@ -1,22 +1,25 @@
 using Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
 using Dewiride.Erp.Testing.Blob;
 using Dewiride.Erp.Testing.EndToEnd.Jobs;
+using Dewiride.Erp.Testing.EndToEnd.Numbering;
+using Dewiride.Erp.Testing.Numbering;
 using Dewiride.Erp.Testing.Sql;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace Dewiride.Erp.Testing.EndToEnd;
 
-// The API Playwright starts: the API a host test builds, with the test identity provider, the test header scheme, the
-// persona sign-in, the routes that add people to the test directory and switch its refusal of the application's token, two
-// recurring test jobs of its own and the routes that seed job runs and the schedule rows of those jobs, listening on a port, on
-// a database and a blob container of its own, so a run reaches neither Azure nor Microsoft Entra ID and leaves the developer's
-// data alone. Playwright stops its servers on Windows by killing them, which leaves their database and container behind, so
-// every start removes those whose host has gone, the session lock on the database and the lease on the container having ended
-// with its process, once they are older than LeftoverAge. Every browser project's requests and every call of the web servers
-// reach the API from loopback, one anonymous rate limit partition, so the host allows anonymous callers ten times the default.
-// The host reads no App Configuration, so it is given the schedule of the account check that the store seeds, for the jobs page
-// to show; like every test host it runs no job loop, so no job ever runs on its own.
+// The API Playwright starts: the API a host test builds, with the test identity provider, the test header scheme, the persona
+// sign-in, the routes that add people to the test directory and switch its refusal of the application's token, two recurring test
+// jobs of its own and the routes that seed job runs and the schedule rows of those jobs, kinds of document of its own to
+// number and the routes that take their numbers and remove their numbering, listening on a port, on a database and a blob container of its own, so a run
+// reaches neither Azure nor Microsoft Entra ID and leaves the developer's data alone. Playwright stops its servers on Windows by
+// killing them, which leaves their database and container behind, so every start removes those whose host has gone, the session
+// lock on the database and the lease on the container having ended with its process, once they are older than LeftoverAge. Every
+// browser project's requests and every call of the web servers reach the API from loopback, one anonymous rate limit partition,
+// so the host allows anonymous callers ten times the default. The host reads no App Configuration, so it is given the schedule of
+// the account check that the store seeds, for the jobs page to show; like every test host it runs no job loop, so no job ever
+// runs on its own.
 public static class EndToEndHost
 {
     public const string EnvironmentName = "Testing";
@@ -50,11 +53,13 @@ public static class EndToEndHost
             .WithConfiguration($"{RateLimitingOptions.SectionName}:{nameof(RateLimitingOptions.AnonymousPermitLimit)}", AnonymousPermitLimit)
             .WithConfiguration(AccountCheckScheduleKey, AccountCheckSchedule)
             .WithTestServices(EndToEndJobs.Register)
+            .WithTestServices(TestNumberedDocuments.Register)
             .WithTestEndpoints(PersonaSignIn.Map)
             .WithTestEndpoints(DirectoryPeople.Map)
             .WithTestEndpoints(DirectoryApplicationAccess.Map)
             .WithTestEndpoints(JobRuns.Map)
-            .WithTestEndpoints(JobSchedules.Map);
+            .WithTestEndpoints(JobSchedules.Map)
+            .WithTestEndpoints(NumberingRoutes.Map);
         factory.UseKestrel(settings.Port);
         factory.StartServer();
 

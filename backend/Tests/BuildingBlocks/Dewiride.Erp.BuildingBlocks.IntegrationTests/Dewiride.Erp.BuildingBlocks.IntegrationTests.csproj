@@ -6,6 +6,7 @@
     <ProjectReference Include="../../../BuildingBlocks/Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency/Dewiride.Erp.BuildingBlocks.Idempotency.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/IntegrationEvents/Dewiride.Erp.BuildingBlocks.IntegrationEvents/Dewiride.Erp.BuildingBlocks.IntegrationEvents.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Jobs/Dewiride.Erp.BuildingBlocks.Jobs/Dewiride.Erp.BuildingBlocks.Jobs.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Numbering/Dewiride.Erp.BuildingBlocks.Numbering/Dewiride.Erp.BuildingBlocks.Numbering.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
     <ProjectReference Include="../../../Hosts/Api/Dewiride.Erp.Host.Api/Dewiride.Erp.Host.Api.csproj" />
     <ProjectReference Include="../../Shared/Dewiride.Erp.Testing/Dewiride.Erp.Testing.csproj" />

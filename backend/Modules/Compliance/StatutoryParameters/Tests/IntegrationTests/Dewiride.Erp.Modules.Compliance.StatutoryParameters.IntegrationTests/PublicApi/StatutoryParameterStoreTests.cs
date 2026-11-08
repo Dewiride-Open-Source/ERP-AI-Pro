@@ -1,5 +1,6 @@
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Companies.ScheduleII;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Documents;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Returns;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Services;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.AdvanceTax;
@@ -85,6 +86,7 @@ public sealed class StatutoryParameterStoreTests(ErpApiFactory factory)
             "gst.return-due-dates" => Of(await store.GetAsOfAsync<GstReturnDueDates>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(rule => rule.Rule)])),
             "gst.quarterly-return-states" => Of(await store.GetAsOfAsync<QuarterlyReturnStates>(day, cancellationToken), set => (set.Version, [.. set.States.Select(state => state.StateCode)])),
             "gst.return-thresholds" => Of(await store.GetAsOfAsync<GstReturnThresholds>(day, cancellationToken), set => (set.Version, [.. set.Thresholds.Select(threshold => threshold.Threshold)])),
+            "gst.document-serial-numbers" => Of(await store.GetAsOfAsync<GstDocumentSerialNumbers>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(rule => rule.Rule)])),
             "companies.schedule-ii-limits" => Of(await store.GetAsOfAsync<ScheduleIILimits>(day, cancellationToken), set => (set.Version, [.. set.Limits.Select(row => row.Limit)])),
             "companies.schedule-ii-useful-lives" => Of(await store.GetAsOfAsync<UsefulLives>(day, cancellationToken), set => (set.Version, [.. set.Lives.Select(row => row.Entry)])),
             "income-tax.advance-tax-instalments" => Of(await store.GetAsOfAsync<AdvanceTaxInstalments>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(row => row.Rule)])),

@@ -17,6 +17,7 @@
     <ProjectReference Include="../../../BuildingBlocks/Jobs/Dewiride.Erp.BuildingBlocks.Jobs/Dewiride.Erp.BuildingBlocks.Jobs.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Kernel/Dewiride.Erp.BuildingBlocks.Kernel/Dewiride.Erp.BuildingBlocks.Kernel.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Modules/Dewiride.Erp.BuildingBlocks.Modules/Dewiride.Erp.BuildingBlocks.Modules.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Numbering/Dewiride.Erp.BuildingBlocks.Numbering/Dewiride.Erp.BuildingBlocks.Numbering.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Observability/Dewiride.Erp.BuildingBlocks.Observability/Dewiride.Erp.BuildingBlocks.Observability.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Persistence/Dewiride.Erp.BuildingBlocks.Persistence/Dewiride.Erp.BuildingBlocks.Persistence.csproj" />
   </ItemGroup>

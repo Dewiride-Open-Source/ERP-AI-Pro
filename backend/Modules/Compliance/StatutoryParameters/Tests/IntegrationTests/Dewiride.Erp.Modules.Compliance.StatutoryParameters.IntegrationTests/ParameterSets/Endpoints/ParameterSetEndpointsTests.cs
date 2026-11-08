@@ -31,6 +31,7 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
         "esi.coverage-wage-limits",
         "gratuity.rules",
         "gst.central-tax-rates",
+        "gst.document-serial-numbers",
         "gst.integrated-tax-rates",
         "gst.quarterly-return-states",
         "gst.return-due-dates",

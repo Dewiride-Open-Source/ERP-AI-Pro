@@ -334,6 +334,14 @@
           "Microsoft.FeatureManagement": "[4.8.0, )"
         }
       },
+      "dewiride.erp.buildingblocks.numbering": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )"
+        }
+      },
       "dewiride.erp.buildingblocks.observability": {
         "type": "Project",
         "dependencies": {
@@ -439,6 +447,24 @@
         }
       },
       "dewiride.erp.modules.platform.jobs.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.numbering": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Idempotency": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Numbering": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Numbering.Contracts": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.numbering.contracts": {
         "type": "Project",
         "dependencies": {
           "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"

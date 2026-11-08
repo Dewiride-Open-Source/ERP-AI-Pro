@@ -1,5 +1,6 @@
 using Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
+using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
 using Dewiride.Erp.BuildingBlocks.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Dewiride.Erp.BuildingBlocks.Persistence.Catalog;
@@ -29,7 +30,7 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
     }
 
     [Fact]
-    public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssemblyTheChangeRecordsAndTheIntegrationEventTables()
+    public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssemblyTheChangeRecordsTheIntegrationEventAndTheNumberingTables()
     {
         using var scope = factory.Services.CreateScope();
 
@@ -85,9 +86,11 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
         Assert.Empty(violations);
     }
 
+    private static readonly HashSet<Type> SharedEntityTypes = [typeof(ChangeRecord), typeof(OutboxMessage), typeof(ProcessedMessage), typeof(NumberSeries), typeof(NumberSeriesYear)];
+
     private static List<string> ForeignEntityTypes(IModel model, Type contextType) =>
         [.. model.GetEntityTypes()
-            .Where(e => e.ClrType.Assembly != contextType.Assembly && e.ClrType != typeof(ChangeRecord) && e.ClrType != typeof(OutboxMessage) && e.ClrType != typeof(ProcessedMessage))
+            .Where(e => e.ClrType.Assembly != contextType.Assembly && !SharedEntityTypes.Contains(e.ClrType))
             .Select(e => $"{contextType.Name} maps {e.DisplayName()} from {e.ClrType.Assembly.GetName().Name}")];
 
     private DbContextCatalog Catalogue() => factory.Services.GetRequiredService<DbContextCatalog>();

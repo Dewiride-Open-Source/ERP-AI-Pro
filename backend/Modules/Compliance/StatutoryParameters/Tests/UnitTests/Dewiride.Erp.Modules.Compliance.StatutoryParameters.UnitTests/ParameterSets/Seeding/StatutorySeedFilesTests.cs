@@ -26,6 +26,7 @@ public sealed class StatutorySeedFilesTests
                 "esi.coverage-wage-limits.json",
                 "gratuity.rules.json",
                 "gst.central-tax-rates.json",
+                "gst.document-serial-numbers.json",
                 "gst.integrated-tax-rates.json",
                 "gst.quarterly-return-states.json",
                 "gst.return-due-dates.json",

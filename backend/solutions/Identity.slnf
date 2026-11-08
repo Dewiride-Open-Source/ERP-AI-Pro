@@ -14,6 +14,7 @@
       "BuildingBlocks\\Jobs\\Dewiride.Erp.BuildingBlocks.Jobs\\Dewiride.Erp.BuildingBlocks.Jobs.csproj",
       "BuildingBlocks\\Kernel\\Dewiride.Erp.BuildingBlocks.Kernel\\Dewiride.Erp.BuildingBlocks.Kernel.csproj",
       "BuildingBlocks\\Modules\\Dewiride.Erp.BuildingBlocks.Modules\\Dewiride.Erp.BuildingBlocks.Modules.csproj",
+      "BuildingBlocks\\Numbering\\Dewiride.Erp.BuildingBlocks.Numbering\\Dewiride.Erp.BuildingBlocks.Numbering.csproj",
       "BuildingBlocks\\Observability\\Dewiride.Erp.BuildingBlocks.Observability\\Dewiride.Erp.BuildingBlocks.Observability.csproj",
       "BuildingBlocks\\Persistence\\Dewiride.Erp.BuildingBlocks.Persistence\\Dewiride.Erp.BuildingBlocks.Persistence.csproj",
       "Hosts\\Api\\Dewiride.Erp.Host.Api\\Dewiride.Erp.Host.Api.csproj",

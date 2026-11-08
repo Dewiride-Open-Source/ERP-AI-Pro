@@ -80,6 +80,20 @@ export interface ChangedValueResponse extends AdditionalDataHolder, Parsable {
      */
     reference?: string | null;
 }
+export interface ChangeNumberSeriesRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * How the numbers look: from the current financial year while it has given no number, otherwise from the next.
+     */
+    format?: NumberFormatRequest | null;
+    /**
+     * Running number the current financial year starts at, which changes only while the year has given no number; absent to keep it.
+     */
+    nextNumber?: number | null;
+    /**
+     * Version of the numbering the change was made from, as the API last returned it.
+     */
+    version?: string | null;
+}
 export type ChangeOperation = (typeof ChangeOperationObject)[keyof typeof ChangeOperationObject];
 export interface ChangePersonStatusRequest extends AdditionalDataHolder, Parsable {
     /**
@@ -220,6 +234,15 @@ export function createAttachmentResponseFromDiscriminatorValue(parseNode: ParseN
 // @ts-ignore
 export function createChangedValueResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoChangedValueResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ChangeNumberSeriesRequest}
+ */
+// @ts-ignore
+export function createChangeNumberSeriesRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoChangeNumberSeriesRequest;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -591,6 +614,51 @@ export function createJobScheduleResponseFromDiscriminatorValue(parseNode: Parse
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {NumberedDocumentResponse}
+ */
+// @ts-ignore
+export function createNumberedDocumentResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoNumberedDocumentResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {NumberFormatRequest}
+ */
+// @ts-ignore
+export function createNumberFormatRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoNumberFormatRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {NumberFormatResponse}
+ */
+// @ts-ignore
+export function createNumberFormatResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoNumberFormatResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {NumberSeriesResponse}
+ */
+// @ts-ignore
+export function createNumberSeriesResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoNumberSeriesResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {NumberSeriesYearResponse}
+ */
+// @ts-ignore
+export function createNumberSeriesYearResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoNumberSeriesYearResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {OrgChartPersonResponse}
  */
 // @ts-ignore
@@ -861,11 +929,29 @@ export function createRegisterPersonRequestFromDiscriminatorValue(parseNode: Par
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {SerialNumberRuleResponse}
+ */
+// @ts-ignore
+export function createSerialNumberRuleResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoSerialNumberRuleResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {SessionResponse}
  */
 // @ts-ignore
 export function createSessionResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoSessionResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {SetUpNumberSeriesRequest}
+ */
+// @ts-ignore
+export function createSetUpNumberSeriesRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoSetUpNumberSeriesRequest;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -1067,6 +1153,19 @@ export function deserializeIntoChangedValueResponse(changedValueResponse: Partia
         "kind": n => { changedValueResponse.kind = n.getEnumValue<ChangeValueKind>(ChangeValueKindObject); },
         "property": n => { changedValueResponse.property = n.getStringValue(); },
         "reference": n => { changedValueResponse.reference = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ChangeNumberSeriesRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoChangeNumberSeriesRequest(changeNumberSeriesRequest: Partial<ChangeNumberSeriesRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "format": n => { changeNumberSeriesRequest.format = n.getObjectValue<NumberFormatRequest>(createNumberFormatRequestFromDiscriminatorValue); },
+        "nextNumber": n => { changeNumberSeriesRequest.nextNumber = n.getNumberValue(); },
+        "version": n => { changeNumberSeriesRequest.version = n.getStringValue(); },
     }
 }
 /**
@@ -1614,6 +1713,85 @@ export function deserializeIntoJobScheduleResponse(jobScheduleResponse: Partial<
 }
 /**
  * The deserialization information for the current model
+ * @param NumberedDocumentResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoNumberedDocumentResponse(numberedDocumentResponse: Partial<NumberedDocumentResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "currentYear": n => { numberedDocumentResponse.currentYear = n.getStringValue(); },
+        "description": n => { numberedDocumentResponse.description = n.getStringValue(); },
+        "documentType": n => { numberedDocumentResponse.documentType = n.getStringValue(); },
+        "rule": n => { numberedDocumentResponse.rule = n.getObjectValue<SerialNumberRuleResponse>(createSerialNumberRuleResponseFromDiscriminatorValue); },
+        "series": n => { numberedDocumentResponse.series = n.getObjectValue<NumberSeriesResponse>(createNumberSeriesResponseFromDiscriminatorValue); },
+        "title": n => { numberedDocumentResponse.title = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param NumberFormatRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoNumberFormatRequest(numberFormatRequest: Partial<NumberFormatRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "digits": n => { numberFormatRequest.digits = n.getNumberValue(); },
+        "prefix": n => { numberFormatRequest.prefix = n.getStringValue(); },
+        "separator": n => { numberFormatRequest.separator = n.getStringValue(); },
+        "year": n => { numberFormatRequest.year = n.getEnumValue<NumberYearStyle>(NumberYearStyleObject); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param NumberFormatResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoNumberFormatResponse(numberFormatResponse: Partial<NumberFormatResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "digits": n => { numberFormatResponse.digits = n.getNumberValue(); },
+        "prefix": n => { numberFormatResponse.prefix = n.getStringValue(); },
+        "separator": n => { numberFormatResponse.separator = n.getStringValue(); },
+        "year": n => { numberFormatResponse.year = n.getEnumValue<NumberYearStyle>(NumberYearStyleObject); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param NumberSeriesResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoNumberSeriesResponse(numberSeriesResponse: Partial<NumberSeriesResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "format": n => { numberSeriesResponse.format = n.getObjectValue<NumberFormatResponse>(createNumberFormatResponseFromDiscriminatorValue); },
+        "id": n => { numberSeriesResponse.id = n.getGuidValue(); },
+        "version": n => { numberSeriesResponse.version = n.getStringValue(); },
+        "years": n => { numberSeriesResponse.years = n.getCollectionOfObjectValues<NumberSeriesYearResponse>(createNumberSeriesYearResponseFromDiscriminatorValue); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param NumberSeriesYearResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoNumberSeriesYearResponse(numberSeriesYearResponse: Partial<NumberSeriesYearResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "firstNumber": n => { numberSeriesYearResponse.firstNumber = n.getNumberValue(); },
+        "firstText": n => { numberSeriesYearResponse.firstText = n.getStringValue(); },
+        "format": n => { numberSeriesYearResponse.format = n.getObjectValue<NumberFormatResponse>(createNumberFormatResponseFromDiscriminatorValue); },
+        "inUse": n => { numberSeriesYearResponse.inUse = n.getBooleanValue(); },
+        "lastIssuedText": n => { numberSeriesYearResponse.lastIssuedText = n.getStringValue(); },
+        "lastNumber": n => { numberSeriesYearResponse.lastNumber = n.getNumberValue(); },
+        "lastText": n => { numberSeriesYearResponse.lastText = n.getStringValue(); },
+        "maxLength": n => { numberSeriesYearResponse.maxLength = n.getNumberValue(); },
+        "nextNumber": n => { numberSeriesYearResponse.nextNumber = n.getNumberValue(); },
+        "nextText": n => { numberSeriesYearResponse.nextText = n.getStringValue(); },
+        "year": n => { numberSeriesYearResponse.year = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param OrgChartPersonResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -2087,6 +2265,18 @@ export function deserializeIntoRegisterPersonRequest(registerPersonRequest: Part
 }
 /**
  * The deserialization information for the current model
+ * @param SerialNumberRuleResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoSerialNumberRuleResponse(serialNumberRuleResponse: Partial<SerialNumberRuleResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "maxLength": n => { serialNumberRuleResponse.maxLength = n.getNumberValue(); },
+        "specialCharacters": n => { serialNumberRuleResponse.specialCharacters = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param SessionResponse The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -2095,6 +2285,19 @@ export function deserializeIntoSessionResponse(sessionResponse: Partial<SessionR
     return {
         "expiresAt": n => { sessionResponse.expiresAt = n.getDateValue(); },
         "lifetimeEndsAt": n => { sessionResponse.lifetimeEndsAt = n.getDateValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param SetUpNumberSeriesRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoSetUpNumberSeriesRequest(setUpNumberSeriesRequest: Partial<SetUpNumberSeriesRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "documentType": n => { setUpNumberSeriesRequest.documentType = n.getStringValue(); },
+        "format": n => { setUpNumberSeriesRequest.format = n.getObjectValue<NumberFormatRequest>(createNumberFormatRequestFromDiscriminatorValue); },
+        "nextNumber": n => { setUpNumberSeriesRequest.nextNumber = n.getNumberValue(); },
     }
 }
 /**
@@ -2708,6 +2911,133 @@ export interface JobScheduleResponse extends AdditionalDataHolder, Parsable {
      */
     problem?: string | null;
 }
+export interface NumberedDocumentResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The currentYear property
+     */
+    currentYear?: string | null;
+    /**
+     * The description property
+     */
+    description?: string | null;
+    /**
+     * The documentType property
+     */
+    documentType?: string | null;
+    /**
+     * The rule property
+     */
+    rule?: SerialNumberRuleResponse | null;
+    /**
+     * The series property
+     */
+    series?: NumberSeriesResponse | null;
+    /**
+     * The title property
+     */
+    title?: string | null;
+}
+export interface NumberFormatRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Fewest digits of the running number, which zeros fill in front, from 1 to 18.
+     */
+    digits?: number | null;
+    /**
+     * Fixed text every number begins with: capital letters, digits and the special characters the rule allows, such as INV/; empty for none.
+     */
+    prefix?: string | null;
+    /**
+     * Character between the financial year and the running number, such as /; empty for none, and empty when the year is not shown.
+     */
+    separator?: string | null;
+    /**
+     * How the financial year follows the fixed text: none, full (2026-27) or abbreviated (26-27).
+     */
+    year?: NumberYearStyle | null;
+}
+export interface NumberFormatResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The digits property
+     */
+    digits?: number | null;
+    /**
+     * The prefix property
+     */
+    prefix?: string | null;
+    /**
+     * The separator property
+     */
+    separator?: string | null;
+    /**
+     * The year property
+     */
+    year?: NumberYearStyle | null;
+}
+export interface NumberSeriesResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The format property
+     */
+    format?: NumberFormatResponse | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The version property
+     */
+    version?: string | null;
+    /**
+     * The years property
+     */
+    years?: NumberSeriesYearResponse[] | null;
+}
+export interface NumberSeriesYearResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The firstNumber property
+     */
+    firstNumber?: number | null;
+    /**
+     * The firstText property
+     */
+    firstText?: string | null;
+    /**
+     * The format property
+     */
+    format?: NumberFormatResponse | null;
+    /**
+     * The inUse property
+     */
+    inUse?: boolean | null;
+    /**
+     * The lastIssuedText property
+     */
+    lastIssuedText?: string | null;
+    /**
+     * The lastNumber property
+     */
+    lastNumber?: number | null;
+    /**
+     * The lastText property
+     */
+    lastText?: string | null;
+    /**
+     * The maxLength property
+     */
+    maxLength?: number | null;
+    /**
+     * The nextNumber property
+     */
+    nextNumber?: number | null;
+    /**
+     * The nextText property
+     */
+    nextText?: string | null;
+    /**
+     * The year property
+     */
+    year?: string | null;
+}
+export type NumberYearStyle = (typeof NumberYearStyleObject)[keyof typeof NumberYearStyleObject];
 export interface OrgChartPersonResponse extends AdditionalDataHolder, Parsable {
     /**
      * The departmentId property
@@ -3520,6 +3850,20 @@ export function serializeChangedValueResponse(writer: SerializationWriter, chang
 }
 /**
  * Serializes information the current object
+ * @param ChangeNumberSeriesRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeChangeNumberSeriesRequest(writer: SerializationWriter, changeNumberSeriesRequest: Partial<ChangeNumberSeriesRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!changeNumberSeriesRequest || isSerializingDerivedType) { return; }
+    writer.writeObjectValue<NumberFormatRequest>("format", changeNumberSeriesRequest.format, serializeNumberFormatRequest);
+    writer.writeNumberValue("nextNumber", changeNumberSeriesRequest.nextNumber);
+    writer.writeStringValue("version", changeNumberSeriesRequest.version);
+    writer.writeAdditionalData(changeNumberSeriesRequest.additionalData);
+}
+/**
+ * Serializes information the current object
  * @param ChangePersonStatusRequest The instance to serialize from.
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param writer Serialization writer to use to serialize this model
@@ -4105,6 +4449,90 @@ export function serializeJobScheduleResponse(writer: SerializationWriter, jobSch
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param NumberedDocumentResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeNumberedDocumentResponse(writer: SerializationWriter, numberedDocumentResponse: Partial<NumberedDocumentResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!numberedDocumentResponse || isSerializingDerivedType) { return; }
+    writer.writeStringValue("currentYear", numberedDocumentResponse.currentYear);
+    writer.writeStringValue("description", numberedDocumentResponse.description);
+    writer.writeStringValue("documentType", numberedDocumentResponse.documentType);
+    writer.writeObjectValue<SerialNumberRuleResponse>("rule", numberedDocumentResponse.rule, serializeSerialNumberRuleResponse);
+    writer.writeObjectValue<NumberSeriesResponse>("series", numberedDocumentResponse.series, serializeNumberSeriesResponse);
+    writer.writeStringValue("title", numberedDocumentResponse.title);
+    writer.writeAdditionalData(numberedDocumentResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param NumberFormatRequest The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeNumberFormatRequest(writer: SerializationWriter, numberFormatRequest: Partial<NumberFormatRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!numberFormatRequest || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("digits", numberFormatRequest.digits);
+    writer.writeStringValue("prefix", numberFormatRequest.prefix);
+    writer.writeStringValue("separator", numberFormatRequest.separator);
+    writer.writeEnumValue<NumberYearStyle>("year", numberFormatRequest.year);
+    writer.writeAdditionalData(numberFormatRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param NumberFormatResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeNumberFormatResponse(writer: SerializationWriter, numberFormatResponse: Partial<NumberFormatResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!numberFormatResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("digits", numberFormatResponse.digits);
+    writer.writeStringValue("prefix", numberFormatResponse.prefix);
+    writer.writeStringValue("separator", numberFormatResponse.separator);
+    writer.writeEnumValue<NumberYearStyle>("year", numberFormatResponse.year);
+    writer.writeAdditionalData(numberFormatResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param NumberSeriesResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeNumberSeriesResponse(writer: SerializationWriter, numberSeriesResponse: Partial<NumberSeriesResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!numberSeriesResponse || isSerializingDerivedType) { return; }
+    writer.writeObjectValue<NumberFormatResponse>("format", numberSeriesResponse.format, serializeNumberFormatResponse);
+    writer.writeGuidValue("id", numberSeriesResponse.id);
+    writer.writeStringValue("version", numberSeriesResponse.version);
+    writer.writeCollectionOfObjectValues<NumberSeriesYearResponse>("years", numberSeriesResponse.years, serializeNumberSeriesYearResponse);
+    writer.writeAdditionalData(numberSeriesResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param NumberSeriesYearResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeNumberSeriesYearResponse(writer: SerializationWriter, numberSeriesYearResponse: Partial<NumberSeriesYearResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!numberSeriesYearResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("firstNumber", numberSeriesYearResponse.firstNumber);
+    writer.writeStringValue("firstText", numberSeriesYearResponse.firstText);
+    writer.writeObjectValue<NumberFormatResponse>("format", numberSeriesYearResponse.format, serializeNumberFormatResponse);
+    writer.writeBooleanValue("inUse", numberSeriesYearResponse.inUse);
+    writer.writeStringValue("lastIssuedText", numberSeriesYearResponse.lastIssuedText);
+    writer.writeNumberValue("lastNumber", numberSeriesYearResponse.lastNumber);
+    writer.writeStringValue("lastText", numberSeriesYearResponse.lastText);
+    writer.writeNumberValue("maxLength", numberSeriesYearResponse.maxLength);
+    writer.writeNumberValue("nextNumber", numberSeriesYearResponse.nextNumber);
+    writer.writeStringValue("nextText", numberSeriesYearResponse.nextText);
+    writer.writeStringValue("year", numberSeriesYearResponse.year);
+    writer.writeAdditionalData(numberSeriesYearResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param OrgChartPersonResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -4613,6 +5041,19 @@ export function serializeRegisterPersonRequest(writer: SerializationWriter, regi
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param SerialNumberRuleResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeSerialNumberRuleResponse(writer: SerializationWriter, serialNumberRuleResponse: Partial<SerialNumberRuleResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!serialNumberRuleResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("maxLength", serialNumberRuleResponse.maxLength);
+    writer.writeStringValue("specialCharacters", serialNumberRuleResponse.specialCharacters);
+    writer.writeAdditionalData(serialNumberRuleResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param SessionResponse The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -4622,6 +5063,20 @@ export function serializeSessionResponse(writer: SerializationWriter, sessionRes
     writer.writeDateValue("expiresAt", sessionResponse.expiresAt);
     writer.writeDateValue("lifetimeEndsAt", sessionResponse.lifetimeEndsAt);
     writer.writeAdditionalData(sessionResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param SetUpNumberSeriesRequest The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeSetUpNumberSeriesRequest(writer: SerializationWriter, setUpNumberSeriesRequest: Partial<SetUpNumberSeriesRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!setUpNumberSeriesRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("documentType", setUpNumberSeriesRequest.documentType);
+    writer.writeObjectValue<NumberFormatRequest>("format", setUpNumberSeriesRequest.format, serializeNumberFormatRequest);
+    writer.writeNumberValue("nextNumber", setUpNumberSeriesRequest.nextNumber);
+    writer.writeAdditionalData(setUpNumberSeriesRequest.additionalData);
 }
 /**
  * Serializes information the current object
@@ -4750,6 +5205,16 @@ export function serializeUploadPolicyResponse(writer: SerializationWriter, uploa
     writer.writeNumberValue("maxSizeBytes", uploadPolicyResponse.maxSizeBytes);
     writer.writeAdditionalData(uploadPolicyResponse.additionalData);
 }
+export interface SerialNumberRuleResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The maxLength property
+     */
+    maxLength?: number | null;
+    /**
+     * The specialCharacters property
+     */
+    specialCharacters?: string | null;
+}
 export interface SessionResponse extends AdditionalDataHolder, Parsable {
     /**
      * The expiresAt property
@@ -4759,6 +5224,20 @@ export interface SessionResponse extends AdditionalDataHolder, Parsable {
      * The lifetimeEndsAt property
      */
     lifetimeEndsAt?: Date | null;
+}
+export interface SetUpNumberSeriesRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Key of the kind of document to number, as the list of numbered documents gives it.
+     */
+    documentType?: string | null;
+    /**
+     * How the numbers look.
+     */
+    format?: NumberFormatRequest | null;
+    /**
+     * Running number the current financial year starts at, from 1 to the last the format can give: 1, or the number after the last one given outside the ERP this year.
+     */
+    nextNumber?: number | null;
 }
 export interface StartupResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -4955,6 +5434,11 @@ export const JobRunStatusObject = {
     DeadLettered: "deadLettered",
     Cancelled: "cancelled",
 } as const;
+export const NumberYearStyleObject = {
+    None: "none",
+    Full: "full",
+    Abbreviated: "abbreviated",
+} as const;
 export const ParameterAsOfObject = {
     SupplyDate: "supplyDate",
     TaxPeriodStart: "taxPeriodStart",
@@ -5009,6 +5493,8 @@ export const PermissionObject = {
     PlatformJobsRunsCancel: "platform.jobs.runs.cancel",
     PlatformJobsRunsRead: "platform.jobs.runs.read",
     PlatformJobsRunsRerun: "platform.jobs.runs.rerun",
+    PlatformNumberingSeriesChange: "platform.numbering.series.change",
+    PlatformNumberingSeriesRead: "platform.numbering.series.read",
     PlatformReferenceDataExchangeRatesCorrect: "platform.reference-data.exchange-rates.correct",
     PlatformReferenceDataExchangeRatesRead: "platform.reference-data.exchange-rates.read",
     PlatformReferenceDataExchangeRatesRecord: "platform.reference-data.exchange-rates.record",

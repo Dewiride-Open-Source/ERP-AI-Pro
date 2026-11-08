@@ -1,4 +1,5 @@
 using System.Globalization;
+using Dewiride.Erp.BuildingBlocks.Application.Actors;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Seeding;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Endpoints.Responses;
@@ -9,7 +10,8 @@ namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.P
 
 // The answer for every version's date of every seed file is held to the file itself: the entries in force that day, and what the
 // version added, changed (each entry as it was the day before and as it is from the version's date) and removed, worked out here
-// from the file's rows by key.
+// from the file's rows by key. Each case reads as an administrator of its own, because the rate limiter counts each person's
+// requests and the collection's tests together read more than one person may in a minute.
 [Collection(StatutoryRows.Name)]
 public sealed class ParameterSetContentTests(ErpApiFactory factory)
 {
@@ -35,7 +37,9 @@ public sealed class ParameterSetContentTests(ErpApiFactory factory)
         var file = SeedFileSets.Of(key);
         var starting = file.Rows.Where(row => row.From == date).ToList();
         var ending = file.Rows.Where(row => row.Until == date.AddDays(-1)).ToList();
-        using var client = factory.CreateClient().AsUser(TestUsers.Administrator);
+        var reader = new TestUser(Guid.CreateVersion7(), "Content reader", $"reader.{Guid.CreateVersion7():N}@example.com", [AppRoles.User, AppRoles.Administrator]);
+        factory.Services.GetRequiredService<TestTokenEndpoint>().Admit(reader);
+        using var client = factory.CreateClient().AsUser(reader);
 
         var shown = (await ParameterSetsApi.GetAsync(client, key, day)).Shown;
 

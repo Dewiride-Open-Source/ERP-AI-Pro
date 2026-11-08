@@ -1,0 +1,125 @@
+{
+  "key": "gst.document-serial-numbers",
+  "title": "Serial numbers of GST documents",
+  "description": "The most characters, and the characters besides letters and numerals, that the Central Goods and Services Tax Rules, 2017 allow in the serial number of a tax invoice, a bill of supply, a receipt, refund or payment voucher, a revised tax invoice and a credit or debit note, for financial years from 2026-27, each with its clause in the rule's words; every such number is unique for its financial year.",
+  "basis": "law",
+  "asOf": "financialYearStart",
+  "columns": [
+    {
+      "name": "rule",
+      "title": "Rule",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "document",
+      "title": "Document",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "maxLength",
+      "title": "Most characters",
+      "kind": "integer",
+      "minimum": 1
+    },
+    {
+      "name": "specialCharacters",
+      "title": "Characters besides letters and numerals",
+      "kind": "text"
+    },
+    {
+      "name": "words",
+      "title": "In the rule's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Notification No. 10/2017-Central Tax, 28 June 2017, G.S.R. 663(E), Central Goods and Services Tax (Second Amendment) Rules, 2017, inserting rules 46 to 53 from 1 July 2017",
+        "Notification No. 3/2019-Central Tax, 29 January 2019, Central Goods and Services Tax (Amendment) Rules, 2019, paragraph 10(d), inserting rule 53(1A) from 1 February 2019"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 46(b), inserted by Notification No. 10/2017-Central Tax",
+      "cells": {
+        "rule": "46(b)",
+        "document": "Tax invoice",
+        "maxLength": 16,
+        "specialCharacters": "-/",
+        "words": "a consecutive serial number not exceeding sixteen characters, in one or multiple series, containing alphabets or numerals or special characters- hyphen or dash and slash symbolised as \"-\" and \"/\" respectively, and any combination thereof, unique for a financial year"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 49(b), inserted by Notification No. 10/2017-Central Tax",
+      "cells": {
+        "rule": "49(b)",
+        "document": "Bill of supply",
+        "maxLength": 16,
+        "specialCharacters": "-/",
+        "words": "a consecutive serial number not exceeding sixteen characters, in one or multiple series, containing alphabets or numerals or special characters - hyphen or dash and slash symbolised as \"-\" and \"/\" respectively, and any combination thereof, unique for a financial year"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 50(b), inserted by Notification No. 10/2017-Central Tax",
+      "cells": {
+        "rule": "50(b)",
+        "document": "Receipt voucher",
+        "maxLength": 16,
+        "specialCharacters": "-/",
+        "words": "a consecutive serial number not exceeding sixteen characters, in one or multiple series, containing alphabets or numerals or special characters- hyphen or dash and slash symbolised as \"-\" and \"/\" respectively, and any combination thereof, unique for a financial year"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 51(b), inserted by Notification No. 10/2017-Central Tax",
+      "cells": {
+        "rule": "51(b)",
+        "document": "Refund voucher",
+        "maxLength": 16,
+        "specialCharacters": "-/",
+        "words": "a consecutive serial number not exceeding sixteen characters, in one or multiple series, containing alphabets or numerals or special characters- hyphen or dash and slash symbolised as \"-\" and \"/\" respectively, and any combination thereof, unique for a financial year"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 52(b), inserted by Notification No. 10/2017-Central Tax",
+      "cells": {
+        "rule": "52(b)",
+        "document": "Payment voucher",
+        "maxLength": 16,
+        "specialCharacters": "-/",
+        "words": "a consecutive serial number not exceeding sixteen characters, in one or multiple series, containing alphabets or numerals or special characters- hyphen or dash and slash symbolised as \"-\" and \"/\" respectively, and any combination thereof, unique for a financial year"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 53(1)(d), inserted by Notification No. 10/2017-Central Tax",
+      "cells": {
+        "rule": "53(1)(d)",
+        "document": "Revised tax invoice",
+        "maxLength": 16,
+        "specialCharacters": "-/",
+        "words": "a consecutive serial number not exceeding sixteen characters, in one or multiple series, containing alphabets or numerals or special characters-hyphen or dash and slash symbolised as \"-\" and \"/\" respectively, and any combination thereof, unique for a financial year"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Central Goods and Services Tax Rules, 2017, rule 53(1A)(c), inserted by Notification No. 3/2019-Central Tax, paragraph 10(d)",
+      "cells": {
+        "rule": "53(1A)(c)",
+        "document": "Credit or debit note",
+        "maxLength": 16,
+        "specialCharacters": "-/",
+        "words": "a consecutive serial number not exceeding sixteen characters, in one or multiple series, containing alphabets or numerals or special characters-hyphen or dash and slash symbolised as \"-\" and \"/\" respectively, and any combination thereof, unique for a financial year"
+      }
+    }
+  ]
+}

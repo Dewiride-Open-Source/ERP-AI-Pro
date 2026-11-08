@@ -10,6 +10,8 @@ import { FeaturesRequestBuilderRequestsMetadata, type FeaturesRequestBuilder } f
 // @ts-ignore
 import { JobsRequestBuilderNavigationMetadata, JobsRequestBuilderRequestsMetadata, type JobsRequestBuilder } from './jobs/index.js';
 // @ts-ignore
+import { NumberingRequestBuilderNavigationMetadata, type NumberingRequestBuilder } from './numbering/index.js';
+// @ts-ignore
 import { ReferenceDataRequestBuilderNavigationMetadata, type ReferenceDataRequestBuilder } from './referenceData/index.js';
 // @ts-ignore
 import { SystemInfoRequestBuilderNavigationMetadata, SystemInfoRequestBuilderRequestsMetadata, type SystemInfoRequestBuilder } from './systemInfo/index.js';
@@ -36,6 +38,10 @@ export interface PlatformRequestBuilder extends BaseRequestBuilder<PlatformReque
      * The jobs property
      */
     get jobs(): JobsRequestBuilder;
+    /**
+     * The numbering property
+     */
+    get numbering(): NumberingRequestBuilder;
     /**
      * The referenceData property
      */
@@ -66,6 +72,9 @@ export const PlatformRequestBuilderNavigationMetadata: Record<Exclude<keyof Plat
     jobs: {
         requestsMetadata: JobsRequestBuilderRequestsMetadata,
         navigationMetadata: JobsRequestBuilderNavigationMetadata,
+    },
+    numbering: {
+        navigationMetadata: NumberingRequestBuilderNavigationMetadata,
     },
     referenceData: {
         navigationMetadata: ReferenceDataRequestBuilderNavigationMetadata,
