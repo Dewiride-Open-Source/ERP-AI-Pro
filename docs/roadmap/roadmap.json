@@ -1448,7 +1448,7 @@
           "id": "business-building-blocks-statutory-datasets-direct-tax-and-labour",
           "title": "Statutory datasets: direct tax and labour",
           "scope": "Seed and golden-test TDS sections with the ITA-1961 to ITA-2025 crosswalk, rates, per-FY thresholds, no/inoperative-PAN and 206AB non-filer rates, company income-tax rates and surcharge, advance-tax schedule, professional-tax State slabs, PF/ESI ceilings and rates (including the pending PF ceiling revision), LWF, gratuity and bonus parameters, and Companies Act Schedule II useful lives with income-tax block rates.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [
@@ -1461,6 +1461,7 @@
           "tags": [],
           "dependsOn": [],
           "startedOn": "2026-11-08",
+          "completedOn": "2026-11-08",
           "notes": "ADR-0064: the store reads the as-of meanings deductionDate (the credit or payment at which the Income-tax Act, 2025 requires the deduction) and financialYearStart (a version only from 1 April) and the cell kind date; 22 sets from 1 April 2026 hold the TDS law of the Income-tax Act, 2025 with the Finance Act, 2026's rates in force, surcharge and cess on deductions and its section 3(8), the ERP's readings of Part II, the ERP's crosswalk of 52 pairs from the 1961 Act, a domestic company's tax, surcharge, cess, minimum alternate tax and advance tax, income-tax depreciation and Schedule II's useful lives and limits, each typed in Contracts and golden-tested, the Finance Act's one-year rows ending on 31 March 2027; the statutory parameter pages list the sets as a searched list and show a set of more than six columns as cards. Not brought, though the store's predecessor named them: amounts in paise, composite keys, a day-and-month kind and paging of a set's entries in the API. The scope's labour datasets became business-building-blocks-statutory-datasets-labour and the personal income-tax rates business-building-blocks-statutory-datasets-personal-income-tax (owner decisions of 2026-11-08); the 2025 Act has no counterpart of the 1961 Act's section 206AB. Unread, so not seeded: the Income-tax Rules amendment G.S.R. 241(E) of 31 March 2026; G.S.R. 237(E) of 31 March 2014, which set continuous process plant's life; the Companies (Amendment) Acts of 2015 to 2020 as they may touch Schedule II; the 1961 side of section 195(6), 197A, 206AA and the first proviso to section 194N; and the Part II item of a benefit, perquisite or virtual digital asset paid in kind under section 3(8)."
         },
         {
