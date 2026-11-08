@@ -44,6 +44,8 @@ test("recordTypeLabel_EveryChangeKeyTheHistoryRecords_HasAName", () => {
   assert.equal(recordTypeLabel("identity.users.positions"), "Move");
   assert.equal(recordTypeLabel("identity.users.themes"), "Colour theme");
   assert.equal(recordTypeLabel("platform.attachments.files"), "File");
+  assert.equal(recordTypeLabel("platform.numbering.series"), "Document numbering");
+  assert.equal(recordTypeLabel("platform.numbering.series-years"), "Numbering year");
   assert.equal(recordTypeLabel("compliance.statutory-parameters.parameter-sets"), "Parameter set");
   assert.equal(
     recordTypeLabel("compliance.statutory-parameters.parameter-versions"),

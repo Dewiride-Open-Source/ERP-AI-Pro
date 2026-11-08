@@ -50,6 +50,8 @@ const referenceDataMarkers = [
 
 const parameterSetVersionsMarker = "parameter-set-versions";
 
+const numberingMarker = "numbering-preview";
+
 const otherModuleMarkers = [
   "supplier-example-form",
   "motion-demo-preference",
@@ -60,6 +62,7 @@ const otherModuleMarkers = [
   ...organisationMarkers,
   jobRunsMarker,
   parameterSetVersionsMarker,
+  numberingMarker,
 ];
 
 function otherReferenceDataMarkers(...own: readonly string[]): string[] {
@@ -73,6 +76,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "motion-demo-preference",
       "overlay-hover-card",
       "upload-progress",
@@ -91,6 +95,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "supplier-example-form",
       "motion-demo-preference",
       "upload-progress",
@@ -108,6 +113,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "supplier-example-form",
       "motion-demo-preference",
       "upload-progress",
@@ -125,6 +131,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "supplier-example-form",
       "upload-progress",
       "system-info-refresh",
@@ -142,6 +149,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "upload-progress",
       "Delete this attachment?",
       "supplier-example-form",
@@ -158,6 +166,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "system-info-refresh",
       "supplier-example-form",
       "motion-demo-preference",
@@ -175,6 +184,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "upload-progress",
       "Delete this attachment?",
       "system-info-refresh",
@@ -193,6 +203,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "upload-progress",
       "Delete this attachment?",
       "system-info-refresh",
@@ -219,6 +230,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       jobRunsMarker,
       "audit-export",
       "No people match these filters.",
@@ -238,6 +250,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "upload-progress",
       "Delete this attachment?",
       "No files match these filters.",
@@ -258,6 +271,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       "audit-export",
       "No people match these filters.",
       "upload-progress",
@@ -278,6 +292,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       designationsMarker,
       orgChartMarker,
       "record-move",
@@ -297,6 +312,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       departmentsMarker,
       orgChartMarker,
       "record-move",
@@ -316,6 +332,7 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
+      numberingMarker,
       departmentsMarker,
       designationsMarker,
       "record-move",
@@ -356,6 +373,14 @@ const routes: readonly WebRoute[] = [
     path: "/design/reference-pickers",
     ownMarkers: [referencePickersMarker],
     foreignMarkers: [...otherReferenceDataMarkers(referencePickersMarker), ...otherModuleMarkers],
+  },
+  {
+    path: "/platform/numbering",
+    ownMarkers: [numberingMarker],
+    foreignMarkers: [
+      ...referenceDataMarkers,
+      ...otherModuleMarkers.filter((marker) => marker !== numberingMarker),
+    ],
   },
   // The list of sets ships no client code of its own, only the shared searched list's, so only what it must leave out is
   // looked for.

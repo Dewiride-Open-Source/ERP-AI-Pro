@@ -65,6 +65,13 @@ export const registeredNavigation: readonly RegisteredNavigation[] = [
     employees: false,
   },
   {
+    area: "Platform",
+    title: "Document numbering",
+    href: "/platform/numbering",
+    description: "Set how invoices and other documents are numbered in each financial year.",
+    employees: false,
+  },
+  {
     area: "Organisation",
     title: "People",
     href: "/identity/users",

@@ -14,6 +14,8 @@ export const changeKeys = [
   "platform.reference-data.countries",
   "platform.reference-data.indian-states",
   "platform.reference-data.exchange-rates",
+  "platform.numbering.series",
+  "platform.numbering.series-years",
   "compliance.statutory-parameters.parameter-sets",
   "compliance.statutory-parameters.parameter-versions",
   "compliance.statutory-parameters.parameter-rows",
