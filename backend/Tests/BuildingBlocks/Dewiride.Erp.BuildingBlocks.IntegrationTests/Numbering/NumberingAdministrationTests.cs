@@ -168,6 +168,32 @@ public sealed class NumberingAdministrationTests
     }
 
     [Fact]
+    public async Task Change_OfTheNextNumberAloneFromAVersionAChangeReplaced_IsRefused()
+    {
+        await using var database = await SetUpAsync();
+        var details = await ListedAsync(database);
+        var first = await database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series!.Id, Version(details), Format, 5, token));
+
+        var stale = await database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series!.Id, Version(details), Format, 9, token));
+
+        Assert.NotEqual(details.Series!.Version, first.Value.Series!.Version);
+        Assert.Equal((EfUnitOfWork.ConcurrencyConflictCode, ErrorKind.Conflict), (stale.Error!.Code, stale.Error.Kind));
+        Assert.Equal(5, Assert.Single((await ListedAsync(database)).Series!.Years).NextNumber);
+    }
+
+    [Fact]
+    public async Task Change_KeepingTheFormatAndNextNumber_WritesNoChangeRecord()
+    {
+        await using var database = await SetUpAsync();
+        var details = await ListedAsync(database);
+
+        var unchanged = await database.AdministerAsync((administration, token) => administration.ChangeAsync(details.Series!.Id, Version(details), Format, null, token));
+
+        Assert.True(unchanged.IsSuccess);
+        Assert.Equal([ChangeOperation.Created], (await database.ChangeRecordsOfAsync(details.Series!.Id.Value)).Select(record => record.Operation));
+    }
+
+    [Fact]
     public async Task Change_AnIdNoNumberingHas_IsNotFound()
     {
         await using var database = await NumberingDatabase.CreateAsync();

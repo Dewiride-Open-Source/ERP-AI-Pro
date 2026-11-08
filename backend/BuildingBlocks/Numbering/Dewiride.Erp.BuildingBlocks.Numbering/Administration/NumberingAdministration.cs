@@ -14,7 +14,8 @@ namespace Dewiride.Erp.BuildingBlocks.Numbering.Administration;
 
 // Each change runs in a unit of work of its own on the numbering's context and takes the lock a number takes, so it never
 // interleaves with the numbering of a document of that kind. A numbering is read before its lock is taken, to learn its kind, so
-// the version the change was made from becomes the original rowversion and saving refuses one that changed meanwhile.
+// the version the change was made from becomes the original rowversion, and every change writes the numbering's row, even one
+// that moves only the year's next number, so its version moves with every change and saving refuses one made from an older one.
 internal sealed class NumberingAdministration(
     NumberingDbContext context,
     NumberedDocumentCatalog catalog,
@@ -121,6 +122,7 @@ internal sealed class NumberingAdministration(
                 }
 
                 context.Entry(series).Property(s => s.RowVersion).OriginalValue = version;
+                context.Entry(series).State = EntityState.Modified;
                 var rule = await rules.RuleForAsync(document.SerialNumberRule, current, token).ConfigureAwait(false);
                 if (rule is null)
                 {
