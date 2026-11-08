@@ -1488,6 +1488,18 @@
           "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the rates of Part III of the First Schedule to the Finance Act, 2026 are the rates in force for the deductions of section 392 other than sub-section (7) and of section 393(1) [Table: Sl. No. 8(iii)] (section 3(10)(ii) and (iii)) and for advance tax (section 3(10)(iv)); income-tax.tds-rates marks those entries as deducted at the rates in force, income-tax.tds-rates-in-force-readings reads none of them, and no set holds the rates. Owner decision of 2026-11-08: the personal rates come as their own small Community table before the salary-tax work, which depends on this item."
         },
         {
+          "id": "business-building-blocks-statutory-datasets-minimum-wages",
+          "title": "Statutory datasets: minimum wages",
+          "scope": "Seed and golden-test, from the law in force on 1 April 2026, the minimum rates of wages that the Central Government and each State Government fix or revise under the Code on Wages, 2019, by employment, skill level and area as each notification states them, with the variable dearness allowance each revision notifies and the floor wage the Central Government fixes.",
+          "status": "planned",
+          "edition": "community",
+          "editionConfirmedOn": "2026-11-08",
+          "acceptance": [],
+          "tags": [],
+          "dependsOn": [],
+          "notes": "Owner decision of 2026-11-08: minimum wages are a Community item of their own, before the payroll work, because the wage on which statutory bonus is calculated under section 26(2) of the Code on Wages, 2019 is the higher of the notified amount and the minimum wage."
+        },
+        {
           "id": "business-building-blocks-document-numbering-series",
           "title": "Document numbering series",
           "scope": "Provide configurable number series per document type and financial year (max 16 characters, unique per FY, prefix and reset rules) with gap-free concurrent allocation proven by a parallel integration test.",
@@ -2466,7 +2478,9 @@
           "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-statutory-datasets-labour"
+          ]
         },
         {
           "id": "finance-payroll-income-tax-on-salary",
@@ -2519,7 +2533,10 @@
           "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [
+            "business-building-blocks-statutory-datasets-labour",
+            "business-building-blocks-statutory-datasets-minimum-wages"
+          ]
         },
         {
           "id": "finance-payroll-web-structure-designer-and-run-wizard",
