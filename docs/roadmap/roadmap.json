@@ -1468,12 +1468,18 @@
           "id": "business-building-blocks-statutory-datasets-labour",
           "title": "Statutory datasets: labour",
           "scope": "Seed and golden-test, from the law in force on 1 April 2026, the provident fund (EPF, EPS and EDLI) and ESI contributions, wage ceilings and rates under the Code on Social Security, 2020 with its schemes and rules, the Codes' wage definition, professional-tax State slabs and exemptions, labour welfare fund contributions by State, and gratuity and bonus parameters under the Code on Social Security, 2020 and the Code on Wages, 2019.",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-11-08",
-          "acceptance": [],
+          "acceptance": [
+            "Every figure seeded is read in its instrument, from the law in force on 1 April 2026 with each change since: the provident fund's (EPF, EPS and EDLI) contribution rates, wage ceilings and charges; ESI's contribution rates, low-wage exemption, coverage limits and contribution periods; the wage definition of the Code on Social Security, 2020 and the Code on Wages, 2019; gratuity under the Code on Social Security, 2020; the bonus terms of the Code on Wages, 2019 with the wage limits of the Central Government and of every State that has notified them; and every State's professional-tax slabs and exemptions and labour welfare fund contributions and coverage.",
+            "Each set is a seed file with a typed Contracts record read through IStatutoryParameters.GetAsOfAsync, golden-tested value by value beside its instrument, with dated theories on the day each version starts and the day before.",
+            "Every State, figure or instrument the research could not read in its instrument is named in the item's note and not seeded, and no set records that a State levies no professional tax or keeps no welfare fund unless an official text says so.",
+            "The store reads what the labour sets need, amounts in paise and the dates they answer for among them, and refuses a malformed seed file; the statutory parameter pages show every new set, a State by its name beside its GST State code, in light and dark on desktop and mobile (Playwright)."
+          ],
           "tags": [],
           "dependsOn": [],
+          "startedOn": "2026-11-08",
           "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): each dataset is a seed file under ParameterSets/Persistence/Statutory/<area>/ with a typed Contracts record and its boundary and golden-value tests. Split from business-building-blocks-statutory-datasets-direct-tax-and-labour by the owner's decisions of 2026-11-08, which also start every dataset with the law in force on 1 April 2026. From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the store also has the cell kind date (yyyy-MM-dd, read as DateOnly) and the as-of meanings deductionDate and financialYearStart (a version only from 1 April) beside supplyDate and taxPeriodStart; a set whose entries hold more than six columns, the source included, shows them as cards, and the list of sets is searched and paged, ten a page. The store has no composite key, no amount in paise, no day-and-month kind and no paging of a set's entries in the API (the largest set holds 138 rows)."
         },
         {
