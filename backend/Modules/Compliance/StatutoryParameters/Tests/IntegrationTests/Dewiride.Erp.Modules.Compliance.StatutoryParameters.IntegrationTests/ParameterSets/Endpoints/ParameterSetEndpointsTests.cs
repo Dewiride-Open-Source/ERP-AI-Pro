@@ -17,6 +17,8 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
 
     private static readonly string[] SeededKeys =
     [
+        "companies.schedule-ii-limits",
+        "companies.schedule-ii-useful-lives",
         "gst.central-tax-rates",
         "gst.integrated-tax-rates",
         "gst.quarterly-return-states",
@@ -25,6 +27,26 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
         "gst.sac-codes",
         "gst.sac-rate-entries",
         "gst.union-territory-tax-rates",
+        "income-tax.advance-tax-instalments",
+        "income-tax.advance-tax-interest",
+        "income-tax.company-rates",
+        "income-tax.company-surcharge",
+        "income-tax.depreciation-allowances",
+        "income-tax.depreciation-notes",
+        "income-tax.depreciation-rates",
+        "income-tax.health-and-education-cess",
+        "income-tax.minimum-alternate-tax",
+        "income-tax.tds-crosswalk",
+        "income-tax.tds-declarations",
+        "income-tax.tds-entries",
+        "income-tax.tds-higher-rates",
+        "income-tax.tds-no-deduction-cases",
+        "income-tax.tds-rates",
+        "income-tax.tds-rates-in-force",
+        "income-tax.tds-rates-in-force-readings",
+        "income-tax.tds-surcharge-and-cess",
+        "income-tax.tds-terms",
+        "income-tax.tds-threshold-limits",
     ];
 
     [Theory]

@@ -70,7 +70,7 @@ internal sealed partial class ParameterSet : AggregateRoot<ParameterSetId>, IAud
 
         if (!Enum.IsDefined(asOf))
         {
-            throw new ArgumentOutOfRangeException(nameof(asOf), asOf, "A set answers for the date of a supply or the first day of a tax period.");
+            throw new ArgumentOutOfRangeException(nameof(asOf), asOf, "A set answers for one of the store's as-of dates.");
         }
 
         Title = ParameterText.Require(title, TitleMaxLength, $"The title of set {Key}");

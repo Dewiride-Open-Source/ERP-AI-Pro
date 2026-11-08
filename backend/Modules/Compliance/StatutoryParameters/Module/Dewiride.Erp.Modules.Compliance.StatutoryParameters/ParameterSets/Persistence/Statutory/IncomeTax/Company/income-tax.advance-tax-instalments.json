@@ -1,0 +1,178 @@
+{
+  "key": "income-tax.advance-tax-instalments",
+  "title": "Advance tax: liability and instalments",
+  "description": "When advance tax is payable during a financial year on the current income of the tax year, the share of it due by each instalment's date (cumulative, as reduced by what was paid before), the single instalment of an assessee who declares profits under section 58(2), and the payments that count as made in the financial year, each in the words of sections 403, 404 and 408 of the Income-tax Act, 2025, in force from 1 April 2026. A month is numbered within the tax year, April being 1, as the ERP numbers the periods of a financial year; where the Act says the whole amount, the share is 100%. The rows are standing law. The tax period is the tax year whose income it is, and the set answers for its first day.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "rule",
+      "title": "Rule",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Instalment or rule",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "payers",
+      "title": "Payers",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "general",
+          "title": "Every assessee liable to it, except under section 58(2)"
+        },
+        {
+          "value": "presumptive",
+          "title": "An assessee declaring profits under section 58(2)"
+        }
+      ]
+    },
+    {
+      "name": "dueDay",
+      "title": "Due on or before day",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1,
+      "maximum": 31
+    },
+    {
+      "name": "taxYearMonth",
+      "title": "Month of the tax year (April is 1)",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1,
+      "maximum": 12
+    },
+    {
+      "name": "cumulativePercent",
+      "title": "Share of the year's advance tax due by then",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "amount",
+      "title": "Amount",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (No. 30 of 2025), 21 August 2025, sections 403, 404, 405 and 408, in force 1 April 2026 (section 1(3))"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, sections 403(1) and (2) and 404",
+      "cells": {
+        "rule": "liability-limit",
+        "name": "Advance tax is payable when the year's tax is at least",
+        "payers": null,
+        "dueDay": null,
+        "taxYearMonth": null,
+        "cumulativePercent": null,
+        "amount": 10000,
+        "wording": "403. (1) Advance tax shall be payable during any Financial year in respect of the current income of the assessee, as per the provisions of this Part. (2) For the purposes of this Part, “current income” of a tax year means the total income of the assessee which would be chargeable to tax for such tax year. 404. Advance tax shall be payable by the assessee during a Financial year, where the amount of such tax payable during that year, as computed under this Part, is ₹10000 or more."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 408(1), Table, Sl. No. 1",
+      "cells": {
+        "rule": "instalment-1",
+        "name": "First instalment",
+        "payers": "general",
+        "dueDay": 15,
+        "taxYearMonth": 3,
+        "cumulativePercent": 15,
+        "amount": null,
+        "wording": "408. (1) All the assessees who are liable to pay advance tax, other than the assessee referred to in sub-section (2), shall pay the same on the current income calculated in the manner laid down in section 405 in four instalments during each financial year and the due date of each instalment and the amount of such instalment shall be as specified in the Table below. 1. On or before the 15th June. Not less than 15% of such advance tax."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 408(1), Table, Sl. No. 2",
+      "cells": {
+        "rule": "instalment-2",
+        "name": "Second instalment",
+        "payers": "general",
+        "dueDay": 15,
+        "taxYearMonth": 6,
+        "cumulativePercent": 45,
+        "amount": null,
+        "wording": "408. (1) All the assessees who are liable to pay advance tax, other than the assessee referred to in sub-section (2), shall pay the same on the current income calculated in the manner laid down in section 405 in four instalments during each financial year and the due date of each instalment and the amount of such instalment shall be as specified in the Table below. 2. On or before the 15th September. Not less than 45% of such advance tax, as reduced by the amount, if any, paid in the earlier instalment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 408(1), Table, Sl. No. 3",
+      "cells": {
+        "rule": "instalment-3",
+        "name": "Third instalment",
+        "payers": "general",
+        "dueDay": 15,
+        "taxYearMonth": 9,
+        "cumulativePercent": 75,
+        "amount": null,
+        "wording": "408. (1) All the assessees who are liable to pay advance tax, other than the assessee referred to in sub-section (2), shall pay the same on the current income calculated in the manner laid down in section 405 in four instalments during each financial year and the due date of each instalment and the amount of such instalment shall be as specified in the Table below. 3. On or before the 15th December. Not less than 75% of such advance tax, as reduced by the amount or amounts, if any, paid in the earlier instalment or instalments."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 408(1), Table, Sl. No. 4",
+      "cells": {
+        "rule": "instalment-4",
+        "name": "Fourth instalment",
+        "payers": "general",
+        "dueDay": 15,
+        "taxYearMonth": 12,
+        "cumulativePercent": 100,
+        "amount": null,
+        "wording": "408. (1) All the assessees who are liable to pay advance tax, other than the assessee referred to in sub-section (2), shall pay the same on the current income calculated in the manner laid down in section 405 in four instalments during each financial year and the due date of each instalment and the amount of such instalment shall be as specified in the Table below. 4. On or before the 15th March. The whole amount of such advance tax, as reduced by the amount or amounts, if any, paid in the earlier instalment or instalments."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 408(2)",
+      "cells": {
+        "rule": "presumptive",
+        "name": "Single instalment of an assessee who declares profits under section 58(2)",
+        "payers": "presumptive",
+        "dueDay": 15,
+        "taxYearMonth": 12,
+        "cumulativePercent": 100,
+        "amount": null,
+        "wording": "(2) An assessee, who declares profits and gains as per the provisions of section 58(2) (Table: Sl. No. 1 or 3), shall pay the whole amount of advance tax on the current income, calculated in the manner laid down in section 405 during each financial year, on or before the 15th March."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 408(3)",
+      "cells": {
+        "rule": "paid-by-31-march",
+        "name": "Paid by 31 March: advance tax of the financial year ending that day",
+        "payers": null,
+        "dueDay": 31,
+        "taxYearMonth": 12,
+        "cumulativePercent": null,
+        "amount": null,
+        "wording": "(3) Any amount paid by way of advance tax on or before the 31st March, shall be treated as advance tax paid during the financial year ending on that day for all the purposes of this Act."
+      }
+    }
+  ]
+}

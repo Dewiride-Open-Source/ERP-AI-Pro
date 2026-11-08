@@ -3,8 +3,8 @@ using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain;
 
 // A version of a set is a legal change: the date from which it applies, known with its set by that date, and the instruments
-// that brought it. It runs until the day before the set's next version. A set dated by financial year changes only on the 1 April
-// that opens one (Companies Act, 2013, section 2(41)).
+// that brought it. It runs until the day before the set's next version. A set dated by financial year changes only on a 1 April,
+// the day after the 31 March on which a financial year ends (Companies Act, 2013, section 2(41)).
 internal sealed class ParameterVersion : AggregateRoot<ParameterVersionId>, IAuditable
 {
     public const int InstrumentMaxLength = 400;

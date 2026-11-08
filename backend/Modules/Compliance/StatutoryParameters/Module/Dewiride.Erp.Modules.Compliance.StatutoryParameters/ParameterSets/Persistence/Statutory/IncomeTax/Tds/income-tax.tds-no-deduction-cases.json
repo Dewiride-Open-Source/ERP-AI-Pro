@@ -1,0 +1,390 @@
+{
+  "key": "income-tax.tds-no-deduction-cases",
+  "title": "Cases with no TDS under the Income-tax Act, 2025",
+  "description": "The cases in which the Income-tax Act, 2025 says tax shall not be deducted at source, in force from 1 April 2026: every serial number of the Table of section 393(4) (“FOR NO DEDUCTION AT SOURCE”), with the provision it switches off and its condition as printed, and the payees of sections 393(5), 393(8) and 393(9). Serial number 7 reads as the Finance Act, 2026, section 84(b), amended it and as the Corrigenda of 30 January 2026 corrected it, and is split into its clauses (a), (b) and (c); serial number 12 is split into its clauses (a) and (b). The amount is the figure the condition names: the turnover above which a co-operative society loses the exception of serial number 7, clause (b), and elsewhere the most that may be paid without deduction.",
+  "basis": "law",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "case",
+      "title": "Case",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Case, in the ERP's words",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "provisions",
+      "title": "Provision it switches off, as printed",
+      "kind": "text"
+    },
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "optional": true,
+      "references": [
+        "income-tax.tds-entries"
+      ]
+    },
+    {
+      "name": "condition",
+      "title": "Condition, as printed",
+      "kind": "text"
+    },
+    {
+      "name": "amount",
+      "title": "Amount the condition names (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "count",
+      "title": "Goods carriages",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), section 393(4), (5), (8) and (9), in force 1 April 2026 (section 1(3))",
+        "Corrigenda to the Income-tax Act, 2025, Ministry of Law and Justice, 30 January 2026: page 412, line 40, “interest credited” for “interest credit”",
+        "Finance Act, 2026 (4 of 2026), section 84(b), amending serial number 7 of the Table of section 393(4), in force 1 April 2026 (section 1(2)(a))"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 1]",
+      "cells": {
+        "case": "393(4)-1",
+        "name": "Commission paid by BSNL or MTNL to public call office franchisees",
+        "provisions": "Commission or Brokerage referred to in section 393(1) [Table: Sl. No. 1(ii)].",
+        "entry": "393(1)-1(ii)",
+        "condition": "Commission or brokerage payable by Bharat Sanchar Nigam Limited or Mahanagar Telephone Nigam Limited to their public call office franchisees.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 2]",
+      "cells": {
+        "case": "393(4)-2",
+        "name": "Rent paid to a real estate investment trust for a real estate asset it owns directly",
+        "provisions": "Rent referred to in section 393(1) [Table: Sl. No. 2(ii)].",
+        "entry": "393(1)-2(ii)",
+        "condition": "Income by way of rent credited or paid to a business trust, being a real estate investment trust, in respect of any real estate asset, referred to in Schedule V (Table: Sl. No. 4), owned directly by such business trust.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 3]",
+      "cells": {
+        "case": "393(4)-3",
+        "name": "Compensation exempt under the land acquisition Act of 2013",
+        "provisions": "Compensation on acquisition of certain immovable property referred to in section 393(1) [Table: Sl. No. 3(iii)].",
+        "entry": "393(1)-3(iii)",
+        "condition": "Income by way of any award or agreement which has been exempted from levy of income-tax under section 96 of the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement Act, 2013 (30 of 2013).",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 4]",
+      "cells": {
+        "case": "393(4)-4",
+        "name": "Income from units that is a capital gain",
+        "provisions": "Income in respect of units referred to in section 393(1) [Table: Sl. No. 4(i)].",
+        "entry": "393(1)-4(i)",
+        "condition": "If income is of the nature of capital gain.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 5]",
+      "cells": {
+        "case": "393(4)-5",
+        "name": "Business trust income where the special purpose vehicle has not opted under section 200",
+        "provisions": "Income from units of a business trust referred to in section 393(1) [Table: Sl. No. 4(ii)].",
+        "entry": "393(1)-4(ii)",
+        "condition": "Income of the nature referred to in Schedule V [Table: Sl. No. 3. B(b)], if the special purpose vehicle referred to in the said serial number has not exercised the option under section 200.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 6]",
+      "cells": {
+        "case": "393(4)-6",
+        "name": "Interest on named securities, and interest paid to insurers and business trusts",
+        "provisions": "Interest on securities referred to in section 393(1) [Table: Sl. No. 5(i)].",
+        "entry": "393(1)-5(i)",
+        "condition": "(a) Interest payable on–– (i) National Development Bonds; (ii) such debentures, issued by such institution or authority or any other person as the Central Government may, by notification, specify in this behalf; (iii) any security of the Central Government or a State Government, other than–– (A) 8% Savings (Taxable) Bonds, 2003; or (B) 7.75% Savings (Taxable) Bonds, 2018; or (C) Floating Rate Savings Bonds, 2020 (Taxable); or (D) any other security of the Central Government or State Government as the Central Government may, by notification, specify in this behalf; (b) interest payable to–– (i) the Life Insurance Corporation of India established under the Life Insurance Corporation Act, 1956 (31 of 1956), in respect of any securities owned by it or in which it has full beneficial interest; or (ii) the General Insurance Corporation of India or to any of the four companies, formed by virtue of the schemes made under section 16(1) of the General Insurance Business (Nationalisation) Act, 1972 (57 of 1972), in respect of any securities owned by the Corporation or such company or in which the Corporation or such company has full beneficial interest; or (iii) any other insurer in respect of any securities owned by it or in which it has full beneficial interest; or (iv) a “business trust”, as defined in section 2(21), in respect of any securities, by a special purpose vehicle referred to in Schedule V (Table: Sl. No. 3).",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 7.C(a)], as amended by the Finance Act, 2026, section 84(b)(i)",
+      "cells": {
+        "case": "393(4)-7(a)",
+        "name": "Interest paid to banks, co-operative banks, financial corporations, LIC, UTI, insurers and notified bodies",
+        "provisions": "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].",
+        "entry": null,
+        "condition": "(a) Interest income credited or paid to— (i) any banking company or any co-operative society engaged in carrying on the business of banking (including a co-operative land mortgage bank); or (ii) any financial corporation established by or under a Central Act or State Act or Provincial Act; or (iii) the Life Insurance Corporation of India established under the Life Insurance Corporation Act, 1956 (31 of 1956); or (iv) the Unit Trust of India; or (v) any company or co-operative society carrying on the business of insurance; or (vi) such other institution, association or body or class of institutions, associations or bodies which the Central Government may, for reasons to be recorded in writing, notified in this behalf before the 1st April, 2020;",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 7.C(b)], as corrected by the Corrigenda of 30 January 2026",
+      "cells": {
+        "case": "393(4)-7(b)",
+        "name": "Interest paid by co-operative societies, unless a society with turnover above fifty crore rupees pays interest above the threshold limit",
+        "provisions": "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].",
+        "entry": null,
+        "condition": "(b) interest income credited or paid–– (i) by a co-operative society other than a co-operative bank, to a member thereof; or (ii) by a co-operative society to any other co-operative society; or (iii) in respect of deposits with a primary agricultural credit society or a primary credit society or a co-operative land mortgage bank or a co-operative land development bank; or (iv) in respect of deposits (other than time deposits made on or after the 1st July, 1995) with a co-operative society, other than a co-operative society or bank referred to in sub-clause (iii), engaged in the business of banking, except when,— (A) where the total sales, gross receipts or turnover of the co-operative society exceed fifty crore rupees during the tax year immediately preceding the tax year in which such interest is credited or paid; and (B) the amount or aggregate of amounts of interest credited or paid exceeds the threshold limit mentioned in section 393(1) (Table: Sl. No. 5(ii) D).",
+        "amount": 500000000,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 7.C(c)], item (iv) as substituted by the Finance Act, 2026, section 84(b)(ii)",
+      "cells": {
+        "case": "393(4)-7(c)",
+        "name": "Interest paid by the Central Government, on notified schemes, on bank deposits other than time deposits, on accident-claim compensation, on zero coupon bonds, under Schedule V and by firms to partners",
+        "provisions": "Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)].",
+        "entry": null,
+        "condition": "(c) interest income credited or paid— (i) by the Central Government under any provision of this Act or the Income-tax Act, 1961 (43 of 1961), or the Estate Duty Act, 1953 (34 of 1953), or the Wealth-tax Act, 1957 (27 of 1957), or the Gift-tax Act, 1958 (18 of 1958), the Companies (Profits) Surtax Act, 1964 (7 of 1964), or the Interest-tax Act, 1974 (45 of 1974); (ii) in respect of deposits under any scheme framed by the Central Government and notified by it in this behalf; (iii) in respect of deposits (other than time deposits made on or after the 1st July, 1995) with a banking company; (iv) on the compensation amount awarded by a Motor Accidents Claims Tribunal— (A) to an individual; or (B) to a person other than an individual, where the aggregate interest on such compensation does not exceed ₹ 50000 during the tax year; (v) or payable by an infrastructure capital company; or infrastructure capital fund; or infrastructure debt fund; or a public sector company; or scheduled bank in relation to a zero coupon bond issued on or after the 1st June, 2005 by such company or fund or public sector company or scheduled bank; (vi) as referred to in Schedule V (Table: Sl. No. 3); (vii) by a firm to a partner of the firm.",
+        "amount": 50000,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 8]",
+      "cells": {
+        "case": "393(4)-8",
+        "name": "Contractors owning ten or fewer goods carriages; contracts for personal purposes",
+        "provisions": "Payments to contractors referred to in section 393(1) [Table: Sl. No. 6(i)].",
+        "entry": "393(1)-6(i)",
+        "condition": "(a) Where–– (i) any sum credited or paid or likely to be credited or paid during the tax year to the account of a contractor during the course of business of plying, hiring or leasing goods carriages; and (ii) that contractor owns ten or less goods carriages at any time during the tax year; and (iii) furnishes a declaration to that effect along with his Permanent Account Number to the person paying or crediting the sum; and (iv) the person responsible for paying to the contractor furnishes to the prescribed income-tax authority the particulars in such form and within such time as may be prescribed; (b) where such sum is credited or paid by individual or Hindu undivided family exclusively for personal purposes of such individual or any member of Hindu undivided family.",
+        "amount": null,
+        "count": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 9]",
+      "cells": {
+        "case": "393(4)-9",
+        "name": "Professional or technical fees paid for personal purposes",
+        "provisions": "Fees for professional or technical services referred to in section 393(1) [Table: Sl. No. 6(iii)].",
+        "entry": "393(1)-6(iii)",
+        "condition": "Where such sum is credited or paid by individual or Hindu undivided family exclusively for personal purposes of such individual or any member of Hindu undivided family.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 10]",
+      "cells": {
+        "case": "393(4)-10",
+        "name": "Dividends paid to insurers, business trusts and notified persons, and small dividends paid to individuals other than in cash",
+        "provisions": "Dividend referred to in section 393(1) (Table: Sl. No. 7).",
+        "entry": "393(1)-7",
+        "condition": "Dividend income credited or paid to— (a) the Life Insurance Corporation of India established under the Life Insurance Corporation Act, 1956 (31 of 1956), in respect of any shares owned by it or in which it has full beneficial interest; (b) the General Insurance Corporation of India or to any of the four companies, formed by virtue of the schemes made under section 16(1) of the General Insurance Business (Nationalisation) Act, 1972 (57 of 1972), in respect of any shares owned by the Corporation or such company or in which the Corporation or such company has full beneficial interest; (c) any other insurer in respect of any shares owned by it or in which it has full beneficial interest; (d) a “business trust”, as defined in section 2(21), by a special purpose vehicle referred to in Schedule V (Note 2); (e) any other person as may be notified by the Central Government in this behalf; (f) a shareholder, being an individual, if— (I) the dividend is paid by the company by any mode other than cash; and (II) amount or aggregate of amounts of such dividend distributed or paid or likely to be distributed or paid during the tax year does not exceed ₹10,000.",
+        "amount": 10000,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 11]",
+      "cells": {
+        "case": "393(4)-11",
+        "name": "Small e-commerce participants that are individuals or Hindu undivided families",
+        "provisions": "Payment by e-commerce operator to e-commerce participant referred to in section 393(1) [Table: Sl. No. 8(v)].",
+        "entry": "393(1)-8(v)",
+        "condition": "Where the amount is credited or paid or likely to be credited or paid during the tax year to the account of an e-commerce participant, which is–– (a) an individual or a Hindu undivided family; and (b) the gross amount of the sales or services or both during the tax year does not exceed ₹ 500000; and (c) the e-commerce participant has furnished the Permanent Account Number or Aadhaar number to the e-commerce operator.",
+        "amount": 500000,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 12.C(a)]",
+      "cells": {
+        "case": "393(4)-12(a)",
+        "name": "Virtual digital assets paid for by an individual or a Hindu undivided family below the turnover limits or without business income",
+        "provisions": "Payment on transfer of virtual digital asset referred to in section 393(1) [Table: Sl. No. 8(vi)].",
+        "entry": "393(1)-8(vi)",
+        "condition": "Where value or aggregate value of such consideration during the tax year does not exceed–– (a) ₹ 50000, when payable by an individual or a Hindu undivided family,— (i) whose total sales, gross receipts or turnover from the business carried on by him or profession exercised by him does not exceed one crore rupees in case of business or fifty lakh rupees in case of profession, during the tax year immediately preceding the tax year in which such virtual digital asset is transferred; (ii) not having any income under the head “Profits and gains of business or profession”;",
+        "amount": 50000,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 12.C(b)]",
+      "cells": {
+        "case": "393(4)-12(b)",
+        "name": "Virtual digital assets paid for by any other person",
+        "provisions": "Payment on transfer of virtual digital asset referred to in section 393(1) [Table: Sl. No. 8(vi)].",
+        "entry": "393(1)-8(vi)",
+        "condition": "Where value or aggregate value of such consideration during the tax year does not exceed–– (b) ₹ 10000, when payable by any person other than the person referred to in clause (a).",
+        "amount": 10000,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 13]",
+      "cells": {
+        "case": "393(4)-13",
+        "name": "Non-resident's business trust income where the special purpose vehicle has not opted under section 200",
+        "provisions": "Income from units of a business trust referred to in section 393(2) (Table: Sl. No. 6).",
+        "entry": "393(2)-6",
+        "condition": "Income of the nature referred to in Schedule V [Table: Sl. No. 3. B(b)], if the special purpose vehicle referred to in the said clause has not exercised the option under section 200.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 14]",
+      "cells": {
+        "case": "393(4)-14",
+        "name": "Investment fund income that is not chargeable",
+        "provisions": "Income in respect of units of investment fund referred to in section 393(2) (Table: Sl. No. 8).",
+        "entry": "393(2)-8",
+        "condition": "Income that is not chargeable to tax under the provisions of this Act.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 15]",
+      "cells": {
+        "case": "393(4)-15",
+        "name": "Units of the Unit Trust of India held by non-resident Indians",
+        "provisions": "Income in respect of units of non-residents referred to in section 393(2) (Table: Sl. No. 10).",
+        "entry": "393(2)-10",
+        "condition": "Income payable in respect of units of the Unit Trust of India to a non-resident Indian or a non-resident Hindu undivided family, subject to prescribed conditions.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 16]",
+      "cells": {
+        "case": "393(4)-16",
+        "name": "Capital gains of Foreign Institutional Investors",
+        "provisions": "Income of Foreign Institutional Investors from securities referred to in section 393(2) (Table: Sl. No. 15).",
+        "entry": "393(2)-15",
+        "condition": "Income, by way of capital gains arising from the transfer of securities referred to in section 210, if payable to a Foreign Institutional Investor.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 17]",
+      "cells": {
+        "case": "393(4)-17",
+        "name": "Exempt income of a specified fund",
+        "provisions": "Income of Specified Fund from securities referred to in section 393(2) (Table: Sl. No. 16).",
+        "entry": "393(2)-16",
+        "condition": "Income is exempt as per Schedule VI (Table: Sl. Nos. 1 to 4).",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 18]",
+      "cells": {
+        "case": "393(4)-18",
+        "name": "Cash paid to the Government, banks, post offices, business correspondents and white label ATM operators",
+        "provisions": "Payment of certain amounts in cash referred to in section 393(3) (Table: Sl. No. 5).",
+        "entry": "393(3)-5",
+        "condition": "Payment made to— (a) the Government; (b) any banking company or co-operative society engaged in carrying on the business of banking or a post office; (c) any business correspondent of a banking company or co-operative society engaged in carrying on the business of banking, as per the guidelines issued in this regard by the Reserve Bank of India under the Reserve Bank of India Act, 1934 (2 of 1934); (d) any white label automated teller machine operator of a banking company or co-operative society engaged in carrying on the business of banking, as per the authorisation issued by the Reserve Bank of India under the Payment and Settlement Systems Act, 2007 (51 of 2007).",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(4) [Table: Sl. No. 19]",
+      "cells": {
+        "case": "393(4)-19",
+        "name": "National Savings Scheme payments to heirs",
+        "provisions": "Payment in respect of deposits under National Savings Scheme, etc., referred to in section 393(3) (Table: Sl. No. 6).",
+        "entry": "393(3)-6",
+        "condition": "Payment made to heirs of an assessee.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(5)",
+      "cells": {
+        "case": "393(5)",
+        "name": "The Government, the Reserve Bank, exempt Central Act corporations and mutual funds",
+        "provisions": "Irrespective of anything contained in this Chapter",
+        "entry": null,
+        "condition": "Irrespective of anything contained in this Chapter, the tax shall not be deducted by any person from any amount payable to–– (a) the Government; or (b) the Reserve Bank of India; or (c) a corporation established by or under a Central Act which is, under any law in force, exempt from income-tax on its income; or (d) a Mutual fund as specified at Schedule VII (Table: Sl. No. 20 or 21), where such amount is payable to it by way of— (A) interest; or (B) dividend in respect of any securities or shares owned by it or in which it has full beneficial interest; or (C) any other income accruing or arising to it.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(8)",
+      "cells": {
+        "case": "393(8)",
+        "name": "Interest paid by an Offshore Banking Unit to non-residents and persons not ordinarily resident",
+        "provisions": "Irrespective of anything contained in sub-section (6)",
+        "entry": null,
+        "condition": "Irrespective of anything contained in sub-section (6), the deduction of tax shall not be made from the interest paid by an Offshore Banking Unit on borrowing from or deposit made on or after 1st April, 2005, by a non-resident or a person not ordinarily resident in India.",
+        "amount": null,
+        "count": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(9)",
+      "cells": {
+        "case": "393(9)",
+        "name": "Payments to the New Pension System Trust",
+        "provisions": "Irrespective of anything contained in this Chapter",
+        "entry": null,
+        "condition": "Irrespective of anything contained in this Chapter, the deduction of tax shall not be made from any payment to a person for, or on behalf of, the New Pension System Trust referred to in Schedule VII (Table: Sl. No. 41).",
+        "amount": null,
+        "count": null
+      }
+    }
+  ]
+}

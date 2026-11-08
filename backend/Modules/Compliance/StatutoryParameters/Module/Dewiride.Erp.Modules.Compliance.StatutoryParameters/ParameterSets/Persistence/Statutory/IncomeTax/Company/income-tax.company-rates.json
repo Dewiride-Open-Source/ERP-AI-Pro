@@ -1,0 +1,247 @@
+{
+  "key": "income-tax.company-rates",
+  "title": "Income-tax rates of a domestic company",
+  "description": "The rates at which the total income of a domestic company is charged for tax years from 2026-27, under the Income-tax Act, 2025 and the Finance Act, 2026: the Finance Act's rate for a company whose total turnover or gross receipt in a named earlier tax year did not exceed a limit and its rate for every other domestic company (First Schedule, Part I-B, Paragraph E, which Part III repeats for advance tax), and the rates of the options of sections 199, 200 and 201 of the Act, each with its conditions and its option in the instrument's words. The Finance Act's rates are for the tax year 2026-27 alone, so they end on 31 March 2027; the options are standing law. The tax period is the tax year, and the set answers for its first day. The surcharge, the cess and the minimum alternate tax are separate sets.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Applies to",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "regime",
+      "title": "Regime",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "financeAct",
+          "title": "Finance Act rates (no option of sections 199 to 201)"
+        },
+        {
+          "value": "section199",
+          "title": "Option of section 199"
+        },
+        {
+          "value": "section200",
+          "title": "Option of section 200"
+        },
+        {
+          "value": "section201",
+          "title": "Option of section 201"
+        }
+      ]
+    },
+    {
+      "name": "rate",
+      "title": "Rate of income-tax",
+      "kind": "percent"
+    },
+    {
+      "name": "turnoverLimit",
+      "title": "Total turnover or gross receipt up to",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "turnoverYear",
+      "title": "Tax year whose turnover is tested",
+      "kind": "code",
+      "optional": true
+    },
+    {
+      "name": "setUpOnOrAfter",
+      "title": "Set up and registered on or after",
+      "kind": "date",
+      "optional": true
+    },
+    {
+      "name": "productionBy",
+      "title": "Manufacturing or production commenced on or before",
+      "kind": "date",
+      "optional": true
+    },
+    {
+      "name": "wording",
+      "title": "Rate and conditions, in the instrument's words",
+      "kind": "text"
+    },
+    {
+      "name": "option",
+      "title": "The option, in the instrument's words",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "excludedBusinesses",
+      "title": "Not manufacture or production (section 205(5)(a))",
+      "kind": "text",
+      "optional": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, sections 3(1), 3(3) and 3(10) and First Schedule, Part I-B, Paragraph E and Part III, Paragraph E, in force 1 April 2026 (section 1(2)(a))",
+        "Income-tax Act, 2025 (No. 30 of 2025), 21 August 2025, sections 199, 200, 201 and 205, in force 1 April 2026 (section 1(3)), with the Corrigenda of 30 January 2026 (Gazette of India, Extraordinary, Part II, Section 1, No. 2)"
+      ]
+    },
+    {
+      "from": "2027-04-01",
+      "instruments": [
+        "Finance Act, 2026 (No. 4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”",
+        "Finance Act, 2026 (No. 4 of 2026), section 3(1): “for the tax year commencing on the 1st day of April, 2026, income-tax shall be charged under the provisions of the Income-tax Act, 2025 (herein referred to as the said Act) at the rates specified in Part I-B of the First Schedule”",
+        "Finance Act, 2026 (No. 4 of 2026), section 3(10)(iv), which computes the advance tax payable under Chapter XIX-C of the Income-tax Act, 2025 at the rates of Part III of the First Schedule; that Act's section 2(90)(a)(iii) makes the rates in force for it “the rate or rates of income-tax specified in this behalf in the Finance Act of the relevant year”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part I-B, Paragraph E, item I(i) (section 3(1)), and Part III, Paragraph E, item I(i) (advance tax, section 3(10))",
+      "cells": {
+        "entry": "turnover-within-limit",
+        "name": "Domestic company within the turnover limit",
+        "regime": "financeAct",
+        "rate": 25,
+        "turnoverLimit": 4000000000,
+        "turnoverYear": "2024-25",
+        "setUpOnOrAfter": null,
+        "productionBy": null,
+        "wording": "I. In the case of a domestic company,— (i) where its total turnover or the gross receipt in the tax year 2024-25 does not exceed ₹ 400 crores; 25% of the total income;",
+        "option": null,
+        "excludedBusinesses": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part I-B, Paragraph E, item I(ii) (section 3(1)), and Part III, Paragraph E, item I(ii) (advance tax, section 3(10))",
+      "cells": {
+        "entry": "other-domestic",
+        "name": "Any other domestic company",
+        "regime": "financeAct",
+        "rate": 30,
+        "turnoverLimit": null,
+        "turnoverYear": null,
+        "setUpOnOrAfter": null,
+        "productionBy": null,
+        "wording": "I. In the case of a domestic company,— (ii) other than that referred to in item (i). 30% of the total income.",
+        "option": null,
+        "excludedBusinesses": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 199(1), (3) and (4), and section 205(5)(a)",
+      "cells": {
+        "entry": "section-199",
+        "name": "Option of section 199: the whole total income",
+        "regime": "section199",
+        "rate": 25,
+        "turnoverLimit": null,
+        "turnoverYear": null,
+        "setUpOnOrAfter": "2016-03-01",
+        "productionBy": null,
+        "wording": "199. (1) Irrespective of anything contained in this Act, but subject to the provisions of Parts A, B, E and this Part (other than sections 200 and 201) of this Chapter, the income-tax payable in respect of the total income of a person, being a domestic company, for any tax year, shall, at the option of such person, be computed at the rate of 25% subject to the following conditions:–– (a) the company has been set-up and registered on or after the 1st March, 2016; (b) the company is not engaged in any business other than the business of manufacture or production of any article or thing and research in relation to, or distribution of, such article or thing manufactured or produced by it; and (c) the total income of the company has been computed,— (i) without any deduction under–– (A) section 45(2) or 47(1)(b); or (B) Chapter VIII-C, other than the provisions of section 146; or (C) sections specified in section 205(1)(a) to (g); (ii) without set off of any loss carried forward from any earlier tax year, if such loss is attributable to any of the deductions referred to in sub-clause (i).",
+        "option": "(3) The provisions of this section shall not apply unless an option is exercised by the person in the manner as may be prescribed on or before the due date specified under section 263(1) for furnishing the first of the returns of income which such person is required to furnish and such option once exercised, shall apply to subsequent tax years. (4) Once the option under sub-section (3) has been exercised for any tax year, it cannot be subsequently withdrawn for the same or any other tax year, except where the person exercises option under section 200.",
+        "excludedBusinesses": "(5) For the purposes of this Part,–– (a) the business of manufacture or production of any article or thing shall include the business of generation of electricity but shall not include business of— (i) development of computer software in any form or in any media; or (ii) mining; or (iii) conversion of marble blocks or similar items into slabs; or (iv) bottling of gas into cylinder; or (v) printing of books or production of cinematograph film; or (vi) any other business as may be notified by the Central Government in this behalf;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 200(1), (2), (4), (5), (6) and (7)",
+      "cells": {
+        "entry": "section-200",
+        "name": "Option of section 200: the whole total income",
+        "regime": "section200",
+        "rate": 22,
+        "turnoverLimit": null,
+        "turnoverYear": null,
+        "setUpOnOrAfter": null,
+        "productionBy": null,
+        "wording": "200. (1) Irrespective of anything contained in this Act but subject to the provisions of Parts A, B, E and this Part (other than sections 199 and 201) of this Chapter, the income-tax payable for a tax year shall be at the rate of 22%, at the option of a person being a domestic company, in respect of the total income of such person computed in the following manner:–– (a) without any deduction under–– (i) section 45(2) or 47(1)(b); or (ii) Chapter VIII other than provisions of section 146 or 148; or (iii) sections specified in section 205(1)(a) to (g); (b) without set off of any loss carried forward or depreciation from any earlier tax year, if such loss or depreciation is attributable to any of the deductions referred to in clause (a); (c) without set off of any loss or allowance for unabsorbed depreciation deemed so under section 116, if such loss or depreciation is attributable to any of the deductions referred to in clause (a). (4) In case of a person, having a Unit in the International Financial Services Centre, which has exercised option under sub-section (5), the requirements contained in sub-section (1) shall be modified to the extent that the deduction as referred to in section 147 shall be available to such Unit subject to fulfilment of the conditions contained in that section.",
+        "option": "(2) Where the person fails to satisfy the requirements contained in sub-section (1) in any tax year, the option shall become invalid in respect of the said tax year and subsequent years and other provisions of the Act shall apply, as if the option had not been exercised for such tax year and for subsequent years. (5) The provisions of this section shall not apply unless the option is exercised by the person in such manner as may be prescribed on or before the due date specified under section 263(1) for furnishing the return of income and such option once exercised, shall apply to subsequent tax years. (6) Once the option under this section has been exercised for any tax year, it shall not be subsequently withdrawn for the same or any other tax year. (7) In case of a person, being a domestic company, where the option exercised by it under section 201, has been rendered invalid due to violation of the conditions contained in section 205(2)(b) or (c) or (d), such person may exercise the option under this section.",
+        "excludedBusinesses": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 201(1), Table, Sl. No. 1, columns B, C(a) and D, section 201(2) and (5), and section 205(5)(a)",
+      "cells": {
+        "entry": "section-201-manufacturing",
+        "name": "Option of section 201: total income other than that of items (b) to (d)",
+        "regime": "section201",
+        "rate": 15,
+        "turnoverLimit": null,
+        "turnoverYear": null,
+        "setUpOnOrAfter": "2019-10-01",
+        "productionBy": "2024-03-31",
+        "wording": "[Sl. No. 1.B] A domestic company engaged in business of manufacture or production of any article or thing. [Sl. No. 1.C] (a) 15% on the total income other than the income mentioned in clauses (b), (c) and (d); [Sl. No. 1.D] Such domestic company–– (a) exercises the option in the manner provided in sub-section (2); (b) has been set-up and registered on or after the 1st October, 2019; (c) has commenced manufacturing or production of an article or thing on or before the 31st March, 2024; (d) the total income of which is computed as per the provisions of sub-section (3); and (e) fulfils all the conditions provided in sub-section (5) of this section and section 205(2).",
+        "option": "(2) The option under this section shall be exercised by the assessee in the manner prescribed subject to the following conditions:–– (a) it shall be exercised on or before the due date specified under section 263(1) for furnishing first of the returns of income for any tax year; (b) such option, once exercised, shall apply to subsequent tax years; (c) once the option has been exercised for any tax year, it shall not be subsequently withdrawn for the same or any other tax year; and (d) where the assessee fails to fulfil the conditions contained in sub-section (1) (Table: Sl. No. 1.D) in any tax year,–– (i) the option shall become invalid in respect of such tax year and subsequent tax years; and (ii) the other provisions of this Act shall apply, as if the option had not been exercised for that tax year and subsequent tax years. (5) In case of an amalgamation, option under this section shall remain valid in case of the amalgamated company only and if the conditions contained in sub-section (1) (Table: Sl. No. 1.D) are continued to be fulfilled by such company.",
+        "excludedBusinesses": "(5) For the purposes of this Part,–– (a) the business of manufacture or production of any article or thing shall include the business of generation of electricity but shall not include business of— (i) development of computer software in any form or in any media; or (ii) mining; or (iii) conversion of marble blocks or similar items into slabs; or (iv) bottling of gas into cylinder; or (v) printing of books or production of cinematograph film; or (vi) any other business as may be notified by the Central Government in this behalf;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 201(1), Table, Sl. No. 1, columns B, C(b) and D, section 201(2) and (5), and section 205(5)(a)",
+      "cells": {
+        "entry": "section-201-other-income",
+        "name": "Option of section 201: income neither derived from nor incidental to manufacturing",
+        "regime": "section201",
+        "rate": 22,
+        "turnoverLimit": null,
+        "turnoverYear": null,
+        "setUpOnOrAfter": "2019-10-01",
+        "productionBy": "2024-03-31",
+        "wording": "[Sl. No. 1.B] A domestic company engaged in business of manufacture or production of any article or thing. [Sl. No. 1.C] (b) 22% (without any deduction or allowance in respect of any expenditure or allowance) on such income,–– (i) which has neither been derived from nor is incidental to manufacturing or production of an article or thing; and (ii) in respect of which no specific rate of tax has been provided separately under Parts A, B, E and this Part of this Chapter; [Sl. No. 1.D] Such domestic company–– (a) exercises the option in the manner provided in sub-section (2); (b) has been set-up and registered on or after the 1st October, 2019; (c) has commenced manufacturing or production of an article or thing on or before the 31st March, 2024; (d) the total income of which is computed as per the provisions of sub-section (3); and (e) fulfils all the conditions provided in sub-section (5) of this section and section 205(2).",
+        "option": "(2) The option under this section shall be exercised by the assessee in the manner prescribed subject to the following conditions:–– (a) it shall be exercised on or before the due date specified under section 263(1) for furnishing first of the returns of income for any tax year; (b) such option, once exercised, shall apply to subsequent tax years; (c) once the option has been exercised for any tax year, it shall not be subsequently withdrawn for the same or any other tax year; and (d) where the assessee fails to fulfil the conditions contained in sub-section (1) (Table: Sl. No. 1.D) in any tax year,–– (i) the option shall become invalid in respect of such tax year and subsequent tax years; and (ii) the other provisions of this Act shall apply, as if the option had not been exercised for that tax year and subsequent tax years. (5) In case of an amalgamation, option under this section shall remain valid in case of the amalgamated company only and if the conditions contained in sub-section (1) (Table: Sl. No. 1.D) are continued to be fulfilled by such company.",
+        "excludedBusinesses": "(5) For the purposes of this Part,–– (a) the business of manufacture or production of any article or thing shall include the business of generation of electricity but shall not include business of— (i) development of computer software in any form or in any media; or (ii) mining; or (iii) conversion of marble blocks or similar items into slabs; or (iv) bottling of gas into cylinder; or (v) printing of books or production of cinematograph film; or (vi) any other business as may be notified by the Central Government in this behalf;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 201(1), Table, Sl. No. 1, columns B, C(c) and D, section 201(2) and (5), and section 205(5)(a)",
+      "cells": {
+        "entry": "section-201-short-term-capital-gains",
+        "name": "Option of section 201: short-term capital gains on assets without depreciation",
+        "regime": "section201",
+        "rate": 22,
+        "turnoverLimit": null,
+        "turnoverYear": null,
+        "setUpOnOrAfter": "2019-10-01",
+        "productionBy": "2024-03-31",
+        "wording": "[Sl. No. 1.B] A domestic company engaged in business of manufacture or production of any article or thing. [Sl. No. 1.C] (c) 22% on short-term capital gains derived from transfer of a capital asset on which no depreciation is allowable under this Act; [Sl. No. 1.D] Such domestic company–– (a) exercises the option in the manner provided in sub-section (2); (b) has been set-up and registered on or after the 1st October, 2019; (c) has commenced manufacturing or production of an article or thing on or before the 31st March, 2024; (d) the total income of which is computed as per the provisions of sub-section (3); and (e) fulfils all the conditions provided in sub-section (5) of this section and section 205(2).",
+        "option": "(2) The option under this section shall be exercised by the assessee in the manner prescribed subject to the following conditions:–– (a) it shall be exercised on or before the due date specified under section 263(1) for furnishing first of the returns of income for any tax year; (b) such option, once exercised, shall apply to subsequent tax years; (c) once the option has been exercised for any tax year, it shall not be subsequently withdrawn for the same or any other tax year; and (d) where the assessee fails to fulfil the conditions contained in sub-section (1) (Table: Sl. No. 1.D) in any tax year,–– (i) the option shall become invalid in respect of such tax year and subsequent tax years; and (ii) the other provisions of this Act shall apply, as if the option had not been exercised for that tax year and subsequent tax years. (5) In case of an amalgamation, option under this section shall remain valid in case of the amalgamated company only and if the conditions contained in sub-section (1) (Table: Sl. No. 1.D) are continued to be fulfilled by such company.",
+        "excludedBusinesses": "(5) For the purposes of this Part,–– (a) the business of manufacture or production of any article or thing shall include the business of generation of electricity but shall not include business of— (i) development of computer software in any form or in any media; or (ii) mining; or (iii) conversion of marble blocks or similar items into slabs; or (iv) bottling of gas into cylinder; or (v) printing of books or production of cinematograph film; or (vi) any other business as may be notified by the Central Government in this behalf;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 201(1), Table, Sl. No. 1, columns B, C(d) and D, section 201(2) and (5), and section 205(4) and (5)(a)",
+      "cells": {
+        "entry": "section-201-deemed-excess-profits",
+        "name": "Option of section 201: profits deemed income under section 205(4)",
+        "regime": "section201",
+        "rate": 30,
+        "turnoverLimit": null,
+        "turnoverYear": null,
+        "setUpOnOrAfter": "2019-10-01",
+        "productionBy": "2024-03-31",
+        "wording": "[Sl. No. 1.B] A domestic company engaged in business of manufacture or production of any article or thing. [Sl. No. 1.C] (d) 30% on the income deemed so under section 205(4). [Sl. No. 1.D] Such domestic company–– (a) exercises the option in the manner provided in sub-section (2); (b) has been set-up and registered on or after the 1st October, 2019; (c) has commenced manufacturing or production of an article or thing on or before the 31st March, 2024; (d) the total income of which is computed as per the provisions of sub-section (3); and (e) fulfils all the conditions provided in sub-section (5) of this section and section 205(2). [Section 205] (4) For the purposes of sections 201 and 204,–– (a) where it appears to the Assessing Officer that, owing to the close connection between the person to which the said section applies and any other person, or for any other reason, the course of business between them is so arranged that the business transacted between them produces to the assessee more than the ordinary profits which might be expected to arise in such business, then the Assessing Officer shall, in computing the profits and gains of such business for the purposes of this section, take profits as may be reasonably deemed to have been derived therefrom, and where the said arrangement involves a specified domestic transaction referred to in section 164, profits from such transaction shall be determined having regard to the arm’s length price as defined in section 173(a); and (b) the amount, being profits in excess of the profits determined by the Assessing Officer under clause (a), shall be deemed to be the income of the person and shall be chargeable at the rates specified in section 201(1) [Table: Sl. No. 1.C(d)] or 204 (1)[Table: Sl. No. 1.A(d)], as the case may be.",
+        "option": "(2) The option under this section shall be exercised by the assessee in the manner prescribed subject to the following conditions:–– (a) it shall be exercised on or before the due date specified under section 263(1) for furnishing first of the returns of income for any tax year; (b) such option, once exercised, shall apply to subsequent tax years; (c) once the option has been exercised for any tax year, it shall not be subsequently withdrawn for the same or any other tax year; and (d) where the assessee fails to fulfil the conditions contained in sub-section (1) (Table: Sl. No. 1.D) in any tax year,–– (i) the option shall become invalid in respect of such tax year and subsequent tax years; and (ii) the other provisions of this Act shall apply, as if the option had not been exercised for that tax year and subsequent tax years. (5) In case of an amalgamation, option under this section shall remain valid in case of the amalgamated company only and if the conditions contained in sub-section (1) (Table: Sl. No. 1.D) are continued to be fulfilled by such company.",
+        "excludedBusinesses": "(5) For the purposes of this Part,–– (a) the business of manufacture or production of any article or thing shall include the business of generation of electricity but shall not include business of— (i) development of computer software in any form or in any media; or (ii) mining; or (iii) conversion of marble blocks or similar items into slabs; or (iv) bottling of gas into cylinder; or (v) printing of books or production of cinematograph film; or (vi) any other business as may be notified by the Central Government in this behalf;"
+      }
+    }
+  ]
+}

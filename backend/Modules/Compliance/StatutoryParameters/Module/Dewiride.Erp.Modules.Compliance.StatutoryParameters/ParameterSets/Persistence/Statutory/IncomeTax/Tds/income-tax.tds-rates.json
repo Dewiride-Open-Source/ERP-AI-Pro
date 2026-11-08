@@ -1,0 +1,877 @@
+{
+  "key": "income-tax.tds-rates",
+  "title": "TDS rates of the Income-tax Act, 2025",
+  "description": "The rate at which tax is deducted under each entry of sections 392 and 393 of the Income-tax Act, 2025, in force from 1 April 2026, one row for each case an entry's rate distinguishes: the rate as printed, its kind (a percentage in the Act, the rates in force of the year's Finance Act, an average rate, a deduction computed under Schedule XI, or the rate of a tax agreement where it is lower) and, where the Act says so, what the rate applies to. Where that is empty, the rate applies to the entire amount of the income or sum (sections 393(1)(a) and 393(3)(a)) or to the amount of the income or sum (section 393(2)). The rates in force themselves are those of the Finance Act of the relevant year (section 2(90)).",
+  "basis": "law",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "rate",
+      "title": "Rate case",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "references": [
+        "income-tax.tds-entries"
+      ]
+    },
+    {
+      "name": "case",
+      "title": "Case the rate applies to",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "words",
+      "title": "Rate, as printed",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "basis",
+      "title": "Kind of rate",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "fixed",
+          "title": "A percentage in the Act"
+        },
+        {
+          "value": "ratesInForce",
+          "title": "Rates in force (the year's Finance Act)"
+        },
+        {
+          "value": "averageRate",
+          "title": "Average rate"
+        },
+        {
+          "value": "scheduleXi",
+          "title": "Computed under Schedule XI"
+        },
+        {
+          "value": "agreement",
+          "title": "Rate of a tax agreement, if lower"
+        }
+      ]
+    },
+    {
+      "name": "percent",
+      "title": "Percent",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "baseWords",
+      "title": "What the rate applies to, where the Act says",
+      "kind": "text",
+      "optional": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), sections 392 and 393 and Schedule XI, in force 1 April 2026 (section 1(3))"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(1)",
+      "cells": {
+        "rate": "392(1)",
+        "entry": "392(1)",
+        "case": null,
+        "words": "at the average rate of income-tax computed on the basis of the rates in force for the tax year in which the payment is made",
+        "basis": "averageRate",
+        "percent": null,
+        "baseWords": "on the estimated income of the assessee under this head for such year"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(2)(b)",
+      "cells": {
+        "rate": "392(2)",
+        "entry": "392(2)",
+        "case": null,
+        "words": "the tax under clause (a) shall be determined at the average rate as per sub-section (1)",
+        "basis": "averageRate",
+        "percent": null,
+        "baseWords": "on the income chargeable under the head “Salaries” including the income referred to in the said clause"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(3)",
+      "cells": {
+        "rate": "392(3)",
+        "entry": "392(3)",
+        "case": null,
+        "words": "on the basis of rates in force for the tax year in which the specified security or sweat equity share is allotted or transferred",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(6)(a) and Schedule XI, Part A, paragraph 10",
+      "cells": {
+        "rate": "392(6)(a)",
+        "entry": "392(6)(a)",
+        "case": null,
+        "words": "make therefrom the deduction provided in paragraph 10 of Part A of Schedule XI",
+        "basis": "scheduleXi",
+        "percent": null,
+        "baseWords": "shall deduct from the accumulated balance at the time of payment, the amount payable under the rule and the provisions of Chapter XIX-B shall apply as if the accumulated balance were income chargeable under the head “Salaries”"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(6)(b) and Schedule XI, Part B, paragraph 7(1)",
+      "cells": {
+        "rate": "392(6)(b)",
+        "entry": "392(6)(b)",
+        "case": null,
+        "words": "tax on the amounts so paid shall be deducted at the average rate of tax applicable to the employee— (a) during the previous three years; or (b) during the period for which the employee was a member of the fund, if the period is less than three years.",
+        "basis": "averageRate",
+        "percent": null,
+        "baseWords": "When any contributions made by an employer to an approved superannuation fund, including interest are paid to an employee during his lifetime under conditions other than those specified in Schedule II (Table: Sl. No. 8)"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(7)",
+      "cells": {
+        "rate": "392(7)",
+        "entry": "392(7)",
+        "case": null,
+        "words": "deduct income-tax thereon at the rate of 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(i)]",
+      "cells": {
+        "rate": "393(1)-1(i)",
+        "entry": "393(1)-1(i)",
+        "case": null,
+        "words": "Rate: Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(ii)]",
+      "cells": {
+        "rate": "393(1)-1(ii)",
+        "entry": "393(1)-1(ii)",
+        "case": null,
+        "words": "Rate: 2%",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(i)]",
+      "cells": {
+        "rate": "393(1)-2(i)",
+        "entry": "393(1)-2(i)",
+        "case": null,
+        "words": "Rate: 2%",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(ii).D(a)]",
+      "cells": {
+        "rate": "393(1)-2(ii).D(a)",
+        "entry": "393(1)-2(ii)",
+        "case": "for the use of any machinery or plant or equipment",
+        "words": "(a) 2%, for the use of any machinery or plant or equipment",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(ii).D(b)]",
+      "cells": {
+        "rate": "393(1)-2(ii).D(b)",
+        "entry": "393(1)-2(ii)",
+        "case": "for the use of any land, or building (including factory building), or land appurtenant to a building (including factory building), or furniture, or fittings",
+        "words": "(b) 10%, for the use of any land, or building (including factory building), or land appurtenant to a building (including factory building), or furniture, or fittings.",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(i)]",
+      "cells": {
+        "rate": "393(1)-3(i)",
+        "entry": "393(1)-3(i)",
+        "case": null,
+        "words": "Rate: 1% of— (a) consideration for transfer of the immovable property; or (b) stamp duty value of such property, whichever is higher.",
+        "basis": "fixed",
+        "percent": 1,
+        "baseWords": "(a) consideration for transfer of the immovable property; or (b) stamp duty value of such property, whichever is higher"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(ii)]",
+      "cells": {
+        "rate": "393(1)-3(ii)",
+        "entry": "393(1)-3(ii)",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(iii)]",
+      "cells": {
+        "rate": "393(1)-3(iii)",
+        "entry": "393(1)-3(iii)",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(i)]",
+      "cells": {
+        "rate": "393(1)-4(i)",
+        "entry": "393(1)-4(i)",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(ii)]",
+      "cells": {
+        "rate": "393(1)-4(ii)",
+        "entry": "393(1)-4(ii)",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(iii)]",
+      "cells": {
+        "rate": "393(1)-4(iii)",
+        "entry": "393(1)-4(iii)",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(iv)]",
+      "cells": {
+        "rate": "393(1)-4(iv)",
+        "entry": "393(1)-4(iv)",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(i)]",
+      "cells": {
+        "rate": "393(1)-5(i)",
+        "entry": "393(1)-5(i)",
+        "case": null,
+        "words": "Rate: Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(ii)]",
+      "cells": {
+        "rate": "393(1)-5(ii)",
+        "entry": "393(1)-5(ii)",
+        "case": null,
+        "words": "Rate: Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(iii)]",
+      "cells": {
+        "rate": "393(1)-5(iii)",
+        "entry": "393(1)-5(iii)",
+        "case": null,
+        "words": "Rate: Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(i).D(a)] and the Note below serial number 6",
+      "cells": {
+        "rate": "393(1)-6(i).D(a)",
+        "entry": "393(1)-6(i)",
+        "case": "if contractor is individual or Hindu undivided family",
+        "words": "(a) 1%, if contractor is individual or Hindu undivided family",
+        "basis": "fixed",
+        "percent": 1,
+        "baseWords": "In serial number 6 (i), if any sum is paid or credited for carrying out any work specified in section 402(47)(e), tax shall be deducted at source— (a) on the invoice value excluding the value of material, if such value is specified separately in the invoice; or (b) on the whole of the invoice value, if the value of material is not specified separately in the invoice."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(i).D(b)] and the Note below serial number 6",
+      "cells": {
+        "rate": "393(1)-6(i).D(b)",
+        "entry": "393(1)-6(i)",
+        "case": "if contractor is a person other than the person mentioned in (a)",
+        "words": "(b) 2%, if contractor is a person other than the person mentioned in (a).",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": "In serial number 6 (i), if any sum is paid or credited for carrying out any work specified in section 402(47)(e), tax shall be deducted at source— (a) on the invoice value excluding the value of material, if such value is specified separately in the invoice; or (b) on the whole of the invoice value, if the value of material is not specified separately in the invoice."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(ii)]",
+      "cells": {
+        "rate": "393(1)-6(ii)",
+        "entry": "393(1)-6(ii)",
+        "case": null,
+        "words": "Rate: 2%",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(iii).D(a)]",
+      "cells": {
+        "rate": "393(1)-6(iii).D(a)",
+        "entry": "393(1)-6(iii)",
+        "case": "(i) fees for technical services (not being a professional services); or (ii) royalty in the nature of consideration for sale, distribution or exhibition of cinematographic films; or (iii) payee, engaged only in the business of operation of call centre",
+        "words": "(a) 2% of such sum in case of— (i) fees for technical services (not being a professional services); or (ii) royalty in the nature of consideration for sale, distribution or exhibition of cinematographic films; or (iii) payee, engaged only in the business of operation of call centre",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(iii).D(b)]",
+      "cells": {
+        "rate": "393(1)-6(iii).D(b)",
+        "entry": "393(1)-6(iii)",
+        "case": "cases other than (a)",
+        "words": "(b) 10% of such sum in cases other than (a).",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) (Table: Sl. No. 7)",
+      "cells": {
+        "rate": "393(1)-7",
+        "entry": "393(1)-7",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(i)]",
+      "cells": {
+        "rate": "393(1)-8(i)",
+        "entry": "393(1)-8(i)",
+        "case": null,
+        "words": "Rate: 2% on income comprised in such sum.",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": "on income comprised in such sum"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(ii)] and Note 1(b) below serial number 8",
+      "cells": {
+        "rate": "393(1)-8(ii)",
+        "entry": "393(1)-8(ii)",
+        "case": null,
+        "words": "Rate: 0.1%",
+        "basis": "fixed",
+        "percent": 0.1,
+        "baseWords": "The tax shall be deducted on the sum exceeding fifty lakh rupees."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(iii)]",
+      "cells": {
+        "rate": "393(1)-8(iii)",
+        "entry": "393(1)-8(iii)",
+        "case": null,
+        "words": "Rate: Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": "Total income of a specified senior citizen after giving effect to deduction allowable under Chapter VIII and rebate allowable under section 156."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(iv)]",
+      "cells": {
+        "rate": "393(1)-8(iv)",
+        "entry": "393(1)-8(iv)",
+        "case": null,
+        "words": "Rate: 10% of value or aggregate of values of such benefit or perquisite.",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": "value or aggregate of values of such benefit or perquisite"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(v)]",
+      "cells": {
+        "rate": "393(1)-8(v)",
+        "entry": "393(1)-8(v)",
+        "case": null,
+        "words": "Rate: 0.1% of gross amount of such sale or services or both.",
+        "basis": "fixed",
+        "percent": 0.1,
+        "baseWords": "gross amount of such sale or services or both"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(vi)]",
+      "cells": {
+        "rate": "393(1)-8(vi)",
+        "entry": "393(1)-8(vi)",
+        "case": null,
+        "words": "Rate: 1%",
+        "basis": "fixed",
+        "percent": 1,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 1)",
+      "cells": {
+        "rate": "393(2)-1",
+        "entry": "393(2)-1",
+        "case": null,
+        "words": "20%",
+        "basis": "fixed",
+        "percent": 20,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 2) and Note 1 of the Table",
+      "cells": {
+        "rate": "393(2)-2",
+        "entry": "393(2)-2",
+        "case": null,
+        "words": "5%",
+        "basis": "fixed",
+        "percent": 5,
+        "baseWords": "For serial numbers. 2, 3 and 4, the interest payable shall be income to the extent to which such interest does not exceed the amount of interest calculated at the rate approved by the Central Government in this behalf, having regard to the terms of the loan or the bond and its repayment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 3) and Note 1 of the Table",
+      "cells": {
+        "rate": "393(2)-3",
+        "entry": "393(2)-3",
+        "case": null,
+        "words": "5%",
+        "basis": "fixed",
+        "percent": 5,
+        "baseWords": "For serial numbers. 2, 3 and 4, the interest payable shall be income to the extent to which such interest does not exceed the amount of interest calculated at the rate approved by the Central Government in this behalf, having regard to the terms of the loan or the bond and its repayment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 4.E(a)) and Note 1 of the Table",
+      "cells": {
+        "rate": "393(2)-4.E(a)",
+        "entry": "393(2)-4",
+        "case": "where such bonds are issued on or after the 1st April, 2020 but before the 1st July, 2023",
+        "words": "(a) 4%, where such bonds are issued on or after the 1st April, 2020 but before the 1st July, 2023",
+        "basis": "fixed",
+        "percent": 4,
+        "baseWords": "For serial numbers. 2, 3 and 4, the interest payable shall be income to the extent to which such interest does not exceed the amount of interest calculated at the rate approved by the Central Government in this behalf, having regard to the terms of the loan or the bond and its repayment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 4.E(b)) and Note 1 of the Table",
+      "cells": {
+        "rate": "393(2)-4.E(b)",
+        "entry": "393(2)-4",
+        "case": "where such bonds are issued on or after the 1st July, 2023",
+        "words": "(b) 9%, where such bonds are issued on or after the 1st July, 2023.",
+        "basis": "fixed",
+        "percent": 9,
+        "baseWords": "For serial numbers. 2, 3 and 4, the interest payable shall be income to the extent to which such interest does not exceed the amount of interest calculated at the rate approved by the Central Government in this behalf, having regard to the terms of the loan or the bond and its repayment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 5)",
+      "cells": {
+        "rate": "393(2)-5",
+        "entry": "393(2)-5",
+        "case": null,
+        "words": "5%",
+        "basis": "fixed",
+        "percent": 5,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 6.E(a))",
+      "cells": {
+        "rate": "393(2)-6.E(a)",
+        "entry": "393(2)-6",
+        "case": "in case of income of the nature referred to in Schedule V [Table: Sl. No. 3. B(a)]",
+        "words": "(a) 5%, in case of income of the nature referred to in Schedule V [Table: Sl. No. 3. B(a)]",
+        "basis": "fixed",
+        "percent": 5,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 6.E(b))",
+      "cells": {
+        "rate": "393(2)-6.E(b)",
+        "entry": "393(2)-6",
+        "case": "in case of income of the nature referred to in Schedule V [Table: Sl. No. 3. B(b)]",
+        "words": "(b) 10%, in case of income of the nature referred to in Schedule V [Table: Sl. No. 3. B(b)].",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 7)",
+      "cells": {
+        "rate": "393(2)-7",
+        "entry": "393(2)-7",
+        "case": null,
+        "words": "Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 8)",
+      "cells": {
+        "rate": "393(2)-8",
+        "entry": "393(2)-8",
+        "case": null,
+        "words": "Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 9)",
+      "cells": {
+        "rate": "393(2)-9",
+        "entry": "393(2)-9",
+        "case": null,
+        "words": "Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 10) and Note 2(a) of the Table",
+      "cells": {
+        "rate": "393(2)-10.Note2(a)",
+        "entry": "393(2)-10",
+        "case": null,
+        "words": "For serial numbers. 10 and 15, tax shall be deducted at the rate of— (a) 20%",
+        "basis": "fixed",
+        "percent": 20,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 10) and Note 2(b) of the Table",
+      "cells": {
+        "rate": "393(2)-10.Note2(b)",
+        "entry": "393(2)-10",
+        "case": "where an agreement referred to in section 159(1) or 159(2) applies to the payee and if the payee has furnished a certificate referred to in section 159(8)",
+        "words": "(b) where an agreement referred to in section 159(1) or 159(2) applies to the payee and if the payee has furnished a certificate referred to in section 159(8), as the case may be, then, income-tax shall be deducted at the rate or rates of income-tax provided in such agreement for such income, if such rate is lower than 20%.",
+        "basis": "agreement",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 11)",
+      "cells": {
+        "rate": "393(2)-11",
+        "entry": "393(2)-11",
+        "case": null,
+        "words": "10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 12)",
+      "cells": {
+        "rate": "393(2)-12",
+        "entry": "393(2)-12",
+        "case": null,
+        "words": "12.5%",
+        "basis": "fixed",
+        "percent": 12.5,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 13)",
+      "cells": {
+        "rate": "393(2)-13",
+        "entry": "393(2)-13",
+        "case": null,
+        "words": "10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 14)",
+      "cells": {
+        "rate": "393(2)-14",
+        "entry": "393(2)-14",
+        "case": null,
+        "words": "12.5%",
+        "basis": "fixed",
+        "percent": 12.5,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 15) and Note 2(a) of the Table",
+      "cells": {
+        "rate": "393(2)-15.Note2(a)",
+        "entry": "393(2)-15",
+        "case": null,
+        "words": "For serial numbers. 10 and 15, tax shall be deducted at the rate of— (a) 20%",
+        "basis": "fixed",
+        "percent": 20,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 15) and Note 2(b) of the Table",
+      "cells": {
+        "rate": "393(2)-15.Note2(b)",
+        "entry": "393(2)-15",
+        "case": "where an agreement referred to in section 159(1) or 159(2) applies to the payee and if the payee has furnished a certificate referred to in section 159(8)",
+        "words": "(b) where an agreement referred to in section 159(1) or 159(2) applies to the payee and if the payee has furnished a certificate referred to in section 159(8), as the case may be, then, income-tax shall be deducted at the rate or rates of income-tax provided in such agreement for such income, if such rate is lower than 20%.",
+        "basis": "agreement",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 16)",
+      "cells": {
+        "rate": "393(2)-16",
+        "entry": "393(2)-16",
+        "case": null,
+        "words": "10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 17)",
+      "cells": {
+        "rate": "393(2)-17",
+        "entry": "393(2)-17",
+        "case": null,
+        "words": "Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1)",
+      "cells": {
+        "rate": "393(3)-1",
+        "entry": "393(3)-1",
+        "case": null,
+        "words": "Rate: Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2) and section 393(3)(a)",
+      "cells": {
+        "rate": "393(3)-2",
+        "entry": "393(3)-2",
+        "case": null,
+        "words": "Rate: Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": "on net winnings as per Note 1 of the Table"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3)",
+      "cells": {
+        "rate": "393(3)-3",
+        "entry": "393(3)-3",
+        "case": null,
+        "words": "Rate: Rates in force.",
+        "basis": "ratesInForce",
+        "percent": null,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 4)",
+      "cells": {
+        "rate": "393(3)-4",
+        "entry": "393(3)-4",
+        "case": null,
+        "words": "Rate: 2%",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 5)",
+      "cells": {
+        "rate": "393(3)-5",
+        "entry": "393(3)-5",
+        "case": null,
+        "words": "Rate: 2%",
+        "basis": "fixed",
+        "percent": 2,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 6)",
+      "cells": {
+        "rate": "393(3)-6",
+        "entry": "393(3)-6",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 7)",
+      "cells": {
+        "rate": "393(3)-7",
+        "entry": "393(3)-7",
+        "case": null,
+        "words": "Rate: 10%",
+        "basis": "fixed",
+        "percent": 10,
+        "baseWords": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,1003 @@
+{
+  "key": "income-tax.tds-crosswalk",
+  "title": "TDS provisions: Income-tax Act, 1961 to Income-tax Act, 2025",
+  "description": "The ERP's reading, not a government table: for each provision of the Income-tax Act, 1961 under which tax was deducted at source up to 31 March 2026, and for its section 197, the provision of the Income-tax Act, 2025 that governs the same payment from 1 April 2026, or none. Section 536 of the 2025 Act repeals the 1961 Act and saves what was done under it but names no corresponding provision, and no complete official mapping was read. Each row says what ties the pair: a statement of the Income Tax Department's e-filing pages, the department's forms, or the words of the two Acts, where the Finance Act, 2025 (section 2(5), (6) and (9)) lists each 1961 section in the place where the Finance Act, 2026 (section 3(7) and (10)) lists its 2025 entry. The 1961 headings are those the department's TRACES pages show. Pairs whose 1961 side no instrument read states are left out: section 195(6), 197A and 206AA and the first proviso to section 194N.",
+  "basis": "interpretation",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "pair",
+      "title": "Pair",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "oldProvision",
+      "title": "Income-tax Act, 1961",
+      "kind": "code"
+    },
+    {
+      "name": "heading1961",
+      "title": "Heading in the 1961 Act, as TRACES shows it",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "newProvision",
+      "title": "Income-tax Act, 2025",
+      "kind": "code",
+      "optional": true
+    },
+    {
+      "name": "newEntry",
+      "title": "TDS entry of the Income-tax Act, 2025",
+      "kind": "code",
+      "optional": true,
+      "references": [
+        "income-tax.tds-entries"
+      ]
+    },
+    {
+      "name": "newCitation",
+      "title": "As the 2025 Act cites it",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "payment",
+      "title": "Payment, in the 2025 Act's words",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "part",
+      "title": "Part of the 1961 provision",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "kind",
+      "title": "What the pair is",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "deduction",
+          "title": "A deduction"
+        },
+        {
+          "value": "certificate",
+          "title": "A lower or nil deduction certificate"
+        },
+        {
+          "value": "noCounterpart",
+          "title": "No counterpart"
+        }
+      ]
+    },
+    {
+      "name": "tie",
+      "title": "What ties the pair",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "departmentStates",
+          "title": "Stated by the Income Tax Department"
+        },
+        {
+          "value": "departmentForms",
+          "title": "Tied by the department's forms"
+        },
+        {
+          "value": "actWords",
+          "title": "The words of the Acts"
+        }
+      ]
+    },
+    {
+      "name": "why",
+      "title": "Why this pair",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), 21 August 2025, sections 392, 393, 395, 397, 402 and 536, in force 1 April 2026 (section 1(3))",
+        "Corrigenda to the Income-tax Act, 2025, Gazette of India Extraordinary, Part II, Section 1, No. 2, 30 January 2026",
+        "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7) and (10) and sections 84, 86 and 90, in force 1 April 2026 (section 1(2)(a))",
+        "Finance Act, 2025 (7 of 2025), 29 March 2025, section 2(5), (6) and (9), sections 56 to 71 and First Schedule, Part II",
+        "Finance (No. 2) Act, 2024 (15 of 2024), 16 August 2024, sections 50 to 65",
+        "TRACES, Income Tax Department, “Financial Year 2025-2026 Non-Salary” (https://traces61contents.tdscpc.gov.in/en/tds-2025-2026.html), “Last reviewed and updated on : 31-March-2026”: the 1961 headings, an official secondary text",
+        "TRACES, Income Tax Department, section codes (https://traces61contents.tdscpc.gov.in/en/section-codes-26A.html), “Last reviewed and updated on : 31-March-2026”: the heading of section 192, which the rates page does not give",
+        "Income Tax Department, e-filing portal, TDS Compliance, Tax Payments, Income Tax Forms and Form 141 FAQs, read 8 November 2026: the pairs the department states and the forms it replaces"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(1); Income-tax Act, 1961, section 192, as listed in the Finance Act, 2025, section 2(9); e-filing TDS Compliance FAQs, question 20",
+      "cells": {
+        "pair": "192.392(1)",
+        "oldProvision": "192",
+        "heading1961": "Salary",
+        "newProvision": "392(1)",
+        "newEntry": "392(1)",
+        "newCitation": "section 392(1)",
+        "payment": "any income chargeable under the head “Salaries”",
+        "part": "The deduction from salary; section 392(2) to (6) and (8) carry the rest of section 192's rules and are not paired one by one",
+        "kind": "deduction",
+        "tie": "departmentStates",
+        "why": "The Income Tax Department's TDS Compliance FAQs (question 20) state the pair: “TDS obligations shall be in accordance to Section 192 of the old Act”, and for salary of the tax year 2026-27, paid from April 2026 onwards, “TDS obligations shall be in accordance to Section 392(1) of the new act”. The Finance Acts agree: section 2(9) of the Finance Act, 2025 deducts tax from income chargeable under the head “Salaries” under section 192 at the rates of Part III of its First Schedule, and section 3(10)(ii) of the Finance Act, 2026 does the same for income chargeable under the head “Salaries” under section 392 other than sub-section (7)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(7); Income-tax Act, 1961, section 192A, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "192A.392(7)",
+        "oldProvision": "192A",
+        "heading1961": "Payment of accumulated balance due to an employee.(applicable from 01.06.2015)",
+        "newProvision": "392(7)",
+        "newEntry": "392(7)",
+        "newCitation": "section 392(7)",
+        "payment": "accumulated balance due to the employee participating in a recognised provident fund",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 392(7) deducts at 10% from the accumulated balance due to an employee participating in a recognised provident fund, under the heading of section 392, “Salary and accumulated balance due to an employee.”; section 2(6) of the Finance Act, 2025 lists section 192A among the deductions at the rates the sections specify where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists 392(7)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(i)]; Income-tax Act, 1961, section 194D, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194D.393(1)-1(i)",
+        "oldProvision": "194D",
+        "heading1961": "Insurance Commission",
+        "newProvision": "393(1)-1(i)",
+        "newEntry": "393(1)-1(i)",
+        "newCitation": "section 393(1) [Table: Sl. No. 1(i)]",
+        "payment": "Any income by way of remuneration or reward, whether by way of commission or otherwise, for soliciting or procuring insurance business (including business relating to the continuance, renewal or revival of insurance policies).",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 61 of the Finance Act, 2025 raised the limit of section 194D to twenty thousand rupees, the entry's “Threshold limit: ₹ 20,000.”; both Acts deduct it at the rates in force, section 2(5) of the Finance Act, 2025 listing section 194D where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 1) lists 393(1) [Table: Sl. Nos. 1(i) and 5], and Part II of both First Schedules gives a rate “on income by way of insurance commission”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(ii)]; Income-tax Act, 1961, section 194H, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194H.393(1)-1(ii)",
+        "oldProvision": "194H",
+        "heading1961": "Commission / Brokerage",
+        "newProvision": "393(1)-1(ii)",
+        "newEntry": "393(1)-1(ii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 1(ii)]",
+        "payment": "Any income by way of commission [not being insurance commission referred to in serial number 1(i)] or brokerage.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 63 of the Finance Act, 2025 raised the limit of section 194H to twenty thousand rupees and section 57 of the Finance (No. 2) Act, 2024 set its rate at two per cent., the entry's “Rate: 2%” and “Threshold limit: ₹ 20,000.”; the Table of section 393(4) names the entry “Commission or Brokerage referred to in section 393(1) [Table: Sl. No. 1(ii)]”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(i)]; Income-tax Act, 1961, section 194-IB, as listed in the Finance Act, 2025, section 2(6); e-filing TDS Compliance FAQs, question 9, and FAQs for Form 141, question 2",
+      "cells": {
+        "pair": "194-IB.393(1)-2(i)",
+        "oldProvision": "194-IB",
+        "heading1961": "Payment of rent by certain individuals or Hindu undivided family",
+        "newProvision": "393(1)-2(i)",
+        "newEntry": "393(1)-2(i)",
+        "newCitation": "section 393(1) [Table: Sl. No. 2(i)]",
+        "payment": "Any income by way of rent.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "departmentForms",
+        "why": "The department's forms tie the pair: its TDS Compliance FAQs (question 9) list “Form 26QC — TDS on rent by individual/HUF (Section 194 -IB)” and say “a common form i.e. Form No. 141 can be used for any of the above four type of transactions”, and its FAQs for Form 141 (question 2) name “Schedule A: TDS on rent paid by an Individual/HUF under section 393(1)”, the entry of Sl. No. 2(i). Section 59 of the Finance (No. 2) Act, 2024 set the rate of section 194-IB at two per cent., the entry's “Rate: 2%”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(ii)]; Income-tax Act, 1961, section 194-I, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194-I.393(1)-2(ii)",
+        "oldProvision": "194-I",
+        "heading1961": "Rent",
+        "newProvision": "393(1)-2(ii)",
+        "newEntry": "393(1)-2(ii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 2(ii)]",
+        "payment": "Any income by way of rent.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 64 of the Finance Act, 2025 spares under section 194-I rent credited or paid for a month or part of a month that does not exceed fifty thousand rupees, the entry's “Threshold limit [for (a) and (b)]: ₹ 50,000 for a month or part of a month.”; the entry's rates (a) and (b) answer TRACES's codes 194I(a) and 194I(b), and the Table of section 393(4) names the entry “Rent referred to in section 393(1) [Table: Sl. No. 2(ii)]”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(i)]; Income-tax Act, 1961, section 194-IA, as listed in the Finance Act, 2025, section 2(6); e-filing TDS Compliance FAQs, question 9, and FAQs for Form 141, question 2",
+      "cells": {
+        "pair": "194-IA.393(1)-3(i)",
+        "oldProvision": "194-IA",
+        "heading1961": "Transfer of certain immovable property other than agriculture land (w.e.f. 1-6-2013)",
+        "newProvision": "393(1)-3(i)",
+        "newEntry": "393(1)-3(i)",
+        "newCitation": "section 393(1) [Table: Sl. No. 3(i)]",
+        "payment": "Any consideration for transfer of any immovable property (other than agricultural land).",
+        "part": null,
+        "kind": "deduction",
+        "tie": "departmentForms",
+        "why": "The department's forms tie the pair: its TDS Compliance FAQs (question 9) list “Form 26QB — TDS on purchase of immovable property (Section 194 -IA)” and say “a common form i.e. Form No. 141 can be used for any of the above four type of transactions”, and its FAQs for Form 141 (question 2) name “Schedule B: TDS on transfer of immovable property under section 393(1)”, the entry of Sl. No. 3(i). The Table's heading of the entry, “Payment on transfer of certain immovable property other than agricultural land”, is the 1961 heading as the TRACES section codes give it, and Note 1 counts “the aggregate of the amounts paid or payable by all the transferees to the transferor or all the transferors”, as section 58 of the Finance (No. 2) Act, 2024 made section 194-IA count it."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(ii)]; Income-tax Act, 1961, section 194-IC, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194-IC.393(1)-3(ii)",
+        "oldProvision": "194-IC",
+        "heading1961": "Payment under Specified agreement",
+        "newProvision": "393(1)-3(ii)",
+        "newEntry": "393(1)-3(ii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 3(ii)]",
+        "payment": "Any consideration, not being consideration in kind, under the agreement referred to in section 67(14).",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The entry deducts from consideration under the agreement referred to in section 67(14), which section 67(15)(b) defines as a “specified agreement”, the word of TRACES's heading of section 194-IC; section 2(6) of the Finance Act, 2025 lists section 194-IC where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 3 of the Table of section 393(1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(iii)]; Income-tax Act, 1961, section 194LA, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LA.393(1)-3(iii)",
+        "oldProvision": "194LA",
+        "heading1961": "Immovable Property",
+        "newProvision": "393(1)-3(iii)",
+        "newEntry": "393(1)-3(iii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 3(iii)]",
+        "payment": "Any sum, being in the nature of— (a) compensation or the enhanced compensation; or (b) consideration or the enhanced consideration, on account of compulsory acquisition, under any law for the time being in force, of any immovable property (other than agricultural land).",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 67 of the Finance Act, 2025 raised the limit of section 194LA to five lakh rupees, the entry's “Threshold limit: ₹ 5,00,000.”, and the Table of section 393(4) names the entry “Compensation on acquisition of certain immovable property referred to in section 393(1) [Table: Sl. No. 3(iii)]”, as the TRACES section codes name section 194LA."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(i)]; Income-tax Act, 1961, section 194K, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194K.393(1)-4(i)",
+        "oldProvision": "194K",
+        "heading1961": "Payment of Dividend by Mutual Funds (Applicable From 01-Apr-2020)",
+        "newProvision": "393(1)-4(i)",
+        "newEntry": "393(1)-4(i)",
+        "newCitation": "section 393(1) [Table: Sl. No. 4(i)]",
+        "payment": "Any income in respect of— (a) units of a Mutual Fund specified under Schedule VII (Table: Sl. No. 20 or 21); or (b) units from the Administrator of the specified undertaking; or (c) units from the specified company.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 66 of the Finance Act, 2025 raised the limit of section 194K to ten thousand rupees, the entry's “Threshold limit: ₹ 10,000.”, and the Table of section 393(4) names the entry “Income in respect of units referred to in section 393(1) [Table: Sl. No. 4(i)]”; section 2(6) of the Finance Act, 2025 lists section 194K where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 4 of the Table of section 393(1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(ii)]; Income-tax Act, 1961, section 194LBA, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LBA.393(1)-4(ii)",
+        "oldProvision": "194LBA",
+        "heading1961": "Certain income from units of a business trust to Residents",
+        "newProvision": "393(1)-4(ii)",
+        "newEntry": "393(1)-4(ii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 4(ii)]",
+        "payment": "Any distributed income referred to in section 223, being of the nature referred to in Schedule V (Table: Sl. Nos. 3 and 4), payable to a unitholder of a Business Trust.",
+        "part": "Distributions to a unit holder resident in India",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The Table of section 393(4) names the entry “Income from units of a business trust referred to in section 393(1) [Table: Sl. No. 4(ii)]”, in the words of TRACES's heading of section 194LBA, and section 2(6) of the Finance Act, 2025 lists section 194LBA where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 4 of the Table of section 393(1), which deducts from payments to a resident."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(iii)]; Income-tax Act, 1961, section 194LBB, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LBB.393(1)-4(iii)",
+        "oldProvision": "194LBB",
+        "heading1961": "Income in respect of units of investment fund.",
+        "newProvision": "393(1)-4(iii)",
+        "newEntry": "393(1)-4(iii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 4(iii)]",
+        "payment": "Any income, other than that proportion of income which is exempt under Schedule V (Table: Sl. No. 2), in respect of units of an investment fund specified in section 224, payable to its unitholder.",
+        "part": "Unit holders resident in India",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The entry deducts from income in respect of units of an investment fund specified in section 224, which the Table of section 393(4) names “Income in respect of units of investment fund” for the payments to non-residents, TRACES's heading of section 194LBB; section 2(6) of the Finance Act, 2025 lists section 194LBB where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 4 of the Table of section 393(1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(iv)]; Income-tax Act, 1961, section 194LBC, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LBC.393(1)-4(iv)",
+        "oldProvision": "194LBC",
+        "heading1961": "Income in respect of investment in securitisation trust.",
+        "newProvision": "393(1)-4(iv)",
+        "newEntry": "393(1)-4(iv)",
+        "newCitation": "section 393(1) [Table: Sl. No. 4(iv)]",
+        "payment": "Any income, in respect of an investment in a securitisation trust specified in section 221 to an investor.",
+        "part": "Investors resident in India",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 68 of the Finance Act, 2025 gave section 194LBC its rate in the words “at the rate of ten per cent.”, the entry's “Rate: 10%”, and section 2(6) of the Finance Act, 2025 lists section 194LBC where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 4 of the Table of section 393(1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(i)]; Income-tax Act, 1961, section 193, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "193.393(1)-5(i)",
+        "oldProvision": "193",
+        "heading1961": "Interest on securities",
+        "newProvision": "393(1)-5(i)",
+        "newEntry": "393(1)-5(i)",
+        "newCitation": "section 393(1) [Table: Sl. No. 5(i)]",
+        "payment": "Any income by way of Interest on securities.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 56 of the Finance Act, 2025 limited section 193 to “the amount or the aggregate of amounts exceeding ten thousand rupees during the financial year”, the entry's “Threshold limit: ₹ 10,000.”, and the Table of section 393(4) names the entry “Interest on securities referred to in section 393(1) [Table: Sl. No. 5(i)]”, TRACES's heading of section 193; both Acts deduct it at the rates in force (Finance Act, 2025, section 2(5); Finance Act, 2026, section 3(7), Table, Sl. No. 1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(ii)]; Income-tax Act, 1961, section 194A, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194A.393(1)-5(ii)",
+        "oldProvision": "194A",
+        "heading1961": "Banks / Co-operative society engaged in business of banking / Post Office",
+        "newProvision": "393(1)-5(ii)",
+        "newEntry": "393(1)-5(ii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 5(ii)]",
+        "payment": "Any income by way of interest other than interest on securities.",
+        "part": "Interest paid by a banking company, a co-operative society carrying on the business of banking or a post office",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 58 of the Finance Act, 2025 raised the limits of section 194A(3)(i) to fifty thousand rupees and, in its third proviso, to one lakh rupees, the entry's “(a) ₹ 1,00,000 in the case of a senior citizen; (b) ₹ 50,000 in case of person other than senior citizen.”; the Table of section 393(4) names the entry “Interest other than interest on securities referred to in section 393(1) [Table: Sl. No. 5(ii) and 5(iii)]”, and both Acts deduct it at the rates in force (Finance Act, 2025, section 2(5); Finance Act, 2026, section 3(7), Table, Sl. No. 1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(iii)]; Income-tax Act, 1961, section 194A, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194A.393(1)-5(iii)",
+        "oldProvision": "194A",
+        "heading1961": "Interest other than interest on securities - in any Others Case",
+        "newProvision": "393(1)-5(iii)",
+        "newEntry": "393(1)-5(iii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 5(iii)]",
+        "payment": "Any income being interest other than interest on securities.",
+        "part": "Interest paid by any other payer",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 58 of the Finance Act, 2025 raised the limit of sub-clause (d) of section 194A(3)(i) to ten thousand rupees, the entry's “Threshold limit: ₹ 10,000.”; the entry's payer is a specified person other than the banking company, co-operative society or post office of Sl. No. 5(ii), and both Acts deduct it at the rates in force (Finance Act, 2025, section 2(5); Finance Act, 2026, section 3(7), Table, Sl. No. 1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(i)]; Income-tax Act, 1961, section 194C, as listed in the Finance Act, 2025, section 2(6); e-filing TDS Compliance FAQs, question 2, and Tax Payments FAQs, question 5",
+      "cells": {
+        "pair": "194C.393(1)-6(i)",
+        "oldProvision": "194C",
+        "heading1961": "Payment to Contractors",
+        "newProvision": "393(1)-6(i)",
+        "newEntry": "393(1)-6(i)",
+        "newCitation": "section 393(1) [Table: Sl. No. 6(i)]",
+        "payment": "Any sum for carrying out any work (including supply of labour for carrying out any work) in pursuance of a contract between the contractor and a designated person.",
+        "part": "Work for a designated person; work for an individual or Hindu undivided family who is not one falls under section 393(1) [Table: Sl. No. 6(ii)], with section 194M",
+        "kind": "deduction",
+        "tie": "departmentStates",
+        "why": "The department's TDS Compliance FAQs (question 2) state the pair: for payments for March 2026 credited on 31 March 2026 “TDS obligation shall be under Section 194C of old Act.”, and under the new Act “TDS obligations shall be under Section 393(1) [Table: Sl. No. 6(i)] of the new Act.”; its Tax Payments FAQs (question 5) add that “the firm must quote Section 393(1) [Table: Sl. No. 6(i)] of the new Act, and not Section 194C of the old Act.” The words agree: section 402(47) keeps out of “work” what Explanation (iv) to section 194C, as section 53 of the Finance (No. 2) Act, 2024 substituted it, keeps out: “manufacturing or supplying a product according to the requirement or specification of a customer by using material purchased from a person, other than such customer or associate of such customer”, and the Table of section 393(4) names the entry “Payments to contractors referred to in section 393(1) [Table: Sl. No. 6(i)]”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(ii)]; Income-tax Act, 1961, section 194M, as listed in the Finance Act, 2025, section 2(6); e-filing TDS Compliance FAQs, question 9, and FAQs for Form 141, question 2",
+      "cells": {
+        "pair": "194M.393(1)-6(ii)",
+        "oldProvision": "194M",
+        "heading1961": "Payment of certain sums by certain individuals or Hindu undivided family",
+        "newProvision": "393(1)-6(ii)",
+        "newEntry": "393(1)-6(ii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 6(ii)]",
+        "payment": "Any sum–– (a) for carrying out any work (including supply of labour for carrying out any work) in pursuance of a contract; or (b) by way of fees for professional services; or (c) by way of commission [not being insurance commission referred to in serial number 1(i)] or brokerage.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "departmentForms",
+        "why": "The department's forms tie the pair: its TDS Compliance FAQs (question 9) list “Form 26QD — TDS on payments by individuals/HUFs to contractors and professionals (Section 194M)” and say “a common form i.e. Form No. 141 can be used for any of the above four type of transactions”, and its FAQs for Form 141 (question 2) name “Schedule C: TDS on payment made by an Individual/HUF to contractors or professionals”, which it places under section 393(1) [Table: Sl. No. 6(ii)]. Section 60 of the Finance (No. 2) Act, 2024 set the rate of section 194M at two per cent., the entry's “Rate: 2%”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(iii)]; Income-tax Act, 1961, section 194J, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194J.393(1)-6(iii)",
+        "oldProvision": "194J",
+        "heading1961": "Fees for Professional/Technical Services",
+        "newProvision": "393(1)-6(iii)",
+        "newEntry": "393(1)-6(iii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 6(iii)]",
+        "payment": "Any sum by way of–– (a) fees for professional services; or (b) fees for technical services; or (c) remuneration or fees or commission by whatever name called, other than those on which tax is deductible under section 392, to a director of a company; or (d) royalty; or (e) any sum referred to in section 26(2)(h).",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Where Explanation (iv) to section 194C, as section 53 of the Finance (No. 2) Act, 2024 substituted it, keeps “any sum referred to in sub-section (1) of section 194J” out of “work”, section 402(47) keeps out “any sum referred to in section 393(1) [Table: Sl. No. 6(iii)]”; section 65 of the Finance Act, 2025 raised the limit of section 194J(1) to fifty thousand rupees, the entry's “Threshold limit: (i) for (a), (b), (d) and (e) of Col. B: ₹ 50,000.”, and the Table of section 393(4) names the entry “Fees for professional or technical services referred to in section 393(1) [Table: Sl. No. 6(iii)]”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) (Table: Sl. No. 7); Income-tax Act, 1961, section 194, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194.393(1)-7",
+        "oldProvision": "194",
+        "heading1961": "Dividends",
+        "newProvision": "393(1)-7",
+        "newEntry": "393(1)-7",
+        "newCitation": "section 393(1) (Table: Sl. No. 7)",
+        "payment": "Any dividend (including dividend on preference shares) declared.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 57 of the Finance Act, 2025 raised the limit in clause (b) of the first proviso to section 194 to ten thousand rupees, the limit up to which the Table of section 393(4) (Sl. No. 10(f)) spares a dividend paid to an individual shareholder by any mode other than cash; the Table names the entry “Dividend referred to in section 393(1) (Table: Sl. No. 7)”, and section 2(6) of the Finance Act, 2025 lists section 194 where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 7 of the Table of section 393(1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(i)]; Income-tax Act, 1961, section 194DA, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194DA.393(1)-8(i)",
+        "oldProvision": "194DA",
+        "heading1961": "Payment in respect of life insurance policy (applicable from 01.10.2014)",
+        "newProvision": "393(1)-8(i)",
+        "newEntry": "393(1)-8(i)",
+        "newCitation": "section 393(1) [Table: Sl. No. 8(i)]",
+        "payment": "Any sum under a life insurance policy, including the sum allocated as bonus on such policy, other than the amount not includible in the total income under Schedule II (Table: Sl. No. 2).",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 54 of the Finance (No. 2) Act, 2024 set the rate of section 194DA at two per cent., the entry's “Rate: 2% on income comprised in such sum.”, and the Table of section 393(6) names the entry “payment in respect of life insurance policy referred to in section 393(1) [Table: Sl. No. 8(i)]”, in the words of TRACES's heading of section 194DA."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(ii)]; Income-tax Act, 1961, section 194Q, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194Q.393(1)-8(ii)",
+        "oldProvision": "194Q",
+        "heading1961": "TDS on Purchase of Goods exceeding Rs. 50 Lakhs (Applicable From 01-July-2021)",
+        "newProvision": "393(1)-8(ii)",
+        "newEntry": "393(1)-8(ii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 8(ii)]",
+        "payment": "Any sum exceeding fifty lakh rupees for purchase of any goods.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The entry deducts from “Any sum exceeding fifty lakh rupees for purchase of any goods.”, as TRACES heads section 194Q, and its Note 1(a) excludes “a transaction on which tax is deductible or collectible under any of the provisions of the Act”, where section 69 of the Finance Act, 2025 struck the exception for section 206C(1H) out of section 194Q(5)(b); section 2(6) of the Finance Act, 2025 lists section 194Q where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 8(ii) of the Table of section 393(1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(iii)]; Income-tax Act, 1961, section 194P, as listed in the Finance Act, 2025, section 2(9)",
+      "cells": {
+        "pair": "194P.393(1)-8(iii)",
+        "oldProvision": "194P",
+        "heading1961": "TDS in case of Specified Senior Citizen",
+        "newProvision": "393(1)-8(iii)",
+        "newEntry": "393(1)-8(iii)",
+        "newCitation": "section 393(1) [Table: Sl. No. 8(iii)]",
+        "payment": "Total income of a specified senior citizen after giving effect to deduction allowable under Chapter VIII and rebate allowable under section 156.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 2(9) of the Finance Act, 2025 computes the tax deducted under section 194P at the rates of Part III of its First Schedule, and section 3(10)(iii) of the Finance Act, 2026 does the same where “income-tax has to be deducted under section 393(1) [Table: Sl. No. 8(iii)] of the said Act”; the entry's payer is the specified bank of a specified senior citizen, as TRACES heads section 194P."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(iv)]; Income-tax Act, 1961, section 194R, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194R.393(1)-8(iv)",
+        "oldProvision": "194R",
+        "heading1961": "TDS in case any benefit or perquisite (arising from business or the exercise of a profession) is provided (Applicable From 01-July-2022)",
+        "newProvision": "393(1)-8(iv)",
+        "newEntry": "393(1)-8(iv)",
+        "newCitation": "section 393(1) [Table: Sl. No. 8(iv)]",
+        "payment": "Any benefit or perquisite, whether convertible into money or not, arising from business or the exercise of a profession of any resident.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The entry deducts from “Any benefit or perquisite, whether convertible into money or not, arising from business or the exercise of a profession of any resident.”, which TRACES's heading of section 194R describes in the same words, and section 2(6) of the Finance Act, 2025 lists section 194R where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 8(iv) of the Table of section 393(1)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(v)]; Income-tax Act, 1961, section 194-O, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194-O.393(1)-8(v)",
+        "oldProvision": "194-O",
+        "heading1961": "TDS on e-commerce participants (Applicable From 01-Oct-2020)",
+        "newProvision": "393(1)-8(v)",
+        "newEntry": "393(1)-8(v)",
+        "newCitation": "section 393(1) [Table: Sl. No. 8(v)]",
+        "payment": "Any sum on account of sale of goods or provision of services by an e-commerce participant, facilitated by an e-commerce operator through its digital or electronic facility or platform.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 61 of the Finance (No. 2) Act, 2024 set the rate of section 194-O at 0.1 per cent., the entry's “Rate: 0.1% of gross amount of such sale or services or both.”, and the Table of section 393(4) names the entry “Payment by e-commerce operator to e-commerce participant referred to in section 393(1) [Table: Sl. No. 8(v)]”, which the TRACES section codes head “Payment of certain sums by e-commerce operator to e-commerce participant”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(vi)]; Income-tax Act, 1961, section 194S, as listed in the Finance Act, 2025, section 2(6); e-filing TDS Compliance FAQs, question 9, and FAQs for Form 141, question 2",
+      "cells": {
+        "pair": "194S.393(1)-8(vi)",
+        "oldProvision": "194S",
+        "heading1961": "TDS on payment on transfer of Virtual Digital Asset ( Applicable From 01-July-2022)",
+        "newProvision": "393(1)-8(vi)",
+        "newEntry": "393(1)-8(vi)",
+        "newCitation": "section 393(1) [Table: Sl. No. 8(vi)]",
+        "payment": "Any sum by way of consideration for transfer of a virtual digital asset.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "departmentForms",
+        "why": "The department's forms tie the pair: its TDS Compliance FAQs (question 9) list “Form 26QE — TDS on transfer of virtual digital assets (Section 194S)” and say “a common form i.e. Form No. 141 can be used for any of the above four type of transactions”, and its FAQs for Form 141 (question 2) name “Schedule D: TDS on payment made by an Individual/HUF on transfer of Virtual Digital Assets (VDA)”, which it places under section 393(1) [Table: Sl. No. 8(vi)]. The Table of section 393(4) names the entry “Payment on transfer of virtual digital asset referred to in section 393(1) [Table: Sl. No. 8(vi)]”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 1); Income-tax Act, 1961, section 194E, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194E.393(2)-1",
+        "oldProvision": "194E",
+        "heading1961": "Payment to Non-Resident Sportsmen or Sports Association",
+        "newProvision": "393(2)-1",
+        "newEntry": "393(2)-1",
+        "newCitation": "section 393(2) (Table: Sl. No. 1)",
+        "payment": "Any income referred to in section 211.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The entry deducts from income referred to in section 211, headed “Tax on non-resident sportsmen or sports associations.”, and section 2(6) of the Finance Act, 2025 lists section 194E where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. Nos. 1 to 6 of the Table of section 393(2)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 2); Income-tax Act, 1961, section 194LC, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LC.393(2)-2",
+        "oldProvision": "194LC",
+        "heading1961": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
+        "newProvision": "393(2)-2",
+        "newEntry": "393(2)-2",
+        "newCitation": "section 393(2) (Table: Sl. No. 2)",
+        "payment": "Any income by way of interest payable in respect of moneys borrowed in foreign currency from a source outside India,— (a) under a loan agreement or issue of long-term infrastructure bond on or after the 1st July, 2012 but before the 1st July, 2023; or (b) by way of issue of any long-term bond on or after the 1st October, 2014 but before the 1st July, 2023, which is approved by the Central Government in this behalf.",
+        "part": "Interest on moneys borrowed in foreign currency under a loan agreement or by way of long-term bonds",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Part II of the First Schedule to the Finance Act, 2025 leaves out “income by way of interest referred to in section 194LB or section 194LC” where Part II of the Finance Act, 2026 leaves out “income by way of interest referred to in section 393(2) [Table: Sl. Nos. 2 to 5] of the said Act”, and section 397(2)(c)(i) of the 2025 Act spares a non-resident from the higher rate without a PAN on “payment of interest on long-term bonds as specified in section 393(2) (Table: Sl. Nos. 2, 3 and 4)”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 3); Income-tax Act, 1961, section 194LC, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LC.393(2)-3",
+        "oldProvision": "194LC",
+        "heading1961": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
+        "newProvision": "393(2)-3",
+        "newEntry": "393(2)-3",
+        "newCitation": "section 393(2) (Table: Sl. No. 3)",
+        "payment": "Any income by way of interest payable in respect of moneys borrowed from a source outside India by way of issue of rupee denominated bond before the 1st July, 2023.",
+        "part": "Interest on rupee denominated bonds",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Part II of the First Schedule to the Finance Act, 2025 leaves out “income by way of interest referred to in section 194LB or section 194LC” where Part II of the Finance Act, 2026 leaves out “income by way of interest referred to in section 393(2) [Table: Sl. Nos. 2 to 5] of the said Act”, and section 397(2)(c)(i) of the 2025 Act spares a non-resident from the higher rate without a PAN on “payment of interest on long-term bonds as specified in section 393(2) (Table: Sl. Nos. 2, 3 and 4)”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 4); Income-tax Act, 1961, section 194LC, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LC.393(2)-4",
+        "oldProvision": "194LC",
+        "heading1961": "Income by way of interest by an Indian specified company to a non-resident / foreign company on foreign currency approved loan /long-term infrastructure bonds from outside India (applicable from July 1, 2012)",
+        "newProvision": "393(2)-4",
+        "newEntry": "393(2)-4",
+        "newCitation": "section 393(2) (Table: Sl. No. 4)",
+        "payment": "Any income by way of interest payable in respect of moneys borrowed from a source outside India by way of issue of any long-term bond or rupee denominated bond, which is listed only on a recognised stock exchange located in any International Financial Services Centre.",
+        "part": "Interest on bonds listed only on a recognised stock exchange in an International Financial Services Centre",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Part II of the First Schedule to the Finance Act, 2025 leaves out “income by way of interest referred to in section 194LB or section 194LC” where Part II of the Finance Act, 2026 leaves out “income by way of interest referred to in section 393(2) [Table: Sl. Nos. 2 to 5] of the said Act”, and section 397(2)(c)(i) of the 2025 Act spares a non-resident from the higher rate without a PAN on “payment of interest on long-term bonds as specified in section 393(2) (Table: Sl. Nos. 2, 3 and 4)”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 5); Income-tax Act, 1961, section 194LB, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LB.393(2)-5",
+        "oldProvision": "194LB",
+        "heading1961": "Income by way of interest from infrastructure debt fund (non-resident)",
+        "newProvision": "393(2)-5",
+        "newEntry": "393(2)-5",
+        "newCitation": "section 393(2) (Table: Sl. No. 5)",
+        "payment": "Any income by way of interest.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Part II of the First Schedule to the Finance Act, 2025 leaves out “income by way of interest referred to in section 194LB or section 194LC” where Part II of the Finance Act, 2026 leaves out “income by way of interest referred to in section 393(2) [Table: Sl. Nos. 2 to 5] of the said Act”, and the entry's payer is “Any infrastructure debt fund referred to in Schedule VII (Table: Sl. No. 46).”, as TRACES heads section 194LB."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 6); Income-tax Act, 1961, section 194LBA, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194LBA.393(2)-6",
+        "oldProvision": "194LBA",
+        "heading1961": "Certain income from units of a business trust to Non Resident :-",
+        "newProvision": "393(2)-6",
+        "newEntry": "393(2)-6",
+        "newCitation": "section 393(2) (Table: Sl. No. 6)",
+        "payment": "Any distributed income referred to in section 223, being of the nature referred to in Schedule V (Table: Sl. No. 3).",
+        "part": "Distributions to a non-resident unit holder of income of the nature of Schedule V (Table: Sl. No. 3), TRACES's codes 194LBA(1) and 194LBA(2)",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The Table of section 393(4) names the entry “Income from units of a business trust referred to in section 393(2) (Table: Sl. No. 6)”, and section 2(6) of the Finance Act, 2025 lists section 194LBA where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. Nos. 1 to 6 of the Table of section 393(2)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 7); Income-tax Act, 1961, section 194LBA, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194LBA.393(2)-7",
+        "oldProvision": "194LBA",
+        "heading1961": "Payment of the nature referred to in section 10(23FCA) by business trust to unit holders",
+        "newProvision": "393(2)-7",
+        "newEntry": "393(2)-7",
+        "newCitation": "section 393(2) (Table: Sl. No. 7)",
+        "payment": "Any distributed income referred to in section 223, being of the nature referred to in Schedule V (Table: Sl. No. 4).",
+        "part": "Distributions to a non-resident unit holder of income of the nature of Schedule V (Table: Sl. No. 4), TRACES's code 194LBA(3)",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 2(5) of the Finance Act, 2025 deducts under section 194LBA at the rates in force, and section 3(7) of the Finance Act, 2026 (Table, Sl. No. 1) and Part II of its First Schedule deduct at the rates in force under 393(2) [Table: Sl. Nos. 7, 8, 9 and 17], of which Sl. No. 7 alone is paid by a business trust."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 8); Income-tax Act, 1961, section 194LBB, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194LBB.393(2)-8",
+        "oldProvision": "194LBB",
+        "heading1961": "Income in respect of units of investment fund.",
+        "newProvision": "393(2)-8",
+        "newEntry": "393(2)-8",
+        "newCitation": "section 393(2) (Table: Sl. No. 8)",
+        "payment": "Any income, other than that proportion of income which is exempt under Schedule V (Table: Sl. No. 2), in respect of units of an investment fund specified in section 224.",
+        "part": "Unit holders not resident in India",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The Table of section 393(4) names the entry “Income in respect of units of investment fund referred to in section 393(2) (Table: Sl. No. 8)”, TRACES's heading of section 194LBB, and section 2(5) of the Finance Act, 2025 deducts under section 194LBB at the rates in force where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 1) lists 393(2) [Table: Sl. Nos. 7, 8, 9 and 17]."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 9); Income-tax Act, 1961, section 194LBC, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194LBC.393(2)-9",
+        "oldProvision": "194LBC",
+        "heading1961": "Income in respect of investment in securitisation trust.",
+        "newProvision": "393(2)-9",
+        "newEntry": "393(2)-9",
+        "newCitation": "section 393(2) (Table: Sl. No. 9)",
+        "payment": "Any income in respect of an investment in a securitisation trust specified in section 221.",
+        "part": "Investors not resident in India",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The entry deducts from income in respect of an investment in a securitisation trust specified in section 221, as TRACES heads section 194LBC, and section 2(5) of the Finance Act, 2025 deducts under section 194LBC at the rates in force where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 1) lists 393(2) [Table: Sl. Nos. 7, 8, 9 and 17]."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 10); Income-tax Act, 1961, section 196A, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "196A.393(2)-10",
+        "oldProvision": "196A",
+        "heading1961": "Foreign comp unit holder of MF",
+        "newProvision": "393(2)-10",
+        "newEntry": "393(2)-10",
+        "newCitation": "section 393(2) (Table: Sl. No. 10)",
+        "payment": "Any income— (a) in respect of units of a Mutual Fund specified under Schedule VII (Table: Sl. No. 20 or 21); or (b) in respect of units from the specified company.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The Table of section 393(4) names the entry “Income in respect of units of non-residents referred to in section 393(2) (Table: Sl. No. 10)”, and section 2(6) of the Finance Act, 2025 lists section 196A where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. No. 10 of the Table of section 393(2)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 11); Income-tax Act, 1961, section 196B, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "196B.393(2)-11",
+        "oldProvision": "196B",
+        "heading1961": "Income from units",
+        "newProvision": "393(2)-11",
+        "newEntry": "393(2)-11",
+        "newCitation": "section 393(2) (Table: Sl. No. 11)",
+        "payment": "Any income in respect of units referred to in section 208.",
+        "part": "Income from the units",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 63 of the Finance (No. 2) Act, 2024 set the rate of section 196B at “ten per cent. in respect of income from units referred to in clause (i) of sub-section (1) of section 115AB”, the entry's 10%, for units referred to in section 208, headed “Tax on income from units purchased in foreign currency or capital gains arising from their transfer.”"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 12); Income-tax Act, 1961, section 196B, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "196B.393(2)-12",
+        "oldProvision": "196B",
+        "heading1961": "Income from units",
+        "newProvision": "393(2)-12",
+        "newEntry": "393(2)-12",
+        "newCitation": "section 393(2) (Table: Sl. No. 12)",
+        "payment": "Any income by way of long-term capital gains arising from the transfer of units referred to in section 208;",
+        "part": "Long-term capital gains on the units",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 63 of the Finance (No. 2) Act, 2024 set the rate of section 196B at “twelve and one-half per cent. in respect of long-term capital gains arising from transfer of units referred to in section 115AB”, the entry's 12.5%, for units referred to in section 208."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 13); Income-tax Act, 1961, section 196C, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "196C.393(2)-13",
+        "oldProvision": "196C",
+        "heading1961": "Income from foreign currency bonds or GDR (including long-term capital gains on transfer of such bonds) (not being dividend)",
+        "newProvision": "393(2)-13",
+        "newEntry": "393(2)-13",
+        "newCitation": "section 393(2) (Table: Sl. No. 13)",
+        "payment": "Any income by way of interest or dividends in respect of bonds or Global Depository Receipts referred to in section 209.",
+        "part": "Interest or dividends",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 64 of the Finance (No. 2) Act, 2024 set the rate of section 196C at “ten per cent. in respect of income by way of interest or dividends in respect of bonds or Global Depository Receipts referred to in section 115AC”, the entry's 10%, for bonds or Global Depository Receipts referred to in section 209."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 14); Income-tax Act, 1961, section 196C, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "196C.393(2)-14",
+        "oldProvision": "196C",
+        "heading1961": "Income from foreign currency bonds or GDR (including long-term capital gains on transfer of such bonds) (not being dividend)",
+        "newProvision": "393(2)-14",
+        "newEntry": "393(2)-14",
+        "newCitation": "section 393(2) (Table: Sl. No. 14)",
+        "payment": "Any income by way of long-term capital gains arising from the transfer of bonds or Global Depository Receipts referred to in section 209.",
+        "part": "Long-term capital gains",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 64 of the Finance (No. 2) Act, 2024 set the rate of section 196C at “twelve and one-half per cent. in respect of long-term capital gains arising from transfer of such bond or Global Depository Receipts referred to in section 115AC”, the entry's 12.5%, for bonds or Global Depository Receipts referred to in section 209."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 15); Income-tax Act, 1961, section 196D, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "196D.393(2)-15",
+        "oldProvision": "196D",
+        "heading1961": "Income of foreign institutional investors from securities under sub-section (1)",
+        "newProvision": "393(2)-15",
+        "newEntry": "393(2)-15",
+        "newCitation": "section 393(2) (Table: Sl. No. 15)",
+        "payment": "Any income in respect of securities referred to in section 210(1) (Table: Sl. No. 1).",
+        "part": "A Foreign Institutional Investor's income",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The Table of section 393(4) names the entry “Income of Foreign Institutional Investors from securities referred to in section 393(2) (Table: Sl. No. 15)”, the heading the TRACES section codes give section 196D, and where section 2(6)(b) of the Finance Act, 2025 surcharges a deduction “on income by way of dividend under section 196D”, section 3(7) of the Finance Act, 2026 (Table, Sl. No. 4) surcharges a deduction “on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16]”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 16); Income-tax Act, 1961, section 196D, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "196D.393(2)-16",
+        "oldProvision": "196D",
+        "heading1961": "Income of specified fund from securities referred to in clause (a) of sub-section (1) of section 115AD (other than interest income referred to in section 194LD)",
+        "newProvision": "393(2)-16",
+        "newEntry": "393(2)-16",
+        "newCitation": "section 393(2) (Table: Sl. No. 16)",
+        "payment": "Any income in respect of securities referred to in section 210(1) (Table: Sl. No. 1).",
+        "part": "A specified fund's income",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The Table of section 393(4) names the entry “Income of Specified Fund from securities referred to in section 393(2) (Table: Sl. No. 16)”, as TRACES heads the specified fund's part of section 196D under its code 196DA, and where section 2(6)(b) of the Finance Act, 2025 surcharges a deduction “on income by way of dividend under section 196D”, section 3(7) of the Finance Act, 2026 (Table, Sl. No. 4) surcharges a deduction “on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16]”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 17); Income-tax Act, 1961, section 195, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "195.393(2)-17",
+        "oldProvision": "195",
+        "heading1961": "Other Sums",
+        "newProvision": "393(2)-17",
+        "newEntry": "393(2)-17",
+        "newCitation": "section 393(2) (Table: Sl. No. 17)",
+        "payment": "Any interest (not being interest referred to against serial numbers 2, 3, 4 and 5) or any other sum chargeable under the provisions of this Act, not being income chargeable under the head “Salaries”.",
+        "part": "The deduction itself",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 2(5) of the Finance Act, 2025 and Part II of its First Schedule deduct under section 195 at the rates in force where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 1) and Part II of its First Schedule deduct under 393(2) [Table: Sl. Nos. 7, 8, 9 and 17], of which Sl. No. 17 alone is open to any payer, and section 395(2) lets the payer of “any sum as mentioned in section 393(2) (Table: Sl. No. 17)” apply to have the part chargeable to tax determined."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1); Income-tax Act, 1961, section 194B, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194B.393(3)-1",
+        "oldProvision": "194B",
+        "heading1961": "Winning from Lotteries or crossword puzzle, etc.",
+        "newProvision": "393(3)-1",
+        "newEntry": "393(3)-1",
+        "newCitation": "section 393(3) (Table: Sl. No. 1)",
+        "payment": "Any income by way of winnings (other than winnings from online games as referred to in serial number 2) from–– (a) any lottery; or (b) crossword puzzle; or (c) card game and other game of any sort; or (d) gambling or betting of any form or nature whatsoever.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 59 of the Finance Act, 2025 limited section 194B to amounts “in respect of a single transaction”, the entry's “Threshold limit: ₹ 10000 in case of a single transaction.”, and Part II of both First Schedules gives a rate on winnings from lotteries, puzzles, card games and other games of any sort; section 2(5) of the Finance Act, 2025 lists section 194B where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 1) lists 393(3) [Table: Sl. Nos. 1, 2 and 3]."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2); Income-tax Act, 1961, section 194BA, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194BA.393(3)-2",
+        "oldProvision": "194BA",
+        "heading1961": "Winnings from online games (Applicable From 01-April-2023)",
+        "newProvision": "393(3)-2",
+        "newEntry": "393(3)-2",
+        "newCitation": "section 393(3) (Table: Sl. No. 2)",
+        "payment": "Any income by way of winnings from online game.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 2(5) of the Finance Act, 2025 deducts under section 194BA at the rates in force where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 1) lists 393(3) [Table: Sl. Nos. 1, 2 and 3], and Part II of both First Schedules gives a rate “on income by way of net winnings from online games”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3); Income-tax Act, 1961, section 194BB, as listed in the Finance Act, 2025, section 2(5)",
+      "cells": {
+        "pair": "194BB.393(3)-3",
+        "oldProvision": "194BB",
+        "heading1961": "Winnings from Horse Race",
+        "newProvision": "393(3)-3",
+        "newEntry": "393(3)-3",
+        "newCitation": "section 393(3) (Table: Sl. No. 3)",
+        "payment": "Any income by way of winnings from any horse race.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 60 of the Finance Act, 2025 limited section 194BB to amounts “in respect of a single transaction”, the entry's “Threshold limit: ₹ 10000 in case of a single transaction.”, and Part II of both First Schedules gives a rate “on income by way of winnings from horse races”; section 2(5) of the Finance Act, 2025 lists section 194BB where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 1) lists 393(3) [Table: Sl. Nos. 1, 2 and 3]."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 4); Income-tax Act, 1961, section 194G, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194G.393(3)-4",
+        "oldProvision": "194G",
+        "heading1961": "Commission - Lottery",
+        "newProvision": "393(3)-4",
+        "newEntry": "393(3)-4",
+        "newCitation": "section 393(3) (Table: Sl. No. 4)",
+        "payment": "Any income, credited or paid to a person, who is or has been stocking, distributing, purchasing or selling lottery tickets, by way of commission, remuneration or prize (by whatever name called) on such tickets.",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 62 of the Finance Act, 2025 raised the limit of section 194G(1) to twenty thousand rupees and section 56 of the Finance (No. 2) Act, 2024 set its rate at two per cent., the entry's “Rate: 2%” and “Threshold limit: ₹ 20000.”; the entry deducts from commission, remuneration or prize on lottery tickets, as TRACES heads section 194G."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 5); Income-tax Act, 1961, section 194N, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194N.393(3)-5",
+        "oldProvision": "194N",
+        "heading1961": "Payment of certain amounts in cash.",
+        "newProvision": "393(3)-5",
+        "newEntry": "393(3)-5",
+        "newCitation": "section 393(3) (Table: Sl. No. 5)",
+        "payment": "Any sum, paid in cash, from one or more accounts maintained by any person (herein referred as recipient).",
+        "part": "The deduction above the limits of three crore rupees for a co-operative society and one crore rupees for any other recipient; the higher deduction from non-filers that TRACES lists as 194NF and 194NFT is not paired",
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The Table of section 393(4) names the entry “Payment of certain amounts in cash referred to in section 393(3) (Table: Sl. No. 5)”, TRACES's heading of section 194N, and section 2(6) of the Finance Act, 2025 lists section 194N where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. Nos. 4 to 7 of the Table of section 393(3)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 6); Income-tax Act, 1961, section 194EE, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194EE.393(3)-6",
+        "oldProvision": "194EE",
+        "heading1961": "Payments out of deposits under NSS",
+        "newProvision": "393(3)-6",
+        "newEntry": "393(3)-6",
+        "newCitation": "section 393(3) (Table: Sl. No. 6)",
+        "payment": "Any amount referred to in section 80CCA(2)(a) of the Income-tax Act, 1961 (43 of 1961).",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "The entry names the 1961 Act's own provision, “Any amount referred to in section 80CCA(2)(a) of the Income-tax Act, 1961 (43 of 1961).”, and the Table of section 393(4) names it “Payment in respect of deposits under National Savings Scheme, etc., referred to in section 393(3) (Table: Sl. No. 6)”; section 2(6) of the Finance Act, 2025 lists section 194EE where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. Nos. 4 to 7 of the Table of section 393(3)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 7); Income-tax Act, 1961, section 194T, as listed in the Finance Act, 2025, section 2(6)",
+      "cells": {
+        "pair": "194T.393(3)-7",
+        "oldProvision": "194T",
+        "heading1961": "Payment of salary, remuneration, commission, bonus or interest to a partner of firm",
+        "newProvision": "393(3)-7",
+        "newEntry": "393(3)-7",
+        "newCitation": "section 393(3) (Table: Sl. No. 7)",
+        "payment": "Any sum in the nature of salary, remuneration, commission, bonus or interest paid to a partner of the firm or credited to his account (including capital account).",
+        "part": null,
+        "kind": "deduction",
+        "tie": "actWords",
+        "why": "Section 62 of the Finance (No. 2) Act, 2024 inserted section 194T, under which “Any person, being a firm, responsible for paying any sum in the nature of salary, remuneration, commission, bonus or interest to a partner of the firm” deducts at ten per cent. above twenty thousand rupees, the entry's “Rate: 10%” and “Threshold limit: ₹ 20000.”; section 2(6) of the Finance Act, 2025 lists section 194T where section 3(7) of the Finance Act, 2026 (Table, Sl. No. 2) lists Sl. Nos. 4 to 7 of the Table of section 393(3)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 1961, section 194LD, as listed in the Finance Act, 2025, section 2(6); Income-tax Act, 2025, sections 392 and 393",
+      "cells": {
+        "pair": "194LD.none",
+        "oldProvision": "194LD",
+        "heading1961": "Interest on certain bonds and govt. Securities (from 01-06-2013)",
+        "newProvision": null,
+        "newEntry": null,
+        "newCitation": null,
+        "payment": "No entry of the Income-tax Act, 2025",
+        "part": null,
+        "kind": "noCounterpart",
+        "tie": "actWords",
+        "why": "No serial number of the Tables of section 393, nor section 392, reproduces section 194LD, and section 3(7) of the Finance Act, 2026 lists no entry where section 2(6) of the Finance Act, 2025 lists section 194LD; interest of that kind credited or paid from 1 April 2026 falls under whichever entry of section 393(2) fits its payee, which the payment shows, not this row."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 395(1); Income-tax Act, 1961, section 197, as amended by the Finance (No. 2) Act, 2024, section 65; e-filing Income Tax Forms FAQs, questions 6 and 7",
+      "cells": {
+        "pair": "197.395(1)",
+        "oldProvision": "197",
+        "heading1961": null,
+        "newProvision": "395(1)",
+        "newEntry": null,
+        "newCitation": "section 395(1)",
+        "payment": "the payee may make an application before the Assessing Officer for deduction of income-tax at a lower rate or no deduction of income-tax, as the case may be",
+        "part": null,
+        "kind": "certificate",
+        "tie": "departmentStates",
+        "why": "The department's Income Tax Forms FAQs (question 6) state the pair for the certificate for deduction at a lower rate or no deduction: “Under the Income Tax Act, 1961, this provision was contained in Section 197.” and “Under the Income Tax Act, 2025, the corresponding provisions are contained in Section 395(1).”; question 7 keeps a certificate issued under section 197 valid “for payments/credits made on or after 1st April, 2026”. Section 197 was in force on 31 March 2026, section 65 of the Finance (No. 2) Act, 2024 having amended its sub-section (1)."
+      }
+    }
+  ]
+}

@@ -1,6 +1,15 @@
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Companies.ScheduleII;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Returns;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Services;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.AdvanceTax;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Company;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Depreciation;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Tds.Crosswalk;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Tds.Entries;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Tds.FinanceAct;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Tds.Limits;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Tds.Rates;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Seeding;
 using Dewiride.Erp.Testing;
 
@@ -68,6 +77,28 @@ public sealed class StatutoryParameterStoreTests(ErpApiFactory factory)
             "gst.return-due-dates" => Of(await store.GetAsOfAsync<GstReturnDueDates>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(rule => rule.Rule)])),
             "gst.quarterly-return-states" => Of(await store.GetAsOfAsync<QuarterlyReturnStates>(day, cancellationToken), set => (set.Version, [.. set.States.Select(state => state.StateCode)])),
             "gst.return-thresholds" => Of(await store.GetAsOfAsync<GstReturnThresholds>(day, cancellationToken), set => (set.Version, [.. set.Thresholds.Select(threshold => threshold.Threshold)])),
+            "companies.schedule-ii-limits" => Of(await store.GetAsOfAsync<ScheduleIILimits>(day, cancellationToken), set => (set.Version, [.. set.Limits.Select(row => row.Limit)])),
+            "companies.schedule-ii-useful-lives" => Of(await store.GetAsOfAsync<UsefulLives>(day, cancellationToken), set => (set.Version, [.. set.Lives.Select(row => row.Entry)])),
+            "income-tax.advance-tax-instalments" => Of(await store.GetAsOfAsync<AdvanceTaxInstalments>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(row => row.Rule)])),
+            "income-tax.advance-tax-interest" => Of(await store.GetAsOfAsync<AdvanceTaxInterest>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(row => row.Rule)])),
+            "income-tax.company-rates" => Of(await store.GetAsOfAsync<CompanyTaxRates>(day, cancellationToken), set => (set.Version, [.. set.Rates.Select(row => row.Entry)])),
+            "income-tax.company-surcharge" => Of(await store.GetAsOfAsync<CompanySurcharges>(day, cancellationToken), set => (set.Version, [.. set.Bands.Select(row => row.Band)])),
+            "income-tax.depreciation-allowances" => Of(await store.GetAsOfAsync<DepreciationAllowances>(day, cancellationToken), set => (set.Version, [.. set.Allowances.Select(row => row.Allowance)])),
+            "income-tax.depreciation-notes" => Of(await store.GetAsOfAsync<DepreciationNotes>(day, cancellationToken), set => (set.Version, [.. set.Notes.Select(row => row.Note)])),
+            "income-tax.depreciation-rates" => Of(await store.GetAsOfAsync<DepreciationRates>(day, cancellationToken), set => (set.Version, [.. set.Rates.Select(row => row.Entry)])),
+            "income-tax.health-and-education-cess" => Of(await store.GetAsOfAsync<HealthAndEducationCess>(day, cancellationToken), set => (set.Version, [.. set.Rates.Select(row => row.Cess)])),
+            "income-tax.minimum-alternate-tax" => Of(await store.GetAsOfAsync<MinimumAlternateTax>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(row => row.Rule)])),
+            "income-tax.tds-crosswalk" => Of(await store.GetAsOfAsync<TdsCrosswalk>(day, cancellationToken), set => (set.Version, [.. set.Pairs.Select(row => row.Pair)])),
+            "income-tax.tds-declarations" => Of(await store.GetAsOfAsync<TdsDeclarations>(day, cancellationToken), set => (set.Version, [.. set.Declarations.Select(row => row.Row)])),
+            "income-tax.tds-entries" => Of(await store.GetAsOfAsync<TdsEntries>(day, cancellationToken), set => (set.Version, [.. set.Entries.Select(row => row.Entry)])),
+            "income-tax.tds-higher-rates" => Of(await store.GetAsOfAsync<TdsHigherRates>(day, cancellationToken), set => (set.Version, [.. set.Cases.Select(row => row.Case)])),
+            "income-tax.tds-no-deduction-cases" => Of(await store.GetAsOfAsync<TdsNoDeductionCases>(day, cancellationToken), set => (set.Version, [.. set.Cases.Select(row => row.Case)])),
+            "income-tax.tds-rates" => Of(await store.GetAsOfAsync<TdsRates>(day, cancellationToken), set => (set.Version, [.. set.Rates.Select(row => row.Rate)])),
+            "income-tax.tds-rates-in-force" => Of(await store.GetAsOfAsync<TdsRatesInForce>(day, cancellationToken), set => (set.Version, [.. set.Rates.Select(row => row.Item)])),
+            "income-tax.tds-rates-in-force-readings" => Of(await store.GetAsOfAsync<TdsRateInForceReadings>(day, cancellationToken), set => (set.Version, [.. set.Readings.Select(row => row.Reading)])),
+            "income-tax.tds-surcharge-and-cess" => Of(await store.GetAsOfAsync<TdsSurchargesAndCess>(day, cancellationToken), set => (set.Version, [.. set.Clauses.Select(row => row.Clause)])),
+            "income-tax.tds-terms" => Of(await store.GetAsOfAsync<TdsTerms>(day, cancellationToken), set => (set.Version, [.. set.Terms.Select(row => row.Term)])),
+            "income-tax.tds-threshold-limits" => Of(await store.GetAsOfAsync<TdsThresholdLimits>(day, cancellationToken), set => (set.Version, [.. set.Limits.Select(row => row.Limit)])),
             _ => throw new ArgumentOutOfRangeException(nameof(key), key, "No typed set reads this key."),
         };
     }

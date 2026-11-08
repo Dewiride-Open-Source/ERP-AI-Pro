@@ -1,0 +1,162 @@
+{
+  "key": "income-tax.tds-terms",
+  "title": "Defined terms of the TDS entries",
+  "description": "The definitions of the Income-tax Act, 2025 on which its TDS entries turn and which carry a figure, in force from 1 April 2026: the turnover that makes an individual or a Hindu undivided family a “designated person” or a “specified person”, the turnover that makes a purchaser a “buyer”, and the ages of a “senior citizen” and a “specified senior citizen”; and the supply of manpower, which the Finance Act, 2026, section 90(b), adds to “work” from the same date.",
+  "basis": "law",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "term",
+      "title": "Term",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Term, in the ERP's words",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "amount",
+      "title": "Amount (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "age",
+      "title": "Age (years)",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 0
+    },
+    {
+      "name": "test",
+      "title": "Test",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "exceeds",
+          "title": "Exceeds"
+        },
+        {
+          "value": "equalToOrMore",
+          "title": "Equals or exceeds"
+        }
+      ]
+    },
+    {
+      "name": "words",
+      "title": "Definition, as printed",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), sections 2(100) and 402, in force 1 April 2026 (section 1(3))",
+        "Finance Act, 2026 (4 of 2026), section 90(b), inserting section 402(47)(f), in force 1 April 2026 (section 1(2)(a))"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 402(11)(l)",
+      "cells": {
+        "term": "402(11)(l)-business",
+        "name": "Designated person: an individual, a Hindu undivided family, an association of persons or a body of individuals with business turnover above the limit",
+        "amount": 10000000,
+        "age": null,
+        "test": "exceeds",
+        "words": "(11) “designated person”, for the purposes of section 393(1) [Table: Sl. No. 6 (i)], means— (l) any person, being an individual or a Hindu undivided family or an association of persons or a body of individuals, if such person,— (i) does not fall under any of the preceding sub-clauses; and (ii) has total sales, gross receipts or turnover from business or profession carried on by him exceeding one crore rupees in case of business or fifty lakh rupees in case of profession during the tax year immediately preceding the tax year in which such sum is credited or paid to the account of the contractor;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 402(11)(l)",
+      "cells": {
+        "term": "402(11)(l)-profession",
+        "name": "Designated person: an individual, a Hindu undivided family, an association of persons or a body of individuals with professional receipts above the limit",
+        "amount": 5000000,
+        "age": null,
+        "test": "exceeds",
+        "words": "(11) “designated person”, for the purposes of section 393(1) [Table: Sl. No. 6 (i)], means— (l) any person, being an individual or a Hindu undivided family or an association of persons or a body of individuals, if such person,— (i) does not fall under any of the preceding sub-clauses; and (ii) has total sales, gross receipts or turnover from business or profession carried on by him exceeding one crore rupees in case of business or fifty lakh rupees in case of profession during the tax year immediately preceding the tax year in which such sum is credited or paid to the account of the contractor;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 402(37)(b)",
+      "cells": {
+        "term": "402(37)(b)-business",
+        "name": "Specified person: an individual or a Hindu undivided family with business turnover above the limit",
+        "amount": 10000000,
+        "age": null,
+        "test": "exceeds",
+        "words": "(37) “specified person” means–– (a) any person, not being an individual or Hindu undivided family; or (b) an individual or a Hindu undivided family, whose total sales, gross receipts or turnover from the business or profession carried on by him exceed one crore rupees in case of business or fifty lakh rupees in case of profession during the tax year immediately preceding the tax year in which such income or sum is credited or paid;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 402(37)(b)",
+      "cells": {
+        "term": "402(37)(b)-profession",
+        "name": "Specified person: an individual or a Hindu undivided family with professional receipts above the limit",
+        "amount": 5000000,
+        "age": null,
+        "test": "exceeds",
+        "words": "(37) “specified person” means–– (a) any person, not being an individual or Hindu undivided family; or (b) an individual or a Hindu undivided family, whose total sales, gross receipts or turnover from the business or profession carried on by him exceed one crore rupees in case of business or fifty lakh rupees in case of profession during the tax year immediately preceding the tax year in which such income or sum is credited or paid;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 402(6) [Table: Sl. No. 1]",
+      "cells": {
+        "term": "402(6)-1",
+        "name": "Buyer of goods: turnover above the limit",
+        "amount": 100000000,
+        "age": null,
+        "test": "exceeds",
+        "words": "(6) “buyer” for the purposes of provisions in column B of the Table below means any person as specified in column C but does not include any person as specified in column D:— Sl. No. 1, column B: Purchase of goods referred to in section 393(1) [Table: Sl. No. 8(ii)]. Column C: A person whose total sales, gross receipts or turnover from the business carried on by him exceed ten crore rupees during the tax year immediately preceding the tax year in which the purchase of goods is carried out. Column D: Any person, as the Central Government may notify for this purpose, subject to conditions as may be specified therein."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 402(39)",
+      "cells": {
+        "term": "402(39)(a)",
+        "name": "Specified senior citizen: aged seventy-five or more",
+        "amount": null,
+        "age": 75,
+        "test": "equalToOrMore",
+        "words": "(39) “specified senior citizen” means an individual, being a resident in India— (a) who is of the age of seventy-five years or more at any time during the tax year; (b) who is having pension income and no other income except the interest received or receivable from any account maintained by such individual in the same specified bank in which he is receiving his pension income; and (c) has furnished a declaration to the specified bank containing particulars, in such form and verified in such manner as may be prescribed;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 2(100)",
+      "cells": {
+        "term": "2(100)",
+        "name": "Senior citizen: aged sixty or more",
+        "amount": null,
+        "age": 60,
+        "test": "equalToOrMore",
+        "words": "(100) “senior citizen” means an individual resident in India who is of the age of sixty years or more at any time during the relevant tax year;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 402(47)(f), inserted by the Finance Act, 2026, section 90(b)",
+      "cells": {
+        "term": "402(47)(f)",
+        "name": "Work includes the supply of manpower",
+        "amount": null,
+        "age": null,
+        "test": null,
+        "words": "(47) “work” shall include— (f) supply of manpower to a person to work under his supervision, control or direction."
+      }
+    }
+  ]
+}

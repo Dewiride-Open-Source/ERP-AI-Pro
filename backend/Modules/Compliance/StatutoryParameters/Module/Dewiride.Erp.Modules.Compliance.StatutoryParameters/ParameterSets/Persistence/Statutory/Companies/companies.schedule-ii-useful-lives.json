@@ -1,0 +1,1149 @@
+{
+  "key": "companies.schedule-ii-useful-lives",
+  "title": "Useful lives of tangible assets (Companies Act, Schedule II)",
+  "description": "The useful lives, in years, that Part C of Schedule II to the Companies Act, 2013 gives tangible assets, for financial years from 2026-27: each entry in the Schedule's words with the headings printed above it, its useful life for single-shift working, and whether extra-shift depreciation is permitted under paragraph 6 of the Notes after Part C. An entry is NESD (no extra shift depreciation permitted) when the mark is printed on it or on a heading above it, and an entry whose life is printed as ditto (-do-) has the life of the entry above it. Continuous process plant, item IV(i)(b), is not included: its life from 1 April 2014 was set by Notification G.S.R. 237(E) of 31 March 2014, whose Gazette copy has not been found.",
+  "basis": "law",
+  "asOf": "financialYearStart",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "group",
+      "title": "Headings above the entry",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "nature",
+      "title": "Nature of assets",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "years",
+      "title": "Useful life (years)",
+      "kind": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
+    {
+      "name": "extraShift",
+      "title": "Extra-shift depreciation",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "nesd",
+          "title": "Not permitted (NESD)"
+        },
+        {
+          "value": "permitted",
+          "title": "Permitted (Notes, paragraph 6)"
+        }
+      ]
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Companies Act, 2013 (18 of 2013), Gazette of India, Extraordinary, Part II, Section 1, No. 27, 30 August 2013: Schedule II, Part C and Notes, paragraph 6, in force 1 April 2014, read with section 123(2)",
+        "Notification G.S.R. 1075(E), 17 November 2016, Ministry of Corporate Affairs, Note: Schedule II came into force on 1 April 2014 and was amended by G.S.R. 237(E), 31 March 2014, with effect from 1 April 2014, and by G.S.R. 627(E), 29 August 2014"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry I(a)",
+      "cells": {
+        "entry": "I(a)",
+        "group": "I. Buildings [NESD]",
+        "nature": "Buildings (other than factory buildings) RCC Frame Structure",
+        "years": 60,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry I(b)",
+      "cells": {
+        "entry": "I(b)",
+        "group": "I. Buildings [NESD]",
+        "nature": "Buildings (other than factory buildings) other than RCC Frame Structure",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry I(c)",
+      "cells": {
+        "entry": "I(c)",
+        "group": "I. Buildings [NESD]",
+        "nature": "Factory buildings",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry I(d)",
+      "cells": {
+        "entry": "I(d)",
+        "group": "I. Buildings [NESD]",
+        "nature": "Fences, wells, tube wells",
+        "years": 5,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry I(e)",
+      "cells": {
+        "entry": "I(e)",
+        "group": "I. Buildings [NESD]",
+        "nature": "Others (including temporary structure, etc.)",
+        "years": 3,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry II",
+      "cells": {
+        "entry": "II",
+        "group": null,
+        "nature": "Bridges, culverts, bunders, etc. [NESD]",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry III(a)(i)",
+      "cells": {
+        "entry": "III(a)(i)",
+        "group": "III. Roads [NESD] > (a) Carpeted roads",
+        "nature": "Carpeted Roads-RCC",
+        "years": 10,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry III(a)(ii)",
+      "cells": {
+        "entry": "III(a)(ii)",
+        "group": "III. Roads [NESD] > (a) Carpeted roads",
+        "nature": "Carpeted Roads-other than RCC",
+        "years": 5,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry III(b)",
+      "cells": {
+        "entry": "III(b)",
+        "group": "III. Roads [NESD]",
+        "nature": "Non-carpeted roads",
+        "years": 3,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(i)(a)",
+      "cells": {
+        "entry": "IV(i)(a)",
+        "group": "IV. Plant and Machinery > (i) General rate applicable to plant and machinery not covered under special plant and machinery",
+        "nature": "Plant and Machinery other than continuous process plant not covered under specific industries",
+        "years": 15,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(a)(1)",
+      "cells": {
+        "entry": "IV(ii)(a)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (a) Plant and Machinery related to production and exhibition of Motion Picture Films",
+        "nature": "Cinematograph films—Machinery used in the production and exhibition of cinematograph films, recording and reproducing equipments, developing machines, printing machines, editing machines, synchronizers and studio lights except bulbs",
+        "years": 13,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(a)(2)",
+      "cells": {
+        "entry": "IV(ii)(a)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (a) Plant and Machinery related to production and exhibition of Motion Picture Films",
+        "nature": "Projecting equipment for exhibition of films",
+        "years": 13,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(b)(1)",
+      "cells": {
+        "entry": "IV(ii)(b)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (b) Plant and Machinery used in glass manufacturing",
+        "nature": "Plant and Machinery except direct fire glass melting furnaces — Recuperative and regenerative glass melting furnaces",
+        "years": 13,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(b)(2)",
+      "cells": {
+        "entry": "IV(ii)(b)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (b) Plant and Machinery used in glass manufacturing",
+        "nature": "Plant and Machinery except direct fire glass melting furnaces — Moulds [NESD]",
+        "years": 8,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(b)(3)",
+      "cells": {
+        "entry": "IV(ii)(b)(3)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (b) Plant and Machinery used in glass manufacturing",
+        "nature": "Float Glass Melting Furnaces [NESD]",
+        "years": 10,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(c)",
+      "cells": {
+        "entry": "IV(ii)(c)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery",
+        "nature": "Plant and Machinery used in mines and quarries—Portable underground machinery and earth moving machinery used in open cast mining [NESD]",
+        "years": 8,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(d)(1)",
+      "cells": {
+        "entry": "IV(ii)(d)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (d) Plant and Machinery used in Telecommunications [NESD]",
+        "nature": "Towers",
+        "years": 18,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(d)(2)",
+      "cells": {
+        "entry": "IV(ii)(d)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (d) Plant and Machinery used in Telecommunications [NESD]",
+        "nature": "Telecom transceivers, switching centres, transmission and other network equipment",
+        "years": 13,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(d)(3)",
+      "cells": {
+        "entry": "IV(ii)(d)(3)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (d) Plant and Machinery used in Telecommunications [NESD]",
+        "nature": "Telecom—Ducts, Cables and optical fibre",
+        "years": 18,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(d)(4)",
+      "cells": {
+        "entry": "IV(ii)(d)(4)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (d) Plant and Machinery used in Telecommunications [NESD]",
+        "nature": "Satellites",
+        "years": 18,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(e)(1)",
+      "cells": {
+        "entry": "IV(ii)(e)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (e) Plant and Machinery used in exploration, production and refining oil and gas [NESD]",
+        "nature": "Refineries",
+        "years": 25,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(e)(2)",
+      "cells": {
+        "entry": "IV(ii)(e)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (e) Plant and Machinery used in exploration, production and refining oil and gas [NESD]",
+        "nature": "Oil and gas assets (including wells), processing plant and facilities",
+        "years": 25,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(e)(3)",
+      "cells": {
+        "entry": "IV(ii)(e)(3)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (e) Plant and Machinery used in exploration, production and refining oil and gas [NESD]",
+        "nature": "Petrochemical Plant",
+        "years": 25,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(e)(4)",
+      "cells": {
+        "entry": "IV(ii)(e)(4)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (e) Plant and Machinery used in exploration, production and refining oil and gas [NESD]",
+        "nature": "Storage tanks and related equipment",
+        "years": 25,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(e)(5)",
+      "cells": {
+        "entry": "IV(ii)(e)(5)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (e) Plant and Machinery used in exploration, production and refining oil and gas [NESD]",
+        "nature": "Pipelines",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(e)(6)",
+      "cells": {
+        "entry": "IV(ii)(e)(6)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (e) Plant and Machinery used in exploration, production and refining oil and gas [NESD]",
+        "nature": "Drilling Rig",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(e)(7)",
+      "cells": {
+        "entry": "IV(ii)(e)(7)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (e) Plant and Machinery used in exploration, production and refining oil and gas [NESD]",
+        "nature": "Field operations (above ground) Portable boilers, drilling tools, well-head tanks, etc.",
+        "years": 8,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(e)(8)",
+      "cells": {
+        "entry": "IV(ii)(e)(8)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (e) Plant and Machinery used in exploration, production and refining oil and gas [NESD]",
+        "nature": "Loggers",
+        "years": 8,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(f)(1)",
+      "cells": {
+        "entry": "IV(ii)(f)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (f) Plant and Machinery used in generation, transmission and distribution of power [NESD]",
+        "nature": "Thermal/ Gas/ Combined Cycle Power Generation Plant",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(f)(2)",
+      "cells": {
+        "entry": "IV(ii)(f)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (f) Plant and Machinery used in generation, transmission and distribution of power [NESD]",
+        "nature": "Hydro Power Generation Plant",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(f)(3)",
+      "cells": {
+        "entry": "IV(ii)(f)(3)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (f) Plant and Machinery used in generation, transmission and distribution of power [NESD]",
+        "nature": "Nuclear Power Generation Plant",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(f)(4)",
+      "cells": {
+        "entry": "IV(ii)(f)(4)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (f) Plant and Machinery used in generation, transmission and distribution of power [NESD]",
+        "nature": "Transmission lines, cables and other network assets",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(f)(5)",
+      "cells": {
+        "entry": "IV(ii)(f)(5)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (f) Plant and Machinery used in generation, transmission and distribution of power [NESD]",
+        "nature": "Wind Power Generation Plant",
+        "years": 22,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(f)(6)",
+      "cells": {
+        "entry": "IV(ii)(f)(6)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (f) Plant and Machinery used in generation, transmission and distribution of power [NESD]",
+        "nature": "Electric Distribution Plant",
+        "years": 35,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(f)(7)",
+      "cells": {
+        "entry": "IV(ii)(f)(7)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (f) Plant and Machinery used in generation, transmission and distribution of power [NESD]",
+        "nature": "Gas Storage and Distribution Plant",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(f)(8)",
+      "cells": {
+        "entry": "IV(ii)(f)(8)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (f) Plant and Machinery used in generation, transmission and distribution of power [NESD]",
+        "nature": "Water Distribution Plant including pipelines",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(g)(1)",
+      "cells": {
+        "entry": "IV(ii)(g)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (g) Plant and Machinery used in manufacture of steel",
+        "nature": "Sinter Plant",
+        "years": 20,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(g)(2)",
+      "cells": {
+        "entry": "IV(ii)(g)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (g) Plant and Machinery used in manufacture of steel",
+        "nature": "Blast Furnace",
+        "years": 20,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(g)(3)",
+      "cells": {
+        "entry": "IV(ii)(g)(3)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (g) Plant and Machinery used in manufacture of steel",
+        "nature": "Coke ovens",
+        "years": 20,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(g)(4)",
+      "cells": {
+        "entry": "IV(ii)(g)(4)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (g) Plant and Machinery used in manufacture of steel",
+        "nature": "Rolling mill in steel plant",
+        "years": 20,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(g)(5)",
+      "cells": {
+        "entry": "IV(ii)(g)(5)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (g) Plant and Machinery used in manufacture of steel",
+        "nature": "Basic oxygen Furnace Converter",
+        "years": 25,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(1)",
+      "cells": {
+        "entry": "IV(ii)(h)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Metal pot line [NESD]",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(2)",
+      "cells": {
+        "entry": "IV(ii)(h)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Bauxite crushing and grinding section [NESD]",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(3)",
+      "cells": {
+        "entry": "IV(ii)(h)(3)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Digester Section [NESD]",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(4)",
+      "cells": {
+        "entry": "IV(ii)(h)(4)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Turbine [NESD]",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(5)",
+      "cells": {
+        "entry": "IV(ii)(h)(5)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Equipments for Calcination [NESD]",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(6)",
+      "cells": {
+        "entry": "IV(ii)(h)(6)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Copper Smelter [NESD]",
+        "years": 40,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(7)",
+      "cells": {
+        "entry": "IV(ii)(h)(7)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Roll Grinder",
+        "years": 40,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(8)",
+      "cells": {
+        "entry": "IV(ii)(h)(8)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Soaking Pit",
+        "years": 30,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(9)",
+      "cells": {
+        "entry": "IV(ii)(h)(9)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Annealing Furnace",
+        "years": 30,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(10)",
+      "cells": {
+        "entry": "IV(ii)(h)(10)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Rolling Mills",
+        "years": 30,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(11)",
+      "cells": {
+        "entry": "IV(ii)(h)(11)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Equipments for Scalping, Slitting , etc. [NESD]",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(12)",
+      "cells": {
+        "entry": "IV(ii)(h)(12)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Surface Miner, Ripper Dozer, etc., used in mines",
+        "years": 25,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(h)(13)",
+      "cells": {
+        "entry": "IV(ii)(h)(13)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (h) Plant and Machinery used in manufacture of non-ferrous metals",
+        "nature": "Copper refining plant [NESD]",
+        "years": 25,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(i)(1)",
+      "cells": {
+        "entry": "IV(ii)(i)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (i) Plant and Machinery used in medical and surgical operations [NESD]",
+        "nature": "Electrical Machinery, X-ray and electrotherapeutic apparatus and accessories thereto, medical, diagnostic equipments, namely, Cat-scan, Ultrasound Machines, ECG Monitors, etc.",
+        "years": 13,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(i)(2)",
+      "cells": {
+        "entry": "IV(ii)(i)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (i) Plant and Machinery used in medical and surgical operations [NESD]",
+        "nature": "Other Equipments.",
+        "years": 15,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(j)(1)",
+      "cells": {
+        "entry": "IV(ii)(j)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (j) Plant and Machinery used in manufacture of pharmaceuticals and chemicals [NESD]",
+        "nature": "Reactors",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(j)(2)",
+      "cells": {
+        "entry": "IV(ii)(j)(2)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (j) Plant and Machinery used in manufacture of pharmaceuticals and chemicals [NESD]",
+        "nature": "Distillation Columns",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(j)(3)",
+      "cells": {
+        "entry": "IV(ii)(j)(3)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (j) Plant and Machinery used in manufacture of pharmaceuticals and chemicals [NESD]",
+        "nature": "Drying equipments/Centrifuges and Decanters",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(j)(4)",
+      "cells": {
+        "entry": "IV(ii)(j)(4)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (j) Plant and Machinery used in manufacture of pharmaceuticals and chemicals [NESD]",
+        "nature": "Vessel/storage tanks",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(k)(1)",
+      "cells": {
+        "entry": "IV(ii)(k)(1)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (k) Plant and Machinery used in civil construction",
+        "nature": "Concreting, Crushing, Piling Equipments and Road Making Equipments",
+        "years": 12,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(k)(2), cranes with capacity of more than 100 tons",
+      "cells": {
+        "entry": "IV(ii)(k)(2)-more-than-100-tons",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (k) Plant and Machinery used in civil construction > 2. Heavy Lift Equipments—",
+        "nature": "Cranes with capacity of more than 100 tons",
+        "years": 20,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(k)(2), cranes with capacity of less than 100 tons",
+      "cells": {
+        "entry": "IV(ii)(k)(2)-less-than-100-tons",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (k) Plant and Machinery used in civil construction > 2. Heavy Lift Equipments—",
+        "nature": "Cranes with capacity of less than 100 tons",
+        "years": 15,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(k)(3)",
+      "cells": {
+        "entry": "IV(ii)(k)(3)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (k) Plant and Machinery used in civil construction",
+        "nature": "Transmission line, Tunneling Equipments [NESD]",
+        "years": 10,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(k)(4)",
+      "cells": {
+        "entry": "IV(ii)(k)(4)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (k) Plant and Machinery used in civil construction",
+        "nature": "Earth-moving equipments",
+        "years": 9,
+        "extraShift": "permitted"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(k)(5)",
+      "cells": {
+        "entry": "IV(ii)(k)(5)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery > (k) Plant and Machinery used in civil construction",
+        "nature": "Others including Material Handling /Pipeline/Welding Equipments [NESD]",
+        "years": 12,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IV(ii)(l)",
+      "cells": {
+        "entry": "IV(ii)(l)",
+        "group": "IV. Plant and Machinery > (ii) Special Plant and Machinery",
+        "nature": "Plant and Machinery used in salt works [NESD]",
+        "years": 15,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry V(i)",
+      "cells": {
+        "entry": "V(i)",
+        "group": "V. Furniture and fittings [NESD]",
+        "nature": "General furniture and fittings",
+        "years": 10,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry V(ii)",
+      "cells": {
+        "entry": "V(ii)",
+        "group": "V. Furniture and fittings [NESD]",
+        "nature": "Furniture and fittings used in hotels, restaurants and boarding houses, schools, colleges and other educational institutions, libraries; welfare centres; meeting halls, cinema houses; theatres and circuses; and furniture and fittings let out on hire for use on the occasion of marriages and similar functions.",
+        "years": 8,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VI(1)",
+      "cells": {
+        "entry": "VI(1)",
+        "group": "VI. Motor Vehicles [NESD]",
+        "nature": "Motor cycles, scooters and other mopeds",
+        "years": 10,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VI(2)",
+      "cells": {
+        "entry": "VI(2)",
+        "group": "VI. Motor Vehicles [NESD]",
+        "nature": "Motor buses, motor lorries, motor cars and motor taxies used in a business of running them on hire",
+        "years": 6,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VI(3)",
+      "cells": {
+        "entry": "VI(3)",
+        "group": "VI. Motor Vehicles [NESD]",
+        "nature": "Motor buses, motor lorries and motor cars other than those used in a business of running them on hire",
+        "years": 8,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VI(4)",
+      "cells": {
+        "entry": "VI(4)",
+        "group": "VI. Motor Vehicles [NESD]",
+        "nature": "Motor tractors, harvesting combines and heavy vehicles",
+        "years": 8,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VI(5)",
+      "cells": {
+        "entry": "VI(5)",
+        "group": "VI. Motor Vehicles [NESD]",
+        "nature": "Electrically operated vehicles including battery powered or fuel cell powered vehicles",
+        "years": 8,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(i)",
+      "cells": {
+        "entry": "VII(1)(i)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Bulk Carriers and liner vessels",
+        "years": 25,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(ii)",
+      "cells": {
+        "entry": "VII(1)(ii)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Crude tankers, product carriers and easy chemical carriers with or without conventional tank coatings.",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(iii)(a)",
+      "cells": {
+        "entry": "VII(1)(iii)(a)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships > (iii) Chemicals and Acid Carriers:",
+        "nature": "With Stainless steel tanks",
+        "years": 25,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(iii)(b)",
+      "cells": {
+        "entry": "VII(1)(iii)(b)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships > (iii) Chemicals and Acid Carriers:",
+        "nature": "With other tanks",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(iv)",
+      "cells": {
+        "entry": "VII(1)(iv)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Liquified gas carriers",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(v)",
+      "cells": {
+        "entry": "VII(1)(v)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Conventional large passenger vessels which are used for cruise purpose also",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(vi)",
+      "cells": {
+        "entry": "VII(1)(vi)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Coastal service ships of all categories",
+        "years": 30,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(vii)",
+      "cells": {
+        "entry": "VII(1)(vii)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Offshore supply and support vessels",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(viii)",
+      "cells": {
+        "entry": "VII(1)(viii)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Catamarans and other high speed passenger for ships or boats",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(ix)",
+      "cells": {
+        "entry": "VII(1)(ix)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Drill ships",
+        "years": 25,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(x)",
+      "cells": {
+        "entry": "VII(1)(x)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Hovercrafts",
+        "years": 15,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(xi)",
+      "cells": {
+        "entry": "VII(1)(xi)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Fishing vessels with wooden hull",
+        "years": 10,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(1)(xii)",
+      "cells": {
+        "entry": "VII(1)(xii)",
+        "group": "VII. Ships [NESD] > 1. Ocean-going ships",
+        "nature": "Dredgers, tugs, barges, survey launches and other similar ships used mainly for dredging purposes",
+        "years": 14,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(2)(i)",
+      "cells": {
+        "entry": "VII(2)(i)",
+        "group": "VII. Ships [NESD] > 2. Vessels ordinarily operating on inland waters—",
+        "nature": "Speed boats",
+        "years": 13,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VII(2)(ii)",
+      "cells": {
+        "entry": "VII(2)(ii)",
+        "group": "VII. Ships [NESD] > 2. Vessels ordinarily operating on inland waters—",
+        "nature": "Other vessels",
+        "years": 28,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry VIII",
+      "cells": {
+        "entry": "VIII",
+        "group": null,
+        "nature": "Aircrafts or Helicopters [NESD]",
+        "years": 20,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry IX",
+      "cells": {
+        "entry": "IX",
+        "group": null,
+        "nature": "Railways sidings, locomotives, rolling stocks, tramways and railways used by concerns, excluding railway concerns [NESD]",
+        "years": 15,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry X",
+      "cells": {
+        "entry": "X",
+        "group": null,
+        "nature": "Ropeway structures [NESD]",
+        "years": 15,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry XI",
+      "cells": {
+        "entry": "XI",
+        "group": null,
+        "nature": "Office equipment [NESD]",
+        "years": 5,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry XII(i)",
+      "cells": {
+        "entry": "XII(i)",
+        "group": "XII. Computers and data processing units [NESD]",
+        "nature": "Servers and networks",
+        "years": 6,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry XII(ii)",
+      "cells": {
+        "entry": "XII(ii)",
+        "group": "XII. Computers and data processing units [NESD]",
+        "nature": "End user devices, such as, desktops, laptops, etc.",
+        "years": 3,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry XIII(i)",
+      "cells": {
+        "entry": "XIII(i)",
+        "group": "XIII. Laboratory equipment [NESD]",
+        "nature": "General laboratory equipment",
+        "years": 10,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry XIII(ii)",
+      "cells": {
+        "entry": "XIII(ii)",
+        "group": "XIII. Laboratory equipment [NESD]",
+        "nature": "Laboratory equipments used in educational institutions",
+        "years": 5,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry XIV",
+      "cells": {
+        "entry": "XIV",
+        "group": null,
+        "nature": "Electrical Installations and Equipment [NESD]",
+        "years": 10,
+        "extraShift": "nesd"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part C, paragraph 5, entry XV",
+      "cells": {
+        "entry": "XV",
+        "group": null,
+        "nature": "Hydraulic works, pipelines and sluices [NESD]",
+        "years": 15,
+        "extraShift": "nesd"
+      }
+    }
+  ]
+}

@@ -1,0 +1,369 @@
+{
+  "key": "income-tax.tds-rates-in-force-readings",
+  "title": "Part II items of the TDS entries at the rates in force",
+  "description": "The ERP's reading, not a government table: for each entry of the Income-tax Act, 2025 deducted at the rates in force whose nature of income fixes the item, and for each payee the entry can have, the item of Part II of the First Schedule to the Finance Act, 2026 whose rate applies. Section 393(1) pays residents, so its entries have two payees, and section 393(3) pays any person, so its winnings have all five. Section 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] is not read here: its item depends on whether the income is interest, royalty, fees, dividend, gains or other income, which only the payment shows. The readings end with the rates they read, on 31 March 2027, until the next Finance Act is added.",
+  "basis": "interpretation",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "reading",
+      "title": "Reading",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "entry",
+      "title": "Entry of the Income-tax Act, 2025",
+      "kind": "code",
+      "references": [
+        "income-tax.tds-entries"
+      ]
+    },
+    {
+      "name": "payee",
+      "title": "Payee",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "residentOtherThanCompany",
+          "title": "Person other than a company, resident in India"
+        },
+        {
+          "value": "nonResidentIndian",
+          "title": "Non-resident Indian"
+        },
+        {
+          "value": "otherNonResident",
+          "title": "Any other person not resident in India (not a company)"
+        },
+        {
+          "value": "domesticCompany",
+          "title": "Domestic company"
+        },
+        {
+          "value": "otherCompany",
+          "title": "Company other than a domestic company"
+        }
+      ]
+    },
+    {
+      "name": "item",
+      "title": "Item of Part II",
+      "kind": "code",
+      "references": [
+        "income-tax.tds-rates-in-force"
+      ]
+    },
+    {
+      "name": "why",
+      "title": "Why this item",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), 21 August 2025, section 393(1) and (3), Tables, in force 1 April 2026 (section 1(3))",
+        "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), Table, Sl. No. 1, and First Schedule, Part II, in force 1 April 2026 (section 1(2)(a))"
+      ]
+    },
+    {
+      "from": "2027-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), section 2(90)(a)(iv) and (c): the rates in force for deducting tax under these entries are “the rate or rates of income-tax specified in this behalf in the Finance Act of the relevant year” ((a)(iv)) and those “specified in this behalf in the Finance Act of the relevant tax year” ((c))",
+        "Finance Act, 2026 (4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(i)], read with the Finance Act, 2026, First Schedule, Part II, item 1(a)(v)",
+      "cells": {
+        "reading": "393(1)-1(i)-residentOtherThanCompany",
+        "entry": "393(1)-1(i)",
+        "payee": "residentOtherThanCompany",
+        "item": "1(a)(v)",
+        "why": "Sl. No. 1(i) deducts from remuneration or reward for soliciting or procuring insurance business, which section 3(18)(b) of the Finance Act, 2026 defines as “insurance commission”, and item 1(a)(v) gives the rate for a resident other than a company “on income by way of insurance commission”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(i)], read with the Finance Act, 2026, First Schedule, Part II, item 2(a)(v)",
+      "cells": {
+        "reading": "393(1)-1(i)-domesticCompany",
+        "entry": "393(1)-1(i)",
+        "payee": "domesticCompany",
+        "item": "2(a)(v)",
+        "why": "Item 2(a), for a domestic company, names no insurance commission, so the commission of Sl. No. 1(i) falls under its residual item 2(a)(v), “on any other income”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(i)], read with the Finance Act, 2026, First Schedule, Part II, item 1(a)(vi)",
+      "cells": {
+        "reading": "393(1)-5(i)-residentOtherThanCompany-1(a)(vi)",
+        "entry": "393(1)-5(i)",
+        "payee": "residentOtherThanCompany",
+        "item": "1(a)(vi)",
+        "why": "Sl. No. 5(i) deducts from interest on securities, and item 1(a)(vi) gives the rate for a resident other than a company on interest payable on the debentures and securities it names in (A) to (C), so it applies when the security is one of them."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(i)], read with the Finance Act, 2026, First Schedule, Part II, item 1(a)(vii)",
+      "cells": {
+        "reading": "393(1)-5(i)-residentOtherThanCompany-1(a)(vii)",
+        "entry": "393(1)-5(i)",
+        "payee": "residentOtherThanCompany",
+        "item": "1(a)(vii)",
+        "why": "Interest on securities that item 1(a)(vi) does not name falls under the residual item 1(a)(vii), “on any other income”, because item 1(a)(i) leaves out “Interest on securities”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(i)], read with the Finance Act, 2026, First Schedule, Part II, item 2(a)(v)",
+      "cells": {
+        "reading": "393(1)-5(i)-domesticCompany",
+        "entry": "393(1)-5(i)",
+        "payee": "domesticCompany",
+        "item": "2(a)(v)",
+        "why": "Item 2(a)(i) leaves out “Interest on securities” and no other item of 2(a) names it, so a domestic company's interest on securities under Sl. No. 5(i) falls under item 2(a)(v), “on any other income”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(ii)], read with the Finance Act, 2026, First Schedule, Part II, item 1(a)(i)",
+      "cells": {
+        "reading": "393(1)-5(ii)-residentOtherThanCompany",
+        "entry": "393(1)-5(ii)",
+        "payee": "residentOtherThanCompany",
+        "item": "1(a)(i)",
+        "why": "Sl. No. 5(ii) deducts from interest other than interest on securities paid by a banking company, a co-operative society carrying on the business of banking or a post office, the income of item 1(a)(i) for a resident other than a company."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(ii)], read with the Finance Act, 2026, First Schedule, Part II, item 2(a)(i)",
+      "cells": {
+        "reading": "393(1)-5(ii)-domesticCompany",
+        "entry": "393(1)-5(ii)",
+        "payee": "domesticCompany",
+        "item": "2(a)(i)",
+        "why": "Sl. No. 5(ii) deducts from interest other than interest on securities paid by a banking company, a co-operative society carrying on the business of banking or a post office, the income of item 2(a)(i) for a domestic company."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(iii)], read with the Finance Act, 2026, First Schedule, Part II, item 1(a)(i)",
+      "cells": {
+        "reading": "393(1)-5(iii)-residentOtherThanCompany",
+        "entry": "393(1)-5(iii)",
+        "payee": "residentOtherThanCompany",
+        "item": "1(a)(i)",
+        "why": "Sl. No. 5(iii) deducts from interest other than interest on securities paid by any other specified person, the income of item 1(a)(i) for a resident other than a company."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(iii)], read with the Finance Act, 2026, First Schedule, Part II, item 2(a)(i)",
+      "cells": {
+        "reading": "393(1)-5(iii)-domesticCompany",
+        "entry": "393(1)-5(iii)",
+        "payee": "domesticCompany",
+        "item": "2(a)(i)",
+        "why": "Sl. No. 5(iii) deducts from interest other than interest on securities paid by any other specified person, the income of item 2(a)(i) for a domestic company."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1), read with the Finance Act, 2026, First Schedule, Part II, item 1(a)(ii)",
+      "cells": {
+        "reading": "393(3)-1-residentOtherThanCompany",
+        "entry": "393(3)-1",
+        "payee": "residentOtherThanCompany",
+        "item": "1(a)(ii)",
+        "why": "Sl. No. 1 deducts from winnings from lotteries, crossword puzzles, card games and other games of any sort and from gambling or betting, other than winnings from online games; item 1(a)(ii) gives the rate for a resident other than a company on winnings from lotteries, puzzles, card games and other games of any sort other than online games, and Part II names no other item for gambling or betting."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1), read with the Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(J)",
+      "cells": {
+        "reading": "393(3)-1-nonResidentIndian",
+        "entry": "393(3)-1",
+        "payee": "nonResidentIndian",
+        "item": "1(b)(i)(J)",
+        "why": "Sl. No. 1 deducts from winnings from lotteries, crossword puzzles, card games and other games of any sort and from gambling or betting, other than winnings from online games; item 1(b)(i)(J) gives the rate for a non-resident Indian on winnings from lotteries, puzzles, card games and other games of any sort other than online games, and Part II names no other item for gambling or betting."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1), read with the Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(E)",
+      "cells": {
+        "reading": "393(3)-1-otherNonResident",
+        "entry": "393(3)-1",
+        "payee": "otherNonResident",
+        "item": "1(b)(ii)(E)",
+        "why": "Sl. No. 1 deducts from winnings from lotteries, crossword puzzles, card games and other games of any sort and from gambling or betting, other than winnings from online games; item 1(b)(ii)(E) gives the rate for any other non-resident other than a company on winnings from lotteries, puzzles, card games and other games of any sort other than online games, and Part II names no other item for gambling or betting."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1), read with the Finance Act, 2026, First Schedule, Part II, item 2(a)(ii)",
+      "cells": {
+        "reading": "393(3)-1-domesticCompany",
+        "entry": "393(3)-1",
+        "payee": "domesticCompany",
+        "item": "2(a)(ii)",
+        "why": "Sl. No. 1 deducts from winnings from lotteries, crossword puzzles, card games and other games of any sort and from gambling or betting, other than winnings from online games; item 2(a)(ii) gives the rate for a domestic company on winnings from lotteries, puzzles, card games and other games of any sort other than online games, and Part II names no other item for gambling or betting."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1), read with the Finance Act, 2026, First Schedule, Part II, item 2(b)(i)",
+      "cells": {
+        "reading": "393(3)-1-otherCompany",
+        "entry": "393(3)-1",
+        "payee": "otherCompany",
+        "item": "2(b)(i)",
+        "why": "Sl. No. 1 deducts from winnings from lotteries, crossword puzzles, card games and other games of any sort and from gambling or betting, other than winnings from online games; item 2(b)(i) gives the rate for a company other than a domestic company on winnings from lotteries, puzzles, card games and other games of any sort other than online games, and Part II names no other item for gambling or betting."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2), read with the Finance Act, 2026, First Schedule, Part II, item 1(a)(iv)",
+      "cells": {
+        "reading": "393(3)-2-residentOtherThanCompany",
+        "entry": "393(3)-2",
+        "payee": "residentOtherThanCompany",
+        "item": "1(a)(iv)",
+        "why": "Sl. No. 2 deducts from winnings from online games, on the net winnings its Note 1 sets out, and item 1(a)(iv) gives the rate for a resident other than a company “on income by way of net winnings from online games”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2), read with the Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(L)",
+      "cells": {
+        "reading": "393(3)-2-nonResidentIndian",
+        "entry": "393(3)-2",
+        "payee": "nonResidentIndian",
+        "item": "1(b)(i)(L)",
+        "why": "Sl. No. 2 deducts from winnings from online games, on the net winnings its Note 1 sets out, and item 1(b)(i)(L) gives the rate for a non-resident Indian “on income by way of net winnings from online games”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2), read with the Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(G)",
+      "cells": {
+        "reading": "393(3)-2-otherNonResident",
+        "entry": "393(3)-2",
+        "payee": "otherNonResident",
+        "item": "1(b)(ii)(G)",
+        "why": "Sl. No. 2 deducts from winnings from online games, on the net winnings its Note 1 sets out, and item 1(b)(ii)(G) gives the rate for any other non-resident other than a company “on income by way of net winnings from online games”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2), read with the Finance Act, 2026, First Schedule, Part II, item 2(a)(iv)",
+      "cells": {
+        "reading": "393(3)-2-domesticCompany",
+        "entry": "393(3)-2",
+        "payee": "domesticCompany",
+        "item": "2(a)(iv)",
+        "why": "Sl. No. 2 deducts from winnings from online games, on the net winnings its Note 1 sets out, and item 2(a)(iv) gives the rate for a domestic company “on income by way of net winnings from online games”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2), read with the Finance Act, 2026, First Schedule, Part II, item 2(b)(iii)",
+      "cells": {
+        "reading": "393(3)-2-otherCompany",
+        "entry": "393(3)-2",
+        "payee": "otherCompany",
+        "item": "2(b)(iii)",
+        "why": "Sl. No. 2 deducts from winnings from online games, on the net winnings its Note 1 sets out, and item 2(b)(iii) gives the rate for a company other than a domestic company “on income by way of net winnings from online games”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3), read with the Finance Act, 2026, First Schedule, Part II, item 1(a)(iii)",
+      "cells": {
+        "reading": "393(3)-3-residentOtherThanCompany",
+        "entry": "393(3)-3",
+        "payee": "residentOtherThanCompany",
+        "item": "1(a)(iii)",
+        "why": "Sl. No. 3 deducts from winnings from any horse race, and item 1(a)(iii) gives the rate for a resident other than a company “on income by way of winnings from horse races”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3), read with the Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(K)",
+      "cells": {
+        "reading": "393(3)-3-nonResidentIndian",
+        "entry": "393(3)-3",
+        "payee": "nonResidentIndian",
+        "item": "1(b)(i)(K)",
+        "why": "Sl. No. 3 deducts from winnings from any horse race, and item 1(b)(i)(K) gives the rate for a non-resident Indian “on income by way of winnings from horse races”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3), read with the Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(F)",
+      "cells": {
+        "reading": "393(3)-3-otherNonResident",
+        "entry": "393(3)-3",
+        "payee": "otherNonResident",
+        "item": "1(b)(ii)(F)",
+        "why": "Sl. No. 3 deducts from winnings from any horse race, and item 1(b)(ii)(F) gives the rate for any other non-resident other than a company “on income by way of winnings from horse races”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3), read with the Finance Act, 2026, First Schedule, Part II, item 2(a)(iii)",
+      "cells": {
+        "reading": "393(3)-3-domesticCompany",
+        "entry": "393(3)-3",
+        "payee": "domesticCompany",
+        "item": "2(a)(iii)",
+        "why": "Sl. No. 3 deducts from winnings from any horse race, and item 2(a)(iii) gives the rate for a domestic company “on income by way of winnings from horse races”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3), read with the Finance Act, 2026, First Schedule, Part II, item 2(b)(ii)",
+      "cells": {
+        "reading": "393(3)-3-otherCompany",
+        "entry": "393(3)-3",
+        "payee": "otherCompany",
+        "item": "2(b)(ii)",
+        "why": "Sl. No. 3 deducts from winnings from any horse race, and item 2(b)(ii) gives the rate for a company other than a domestic company “on income by way of winnings from horse races”."
+      }
+    }
+  ]
+}

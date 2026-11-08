@@ -1,0 +1,103 @@
+{
+  "key": "income-tax.depreciation-notes",
+  "title": "Notes below the income-tax depreciation Table",
+  "description": "The nine Notes below the Table in Appendix I to the Income-tax Rules, 2026, for tax years from 2026-27, in their words: what the Table's words mean (buildings, a building used mainly for residential purposes, water treatment system, electrical fittings, commercial vehicle, computer software, the pipes that count as machinery and plant of a water supply project, speed boat) and the percentage that applies to a structure or work by way of renovation, improvement or extension of a building referred to in section 33(6) of the Income-tax Act, 2025. The Table's entries refer to them by number.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "note",
+      "title": "Note",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "text",
+      "title": "Note in the Table's words",
+      "kind": "text",
+      "rowTitle": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Rules, 2026, G.S.R. 198(E), 20 March 2026 (Notification No. 22/2026, F. No. 370142/41/2025-TPL), Appendix I, Notes, in force 1 April 2026 (rule 1(2))"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 1",
+      "cells": {
+        "note": "1",
+        "text": "\"Buildings\" include roads, bridges, culverts, wells and tubewells."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 2",
+      "cells": {
+        "note": "2",
+        "text": "A building shall be deemed to be a building used mainly for residential purposes, if the built up floor area thereof used for residential purposes is not less than sixty-six and two-third per cent of its total built-up floor area and shall include any such building in the factory premises."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 3",
+      "cells": {
+        "note": "3",
+        "text": "In respect of any structure or work by way of renovation or improvement in or in relation to a building referred to in section 33(6), the percentage to be applied will be the percentage specified against sub-item (1) or (2) of item 1 of PART A as may be appropriate to the class of building in or in relation to which the renovation or improvement is effected. Where the structure is constructed or the work is done by way of extension of any such building, the percentage to be applied would be such percentage as would be appropriate, as if the structure or work constituted a separate building."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 4",
+      "cells": {
+        "note": "4",
+        "text": "Water treatment system includes system for desalination, demineralisation and purification of water."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 5",
+      "cells": {
+        "note": "5",
+        "text": "\"Electrical fittings\" include electrical wiring, switches, sockets, other fittings and fans, etc."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 6",
+      "cells": {
+        "note": "6",
+        "text": "\"Commercial vehicle\" means \"heavy goods vehicle\", \"heavy passenger motor vehicle\", \"light motor vehicle\", \"medium goods vehicle\" and \"medium passenger motor vehicle\" but does not include \"maxi-cab\", \"motor-cab\", \"tractor\" and \"road-roller\". The expressions \"heavy goods vehicle\", \"heavy passenger motor vehicle\", \"light motor vehicle\", \"medium goods vehicle\", \"medium passenger motor vehicle\", \"maxi-cab\", \"motor-cab\", \"tractor\" and \"road-roller\" shall have the meanings respectively assigned to them in section 2 of the Motor Vehicles Act, 1988 (59 of 1988)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 7",
+      "cells": {
+        "note": "7",
+        "text": "\"Computer software\" means any computer program recorded on any disc, tape, perforated media or other information storage device."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 8",
+      "cells": {
+        "note": "8",
+        "text": "Machinery and plant includes pipes needed for delivery from the source of supply of raw water to the plant and from the plant to the storage facility."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Note 9",
+      "cells": {
+        "note": "9",
+        "text": "\"Speed boat\" means a motor boat driven by a high speed internal combustion engine capable of propelling the boat at a speed exceeding 24 kilometres per hour in still water and so designed that when running at a speed, it will plane, i.e., its bow will rise from the water."
+      }
+    }
+  ]
+}

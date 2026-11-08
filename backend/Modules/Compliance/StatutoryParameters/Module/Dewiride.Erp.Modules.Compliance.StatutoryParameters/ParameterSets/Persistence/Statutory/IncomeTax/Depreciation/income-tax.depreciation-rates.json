@@ -1,0 +1,1738 @@
+{
+  "key": "income-tax.depreciation-rates",
+  "title": "Income-tax depreciation rates by block of assets",
+  "description": "The rates at which depreciation is allowed under section 33(3) of the Income-tax Act, 2025, as percentages of the written down value of each block of assets, in the Table in Appendix I to the Income-tax Rules, 2026 (rule 25(1)), for tax years from 2026-27: every entry of Part A (tangible assets) and Part B (intangible assets) with its rate in column (3) and its words in column (2), under its item and any heading printed above it, copied as printed, misprints and references to the Notes below the Table included. The Notes, the half rate and additional depreciation of section 33(4) and (9), and the 40% cap and the 40% rate of rule 25(2) and (7) are sets of their own; the straight-line rates of Appendix II for power undertakings are not held.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "part",
+      "title": "Part",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "tangibleAssets",
+          "title": "Part A: Tangible assets"
+        },
+        {
+          "value": "intangibleAssets",
+          "title": "Part B: Intangible assets"
+        }
+      ]
+    },
+    {
+      "name": "item",
+      "title": "Item",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "building",
+          "title": "Building [See Notes 1 to 4 below]"
+        },
+        {
+          "value": "furnitureAndFittings",
+          "title": "Furniture and fittings"
+        },
+        {
+          "value": "machineryAndPlant",
+          "title": "Machinery and Plant"
+        },
+        {
+          "value": "ships",
+          "title": "Ships"
+        }
+      ]
+    },
+    {
+      "name": "heading",
+      "title": "Heading above the entry",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "block",
+      "title": "Block of assets",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "rate",
+      "title": "Depreciation allowance as percentage of written down value",
+      "kind": "percent"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Rules, 2026, G.S.R. 198(E), 20 March 2026 (Notification No. 22/2026, F. No. 370142/41/2025-TPL), rule 25(1) and Appendix I, in force 1 April 2026 (rule 1(2))",
+        "Income-tax Act, 2025 (30 of 2025), section 33(3)(a), in force 1 April 2026 (section 1(3))"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item I, sub-item (1)",
+      "cells": {
+        "entry": "A.I.1",
+        "part": "tangibleAssets",
+        "item": "building",
+        "heading": null,
+        "block": "Buildings which are used mainly for residential purposes except hotels and boarding houses",
+        "rate": 5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item I, sub-item (2)",
+      "cells": {
+        "entry": "A.I.2",
+        "part": "tangibleAssets",
+        "item": "building",
+        "heading": null,
+        "block": "Buildings other than those used mainly for residential purposes and not covered by sub-items (1) above and (3) below",
+        "rate": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item I, sub-item (3)",
+      "cells": {
+        "entry": "A.I.3",
+        "part": "tangibleAssets",
+        "item": "building",
+        "heading": null,
+        "block": "Buildings for installing machinery and plant forming part of water supply project or water treatment system and which is put to use for the purpose of business of providing infrastructure facilities under section 80-IA(4)(i) of the Income-tax Act, 1961",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item I, sub-item (4)",
+      "cells": {
+        "entry": "A.I.4",
+        "part": "tangibleAssets",
+        "item": "building",
+        "heading": null,
+        "block": "Purely temporary erections such as wooden structures",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item II",
+      "cells": {
+        "entry": "A.II",
+        "part": "tangibleAssets",
+        "item": "furnitureAndFittings",
+        "heading": null,
+        "block": "Furniture and fittings including electrical fittings [See Note 5 below]",
+        "rate": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (1)",
+      "cells": {
+        "entry": "A.III.1",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Machinery and plant other than those covered by sub-items (2), (3) and (8) below:",
+        "rate": 15
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (2), entry (i)",
+      "cells": {
+        "entry": "A.III.2(i)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Motor cars, other than those used in a business of running them on hire, except those covered under entry (ii) acquired on or after the 1st April, 1990;",
+        "rate": 15
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (2), entry (ii)",
+      "cells": {
+        "entry": "A.III.2(ii)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Motor cars, other than those used in a business of running them on hire, acquired on or after the 23rd August, 2019 but before the 1st April, 2020 and is put to use before the 1st April, 2020.",
+        "rate": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (i)",
+      "cells": {
+        "entry": "A.III.3(i)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Aeroplanes - Aeroengines",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (ii)",
+      "cells": {
+        "entry": "A.III.3(ii)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Motor buses, motor lorries and motor taxis used in a business of running them on hire.",
+        "rate": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (iii)",
+      "cells": {
+        "entry": "A.III.3(iii)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Motor buses, motor lorries and motor taxis used in a business of running them on hire, acquired on or after the 23rd August, 2019 but before the 1st April, 2020 and is put to use before the 1st April, 2020.",
+        "rate": 45
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (iv)",
+      "cells": {
+        "entry": "A.III.3(iv)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "New commercial vehicle which is acquired on or after the 1st January, 2009 but before the 1st October, 2009 and is put to use before the 1st October, 2009 for the purposes of business or profession [See Note 6 below]",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (v)",
+      "cells": {
+        "entry": "A.III.3(v)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Moulds used in rubber and plastic goods factories",
+        "rate": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vi), clause (a)",
+      "cells": {
+        "entry": "A.III.3(vi)(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Air pollution control equipment, being—",
+        "block": "Electrostatic precipitation systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vi), clause (b)",
+      "cells": {
+        "entry": "A.III.3(vi)(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Air pollution control equipment, being—",
+        "block": "Felt-filter systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vi), clause (c)",
+      "cells": {
+        "entry": "A.III.3(vi)(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Air pollution control equipment, being—",
+        "block": "Dust collector systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vi), clause (d)",
+      "cells": {
+        "entry": "A.III.3(vi)(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Air pollution control equipment, being—",
+        "block": "Scrubber-counter current/venturi/packed bed/cyclonic scrubbers",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vi), clause (e)",
+      "cells": {
+        "entry": "A.III.3(vi)(e)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Air pollution control equipment, being—",
+        "block": "Ash handling system and evacuation system",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (a)",
+      "cells": {
+        "entry": "A.III.3(vii)(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Mechanical screen systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (b)",
+      "cells": {
+        "entry": "A.III.3(vii)(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Aerated detritus chambers (including air compressor)",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (c)",
+      "cells": {
+        "entry": "A.III.3(vii)(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Mechanically skimmed oil and grease removal systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (d)",
+      "cells": {
+        "entry": "A.III.3(vii)(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Chemical feed systems and flash mixing equipment",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (e)",
+      "cells": {
+        "entry": "A.III.3(vii)(e)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Mechanical flocculators and mechanical reactors",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (f)",
+      "cells": {
+        "entry": "A.III.3(vii)(f)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Diffused air/mechanically aerated activated sludge systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (g)",
+      "cells": {
+        "entry": "A.III.3(vii)(g)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Aerated lagoon systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (h)",
+      "cells": {
+        "entry": "A.III.3(vii)(h)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Biofilters",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (i)",
+      "cells": {
+        "entry": "A.III.3(vii)(i)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Methane-recovery anaerobic digester systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (j)",
+      "cells": {
+        "entry": "A.III.3(vii)(j)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Air flotation systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (k)",
+      "cells": {
+        "entry": "A.III.3(vii)(k)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Air/steam stripping systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (l)",
+      "cells": {
+        "entry": "A.III.3(vii)(l)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Urea Hydrolysis systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (m)",
+      "cells": {
+        "entry": "A.III.3(vii)(m)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Marine outfall systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (n)",
+      "cells": {
+        "entry": "A.III.3(vii)(n)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Centrifuge for dewatering sludge",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (o)",
+      "cells": {
+        "entry": "A.III.3(vii)(o)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Rotating biological contractor or bio-disc",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (p)",
+      "cells": {
+        "entry": "A.III.3(vii)(p)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Ion exchange resin column",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (vii), clause (q)",
+      "cells": {
+        "entry": "A.III.3(vii)(q)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Water pollution control equipment, being—",
+        "block": "Activated carbon column",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (viii), clause (a)",
+      "cells": {
+        "entry": "A.III.3(viii)(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Solid waste, control equipment being - caustic/lime/chrome/mineral/cryolite recovery systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (viii), clause (b)",
+      "cells": {
+        "entry": "A.III.3(viii)(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Solid waste recycling and resource recovery systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (ix)",
+      "cells": {
+        "entry": "A.III.3(ix)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Machinery and plant, used in semi-conductor industry covering all Integrated Circuits (ICs) (excluding hybrid integrated circuits) ranging from Small Scale Integration (SSI) to Large Scale Integration/Very Large Scale Integration (LSI/VLSI) as also discrete semi-conductor devices such as diodes, transistors, thyristors, triacs, etc., other than those covered by entries (iv), (v) and (vi) of this sub-item and sub-item (7) below.",
+        "rate": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (a)",
+      "cells": {
+        "entry": "A.III.3(x)(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "D.C. Defibrillators for internal use and pace makers",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (b)",
+      "cells": {
+        "entry": "A.III.3(x)(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Heamodialysors",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (c)",
+      "cells": {
+        "entry": "A.III.3(x)(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Heart lung machine",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (d)",
+      "cells": {
+        "entry": "A.III.3(x)(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Cobalt Therapy Unit",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (e)",
+      "cells": {
+        "entry": "A.III.3(x)(e)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Colour Doppler",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (f)",
+      "cells": {
+        "entry": "A.III.3(x)(f)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "SPECT Gamma Camera",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (g)",
+      "cells": {
+        "entry": "A.III.3(x)(g)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Vascular Angiography System including Digital Subtraction Angiography",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (h)",
+      "cells": {
+        "entry": "A.III.3(x)(h)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Ventilator used with anaesthesia apparatus",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (i)",
+      "cells": {
+        "entry": "A.III.3(x)(i)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Magnetic Resonance Imaging System",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (j)",
+      "cells": {
+        "entry": "A.III.3(x)(j)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Surgical Laser",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (k)",
+      "cells": {
+        "entry": "A.III.3(x)(k)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Ventilator other than those used with anaesthesia",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (l)",
+      "cells": {
+        "entry": "A.III.3(x)(l)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Gamma knife",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (m)",
+      "cells": {
+        "entry": "A.III.3(x)(m)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Bone Marrow Transplant Equipment including silastic long standing intravenous catheters for chemotherapy",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (n)",
+      "cells": {
+        "entry": "A.III.3(x)(n)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Fibre optic endoscopes including, Paediatric resectoscope/audit resectoscope, Peritoneoscopes, Arthoscope, Microlaryngoscope, Fibreoptic Flexible Nasal Pharyngo Bronchoscope, Fibreoptic Flexible Laryngo Bronchoscope, Video Laryngo Bronchoscope and Video Oesophago Gastroscope, Stroboscope, Fibreoptic Flexible Oesophago Gastroscope",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (3), entry (x), clause (o)",
+      "cells": {
+        "entry": "A.III.3(x)(o)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Life saving medical equipment, being—",
+        "block": "Laparoscope (single incision)",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (4)",
+      "cells": {
+        "entry": "A.III.4",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Containers made of glass or plastic used as re-fills",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (5)",
+      "cells": {
+        "entry": "A.III.5",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Computers including computer software (See Note 7 below)",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (6)",
+      "cells": {
+        "entry": "A.III.6",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Machinery and plant, acquired and installed on or after the 1st September, 2002 in a water supply project or a water treatment system and which is put to use for the purpose of business of providing infrastructure facility under clause (i) of sub-section (4) of section 80-IA of the Income-tax Act, 1961 [See Notes 4 and 8 below]",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (i)",
+      "cells": {
+        "entry": "A.III.7(i)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Wooden parts used in artificial silk manufacturing machinery",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ii)",
+      "cells": {
+        "entry": "A.III.7(ii)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Cinematograph films - bulbs of studio lights",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (iii)",
+      "cells": {
+        "entry": "A.III.7(iii)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Match factories - Wooden match frames",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (iv), clause (a)",
+      "cells": {
+        "entry": "A.III.7(iv)(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Mines and quarries",
+        "block": "Tubs winding ropes, haulage ropes and sand stowing pipes",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (iv), clause (b)",
+      "cells": {
+        "entry": "A.III.7(iv)(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Mines and quarries",
+        "block": "Safety lamps",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (v)",
+      "cells": {
+        "entry": "A.III.7(v)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Salt works - Salt pans, reservoirs and condensers, etc., made of earthy, sandy or clayey material or any other similar material",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (vi)",
+      "cells": {
+        "entry": "A.III.7(vi)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Flour mills – Rollers",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (vii)",
+      "cells": {
+        "entry": "A.III.7(vii)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Iron and steel industry - Rolling mill rolls",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (viii)",
+      "cells": {
+        "entry": "A.III.7(viii)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Sugar works – Rollers",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group A, clause (a)",
+      "cells": {
+        "entry": "A.III.7(ix)A(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— A. Specialised boilers and furnaces:",
+        "block": "Ignifluid/fluidized bed boilers",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group A, clause (b)",
+      "cells": {
+        "entry": "A.III.7(ix)A(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— A. Specialised boilers and furnaces:",
+        "block": "Flameless furnaces and continuous pusher type furnaces",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group A, clause (c)",
+      "cells": {
+        "entry": "A.III.7(ix)A(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— A. Specialised boilers and furnaces:",
+        "block": "Fluidized bed type heat treatment furnaces",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group A, clause (d)",
+      "cells": {
+        "entry": "A.III.7(ix)A(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— A. Specialised boilers and furnaces:",
+        "block": "High efficiency boilers (thermal efficiency higher than 75 per cent in case of coal fired and 80 per cent in case of oil/gas fired boilers)",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group B, clause (a)",
+      "cells": {
+        "entry": "A.III.7(ix)B(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— B. Instrumentation and monitoring system for monitoring energy flows :",
+        "block": "Automatic electrical load monitoring systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group B, clause (b)",
+      "cells": {
+        "entry": "A.III.7(ix)B(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— B. Instrumentation and monitoring system for monitoring energy flows :",
+        "block": "Digital heat loss meters",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group B, clause (c)",
+      "cells": {
+        "entry": "A.III.7(ix)B(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— B. Instrumentation and monitoring system for monitoring energy flows :",
+        "block": "Micro-processor based control systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group B, clause (d)",
+      "cells": {
+        "entry": "A.III.7(ix)B(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— B. Instrumentation and monitoring system for monitoring energy flows :",
+        "block": "Infra-red thermography",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group B, clause (e)",
+      "cells": {
+        "entry": "A.III.7(ix)B(e)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— B. Instrumentation and monitoring system for monitoring energy flows :",
+        "block": "Meters for measuring heat losses, furnace oil flow, steam flow, electric energy and power factor meters",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group B, clause (f)",
+      "cells": {
+        "entry": "A.III.7(ix)B(f)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— B. Instrumentation and monitoring system for monitoring energy flows :",
+        "block": "Maximum demand indicator and clamp on power meters",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group B, clause (g)",
+      "cells": {
+        "entry": "A.III.7(ix)B(g)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— B. Instrumentation and monitoring system for monitoring energy flows :",
+        "block": "Exhaust gases analyzer",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group B, clause (h)",
+      "cells": {
+        "entry": "A.III.7(ix)B(h)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— B. Instrumentation and monitoring system for monitoring energy flows :",
+        "block": "Fuel oil pump test bench",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group C, clause (a)",
+      "cells": {
+        "entry": "A.III.7(ix)C(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— C. Waste heat recovery equipment:",
+        "block": "Economisers and feed water heaters",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group C, clause (b)",
+      "cells": {
+        "entry": "A.III.7(ix)C(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— C. Waste heat recovery equipment:",
+        "block": "Recuperators and air pre-heaters",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group C, clause (c)",
+      "cells": {
+        "entry": "A.III.7(ix)C(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— C. Waste heat recovery equipment:",
+        "block": "Heat pumps",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group C, clause (d)",
+      "cells": {
+        "entry": "A.III.7(ix)C(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— C. Waste heat recovery equipment:",
+        "block": "Thermal energy wheel for high and low temperature waste heat recovery",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group D, clause (a)",
+      "cells": {
+        "entry": "A.III.7(ix)D(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— D. Co-generation systems:",
+        "block": "Back pressure pass out, controlled extraction, extraction-cum-condensing turbines for co-generation along with pressure boilers",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group D, clause (b)",
+      "cells": {
+        "entry": "A.III.7(ix)D(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— D. Co-generation systems:",
+        "block": "Vapour absorption refrigeration systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group D, clause (c)",
+      "cells": {
+        "entry": "A.III.7(ix)D(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— D. Co-generation systems:",
+        "block": "Organic rankine cycle power systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group D, clause (d)",
+      "cells": {
+        "entry": "A.III.7(ix)D(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— D. Co-generation systems:",
+        "block": "Low inlet pressure small steam turbines",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (a)",
+      "cells": {
+        "entry": "A.III.7(ix)E(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Shunt capacitors and synchronous condenser systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (b)",
+      "cells": {
+        "entry": "A.III.7(ix)E(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Automatic power cut-off devices (relays) mounted on individual motors",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (c)",
+      "cells": {
+        "entry": "A.III.7(ix)E(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Automatic voltage controller",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (d)",
+      "cells": {
+        "entry": "A.III.7(ix)E(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Power factor controller for AC motors",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (e)",
+      "cells": {
+        "entry": "A.III.7(ix)E(e)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Solid state devices for controlling motor speeds",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (f)",
+      "cells": {
+        "entry": "A.III.7(ix)E(f)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Thermally energy-efficient stenters (which require 800 or less kilocalories of heat to evaporate one kilogram of water)",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (g)",
+      "cells": {
+        "entry": "A.III.7(ix)E(g)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Series compensation equipment",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (h)",
+      "cells": {
+        "entry": "A.III.7(ix)E(h)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Flexible AC Transmission (FACT) devices - Thyristor controlled series compensation equipment",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (i)",
+      "cells": {
+        "entry": "A.III.7(ix)E(i)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Time of Day (ToD) energy meters",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (j)",
+      "cells": {
+        "entry": "A.III.7(ix)E(j)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Equipment to establish transmission highways for National Power Grid to facilitate transfer of surplus power of one region to the deficient region",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (k)",
+      "cells": {
+        "entry": "A.III.7(ix)E(k)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Remote terminal units/intelligent electronic devices, computer hardware/software, router/bridges, other required equipment and associated communication systems for supervisory control and data acquisition systems, energy management systems and distribution management systems for power transmission systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group E, clause (l)",
+      "cells": {
+        "entry": "A.III.7(ix)E(l)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— E. Electrical equipment:",
+        "block": "Special energy meters for Availability Based Tariff (ABT)",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group F, clause (a)",
+      "cells": {
+        "entry": "A.III.7(ix)F(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— F. Burners:",
+        "block": "0 to 10 per cent excess air burners",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group F, clause (b)",
+      "cells": {
+        "entry": "A.III.7(ix)F(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— F. Burners:",
+        "block": "Emulsion burners",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group F, clause (c)",
+      "cells": {
+        "entry": "A.III.7(ix)F(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— F. Burners:",
+        "block": "Burners using air with high pre-heat temperature (above 300°C)",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group G, clause (a)",
+      "cells": {
+        "entry": "A.III.7(ix)G(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— G. Other equipment:",
+        "block": "Wet air oxidation equipment for recovery of chemicals and heat",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group G, clause (b)",
+      "cells": {
+        "entry": "A.III.7(ix)G(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— G. Other equipment:",
+        "block": "Mechanical vapour recompressors",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group G, clause (c)",
+      "cells": {
+        "entry": "A.III.7(ix)G(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— G. Other equipment:",
+        "block": "Thin film evaporators",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group G, clause (d)",
+      "cells": {
+        "entry": "A.III.7(ix)G(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— G. Other equipment:",
+        "block": "Automatic micro-processor based load demand controllers",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group G, clause (e)",
+      "cells": {
+        "entry": "A.III.7(ix)G(e)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— G. Other equipment:",
+        "block": "Coal based producer gas plants",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group G, clause (f)",
+      "cells": {
+        "entry": "A.III.7(ix)G(f)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— G. Other equipment:",
+        "block": "Fluid drives and fluid couplings",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group G, clause (g)",
+      "cells": {
+        "entry": "A.III.7(ix)G(g)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— G. Other equipment:",
+        "block": "Turbo charges/super-charges",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (ix), group G, clause (h)",
+      "cells": {
+        "entry": "A.III.7(ix)G(h)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Energy saving devices, being— G. Other equipment:",
+        "block": "Sealed radiation sources for radiation processing plants",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (x)",
+      "cells": {
+        "entry": "A.III.7(x)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Gas cylinders including valves and regulators",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xi)",
+      "cells": {
+        "entry": "A.III.7(xi)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Glass manufacturing concerns - Direct fire glass melting furnaces",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xii), clause (a)",
+      "cells": {
+        "entry": "A.III.7(xii)(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Mineral oil concerns:",
+        "block": "Plant used in field operations (above ground) distribution -Returnable packages",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xii), clause (b)",
+      "cells": {
+        "entry": "A.III.7(xii)(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Mineral oil concerns:",
+        "block": "Plant used in field operations (below ground), but not including kerbside pumps including underground tanks and fittings used in field operations (distribution) by mineral oil concerns",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xii), clause (c)",
+      "cells": {
+        "entry": "A.III.7(xii)(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Mineral oil concerns:",
+        "block": "Oil wells not covered in clauses (a) and (b)",
+        "rate": 15
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (a)",
+      "cells": {
+        "entry": "A.III.7(xiii)(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Flat plate solar collectors",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (b)",
+      "cells": {
+        "entry": "A.III.7(xiii)(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Concentrating and pipe type solar collectors",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (c)",
+      "cells": {
+        "entry": "A.III.7(xiii)(c)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Solar cookers",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (d)",
+      "cells": {
+        "entry": "A.III.7(xiii)(d)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Solar water heaters and systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (e)",
+      "cells": {
+        "entry": "A.III.7(xiii)(e)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Air/gas/fluid heating systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (f)",
+      "cells": {
+        "entry": "A.III.7(xiii)(f)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Solar crop driers and systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (g)",
+      "cells": {
+        "entry": "A.III.7(xiii)(g)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Solar refrigeration, cold storages and air conditioning systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (h)",
+      "cells": {
+        "entry": "A.III.7(xiii)(h)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Solar steels and desalination systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (i)",
+      "cells": {
+        "entry": "A.III.7(xiii)(i)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Solar power generating systems",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (j)",
+      "cells": {
+        "entry": "A.III.7(xiii)(j)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Solar pumps based on solar-thermal and solar-photovoltaic conversion",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (k)",
+      "cells": {
+        "entry": "A.III.7(xiii)(k)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Solar-photovoltaic modules and panels for water pumping and other applications",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (l)",
+      "cells": {
+        "entry": "A.III.7(xiii)(l)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Wind mills and any specially designed devices which run on wind mills installed on or after the 1st April, 2014",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (m)",
+      "cells": {
+        "entry": "A.III.7(xiii)(m)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Any special devices including electric generators and pumps running on wind energy installed on or after the 1st April, 2014",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (n)",
+      "cells": {
+        "entry": "A.III.7(xiii)(n)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Biogas-plant and biogas-engines",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (o)",
+      "cells": {
+        "entry": "A.III.7(xiii)(o)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Electrically operated vehicles including battery powered or fuel-cell powered vehicles",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (p)",
+      "cells": {
+        "entry": "A.III.7(xiii)(p)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Agricultural and municipal waste conversion devices producing energy",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (q)",
+      "cells": {
+        "entry": "A.III.7(xiii)(q)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Equipment for utilising ocean waste and thermal energy",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (7), entry (xiii), clause (r)",
+      "cells": {
+        "entry": "A.III.7(xiii)(r)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Renewable energy devices being",
+        "block": "Machinery and plant used in the manufacture of any of the above sub-items",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (8), entry (i), clause (a)",
+      "cells": {
+        "entry": "A.III.8(i)(a)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Books owned by assessees carrying on a profession—",
+        "block": "Books, being annual publications",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (8), entry (i), clause (b)",
+      "cells": {
+        "entry": "A.III.8(i)(b)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": "Books owned by assessees carrying on a profession—",
+        "block": "Books, other than those covered by entry (a) above",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item III, sub-item (8), entry (ii)",
+      "cells": {
+        "entry": "A.III.8(ii)",
+        "part": "tangibleAssets",
+        "item": "machineryAndPlant",
+        "heading": null,
+        "block": "Books owned by assessees carrying on business in running lending libraries",
+        "rate": 40
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item IV, sub-item (1)",
+      "cells": {
+        "entry": "A.IV(1)",
+        "part": "tangibleAssets",
+        "item": "ships",
+        "heading": null,
+        "block": "Ocean-going ships including dredgers, tugs, barges, survey launches and other similar ships used mainly for dredging purposes and fishing vessels with wooden hull",
+        "rate": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item IV, sub-item (2)",
+      "cells": {
+        "entry": "A.IV(2)",
+        "part": "tangibleAssets",
+        "item": "ships",
+        "heading": null,
+        "block": "Vessels ordinarily operating on inland waters, not covered by sub-item (3) below",
+        "rate": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part A, item IV, sub-item (3)",
+      "cells": {
+        "entry": "A.IV(3)",
+        "part": "tangibleAssets",
+        "item": "ships",
+        "heading": null,
+        "block": "Vessels ordinarily operating on inland waters being speed boats [See Note 9 below]",
+        "rate": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Rules, 2026, Appendix I, Part B",
+      "cells": {
+        "entry": "B",
+        "part": "intangibleAssets",
+        "item": null,
+        "heading": null,
+        "block": "Know-how, patents, copyrights, trademarks, licences, franchises or any other business or commercial rights of similar nature",
+        "rate": 25
+      }
+    }
+  ]
+}

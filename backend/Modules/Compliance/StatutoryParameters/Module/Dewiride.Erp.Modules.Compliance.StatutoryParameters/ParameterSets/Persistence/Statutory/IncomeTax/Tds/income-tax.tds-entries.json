@@ -1,0 +1,1102 @@
+{
+  "key": "income-tax.tds-entries",
+  "title": "TDS entries of the Income-tax Act, 2025",
+  "description": "Every entry under which the Income-tax Act, 2025 requires tax to be deducted at source, in force from 1 April 2026: the six of section 392 (salary and accumulated balances) and every serial number of the three Tables of section 393 (payments to residents, to non-residents and to any person). Each entry gives its nature, payee, payer, rate and threshold limit as the Act prints them, when the tax is deducted, and the Notes of its Table that change who deducts, when or on what. The Table of section 393(2) prints no threshold limit, and Note 3 below serial number 3 of the Table of section 393(1) reads as the Finance Act, 2026, section 84(a), amended it.",
+  "basis": "law",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "citation",
+      "title": "Provision, as the Act cites it",
+      "kind": "text"
+    },
+    {
+      "name": "table",
+      "title": "Where it sits",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "salary",
+          "title": "Section 392: salary and accumulated balances"
+        },
+        {
+          "value": "residents",
+          "title": "Section 393(1): payments to residents"
+        },
+        {
+          "value": "nonResidents",
+          "title": "Section 393(2): payments to non-residents"
+        },
+        {
+          "value": "anyPerson",
+          "title": "Section 393(3): payments to any person"
+        }
+      ]
+    },
+    {
+      "name": "heading",
+      "title": "Heading of the serial number",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "nature",
+      "title": "Nature of income or sum",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "payee",
+      "title": "Payee",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "payer",
+      "title": "Payer",
+      "kind": "text"
+    },
+    {
+      "name": "rate",
+      "title": "Rate, as printed",
+      "kind": "text"
+    },
+    {
+      "name": "threshold",
+      "title": "Threshold limit, as printed",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "timing",
+      "title": "When tax is deducted",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "creditOrPayment",
+          "title": "On credit or payment, whichever is earlier"
+        },
+        {
+          "value": "payment",
+          "title": "On payment"
+        },
+        {
+          "value": "lastMonth",
+          "title": "For the last month of the tax year or of the tenancy"
+        },
+        {
+          "value": "beforeDistribution",
+          "title": "Before the dividend is distributed or paid"
+        },
+        {
+          "value": "withdrawalOrYearEnd",
+          "title": "On withdrawal and at the end of the tax year"
+        },
+        {
+          "value": "deferred",
+          "title": "Within the time section 289(3) gives the payee"
+        }
+      ]
+    },
+    {
+      "name": "timingWords",
+      "title": "When, in the Act's words",
+      "kind": "text"
+    },
+    {
+      "name": "notes",
+      "title": "Notes that change who deducts, when or on what",
+      "kind": "text",
+      "optional": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), sections 392 and 393 and Schedule XI, in force 1 April 2026 (section 1(3))",
+        "Finance Act, 2026 (4 of 2026), section 84(a), substituting “serial number 3(i)” in Note 3 below serial number 3 of the Table of section 393(1), in force 1 April 2026 (section 1(2)(a))"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(1), (4) and (8)",
+      "cells": {
+        "entry": "392(1)",
+        "citation": "section 392(1)",
+        "table": "salary",
+        "heading": null,
+        "nature": "any income chargeable under the head “Salaries”",
+        "payee": null,
+        "payer": "Any person responsible for paying any income chargeable under the head “Salaries”",
+        "rate": "at the average rate of income-tax computed on the basis of the rates in force for the tax year in which the payment is made, on the estimated income of the assessee under this head for such year",
+        "threshold": null,
+        "timing": "payment",
+        "timingWords": "this deduction shall be made at the time of such payment",
+        "notes": "(4)(a) The person responsible for making payment under sub-section (1), shall take into account the following particulars furnished by the assessee, at his option, in such form and verified in such manner as may be prescribed, for the purpose of making deduction under the said sub-section and such particulars shall have an effect of increasing or decreasing the tax to be deducted:— (i) any income under the head “Salaries” due or received by the assessee, from any other employer or employers during the tax year; (ii) any relief allowable under section 157, where the assessee being a Government servant, or an employee in a company, co-operative society, local authority, university, institution, association or body is entitled for such relief; (iii) any loss under the head “Income from house property” for the same tax year; (iv) any income chargeable under any other head of income, not being a loss under any such head other than the loss specified in sub-clause (iii) for the same tax year; (v) any tax deducted or collected at source under this Chapter for the same tax year; (b) the tax deductible from income under the head “Salaries” shall not be reduced in any case, except on account of–– (i) loss under the head “Income from house property”; and (ii) the tax deducted and collected as per other provisions of this Chapter. (8) For the purposes of deduction of tax on salary payable in foreign currency, the value in rupees of such salary shall be calculated at such rate of exchange as may be prescribed."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(2)",
+      "cells": {
+        "entry": "392(2)",
+        "citation": "section 392(2)",
+        "table": "salary",
+        "heading": null,
+        "nature": "any income in the nature of a non-monetary perquisite chargeable to tax under section 17(1)",
+        "payee": null,
+        "payer": "the person responsible for paying any income in the nature of a non-monetary perquisite chargeable to tax under section 17(1)",
+        "rate": "the tax under clause (a) shall be determined at the average rate as per sub-section (1), on the income chargeable under the head “Salaries” including the income referred to in the said clause, and shall be construed as if it were a tax deductible at source from the income under the head “Salaries”, and be subject to the provisions of this Chapter",
+        "threshold": null,
+        "timing": "payment",
+        "timingWords": "may pay, at his option, tax on the whole or part of such income without making any deduction therefrom, at the time when such tax was deductible under sub-section (1)",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(3)",
+      "cells": {
+        "entry": "392(3)",
+        "citation": "section 392(3)",
+        "table": "salary",
+        "heading": null,
+        "nature": "any income of the nature specified in section 17(1)(d)",
+        "payee": null,
+        "payer": "Any person, being an eligible start-up referred to in section 140",
+        "rate": "on the basis of rates in force for the tax year in which the specified security or sweat equity share is allotted or transferred",
+        "threshold": null,
+        "timing": "deferred",
+        "timingWords": "within the time as specified for the payee in section 289(3)",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(6)(a) and Schedule XI, Part A, paragraphs 9 and 10",
+      "cells": {
+        "entry": "392(6)(a)",
+        "citation": "section 392(6)(a)",
+        "table": "salary",
+        "heading": null,
+        "nature": "an accumulated balance due to an employee",
+        "payee": null,
+        "payer": "The trustees of a recognised provident fund, or any person authorised by the regulations of the fund to make payment of the accumulated balances due to employees",
+        "rate": "make therefrom the deduction provided in paragraph 10 of Part A of Schedule XI",
+        "threshold": null,
+        "timing": "payment",
+        "timingWords": "in cases where paragraph 9 of Part A of Schedule XI applies, at the time an accumulated balance due to an employee is paid",
+        "notes": "9. Tax on accumulated balance.—Where the accumulated balance due to an employee is included in his total income owing to the provisions of paragraph 8 not being applicable, then— (a) the Assessing Officer shall calculate the total of the various sums of tax which would have been payable by the employee in respect of his total income for each of the years concerned if the fund had not been a recognised provident fund; and (b) the amount by which such total exceeds the total of all sums paid by or on behalf of such employee by way of tax for such years shall be payable by the employee in addition to any other tax for which he may be liable for the tax year in which the accumulated balance due to him becomes payable. 10. Deduction at source of tax payable on accumulated balance.—In cases where paragraph 9 applies–– (a) the trustees of a recognised provident fund; or (b) any person authorised by the regulations of the fund to make payment of accumulated balances due to employees, shall deduct from the accumulated balance at the time of payment, the amount payable under the rule and the provisions of Chapter XIX-B shall apply as if the accumulated balance were income chargeable under the head “Salaries”."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(6)(b) and Schedule XI, Part B, paragraph 7",
+      "cells": {
+        "entry": "392(6)(b)",
+        "citation": "section 392(6)(b)",
+        "table": "salary",
+        "heading": null,
+        "nature": "any contribution made by an employer, including interest on such contributions, if any, in an approved superannuation fund",
+        "payee": null,
+        "payer": "the trustees of the fund",
+        "rate": "tax on the amount so paid shall be deducted by the trustees of the fund to the extent provided in paragraph 7 of Part B of Schedule XI",
+        "threshold": null,
+        "timing": "payment",
+        "timingWords": "where any contribution made by an employer, including interest on such contributions, if any, in an approved superannuation fund is paid to the employee",
+        "notes": "7. Deduction of tax on contributions paid to an employee.—(1) When any contributions made by an employer to an approved superannuation fund, including interest are paid to an employee during his lifetime under conditions other than those specified in Schedule II (Table: Sl. No. 8), tax on the amounts so paid shall be deducted at the average rate of tax applicable to the employee— (a) during the previous three years; or (b) during the period for which the employee was a member of the fund, if the period is less than three years. (2) The trustees shall pay the tax so deducted to the Central Government within the time and manner, as may be prescribed."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(7)",
+      "cells": {
+        "entry": "392(7)",
+        "citation": "section 392(7)",
+        "table": "salary",
+        "heading": null,
+        "nature": "accumulated balance due to the employee participating in a recognised provident fund",
+        "payee": null,
+        "payer": "(a) Irrespective of anything contained in this Act, the trustees of the Employees’ Provident Funds Scheme, 1952, made under section 5 of the Employees’ Provident Funds and Miscellaneous Provisions Act, 1952; or (b) any person authorised under such scheme to make payment of accumulated balance due to employees",
+        "rate": "deduct income-tax thereon at the rate of 10%",
+        "threshold": "where the aggregate amount of such payment is ₹ 50000 or more",
+        "timing": "payment",
+        "timingWords": "at the time of payment of accumulated balance due to the employee participating in a recognised provident fund",
+        "notes": "such accumulated balance is includible in his total income owing to the provisions of paragraph 8 of Part A of Schedule XI not being applicable"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(i)]",
+      "cells": {
+        "entry": "393(1)-1(i)",
+        "citation": "section 393(1) [Table: Sl. No. 1(i)]",
+        "table": "residents",
+        "heading": "Commission or brokerage",
+        "nature": "Any income by way of remuneration or reward, whether by way of commission or otherwise, for soliciting or procuring insurance business (including business relating to the continuance, renewal or revival of insurance policies).",
+        "payee": "a resident",
+        "payer": "Any person.",
+        "rate": "Rate: Rates in force.",
+        "threshold": "Threshold limit: ₹ 20,000.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(ii)]",
+      "cells": {
+        "entry": "393(1)-1(ii)",
+        "citation": "section 393(1) [Table: Sl. No. 1(ii)]",
+        "table": "residents",
+        "heading": "Commission or brokerage",
+        "nature": "Any income by way of commission [not being insurance commission referred to in serial number 1(i)] or brokerage.",
+        "payee": "a resident",
+        "payer": "Specified person.",
+        "rate": "Rate: 2%",
+        "threshold": "Threshold limit: ₹ 20,000.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(i)] and Note 1 below serial number 2",
+      "cells": {
+        "entry": "393(1)-2(i)",
+        "citation": "section 393(1) [Table: Sl. No. 2(i)]",
+        "table": "residents",
+        "heading": "Rent",
+        "nature": "Any income by way of rent.",
+        "payee": "a resident",
+        "payer": "Person other than specified person.",
+        "rate": "Rate: 2%",
+        "threshold": "Threshold limit: ₹ 50,000 for a month or part of a month.",
+        "timing": "lastMonth",
+        "timingWords": "In serial number 2(i), the tax shall be deducted on such income at the time of— (a) credit of rent to the account of the payee; or (b) payment thereof in cash or by way of a cheque or a draft or any other mode, whichever is earlier, for the last month of the tax year or the last month of tenancy.",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(ii)]",
+      "cells": {
+        "entry": "393(1)-2(ii)",
+        "citation": "section 393(1) [Table: Sl. No. 2(ii)]",
+        "table": "residents",
+        "heading": "Rent",
+        "nature": "Any income by way of rent.",
+        "payee": "a resident",
+        "payer": "Specified person.",
+        "rate": "Rate: (a) 2%, for the use of any machinery or plant or equipment; and (b) 10%, for the use of any land, or building (including factory building), or land appurtenant to a building (including factory building), or furniture, or fittings.",
+        "threshold": "Threshold limit [for (a) and (b)]: ₹ 50,000 for a month or part of a month.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(i)] and Notes 1 to 3 below serial number 3, Note 3 as amended by the Finance Act, 2026, section 84(a)",
+      "cells": {
+        "entry": "393(1)-3(i)",
+        "citation": "section 393(1) [Table: Sl. No. 3(i)]",
+        "table": "residents",
+        "heading": "Payment on transfer of certain immovable property other than agricultural land",
+        "nature": "Any consideration for transfer of any immovable property (other than agricultural land).",
+        "payee": "a resident",
+        "payer": "Person [other than the person who are required to deduct tax under serial number 3(iii)].",
+        "rate": "Rate: 1% of— (a) consideration for transfer of the immovable property; or (b) stamp duty value of such property, whichever is higher.",
+        "threshold": "Threshold limit: Fifty lakh rupees and as per Note 3.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 1.––Consideration for transfer of any immovable property under serial number 3(i) shall be the aggregate of the amounts paid or payable by all the transferees to the transferor or all the transferors for transfer of such immovable property for the purposes of the threshold limit mentioned in column D. Note 2.—In case of consideration on which provisions of both serial numbers 3(i) and 3(ii) are applicable, tax shall be deducted under 3(ii) only. Note 3.––For the purposes of serial number 3(i), the income-tax shall be deducted where consideration for transfer of any immovable property or the stamp duty value of such property, is equal to or greater than fifty lakh rupees."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(ii)] and Note 2 below serial number 3",
+      "cells": {
+        "entry": "393(1)-3(ii)",
+        "citation": "section 393(1) [Table: Sl. No. 3(ii)]",
+        "table": "residents",
+        "heading": "Payment on transfer of certain immovable property other than agricultural land",
+        "nature": "Any consideration, not being consideration in kind, under the agreement referred to in section 67(14).",
+        "payee": "a resident",
+        "payer": "Any person.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: Nil.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 2.—In case of consideration on which provisions of both serial numbers 3(i) and 3(ii) are applicable, tax shall be deducted under 3(ii) only."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(iii)]",
+      "cells": {
+        "entry": "393(1)-3(iii)",
+        "citation": "section 393(1) [Table: Sl. No. 3(iii)]",
+        "table": "residents",
+        "heading": "Payment on transfer of certain immovable property other than agricultural land",
+        "nature": "Any sum, being in the nature of— (a) compensation or the enhanced compensation; or (b) consideration or the enhanced consideration, on account of compulsory acquisition, under any law for the time being in force, of any immovable property (other than agricultural land).",
+        "payee": "a resident",
+        "payer": "Any person.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: ₹ 5,00,000.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(i)]",
+      "cells": {
+        "entry": "393(1)-4(i)",
+        "citation": "section 393(1) [Table: Sl. No. 4(i)]",
+        "table": "residents",
+        "heading": "Income from capital market",
+        "nature": "Any income in respect of— (a) units of a Mutual Fund specified under Schedule VII (Table: Sl. No. 20 or 21); or (b) units from the Administrator of the specified undertaking; or (c) units from the specified company.",
+        "payee": "a resident",
+        "payer": "Any person.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: ₹ 10,000.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(ii)]",
+      "cells": {
+        "entry": "393(1)-4(ii)",
+        "citation": "section 393(1) [Table: Sl. No. 4(ii)]",
+        "table": "residents",
+        "heading": "Income from capital market",
+        "nature": "Any distributed income referred to in section 223, being of the nature referred to in Schedule V (Table: Sl. Nos. 3 and 4), payable to a unitholder of a Business Trust.",
+        "payee": "a resident",
+        "payer": "Any Business Trust.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: Nil.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(iii)]",
+      "cells": {
+        "entry": "393(1)-4(iii)",
+        "citation": "section 393(1) [Table: Sl. No. 4(iii)]",
+        "table": "residents",
+        "heading": "Income from capital market",
+        "nature": "Any income, other than that proportion of income which is exempt under Schedule V (Table: Sl. No. 2), in respect of units of an investment fund specified in section 224, payable to its unitholder.",
+        "payee": "a resident",
+        "payer": "Any Investment fund specified in section 224.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: Nil.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(iv)]",
+      "cells": {
+        "entry": "393(1)-4(iv)",
+        "citation": "section 393(1) [Table: Sl. No. 4(iv)]",
+        "table": "residents",
+        "heading": "Income from capital market",
+        "nature": "Any income, in respect of an investment in a securitisation trust specified in section 221 to an investor.",
+        "payee": "a resident",
+        "payer": "Any securitisation trust specified in section 221.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: Nil.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(i)]",
+      "cells": {
+        "entry": "393(1)-5(i)",
+        "citation": "section 393(1) [Table: Sl. No. 5(i)]",
+        "table": "residents",
+        "heading": "Interest income",
+        "nature": "Any income by way of Interest on securities.",
+        "payee": "a resident",
+        "payer": "Any person.",
+        "rate": "Rate: Rates in force.",
+        "threshold": "Threshold limit: ₹ 10,000.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(ii)] and Notes 1 and 2 below serial number 5",
+      "cells": {
+        "entry": "393(1)-5(ii)",
+        "citation": "section 393(1) [Table: Sl. No. 5(ii)]",
+        "table": "residents",
+        "heading": "Interest income",
+        "nature": "Any income by way of interest other than interest on securities.",
+        "payee": "a resident",
+        "payer": "(a) A banking company; or (b) a co-operative society carrying on the business of banking; or (c) a post office for a deposit made under a scheme notified by the Central Government.",
+        "rate": "Rate: Rates in force.",
+        "threshold": "Threshold limit: (a) ₹ 1,00,000 in the case of a senior citizen; (b) ₹ 50,000 in case of person other than senior citizen.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 1.—In serial number 5(ii) and (iii), where the interest income credited or paid is in respect of— (a) time deposits with a banking company; or (b) time deposits with a co-operative society engaged in carrying on the business of banking; or (c) deposits with a public company formed and registered in India with the main object of carrying on business of long-term finance for construction or purchase of houses in India for residential purposes and is eligible for deduction under section 32(e), and the person mentioned in column C has not adopted core banking solutions, the threshold limit in column D shall be computed with reference to the income credited or paid by a branch of such person. Note 2.—The person responsible for making the payment referred to in serial number 5(ii) and (iii) of this Table, may at the time of making any deduction, increase or reduce the amount to be deducted for the purpose of adjusting any excess or deficiency arising out of any previous deduction or failure to deduct during the tax year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(iii)] and Notes 1 and 2 below serial number 5",
+      "cells": {
+        "entry": "393(1)-5(iii)",
+        "citation": "section 393(1) [Table: Sl. No. 5(iii)]",
+        "table": "residents",
+        "heading": "Interest income",
+        "nature": "Any income being interest other than interest on securities.",
+        "payee": "a resident",
+        "payer": "Specified person [other than person in Sl. No. 5(ii).C].",
+        "rate": "Rate: Rates in force.",
+        "threshold": "Threshold limit: ₹10,000.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 1.—In serial number 5(ii) and (iii), where the interest income credited or paid is in respect of— (a) time deposits with a banking company; or (b) time deposits with a co-operative society engaged in carrying on the business of banking; or (c) deposits with a public company formed and registered in India with the main object of carrying on business of long-term finance for construction or purchase of houses in India for residential purposes and is eligible for deduction under section 32(e), and the person mentioned in column C has not adopted core banking solutions, the threshold limit in column D shall be computed with reference to the income credited or paid by a branch of such person. Note 2.—The person responsible for making the payment referred to in serial number 5(ii) and (iii) of this Table, may at the time of making any deduction, increase or reduce the amount to be deducted for the purpose of adjusting any excess or deficiency arising out of any previous deduction or failure to deduct during the tax year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(i)] and the Note below serial number 6",
+      "cells": {
+        "entry": "393(1)-6(i)",
+        "citation": "section 393(1) [Table: Sl. No. 6(i)]",
+        "table": "residents",
+        "heading": "Payments to contractors, fees for professional and technical services, etc.",
+        "nature": "Any sum for carrying out any work (including supply of labour for carrying out any work) in pursuance of a contract between the contractor and a designated person.",
+        "payee": "a resident",
+        "payer": "Any designated person.",
+        "rate": "Rate: (a) 1%, if contractor is individual or Hindu undivided family; (b) 2%, if contractor is a person other than the person mentioned in (a).",
+        "threshold": "Threshold limit: [for (a) and (b)] (a) ₹ 30000; for any such sum; and (b) ₹ 100000 in case of aggregate of such sums.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note.––In serial number 6 (i), if any sum is paid or credited for carrying out any work specified in section 402(47)(e), tax shall be deducted at source— (a) on the invoice value excluding the value of material, if such value is specified separately in the invoice; or (b) on the whole of the invoice value, if the value of material is not specified separately in the invoice."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(ii)]",
+      "cells": {
+        "entry": "393(1)-6(ii)",
+        "citation": "section 393(1) [Table: Sl. No. 6(ii)]",
+        "table": "residents",
+        "heading": "Payments to contractors, fees for professional and technical services, etc.",
+        "nature": "Any sum–– (a) for carrying out any work (including supply of labour for carrying out any work) in pursuance of a contract; or (b) by way of fees for professional services; or (c) by way of commission [not being insurance commission referred to in serial number 1(i)] or brokerage.",
+        "payee": "a resident",
+        "payer": "Any person, being an individual or Hindu undivided family [other than those required to deduct income-tax as per Sl. No. 6(i) and (iii) or Sl. No. 1(ii)].",
+        "rate": "Rate: 2%",
+        "threshold": "Threshold limit: Fifty lakh rupees.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(iii)]",
+      "cells": {
+        "entry": "393(1)-6(iii)",
+        "citation": "section 393(1) [Table: Sl. No. 6(iii)]",
+        "table": "residents",
+        "heading": "Payments to contractors, fees for professional and technical services, etc.",
+        "nature": "Any sum by way of–– (a) fees for professional services; or (b) fees for technical services; or (c) remuneration or fees or commission by whatever name called, other than those on which tax is deductible under section 392, to a director of a company; or (d) royalty; or (e) any sum referred to in section 26(2)(h).",
+        "payee": "a resident",
+        "payer": "Specified person.",
+        "rate": "Rate: (a) 2% of such sum in case of— (i) fees for technical services (not being a professional services); or (ii) royalty in the nature of consideration for sale, distribution or exhibition of cinematographic films; or (iii) payee, engaged only in the business of operation of call centre; (b) 10% of such sum in cases other than (a).",
+        "threshold": "Threshold limit: (i) for (a), (b), (d) and (e) of Col. B: ₹ 50,000. (ii) for (c) of Col. B: Nil.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) (Table: Sl. No. 7) and the Note below serial number 7",
+      "cells": {
+        "entry": "393(1)-7",
+        "citation": "section 393(1) (Table: Sl. No. 7)",
+        "table": "residents",
+        "heading": "Dividend",
+        "nature": "Any dividend (including dividend on preference shares) declared.",
+        "payee": "a resident",
+        "payer": "Any domestic company.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: Nil.",
+        "timing": "beforeDistribution",
+        "timingWords": "The tax shall be deducted at source before making any distribution or payment of dividend.",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(i)]",
+      "cells": {
+        "entry": "393(1)-8(i)",
+        "citation": "section 393(1) [Table: Sl. No. 8(i)]",
+        "table": "residents",
+        "heading": "Other cases",
+        "nature": "Any sum under a life insurance policy, including the sum allocated as bonus on such policy, other than the amount not includible in the total income under Schedule II (Table: Sl. No. 2).",
+        "payee": "a resident",
+        "payer": "Any person.",
+        "rate": "Rate: 2% on income comprised in such sum.",
+        "threshold": "Threshold limit: ₹1,00,000.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(ii)] and Note 1 below serial number 8",
+      "cells": {
+        "entry": "393(1)-8(ii)",
+        "citation": "section 393(1) [Table: Sl. No. 8(ii)]",
+        "table": "residents",
+        "heading": "Other cases",
+        "nature": "Any sum exceeding fifty lakh rupees for purchase of any goods.",
+        "payee": "a resident",
+        "payer": "Any person, being a buyer.",
+        "rate": "Rate: 0.1%",
+        "threshold": "Threshold limit: As per Note 1.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 1.––(a) The deduction of tax under serial number 8(ii) shall not apply to a transaction on which tax is deductible or collectible under any of the provisions of the Act. (b) The tax shall be deducted on the sum exceeding fifty lakh rupees."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(iii)] and Note 5 below serial number 8",
+      "cells": {
+        "entry": "393(1)-8(iii)",
+        "citation": "section 393(1) [Table: Sl. No. 8(iii)]",
+        "table": "residents",
+        "heading": "Other cases",
+        "nature": "Total income of a specified senior citizen after giving effect to deduction allowable under Chapter VIII and rebate allowable under section 156.",
+        "payee": "a resident",
+        "payer": "Specified bank.",
+        "rate": "Rate: Rates in force.",
+        "threshold": "Threshold limit: As applicable.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 5.—The provisions of serial number 8(iii) shall take precedence over any other provisions of this Chapter and tax shall be deducted under this provision."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(iv)] and Notes 2 and 6 below serial number 8",
+      "cells": {
+        "entry": "393(1)-8(iv)",
+        "citation": "section 393(1) [Table: Sl. No. 8(iv)]",
+        "table": "residents",
+        "heading": "Other cases",
+        "nature": "Any benefit or perquisite, whether convertible into money or not, arising from business or the exercise of a profession of any resident.",
+        "payee": "a resident",
+        "payer": "Specified person.",
+        "rate": "Rate: 10% of value or aggregate of values of such benefit or perquisite.",
+        "threshold": "Threshold limit: ₹ 20,000.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 2.––The provisions of serial number 8(iv) shall also apply to any benefit or perquisite, whether in cash or in kind or partly in cash and partly in kind, provided to a resident and before providing such benefit or perquisite, as the case may be, the person responsible for providing such benefit or perquisite shall ensure that tax has been deducted. Note 6.—For serial numbers 8(iv) and (vi),— (a) where the consideration or, benefit or perquisite provided, as the case may be,— (i) is in exchange of another virtual digital asset where there is no part in cash, in respect of serial number 8(iv); or (ii) is wholly in kind; or (iii) is partly in kind and partly in cash, but such part in cash is not sufficient to meet the liability of deduction of tax in respect of the whole of such payment or benefit or perquisite, the person responsible for paying or providing shall ensure that the tax required to be deducted has been paid, before releasing such consideration or providing such benefit or perquisite, as the case may be; (b) “person responsible for providing” means the person providing such benefit or perquisite, or in case of a company, the company itself including the principal officer thereof."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(v)] and Notes 3 and 4 below serial number 8",
+      "cells": {
+        "entry": "393(1)-8(v)",
+        "citation": "section 393(1) [Table: Sl. No. 8(v)]",
+        "table": "residents",
+        "heading": "Other cases",
+        "nature": "Any sum on account of sale of goods or provision of services by an e-commerce participant, facilitated by an e-commerce operator through its digital or electronic facility or platform.",
+        "payee": "a resident",
+        "payer": "Any e-commerce operator.",
+        "rate": "Rate: 0.1% of gross amount of such sale or services or both.",
+        "threshold": "Threshold limit: Nil.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 3.––In respect of serial number 8(v)–– (a) for deduction of tax, the provisions thereof shall take precedence over any other provisions of this Chapter; (b) any payment made by a purchaser of goods or recipient of services directly to an e-commerce participant for the sale of goods or provision of services or both, facilitated by an e-commerce operator, shall be deemed to be the amount credited or paid by the e-commerce operator to the e-commerce participant and this amount shall be included in the gross amount of such sale or services for the purposes of deduction of income-tax under this serial number; (c) e-commerce operator shall be deemed to be the person responsible for paying to e-commerce participant; (d) irrespective of anything contained in this Chapter, if— (i) tax has been deducted on a transaction under this serial number; or (ii) a transaction is not liable for tax deduction as provided in section 393(4) (Table: Sl. No. 11), then tax shall not be deducted on such transaction under any other provision of this Chapter; (e) clause (d) shall not apply to any amount or aggregate of amounts received or receivable by an e-commerce operator for— (i) hosting advertisements; or (ii) providing any other services, which are not in connection with the sale or services referred to in this serial number. Note 4.––In case of a transaction on which provisions of serial number 8(v) are applicable along with the provisions of serial number 8(vi) for deduction of tax, then irrespective of anything contained in Note 3, tax on such transaction shall be deducted only under the provisions of serial number 8(vi)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(vi)] and Notes 4 and 6 below serial number 8",
+      "cells": {
+        "entry": "393(1)-8(vi)",
+        "citation": "section 393(1) [Table: Sl. No. 8(vi)]",
+        "table": "residents",
+        "heading": "Other cases",
+        "nature": "Any sum by way of consideration for transfer of a virtual digital asset.",
+        "payee": "a resident",
+        "payer": "Any person.",
+        "rate": "Rate: 1%",
+        "threshold": "Threshold limit: Nil.",
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of such income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 4.––In case of a transaction on which provisions of serial number 8(v) are applicable along with the provisions of serial number 8(vi) for deduction of tax, then irrespective of anything contained in Note 3, tax on such transaction shall be deducted only under the provisions of serial number 8(vi). Note 6.—For serial numbers 8(iv) and (vi),— (a) where the consideration or, benefit or perquisite provided, as the case may be,— (i) is in exchange of another virtual digital asset where there is no part in cash, in respect of serial number 8(iv); or (ii) is wholly in kind; or (iii) is partly in kind and partly in cash, but such part in cash is not sufficient to meet the liability of deduction of tax in respect of the whole of such payment or benefit or perquisite, the person responsible for paying or providing shall ensure that the tax required to be deducted has been paid, before releasing such consideration or providing such benefit or perquisite, as the case may be; (b) “person responsible for providing” means the person providing such benefit or perquisite, or in case of a company, the company itself including the principal officer thereof."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 1)",
+      "cells": {
+        "entry": "393(2)-1",
+        "citation": "section 393(2) (Table: Sl. No. 1)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income referred to in section 211.",
+        "payee": "(a) A non-resident sportsman (including an athlete) or an entertainer, who is not a citizen of India; or (b) a non-resident sports association or institution.",
+        "payer": "Any person.",
+        "rate": "20%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 2) and Note 1 of the Table",
+      "cells": {
+        "entry": "393(2)-2",
+        "citation": "section 393(2) (Table: Sl. No. 2)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income by way of interest payable in respect of moneys borrowed in foreign currency from a source outside India,— (a) under a loan agreement or issue of long-term infrastructure bond on or after the 1st July, 2012 but before the 1st July, 2023; or (b) by way of issue of any long-term bond on or after the 1st October, 2014 but before the 1st July, 2023, which is approved by the Central Government in this behalf.",
+        "payee": "Any non-resident (not being a company) or a foreign company.",
+        "payer": "Any Indian company or a business trust.",
+        "rate": "5%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 1.—For serial numbers. 2, 3 and 4, the interest payable shall be income to the extent to which such interest does not exceed the amount of interest calculated at the rate approved by the Central Government in this behalf, having regard to the terms of the loan or the bond and its repayment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 3) and Note 1 of the Table",
+      "cells": {
+        "entry": "393(2)-3",
+        "citation": "section 393(2) (Table: Sl. No. 3)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income by way of interest payable in respect of moneys borrowed from a source outside India by way of issue of rupee denominated bond before the 1st July, 2023.",
+        "payee": "Any non-resident (not being a company) or a foreign company.",
+        "payer": "Any Indian company or a business trust.",
+        "rate": "5%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 1.—For serial numbers. 2, 3 and 4, the interest payable shall be income to the extent to which such interest does not exceed the amount of interest calculated at the rate approved by the Central Government in this behalf, having regard to the terms of the loan or the bond and its repayment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 4) and Note 1 of the Table",
+      "cells": {
+        "entry": "393(2)-4",
+        "citation": "section 393(2) (Table: Sl. No. 4)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income by way of interest payable in respect of moneys borrowed from a source outside India by way of issue of any long-term bond or rupee denominated bond, which is listed only on a recognised stock exchange located in any International Financial Services Centre.",
+        "payee": "Any non-resident (not being a company) or a foreign company.",
+        "payer": "Any Indian company or a business trust.",
+        "rate": "(a) 4%, where such bonds are issued on or after the 1st April, 2020 but before the 1st July, 2023; or (b) 9%, where such bonds are issued on or after the 1st July, 2023.",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 1.—For serial numbers. 2, 3 and 4, the interest payable shall be income to the extent to which such interest does not exceed the amount of interest calculated at the rate approved by the Central Government in this behalf, having regard to the terms of the loan or the bond and its repayment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 5)",
+      "cells": {
+        "entry": "393(2)-5",
+        "citation": "section 393(2) (Table: Sl. No. 5)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income by way of interest.",
+        "payee": "Any non-resident (not being a company) or a foreign company.",
+        "payer": "Any infrastructure debt fund referred to in Schedule VII (Table: Sl. No. 46).",
+        "rate": "5%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 6)",
+      "cells": {
+        "entry": "393(2)-6",
+        "citation": "section 393(2) (Table: Sl. No. 6)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any distributed income referred to in section 223, being of the nature referred to in Schedule V (Table: Sl. No. 3).",
+        "payee": "Any unit holder, being a non-resident (not being a company) or a foreign company.",
+        "payer": "Any business trust.",
+        "rate": "(a) 5%, in case of income of the nature referred to in Schedule V [Table: Sl. No. 3. B(a)]; and (b) 10%, in case of income of the nature referred to in Schedule V [Table: Sl. No. 3. B(b)].",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 7)",
+      "cells": {
+        "entry": "393(2)-7",
+        "citation": "section 393(2) (Table: Sl. No. 7)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any distributed income referred to in section 223, being of the nature referred to in Schedule V (Table: Sl. No. 4).",
+        "payee": "Any unit holder, being a non-resident (not being a company) or a foreign company.",
+        "payer": "Any business trust.",
+        "rate": "Rates in force.",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 8)",
+      "cells": {
+        "entry": "393(2)-8",
+        "citation": "section 393(2) (Table: Sl. No. 8)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income, other than that proportion of income which is exempt under Schedule V (Table: Sl. No. 2), in respect of units of an investment fund specified in section 224.",
+        "payee": "Any unit holder, being a non-resident (not being a company) or a foreign company.",
+        "payer": "Any investment fund specified in section 224.",
+        "rate": "Rates in force.",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 9)",
+      "cells": {
+        "entry": "393(2)-9",
+        "citation": "section 393(2) (Table: Sl. No. 9)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income in respect of an investment in a securitisation trust specified in section 221.",
+        "payee": "Any investor, being a non-resident (not being a company) or a foreign company.",
+        "payer": "Any securitisation trust specified in section 221.",
+        "rate": "Rates in force.",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 10) and Note 2 of the Table",
+      "cells": {
+        "entry": "393(2)-10",
+        "citation": "section 393(2) (Table: Sl. No. 10)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income— (a) in respect of units of a Mutual Fund specified under Schedule VII (Table: Sl. No. 20 or 21); or (b) in respect of units from the specified company.",
+        "payee": "Any non-resident (not being a company) or a foreign company.",
+        "payer": "Any person.",
+        "rate": "As per Note 2.",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 2.—For serial numbers. 10 and 15, tax shall be deducted at the rate of— (a) 20%; or (b) where an agreement referred to in section 159(1) or 159(2) applies to the payee and if the payee has furnished a certificate referred to in section 159(8), as the case may be, then, income-tax shall be deducted at the rate or rates of income-tax provided in such agreement for such income, if such rate is lower than 20%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 11)",
+      "cells": {
+        "entry": "393(2)-11",
+        "citation": "section 393(2) (Table: Sl. No. 11)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income in respect of units referred to in section 208.",
+        "payee": "Any offshore fund.",
+        "payer": "Any person.",
+        "rate": "10%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 12)",
+      "cells": {
+        "entry": "393(2)-12",
+        "citation": "section 393(2) (Table: Sl. No. 12)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income by way of long-term capital gains arising from the transfer of units referred to in section 208;",
+        "payee": "Any offshore fund.",
+        "payer": "Any person.",
+        "rate": "12.5%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 13)",
+      "cells": {
+        "entry": "393(2)-13",
+        "citation": "section 393(2) (Table: Sl. No. 13)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income by way of interest or dividends in respect of bonds or Global Depository Receipts referred to in section 209.",
+        "payee": "Any non-resident.",
+        "payer": "Any person.",
+        "rate": "10%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 14)",
+      "cells": {
+        "entry": "393(2)-14",
+        "citation": "section 393(2) (Table: Sl. No. 14)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income by way of long-term capital gains arising from the transfer of bonds or Global Depository Receipts referred to in section 209.",
+        "payee": "Any non-resident.",
+        "payer": "Any person.",
+        "rate": "12.5%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 15) and Note 2 of the Table",
+      "cells": {
+        "entry": "393(2)-15",
+        "citation": "section 393(2) (Table: Sl. No. 15)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income in respect of securities referred to in section 210(1) (Table: Sl. No. 1).",
+        "payee": "Any Foreign Institutional Investor.",
+        "payer": "Any person.",
+        "rate": "As per Note 2.",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 2.—For serial numbers. 10 and 15, tax shall be deducted at the rate of— (a) 20%; or (b) where an agreement referred to in section 159(1) or 159(2) applies to the payee and if the payee has furnished a certificate referred to in section 159(8), as the case may be, then, income-tax shall be deducted at the rate or rates of income-tax provided in such agreement for such income, if such rate is lower than 20%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 16)",
+      "cells": {
+        "entry": "393(2)-16",
+        "citation": "section 393(2) (Table: Sl. No. 16)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any income in respect of securities referred to in section 210(1) (Table: Sl. No. 1).",
+        "payee": "A specified fund referred to in Schedule VI [ Note 1(g)].",
+        "payer": "Any person.",
+        "rate": "10%",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(2) (Table: Sl. No. 17) and Note 3 of the Table",
+      "cells": {
+        "entry": "393(2)-17",
+        "citation": "section 393(2) (Table: Sl. No. 17)",
+        "table": "nonResidents",
+        "heading": null,
+        "nature": "Any interest (not being interest referred to against serial numbers 2, 3, 4 and 5) or any other sum chargeable under the provisions of this Act, not being income chargeable under the head “Salaries”.",
+        "payee": "Any non-resident (not being a company) or a foreign company.",
+        "payer": "Any person.",
+        "rate": "Rates in force.",
+        "threshold": null,
+        "timing": "creditOrPayment",
+        "timingWords": "at the time of credit of income or sum to the account of the payee or at the time of its payment in cash or by way of a cheque or a draft or by any other mode, whichever is earlier",
+        "notes": "Note 3.—For serial number. 17,— (a) if interest is payable by the Government or a public sector bank or a public financial institution within the meaning of Schedule VII (Note 3), deduction of tax shall be made only at the time of payment thereof in cash or by the issue of a cheque or draft or by any other mode; (b) the obligation to deduct tax at source and comply with the provisions of this serial number extend to all persons resident or non-resident, whether or not, the non-resident person has— (i) a residence or place of business or business connection in India; or (ii) any other presence in any manner whatsoever in India."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1) and Note 2 of the Table",
+      "cells": {
+        "entry": "393(3)-1",
+        "citation": "section 393(3) (Table: Sl. No. 1)",
+        "table": "anyPerson",
+        "heading": null,
+        "nature": "Any income by way of winnings (other than winnings from online games as referred to in serial number 2) from–– (a) any lottery; or (b) crossword puzzle; or (c) card game and other game of any sort; or (d) gambling or betting of any form or nature whatsoever.",
+        "payee": "any person",
+        "payer": "Any person.",
+        "rate": "Rate: Rates in force.",
+        "threshold": "Threshold limit: ₹ 10000 in case of a single transaction.",
+        "timing": "payment",
+        "timingWords": "at the time of payment thereof in cash or by way of a cheque or a draft or by any other mode, or as specified therein",
+        "notes": "Note 2.—For serial numbers 1 and 2, where the winnings or net winnings, as the case may be,— (a) is wholly in kind; or (b) is partly in kind and partly in cash, but such part in cash is not sufficient to meet the liability of deduction of tax in respect of the whole of such winnings, then, the person responsible for paying shall ensure that the tax required to be deducted has been paid, before releasing the winnings."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2) and Notes 1 and 2 of the Table",
+      "cells": {
+        "entry": "393(3)-2",
+        "citation": "section 393(3) (Table: Sl. No. 2)",
+        "table": "anyPerson",
+        "heading": null,
+        "nature": "Any income by way of winnings from online game.",
+        "payee": "any person",
+        "payer": "Any person.",
+        "rate": "Rate: Rates in force.",
+        "threshold": "Threshold limit: As per Note 1.",
+        "timing": "withdrawalOrYearEnd",
+        "timingWords": "For serial number 2, tax shall be deducted–– (a) on net winnings in the user account of the payee at the end of the tax year; (b) where there is any withdrawal from user account during the tax year, the tax shall be deducted at the time of such withdrawal on the net winnings comprised in such withdrawal as well as on the remaining amount of net winnings in user account at the end of the tax year, where the net winnings in each case is computed in the such manner as may be prescribed.",
+        "notes": "Note 2.—For serial numbers 1 and 2, where the winnings or net winnings, as the case may be,— (a) is wholly in kind; or (b) is partly in kind and partly in cash, but such part in cash is not sufficient to meet the liability of deduction of tax in respect of the whole of such winnings, then, the person responsible for paying shall ensure that the tax required to be deducted has been paid, before releasing the winnings."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3)",
+      "cells": {
+        "entry": "393(3)-3",
+        "citation": "section 393(3) (Table: Sl. No. 3)",
+        "table": "anyPerson",
+        "heading": null,
+        "nature": "Any income by way of winnings from any horse race.",
+        "payee": "any person",
+        "payer": "Any person, being a bookmaker or a person to whom a licence has been granted by the Government under any law for the time being in force for horse racing in any race course or for arranging for wagering or betting in any race course.",
+        "rate": "Rate: Rates in force.",
+        "threshold": "Threshold limit: ₹ 10000 in case of a single transaction.",
+        "timing": "payment",
+        "timingWords": "at the time of payment thereof in cash or by way of a cheque or a draft or by any other mode, or as specified therein",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 4) and Note 3 of the Table",
+      "cells": {
+        "entry": "393(3)-4",
+        "citation": "section 393(3) (Table: Sl. No. 4)",
+        "table": "anyPerson",
+        "heading": null,
+        "nature": "Any income, credited or paid to a person, who is or has been stocking, distributing, purchasing or selling lottery tickets, by way of commission, remuneration or prize (by whatever name called) on such tickets.",
+        "payee": "any person",
+        "payer": "Any person.",
+        "rate": "Rate: 2%",
+        "threshold": "Threshold limit: ₹ 20000.",
+        "timing": "creditOrPayment",
+        "timingWords": "For serial number 4, the person responsible for making the payment shall deduct tax at the time of credit of such sum or at the time of payment of such sum in cash or by issue of a cheque or a draft or by any other mode, whichever is earlier.",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 5)",
+      "cells": {
+        "entry": "393(3)-5",
+        "citation": "section 393(3) (Table: Sl. No. 5)",
+        "table": "anyPerson",
+        "heading": null,
+        "nature": "Any sum, paid in cash, from one or more accounts maintained by any person (herein referred as recipient).",
+        "payee": "any person",
+        "payer": "Any person, being,— (a) a banking company; (b) a co-operative society engaged in carrying on the business of banking; or (c) a post office.",
+        "rate": "Rate: 2%",
+        "threshold": "Threshold limit: three crore rupees in case of recipient being, a co-operative society; or (b) one crore rupees in case of recipient being person other than a co-operative society.",
+        "timing": "payment",
+        "timingWords": "at the time of payment thereof in cash or by way of a cheque or a draft or by any other mode, or as specified therein",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 6)",
+      "cells": {
+        "entry": "393(3)-6",
+        "citation": "section 393(3) (Table: Sl. No. 6)",
+        "table": "anyPerson",
+        "heading": null,
+        "nature": "Any amount referred to in section 80CCA(2)(a) of the Income-tax Act, 1961 (43 of 1961).",
+        "payee": "any person",
+        "payer": "Any person.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: ₹ 2500.",
+        "timing": "payment",
+        "timingWords": "at the time of payment thereof in cash or by way of a cheque or a draft or by any other mode, or as specified therein",
+        "notes": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 7)",
+      "cells": {
+        "entry": "393(3)-7",
+        "citation": "section 393(3) (Table: Sl. No. 7)",
+        "table": "anyPerson",
+        "heading": null,
+        "nature": "Any sum in the nature of salary, remuneration, commission, bonus or interest paid to a partner of the firm or credited to his account (including capital account).",
+        "payee": "any person",
+        "payer": "Any person, being a firm.",
+        "rate": "Rate: 10%",
+        "threshold": "Threshold limit: ₹ 20000.",
+        "timing": "payment",
+        "timingWords": "at the time of payment thereof in cash or by way of a cheque or a draft or by any other mode, or as specified therein",
+        "notes": null
+      }
+    }
+  ]
+}

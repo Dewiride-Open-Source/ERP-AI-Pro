@@ -6,12 +6,14 @@ namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.UnitTests.Paramete
 public sealed class StatutorySeedFilesTests
 {
     [Fact]
-    public void Embedded_SeedFiles_AreTheEightGstSetsEachUnderItsKey()
+    public void Embedded_SeedFiles_AreTheGstAndDirectTaxSetsEachUnderItsKey()
     {
         var files = StatutorySeedFiles.Embedded();
 
         Assert.Equal(
             [
+                "companies.schedule-ii-limits.json",
+                "companies.schedule-ii-useful-lives.json",
                 "gst.central-tax-rates.json",
                 "gst.integrated-tax-rates.json",
                 "gst.quarterly-return-states.json",
@@ -20,6 +22,26 @@ public sealed class StatutorySeedFilesTests
                 "gst.sac-codes.json",
                 "gst.sac-rate-entries.json",
                 "gst.union-territory-tax-rates.json",
+                "income-tax.advance-tax-instalments.json",
+                "income-tax.advance-tax-interest.json",
+                "income-tax.company-rates.json",
+                "income-tax.company-surcharge.json",
+                "income-tax.depreciation-allowances.json",
+                "income-tax.depreciation-notes.json",
+                "income-tax.depreciation-rates.json",
+                "income-tax.health-and-education-cess.json",
+                "income-tax.minimum-alternate-tax.json",
+                "income-tax.tds-crosswalk.json",
+                "income-tax.tds-declarations.json",
+                "income-tax.tds-entries.json",
+                "income-tax.tds-higher-rates.json",
+                "income-tax.tds-no-deduction-cases.json",
+                "income-tax.tds-rates-in-force-readings.json",
+                "income-tax.tds-rates-in-force.json",
+                "income-tax.tds-rates.json",
+                "income-tax.tds-surcharge-and-cess.json",
+                "income-tax.tds-terms.json",
+                "income-tax.tds-threshold-limits.json",
             ],
             files.Select(file => file.FileName));
     }

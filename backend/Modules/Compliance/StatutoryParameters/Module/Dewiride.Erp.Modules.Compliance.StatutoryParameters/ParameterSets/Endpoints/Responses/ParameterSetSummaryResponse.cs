@@ -7,7 +7,7 @@ namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Endp
 /// <param name="Title">Title of the set.</param>
 /// <param name="Description">What the set holds and where it comes from.</param>
 /// <param name="Basis">Whether the set is a government table (law) or the ERP's reading of one (interpretation).</param>
-/// <param name="AsOf">The date the set answers for: the date of a supply, or the first day of a tax period.</param>
+/// <param name="AsOf">The date the set answers for: the date of a supply, the first day of a tax period, the credit or payment at which tax is deducted at source, or the first day of a financial year.</param>
 /// <param name="FirstVersionFrom">Date the set's first version applies from; the set holds nothing for an earlier date.</param>
 /// <param name="VersionCount">Number of versions of the set.</param>
 /// <param name="Current">The version in force today in India; null while the set's first version is still to come.</param>

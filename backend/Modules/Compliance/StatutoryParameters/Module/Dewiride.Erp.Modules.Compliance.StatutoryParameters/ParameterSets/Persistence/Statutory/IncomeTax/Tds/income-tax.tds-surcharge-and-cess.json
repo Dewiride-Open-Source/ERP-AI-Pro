@@ -1,0 +1,748 @@
+{
+  "key": "income-tax.tds-surcharge-and-cess",
+  "title": "Surcharge and cess on TDS (Finance Act)",
+  "description": "The surcharge on tax deducted at source from payments to non-residents, under section 3(7) of the Finance Act, 2026 for the entries of the Income-tax Act, 2025 deducted at the rates those entries specify and under Part II of its First Schedule for the entries deducted at the rates in force, by payee and by the income or aggregate of incomes subject to the deduction; and the Health and Education Cess of 4% that section 3(16) adds to the tax and surcharge, which section 3(17)(i) does not add where the income is paid to a domestic company and any other person who is resident in India. The rows apply from 1 April 2026; the Finance Act, 2026 gives effect to the proposals for the financial year 2026-27, so they end on 31 March 2027 and the set holds none after that day until the next Finance Act is added.",
+  "basis": "law",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "clause",
+      "title": "Clause",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "provision",
+      "title": "Provision",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "section3Sub7",
+          "title": "Finance Act, 2026, section 3(7), Table"
+        },
+        {
+          "value": "partTwo",
+          "title": "Finance Act, 2026, First Schedule, Part II"
+        },
+        {
+          "value": "section3Sub16",
+          "title": "Finance Act, 2026, section 3(16) and (17)"
+        }
+      ]
+    },
+    {
+      "name": "person",
+      "title": "Person in respect of which deduction has to be made",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "appliesTo",
+      "title": "Deductions it applies to",
+      "kind": "text"
+    },
+    {
+      "name": "kind",
+      "title": "What it is",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "band",
+          "title": "Surcharge band"
+        },
+        {
+          "value": "cap",
+          "title": "Cap on the surcharge"
+        },
+        {
+          "value": "cess",
+          "title": "Cess"
+        },
+        {
+          "value": "cessNotApplied",
+          "title": "Cess not added"
+        }
+      ]
+    },
+    {
+      "name": "above",
+      "title": "Income above",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "upTo",
+      "title": "Income up to",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "scope",
+      "title": "Income counted",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "allIncome",
+          "title": "The income or aggregate of incomes"
+        },
+        {
+          "value": "includingDividendAndCapitalGains",
+          "title": "Including dividend and capital gains (sections 196 to 198)"
+        },
+        {
+          "value": "excludingDividendAndCapitalGains",
+          "title": "Excluding dividend and capital gains (sections 196 to 198)"
+        },
+        {
+          "value": "includingNotCoveredAbove",
+          "title": "Including dividend and capital gains, not covered above"
+        },
+        {
+          "value": "dividendAndCapitalGainsPart",
+          "title": "On the part that is dividend or capital gains"
+        }
+      ]
+    },
+    {
+      "name": "percent",
+      "title": "Rate of surcharge or cess",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "words",
+      "title": "In the Finance Act's words",
+      "kind": "text",
+      "rowTitle": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), (16) and (17) and First Schedule, Part II, in force 1 April 2026 (section 1(2)(a))"
+      ]
+    },
+    {
+      "from": "2027-04-01",
+      "instruments": [
+        "Finance Act, 2026 (4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 1, clause (i)",
+      "cells": {
+        "clause": "PartII-1(i)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case where the income of such person, is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 5000000,
+        "upTo": 10000000,
+        "scope": "includingDividendAndCapitalGains",
+        "percent": 10,
+        "words": "(i) Where the income or the aggregate of such incomes (including dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 5000000 but does not exceed ₹ 10000000, at the rate of 10%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 1, clause (ii)",
+      "cells": {
+        "clause": "PartII-1(ii)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case where the income of such person, is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": 20000000,
+        "scope": "includingDividendAndCapitalGains",
+        "percent": 15,
+        "words": "(ii) where the income or the aggregate of such incomes (including dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 10000000 but does not exceed ₹ 20000000, at the rate of 15%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 1, clause (iii)",
+      "cells": {
+        "clause": "PartII-1(iii)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case where the income of such person, is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 20000000,
+        "upTo": 50000000,
+        "scope": "excludingDividendAndCapitalGains",
+        "percent": 25,
+        "words": "(iii) where the income or the aggregate of such incomes (excluding dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 20000000 but does not exceed ₹ 50000000, at the rate of 25%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 1, clause (iv)",
+      "cells": {
+        "clause": "PartII-1(iv)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case where the income of such person, is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 50000000,
+        "upTo": null,
+        "scope": "excludingDividendAndCapitalGains",
+        "percent": 37,
+        "words": "(iv) where the income or the aggregate of such incomes (excluding dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 50000000, at the rate of 37%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 1, clause (v)",
+      "cells": {
+        "clause": "PartII-1(v)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case where the income of such person, is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 20000000,
+        "upTo": null,
+        "scope": "includingNotCoveredAbove",
+        "percent": 15,
+        "words": "(v) where the income or the aggregate of such incomes (including dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 20000000, but is not covered under clauses (iii) and (iv), at the rate of 15%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 1, clause (vi)",
+      "cells": {
+        "clause": "PartII-1(vi)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case where the income of such person, is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "cap",
+        "above": null,
+        "upTo": null,
+        "scope": "dividendAndCapitalGainsPart",
+        "percent": 15,
+        "words": "(vi) where the total income includes dividend income or capital gains under sections 196, 197 and 198 of the said Act, the rate of surcharge on the amount of income-tax computed in respect of that part of income shall not exceed 15% and the clause (i) or (ii), as the case may be, shall apply accordingly."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 2, clause (i)",
+      "cells": {
+        "clause": "PartII-2(i)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident where the income of such person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 5000000,
+        "upTo": 10000000,
+        "scope": "includingDividendAndCapitalGains",
+        "percent": 10,
+        "words": "(i) Where the income or the aggregate of such incomes (including dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 5000000 but does not exceed ₹ 10000000, at the rate of 10%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 2, clause (ii)",
+      "cells": {
+        "clause": "PartII-2(ii)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident where the income of such person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": 20000000,
+        "scope": "includingDividendAndCapitalGains",
+        "percent": 15,
+        "words": "(ii) where the income or the aggregate of such incomes (including dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 10000000 but does not exceed ₹ 20000000, at the rate of 15%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 2, clause (iii)",
+      "cells": {
+        "clause": "PartII-2(iii)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident where the income of such person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 20000000,
+        "upTo": null,
+        "scope": "excludingDividendAndCapitalGains",
+        "percent": 25,
+        "words": "(iii) where the income or the aggregate of such incomes (excluding dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 20000000, at the rate of 25%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 2, clause (iv)",
+      "cells": {
+        "clause": "PartII-2(iv)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident where the income of such person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 20000000,
+        "upTo": null,
+        "scope": "includingNotCoveredAbove",
+        "percent": 15,
+        "words": "(iv) where the income or the aggregate of such incomes (including dividend income or capital gains under the provisions of sections 196, 197 and 198 of the said Act) paid or likely to be paid and subject to the deduction exceeds ₹ 20000000 but is not covered under clause (iii), at the rate of 15%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 2, clause (v)",
+      "cells": {
+        "clause": "PartII-2(v)",
+        "provision": "partTwo",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident where the income of such person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "cap",
+        "above": null,
+        "upTo": null,
+        "scope": "dividendAndCapitalGainsPart",
+        "percent": 15,
+        "words": "(v) where the total income includes dividend income or capital gains under sections 196, 197 and 198 of the said Act, the rate of surcharge on the amount of income-tax deducted in respect of that part of income shall not exceed 15% and the clause (i) or (ii), as the case may be, shall apply accordingly."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 3, clause (i)",
+      "cells": {
+        "clause": "PartII-3(i)",
+        "provision": "partTwo",
+        "person": "Association of persons, being a non-resident, and consisting of only companies as its members.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 5000000,
+        "upTo": 10000000,
+        "scope": "allIncome",
+        "percent": 10,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 5000000 but does not exceed ₹ 10000000, at the rate of 10%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 3, clause (ii)",
+      "cells": {
+        "clause": "PartII-3(ii)",
+        "provision": "partTwo",
+        "person": "Association of persons, being a non-resident, and consisting of only companies as its members.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 15,
+        "words": "(ii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000, at the rate of 15%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 4, clause (i)",
+      "cells": {
+        "clause": "PartII-4(i)",
+        "provision": "partTwo",
+        "person": "Every co-operative society, being a non-resident.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": 100000000,
+        "scope": "allIncome",
+        "percent": 7,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000 but does not exceed ₹ 100000000, at the rate of 7%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 4, clause (ii)",
+      "cells": {
+        "clause": "PartII-4(ii)",
+        "provision": "partTwo",
+        "person": "Every co-operative society, being a non-resident.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 100000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 12,
+        "words": "(ii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 100000000, at the rate of 12%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 5",
+      "cells": {
+        "clause": "PartII-5",
+        "provision": "partTwo",
+        "person": "Every firm, being a non-resident.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 12,
+        "words": "Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000, at the rate of 12%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 6, clause (i)",
+      "cells": {
+        "clause": "PartII-6(i)",
+        "provision": "partTwo",
+        "person": "Every company, other than a domestic company.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": 100000000,
+        "scope": "allIncome",
+        "percent": 2,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000 but does not exceed ₹ 100000000, at the rate of 2%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, Surcharge on income-tax, Table, Sl. No. 6, clause (ii)",
+      "cells": {
+        "clause": "PartII-6(ii)",
+        "provision": "partTwo",
+        "person": "Every company, other than a domestic company.",
+        "appliesTo": "sections 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3]",
+        "kind": "band",
+        "above": 100000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 5,
+        "words": "(ii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 100000000, at the rate of 5%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 2, column E, clause (i)",
+      "cells": {
+        "clause": "3(7)-2(i)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act or where the income of the person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 5000000,
+        "upTo": 10000000,
+        "scope": "allIncome",
+        "percent": 10,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 5000000 but does not exceed ₹ 10000000, at the rate of 10%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 2, column E, clause (ii)",
+      "cells": {
+        "clause": "3(7)-2(ii)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act or where the income of the person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": 20000000,
+        "scope": "allIncome",
+        "percent": 15,
+        "words": "(ii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000 but does not exceed ₹ 20000000, at the rate of 15%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 2, column E, clause (iii)",
+      "cells": {
+        "clause": "3(7)-2(iii)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act or where the income of the person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 20000000,
+        "upTo": 50000000,
+        "scope": "allIncome",
+        "percent": 25,
+        "words": "(iii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 20000000 but does not exceed ₹ 50000000, at the rate of 25%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 2, column E, clause (iv)",
+      "cells": {
+        "clause": "3(7)-2(iv)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, except in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act or where the income of the person is chargeable to tax under section 202 of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 50000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 37,
+        "words": "(iv) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 50000000, at the rate of 37%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 3, column E, clause (i)",
+      "cells": {
+        "clause": "3(7)-3(i)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, where the income of the person is chargeable to tax under section 202 of the said Act except in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 5000000,
+        "upTo": 10000000,
+        "scope": "allIncome",
+        "percent": 10,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 5000000 but does not exceed ₹ 10000000, at the rate of 10%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 3, column E, clause (ii)",
+      "cells": {
+        "clause": "3(7)-3(ii)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, where the income of the person is chargeable to tax under section 202 of the said Act except in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": 20000000,
+        "scope": "allIncome",
+        "percent": 15,
+        "words": "(ii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000 but does not exceed ₹ 20000000, at the rate of 15%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 3, column E, clause (iii)",
+      "cells": {
+        "clause": "3(7)-3(iii)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, where the income of the person is chargeable to tax under section 202 of the said Act except in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 20000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 25,
+        "words": "(iii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 20000000, at the rate of 25%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 4, column E, clause (i)",
+      "cells": {
+        "clause": "3(7)-4(i)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 5000000,
+        "upTo": 10000000,
+        "scope": "allIncome",
+        "percent": 10,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 5000000 but does not exceed ₹ 10000000, at the rate of 10%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 4, column E, clause (ii)",
+      "cells": {
+        "clause": "3(7)-4(ii)",
+        "provision": "section3Sub7",
+        "person": "(i) Every individual; or (ii) Hindu undivided family; or (iii) association of persons, except in a case of an association of persons consisting of only companies as its members, whether incorporated or not; or (iv) body of individuals, whether incorporated or not; or (v) every artificial juridical person referred to in section 2(77)(g) of the said Act, being a non-resident, in case of deduction on dividend income under section 393(2) [Table: Sl. Nos. 15 and 16] of the said Act.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 15,
+        "words": "(ii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000, at the rate of 15%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 5, column E, clause (i)",
+      "cells": {
+        "clause": "3(7)-5(i)",
+        "provision": "section3Sub7",
+        "person": "Association of persons, being a non-resident, and consisting of only companies as its members.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 5000000,
+        "upTo": 10000000,
+        "scope": "allIncome",
+        "percent": 10,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 5000000 but does not exceed ₹ 10000000, at the rate of 10%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 5, column E, clause (ii)",
+      "cells": {
+        "clause": "3(7)-5(ii)",
+        "provision": "section3Sub7",
+        "person": "Association of persons, being a non-resident, and consisting of only companies as its members.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 15,
+        "words": "(ii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000, at the rate of 15%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 6, column E, clause (i)",
+      "cells": {
+        "clause": "3(7)-6(i)",
+        "provision": "section3Sub7",
+        "person": "Every co-operative society, being a non-resident.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": 100000000,
+        "scope": "allIncome",
+        "percent": 7,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000 but does not exceed ₹ 100000000, at the rate of 7%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 6, column E, clause (ii)",
+      "cells": {
+        "clause": "3(7)-6(ii)",
+        "provision": "section3Sub7",
+        "person": "Every co-operative society, being a non-resident.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 100000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 12,
+        "words": "(ii) where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 100000000, at the rate of 12%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 7, column E",
+      "cells": {
+        "clause": "3(7)-7",
+        "provision": "section3Sub7",
+        "person": "Every firm, being a non-resident.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 12,
+        "words": "Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000, at the rate of 12%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 8, column E, clause (i)",
+      "cells": {
+        "clause": "3(7)-8(i)",
+        "provision": "section3Sub7",
+        "person": "Every company, other than a domestic company.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 10000000,
+        "upTo": 100000000,
+        "scope": "allIncome",
+        "percent": 2,
+        "words": "(i) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 10000000 but does not exceed ₹ 100000000, at the rate of 2%;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(7), Table, Sl. No. 8, column E, clause (ii)",
+      "cells": {
+        "clause": "3(7)-8(ii)",
+        "provision": "section3Sub7",
+        "person": "Every company, other than a domestic company.",
+        "appliesTo": "(i) 392(7); (ii) 393(1) [Table: Sl. Nos. 1(ii), 2, 3, 4, 6, 7, 8(i), 8(ii), 8(iv), 8(v) and 8(vi)]; (iii) 393(2) [Table: Sl. Nos. 1 to 6, 10, 11 to 14, 15 and 16]; and (iv) 393(3) [Table: Sl. Nos. 4 to 7].",
+        "kind": "band",
+        "above": 100000000,
+        "upTo": null,
+        "scope": "allIncome",
+        "percent": 5,
+        "words": "(ii) Where the income or the aggregate of such incomes paid or likely to be paid and subject to the deduction exceeds ₹ 100000000, at the rate of 5%."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(16)",
+      "cells": {
+        "clause": "3(16)",
+        "provision": "section3Sub16",
+        "person": null,
+        "appliesTo": "sub-sections (6) to (14)",
+        "kind": "cess",
+        "above": null,
+        "upTo": null,
+        "scope": null,
+        "percent": 4,
+        "words": "(16) The amount of income-tax as specified in sub-sections (6) to (14) and as increased by the applicable surcharge, for the purposes of the Union, calculated in the manner provided therein, shall be further increased by an additional surcharge, for the purposes of the Union, to be called the “Health and Education Cess on income-tax”, calculated at the rate of 4% of such income-tax and surcharge so as to fulfil the commitment of the Government to provide and finance quality health services and universalised quality basic education and secondary and higher education."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(17)(i)",
+      "cells": {
+        "clause": "3(17)(i)",
+        "provision": "section3Sub16",
+        "person": "a domestic company and any other person who is resident in India",
+        "appliesTo": "the sections of the said Act mentioned in sub-sections (7), (8) and (9)",
+        "kind": "cessNotApplied",
+        "above": null,
+        "upTo": null,
+        "scope": null,
+        "percent": null,
+        "words": "(17) The provisions of sub-section (16) shall not apply–– (i) to cases in which tax is to be deducted or collected under the sections of the said Act mentioned in sub-sections (7), (8) and (9), if the income subjected to deduction of tax at source or collection of tax at source is paid to a domestic company and any other person who is resident in India;"
+      }
+    }
+  ]
+}

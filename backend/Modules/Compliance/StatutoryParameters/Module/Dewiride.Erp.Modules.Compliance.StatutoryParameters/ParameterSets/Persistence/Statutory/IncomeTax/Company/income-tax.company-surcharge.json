@@ -1,0 +1,188 @@
+{
+  "key": "income-tax.company-surcharge",
+  "title": "Surcharge on a domestic company's income-tax",
+  "description": "The surcharge for the purposes of the Union on a domestic company's income-tax for tax years from 2026-27, by the income-tax it is levied on and the company's total income, with the marginal relief the Finance Act gives, each in the instrument's words: Paragraph F of Part I-B of the First Schedule to the Finance Act, 2026 and the Table of its section 3(4)(b), as amended from 1 April 2026 by section 6 of the Taxation and Other Laws (Amendment) Act, 2026. Part III and section 3(12) state the same bands for advance tax; the words are those of the tax charged for the tax year. The bands are for the tax year 2026-27 alone, so every row ends on 31 March 2027. A company taxed under section 200 or 201 has no income band. The tax period is the tax year, and the set answers for its first day.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "band",
+      "title": "Band",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Applies to",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "taxOn",
+      "title": "Income-tax it is levied on",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "scheduleRates",
+          "title": "Tax under Paragraphs A to E or sections 196 to 198"
+        },
+        {
+          "value": "specialSections",
+          "title": "Tax under sections 193, 194, 199, 206 to 211, 214, 218, 334"
+        },
+        {
+          "value": "newRegimeOptions",
+          "title": "Tax of a company that opted for section 200 or 201"
+        }
+      ]
+    },
+    {
+      "name": "rate",
+      "title": "Surcharge",
+      "kind": "percent"
+    },
+    {
+      "name": "incomeAbove",
+      "title": "Total income above",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "incomeUpTo",
+      "title": "Total income up to",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "persons",
+      "title": "Persons, in the instrument's words",
+      "kind": "text"
+    },
+    {
+      "name": "wording",
+      "title": "Surcharge, in the instrument's words",
+      "kind": "text"
+    },
+    {
+      "name": "marginalRelief",
+      "title": "Marginal relief, in the instrument's words",
+      "kind": "text",
+      "optional": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, sections 3(4), 3(5), 3(12) and 3(13) and First Schedule, Part I-B, Paragraph F and Part III, Paragraph F, in force 1 April 2026 (section 1(2)(a))",
+        "Taxation and Other Laws (Amendment) Act, 2026 (No. 21 of 2026), 17 August 2026, section 6, substituting serial numbers 9 and 9A for serial number 9 in the Tables of sections 3(4)(b) and 3(12)(b) of the Finance Act, 2026, deemed in force 1 April 2026 (section 1(2))"
+      ]
+    },
+    {
+      "from": "2027-04-01",
+      "instruments": [
+        "Finance Act, 2026 (No. 4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”",
+        "Finance Act, 2026 (No. 4 of 2026), section 3(1): “for the tax year commencing on the 1st day of April, 2026, income-tax shall be charged” at the rates of Part I-B of the First Schedule “and such tax shall be increased by a surcharge, for the purposes of the Union, calculated in each case in the manner provided therein”",
+        "Finance Act, 2026 (No. 4 of 2026), section 3(10)(iv), which computes the advance tax payable under Chapter XIX-C of the Income-tax Act, 2025 at the rates of Part III of the First Schedule; that Act's section 2(90)(a)(iii) makes the rates in force for it “the rate or rates of income-tax specified in this behalf in the Finance Act of the relevant year”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part I-B, Paragraph F, Table 1, Sl. No. 5(i) and Table 2, Sl. No. 5; Part III, Paragraph F, Table 1, Sl. No. 5(i) and Table 2, Sl. No. 5 (advance tax)",
+      "cells": {
+        "band": "schedule-rates-above-1-crore",
+        "name": "Total income above ₹1 crore up to ₹10 crore, on tax under Paragraphs A to E",
+        "taxOn": "scheduleRates",
+        "rate": 7,
+        "incomeAbove": 10000000,
+        "incomeUpTo": 100000000,
+        "persons": "Every domestic company.",
+        "wording": "The amount of income-tax computed in accordance with Paragraphs A to E, or the provisions of section 196, 197 or 198 of the said Act, in the case of person as specified in column B in Table 1 below, shall be increased by a surcharge, for the purposes of the Union, calculated at the rate or rates as specified in column C of the said Table, of such income-tax. [Table 1: Sl. No. 5.C] (i) Where the total income exceeds ₹ 10000000 but does not exceed ₹ 100000000, at the rate of 7%;",
+        "marginalRelief": "Further, in respect of the persons mentioned in column B of the Table 2 below, having total income exceeding the amount as specified in column C of the said Table but does not exceed the amount specified in column D thereof, the total amount payable as income-tax and surcharge thereon shall not exceed the amount determined as per the following formula:— Wn = Un + Vn where,–– Wn = the total amount beyond which the total amount payable as income-tax and surcharge thereon shall not exceed; Un = the total amount payable as income-tax and surcharge, if applicable, on an amount as specified in column C of the Table 2 below; and Vn = the total income – amount as specified in column C of the said Table. [Table 2: Sl. No. 5] Table 1: Sl. Nos. 5.B and 6.B. ₹1,00,00,000. ₹ 10,00,00,000."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part I-B, Paragraph F, Table 1, Sl. No. 5(ii) and Table 2, Sl. No. 5; Part III, Paragraph F, Table 1, Sl. No. 5(ii) and Table 2, Sl. No. 5 (advance tax)",
+      "cells": {
+        "band": "schedule-rates-above-10-crore",
+        "name": "Total income above ₹10 crore, on tax under Paragraphs A to E",
+        "taxOn": "scheduleRates",
+        "rate": 12,
+        "incomeAbove": 100000000,
+        "incomeUpTo": null,
+        "persons": "Every domestic company.",
+        "wording": "The amount of income-tax computed in accordance with Paragraphs A to E, or the provisions of section 196, 197 or 198 of the said Act, in the case of person as specified in column B in Table 1 below, shall be increased by a surcharge, for the purposes of the Union, calculated at the rate or rates as specified in column C of the said Table, of such income-tax. [Table 1: Sl. No. 5.C] (ii) where the total income exceeds ₹ 100000000, at the rate of 12%.",
+        "marginalRelief": "Further, in respect of the persons mentioned in column B of the Table 2 below, having total income exceeding the amount as specified in column C of the said Table but does not exceed the amount specified in column D thereof, the total amount payable as income-tax and surcharge thereon shall not exceed the amount determined as per the following formula:— Wn = Un + Vn where,–– Wn = the total amount beyond which the total amount payable as income-tax and surcharge thereon shall not exceed; Un = the total amount payable as income-tax and surcharge, if applicable, on an amount as specified in column C of the Table 2 below; and Vn = the total income – amount as specified in column C of the said Table. [Table 2: Sl. No. 5] Table 1: Sl. Nos. 5.B and 6.B. ₹ 10,00,00,000. -"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(4)(b), Table, Sl. No. 6(i), with section 3(5), Table, Sl. No. 5; section 3(12)(b), Table, Sl. No. 6(i), with section 3(13), Table, Sl. No. 5 (advance tax)",
+      "cells": {
+        "band": "special-sections-above-1-crore",
+        "name": "Total income above ₹1 crore up to ₹10 crore, on tax under the listed sections",
+        "taxOn": "specialSections",
+        "rate": 7,
+        "incomeAbove": 10000000,
+        "incomeUpTo": 100000000,
+        "persons": "Every domestic company except such domestic company whose income is chargeable to tax under section 200 or 201 of the said Act.",
+        "wording": "(4) For the purposes of sub-section (3),— (b) in respect of income chargeable to tax under the section as specified in column B of the Table below, in the case of a person as specified in column C of the said Table, the amount of income-tax computed shall be increased by a surcharge, for the purposes of the Union, calculated at the rate or rates as specified in column D of the said Table, of such income-tax. [Sl. No. 6.B] 193, 194, 199, 206, 207, 208, 209, 210, 211, 214, 218 or 334. [Sl. No. 6.D] (i) Where the total income exceeds ₹ 10000000 but does not exceed ₹ 100000000, at the rate of 7%;",
+        "marginalRelief": "(5) For the purposes of sub-section (4), in respect of the persons mentioned in column B of the Table below, having total income chargeable to tax under section 202, 206(1) or 206(2) of the said Act, as the case may be, and such income exceeds the amount as specified in column C of the said Table but does not exceed the amount specified in column D thereof, the total amount payable as income-tax and surcharge thereon shall not exceed the amount determined as per the following formula:— Tn = Rn + Sn where,–– Tn = the total amount beyond which the total amount payable as income-tax and surcharge thereon shall not exceed; Rn = the total amount payable as income-tax and surcharge, if applicable, on an amount as specified in column C of the Table below; and Sn = the total income – amount as specified in column C of the said Table. [Table: Sl. No. 5] Persons specified against Sl. Nos. 6 and 7 in column C. ₹ 10000000. ₹ 100000000."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(4)(b), Table, Sl. No. 6(ii), with section 3(5), Table, Sl. No. 5; section 3(12)(b), Table, Sl. No. 6(ii), with section 3(13), Table, Sl. No. 5 (advance tax)",
+      "cells": {
+        "band": "special-sections-above-10-crore",
+        "name": "Total income above ₹10 crore, on tax under the listed sections",
+        "taxOn": "specialSections",
+        "rate": 12,
+        "incomeAbove": 100000000,
+        "incomeUpTo": null,
+        "persons": "Every domestic company except such domestic company whose income is chargeable to tax under section 200 or 201 of the said Act.",
+        "wording": "(4) For the purposes of sub-section (3),— (b) in respect of income chargeable to tax under the section as specified in column B of the Table below, in the case of a person as specified in column C of the said Table, the amount of income-tax computed shall be increased by a surcharge, for the purposes of the Union, calculated at the rate or rates as specified in column D of the said Table, of such income-tax. [Sl. No. 6.B] 193, 194, 199, 206, 207, 208, 209, 210, 211, 214, 218 or 334. [Sl. No. 6.D] (ii) where the total income exceeds ₹ 100000000, at the rate of 12%.",
+        "marginalRelief": "(5) For the purposes of sub-section (4), in respect of the persons mentioned in column B of the Table below, having total income chargeable to tax under section 202, 206(1) or 206(2) of the said Act, as the case may be, and such income exceeds the amount as specified in column C of the said Table but does not exceed the amount specified in column D thereof, the total amount payable as income-tax and surcharge thereon shall not exceed the amount determined as per the following formula:— Tn = Rn + Sn where,–– Tn = the total amount beyond which the total amount payable as income-tax and surcharge thereon shall not exceed; Rn = the total amount payable as income-tax and surcharge, if applicable, on an amount as specified in column C of the Table below; and Sn = the total income – amount as specified in column C of the said Table. [Table: Sl. No. 5] Persons specified against Sl. Nos. 6 and 7 in column C. ₹ 100000000. -"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(4)(b), Table, Sl. No. 9, and section 3(12)(b), Table, Sl. No. 9 (advance tax), as substituted by the Taxation and Other Laws (Amendment) Act, 2026, section 6(a) and (b)",
+      "cells": {
+        "band": "new-regime-options",
+        "name": "Company taxed under section 200 or 201, other than a special purpose vehicle",
+        "taxOn": "newRegimeOptions",
+        "rate": 10,
+        "incomeAbove": null,
+        "incomeUpTo": null,
+        "persons": "Every domestic company other than a special purpose vehicle referred to in Schedule V [Note 2].",
+        "wording": "(4) For the purposes of sub-section (3),— (b) in respect of income chargeable to tax under the section as specified in column B of the Table below, in the case of a person as specified in column C of the said Table, the amount of income-tax computed shall be increased by a surcharge, for the purposes of the Union, calculated at the rate or rates as specified in column D of the said Table, of such income-tax. [Sl. No. 9.B] 200 or 201. [Sl. No. 9.D] 10%.",
+        "marginalRelief": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(4)(b), Table, Sl. No. 9A, and section 3(12)(b), Table, Sl. No. 9A (advance tax), as substituted by the Taxation and Other Laws (Amendment) Act, 2026, section 6(a) and (b); Income-tax Act, 2025, Schedule V, Note 2",
+      "cells": {
+        "band": "new-regime-options-special-purpose-vehicle",
+        "name": "Company taxed under section 200 or 201, being a special purpose vehicle",
+        "taxOn": "newRegimeOptions",
+        "rate": 25,
+        "incomeAbove": null,
+        "incomeUpTo": null,
+        "persons": "Every domestic company, being a special purpose vehicle referred to in Schedule V [Note 2].",
+        "wording": "(4) For the purposes of sub-section (3),— (b) in respect of income chargeable to tax under the section as specified in column B of the Table below, in the case of a person as specified in column C of the said Table, the amount of income-tax computed shall be increased by a surcharge, for the purposes of the Union, calculated at the rate or rates as specified in column D of the said Table, of such income-tax. [Sl. No. 9A.B] 200 or 201. [Sl. No. 9A.D] 25%.",
+        "marginalRelief": null
+      }
+    }
+  ]
+}

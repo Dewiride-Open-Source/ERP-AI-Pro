@@ -1,0 +1,698 @@
+{
+  "key": "income-tax.tds-rates-in-force",
+  "title": "TDS rates in force (Part II of the Finance Act's First Schedule)",
+  "description": "The rates in force at which tax is deducted under section 393(1) [Table: Sl. Nos. 1(i) and 5], 393(2) [Table: Sl. Nos. 7, 8, 9 and 17] and 393(3) [Table: Sl. Nos. 1, 2 and 3] of the Income-tax Act, 2025, by payee and nature of income, as Part II of the First Schedule to the Finance Act, 2026 gives them from 1 April 2026. Section 2(90) of the Income-tax Act, 2025 takes these rates from the Finance Act of the relevant year, and the Finance Act, 2026 gives effect to the proposals for the financial year 2026-27, so its rates end on 31 March 2027 and the set holds none after that day until the next Finance Act is added. For 393(2) [Table: Sl. Nos. 7, 8, 9 and 17], section 2(90)(c) applies instead the rate of an agreement under section 159 where that is the one applicable. For item 1(b)(i), “investment income” and “non-resident Indian” have the meanings of section 212 of the Act (Part II, Note). The surcharge and the cess are in their own set.",
+  "basis": "law",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "item",
+      "title": "Item of Part II",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "payee",
+      "title": "Payee",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "residentOtherThanCompany",
+          "title": "Person other than a company, resident in India"
+        },
+        {
+          "value": "nonResidentIndian",
+          "title": "Non-resident Indian"
+        },
+        {
+          "value": "otherNonResident",
+          "title": "Any other person not resident in India (not a company)"
+        },
+        {
+          "value": "domesticCompany",
+          "title": "Domestic company"
+        },
+        {
+          "value": "otherCompany",
+          "title": "Company other than a domestic company"
+        }
+      ]
+    },
+    {
+      "name": "income",
+      "title": "Income, as Part II prints it",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "percent",
+      "title": "Rate of income-tax",
+      "kind": "percent"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Finance Act, 2026 (4 of 2026), 30 March 2026, section 3(7), Table, Sl. No. 1, and First Schedule, Part II, in force 1 April 2026 (section 1(2)(a))",
+        "Income-tax Act, 2025 (30 of 2025), 21 August 2025, section 2(90), in force 1 April 2026 (section 1(3))"
+      ]
+    },
+    {
+      "from": "2027-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), section 2(90)(a)(iv) and (c): the rates in force for deducting tax under these entries are “the rate or rates of income-tax specified in this behalf in the Finance Act of the relevant year” ((a)(iv)) and those “specified in this behalf in the Finance Act of the relevant tax year” ((c))",
+        "Finance Act, 2026 (4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(a)(i)",
+      "cells": {
+        "item": "1(a)(i)",
+        "payee": "residentOtherThanCompany",
+        "income": "on income by way of interest other than “Interest on securities”",
+        "percent": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(a)(ii)",
+      "cells": {
+        "item": "1(a)(ii)",
+        "payee": "residentOtherThanCompany",
+        "income": "on income by way of winnings from lotteries, puzzles, card games and other games of any sort (other than winnings from online games)",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(a)(iii)",
+      "cells": {
+        "item": "1(a)(iii)",
+        "payee": "residentOtherThanCompany",
+        "income": "on income by way of winnings from horse races",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(a)(iv)",
+      "cells": {
+        "item": "1(a)(iv)",
+        "payee": "residentOtherThanCompany",
+        "income": "on income by way of net winnings from online games",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(a)(v)",
+      "cells": {
+        "item": "1(a)(v)",
+        "payee": "residentOtherThanCompany",
+        "income": "on income by way of insurance commission",
+        "percent": 2
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(a)(vi)",
+      "cells": {
+        "item": "1(a)(vi)",
+        "payee": "residentOtherThanCompany",
+        "income": "on income by way of interest payable on— (A) any debentures or securities for money issued by or on behalf of any local authority or a corporation established by a Central, State or Provincial Act (B) any debentures issued by a company where such debentures are listed on a recognised stock exchange in India in accordance with the Securities Contracts (Regulation) Act, 1956 (42 of 1956) and the rules made thereunder (C) any security of the Central Government or State Government",
+        "percent": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(a)(vii)",
+      "cells": {
+        "item": "1(a)(vii)",
+        "payee": "residentOtherThanCompany",
+        "income": "on any other income",
+        "percent": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(A)",
+      "cells": {
+        "item": "1(b)(i)(A)",
+        "payee": "nonResidentIndian",
+        "income": "on any investment income",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(B)",
+      "cells": {
+        "item": "1(b)(i)(B)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of long-term capital gains referred to in section 214 or 197(4) of the said Act",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(C)",
+      "cells": {
+        "item": "1(b)(i)(C)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of long-term capital gains referred to in section 198 of the said Act exceeding ₹ 125000",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(D)",
+      "cells": {
+        "item": "1(b)(i)(D)",
+        "payee": "nonResidentIndian",
+        "income": "on other income by way of long-term capital gains [not being long-term capital gains referred to in Schedule II [Table: Sl. Nos. 14 and 17] [to the extent it relates to section 10(36) of the Income-tax Act, 1961 (43 of 1961)] of the said Act]",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(E)",
+      "cells": {
+        "item": "1(b)(i)(E)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of short-term capital gains referred to in section 196 of the said Act",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(F)",
+      "cells": {
+        "item": "1(b)(i)(F)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of interest payable by Government or an Indian concern on moneys borrowed or debt incurred by Government or the Indian concern in foreign currency (not being income by way of interest referred to in section 393(2) [Table: Sl. Nos. 2 to 5] of the said Act)",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(G)",
+      "cells": {
+        "item": "1(b)(i)(G)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of royalty payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern where such royalty is in consideration for the transfer of all or any rights (including the granting of a licence) in respect of copyright in any book referred to in section 207(3)(a) of the said Act, to the Indian concern, or in respect of any computer software referred to in section 207(3)(b) of the said Act, to a person resident in India",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(H)",
+      "cells": {
+        "item": "1(b)(i)(H)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of royalty [not being royalty of the nature referred to in sub-item (b)(i)(G)] payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern and where such agreement is with an Indian concern, the agreement is approved by the Central Government or where it relates to a matter included in the industrial policy of the Government of India, the agreement is in accordance with that policy",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(I)",
+      "cells": {
+        "item": "1(b)(i)(I)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of fees for technical services payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern and where such agreement is with an Indian concern, the agreement is approved by the Central Government or where it relates to a matter included in the industrial policy of the Government of India, the agreement is in accordance with that policy",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(J)",
+      "cells": {
+        "item": "1(b)(i)(J)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of winnings from lotteries, crossword puzzles, card games and other games of any sort (other than winnings from online games)",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(K)",
+      "cells": {
+        "item": "1(b)(i)(K)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of winnings from horse races",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(L)",
+      "cells": {
+        "item": "1(b)(i)(L)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of net winnings from online games",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(M)",
+      "cells": {
+        "item": "1(b)(i)(M)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of dividend, referred to in section 207(1) [Table: Sl. No. 2] of the said Act",
+        "percent": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(N)",
+      "cells": {
+        "item": "1(b)(i)(N)",
+        "payee": "nonResidentIndian",
+        "income": "on income by way of dividend other than the income referred to in sub-item (b)(i)(M)",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(i)(O)",
+      "cells": {
+        "item": "1(b)(i)(O)",
+        "payee": "nonResidentIndian",
+        "income": "on the whole of the other income",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(A)",
+      "cells": {
+        "item": "1(b)(ii)(A)",
+        "payee": "otherNonResident",
+        "income": "on income by way of interest payable by Government or an Indian concern on moneys borrowed or debt incurred by Government or the Indian concern in foreign currency (not being income by way of interest referred to in section 393(2) [Table: Sl. Nos. 2 to 5] of the said Act)",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(B)",
+      "cells": {
+        "item": "1(b)(ii)(B)",
+        "payee": "otherNonResident",
+        "income": "on income by way of royalty payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern where such royalty is in consideration for the transfer of all or any rights (including the granting of a licence) in respect of copyright in any book referred to in section 207(3)(a) of the said Act, to the Indian concern, in respect of any computer software referred to in section 207(3)(b) of the said Act, to a person resident in India",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(C)",
+      "cells": {
+        "item": "1(b)(ii)(C)",
+        "payee": "otherNonResident",
+        "income": "on income by way of royalty [not being royalty of the nature referred to in sub-item (b)(ii)(B)] payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern and where such agreement is with an Indian concern, the agreement is approved by the Central Government or where it relates to a matter included in the industrial policy of the Government of India, the agreement is in accordance with that policy",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(D)",
+      "cells": {
+        "item": "1(b)(ii)(D)",
+        "payee": "otherNonResident",
+        "income": "on income by way of fees for technical services payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern and where such agreement is with an Indian concern, the agreement is approved by the Central Government or where it relates to a matter included in the industrial policy of the Government of India, the agreement is in accordance with that policy",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(E)",
+      "cells": {
+        "item": "1(b)(ii)(E)",
+        "payee": "otherNonResident",
+        "income": "on income by way of winnings from lotteries, crossword puzzles, card games and other games of any sort (other than winnings from online games)",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(F)",
+      "cells": {
+        "item": "1(b)(ii)(F)",
+        "payee": "otherNonResident",
+        "income": "on income by way of winnings from horse races",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(G)",
+      "cells": {
+        "item": "1(b)(ii)(G)",
+        "payee": "otherNonResident",
+        "income": "on income by way of net winnings from online games",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(H)",
+      "cells": {
+        "item": "1(b)(ii)(H)",
+        "payee": "otherNonResident",
+        "income": "on income by way of short-term capital gains referred to in section 196 of the said Act",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(I)",
+      "cells": {
+        "item": "1(b)(ii)(I)",
+        "payee": "otherNonResident",
+        "income": "on income by way of long-term capital gains referred to in section 197(4) of the said Act",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(J)",
+      "cells": {
+        "item": "1(b)(ii)(J)",
+        "payee": "otherNonResident",
+        "income": "on income by way of long-term capital gains referred to in section 198 of the said Act exceeding ₹ 125000",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(K)",
+      "cells": {
+        "item": "1(b)(ii)(K)",
+        "payee": "otherNonResident",
+        "income": "on other income by way of long-term capital gains [not being long-term capital gains referred to in Schedule II [Table: Sl. Nos. 14 and 17] [to the extent it relates to section 10(36) of the Income-tax Act, 1961 (43 of 1961)] of the said Act",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(L)",
+      "cells": {
+        "item": "1(b)(ii)(L)",
+        "payee": "otherNonResident",
+        "income": "on income by way of dividend, referred to in section 207(1) [Table: Sl. No. 2] of the said Act",
+        "percent": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(M)",
+      "cells": {
+        "item": "1(b)(ii)(M)",
+        "payee": "otherNonResident",
+        "income": "on income by way of dividend other than the income referred to in sub-item (b)(ii)(L)",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 1(b)(ii)(N)",
+      "cells": {
+        "item": "1(b)(ii)(N)",
+        "payee": "otherNonResident",
+        "income": "on the whole of the other income",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(a)(i)",
+      "cells": {
+        "item": "2(a)(i)",
+        "payee": "domesticCompany",
+        "income": "on income by way of interest other than “Interest on securities”",
+        "percent": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(a)(ii)",
+      "cells": {
+        "item": "2(a)(ii)",
+        "payee": "domesticCompany",
+        "income": "on income by way of winnings from lotteries, puzzles, card games and other games of any sort (other than winnings from online games)",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(a)(iii)",
+      "cells": {
+        "item": "2(a)(iii)",
+        "payee": "domesticCompany",
+        "income": "on income by way of winnings from horse races",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(a)(iv)",
+      "cells": {
+        "item": "2(a)(iv)",
+        "payee": "domesticCompany",
+        "income": "on income by way of net winnings from online games",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(a)(v)",
+      "cells": {
+        "item": "2(a)(v)",
+        "payee": "domesticCompany",
+        "income": "on any other income",
+        "percent": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(i)",
+      "cells": {
+        "item": "2(b)(i)",
+        "payee": "otherCompany",
+        "income": "on income by way of winnings from lotteries, crossword puzzles, card games and other games of any sort (other than winnings from online games)",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(ii)",
+      "cells": {
+        "item": "2(b)(ii)",
+        "payee": "otherCompany",
+        "income": "on income by way of winnings from horse races",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(iii)",
+      "cells": {
+        "item": "2(b)(iii)",
+        "payee": "otherCompany",
+        "income": "on income by way of net winnings from online games",
+        "percent": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(iv)",
+      "cells": {
+        "item": "2(b)(iv)",
+        "payee": "otherCompany",
+        "income": "on income by way of interest payable by Government or an Indian concern on moneys borrowed or debt incurred by Government or the Indian concern in foreign currency (not being income by way of interest referred to in section 393(2) [Table: Sl. Nos. 2 to 5] of the said Act)",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(v)",
+      "cells": {
+        "item": "2(b)(v)",
+        "payee": "otherCompany",
+        "income": "on income by way of royalty payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern after the 31st March, 1976 where such royalty is in consideration for the transfer of all or any rights (including the granting of a licence) in respect of copyright in any book referred to in section 207(3)(a) of the said Act, to the Indian concern, or in respect of any computer software referred to in section 207(3)(b) of the said Act, to a person resident in India",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(vi)(A)",
+      "cells": {
+        "item": "2(b)(vi)(A)",
+        "payee": "otherCompany",
+        "income": "on income by way of royalty [not being royalty of the nature referred to in item (b)(v)] payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern and where such agreement is with an Indian concern, the agreement is approved by the Central Government or where it relates to a matter included in the industrial policy of the Government of India, the agreement is in with that policy— (A) where the agreement is made after the 31st March, 1961 but before the 1st April, 1976",
+        "percent": 50
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(vi)(B)",
+      "cells": {
+        "item": "2(b)(vi)(B)",
+        "payee": "otherCompany",
+        "income": "on income by way of royalty [not being royalty of the nature referred to in item (b)(v)] payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern and where such agreement is with an Indian concern, the agreement is approved by the Central Government or where it relates to a matter included in the industrial policy of the Government of India, the agreement is in with that policy— (B) where the agreement is made after the 31st March, 1976",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(vii)(A)",
+      "cells": {
+        "item": "2(b)(vii)(A)",
+        "payee": "otherCompany",
+        "income": "on income by way of fees for technical services payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern and where such agreement is with an Indian concern, the agreement is approved by the Central Government or where it relates to a matter included in the industrial policy of the Government of India, the agreement is in accordance with that policy— (A) where the agreement is made after the 29th February, 1964 but before the 1st April, 1976",
+        "percent": 50
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(vii)(B)",
+      "cells": {
+        "item": "2(b)(vii)(B)",
+        "payee": "otherCompany",
+        "income": "on income by way of fees for technical services payable by Government or an Indian concern in pursuance of an agreement made by it with the Government or the Indian concern and where such agreement is with an Indian concern, the agreement is approved by the Central Government or where it relates to a matter included in the industrial policy of the Government of India, the agreement is in accordance with that policy— (B) where the agreement is made after the 31st March, 1976",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(viii)",
+      "cells": {
+        "item": "2(b)(viii)",
+        "payee": "otherCompany",
+        "income": "on income by way of short-term capital gains referred to in section 196 of the said Act",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(ix)",
+      "cells": {
+        "item": "2(b)(ix)",
+        "payee": "otherCompany",
+        "income": "on income by way of long-term capital gains referred to in section 197(4) of the said Act",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(x)",
+      "cells": {
+        "item": "2(b)(x)",
+        "payee": "otherCompany",
+        "income": "on income by way of long-term capital gains referred to in section 198 of the said Act exceeding ₹ 125000",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(xi)",
+      "cells": {
+        "item": "2(b)(xi)",
+        "payee": "otherCompany",
+        "income": "on other income by way of long-term capital gains [not being long-term capital gains referred to in Schedule II] [Table: Sl. Nos. 14 and 17] [to the extent it relates to section 10(36) of the Income-tax Act, 1961 (43 of 1961)] of the said Act",
+        "percent": 12.5
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(xii)",
+      "cells": {
+        "item": "2(b)(xii)",
+        "payee": "otherCompany",
+        "income": "on income by way of dividend, referred to in section 207(1) [Table: Sl. No. 2] of the said Act",
+        "percent": 10
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(xiii)",
+      "cells": {
+        "item": "2(b)(xiii)",
+        "payee": "otherCompany",
+        "income": "on income by way of dividend other than the income referred to in item (b)(xii)",
+        "percent": 20
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, First Schedule, Part II, item 2(b)(xiv)",
+      "cells": {
+        "item": "2(b)(xiv)",
+        "payee": "otherCompany",
+        "income": "on any other income",
+        "percent": 35
+      }
+    }
+  ]
+}

@@ -1,0 +1,575 @@
+{
+  "key": "income-tax.tds-threshold-limits",
+  "title": "TDS threshold limits of the Income-tax Act, 2025",
+  "description": "The threshold limits of sections 392 and 393 of the Income-tax Act, 2025, in force from 1 April 2026, one row for each case a limit distinguishes: the limit as printed, its amount in rupees, the test and how the Act measures the amount. A limit printed as Nil is 0 with the test that the amount exceeds it, so every amount is deducted; a limit printed without a figure has no amount. The limit of section 393(1) [Table: Sl. No. 3(i)] follows its Note 3, as the Finance Act, 2026, section 84(a), amended it: tax is deducted where the consideration or the stamp duty value is equal to or greater than fifty lakh rupees.",
+  "basis": "law",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "limit",
+      "title": "Limit",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "references": [
+        "income-tax.tds-entries"
+      ]
+    },
+    {
+      "name": "case",
+      "title": "Case the limit applies to",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "words",
+      "title": "Threshold limit, as printed",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "amount",
+      "title": "Amount (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "test",
+      "title": "Test",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "exceeds",
+          "title": "Deducted when the amount exceeds the limit"
+        },
+        {
+          "value": "equalToOrMore",
+          "title": "Deducted when the amount equals or exceeds the limit"
+        },
+        {
+          "value": "noFigure",
+          "title": "No figure: as the Act's words say"
+        }
+      ]
+    },
+    {
+      "name": "measure",
+      "title": "How the amount is measured",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "amountOrAggregate",
+          "title": "The amount or the aggregate of amounts"
+        },
+        {
+          "value": "monthOrPart",
+          "title": "For a month or part of a month"
+        },
+        {
+          "value": "singleSum",
+          "title": "Any single sum"
+        },
+        {
+          "value": "aggregateOfSums",
+          "title": "The aggregate of such sums"
+        },
+        {
+          "value": "singleTransaction",
+          "title": "A single transaction"
+        },
+        {
+          "value": "aggregatePayment",
+          "title": "The aggregate amount of the payment"
+        },
+        {
+          "value": "allTransferees",
+          "title": "Aggregate paid by all transferees to all transferors"
+        }
+      ]
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), sections 392 and 393, in force 1 April 2026 (section 1(3))",
+        "Finance Act, 2026 (4 of 2026), section 84(a), substituting “serial number 3(i)” in Note 3 below serial number 3 of the Table of section 393(1), in force 1 April 2026 (section 1(2)(a))"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 392(7)",
+      "cells": {
+        "limit": "392(7)",
+        "entry": "392(7)",
+        "case": null,
+        "words": "where the aggregate amount of such payment is ₹ 50000 or more",
+        "amount": 50000,
+        "test": "equalToOrMore",
+        "measure": "aggregatePayment"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(i)]",
+      "cells": {
+        "limit": "393(1)-1(i)",
+        "entry": "393(1)-1(i)",
+        "case": null,
+        "words": "Threshold limit: ₹ 20,000.",
+        "amount": 20000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 1(ii)]",
+      "cells": {
+        "limit": "393(1)-1(ii)",
+        "entry": "393(1)-1(ii)",
+        "case": null,
+        "words": "Threshold limit: ₹ 20,000.",
+        "amount": 20000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(i)]",
+      "cells": {
+        "limit": "393(1)-2(i)",
+        "entry": "393(1)-2(i)",
+        "case": null,
+        "words": "Threshold limit: ₹ 50,000 for a month or part of a month.",
+        "amount": 50000,
+        "test": "exceeds",
+        "measure": "monthOrPart"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 2(ii)]",
+      "cells": {
+        "limit": "393(1)-2(ii)",
+        "entry": "393(1)-2(ii)",
+        "case": "for (a) and (b)",
+        "words": "Threshold limit [for (a) and (b)]: ₹ 50,000 for a month or part of a month.",
+        "amount": 50000,
+        "test": "exceeds",
+        "measure": "monthOrPart"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(i)] and Notes 1 and 3 below serial number 3, Note 3 as amended by the Finance Act, 2026, section 84(a)",
+      "cells": {
+        "limit": "393(1)-3(i)",
+        "entry": "393(1)-3(i)",
+        "case": null,
+        "words": "Threshold limit: Fifty lakh rupees and as per Note 3. Note 1.––Consideration for transfer of any immovable property under serial number 3(i) shall be the aggregate of the amounts paid or payable by all the transferees to the transferor or all the transferors for transfer of such immovable property for the purposes of the threshold limit mentioned in column D. Note 3.––For the purposes of serial number 3(i), the income-tax shall be deducted where consideration for transfer of any immovable property or the stamp duty value of such property, is equal to or greater than fifty lakh rupees.",
+        "amount": 5000000,
+        "test": "equalToOrMore",
+        "measure": "allTransferees"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(ii)]",
+      "cells": {
+        "limit": "393(1)-3(ii)",
+        "entry": "393(1)-3(ii)",
+        "case": null,
+        "words": "Threshold limit: Nil.",
+        "amount": 0,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 3(iii)]",
+      "cells": {
+        "limit": "393(1)-3(iii)",
+        "entry": "393(1)-3(iii)",
+        "case": null,
+        "words": "Threshold limit: ₹ 5,00,000.",
+        "amount": 500000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(i)]",
+      "cells": {
+        "limit": "393(1)-4(i)",
+        "entry": "393(1)-4(i)",
+        "case": null,
+        "words": "Threshold limit: ₹ 10,000.",
+        "amount": 10000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(ii)]",
+      "cells": {
+        "limit": "393(1)-4(ii)",
+        "entry": "393(1)-4(ii)",
+        "case": null,
+        "words": "Threshold limit: Nil.",
+        "amount": 0,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(iii)]",
+      "cells": {
+        "limit": "393(1)-4(iii)",
+        "entry": "393(1)-4(iii)",
+        "case": null,
+        "words": "Threshold limit: Nil.",
+        "amount": 0,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 4(iv)]",
+      "cells": {
+        "limit": "393(1)-4(iv)",
+        "entry": "393(1)-4(iv)",
+        "case": null,
+        "words": "Threshold limit: Nil.",
+        "amount": 0,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(i)]",
+      "cells": {
+        "limit": "393(1)-5(i)",
+        "entry": "393(1)-5(i)",
+        "case": null,
+        "words": "Threshold limit: ₹ 10,000.",
+        "amount": 10000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(ii)], threshold limit (a)",
+      "cells": {
+        "limit": "393(1)-5(ii).limit(a)",
+        "entry": "393(1)-5(ii)",
+        "case": "in the case of a senior citizen",
+        "words": "(a) ₹ 1,00,000 in the case of a senior citizen",
+        "amount": 100000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(ii)], threshold limit (b)",
+      "cells": {
+        "limit": "393(1)-5(ii).limit(b)",
+        "entry": "393(1)-5(ii)",
+        "case": "in case of person other than senior citizen",
+        "words": "(b) ₹ 50,000 in case of person other than senior citizen.",
+        "amount": 50000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 5(iii)]",
+      "cells": {
+        "limit": "393(1)-5(iii)",
+        "entry": "393(1)-5(iii)",
+        "case": null,
+        "words": "Threshold limit: ₹10,000.",
+        "amount": 10000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(i)], threshold limit (a)",
+      "cells": {
+        "limit": "393(1)-6(i).limit(a)",
+        "entry": "393(1)-6(i)",
+        "case": "for any such sum",
+        "words": "(a) ₹ 30000; for any such sum",
+        "amount": 30000,
+        "test": "exceeds",
+        "measure": "singleSum"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(i)], threshold limit (b)",
+      "cells": {
+        "limit": "393(1)-6(i).limit(b)",
+        "entry": "393(1)-6(i)",
+        "case": "in case of aggregate of such sums",
+        "words": "(b) ₹ 100000 in case of aggregate of such sums.",
+        "amount": 100000,
+        "test": "exceeds",
+        "measure": "aggregateOfSums"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(ii)]",
+      "cells": {
+        "limit": "393(1)-6(ii)",
+        "entry": "393(1)-6(ii)",
+        "case": null,
+        "words": "Threshold limit: Fifty lakh rupees.",
+        "amount": 5000000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(iii)], threshold limit (i)",
+      "cells": {
+        "limit": "393(1)-6(iii).limit(i)",
+        "entry": "393(1)-6(iii)",
+        "case": "for (a), (b), (d) and (e) of Col. B",
+        "words": "Threshold limit: (i) for (a), (b), (d) and (e) of Col. B: ₹ 50,000.",
+        "amount": 50000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 6(iii)], threshold limit (ii)",
+      "cells": {
+        "limit": "393(1)-6(iii).limit(ii)",
+        "entry": "393(1)-6(iii)",
+        "case": "for (c) of Col. B",
+        "words": "(ii) for (c) of Col. B: Nil.",
+        "amount": 0,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) (Table: Sl. No. 7)",
+      "cells": {
+        "limit": "393(1)-7",
+        "entry": "393(1)-7",
+        "case": null,
+        "words": "Threshold limit: Nil.",
+        "amount": 0,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(i)]",
+      "cells": {
+        "limit": "393(1)-8(i)",
+        "entry": "393(1)-8(i)",
+        "case": null,
+        "words": "Threshold limit: ₹1,00,000.",
+        "amount": 100000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(ii)] and Note 1 below serial number 8",
+      "cells": {
+        "limit": "393(1)-8(ii)",
+        "entry": "393(1)-8(ii)",
+        "case": null,
+        "words": "Threshold limit: As per Note 1. Note 1.––(a) The deduction of tax under serial number 8(ii) shall not apply to a transaction on which tax is deductible or collectible under any of the provisions of the Act. (b) The tax shall be deducted on the sum exceeding fifty lakh rupees.",
+        "amount": 5000000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(iii)]",
+      "cells": {
+        "limit": "393(1)-8(iii)",
+        "entry": "393(1)-8(iii)",
+        "case": null,
+        "words": "Threshold limit: As applicable.",
+        "amount": null,
+        "test": "noFigure",
+        "measure": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(iv)]",
+      "cells": {
+        "limit": "393(1)-8(iv)",
+        "entry": "393(1)-8(iv)",
+        "case": null,
+        "words": "Threshold limit: ₹ 20,000.",
+        "amount": 20000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(v)]",
+      "cells": {
+        "limit": "393(1)-8(v)",
+        "entry": "393(1)-8(v)",
+        "case": null,
+        "words": "Threshold limit: Nil.",
+        "amount": 0,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(1) [Table: Sl. No. 8(vi)]",
+      "cells": {
+        "limit": "393(1)-8(vi)",
+        "entry": "393(1)-8(vi)",
+        "case": null,
+        "words": "Threshold limit: Nil.",
+        "amount": 0,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 1)",
+      "cells": {
+        "limit": "393(3)-1",
+        "entry": "393(3)-1",
+        "case": null,
+        "words": "Threshold limit: ₹ 10000 in case of a single transaction.",
+        "amount": 10000,
+        "test": "exceeds",
+        "measure": "singleTransaction"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 2) and Note 1 of the Table",
+      "cells": {
+        "limit": "393(3)-2",
+        "entry": "393(3)-2",
+        "case": null,
+        "words": "Threshold limit: As per Note 1. Note 1.––For serial number 2, tax shall be deducted–– (a) on net winnings in the user account of the payee at the end of the tax year; (b) where there is any withdrawal from user account during the tax year, the tax shall be deducted at the time of such withdrawal on the net winnings comprised in such withdrawal as well as on the remaining amount of net winnings in user account at the end of the tax year, where the net winnings in each case is computed in the such manner as may be prescribed.",
+        "amount": null,
+        "test": "noFigure",
+        "measure": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 3)",
+      "cells": {
+        "limit": "393(3)-3",
+        "entry": "393(3)-3",
+        "case": null,
+        "words": "Threshold limit: ₹ 10000 in case of a single transaction.",
+        "amount": 10000,
+        "test": "exceeds",
+        "measure": "singleTransaction"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 4)",
+      "cells": {
+        "limit": "393(3)-4",
+        "entry": "393(3)-4",
+        "case": null,
+        "words": "Threshold limit: ₹ 20000.",
+        "amount": 20000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 5), threshold limit for a co-operative society",
+      "cells": {
+        "limit": "393(3)-5.limit(a)",
+        "entry": "393(3)-5",
+        "case": "in case of recipient being, a co-operative society",
+        "words": "Threshold limit: three crore rupees in case of recipient being, a co-operative society",
+        "amount": 30000000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 5), threshold limit (b)",
+      "cells": {
+        "limit": "393(3)-5.limit(b)",
+        "entry": "393(3)-5",
+        "case": "in case of recipient being person other than a co-operative society",
+        "words": "(b) one crore rupees in case of recipient being person other than a co-operative society.",
+        "amount": 10000000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 6)",
+      "cells": {
+        "limit": "393(3)-6",
+        "entry": "393(3)-6",
+        "case": null,
+        "words": "Threshold limit: ₹ 2500.",
+        "amount": 2500,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(3) (Table: Sl. No. 7)",
+      "cells": {
+        "limit": "393(3)-7",
+        "entry": "393(3)-7",
+        "case": null,
+        "words": "Threshold limit: ₹ 20000.",
+        "amount": 20000,
+        "test": "exceeds",
+        "measure": "amountOrAggregate"
+      }
+    }
+  ]
+}

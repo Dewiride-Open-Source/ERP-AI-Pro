@@ -1,0 +1,89 @@
+{
+  "key": "income-tax.tds-declarations",
+  "title": "Declarations for no TDS under section 393(6)",
+  "description": "Who may furnish a written declaration that the tax on his estimated total income of the tax year will be nil, so that no tax is deducted under the provisions the Table of section 393(6) of the Income-tax Act, 2025 lists (“DECLARATION FOR NO DEDUCTION AT SOURCE”), in force from 1 April 2026, with the limit of its Note; and, from 1 April 2027, the declaration furnished electronically to a depository under section 393(6)(b), which the Finance Act, 2026, section 84(c), inserts with effect from that date.",
+  "basis": "law",
+  "asOf": "deductionDate",
+  "columns": [
+    {
+      "name": "row",
+      "title": "Row",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "person",
+      "title": "Who may declare, as printed",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "provisions",
+      "title": "Provisions or conditions, as printed",
+      "kind": "text"
+    },
+    {
+      "name": "age",
+      "title": "Age (years)",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 0
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Income-tax Act, 2025 (30 of 2025), section 393(6), in force 1 April 2026 (section 1(3))"
+      ]
+    },
+    {
+      "from": "2027-04-01",
+      "instruments": [
+        "Finance Act, 2026 (4 of 2026), section 84(c), inserting section 393(6)(b) with effect from 1 April 2027"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(6) [Table: Sl. No. 1]",
+      "cells": {
+        "row": "393(6)-1",
+        "person": "An individual being a resident.",
+        "provisions": "(a) payment of accumulated balance due to an employee referred to in section 392(7); (b) insurance Commission referred to in section 393(1) [Table: Sl. No. 1(i)]; (c) rent referred to in section 393(1) [Table: Sl. No. 2(ii)]; (d) income in respect of units referred to in section 393(1) [Table: Sl. No. 4(i)]; (e) interest referred to in section 393(1) [Table: Sl. No. 5(i), (ii) and (iii)]; (f) payment in respect of life insurance policy referred to in section 393(1) [Table: Sl. No. 8(i)]; (g) dividend referred to in section 393(1) (Table: Sl. No. 7).",
+        "age": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(6) [Table: Sl. No. 2]",
+      "cells": {
+        "row": "393(6)-2",
+        "person": "Any person not being a company or a firm or an individual covered in Sl. No. (1).",
+        "provisions": "Sl. No. (1).C(a) to (f).",
+        "age": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Income-tax Act, 2025, section 393(6), the Note below the Table",
+      "cells": {
+        "row": "393(6)-Note",
+        "person": "a person referred to in column B of the Table, other than an individual being a resident who is of the age of sixty years or more at any time during the tax year",
+        "provisions": "The provisions of this sub-section shall not apply in case of a person referred to in column B of the Table, other than an individual being a resident who is of the age of sixty years or more at any time during the tax year, if the aggregate of amounts of any income or sum of the nature referred to in provision mentioned in column C of this Table, is credited or paid or likely to be credited or paid during the relevant tax year in which such income or sum is to be included, exceeds the maximum amount not chargeable to tax.",
+        "age": 60
+      }
+    },
+    {
+      "from": "2027-04-01",
+      "source": "Income-tax Act, 2025, section 393(6)(b), inserted by the Finance Act, 2026, section 84(c), with effect from 1 April 2027",
+      "cells": {
+        "row": "393(6)(b)",
+        "person": "The declaration referred in clause (a) may also be furnished electronically to a depository, as defined in section (2)(e) of the Depositories Act, 1996",
+        "provisions": "where–– (i) the income is from units, interest on securities or dividends, as the case may be, as referred to in section 393(1) [Table: 4(i), 5(i) or 7]; (ii) such units or securities are held with such depository; and (iii) such securities are listed on a recognised stock exchange, in accordance with such procedure and manner, as may be prescribed.",
+        "age": null
+      }
+    }
+  ]
+}

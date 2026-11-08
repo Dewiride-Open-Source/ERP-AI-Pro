@@ -1,0 +1,72 @@
+{
+  "key": "companies.schedule-ii-limits",
+  "title": "Schedule II residual value and shift limits (Companies Act)",
+  "description": "The most that Part A of Schedule II to the Companies Act, 2013 allows as an asset's residual value, as a percentage of its original cost, and the percentages that paragraph 6 of the Notes after Part C gives for double-shift and triple-shift working, for financial years from 2026-27, each with its test in the Schedule's words. Paragraph 3(i) of Part A is as Notification G.S.R. 627(E) of 29 August 2014 substituted it.",
+  "basis": "law",
+  "asOf": "financialYearStart",
+  "columns": [
+    {
+      "name": "limit",
+      "title": "Limit",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "What it decides",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "percent",
+      "title": "Percentage",
+      "kind": "percent"
+    },
+    {
+      "name": "test",
+      "title": "In the Schedule's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Notification G.S.R. 627(E), 29 August 2014, Ministry of Corporate Affairs, paragraph 1(a), substituting Schedule II, Part A, paragraph 3(i), in force on its publication in the Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 456, 29 August 2014",
+        "Companies Act, 2013 (18 of 2013), Gazette of India, Extraordinary, Part II, Section 1, No. 27, 30 August 2013: Schedule II, Notes, paragraph 6, in force 1 April 2014"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Part A, paragraph 3(i), as substituted by Notification G.S.R. 627(E), 29 August 2014, paragraph 1(a)",
+      "cells": {
+        "limit": "residual-value",
+        "name": "Residual value: the most it may be, as a share of the asset's original cost, unless a different value is disclosed and justified",
+        "percent": 5,
+        "test": "The useful life of an asset shall not ordinarily be different from the useful life specified in Part C and the residual value of an asset shall not be more than five per cent. of the original cost of the asset: Provided that where a company adopts a useful life different from what is specified in Part C or uses a residual value different from the limit specified above, the financial statements shall disclose such difference and provide justification in this behalf duly supported by technical advice"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Notes, paragraph 6",
+      "cells": {
+        "limit": "double-shift",
+        "name": "Double shift: the increase in depreciation for the period of double-shift working",
+        "percent": 50,
+        "test": "The useful lives of assets working on shift basis have been specified in the Schedule based on their single shift working. Except for assets in respect of which no extra shift depreciation is permitted (indicated by NESD in Part C above), if an asset is used for any time during the year for double shift, the depreciation will increase by 50% for that period"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Companies Act, 2013 (18 of 2013), Schedule II, Notes, paragraph 6",
+      "cells": {
+        "limit": "triple-shift",
+        "name": "Triple shift: the percentage on whose basis depreciation is calculated for the period of triple-shift working",
+        "percent": 100,
+        "test": "The useful lives of assets working on shift basis have been specified in the Schedule based on their single shift working. Except for assets in respect of which no extra shift depreciation is permitted (indicated by NESD in Part C above), if an asset is used for any time during the year for double shift, the depreciation will increase by 50% for that period and in case of the triple shift the depreciation shall be calculated on the basis of 100% for that period."
+      }
+    }
+  ]
+}

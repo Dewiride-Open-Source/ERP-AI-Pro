@@ -79,5 +79,6 @@
 | [0061](adr/0061-a-module-scaffolder-that-registers-what-it-writes-proven-on-every-push.md) | A module scaffolder that registers what it writes, proven on every push |
 | [0062](adr/0062-reference-data-seeded-lists-every-iso-currency-dated-exchange-rates-and-financial-periods.md) | Reference data: seeded lists, every ISO currency, dated exchange rates and financial periods |
 | [0063](adr/0063-statutory-parameters-dated-rows-in-versioned-sets-typed-reads-by-date-and-the-first-gst-datasets.md) | Statutory parameters: dated rows in versioned sets, typed reads by date and the first GST datasets |
+| [0064](adr/0064-statutory-datasets-tds-under-the-income-tax-act-2025-company-tax-and-depreciation.md) | Statutory datasets: TDS under the Income-tax Act, 2025, company tax and depreciation |
 
 New decisions use [0000-template.md](adr/0000-template.md).

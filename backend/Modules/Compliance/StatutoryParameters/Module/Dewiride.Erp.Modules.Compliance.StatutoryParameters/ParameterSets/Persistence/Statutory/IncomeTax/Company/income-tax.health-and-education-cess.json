@@ -1,0 +1,71 @@
+{
+  "key": "income-tax.health-and-education-cess",
+  "title": "Health and Education Cess on income-tax",
+  "description": "The additional surcharge called the Health and Education Cess on income-tax, levied for tax years from 2026-27 at a rate of the income-tax and its surcharge, in the words of section 3 of the Finance Act, 2026: on the tax charged for the tax year (section 3(15)) and on the advance tax, whose cess section 3(16) levies with the exception of section 3(17)(ii). The cess on tax deducted at source is held with the deduction's surcharge in the set income-tax.tds-surcharge-and-cess, which answers for the date of the deduction. The cess is the Finance Act's for the tax year 2026-27 alone, so every row ends on 31 March 2027. The tax period is the tax year, and the set answers for its first day.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "cess",
+      "title": "Cess",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Levied on",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "rate",
+      "title": "Rate",
+      "kind": "percent"
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Finance Act, 2026 (No. 4 of 2026), 30 March 2026, section 3(15), (16) and (17), in force 1 April 2026 (section 1(2)(a))"
+      ]
+    },
+    {
+      "from": "2027-04-01",
+      "instruments": [
+        "Finance Act, 2026 (No. 4 of 2026), long title: “An Act to give effect to the financial proposals of the Central Government for the financial year 2026-27.”",
+        "Finance Act, 2026 (No. 4 of 2026), section 3(15), which levies the cess on “The amount of income-tax as specified in sub-sections (1) to (5)”, the income-tax that section 3(1) charges “for the tax year commencing on the 1st day of April, 2026”",
+        "Finance Act, 2026 (No. 4 of 2026), section 3(16), which levies the cess on “The amount of income-tax as specified in sub-sections (6) to (14)”, among them the advance tax that section 3(10)(iv) computes at the rates of Part III of the First Schedule"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(15), on the income-tax of section 3(1) to (5)",
+      "cells": {
+        "cess": "charge",
+        "name": "Income-tax charged for the tax year, with its surcharge",
+        "rate": 4,
+        "wording": "(15) The amount of income-tax as specified in sub-sections (1) to (5) and as increased by the applicable surcharge, for the purposes of the Union, calculated in the manner provided therein, shall be further increased by an additional surcharge, for the purposes of the Union, to be called the “Health and Education Cess on income-tax”, calculated at the rate of 4% of such income-tax and surcharge so as to fulfil the commitment of the Government to provide and finance quality health services and universalised quality basic education and secondary and higher education."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2027-03-31",
+      "source": "Finance Act, 2026, section 3(16), as it applies to the advance tax of section 3(10)(iv) and (11) to (14), and section 3(17)(ii)",
+      "cells": {
+        "cess": "advance-tax",
+        "name": "Advance tax, with its surcharge",
+        "rate": 4,
+        "wording": "(16) The amount of income-tax as specified in sub-sections (6) to (14) and as increased by the applicable surcharge, for the purposes of the Union, calculated in the manner provided therein, shall be further increased by an additional surcharge, for the purposes of the Union, to be called the “Health and Education Cess on income-tax”, calculated at the rate of 4% of such income-tax and surcharge so as to fulfil the commitment of the Government to provide and finance quality health services and universalised quality basic education and secondary and higher education. (17) The provisions of sub-section (16) shall not apply–– (ii) in respect of income-tax as specified in sub-sections (10) to (13), calculated on income, referred to in section 210(1) [Table: Sl. No. 1] of the said Act, of specified fund referred to in Schedule VI [Note 1(g)] of the said Act."
+      }
+    }
+  ]
+}

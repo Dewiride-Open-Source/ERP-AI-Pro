@@ -30,7 +30,7 @@ public sealed class StatutoryParameterSeederTests(ErpApiFactory factory)
 
         await SeedAsync();
 
-        Assert.Equal(8, before.Count(line => line.StartsWith("set ", StringComparison.Ordinal)));
+        Assert.Equal(SeedFileSets.All.Count, before.Count(line => line.StartsWith("set ", StringComparison.Ordinal)));
         Assert.Equal(before, await TablesAsync());
         Assert.Equal(changes, await ChangeCountsAsync());
     }
