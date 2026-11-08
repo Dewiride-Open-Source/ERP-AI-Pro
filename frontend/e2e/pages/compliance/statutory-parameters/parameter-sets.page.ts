@@ -10,7 +10,16 @@ export const setsPerPage = 10;
 
 export type ParameterSetBasis = "law" | "interpretation";
 
-export type ParameterAsOf = "supplyDate" | "taxPeriodStart" | "deductionDate" | "financialYearStart";
+export type ParameterAsOf =
+  | "supplyDate"
+  | "taxPeriodStart"
+  | "deductionDate"
+  | "financialYearStart"
+  | "wageDate"
+  | "wagePeriodEnd"
+  | "employmentEndDate"
+  | "accountingYearEnd"
+  | "contributionPeriodEnd";
 
 export type VersionSummary = {
   readonly from: string;
@@ -66,6 +75,13 @@ export function parameterSetApi(key: string): string {
 
 export function longDate(isoDate: string): string {
   return longDates.format(new Date(`${isoDate}T00:00:00Z`));
+}
+
+const longDaysOfMonths = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "long", timeZone: "UTC" });
+
+// A day and month (MM-dd) names that day of every year, so it is written in a leap year, which holds 29 February too.
+export function longDayMonth(dayMonth: string): string {
+  return longDaysOfMonths.format(new Date(`2000-${dayMonth}T00:00:00Z`));
 }
 
 export function fromText(isoDate: string): string {

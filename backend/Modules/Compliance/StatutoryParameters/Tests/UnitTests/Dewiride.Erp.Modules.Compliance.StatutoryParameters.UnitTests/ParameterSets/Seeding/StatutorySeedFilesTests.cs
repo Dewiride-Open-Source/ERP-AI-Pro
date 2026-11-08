@@ -6,14 +6,25 @@ namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.UnitTests.Paramete
 public sealed class StatutorySeedFilesTests
 {
     [Fact]
-    public void Embedded_SeedFiles_AreTheGstAndDirectTaxSetsEachUnderItsKey()
+    public void Embedded_SeedFiles_AreTheGstDirectTaxAndLabourSetsEachUnderItsKey()
     {
         var files = StatutorySeedFiles.Embedded();
 
         Assert.Equal(
             [
+                "bonus.prior-charges.json",
+                "bonus.rules.json",
+                "bonus.state-wage-limit-readings.json",
+                "bonus.wage-limits.json",
                 "companies.schedule-ii-limits.json",
                 "companies.schedule-ii-useful-lives.json",
+                "esi.average-daily-wage-divisors.json",
+                "esi.contribution-due-dates.json",
+                "esi.contribution-exemptions.json",
+                "esi.contribution-periods.json",
+                "esi.contribution-rates.json",
+                "esi.coverage-wage-limits.json",
+                "gratuity.rules.json",
                 "gst.central-tax-rates.json",
                 "gst.integrated-tax-rates.json",
                 "gst.quarterly-return-states.json",
@@ -42,6 +53,19 @@ public sealed class StatutorySeedFilesTests
                 "income-tax.tds-surcharge-and-cess.json",
                 "income-tax.tds-terms.json",
                 "income-tax.tds-threshold-limits.json",
+                "labour-codes.wage-definition.json",
+                "labour-welfare-fund.contributions.json",
+                "labour-welfare-fund.coverage.json",
+                "labour-welfare-fund.due-days.json",
+                "professional-tax.exemptions.json",
+                "professional-tax.levies.json",
+                "professional-tax.salary-slabs.json",
+                "provident-fund.charges.json",
+                "provident-fund.contribution-rates.json",
+                "provident-fund.due-dates.json",
+                "provident-fund.membership-limits.json",
+                "provident-fund.rounding.json",
+                "provident-fund.ten-per-cent-establishments.json",
             ],
             files.Select(file => file.FileName));
     }

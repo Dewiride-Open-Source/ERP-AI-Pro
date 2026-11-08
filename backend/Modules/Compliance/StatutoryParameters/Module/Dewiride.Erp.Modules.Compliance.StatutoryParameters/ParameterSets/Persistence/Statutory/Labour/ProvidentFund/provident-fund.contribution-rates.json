@@ -1,0 +1,429 @@
+{
+  "key": "provident-fund.contribution-rates",
+  "title": "Provident fund contribution rates",
+  "description": "The contributions to the Provident Fund, the Pension Fund and the Deposit-Linked Insurance Fund under section 16(1) of the Code on Social Security, 2020: who pays each, its per cent of the wages and the monthly wages it is counted on, in its instruments' words. From 1 April 2026 the Code, S.O. 3582(E), deemed in force from 21 November 2025, and the Employees' Provident Funds Scheme, 1952 and Employees' Pension Scheme, 1995, continued by section 164(2) of the Code, set them; from 29 June 2026 the Schemes of 2026, S.O. 3580(E) and S.O. 3581(E), the wage limit being the wage ceiling of S.O. 2702(E) and, from 17 September 2026, of S.O. 5109(E), save the Central Government's, which G.S.R. 890(E) keeps at ₹15,000. The ten per cent is for the establishments of provident-fund.ten-per-cent-establishments. The Insurance Fund's rate before 29 June 2026 was not read in an instrument. A wage month a version divides is split by the payroll as EPFO instructs.",
+  "basis": "law",
+  "asOf": "wageDate",
+  "columns": [
+    {
+      "name": "contribution",
+      "title": "Contribution",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Who pays it and into which fund",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "payer",
+      "title": "Paid by",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "employer",
+          "title": "The employer"
+        },
+        {
+          "value": "employee",
+          "title": "The employee"
+        },
+        {
+          "value": "centralGovernment",
+          "title": "The Central Government"
+        }
+      ]
+    },
+    {
+      "name": "fund",
+      "title": "Paid into",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "providentFund",
+          "title": "The Provident Fund"
+        },
+        {
+          "value": "pensionFund",
+          "title": "The Pension Fund"
+        },
+        {
+          "value": "insuranceFund",
+          "title": "The Deposit-Linked Insurance Fund"
+        }
+      ]
+    },
+    {
+      "name": "share",
+      "title": "How it is set",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "perCentOfWages",
+          "title": "A per cent of the wages"
+        },
+        {
+          "value": "equalToEmployers",
+          "title": "Equal to the employer's contribution"
+        },
+        {
+          "value": "partOfEmployers",
+          "title": "Part of the employer's contribution"
+        }
+      ]
+    },
+    {
+      "name": "rate",
+      "title": "Rate (per cent of the wages)",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "wagesUpTo",
+      "title": "Monthly wages counted up to (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "wagesAbove",
+      "title": "Applicable to monthly wages above (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "wording",
+      "title": "In the instruments' words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 16(1), and section 164(2), which keeps in force the schemes and notifications of the repealed Employees' Provident Funds and Miscellaneous Provisions Act, 1952",
+        "S.O. 5319(E), 21 November 2025, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025, No. 5739 of 20 December 2025: sections 16 and 164 in force from 21 November 2025, “except the provisions of the Code specified” in S.O. 2060(E), dated the 3rd May, 2023",
+        "S.O. 3582(E), 1 July 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 3447, under the first proviso to section 16(1)(a) of the Code, superseding S.O. 320(E) of 9 April 1997: “This notification shall be deemed to come into force from the 21st day of November, 2025.”",
+        "Employees' Provident Funds Scheme, 1952, paragraphs 26A and 29, and Employees' Pension Scheme, 1995, paragraph 3, with S.O. 2061(E) of 3 May 2023, as EPFO's consolidated texts print them, in force until the Schemes of 2026 superseded them on 29 June 2026"
+      ]
+    },
+    {
+      "from": "2026-06-29",
+      "instruments": [
+        "Employees' Provident Funds Scheme, 2026, G.S.R. 525(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 473, superseding the Employees' Provident Funds Scheme, 1952: “It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 703(E), 4 August 2026, No. 639",
+        "Employees' Pension Scheme, 2026, G.S.R. 527(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 475, superseding the Employees' Pension Scheme, 1995: “It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 704(E), 4 August 2026, No. 640",
+        "Employees' Deposit-Linked Insurance Scheme, 2026, G.S.R. 526(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 474, superseding the Employees' Deposit-Linked Insurance Scheme, 1976: “It shall come into force on the date of its publication in the Official Gazette.”",
+        "S.O. 3580(E), 1 July 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 3445, under section 16(1)(b)(i) and (ii) of the Code: “with effect from the commencement of Employees' Pension Scheme, 2026 i.e. 29th June, 2026.”",
+        "S.O. 3581(E), 1 July 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 3446, under section 16(1)(c) of the Code: “with effect from the commencement of Employees' Deposit Linked Insurance Scheme, 2026 i.e. 29th June, 2026.”",
+        "S.O. 2702(E), 29 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 2609, under section 2(89) of the Code: rupees fifteen thousand per month as the wage ceiling for the purposes of Chapter III, in force on its publication"
+      ]
+    },
+    {
+      "from": "2026-09-17",
+      "instruments": [
+        "S.O. 5109(E), 17 September 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 4918, under section 2(89) of the Code, superseding S.O. 2702(E): rupees twenty-five thousand per month as the wage ceiling for the purposes of Chapter III, “with effect from the date of publication of this notification in the Official Gazette.”",
+        "G.S.R. 890(E), 15 October 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 819, amending paragraph 4(2) of the Employees' Pension Scheme, 2026: “This notification shall come into force on the 17th September, 2026.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Code on Social Security, 2020, section 16(1)(a), first proviso; S.O. 3582(E), paragraph 1, deemed in force 21 November 2025; the wage limit of the Employees' Provident Funds Scheme, 1952, paragraph 26A, proviso, in EPFO's consolidated text, continued by section 164(2) of the Code",
+      "cells": {
+        "contribution": "provident-fund-employer",
+        "name": "The employer, into the Provident Fund",
+        "payer": "employer",
+        "fund": "providentFund",
+        "share": "perCentOfWages",
+        "rate": 12,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Code on Social Security, 2020, section 16(1)(a), first proviso: Provided that in its application to any establishment or class of establishments which the Central Government, after making such inquiry as it deems fit, may, by notification, specify, this section shall be subject to the modification that for the words “ten per cent.” at both the places where they occur, the words “twelve per cent.” shall be substituted: S.O. 3582(E), paragraph 1: … the Central Government after making necessary inquiry into the matter hereby specifies twelve percent as the contribution to be paid by the employer and the employees of every establishment covered under sub-sections (4), (5) and (6) of section 1 of the Code except specified herein of Employees' Provident Funds Scheme, 2026. Paragraph 3: This notification shall be deemed to come into force from the 21st day of November, 2025. Employees' Provident Funds Scheme, 1952, paragraph 26A, proviso: … where the monthly pay of such a member exceeds fifteen thousand rupees the contribution payable by him …"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Code on Social Security, 2020, section 16(1)(a); S.O. 3582(E), paragraph 2, deemed in force 21 November 2025; Employees' Provident Funds Scheme, 1952, paragraph 29 and the wage limit of paragraph 26A, proviso, in EPFO's consolidated text, continued by section 164(2) of the Code",
+      "cells": {
+        "contribution": "provident-fund-employer-ten-per-cent",
+        "name": "The employer of an establishment listed in paragraph 2 of S.O. 3582(E), into the Provident Fund",
+        "payer": "employer",
+        "fund": "providentFund",
+        "share": "perCentOfWages",
+        "rate": 10,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Code on Social Security, 2020, section 16(1)(a): … the contributions paid by the employer to the fund shall be ten per cent. of the wages for the time being payable to each of the employees (whether employed by him directly or by or through a contactor) … S.O. 3582(E), paragraph 2: The establishments to which the first proviso to clause (a) of sub-section (1) of section 16 of the Code on Social Security, 2020 (36 of 2020) shall not apply are as under,- Employees' Provident Funds Scheme, 1952, paragraph 29: The contributions payable by the employer under the Scheme shall be at the rate of ten per cent … Paragraph 26A, proviso: … where the monthly pay of such a member exceeds fifteen thousand rupees the contribution payable by him …"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Code on Social Security, 2020, section 16(1)(a), with its first proviso and S.O. 3582(E); the wage limit of the Employees' Provident Funds Scheme, 1952, paragraph 26A, proviso, in EPFO's consolidated text, continued by section 164(2) of the Code",
+      "cells": {
+        "contribution": "provident-fund-employee",
+        "name": "The employee, into the Provident Fund",
+        "payer": "employee",
+        "fund": "providentFund",
+        "share": "equalToEmployers",
+        "rate": null,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Code on Social Security, 2020, section 16(1)(a): … the employee's contribution shall be equal to the contribution payable by the employer in respect of him and may, if any employee so desires, be an amount exceeding ten per cent. of the wages, subject to the condition that the employer shall not be under an obligation to pay any contribution over and above his contribution payable under this section: Employees' Provident Funds Scheme, 1952, paragraph 26A, proviso: … where the monthly pay of such a member exceeds fifteen thousand rupees the contribution payable by him …"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Employees' Pension Scheme, 1995, paragraph 3(1) and the proviso to paragraph 3(2), printed as 4(1) and 4(2) in EPFO's consolidated text, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "contribution": "pension-fund-employer",
+        "name": "Part of the employer's contribution, into the Pension Fund",
+        "payer": "employer",
+        "fund": "pensionFund",
+        "share": "partOfEmployers",
+        "rate": 8.33,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Employees' Pension Scheme, 1995, paragraph 3(1): … a part of contribution representing 8.33 per cent. of the Employee's pay shall be remitted by the employer … Paragraph 3(2), proviso: Provided that where the pay of the member exceeds fifteen thousand rupees per month … limited to the amount payable on his pay of fifteen thousand rupees only."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023, continued by section 164(2) of the Code on Social Security, 2020; the wage limit as paragraph 4(2), second proviso, of the Employees' Pension Scheme, 2026 states it with effect from 1 September 2014",
+      "cells": {
+        "contribution": "pension-fund-employer-joint-option",
+        "name": "Part of the employer's contribution, into the Pension Fund, for a member who exercised the joint option",
+        "payer": "employer",
+        "fund": "pensionFund",
+        "share": "partOfEmployers",
+        "rate": 9.49,
+        "wagesUpTo": null,
+        "wagesAbove": 15000,
+        "wording": "Employees' Pension Scheme, 1995, as EPFO's consolidated text prints S.O. 2061(E) of 3 May 2023: … the employer's contribution shall be nine and forty-ninth per cent. (9.49%) of the basic wages … Employees' Pension Scheme, 2026, paragraph 4(2), second proviso: Provided further that with effect from 1st of September, 2014, in respect of members who have exercised joint option for contributing under the provisions of paragraph 11 of the erstwhile Employees' Pension Scheme, 1995 and are found eligible, the contribution of the employer shall be nine and forty-nine hundredths per cent. of the wages of each member by increasing it by one and sixteen hundredths per cent. from the extant eight and thirty-three hundredths per cent. and such increased contribution shall be applicable to wages exceeding fifteen thousand rupees per month."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Employees' Pension Scheme, 1995, paragraph 3(2) and its proviso, printed as 4(2) in EPFO's consolidated text, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "contribution": "pension-fund-central-government",
+        "name": "The Central Government, into the Pension Fund",
+        "payer": "centralGovernment",
+        "fund": "pensionFund",
+        "share": "perCentOfWages",
+        "rate": 1.16,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Employees' Pension Scheme, 1995, paragraph 3(2): The Central Government shall also contribute at the rate of 1.16 per cent. of the pay of the members … Proviso: Provided that where the pay of the member exceeds fifteen thousand rupees per month … limited to the amount payable on his pay of fifteen thousand rupees only."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "until": "2026-09-16",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 18(2) and (3), the latter as corrected by G.S.R. 703(E), item 8; the wage ceiling of S.O. 2702(E), 29 May 2026",
+      "cells": {
+        "contribution": "provident-fund-employer",
+        "name": "The employer, into the Provident Fund",
+        "payer": "employer",
+        "fund": "providentFund",
+        "share": "perCentOfWages",
+        "rate": 12,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 18(2): The employer's contribution, under this Scheme shall be at the rate of twelve per cent of the wages payable to the employee, to whom this Scheme applies and the employees' contribution shall be equal to the employer's contribution in respect of such employee: Paragraph 18(3), as corrected: The contribution payable in respect of a member other than international workers shall be subject to the wage ceiling limit, notified by the Central Government from time to time: Provided that subject to the provisions contained in sub-Paragraph (4) and (6) of paragraph 9, where the monthly wage of such a member exceeds the wage ceiling, the employer's contribution and the employees' contribution shall be limited to the contribution payable on the wage ceiling: S.O. 2702(E): … the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "until": "2026-09-16",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 18(2), first proviso, and 18(3), as corrected by G.S.R. 703(E), item 8; S.O. 3582(E), paragraph 2; the wage ceiling of S.O. 2702(E), 29 May 2026",
+      "cells": {
+        "contribution": "provident-fund-employer-ten-per-cent",
+        "name": "The employer of an establishment listed in paragraph 2 of S.O. 3582(E), into the Provident Fund",
+        "payer": "employer",
+        "fund": "providentFund",
+        "share": "perCentOfWages",
+        "rate": 10,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 18(2), first proviso: Provided that the rate of contribution shall be ten per cent in respect of the class of establishments notified by the Central Government in this regard: S.O. 3582(E), paragraph 2: The establishments to which the first proviso to clause (a) of sub-section (1) of section 16 of the Code on Social Security, 2020 (36 of 2020) shall not apply are as under,- Paragraph 18(3), as corrected: The contribution payable in respect of a member other than international workers shall be subject to the wage ceiling limit, notified by the Central Government from time to time: Provided that subject to the provisions contained in sub-Paragraph (4) and (6) of paragraph 9, where the monthly wage of such a member exceeds the wage ceiling, the employer's contribution and the employees' contribution shall be limited to the contribution payable on the wage ceiling: S.O. 2702(E): … the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "until": "2026-09-16",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 18(2) and (3), the latter as corrected by G.S.R. 703(E), item 8; the wage ceiling of S.O. 2702(E), 29 May 2026",
+      "cells": {
+        "contribution": "provident-fund-employee",
+        "name": "The employee, into the Provident Fund",
+        "payer": "employee",
+        "fund": "providentFund",
+        "share": "equalToEmployers",
+        "rate": null,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 18(2): … the employees' contribution shall be equal to the employer's contribution in respect of such employee: Paragraph 18(3), as corrected: The contribution payable in respect of a member other than international workers shall be subject to the wage ceiling limit, notified by the Central Government from time to time: Provided that subject to the provisions contained in sub-Paragraph (4) and (6) of paragraph 9, where the monthly wage of such a member exceeds the wage ceiling, the employer's contribution and the employees' contribution shall be limited to the contribution payable on the wage ceiling: S.O. 2702(E): … the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "until": "2026-09-16",
+      "source": "Employees' Pension Scheme, 2026, paragraph 4(1) and the first proviso to 4(2); the wage ceiling of S.O. 2702(E). The rate held is that of paragraph 4(1), which directs the remittance; S.O. 3580(E), under section 16(1)(b) of the Code, writes it “eight and one-third per cent.”",
+      "cells": {
+        "contribution": "pension-fund-employer",
+        "name": "Part of the employer's contribution, into the Pension Fund",
+        "payer": "employer",
+        "fund": "pensionFund",
+        "share": "partOfEmployers",
+        "rate": 8.33,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Employees' Pension Scheme, 2026, paragraph 4(1): From and out of the contributions payable by the employer in each month under clause (a) of sub-section (1) of section 16 of the Code or under the rules of the Provident Fund of the establishment which is exempted under section 143 of the Code, a part of contribution of eight and thirty-three hundredths per cent. of the wages of employee up to wage ceiling notified by the Central Government, shall be remitted by the employer to the Pension Fund within fifteen days of the close of every month in the account of the Central Board and the cost of the remittance, if any, shall be borne by the employer. Paragraph 4(2), first proviso: Provided that where the wage of the member exceeds the wage ceiling notified by the Central Government, the contribution payable by the employer and the Central Government shall be limited to the amount payable on wages up to such wage ceiling : S.O. 3580(E): … the Central Government hereby notifies eight and one-third per cent. of the wages for the time being payable in relation to his employees as the rate of contribution which shall be payable every month by the employer to the Pension Fund, established under the Code with effect from the commencement of Employees' Pension Scheme, 2026 i.e. 29th June, 2026. S.O. 2702(E): … the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "Employees' Pension Scheme, 2026, paragraph 4(2), second proviso",
+      "cells": {
+        "contribution": "pension-fund-employer-joint-option",
+        "name": "Part of the employer's contribution, into the Pension Fund, for a member who exercised the joint option",
+        "payer": "employer",
+        "fund": "pensionFund",
+        "share": "partOfEmployers",
+        "rate": 9.49,
+        "wagesUpTo": null,
+        "wagesAbove": 15000,
+        "wording": "Employees' Pension Scheme, 2026, paragraph 4(2), second proviso: Provided further that with effect from 1st of September, 2014, in respect of members who have exercised joint option for contributing under the provisions of paragraph 11 of the erstwhile Employees' Pension Scheme, 1995 and are found eligible, the contribution of the employer shall be nine and forty-nine hundredths per cent. of the wages of each member by increasing it by one and sixteen hundredths per cent. from the extant eight and thirty-three hundredths per cent. and such increased contribution shall be applicable to wages exceeding fifteen thousand rupees per month."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "until": "2026-09-16",
+      "source": "Employees' Pension Scheme, 2026, paragraph 4(2) and its first proviso, “pay” read “wages” by G.S.R. 704(E), item 2; the wage ceiling of S.O. 2702(E), 29 May 2026, no sum the Central Government specified under paragraph 4(2) having been found",
+      "cells": {
+        "contribution": "pension-fund-central-government",
+        "name": "The Central Government, into the Pension Fund",
+        "payer": "centralGovernment",
+        "fund": "pensionFund",
+        "share": "perCentOfWages",
+        "rate": 1.16,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Employees' Pension Scheme, 2026, paragraph 4(2), as corrected: The Central Government shall contribute to the Scheme at the rate of one and sixteen hundredths per cent. of the wages of the members of the Employees' Pension Scheme, limited to such sum as may be specified by the Central Government : Provided that where the wage of the member exceeds the wage ceiling notified by the Central Government, the contribution payable by the employer and the Central Government shall be limited to the amount payable on wages up to such wage ceiling : S.O. 2702(E): … the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "until": "2026-09-16",
+      "source": "S.O. 3581(E), under section 16(1)(c) of the Code on Social Security, 2020, in force 29 June 2026; Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 5(1) and (2); the wage ceiling of S.O. 2702(E), 29 May 2026",
+      "cells": {
+        "contribution": "insurance-fund-employer",
+        "name": "The employer, into the Deposit-Linked Insurance Fund",
+        "payer": "employer",
+        "fund": "insuranceFund",
+        "share": "perCentOfWages",
+        "rate": 0.5,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "S.O. 3581(E): … the Central Government hereby specifies one-half per cent of the wages for the time being payable in relation to his employee as the rate of contribution which shall be payable every month by the employer to the Insurance Fund established under the said Code and with effect from the commencement of Employees' Deposit Linked Insurance Scheme, 2026 i.e. 29th June, 2026. Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 5(1): The contribution payable by the employer under clause (c) of sub-section (1) of section 16 of the Code to the Deposit Linked Insurance Fund, shall be calculated on the basis of the wages as defined in clause (88) of section 2 of the Code, subject to the wage ceiling specified in clause (89) of section 2 of the Code. Paragraph 5(2): The rate of contribution shall be notified by the Central Government in consultation with the Central Board from time to time taking into account the actuarial valuation of the Insurance Fund. S.O. 2702(E): … the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 18(2) and (3), the latter as corrected by G.S.R. 703(E), item 8; the wage ceiling of S.O. 5109(E), 17 September 2026",
+      "cells": {
+        "contribution": "provident-fund-employer",
+        "name": "The employer, into the Provident Fund",
+        "payer": "employer",
+        "fund": "providentFund",
+        "share": "perCentOfWages",
+        "rate": 12,
+        "wagesUpTo": 25000,
+        "wagesAbove": null,
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 18(2): The employer's contribution, under this Scheme shall be at the rate of twelve per cent of the wages payable to the employee, to whom this Scheme applies and the employees' contribution shall be equal to the employer's contribution in respect of such employee: Paragraph 18(3), as corrected: The contribution payable in respect of a member other than international workers shall be subject to the wage ceiling limit, notified by the Central Government from time to time: Provided that subject to the provisions contained in sub-Paragraph (4) and (6) of paragraph 9, where the monthly wage of such a member exceeds the wage ceiling, the employer's contribution and the employees' contribution shall be limited to the contribution payable on the wage ceiling: S.O. 5109(E): … the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 18(2), first proviso, and 18(3), as corrected by G.S.R. 703(E), item 8; S.O. 3582(E), paragraph 2; the wage ceiling of S.O. 5109(E), 17 September 2026",
+      "cells": {
+        "contribution": "provident-fund-employer-ten-per-cent",
+        "name": "The employer of an establishment listed in paragraph 2 of S.O. 3582(E), into the Provident Fund",
+        "payer": "employer",
+        "fund": "providentFund",
+        "share": "perCentOfWages",
+        "rate": 10,
+        "wagesUpTo": 25000,
+        "wagesAbove": null,
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 18(2), first proviso: Provided that the rate of contribution shall be ten per cent in respect of the class of establishments notified by the Central Government in this regard: S.O. 3582(E), paragraph 2: The establishments to which the first proviso to clause (a) of sub-section (1) of section 16 of the Code on Social Security, 2020 (36 of 2020) shall not apply are as under,- Paragraph 18(3), as corrected: The contribution payable in respect of a member other than international workers shall be subject to the wage ceiling limit, notified by the Central Government from time to time: Provided that subject to the provisions contained in sub-Paragraph (4) and (6) of paragraph 9, where the monthly wage of such a member exceeds the wage ceiling, the employer's contribution and the employees' contribution shall be limited to the contribution payable on the wage ceiling: S.O. 5109(E): … the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 18(2) and (3), the latter as corrected by G.S.R. 703(E), item 8; the wage ceiling of S.O. 5109(E), 17 September 2026",
+      "cells": {
+        "contribution": "provident-fund-employee",
+        "name": "The employee, into the Provident Fund",
+        "payer": "employee",
+        "fund": "providentFund",
+        "share": "equalToEmployers",
+        "rate": null,
+        "wagesUpTo": 25000,
+        "wagesAbove": null,
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 18(2): … the employees' contribution shall be equal to the employer's contribution in respect of such employee: Paragraph 18(3), as corrected: The contribution payable in respect of a member other than international workers shall be subject to the wage ceiling limit, notified by the Central Government from time to time: Provided that subject to the provisions contained in sub-Paragraph (4) and (6) of paragraph 9, where the monthly wage of such a member exceeds the wage ceiling, the employer's contribution and the employees' contribution shall be limited to the contribution payable on the wage ceiling: S.O. 5109(E): … the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "Employees' Pension Scheme, 2026, paragraph 4(1), and the first proviso to 4(2) as amended by G.S.R. 890(E), clause (ii); the wage ceiling of S.O. 5109(E). The rate held is that of paragraph 4(1), which directs the remittance; S.O. 3580(E), under section 16(1)(b) of the Code, writes it “eight and one-third per cent.”",
+      "cells": {
+        "contribution": "pension-fund-employer",
+        "name": "Part of the employer's contribution, into the Pension Fund",
+        "payer": "employer",
+        "fund": "pensionFund",
+        "share": "partOfEmployers",
+        "rate": 8.33,
+        "wagesUpTo": 25000,
+        "wagesAbove": null,
+        "wording": "Employees' Pension Scheme, 2026, paragraph 4(1): From and out of the contributions payable by the employer in each month under clause (a) of sub-section (1) of section 16 of the Code or under the rules of the Provident Fund of the establishment which is exempted under section 143 of the Code, a part of contribution of eight and thirty-three hundredths per cent. of the wages of employee up to wage ceiling notified by the Central Government, shall be remitted by the employer to the Pension Fund within fifteen days of the close of every month in the account of the Central Board and the cost of the remittance, if any, shall be borne by the employer. Paragraph 4(2), first proviso, as amended: Provided that where the wage of the member exceeds the wage ceiling notified by the Central Government, the contribution payable by the employer shall be limited to the amount payable on wages up to such wage ceiling : S.O. 3580(E): … the Central Government hereby notifies eight and one-third per cent. of the wages for the time being payable in relation to his employees as the rate of contribution which shall be payable every month by the employer to the Pension Fund, established under the Code with effect from the commencement of Employees' Pension Scheme, 2026 i.e. 29th June, 2026. S.O. 5109(E): … the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "Employees' Pension Scheme, 2026, paragraph 4(2), “pay” read “wages” by G.S.R. 704(E), item 2, as amended by G.S.R. 890(E), clauses (i) and (ii), in force 17 September 2026",
+      "cells": {
+        "contribution": "pension-fund-central-government",
+        "name": "The Central Government, into the Pension Fund",
+        "payer": "centralGovernment",
+        "fund": "pensionFund",
+        "share": "perCentOfWages",
+        "rate": 1.16,
+        "wagesUpTo": 15000,
+        "wagesAbove": null,
+        "wording": "Employees' Pension Scheme, 2026, paragraph 4(2), as corrected and amended: The Central Government shall contribute to the Scheme at the rate of one and sixteen hundredths per cent. of the wages of the members of the Employees' Pension Scheme, limited to wages upto rupees fifteen thousand (Rs. 15,000/-) per month : G.S.R. 890(E): In the said Scheme, in paragraph 4, in sub-paragraph (2),- (i) for the words “such sum as may be specified by the Central Government”, the words “wages upto rupees fifteen thousand (Rs. 15,000/-) per month” shall be substituted; (ii) in the first proviso, the words “and the Central Government” shall be omitted. 2. This notification shall come into force on the 17th September, 2026."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "S.O. 3581(E), under section 16(1)(c) of the Code on Social Security, 2020, in force 29 June 2026; Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 5(1) and (2); the wage ceiling of S.O. 5109(E), 17 September 2026",
+      "cells": {
+        "contribution": "insurance-fund-employer",
+        "name": "The employer, into the Deposit-Linked Insurance Fund",
+        "payer": "employer",
+        "fund": "insuranceFund",
+        "share": "perCentOfWages",
+        "rate": 0.5,
+        "wagesUpTo": 25000,
+        "wagesAbove": null,
+        "wording": "S.O. 3581(E): … the Central Government hereby specifies one-half per cent of the wages for the time being payable in relation to his employee as the rate of contribution which shall be payable every month by the employer to the Insurance Fund established under the said Code and with effect from the commencement of Employees' Deposit Linked Insurance Scheme, 2026 i.e. 29th June, 2026. Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 5(1): The contribution payable by the employer under clause (c) of sub-section (1) of section 16 of the Code to the Deposit Linked Insurance Fund, shall be calculated on the basis of the wages as defined in clause (88) of section 2 of the Code, subject to the wage ceiling specified in clause (89) of section 2 of the Code. Paragraph 5(2): The rate of contribution shall be notified by the Central Government in consultation with the Central Board from time to time taking into account the actuarial valuation of the Insurance Fund. S.O. 5109(E): … the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    }
+  ]
+}

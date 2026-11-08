@@ -17,8 +17,19 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
 
     private static readonly string[] SeededKeys =
     [
+        "bonus.prior-charges",
+        "bonus.rules",
+        "bonus.state-wage-limit-readings",
+        "bonus.wage-limits",
         "companies.schedule-ii-limits",
         "companies.schedule-ii-useful-lives",
+        "esi.average-daily-wage-divisors",
+        "esi.contribution-due-dates",
+        "esi.contribution-exemptions",
+        "esi.contribution-periods",
+        "esi.contribution-rates",
+        "esi.coverage-wage-limits",
+        "gratuity.rules",
         "gst.central-tax-rates",
         "gst.integrated-tax-rates",
         "gst.quarterly-return-states",
@@ -47,6 +58,19 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
         "income-tax.tds-surcharge-and-cess",
         "income-tax.tds-terms",
         "income-tax.tds-threshold-limits",
+        "labour-codes.wage-definition",
+        "labour-welfare-fund.contributions",
+        "labour-welfare-fund.coverage",
+        "labour-welfare-fund.due-days",
+        "professional-tax.exemptions",
+        "professional-tax.levies",
+        "professional-tax.salary-slabs",
+        "provident-fund.charges",
+        "provident-fund.contribution-rates",
+        "provident-fund.due-dates",
+        "provident-fund.membership-limits",
+        "provident-fund.rounding",
+        "provident-fund.ten-per-cent-establishments",
     ];
 
     [Theory]
@@ -174,6 +198,30 @@ public sealed class ParameterSetEndpointsTests(ErpApiFactory factory)
         Assert.Contains("\"kind\":\"stateCode\"", body, StringComparison.Ordinal);
         Assert.Contains("\"asOf\":\"taxPeriodStart\"", body, StringComparison.Ordinal);
         Assert.DoesNotContain("references", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Get_SetOfStateCodes_NamesTheStateOfEachStateCodeCellAndNoOtherCell()
+    {
+        using var client = Administrator();
+
+        var set = await ParameterSetsApi.GetAsync(client, "gst.quarterly-return-states");
+
+        var rows = Assert.IsType<ParameterVersionResponse>(set.Shown).Rows;
+        Assert.Equal(
+            [("stateCode", "Maharashtra"), ("listedAs", null), ("rule", null)],
+            Assert.Single(rows, row => row.Key == "27").Cells.Select(cell => (cell.Column, cell.StateName)));
+        Assert.All(rows, row => Assert.False(string.IsNullOrEmpty(row.Cells.Single(cell => cell.Column == "stateCode").StateName)));
+    }
+
+    [Fact]
+    public async Task Get_SetWithoutStateCodes_NamesNoState()
+    {
+        using var client = Administrator();
+
+        var set = await ParameterSetsApi.GetAsync(client, CentralTaxRates);
+
+        Assert.All(Assert.IsType<ParameterVersionResponse>(set.Shown).Rows.SelectMany(row => row.Cells), cell => Assert.Null(cell.StateName));
     }
 
     [Theory]

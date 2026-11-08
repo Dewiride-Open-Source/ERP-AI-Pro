@@ -150,8 +150,8 @@ test("setDetailOf_AnsweredSet_KeepsItsColumnsVersionsAndTheShownVersionWithItsCh
         until: "2025-03-31",
         source: "Order 1 of 2023, item a",
         cells: [
-          { column: "code", value: "a" },
-          { column: "note", value: null },
+          { column: "code", value: "a", stateName: null },
+          { column: "note", value: null, stateName: null },
         ],
       },
       after: {
@@ -160,12 +160,21 @@ test("setDetailOf_AnsweredSet_KeepsItsColumnsVersionsAndTheShownVersionWithItsCh
         until: null,
         source: "Order 1 of 2023, item a",
         cells: [
-          { column: "code", value: "a" },
-          { column: "note", value: "first" },
+          { column: "code", value: "a", stateName: null },
+          { column: "note", value: "first", stateName: null },
         ],
       },
     },
   ]);
+});
+
+test("setDetailOf_StateCodeCell_KeepsTheNameOfItsState", () => {
+  const answered = row("a", "2025-04-01", null, "first");
+  const named = { ...answered, cells: [{ column: "code", value: "27", stateName: "Maharashtra" }] };
+
+  const set = setDetailOf({ ...detail, shown: { ...detail.shown, rows: [named], changed: [] } });
+
+  assert.deepEqual(set.shown?.rows[0]?.cells, [{ column: "code", value: "27", stateName: "Maharashtra" }]);
 });
 
 test("setDetailOf_DayBeforeTheFirstVersion_ShowsNoVersion", () => {

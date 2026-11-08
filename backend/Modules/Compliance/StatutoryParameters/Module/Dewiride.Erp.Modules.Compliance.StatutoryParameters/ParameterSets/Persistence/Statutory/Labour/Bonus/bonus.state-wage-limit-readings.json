@@ -1,0 +1,471 @@
+{
+  "key": "bonus.state-wage-limit-readings",
+  "title": "Bonus wage limits of the States and Union territories, as the ERP reads them",
+  "description": "The ERP's reading, not a government table: the bonus wage limits of an establishment for which a State Government is the appropriate Government (Code on Wages, 2019, section 2(d)(ii)), a Union territory being a State (section 2(w)), while no notification of that State under section 26(1) or (2) is held. Section 69(2) keeps in force “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 until it is repealed under the Code, so each row holds that Act's eligibility limit (section 2(13)) and its calculation wage, or the minimum wage if higher (section 12), as the Payment of Bonus (Amendment) Act, 2015 set them. Bihar has no row: notifications of its own under section 26, reported for 30 October 2026, are not yet read. A State's own notification under section 26 replaces its row in a later release, as a row of bonus.wage-limits. The set answers for the last day of the accounting year a bonus is for, from the year 2026-27.",
+  "basis": "interpretation",
+  "asOf": "accountingYearEnd",
+  "columns": [
+    {
+      "name": "stateCode",
+      "title": "State or Union territory",
+      "kind": "stateCode",
+      "key": true
+    },
+    {
+      "name": "eligibilityLimit",
+      "title": "Eligibility limit (₹ a month)",
+      "kind": "amount"
+    },
+    {
+      "name": "calculationWage",
+      "title": "Calculation wage (₹ a month)",
+      "kind": "amount"
+    },
+    {
+      "name": "eligibilityWording",
+      "title": "Eligibility limit, in the amending Act's words",
+      "kind": "text"
+    },
+    {
+      "name": "calculationWording",
+      "title": "Calculation wage, in the amending Act's words",
+      "kind": "text"
+    },
+    {
+      "name": "why",
+      "title": "Why the ERP reads it so",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Code on Wages, 2019 (No. 29 of 2019), 8 August 2019, Gazette of India, Extraordinary, Part II, Section 1, No. 48: sections 2(d), 2(w), 26(1) and (2) and 69, in force from 21 November 2025 by S.O. 5322(E) of that day (Part II, Section 3(ii), No. 5146), section 69 “except the provisions of the Code mentioned at serial number 3 of S.O. 4604 (E), dated the 18th December, 2020”",
+        "Payment of Bonus (Amendment) Act, 2015 (No. 6 of 2016), 31 December 2015, Gazette of India, Extraordinary, Part II, Section 1, No. 6, 1 January 2016: sections 2 and 3(i), amending sections 2(13) and 12 of the Payment of Bonus Act, 1965; section 1(2): “It shall be deemed to have come into force on the 1st day of April, 2014.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "01",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "02",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "03",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "04",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "05",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "06",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them; Labour Department, Government of NCT of Delhi, advisory F.No. 15(46)/Lab/2020/800-805, 2 November 2026, for the accounting year 2025-26: “The wage ceiling of ₹21,000 is still applicable in GNCTD.”",
+      "cells": {
+        "stateCode": "07",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held. The Labour Department of the Government of NCT of Delhi reads it so in its advisory of 2 November 2026: “The wage ceiling of ₹21,000 is still applicable in GNCTD.”"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "08",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "09",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "11",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "12",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "13",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "14",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "15",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "16",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "17",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "18",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "19",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "20",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "21",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "22",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "23",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "24",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "26",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "27",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "29",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "30",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "31",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "32",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "33",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "34",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "35",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "36",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "37",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 2(d)(ii), 2(w) and 69(2); Payment of Bonus Act, 1965, sections 2(13) and 12, as the Payment of Bonus (Amendment) Act, 2015, sections 2 and 3(i), amended them",
+      "cells": {
+        "stateCode": "38",
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In section 2 of the Payment of Bonus Act, 1965 (hereinafter referred to as the principal Act), in clause (13), for the words “ten thousand rupees”, the words “twenty-one thousand rupees” shall be substituted.",
+        "calculationWording": "In section 12 of the principal Act,— (i) for the words “three thousand and five hundred rupees” at both the places where they occur, the words “seven thousand rupees or the minimum wage for the scheduled employment, as fixed by the appropriate Government, whichever is higher” shall respectively be substituted;",
+        "why": "Section 69(2) of the Code on Wages, 2019 keeps “any amount of wages provided in any provision” of the repealed Payment of Bonus Act, 1965 in force “to the extent they are not contrary to the provisions of this Code till they are repealed under the corresponding provisions of this Code or by the notification to that effect by the Central Government”, and no notification of this State or Union territory under section 26(1) or (2) is held."
+      }
+    }
+  ]
+}

@@ -1,0 +1,465 @@
+{
+  "key": "professional-tax.exemptions",
+  "title": "Professional tax: exemptions of salary and wage earners",
+  "description": "The salary and wage earners that each State's Act or exemption notification keeps out of the tax on professions, trades, callings and employments, from 1 April 2026, keyed by the GST State code and the provision: the classes it exempts, the persons its definition leaves out (casual wage earners among them) and the conditions under which no tax is payable, each in the instrument's words, with the age, the income or the days of employment its condition names; the age test says whether a person must have attained the age or be above it, and “…” marks words the ERP's copy leaves out. A State or class without a row is one whose text the ERP has not read or does not hold, which says nothing of whether it is exempt. The tax period is the month or year the tax is for, and the set answers for its first day.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "exemption",
+      "title": "Exemption",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "stateCode",
+      "title": "State",
+      "kind": "stateCode"
+    },
+    {
+      "name": "name",
+      "title": "Who, in the ERP's words",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "words",
+      "title": "In the instrument's words",
+      "kind": "text"
+    },
+    {
+      "name": "age",
+      "title": "Age (years)",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 0
+    },
+    {
+      "name": "ageTest",
+      "title": "Age test",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "attained",
+          "title": "Has attained or completed the age"
+        },
+        {
+          "value": "above",
+          "title": "Is above the age"
+        }
+      ]
+    },
+    {
+      "name": "incomeUpTo",
+      "title": "Income up to (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "daysUpTo",
+      "title": "Days of employment in the year, at most",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Punjab State Development Tax Act, 2018 (Punjab Act No. 11 of 2018), Punjab Government Gazette Extraordinary, 19 April 2018, sections 2(j), proviso, and 4(2) and (3), in force from its publication in the Official Gazette (section 1(3))",
+        "Mizoram Professions, Trades, Callings and Employments Taxation Act, 1995 (Mizoram Act No. 7 of 1995), section 5, proviso, in the Taxation Department's copy of the Act as enacted",
+        "Tripura Professions, Trades, Callings and Employments Taxation Act, 1997 (Tripura Act No. 3 of 1997), Tripura Gazette Extraordinary, 1 September 1997, sections 2(f) and 27(1)",
+        "Assam Professions, Trades, Callings and Employments Taxation Act, 1947 (Assam Act VI of 1947), section 3, second proviso, as consolidated by the Commissionerate of Taxes, with the Explanation inserted by Assam Act No. XXVIII of 2021, notification No. LGL.55/2005/46, Assam Gazette Extraordinary No. 419, 16 September 2021, in force at once",
+        "Notification No. FTX.76/2006/2, Finance (Taxation) Department, Assam, 4 November 2006, Assam Gazette Extraordinary No. 257, 10 November 2006, under the third proviso to section 3 of the Assam Professions, Trades, Callings and Employments Taxation Act, 1947, in force from 1 April 2006",
+        "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979 (West Bengal Act VI of 1979), sections 2(f) and 26(1), as consolidated by the Directorate of Commercial Taxes",
+        "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975 (Mah. XVI of 1975), sections 2(e) and 27A, text as on 16 July 2025, as consolidated by the Goods and Services Tax Department",
+        "Maharashtra State Tax on Professions, Trades, Callings and Employments (Amendment) Act, 2023 (Mah. Act No. XIX of 2023), first published 6 April 2023, section 2(1), substituting section 27A(c), in force 1 April 2023 (section 1(2))",
+        "Maharashtra Tax Laws (Amendment) Act, 2024 (Mah. Act No. XXXII of 2024), first published 31 July 2024, section 5, substituting section 27A(h), in force 1 September 2024 by Notification No. PTA-2024/C.R.19/Taxation-3, Finance Department, 9 August 2024",
+        "Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976 (Karnataka Act 35 of 1976), sections 2(h) and 3(2), first and third provisos, as consolidated by the Commercial Taxes Department",
+        "Notification-2, No. FD 09 CPT 2023, Finance Department, Karnataka, 13 July 2023, Karnataka Gazette Extraordinary Part IV-A No. 321, under section 29 of the Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976, exempting “with effect from the date of publication in the Gazette”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Punjab State Development Tax Act, 2018, section 2(j), proviso",
+      "cells": {
+        "exemption": "03-2(j).proviso",
+        "stateCode": "03",
+        "name": "Persons who earn wages on a casual basis",
+        "words": "Provided that any person who earns wages on a casual basis and an agriculturist or a member of his family, who sells within the State of Punjab exclusively the agricultural produce, grown on any land inside the State of Punjab in which he has an interest, whether as owner, mortgagee, tenant or otherwise, shall not be deemed to be a person.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Punjab State Development Tax Act, 2018, section 4(2)",
+      "cells": {
+        "exemption": "03-4(2)",
+        "stateCode": "03",
+        "name": "Senior citizens, as the Income Tax Act, 1961 exempts them",
+        "words": "Every person, engaged in any profession, trade, calling or employment and falling under any class mentioned in the Schedule, shall be liable to pay the tax at rates mentioned in the Schedule from time to time. Senior citizens shall, however, be exempted as per the Income Tax Act, 1961.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Punjab State Development Tax Act, 2018, section 4(3)",
+      "cells": {
+        "exemption": "03-4(3)",
+        "stateCode": "03",
+        "name": "Persons who are not income tax payees for the financial year",
+        "words": "The tax under this Act shall be levied on the persons in the categories mentioned in the Schedule only if they are income tax payees i.e. the tax, for any particular financial year, shall be payable under this Act only by those persons whose taxable income for the same financial year, before allowing deduction on account of tax levied under this Act, exceeds the maximum amount which is not chargeable to Income Tax by the amount of tax payable by him under this Act for that year:",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Mizoram Professions, Trades, Callings and Employments Taxation Act, 1995, section 5, proviso",
+      "cells": {
+        "exemption": "15-5.proviso",
+        "stateCode": "15",
+        "name": "Members of the Armed Forces of India",
+        "words": "Provided that the provision of this Act shall not apply to a member of the Armed Forces of India or to a Co-operative Society registered or deemed to have been registered under the Mizoram Co-operative Societies Act, 1991.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Tripura Professions, Trades, Callings and Employments Taxation Act, 1997, section 2(f)",
+      "cells": {
+        "exemption": "16-2(f)",
+        "stateCode": "16",
+        "name": "Persons who earn wages on a casual basis",
+        "words": "“person” means any person who is engaged in any profession, trade, calling or employment in Tripura and includes … so engaged, but does not include any person who earns wages on a casual basis;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Tripura Professions, Trades, Callings and Employments Taxation Act, 1997, section 27(1)",
+      "cells": {
+        "exemption": "16-27(1)",
+        "stateCode": "16",
+        "name": "Members of the Army, Navy and Air Force serving in Tripura",
+        "words": "Nothing contained in this Act shall apply to the persons who are subject to the Army Act, 1950, the Navy Act, 1957 or the Air Force Act, 1950 and are serving in any part of Tripura.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Assam Professions, Trades, Callings and Employments Taxation Act, 1947, section 3, second proviso, with the Explanation inserted by Assam Act No. XXVIII of 2021",
+      "cells": {
+        "exemption": "18-3.proviso(2)",
+        "stateCode": "18",
+        "name": "Members of the Armed Forces of India serving or posted in Assam",
+        "words": "Provided further that notwithstanding anything contained in this section the provisions of this Act shall not apply to a member of the Armed forces of India and to a Co-operative Society registered or deemed to have been registered under the Assam Co-operative Societies Act, 1947:",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. FTX.76/2006/2, Finance (Taxation) Department, Assam, 4 November 2006, under the third proviso to section 3 of the Assam Professions, Trades, Callings and Employments Taxation Act, 1947",
+      "cells": {
+        "exemption": "18-FTX.76-2006-2",
+        "stateCode": "18",
+        "name": "Persons above sixty whose gross income does not exceed ₹5 lakh in the financial year",
+        "words": "any person above the age of 60 years … subject to the condition that his gross income does not exceed Rs.5.00 lakhs in a financial year",
+        "age": 60,
+        "ageTest": "above",
+        "incomeUpTo": 500000,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979, section 2(f) and its Explanation",
+      "cells": {
+        "exemption": "19-2(f)",
+        "stateCode": "19",
+        "name": "Persons who earn wages on a casual basis, employed for 180 days or less in a year",
+        "words": "“person” means any person who is engaged in any profession, trade, calling or employment in West Bengal, and includes a Hindu undivided family, firm, company, corporation or other corporate body, any society, club or association, so engaged, but does not include any person who earns wages on a casual basis; Explanation.-The expression “person who earns wages on casual basis” shall mean a person who earns wages on being employed for a period not exceeding 180 days in a year.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": 180
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979, section 26(1)",
+      "cells": {
+        "exemption": "19-26(1)",
+        "stateCode": "19",
+        "name": "Members of the Army, Navy and Air Force serving in West Bengal",
+        "words": "Nothing contained in this Act shall apply to the persons who are subject to the Army Act, 1950, the Navy Act, 1957 or the Air Force Act, 1950 and are serving in any part of West Bengal.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, section 2(e), text as on 16 July 2025",
+      "cells": {
+        "exemption": "27-2(e)",
+        "stateCode": "27",
+        "name": "Persons who earn wages on a casual basis",
+        "words": "“person” means any person who is engaged actively or otherwise in any profession, trade, calling or employment in the State of Maharashtra and includes … so engaged, but does not include any person who earns wages on a casual basis;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, section 27A(a) and its Explanation, text as on 16 July 2025",
+      "cells": {
+        "exemption": "27-27A(a)",
+        "stateCode": "27",
+        "name": "Members of the Army, Air Force and Navy serving in Maharashtra",
+        "words": "Nothing contained in section 3 and other provisions of this Act shall apply to,— (a) the members of the forces as defined in the Army Act, 1950 (46 of 1950) or the Air Force Act, 1950 (45 of 1950) and the members of Indian Navy as defined in the Navy Act, 1957 (62 of 1957) serving in any part of the State and drawing pay and allowance as Army or Air Force or Navy, as the case may be, including the members of auxiliary forces or reservists or reserve and auxiliary services serving in any part of the State and drawing pay and allowances as such auxiliary forces or reservists, or reserve and auxiliary services, as the case may be, under the budgetary allocations of the Defence Services. Explanation.— It is hereby declared for the removal of doubts that nothing in this clause shall apply or shall be taken to have applied, during any period starting on or after the 1st May 2000, to persons drawing pay and allowances from the establishments of the Defence Ordinance Factories situated in any part of the State.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, section 27A(b), text as on 16 July 2025",
+      "cells": {
+        "exemption": "27-27A(b)",
+        "stateCode": "27",
+        "name": "Badli workers in the textile industry",
+        "words": "Nothing contained in section 3 and other provisions of this Act shall apply to,— (b) the badli workers in the textile industry.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, section 27A(c)(i) and its provisos, as substituted by Mah. Act No. XIX of 2023, section 2(1)",
+      "cells": {
+        "exemption": "27-27A(c)(i)",
+        "stateCode": "27",
+        "name": "Persons with a benchmark disability",
+        "words": "Nothing contained in section 3 and other provisions of this Act shall apply to,— (c) (i) any person with benchmark disability as defined in clause (r) of section 2 of the Rights of Persons with Disabilities Act, 2016; or (ii) parents or guardians of a child with a benchmark disability, provided such person or child with benchmark disability holds the certificate of disability issued by the certifying authority under the said Act or the rules made thereunder : Provided that, such individual or, as the case may be, employer produces the aforesaid certificate before the prescribed authority in respect of the first assessment year for which he claims exemption under this clause: Provided further that, an individual or, as the case may be, employer who has already produced a certificate before the prescribed authority for the purposes of this section, as it stood immediately before the 1st April 2023, shall not be required to produce it again;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, section 27A(c)(ii) and its provisos, as substituted by Mah. Act No. XIX of 2023, section 2(1)",
+      "cells": {
+        "exemption": "27-27A(c)(ii)",
+        "stateCode": "27",
+        "name": "Parents or guardians of a child with a benchmark disability",
+        "words": "Nothing contained in section 3 and other provisions of this Act shall apply to,— (c) (i) any person with benchmark disability as defined in clause (r) of section 2 of the Rights of Persons with Disabilities Act, 2016; or (ii) parents or guardians of a child with a benchmark disability, provided such person or child with benchmark disability holds the certificate of disability issued by the certifying authority under the said Act or the rules made thereunder : Provided that, such individual or, as the case may be, employer produces the aforesaid certificate before the prescribed authority in respect of the first assessment year for which he claims exemption under this clause: Provided further that, an individual or, as the case may be, employer who has already produced a certificate before the prescribed authority for the purposes of this section, as it stood immediately before the 1st April 2023, shall not be required to produce it again;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, section 27A(d), text as on 16 July 2025",
+      "cells": {
+        "exemption": "27-27A(d)",
+        "stateCode": "27",
+        "name": "Women agents of the Mahila Pradhan Kshetriya Bachat Yojana",
+        "words": "Nothing contained in section 3 and other provisions of this Act shall apply to,— (d) women exclusively engaged as agents under the Mahila Pradhan Kshetriya Bachat Yojana of Directorate of Small Savings.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, section 27A(f), text as on 16 July 2025",
+      "cells": {
+        "exemption": "27-27A(f)",
+        "stateCode": "27",
+        "name": "Persons who have completed sixty-five years of age",
+        "words": "Nothing contained in section 3 and other provisions of this Act shall apply to,— (f) the person who have completed the age of sixty-five years.",
+        "age": 65,
+        "ageTest": "attained",
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, section 27A(h), as substituted by Mah. Act No. XXXII of 2024, section 5, in force 1 September 2024",
+      "cells": {
+        "exemption": "27-27A(h)",
+        "stateCode": "27",
+        "name": "Armed members of the central armed police forces serving in Maharashtra",
+        "words": "Nothing contained in section 3 and other provisions of this Act shall apply to,— (h) the armed members, serving in the State, of,— (i) the Central Reserve Police Force constituted under the Central Reserve Police Force Act, 1949 ; (ii) the Border Security Force constituted under the Border Security Force Act, 1968 ; (iii) the Central Industrial Security Force constituted under the Central Industrial Security Force Act, 1968 ; (iv) the National Security Guard constituted under the National Security Guard Act, 1986 ; (v) the Indo Tibetan Border Police Force constituted under the Indo Tibetan Border Police Act, 1992 ; (vi) the Assam Rifles constituted under the Assam Rifles Act, 2006 ; and (vii) the Sashastra Seema Bal constituted under the Sashastra Seema Bal Act, 2007.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976, section 2(h)",
+      "cells": {
+        "exemption": "29-2(h)",
+        "stateCode": "29",
+        "name": "Persons who earn wages on a casual basis",
+        "words": "“person” means any person who is engaged in any profession, trade, calling or employment in the State of Karnataka and includes a Hindu Undivided Family, firm, company, corporation or other corporate body, any society, club or association, so engaged but does not include any person who earns wages on a casual basis;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976, section 3(2), first proviso",
+      "cells": {
+        "exemption": "29-3(2).proviso(1)",
+        "stateCode": "29",
+        "name": "Senior citizens who have attained sixty years of age",
+        "words": "Provided that, no tax shall be payable by the individuals who are senior citizens having attained the age of sixty years:",
+        "age": 60,
+        "ageTest": "attained",
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976, section 3(2), third proviso",
+      "cells": {
+        "exemption": "29-3(2).proviso(3)",
+        "stateCode": "29",
+        "name": "Persons employed for no more than 120 days in the year",
+        "words": "Provided further that, no tax shall be payable by a person in respect of any year if the period during which he exercises such profession or calling or is engaged in the trade or holds the appointment or is employed does not exceed one hundred and twenty days in that year.",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": 120
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification-2, No. FD 09 CPT 2023, Finance Department, Karnataka, 13 July 2023, item 3",
+      "cells": {
+        "exemption": "29-FD-09-CPT-2023-3",
+        "stateCode": "29",
+        "name": "Persons with a total permanent disability of at least 40% of both upper and lower extremities",
+        "words": "the Government of Karnataka hereby exempts with effect from the date of publication in the Gazette, the tax payable under the said Act, by the following, namely:- 3. Individual persons engaged in any profession, trades, callings and employment who are physically challenged who has total permanent disability of not less than 40% of both upper and lower extremity deformities subject to production of a certificate obtained from the Head of the Orthopaedic Department of Government Civil Hospital in the State;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification-2, No. FD 09 CPT 2023, Finance Department, Karnataka, 13 July 2023, item 4",
+      "cells": {
+        "exemption": "29-FD-09-CPT-2023-4",
+        "stateCode": "29",
+        "name": "Persons with a single child who have undergone sterilisation",
+        "words": "the Government of Karnataka hereby exempts with effect from the date of publication in the Gazette, the tax payable under the said Act, by the following, namely:- 4. Individual person having single child and who has undergone sterilisation operation, subject to production of certificate from the District Surgeon, Government Civil hospital, for having undergone such operation;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification-2, No. FD 09 CPT 2023, Finance Department, Karnataka, 13 July 2023, item 6",
+      "cells": {
+        "exemption": "29-FD-09-CPT-2023-6",
+        "stateCode": "29",
+        "name": "Salary or wage earners who are blind or deaf and dumb",
+        "words": "the Government of Karnataka hereby exempts with effect from the date of publication in the Gazette, the tax payable under the said Act, by the following, namely:- 6. Person covered under Serial no. 1 of the above Schedule who are blind or deaf and dumb;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification-2, No. FD 09 CPT 2023, Finance Department, Karnataka, 13 July 2023, item 7",
+      "cells": {
+        "exemption": "29-FD-09-CPT-2023-7",
+        "stateCode": "29",
+        "name": "Foreign technicians whose appointments the Government of India approved, for at most two years",
+        "words": "the Government of Karnataka hereby exempts with effect from the date of publication in the Gazette, the tax payable under the said Act, by the following, namely:- 7. Foreign technicians employed in the State provided their appointments are approved by the Government of India for the purpose of exemptions from payment of Income Tax subject to a maximum of two years from the date of their joining duty;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification-2, No. FD 09 CPT 2023, Finance Department, Karnataka, 13 July 2023, item 10",
+      "cells": {
+        "exemption": "29-FD-09-CPT-2023-10",
+        "stateCode": "29",
+        "name": "Combatant and civilian non-combatant members of the Armed Forces",
+        "words": "the Government of Karnataka hereby exempts with effect from the date of publication in the Gazette, the tax payable under the said Act, by the following, namely:- 10. Combatant and civilian non-combatant members of the Armed Forces who are governed by the Army Act, 1950, the Navy Act, 1957 and the Air Force Act, 1950;",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification-2, No. FD 09 CPT 2023, Finance Department, Karnataka, 13 July 2023, item 13",
+      "cells": {
+        "exemption": "29-FD-09-CPT-2023-13",
+        "stateCode": "29",
+        "name": "Central Para-Military Force personnel",
+        "words": "the Government of Karnataka hereby exempts with effect from the date of publication in the Gazette, the tax payable under the said Act, by the following, namely:- 13. Central Para-Military Force (CPMF) Personnel; and",
+        "age": null,
+        "ageTest": null,
+        "incomeUpTo": null,
+        "daysUpTo": null
+      }
+    }
+  ]
+}

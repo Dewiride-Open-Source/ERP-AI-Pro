@@ -8,6 +8,7 @@ import {
   entryCountText,
   fromText,
   longDate,
+  longDayMonth,
   versionRange,
 } from "./set-text.ts";
 
@@ -33,6 +34,29 @@ test("asOfText_EachMeaning_SaysWhatTheDayAVersionStartsGoverns", () => {
     asOfText("financialYearStart"),
     "Each version applies to the financial years that begin on or after the day it starts.",
   );
+  assert.equal(asOfText("wageDate"), "Each version applies to wages earned on or after the day it starts.");
+  assert.equal(
+    asOfText("wagePeriodEnd"),
+    "Each version applies to the wage periods that end on or after the day it starts.",
+  );
+  assert.equal(
+    asOfText("employmentEndDate"),
+    "Each version applies to employment that ends on or after the day it starts.",
+  );
+  assert.equal(
+    asOfText("accountingYearEnd"),
+    "Each version applies to the accounting years that end on or after the day it starts.",
+  );
+  assert.equal(
+    asOfText("contributionPeriodEnd"),
+    "Each version applies to the contribution periods that end on or after the day it starts.",
+  );
+});
+
+test("longDayMonth_DayAndMonth_IsTheDayAndMonthInWords", () => {
+  assert.equal(longDayMonth("04-01"), "1 April");
+  assert.equal(longDayMonth("09-30"), "30 September");
+  assert.equal(longDayMonth("02-29"), "29 February");
 });
 
 test("longDate_IsoDate_IsTheDayMonthAndYearInWords", () => {

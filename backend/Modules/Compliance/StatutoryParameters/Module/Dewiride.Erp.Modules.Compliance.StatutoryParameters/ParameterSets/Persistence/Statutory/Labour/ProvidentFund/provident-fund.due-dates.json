@@ -1,0 +1,152 @@
+{
+  "key": "provident-fund.due-dates",
+  "title": "Provident fund remittance due dates",
+  "description": "When an employer remits a wage month's provident fund, pension and insurance contributions and charges, in each instrument's words: within fifteen days of the close of the month, and, for an establishment exempted under section 143 of the Code on Social Security, 2020, the transfer of its contributions to its board of trustees by the fifteenth of the month that follows. Until 28 June 2026 the Employees' Provident Funds Scheme, 1952 and the Employees' Deposit-Linked Insurance Scheme, 1976, continued by section 164(2) of the Code, set the days; from 29 June 2026 the Schemes of 2026; the inspection charges' day is that of S.O. 2701(E). The Pension Fund's day before 29 June 2026 was not read in its instrument. A time the Central Provident Fund Commissioner extends under paragraph 28(3) of the Employees' Provident Funds Scheme, 2026 is not held.",
+  "basis": "law",
+  "asOf": "wageDate",
+  "columns": [
+    {
+      "name": "remittance",
+      "title": "Remittance",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "What is remitted",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "days",
+      "title": "Days",
+      "kind": "integer",
+      "minimum": 1,
+      "maximum": 31
+    },
+    {
+      "name": "counted",
+      "title": "Counted",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "afterTheMonthCloses",
+          "title": "Within this many days of the close of the month"
+        },
+        {
+          "value": "dayOfTheFollowingMonth",
+          "title": "By this day of the month that follows"
+        }
+      ]
+    },
+    {
+      "name": "wording",
+      "title": "In the instruments' words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Employees' Provident Funds Scheme, 1952, paragraph 38(1), and Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 8(1), as EPFO's consolidated texts print them, in force until the Schemes of 2026 superseded them on 29 June 2026",
+        "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 164(2), which keeps in force the schemes of the repealed Employees' Provident Funds and Miscellaneous Provisions Act, 1952, in force from 21 November 2025 by S.O. 5319(E), 21 November 2025, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    },
+    {
+      "from": "2026-05-29",
+      "instruments": [
+        "S.O. 2701(E), 29 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 2608, under section 143(6) of the Code on Social Security, 2020, superseding S.O. 1436 of 9 July 1998 and S.O. 238 of 11 January 1998, in force on its publication, the notification naming no other day"
+      ]
+    },
+    {
+      "from": "2026-06-29",
+      "instruments": [
+        "Employees' Provident Funds Scheme, 2026, G.S.R. 525(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 473, superseding the Employees' Provident Funds Scheme, 1952: “It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 703(E), 4 August 2026, No. 639",
+        "Employees' Pension Scheme, 2026, G.S.R. 527(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 475, superseding the Employees' Pension Scheme, 1995: “It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 704(E), 4 August 2026, No. 640",
+        "Employees' Deposit-Linked Insurance Scheme, 2026, G.S.R. 526(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 474, superseding the Employees' Deposit-Linked Insurance Scheme, 1976: “It shall come into force on the date of its publication in the Official Gazette.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Employees' Provident Funds Scheme, 1952, paragraph 38(1), in EPFO's consolidated text, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "remittance": "provident-fund",
+        "name": "Provident Fund contributions and administrative charges",
+        "days": 15,
+        "counted": "afterTheMonthCloses",
+        "wording": "Employees' Provident Funds Scheme, 1952, paragraph 38(1): … He shall within fifteen days of the close of every month pay the same to the fund …"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 8(1), in EPFO's consolidated text, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "remittance": "insurance-fund",
+        "name": "Insurance Fund contributions and administrative charges",
+        "days": 15,
+        "counted": "afterTheMonthCloses",
+        "wording": "Employees' Deposit-Linked Insurance Scheme, 1976, paragraph 8(1): … to the Insurance Fund within fifteen days of the close of every month …"
+      }
+    },
+    {
+      "from": "2026-05-29",
+      "source": "S.O. 2701(E), 29 May 2026, under section 143(6) of the Code on Social Security, 2020",
+      "cells": {
+        "remittance": "inspection-charges",
+        "name": "Inspection charges of an exempted establishment",
+        "days": 15,
+        "counted": "afterTheMonthCloses",
+        "wording": "S.O. 2701(E): … to pay inspection charges … within fifteen days of the close of every month."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraphs 20(1) and 28(3)",
+      "cells": {
+        "remittance": "provident-fund",
+        "name": "Provident Fund contributions and administrative charges",
+        "days": 15,
+        "counted": "afterTheMonthCloses",
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 20(1): The employer shall, in the first instance, pay both the employer's contribution and the employee's contribution, together with administrative charges or other fees or charges payable under this Scheme in respect of an employee directly employed by him or through a contractor [in respect of such establishment, which is not registered independently], within fifteen days of the close of every month in the manner specified by the Central Board. Paragraph 28(3): The employer shall, within fifteen days of the close of every month, remit the contributions to the Fund through electronic mode of payment authorised for such collection on account of contributions and administrative charges:"
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "Employees' Pension Scheme, 2026, paragraph 4(1)",
+      "cells": {
+        "remittance": "pension-fund",
+        "name": "The employer's part of the contribution, into the Pension Fund",
+        "days": 15,
+        "counted": "afterTheMonthCloses",
+        "wording": "Employees' Pension Scheme, 2026, paragraph 4(1): … a part of contribution of eight and thirty-three hundredths per cent. of the wages of employee up to wage ceiling notified by the Central Government, shall be remitted by the employer to the Pension Fund within fifteen days of the close of every month in the account of the Central Board …"
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 6(1)",
+      "cells": {
+        "remittance": "insurance-fund",
+        "name": "Insurance Fund contributions and administrative charges",
+        "days": 15,
+        "counted": "afterTheMonthCloses",
+        "wording": "Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 6(1): The employer shall, within fifteen days of the close of every month pay the contribution and administrative charges to the Insurance Fund through electronic mode (including digital payment) of agency banks listed with the Reserve Bank of India or scheduled banks or payment gateway or through the PayGov platform, authorised for such collection and cost of remittance, if any, shall be borne by the employer."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 13(7)",
+      "cells": {
+        "remittance": "exempted-fund-to-trustees",
+        "name": "An exempted establishment's contributions, to its board of trustees",
+        "days": 15,
+        "counted": "dayOfTheFollowingMonth",
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 13(7): The employer shall transfer contributions payable by the employer and employees to the board of trustees by the 15th of each month following the month for which contributions are due, failing which the employer shall be liable for interest and damages under sections 127 and 128 of the Code."
+      }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "key": "esi.coverage-wage-limits",
+  "title": "ESI coverage wage limits",
+  "description": "The wage limits a month for the coverage of an employee by the Employees' State Insurance, ₹21,000 and ₹25,000 for a person with disability, and the rule that an employee whose wages exceed the limit after the beginning of a contribution period stays covered to its end, in the words of rule 50 of the Employees' State Insurance (Central) Rules, 1950, in ESIC's consolidated text, until the Social Security (Central) Rules, 2026 superseded those Rules on 8 May 2026. The Rules of 2026 hold no wage limit, and no wage ceiling for Chapter IV of the Code on Social Security, 2020 under its section 2(89) was found, so the limits end on 7 May 2026: no limit means none is seeded, never that every employee is covered or that none is. From 8 May 2026 the continued coverage is that of S.O. 2351(E), against the ceiling the Central Government may notify. The set answers for the last day of the wage period.",
+  "basis": "law",
+  "asOf": "wagePeriodEnd",
+  "columns": [
+    {
+      "name": "limit",
+      "title": "Limit",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Applies to",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "amount",
+      "title": "Wage limit a month (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Employees' State Insurance (Central) Rules, 1950, S.R.O. 212, 22 June 1950, Ministry of Labour, in ESIC's consolidated text as on 26.04.2024: rule 50, inserted by G.S.R. 76, 22 January 1991, w.e.f. 1 February 1991, its limit substituted by G.S.R. 1166(E), 22 December 2016, w.e.f. 1 January 2017, and its second proviso inserted by G.S.R. 254(E), 31 March 2008, w.e.f. 1 April 2008",
+        "Code on Social Security, 2020 (36 of 2020), section 164(2)(a) and (b), keeping in force the rules and regulations made under the Employees' State Insurance Act, 1948, which section 164(1) repeals; in force from “the 21st day of November, 2025” by S.O. 5319(E), 21 November 2025, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    },
+    {
+      "from": "2026-05-08",
+      "instruments": [
+        "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 310, 8 May 2026, made “in supersession of the— … (iii) Employees' State Insurance (Central) Rules, 1950”; rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”",
+        "S.O. 2351(E), 8 May 2026, Ministry of Labour and Employment, under the first proviso to section 2(26) of the Code on Social Security, 2020, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 2260, 8 May 2026, without words of commencement"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 50, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "limit": "employee",
+        "name": "An employee",
+        "amount": 21000,
+        "wording": "50. Wage limit for coverage of an employee under the Act. The wage limit for coverage of an employee under sub-clause (b) of clause (9) of Section 2 of the Act shall be twenty-one thousand rupees a month:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 50, second proviso, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "limit": "employee-with-disability",
+        "name": "An employee who is a person with disability",
+        "amount": 25000,
+        "wording": "50. Wage limit for coverage of an employee under the Act. The wage limit for coverage of an employee under sub-clause (b) of clause (9) of Section 2 of the Act shall be twenty-one thousand rupees a month: Provided further that the wage limit for coverage of an employee who is a person with disability under the Persons with Disabilities (Equal Opportunities Protection of Rights and Full Participation) Act, 1995 (1 of 1996), and under the National Trust for Welfare of Persons with Autism, Cerebral Palsy, Mental Retardation and Multiple Disabilities Act, 1999 (44 of 1999) respectively, shall be twenty-five thousand rupees per month."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 50, first proviso, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "limit": "continued-coverage",
+        "name": "An employee whose wages exceed the limit after a contribution period begins",
+        "amount": null,
+        "wording": "50. Wage limit for coverage of an employee under the Act. The wage limit for coverage of an employee under sub-clause (b) of clause (9) of Section 2 of the Act shall be twenty-one thousand rupees a month: Provided that an employee whose wages (excluding remuneration for overtime work) exceed twenty-one thousand rupees a month at any time after and not before the beginning of the contribution period, shall continue to be an employee until the end of that period."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "S.O. 2351(E), 8 May 2026, under the first proviso to section 2(26) of the Code on Social Security, 2020",
+      "cells": {
+        "limit": "continued-coverage",
+        "name": "An employee whose wages exceed the limit after a contribution period begins",
+        "amount": null,
+        "wording": "In exercise of the powers conferred by the first proviso to clause (26) of section 2 of the Code on Social Security, 2020 (36 of 2020), the Central Government hereby specifies that an employee whose wages exceed at any time after, and not before, the beginning of the contribution period, the wage ceiling as may be notified by the Central Government under clause (89) of section 2 of the Code for the purposes of becoming a member under Chapter IV of the Code, shall continue to be an employee for the remainder of that contribution period."
+      }
+    }
+  ]
+}

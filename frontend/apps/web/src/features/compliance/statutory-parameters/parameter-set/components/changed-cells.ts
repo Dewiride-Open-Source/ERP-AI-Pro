@@ -1,6 +1,6 @@
 import type { ParameterColumn, RowChange } from "../../parameter-sets/components/set-items.ts";
 
-import { cellText, cellValue, sourceHeader } from "./cell-text.ts";
+import { cellValue, rowCellText, sourceHeader } from "./cell-text.ts";
 
 export interface ChangedCell {
   readonly label: string;
@@ -16,7 +16,13 @@ export function changedCells(columns: readonly ParameterColumn[], change: RowCha
     const after = cellValue(change.after, column.name);
     return before === after
       ? []
-      : [{ label: column.title, value: cellText(column, after), was: cellText(column, before) }];
+      : [
+          {
+            label: column.title,
+            value: rowCellText(column, change.after),
+            was: rowCellText(column, change.before),
+          },
+        ];
   });
   return change.before.source === change.after.source
     ? cells

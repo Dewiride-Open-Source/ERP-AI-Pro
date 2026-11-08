@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { ParameterColumn, ParameterRow, ShownVersion } from "../../parameter-sets/components/set-items";
 
-import { cellText, cellValue, entryTitle, sourceHeader, titleColumn } from "./cell-text";
+import { entryTitle, rowCellText, sourceHeader, titleColumn } from "./cell-text";
 import { changedCells } from "./changed-cells";
 
 const firstVersionText = "This is the first version of the set.";
@@ -61,7 +61,7 @@ function entryValues(columns: readonly ParameterColumn[], row: ParameterRow): re
   return [
     ...columns
       .filter((column) => column !== title)
-      .map((column) => ({ label: column.title, value: cellText(column, cellValue(row, column.name)) })),
+      .map((column) => ({ label: column.title, value: rowCellText(column, row) })),
     { label: sourceHeader, value: row.source },
   ];
 }

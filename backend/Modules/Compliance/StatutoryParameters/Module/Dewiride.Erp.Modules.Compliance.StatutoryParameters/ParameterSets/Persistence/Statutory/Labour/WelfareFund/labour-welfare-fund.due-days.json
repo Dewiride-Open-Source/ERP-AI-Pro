@@ -1,0 +1,321 @@
+{
+  "key": "labour-welfare-fund.due-days",
+  "title": "Labour welfare fund due days",
+  "description": "The days of every year by which an employer pays a State's labour welfare fund both contributions, or submits the statement of them, as the State's Act or rules set them from 1 April 2026, before the day or on or before it as the instrument writes it, with the register each day is for where the instrument names one; a day falls after that register day, in the next year when the register closes the year. Goa's rules set days for the half-yearly statements and none for paying, and Haryana's Act one day a year for its monthly contributions. One-off extensions of these days are not held here. A State without a row is one whose days the ERP has not read, never a finding that nothing falls due. The set answers for the last day of a contribution period, the day the register fixes who is counted.",
+  "basis": "law",
+  "asOf": "contributionPeriodEnd",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "stateCode",
+      "title": "State",
+      "kind": "stateCode"
+    },
+    {
+      "name": "name",
+      "title": "Falls due",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "obligation",
+      "title": "What falls due",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "payment",
+          "title": "Both contributions paid"
+        },
+        {
+          "value": "statement",
+          "title": "A statement of the contributions"
+        }
+      ]
+    },
+    {
+      "name": "form",
+      "title": "Form",
+      "kind": "code",
+      "optional": true
+    },
+    {
+      "name": "bound",
+      "title": "Due",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "before",
+          "title": "Before the day"
+        },
+        {
+          "value": "onOrBefore",
+          "title": "On or before the day"
+        }
+      ]
+    },
+    {
+      "name": "day",
+      "title": "Day",
+      "kind": "dayMonth"
+    },
+    {
+      "name": "registerDay",
+      "title": "For the register of",
+      "kind": "dayMonth",
+      "optional": true
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Punjab Labour Welfare Fund Act, 1965 (Punjab Act 17 of 1965), section 9A(2) as substituted in Haryana by Haryana Act No. 16 of 2021, 5 April 2021, in the Labour Department's consolidated text",
+        "Bombay Labour Welfare Fund Act, 1953 (Bombay Act XL of 1953), section 6BB(3), as extended to the Union territory of Delhi with modifications by G.S.R. 1286(E), 15 December 1986",
+        "Odisha Labour Welfare Fund Rules, 2015, rule 6(2), Notification S.R.O. No. 73/2016, Labour & ESI Department, 27 January 2016, Odisha Gazette, Extraordinary, No. 224, 28 January 2016: “They shall come into force on the date of their publication in the Odisha Gazette.”",
+        "Maharashtra Labour Welfare Fund Rules, 1953, rule 3-A, inserted by Government Notification of 4 May 1971, its day of July as notification No. MLW-1161/157706-Lab. iii-B, 18 August 1973, sets it",
+        "Maharashtra Labour Welfare Fund Act, 1953 (Mah. XL of 1953), section 6BB(3), inserted by Mah. 16 of 1971",
+        "Karnataka Labour Welfare Fund Rules, 1968, rule 3-A(1)",
+        "Karnataka Labour Welfare Fund Act, 1965 (Karnataka Act 15 of 1965), section 7A(3), inserted by Act No. 73 of 1976, 8 October 1976",
+        "Goa Labour Welfare Fund Rules, 1990, rule 4, made by the Department of Labour, Government of Goa under section 37 of the Goa, Daman and Diu Labour Welfare Fund Act, 1986 (Act 4 of 1987), Official Gazette, Series I, No. 49, 8 March 1990: “They shall come into force at once.”",
+        "Kerala Labour Welfare Fund Act, 1975 (11 of 1977), section 15(2)"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Punjab Labour Welfare Fund Act, 1965, section 9A(2) as in force in Haryana, substituted by Haryana Act No. 16 of 2021, in the Labour Department's consolidated text; one day a year for the contributions of every month",
+      "cells": {
+        "entry": "06-9A(2)",
+        "stateCode": "06",
+        "name": "Contributions of every month of the year",
+        "obligation": "payment",
+        "form": null,
+        "bound": "before",
+        "day": "12-31",
+        "registerDay": null,
+        "wording": "(2) Every employer shall pay to the Fund both his contribution and the contribution of the employee before the 31st December of every year through online mode in favour of Welfare Commissioner."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bombay Labour Welfare Fund Act, 1953, section 6BB(3), as extended to the Union territory of Delhi, in the Delhi Labour Welfare Board's copy: the second of its two days, for the register of 31 December of section 6BB(2)",
+      "cells": {
+        "entry": "07-6BB(3).january",
+        "stateCode": "07",
+        "name": "Contributions for the register of 31 December",
+        "obligation": "payment",
+        "form": null,
+        "bound": "before",
+        "day": "01-15",
+        "registerDay": "12-31",
+        "wording": "… before the 15th day of July and 15th day of January …"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bombay Labour Welfare Fund Act, 1953, section 6BB(3), as extended to the Union territory of Delhi, in the Delhi Labour Welfare Board's copy: the first of its two days, for the register of 30 June of section 6BB(2)",
+      "cells": {
+        "entry": "07-6BB(3).july",
+        "stateCode": "07",
+        "name": "Contributions for the register of 30 June",
+        "obligation": "payment",
+        "form": null,
+        "bound": "before",
+        "day": "07-15",
+        "registerDay": "06-30",
+        "wording": "… before the 15th day of July and 15th day of January …"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Odisha Labour Welfare Fund Rules, 2015, rule 6(2): the first of its two days, for the employees on the register preceding 31 December, paid with the statement in Form F",
+      "cells": {
+        "entry": "21-6(2).january",
+        "stateCode": "21",
+        "name": "Contributions for the register preceding 31 December",
+        "obligation": "payment",
+        "form": "F",
+        "bound": "before",
+        "day": "01-15",
+        "registerDay": null,
+        "wording": "(2) Every employer of an establishment operating for any length of period during the twelve months preceding the 31st December of every year, shall pay to the Welfare Commissioner or such officer as may be authorized in this behalf, the employer's contribution and also the employee's contribution before the 15th day of January and the 15th day of July of every year in respect of all employees whose names stand on the register of establishment preceding the 31st December and the 30th June respectively, along with a statement showing full particulars in Form F."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Odisha Labour Welfare Fund Rules, 2015, rule 6(2): the second of its two days, for the employees on the register preceding 30 June, paid with the statement in Form F",
+      "cells": {
+        "entry": "21-6(2).july",
+        "stateCode": "21",
+        "name": "Contributions for the register preceding 30 June",
+        "obligation": "payment",
+        "form": "F",
+        "bound": "before",
+        "day": "07-15",
+        "registerDay": null,
+        "wording": "(2) Every employer of an establishment operating for any length of period during the twelve months preceding the 31st December of every year, shall pay to the Welfare Commissioner or such officer as may be authorized in this behalf, the employer's contribution and also the employee's contribution before the 15th day of January and the 15th day of July of every year in respect of all employees whose names stand on the register of establishment preceding the 31st December and the 30th June respectively, along with a statement showing full particulars in Form F."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra Labour Welfare Fund Rules, 1953, rule 3-A, in the Maharashtra Labour Welfare Board's consolidated text: the second of its two days, for the register of 31 December, the statement in Form A-1",
+      "cells": {
+        "entry": "27-3-A.january",
+        "stateCode": "27",
+        "name": "Statement for the register of 31 December",
+        "obligation": "statement",
+        "form": "A-1",
+        "bound": "onOrBefore",
+        "day": "01-31",
+        "registerDay": "12-31",
+        "wording": "3-A. Every employer shall submit to the Welfare Commissioner on or before 31 day of July and 31st day of January a statement of employer's contribution and employees' contribution in respect of employees whose names stand on the establishment register on 30th June and 31st December, respectively"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra Labour Welfare Fund Rules, 1953, rule 3-A, in the Maharashtra Labour Welfare Board's consolidated text: the first of its two days, for the register of 30 June, the statement in Form A-1",
+      "cells": {
+        "entry": "27-3-A.july",
+        "stateCode": "27",
+        "name": "Statement for the register of 30 June",
+        "obligation": "statement",
+        "form": "A-1",
+        "bound": "onOrBefore",
+        "day": "07-31",
+        "registerDay": "06-30",
+        "wording": "3-A. Every employer shall submit to the Welfare Commissioner on or before 31 day of July and 31st day of January a statement of employer's contribution and employees' contribution in respect of employees whose names stand on the establishment register on 30th June and 31st December, respectively"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra Labour Welfare Fund Act, 1953, section 6BB(3): the second of its two days, for the register of 31 December of section 6BB(2)(a)",
+      "cells": {
+        "entry": "27-6BB(3).january",
+        "stateCode": "27",
+        "name": "Contributions for the register of 31 December",
+        "obligation": "payment",
+        "form": null,
+        "bound": "before",
+        "day": "01-15",
+        "registerDay": "12-31",
+        "wording": "(3) Every employer shall pay to the Board both the employer's contribution and the employee's contribution in accordance with the provisions of sub-section (2) before the 15th day of July and 15th day of January, as the case may be"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra Labour Welfare Fund Act, 1953, section 6BB(3): the first of its two days, for the register of 30 June of section 6BB(2)(a)",
+      "cells": {
+        "entry": "27-6BB(3).july",
+        "stateCode": "27",
+        "name": "Contributions for the register of 30 June",
+        "obligation": "payment",
+        "form": null,
+        "bound": "before",
+        "day": "07-15",
+        "registerDay": "06-30",
+        "wording": "(3) Every employer shall pay to the Board both the employer's contribution and the employee's contribution in accordance with the provisions of sub-section (2) before the 15th day of July and 15th day of January, as the case may be"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Karnataka Labour Welfare Fund Rules, 1968, rule 3-A(1), in the Labour Department's booklet of 2025: the statement in Form D of the contributions paid during the year before",
+      "cells": {
+        "entry": "29-3-A(1)",
+        "stateCode": "29",
+        "name": "Statement of the contributions paid in the year before",
+        "obligation": "statement",
+        "form": "D",
+        "bound": "onOrBefore",
+        "day": "01-15",
+        "registerDay": null,
+        "wording": "(1) Every employer shall submit to the Welfare Commissioner on or before 15th of January, of every year a statement in Form 'D' of the contributions by the employers and the employees paid during the preceding year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Karnataka Labour Welfare Fund Act, 1965, section 7A(3), in the Labour Department's booklet of 2025: for the register of 31 December of section 7A(2)",
+      "cells": {
+        "entry": "29-7A(3)",
+        "stateCode": "29",
+        "name": "Contributions for the register of 31 December",
+        "obligation": "payment",
+        "form": null,
+        "bound": "onOrBefore",
+        "day": "01-15",
+        "registerDay": "12-31",
+        "wording": "(3) The employer's contribution and the employee's contribution in respect of a year shall be paid by the employer to the Board on or before 15th January of the following year by cheque, or by crossed demand draft and the expenses of remitting the contribution shall be borne by the employer himself."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Goa Labour Welfare Fund Rules, 1990, rule 4: the second of its two days, for the register of 31 December, the statement in Form A; no rule read sets a day for paying the contributions",
+      "cells": {
+        "entry": "30-4.january",
+        "stateCode": "30",
+        "name": "Statement for the register of 31 December",
+        "obligation": "statement",
+        "form": "A",
+        "bound": "onOrBefore",
+        "day": "01-31",
+        "registerDay": "12-31",
+        "wording": "4. Submission of statement to Secretary.- Every employer shall submit to the Secretary on or before the 31st day of July and 31st of January a statement of employer's contribution and employees' contribution in respect of employees whose names stand on the establishment register on 30th June and 31st December respectively; in Form A."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Goa Labour Welfare Fund Rules, 1990, rule 4: the first of its two days, for the register of 30 June, the statement in Form A; no rule read sets a day for paying the contributions",
+      "cells": {
+        "entry": "30-4.july",
+        "stateCode": "30",
+        "name": "Statement for the register of 30 June",
+        "obligation": "statement",
+        "form": "A",
+        "bound": "onOrBefore",
+        "day": "07-31",
+        "registerDay": "06-30",
+        "wording": "4. Submission of statement to Secretary.- Every employer shall submit to the Secretary on or before the 31st day of July and 31st of January a statement of employer's contribution and employees' contribution in respect of employees whose names stand on the establishment register on 30th June and 31st December respectively; in Form A."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Kerala Labour Welfare Fund Act, 1975, section 15(2), in the Labour Commissionerate's copy: the second of its two days; the Act names no register day",
+      "cells": {
+        "entry": "32-15(2).january",
+        "stateCode": "32",
+        "name": "Contributions due before 15 January",
+        "obligation": "payment",
+        "form": null,
+        "bound": "before",
+        "day": "01-15",
+        "registerDay": null,
+        "wording": "(2) Every employer shall pay to the Fund both the employer's contribution and the employee's contribution before the 15th day of July and 15th day of January of every year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Kerala Labour Welfare Fund Act, 1975, section 15(2), in the Labour Commissionerate's copy: the first of its two days; the Act names no register day",
+      "cells": {
+        "entry": "32-15(2).july",
+        "stateCode": "32",
+        "name": "Contributions due before 15 July",
+        "obligation": "payment",
+        "form": null,
+        "bound": "before",
+        "day": "07-15",
+        "registerDay": null,
+        "wording": "(2) Every employer shall pay to the Fund both the employer's contribution and the employee's contribution before the 15th day of July and 15th day of January of every year."
+      }
+    }
+  ]
+}

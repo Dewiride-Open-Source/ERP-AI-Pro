@@ -93,12 +93,20 @@ public sealed class ParameterSetTests
         Assert.Throws<ArgumentException>(() => ParameterVersion.Create(FinancialYearSet(), TestSets.Day(from), ["An instrument"]));
     }
 
-    [Fact]
-    public void CreateVersion_OfASetDatedByDeduction_TakesAnyDay()
+    [Theory]
+    [InlineData(nameof(AsOfDate.SupplyDate))]
+    [InlineData(nameof(AsOfDate.TaxPeriodStart))]
+    [InlineData(nameof(AsOfDate.DeductionDate))]
+    [InlineData(nameof(AsOfDate.WageDate))]
+    [InlineData(nameof(AsOfDate.WagePeriodEnd))]
+    [InlineData(nameof(AsOfDate.EmploymentEndDate))]
+    [InlineData(nameof(AsOfDate.AccountingYearEnd))]
+    [InlineData(nameof(AsOfDate.ContributionPeriodEnd))]
+    public void CreateVersion_OfASetDatedOtherwiseThanByFinancialYear_TakesAnyDay(string asOfName)
     {
-        var set = TestSets.Set(AsOfDate.DeductionDate, TestSets.Column("entry", CellKind.Code, isKey: true));
+        var set = TestSets.Set(Enum.Parse<AsOfDate>(asOfName), TestSets.Column("entry", CellKind.Code, isKey: true));
 
-        Assert.Equal(TestSets.Day("2026-10-01"), ParameterVersion.Create(set, TestSets.Day("2026-10-01"), ["An instrument"]).From);
+        Assert.Equal(TestSets.Day("2026-09-17"), ParameterVersion.Create(set, TestSets.Day("2026-09-17"), ["An instrument"]).From);
     }
 
     [Fact]

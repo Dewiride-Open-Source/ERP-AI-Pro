@@ -1,4 +1,6 @@
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.History;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.History.Definitions;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Application.Queries.GetParameterSet;
 
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Endpoints.Responses;
 
@@ -17,8 +19,18 @@ internal static class ParameterSetResponses
             set.Next is null ? null : VersionOf(set.Next),
             set.EntryCount))]);
 
-    public static ParameterSetResponse Of(ParameterSetDetails set, ParameterVersionView? shown) =>
-        new(
+    public static ParameterSetResponse Of(ShownParameterSet shownSet)
+    {
+        var (set, shown, names) = shownSet;
+        var stateColumns = set.Columns.Where(column => column.Kind == ParameterColumnKind.StateCode).Select(column => column.Name).ToHashSet(StringComparer.Ordinal);
+
+        ParameterRowResponse RowOf(ParameterRowEntry row) =>
+            new(row.Key, row.From, row.Until, row.Source, [.. row.Cells.Select(cell => new ParameterCellResponse(
+                cell.Column,
+                cell.Value,
+                cell.Value is { } code && stateColumns.Contains(cell.Column) ? names.NameOf(code, row.From) : null))]);
+
+        return new(
             set.Key,
             set.Title,
             set.Description,
@@ -44,10 +56,8 @@ internal static class ParameterSetResponses
                     [.. shown.Added.Select(RowOf)],
                     [.. shown.Changed.Select(change => new ParameterRowChangeResponse(RowOf(change.Before), RowOf(change.After)))],
                     [.. shown.Removed.Select(RowOf)]));
+    }
 
     private static ParameterVersionSummaryResponse VersionOf(ParameterVersionEntry version) =>
         new(version.From, version.Until, version.Instruments, version.AddedCount, version.ChangedCount, version.RemovedCount);
-
-    private static ParameterRowResponse RowOf(ParameterRowEntry row) =>
-        new(row.Key, row.From, row.Until, row.Source, [.. row.Cells.Select(cell => new ParameterCellResponse(cell.Column, cell.Value))]);
 }

@@ -102,7 +102,7 @@ internal static class StatutorySeedFiles
         var asOf = Named<AsOfDate>(file.AsOf);
         if (asOf is null)
         {
-            Problem("asOf", $"'{file.AsOf}' is not supplyDate, taxPeriodStart, deductionDate or financialYearStart.");
+            Problem("asOf", $"'{file.AsOf}' is not one of the store's as-of dates: {NamesOf<AsOfDate>()}.");
         }
 
         var references = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
@@ -271,6 +271,10 @@ internal static class StatutorySeedFiles
 
     private static string MessageOf(ArgumentException exception) =>
         exception.ParamName is { } name ? exception.Message.Replace($" (Parameter '{name}')", string.Empty, StringComparison.Ordinal) : exception.Message;
+
+    private static string NamesOf<TEnum>()
+        where TEnum : struct, Enum =>
+        string.Join(", ", Enum.GetValues<TEnum>().Select(member => JsonNamingPolicy.CamelCase.ConvertName(member.ToString())));
 
     private static TEnum? Named<TEnum>(string? name)
         where TEnum : struct, Enum =>

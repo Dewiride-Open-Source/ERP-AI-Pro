@@ -1,0 +1,301 @@
+{
+  "key": "labour-welfare-fund.contributions",
+  "title": "Labour welfare fund contributions",
+  "description": "What each employee and each employer pays to a State's labour welfare fund for a contribution period, and the Government's share where the instrument names one, as the State's Act or the rules made under it fix them from 1 April 2026: an amount in rupees and paise, or for Haryana a percentage of salary, wages or remuneration up to a limit. A share the instrument states as a multiple of the employee's contribution is held as that multiple. Goa and Odisha fix yearly amounts, with two days a year in labour-welfare-fund.due-days, and state no split of the amount between them. Haryana's limit is indexed each 1 January, so its row ends on 31 December 2026 until the limit for 2027 is seeded. Each Act's references to central Acts are kept as written. A State without a row is one whose instrument the ERP has not read, never a finding that it has no fund. The set answers for the last day of a contribution period, the day the register fixes who is counted.",
+  "basis": "law",
+  "asOf": "contributionPeriodEnd",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "stateCode",
+      "title": "State",
+      "kind": "stateCode"
+    },
+    {
+      "name": "act",
+      "title": "Act",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "period",
+      "title": "Contribution period",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "monthly",
+          "title": "Every month"
+        },
+        {
+          "value": "halfYearly",
+          "title": "Every six months"
+        },
+        {
+          "value": "yearly",
+          "title": "Every year"
+        }
+      ]
+    },
+    {
+      "name": "employeeAmount",
+      "title": "Employee's contribution (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "employeePercent",
+      "title": "Employee's contribution (% of salary or wages)",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "employeeLimit",
+      "title": "Employee's contribution at most (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "employerAmount",
+      "title": "Employer's contribution (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "employerTimesEmployee",
+      "title": "Employer's contribution, times the employee's",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "governmentAmount",
+      "title": "Government's contribution (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "governmentTimesEmployee",
+      "title": "Government's contribution, times the employee's",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "wording",
+      "title": "Contributions, in the instrument's words",
+      "kind": "text"
+    },
+    {
+      "name": "deduction",
+      "title": "Deduction from wages, in the instrument's words",
+      "kind": "text",
+      "optional": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Punjab Labour Welfare Fund Act, 1965 (Punjab Act 17 of 1965), section 9A as in force in Haryana, sub-section (1) as substituted by Haryana Act No. 18 of 2019, 14 March 2019, with the limit of “rupees thirty-five” that the Labour Department's consolidated text of the Act prints in 2026",
+        "Bombay Labour Welfare Fund Act, 1953 (Bombay Act XL of 1953), section 6BB, as extended to the Union territory of Delhi with modifications by G.S.R. 1286(E), 15 December 1986",
+        "Notification No. F.9(1)/89/DLC(W)/100, Labour Department, Government of the National Capital Territory of Delhi, 13 July 2004, constituting the Labour Welfare Fund of Delhi “with immediate effect”",
+        "Odisha Labour Welfare Fund Rules, 2015, rule 6, Notification S.R.O. No. 73/2016, Labour & ESI Department, 27 January 2016, under section 34 of the Odisha Labour Welfare Fund Act, 2005 (Odisha Act 14 of 2005), Odisha Gazette, Extraordinary, No. 224, 28 January 2016: “They shall come into force on the date of their publication in the Odisha Gazette.”",
+        "Notification No. KHR-196-2016-KKB-10-2016-190722-M.4, Labour and Employment Department, Government of Gujarat, 10 November 2016, under section 6(B) of the Labour Welfare Fund Act, 1953 and the Labour Welfare Fund (Gujarat Amendment) Act, 2005, Gujarat Government Gazette, Extraordinary, Part IV-B, No. 634, 15 November 2016, stating no day of commencement",
+        "Maharashtra Labour Welfare Fund Act, 1953 (Mah. XL of 1953), section 6BB, inserted by Mah. 16 of 1971, sub-section (8) as amended by Mah. 24 of 2003, which gives the State Government's share of twice the employee's contribution “with effect from the 1st April 2003”",
+        "Maharashtra Labour Welfare Fund (Amendment) Act, 2024, section 2, substituting section 6BB(2), Maharashtra Government Gazette, Extraordinary, Part VIII, No. 41, 18 March 2024, its Bill (L.A. Bill No. X of 2024) having no commencement clause",
+        "Karnataka Labour Welfare Fund Act, 1965 (Karnataka Act 15 of 1965), section 7A, inserted by Act No. 73 of 1976, 8 October 1976",
+        "Karnataka Labour Welfare Fund (Amendment) Act, 2024 (Karnataka Act No. 05 of 2025), section 2, assented to on 8 January 2025, Karnataka Gazette, Extraordinary, Part IV-A, No. 19, 10 January 2025: “It shall come into force at once.”",
+        "Goa Labour Welfare Fund Act, 1986 (Act 4 of 1987), section 14(2), assented to by the President of India on 4 April 1987, Official Gazette, Series I, No. 5, 30 April 1987",
+        "Goa Labour Welfare Fund (Amendment) Act, 2015 (Goa Act 9 of 2015), section 6, substituting section 14(1), assented to on 26 August 2015, Official Gazette, Series I, No. 22, Extraordinary No. 2, 28 August 2015: “It shall come into force at once.”",
+        "Kerala Labour Welfare Fund Act, 1975 (11 of 1977), section 15",
+        "Kerala Labour Welfare Fund (Amendment) Act, 2021, section 2, substituting “forty five rupees” in section 15(1), read in its Bill as passed by the Assembly (KNPP. 1989/2021): “It shall be deemed to have come into force on the 16th day of January, 2020.”",
+        "Telangana Labour Welfare Fund Act, 1987 (Act No. 34 of 1987), section 10(1), as the Labour Department of Telangana publishes it"
+      ]
+    },
+    {
+      "from": "2027-01-01",
+      "instruments": [
+        "Punjab Labour Welfare Fund Act, 1965 (Punjab Act 17 of 1965), as amended in Haryana, proviso to section 9A(1): “Provided that the limit specified above shall be indexed annually to the consumer price index beginning from first of January each year.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-12-31",
+      "source": "Punjab Labour Welfare Fund Act, 1965, section 9A(1) and (3) as in force in Haryana, sub-section (1) as substituted by Haryana Act No. 18 of 2019, in the Labour Department's consolidated text of 2026, whose limit of rupees thirty-five the proviso indexes each 1 January",
+      "cells": {
+        "entry": "06-9A(1)",
+        "stateCode": "06",
+        "act": "Punjab Labour Welfare Fund Act, 1965, as amended in Haryana",
+        "period": "monthly",
+        "employeeAmount": null,
+        "employeePercent": 0.2,
+        "employeeLimit": 35,
+        "employerAmount": null,
+        "employerTimesEmployee": 2,
+        "governmentAmount": null,
+        "governmentTimesEmployee": null,
+        "wording": "(1) Each employee shall contribute to the Fund every month an amount equal to zero point two percent of his salary or wages or any remuneration subject to a limit of rupees thirty-five and each employer in respect of each such employee shall contribute to the Fund every month, twice the amount contributed by such employee : Provided that the limit specified above shall be indexed annually to the consumer price index beginning from first of January each year. Explanation.- For the purposes of sub-section (1), \"employee\" means an employee on the register of an establishment on the last working day of the month.",
+        "deduction": "(3) The employer shall be entitled to recover from the employee the employee's contribution by deduction from his wages and not otherwise:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bombay Labour Welfare Fund Act, 1953, section 6BB(2) and (8), as extended to the Union territory of Delhi by G.S.R. 1286(E), in the Delhi Labour Welfare Board's copy, each gap marked …; the notification of 13 July 2004 constituting the Fund lists the shares as Rs. 0.75 paise, Rs. 2.25 and Rs. 1.50",
+      "cells": {
+        "entry": "07-6BB(2)",
+        "stateCode": "07",
+        "act": "Bombay Labour Welfare Fund Act, 1953, as extended to the Union territory of Delhi",
+        "period": "halfYearly",
+        "employeeAmount": 0.75,
+        "employeePercent": null,
+        "employeeLimit": null,
+        "employerAmount": 2.25,
+        "employerTimesEmployee": null,
+        "governmentAmount": null,
+        "governmentTimesEmployee": 2,
+        "wording": "(2) … the amount of contribution payable every six months in respect of every employee shall be 75 paise … in respect of an employer for each such employee shall be 225 paise … (8) … an amount equal to twice the employees' contribution …",
+        "deduction": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Odisha Labour Welfare Fund Rules, 2015, rule 6(1), made under section 34 of the Odisha Labour Welfare Fund Act, 2005; rule 6(2) has both contributions paid before 15 January and before 15 July and states no split of the yearly amount",
+      "cells": {
+        "entry": "21-6(1)",
+        "stateCode": "21",
+        "act": "Odisha Labour Welfare Fund Act, 2005",
+        "period": "yearly",
+        "employeeAmount": 20,
+        "employeePercent": null,
+        "employeeLimit": null,
+        "employerAmount": 40,
+        "employerTimesEmployee": null,
+        "governmentAmount": null,
+        "governmentTimesEmployee": null,
+        "wording": "(1) Every employee shall contribute twenty rupees per year to the Fund and every employer shall, in respect of each employee, contribute forty rupees per year to the Fund.",
+        "deduction": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. KHR-196-2016-KKB-10-2016-190722-M.4, Labour and Employment Department, Government of Gujarat, 10 November 2016, under section 6(B) of the Act, in Gujarati; it names a tripartite contribution of workers, employers and the Government without the Government's amount",
+      "cells": {
+        "entry": "24-6(B)",
+        "stateCode": "24",
+        "act": "Labour Welfare Fund Act, 1953, as in force in Gujarat",
+        "period": "halfYearly",
+        "employeeAmount": 6,
+        "employeePercent": null,
+        "employeeLimit": null,
+        "employerAmount": 12,
+        "employerTimesEmployee": null,
+        "governmentAmount": null,
+        "governmentTimesEmployee": null,
+        "wording": "જેનું નામ અનુક્રમે જૂન મહિનામાં અથવા યથાપ્રસંગ, ડિસેમ્બર મહિનામાં સંબંધિત સંસ્થાના રજીસ્ટરમાં હોય તે દરેક કામદાર માટે કામદાર-ફાળાની રકમ, દર છ મહિને એવા દરેક કામદાર દીઠ ૬ રૂપિયાના દરે અને માલિકના ફાળાની રકમ, દર છ મહિને એવા દરેક કામદાર દીઠ ૧૨ રૂપિયાના દરે આપવાની રહેશે.",
+        "deduction": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra Labour Welfare Fund Act, 1953, section 6BB(2) as substituted by the Maharashtra Labour Welfare Fund (Amendment) Act, 2024, and section 6BB(4), (5) and (8), in the Maharashtra Labour Welfare Board's consolidated text; sub-section (8) names sub-clauses of clause (a) that the substituted clause (a) does not contain",
+      "cells": {
+        "entry": "27-6BB(2)",
+        "stateCode": "27",
+        "act": "Maharashtra Labour Welfare Fund Act, 1953",
+        "period": "halfYearly",
+        "employeeAmount": 25,
+        "employeePercent": null,
+        "employeeLimit": null,
+        "employerAmount": null,
+        "employerTimesEmployee": 3,
+        "governmentAmount": null,
+        "governmentTimesEmployee": 2,
+        "wording": "(2) The amount of contribution payable every six months in respect of every employee and an employer for each such employee shall be at the following rates, namely:- (a) in respect of an employee, whose name appears in the register of an establishment on the 30th June and 31st December, respectively, shall be at the rate of twenty-five rupees: Provided that, the State Government shall on receipt of a proposal from the Board, by notification in the Official Gazette, increase once in every three years, the rate of employee's contribution so, however that, such increase shall not exceed thirty per cent of the rate of contribution; (b) in respect of an employer, for each employee referred to in clause (a), thrice the amount of contribution payable by an employee. … (8) … On receipt of the statement from the Welfare Commissioner, the State Government shall pay to the Board a contribution of an amount equal to half the employee's contribution for the period from the 31st December, 2000 to the 31st March 2003; and an amount equal to twice the employee's contribution with effect from the 1st April 2003, in respect of every employee referred to in sub-clauses (1) and (ii) of clause (a) of sub-section (2).",
+        "deduction": "(4) Notwithstanding anything contained in any other enactment but subject to the provisions of this Act and any rules, the employer shall in the case of any such employee be entitled to recover from the employee that employee's contribution by deduction from his wages, and not otherwise; and such deduction shall be deemed to be a deduction authorised by or under the Payment of Wages Act, 1936; (4 of 1936): Provided that, no such deduction shall be made in excess of the amount of the contribution payable by such employee, nor shall it be made from any wages other than the wages for the months of June and December: Provided further that, if through inadvertance or otherwise, no deduction has been made from the wages of an employee for the months aforesaid, such deduction may be made from the wages of such employee for any subsequent month or months with the permission in writing of the Inspector appointed under this Act. (5) Notwithstanding any contract to the contrary, no employer shall deduct the employer's contribution from any wages payable to an employee or otherwise recover it from the employee."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Karnataka Labour Welfare Fund Act, 1965, section 7A(2), (4) and (5), sub-section (2) as amended by the Karnataka Labour Welfare Fund (Amendment) Act, 2024 (Karnataka Act No. 05 of 2025), section 2, in the Labour Department's booklet of 2025",
+      "cells": {
+        "entry": "29-7A(2)",
+        "stateCode": "29",
+        "act": "Karnataka Labour Welfare Fund Act, 1965",
+        "period": "yearly",
+        "employeeAmount": 50,
+        "employeePercent": null,
+        "employeeLimit": null,
+        "employerAmount": 100,
+        "employerTimesEmployee": null,
+        "governmentAmount": 50,
+        "governmentTimesEmployee": null,
+        "wording": "(2) In respect of every employee whose name stands in the register of an establishment on 31st December of a year sum of fifty rupees, one hundred rupees and fifty rupees respectively shall be payable as contribution for that year by the concerned employee, the employer and the State Government.",
+        "deduction": "(4) Notwithstanding anything contained in any other enactment but subject to the provisions of this Act and any rules made thereunder the employer shall be entitled to recover the employee's contribution from the employee by deduction from his wages and not otherwise and such deduction shall be deemed to be a deduction authorised by or under the Payment of Wages Act, 1936: Provided that, no such deduction shall be made in excess of the amount of the contribution payable by such employee, nor shall it be made from any wages other than the wages for the month of December of the year to which the contribution relates: Provided further that, if through inadvertence or otherwise, no deduction has been made from the wages of an employee for the month aforesaid, such deduction may be made from the wages of such employee for any subsequent month or months with the permission in writing of the Inspector appointed under this Act. (5) Notwithstanding anything to the contrary in any agreement or contract no employer shall deduct the employer's contribution from any wages payable to an employee or otherwise recover it from the employee."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Goa Labour Welfare Fund Act, 1986, section 14(1) as substituted by the Goa Labour Welfare Fund (Amendment) Act, 2015 (Goa Act 9 of 2015), section 6, and section 14(2); rule 4 of the Goa Labour Welfare Fund Rules, 1990 has the statements made twice a year and states no split of the yearly amount",
+      "cells": {
+        "entry": "30-14(1)",
+        "stateCode": "30",
+        "act": "Goa Labour Welfare Fund Act, 1986",
+        "period": "yearly",
+        "employeeAmount": 120,
+        "employeePercent": null,
+        "employeeLimit": null,
+        "employerAmount": 360,
+        "employerTimesEmployee": null,
+        "governmentAmount": 240,
+        "governmentTimesEmployee": null,
+        "wording": "(1) Every employee shall contribute rupees one hundred and twenty per year to the Fund and every employer and the Government shall, in respect of each such employee, contribute rupees three hundred and sixty and rupees two hundred and forty, respectively, per year to the Fund.",
+        "deduction": "(2) Notwithstanding anything contained in any other law for the time being in force, but subject to the provisions of this Act and any rules made thereunder, the employer shall be entitled to recover from the employee the employee's contribution by deduction from his wages in such manner as may be prescribed and such deduction shall be deemed to be a deduction authorised by or under the Payment of Wages Act, 1936 (Central Act 4 of 1936)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Kerala Labour Welfare Fund Act, 1975, section 15(1) and (3), sub-section (1) as amended by the Kerala Labour Welfare Fund (Amendment) Act, 2021, section 2, deemed in force from 16 January 2020; the Act names no register day",
+      "cells": {
+        "entry": "32-15(1)",
+        "stateCode": "32",
+        "act": "Kerala Labour Welfare Fund Act, 1975",
+        "period": "halfYearly",
+        "employeeAmount": 45,
+        "employeePercent": null,
+        "employeeLimit": null,
+        "employerAmount": 45,
+        "employerTimesEmployee": null,
+        "governmentAmount": null,
+        "governmentTimesEmployee": null,
+        "wording": "(1) Every employee shall contribute forty five rupees per half year to the Fund and every employer shall in respect of each such employee contribute forty five rupees per half year to the Fund.",
+        "deduction": "(3) Notwithstanding anything contained in any other law for the time being in force, the employer shall be entitled to recover from the employees the employee's contribution by deduction from his wages or in such other manner as may be prescribed, and such deduction shall be deemed to be a deduction authorised by or under the Payment of Wages Act, 1936 (Central Act 4 of 1936)."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Telangana Labour Welfare Fund Act, 1987 (Act No. 34 of 1987), section 10(1), as the Labour Department of Telangana publishes it",
+      "cells": {
+        "entry": "36-10(1)",
+        "stateCode": "36",
+        "act": "Telangana Labour Welfare Fund Act, 1987",
+        "period": "yearly",
+        "employeeAmount": 2,
+        "employeePercent": null,
+        "employeeLimit": null,
+        "employerAmount": 5,
+        "employerTimesEmployee": null,
+        "governmentAmount": null,
+        "governmentTimesEmployee": null,
+        "wording": "Every employee shall contribute two rupees per year to the Fund and every employer shall, in respect of each such employee, contribute five rupees per year to the Fund",
+        "deduction": null
+      }
+    }
+  ]
+}

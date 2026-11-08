@@ -6,6 +6,7 @@ import {
   basisLabels,
   changeCounts,
   longDate,
+  longDayMonth,
   parameterSetApi,
   parameterSetPath,
   quoted,
@@ -28,10 +29,26 @@ export const companyRatesKey = "income-tax.company-rates";
 
 export const usefulLivesKey = "companies.schedule-ii-useful-lives";
 
+export const professionalTaxSlabsKey = "professional-tax.salary-slabs";
+
+export const esiContributionPeriodsKey = "esi.contribution-periods";
+
+export const welfareFundContributionsKey = "labour-welfare-fund.contributions";
+
+export const labourSetPrefixes = [
+  "bonus.",
+  "esi.",
+  "gratuity.",
+  "labour-codes.",
+  "labour-welfare-fund.",
+  "professional-tax.",
+  "provident-fund.",
+];
+
 export const entriesPerPage = 10;
 
 export type ParameterColumnKind =
-  "text" | "code" | "integer" | "percent" | "amount" | "choice" | "stateCode" | "date";
+  "text" | "code" | "integer" | "percent" | "amount" | "choice" | "stateCode" | "date" | "dayMonth";
 
 export type ParameterColumn = {
   readonly name: string;
@@ -48,7 +65,11 @@ export type ParameterRow = {
   readonly from: string;
   readonly until: string | null;
   readonly source: string;
-  readonly cells: readonly { readonly column: string; readonly value: string | null }[];
+  readonly cells: readonly {
+    readonly column: string;
+    readonly value: string | null;
+    readonly stateName: string | null;
+  }[];
 };
 
 export type RowChange = { readonly before: ParameterRow; readonly after: ParameterRow };
@@ -84,6 +105,12 @@ export const asOfTexts: Readonly<Record<ParameterAsOf, string>> = {
   deductionDate:
     "Each version applies to tax deducted on or after the day it starts: on the credit or the payment at which the Act requires the deduction.",
   financialYearStart: "Each version applies to the financial years that begin on or after the day it starts.",
+  wageDate: "Each version applies to wages earned on or after the day it starts.",
+  wagePeriodEnd: "Each version applies to the wage periods that end on or after the day it starts.",
+  employmentEndDate: "Each version applies to employment that ends on or after the day it starts.",
+  accountingYearEnd: "Each version applies to the accounting years that end on or after the day it starts.",
+  contributionPeriodEnd:
+    "Each version applies to the contribution periods that end on or after the day it starts.",
 };
 
 const indianGrouping = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2, minimumFractionDigits: 0 });
@@ -118,8 +145,13 @@ export function valueOf(row: ParameterRow, column: string): string | null {
 }
 
 // How each kind of value reads on the page, written apart from the page's own code: a percentage with its sign, rupees grouped
-// in lakhs and crores with paise only when there are some, a date in words, a choice by its title and an empty value as None.
-export function cellText(column: ParameterColumn, value: string | null): string {
+// in lakhs and crores with paise only when there are some, a date and a day of the year in words, a choice by its title, a GST
+// State code after the name of its State and an empty value as None.
+export function cellText(
+  column: ParameterColumn,
+  value: string | null,
+  stateName: string | null = null,
+): string {
   if (value === null) return "None";
   switch (column.kind) {
     case "percent":
@@ -128,11 +160,20 @@ export function cellText(column: ParameterColumn, value: string | null): string 
       return `₹${(value.includes(".") ? withPaise : indianGrouping).format(Number(value))}`;
     case "date":
       return longDate(value);
+    case "dayMonth":
+      return longDayMonth(value);
+    case "stateCode":
+      return stateName === null ? value : `${stateName} (${value})`;
     case "choice":
       return column.choices.find((choice) => choice.value === value)?.title ?? value;
     default:
       return value;
   }
+}
+
+export function rowCellText(column: ParameterColumn, row: ParameterRow): string {
+  const cell = row.cells.find((candidate) => candidate.column === column.name);
+  return cellText(column, cell?.value ?? null, cell?.stateName ?? null);
 }
 
 export function titleColumn(set: ParameterSet): ParameterColumn {
@@ -144,14 +185,12 @@ export function titleColumn(set: ParameterSet): ParameterColumn {
 
 export function entryRow(set: ParameterSet, row: ParameterRow): ShownRow {
   return {
-    ...Object.fromEntries(
-      set.columns.map((column) => [column.title, cellText(column, valueOf(row, column.name))]),
-    ),
+    ...Object.fromEntries(set.columns.map((column) => [column.title, rowCellText(column, row)])),
     Source: row.source,
   };
 }
 
-// What a person may search an entry by: its key, and the words of its text, its codes and the titles of its choices.
+// What a person may search an entry by: its key, and the words of its text, its codes, the titles of its choices and its States.
 export function entryKeys(
   set: ParameterSet,
   row: ParameterRow,
@@ -159,18 +198,18 @@ export function entryKeys(
   return {
     code: row.key,
     name: set.columns
-      .filter((column) => column.kind === "text" || column.kind === "code" || column.kind === "choice")
-      .map((column) => {
-        const value = valueOf(row, column.name);
-        return value === null ? "" : cellText(column, value);
-      })
+      .filter(
+        (column) =>
+          ["text", "code", "choice", "stateCode"].includes(column.kind) && valueOf(row, column.name) !== null,
+      )
+      .map((column) => rowCellText(column, row))
       .join(" "),
   };
 }
 
 export function entryTitle(set: ParameterSet, row: ParameterRow): string {
   const rowTitle = set.columns.find((column) => column.isRowTitle);
-  if (rowTitle !== undefined) return cellText(rowTitle, valueOf(row, rowTitle.name));
+  if (rowTitle !== undefined) return rowCellText(rowTitle, row);
   const key = set.columns.find((column) => column.isKey);
   return key === undefined ? row.key : `${key.title} ${row.key}`;
 }
@@ -180,7 +219,7 @@ export function entryValues(set: ParameterSet, row: ParameterRow): ShownValue[] 
   return [
     ...set.columns
       .filter((column) => column !== title)
-      .map((column) => ({ label: column.title, value: cellText(column, valueOf(row, column.name)) })),
+      .map((column) => ({ label: column.title, value: rowCellText(column, row) })),
     { label: "Source", value: row.source },
   ];
 }
@@ -190,8 +229,8 @@ export function changedValues(set: ParameterSet, change: RowChange): ShownValue[
     .filter((column) => valueOf(change.before, column.name) !== valueOf(change.after, column.name))
     .map((column) => ({
       label: column.title,
-      value: cellText(column, valueOf(change.after, column.name)),
-      was: cellText(column, valueOf(change.before, column.name)),
+      value: rowCellText(column, change.after),
+      was: rowCellText(column, change.before),
     }));
   return change.before.source === change.after.source
     ? values

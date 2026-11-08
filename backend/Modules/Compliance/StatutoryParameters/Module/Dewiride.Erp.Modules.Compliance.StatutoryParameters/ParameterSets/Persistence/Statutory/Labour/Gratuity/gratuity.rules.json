@@ -1,0 +1,585 @@
+{
+  "key": "gratuity.rules",
+  "title": "Gratuity under the Code on Social Security, 2020",
+  "description": "Gratuity under Chapter V of the Code on Social Security, 2020, in force from 21 November 2025, each rule in the instrument's words: the establishments covered, the continuous service that earns gratuity, how it is computed and capped, and the time to pay it and to appeal; with section 2(o)(c) of the Industrial Relations Code, 2020, under which a fixed-term employee is eligible after a year's service. The ceiling is S.O. 1420(E) of 29 March 2018 under the repealed Payment of Gratuity Act, 1972, kept in force by section 164(2)(a). From 8 May 2026 the Social Security (Central) Rules, 2026 add, where the Central Government is the appropriate Government, the rounding of a fixed term's service and the employer's limits to answer an application; the Central Rules of 1972 they superseded are not held. No rate of interest on gratuity paid late is held: section 56(4) caps it at a rate the Central Government notifies for long-term deposits. The set answers for the day employment ends.",
+  "basis": "law",
+  "asOf": "employmentEndDate",
+  "columns": [
+    {
+      "name": "provision",
+      "title": "Provision",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "What it says",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "sphere",
+      "title": "Applies to",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "everyEstablishment",
+          "title": "Every establishment Chapter V covers"
+        },
+        {
+          "value": "centralSphere",
+          "title": "Where the Central Government is the appropriate Government"
+        }
+      ]
+    },
+    {
+      "name": "count",
+      "title": "Number",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "unit",
+      "title": "Unit",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "employees",
+          "title": "Employees"
+        },
+        {
+          "value": "years",
+          "title": "Years"
+        },
+        {
+          "value": "months",
+          "title": "Months"
+        },
+        {
+          "value": "weeks",
+          "title": "Weeks"
+        },
+        {
+          "value": "days",
+          "title": "Days"
+        },
+        {
+          "value": "daysWages",
+          "title": "Days' wages"
+        },
+        {
+          "value": "monthlyRateDivisor",
+          "title": "Divisor of the monthly rate of wages"
+        }
+      ]
+    },
+    {
+      "name": "bound",
+      "title": "Bound",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "atLeast",
+          "title": "At least (not less than)"
+        },
+        {
+          "value": "moreThan",
+          "title": "More than (in excess of)"
+        },
+        {
+          "value": "atMost",
+          "title": "At most (not exceeding, within)"
+        }
+      ]
+    },
+    {
+      "name": "percent",
+      "title": "Per cent",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "amount",
+      "title": "Amount (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Code on Social Security, 2020 (No. 36 of 2020), 28 September 2020, Gazette of India, Extraordinary, Part II, Section 1, No. 61: sections 1(4) and (8), 53 to 56 and 164 and the First Schedule, in force from 21 November 2025",
+        "S.O. 5319(E), 21 November 2025, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025, No. 5739: the Central Government “hereby appoints the 21st day of November, 2025 as the date on which the following provisions of the said Code, shall come into force”",
+        "Industrial Relations Code, 2020 (No. 35 of 2020), 28 September 2020, Gazette of India, Extraordinary, Part II, Section 1, No. 60: section 2(o), in force from 21 November 2025 by S.O. 5320(E) of that day (Part II, Section 3(ii), No. 5144): “appoints the 21st day of November, 2025 as the date on which the provisions of the said Code, shall come into force”",
+        "S.O. 1420(E), 29 March 2018, Ministry of Labour and Employment, under section 4(3) of the Payment of Gratuity Act, 1972, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 1283, in force on its publication; kept in force by section 164(2)(a) of the Code on Social Security, 2020 as if made under its section 53(3)"
+      ]
+    },
+    {
+      "from": "2026-05-08",
+      "instruments": [
+        "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3(i), No. 310: rule 33(1)(a) and (2)(a), superseding the Payment of Gratuity (Central) Rules, 1972; rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, First Schedule, Chapter V, column (3), entry (a), applied by section 1(4)",
+      "cells": {
+        "provision": "first-schedule-V(a)",
+        "name": "Factories, mines, oilfields, plantations, ports and railway companies, whatever their size",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "[Chapter V. Gratuity. Applicability] (a) every factory, mine, oilfield, plantation, port and railway company; and"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, First Schedule, Chapter V, column (3), entry (b), applied by section 1(4)",
+      "cells": {
+        "provision": "first-schedule-V(b)",
+        "name": "Shops and establishments, by their employees on any day of the preceding twelve months",
+        "sphere": "everyEstablishment",
+        "count": 10,
+        "unit": "employees",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "[Chapter V. Gratuity. Applicability] (b) every shop or establishment in which ten or more employees are employed, or were employed, on any day of the preceding twelve months; and such shops or establishments as may be notified by the appropriate Government from time to time."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 1(8)",
+      "cells": {
+        "provision": "1(8)",
+        "name": "An establishment once covered stays covered when its employees fall below the threshold",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "(8) Notwithstanding anything contained in sub-section (4), an establishment to which any Chapter applies at the first instance shall continue to be applied thereafter even if the number of employees therein at any subsequent time falls below the threshold specified in the First Schedule in respect of that Chapter."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(1)",
+      "cells": {
+        "provision": "53(1)",
+        "name": "Continuous service after which gratuity is payable when employment ends",
+        "sphere": "everyEstablishment",
+        "count": 5,
+        "unit": "years",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "53. (1) Gratuity shall be payable to an employee on the termination of his employment after he has rendered continuous service for not less than five years,— (a) on his superannuation; or (b) on his retirement or resignation; or (c) on his death or disablement due to accident or disease; or (d) on termination of his contract period under fixed term employment; or (e) on happening of any such event as may be notified by the Central Government:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(1), first proviso",
+      "cells": {
+        "provision": "53(1)-proviso-1",
+        "name": "Continuous service of a working journalist",
+        "sphere": "everyEstablishment",
+        "count": 3,
+        "unit": "years",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "Provided that in case of working journalist as defined in clause (f) of section 2 of the Working Journalists and Other Newspaper Employees (Condition of Service) and Miscellaneous Provisions Act, 1955, the expression “five years” occurring in this sub-section shall be deemed to be three years:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(1), second proviso",
+      "cells": {
+        "provision": "53(1)-proviso-2",
+        "name": "No minimum continuous service on death, disablement, the end of a fixed term or a notified event",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "Provided further that the completion of continuous service of five years shall not be necessary where the termination of the employment of any employee is due to death or disablement or expiration of fixed term employment or happening of any such event as may be notified by the Central Government:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Industrial Relations Code, 2020, section 2(o), proviso, clause (c)",
+      "cells": {
+        "provision": "irc-2(o)(c)",
+        "name": "Service under the contract after which a fixed-term employee is eligible",
+        "sphere": "everyEstablishment",
+        "count": 1,
+        "unit": "years",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "(o) “fixed term employment” means the engagement of a worker on the basis of a written contract of employment for a fixed period: Provided that— (c) he shall be eligible for gratuity if he renders service under the contract for a period of one year;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(2)",
+      "cells": {
+        "provision": "53(2)",
+        "name": "Days' wages for each completed year of service, at the rate of wages last drawn",
+        "sphere": "everyEstablishment",
+        "count": 15,
+        "unit": "daysWages",
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "(2) For every completed year of service or part thereof in excess of six months, the employer shall pay gratuity to an employee at the rate of fifteen days' wages or such number of days as may be notified by the Central Government, based on the rate of wages last drawn by the employee concerned:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(2), “part thereof in excess of six months”",
+      "cells": {
+        "provision": "53(2)-part-of-a-year",
+        "name": "Part of a year that counts as a completed year of service",
+        "sphere": "everyEstablishment",
+        "count": 6,
+        "unit": "months",
+        "bound": "moreThan",
+        "percent": null,
+        "amount": null,
+        "wording": "(2) For every completed year of service or part thereof in excess of six months, the employer shall pay gratuity to an employee at the rate of fifteen days' wages or such number of days as may be notified by the Central Government, based on the rate of wages last drawn by the employee concerned:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(2), first proviso",
+      "cells": {
+        "provision": "53(2)-proviso-1",
+        "name": "Piece-rated employee: months whose total wages give the daily wage, overtime left out",
+        "sphere": "everyEstablishment",
+        "count": 3,
+        "unit": "months",
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "Provided that in the case of a piece-rated employee, daily wages shall be computed on the average of the total wages received by him for a period of three months immediately preceding the termination of his employment, and, for this purpose, the wages paid for any overtime work shall not be taken into account:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(2), second proviso",
+      "cells": {
+        "provision": "53(2)-proviso-2",
+        "name": "Seasonal employee not employed throughout the year: days' wages for each season",
+        "sphere": "everyEstablishment",
+        "count": 7,
+        "unit": "daysWages",
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "Provided further that in the case of an employee who is employed in a seasonal establishment and who is not so employed throughout the year, the employer shall pay the gratuity at the rate of seven days' wages for each season:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(2), third proviso",
+      "cells": {
+        "provision": "53(2)-proviso-3",
+        "name": "Fixed-term and deceased employees are paid pro rata",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "Provided also that in the case of an employee employed on fixed term employment or a deceased employee, the employer shall pay gratuity on pro rata basis."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(3), with S.O. 1420(E), 29 March 2018, under section 4(3) of the Payment of Gratuity Act, 1972, kept in force by section 164(2)(a)",
+      "cells": {
+        "provision": "53(3)",
+        "name": "Most gratuity payable to an employee",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": "atMost",
+        "percent": null,
+        "amount": 2000000,
+        "wording": "(3) The amount of gratuity payable to an employee shall not exceed such amount as may be notified by the Central Government. [S.O. 1420(E)] In exercise of the powers conferred by sub-section (3) of section 4 of the Payment of Gratuity Act, 1972 (39 of 1972), the Central Government hereby specifies that the amount of gratuity payable to an employee under the said Act shall not exceed twenty lakh rupees."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53(4)",
+      "cells": {
+        "provision": "53(4)",
+        "name": "Wages of an employee re-employed on reduced wages after disablement",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "(4) For the purpose of computing the gratuity payable to an employee who is employed, after his disablement, on reduced wages, his wages for the period preceding his disablement shall be taken to be the wages received by him during that period, and his wages for the period subsequent to his disablement shall be taken to be the wages as so reduced."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53, Explanation 1",
+      "cells": {
+        "provision": "53-explanation-1",
+        "name": "A holder of a Government post under other gratuity rules is not an employee for Chapter V",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "Explanation 1.— For the purposes of this Chapter, employee does not include any such person who holds a post under the Central Government or a State Government and is governed by any other Act or by any rules providing for payment of gratuity."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 53, Explanation 3",
+      "cells": {
+        "provision": "53-explanation-3",
+        "name": "Monthly-rated employee: the monthly rate of wages is divided by this number and multiplied by the days' wages",
+        "sphere": "everyEstablishment",
+        "count": 26,
+        "unit": "monthlyRateDivisor",
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "Explanation 3.— For the purposes of this section, it is clarified that in the case of a monthly rated employee, the fifteen days' wages shall be calculated by dividing the monthly rate of wages last drawn by him by twenty-six and multiplying the quotient by fifteen."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 54(B)(a)(i)",
+      "cells": {
+        "provision": "54(B)(a)(i)",
+        "name": "Deemed year of service: days actually worked below ground in a mine or in an establishment working less than six days a week",
+        "sphere": "everyEstablishment",
+        "count": 190,
+        "unit": "days",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "(B) where an employee (not being an employee employed in a seasonal establishment) is not in continuous service within the meaning of clause (A), for any period of one year or six months, he shall be deemed to be in continuous service under the employer— (a) for the said period of one year, if the employee during the period of twelve calendar months preceding the date with reference to which calculation is to be made, has actually worked under the employer for not less than— (i) one hundred and ninety days, in the case of any employee employed below the ground in a mine or in an establishment which works for less than six days in a week; and"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 54(B)(a)(ii)",
+      "cells": {
+        "provision": "54(B)(a)(ii)",
+        "name": "Deemed year of service: days actually worked in any other case",
+        "sphere": "everyEstablishment",
+        "count": 240,
+        "unit": "days",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "(B) where an employee (not being an employee employed in a seasonal establishment) is not in continuous service within the meaning of clause (A), for any period of one year or six months, he shall be deemed to be in continuous service under the employer— (a) for the said period of one year, if the employee during the period of twelve calendar months preceding the date with reference to which calculation is to be made, has actually worked under the employer for not less than— (ii) two hundred and forty days, in any other case;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 54(B)(b)(i)",
+      "cells": {
+        "provision": "54(B)(b)(i)",
+        "name": "Deemed six months of service: days actually worked below ground in a mine or in an establishment working less than six days a week",
+        "sphere": "everyEstablishment",
+        "count": 95,
+        "unit": "days",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "(B) where an employee (not being an employee employed in a seasonal establishment) is not in continuous service within the meaning of clause (A), for any period of one year or six months, he shall be deemed to be in continuous service under the employer— (b) for the said period of six months, if the employee during the period of six calendar months preceding the date with reference to which the calculation is to be made, has actually worked under the employer for not less than— (i) ninety-five days, in the case of an employee employed below the ground in a mine or in an establishment which works for less than six days in a week; and"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 54(B)(b)(ii)",
+      "cells": {
+        "provision": "54(B)(b)(ii)",
+        "name": "Deemed six months of service: days actually worked in any other case",
+        "sphere": "everyEstablishment",
+        "count": 120,
+        "unit": "days",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "(B) where an employee (not being an employee employed in a seasonal establishment) is not in continuous service within the meaning of clause (A), for any period of one year or six months, he shall be deemed to be in continuous service under the employer— (b) for the said period of six months, if the employee during the period of six calendar months preceding the date with reference to which the calculation is to be made, has actually worked under the employer for not less than— (ii) one hundred and twenty days, in any other case."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 54(B), Explanation, its clause (iv) for the weeks of maternity leave",
+      "cells": {
+        "provision": "54(B)-explanation",
+        "name": "Days counted as actually worked, maternity leave up to a total among them",
+        "sphere": "everyEstablishment",
+        "count": 26,
+        "unit": "weeks",
+        "bound": "atMost",
+        "percent": null,
+        "amount": null,
+        "wording": "Explanation.— For the purposes of this clause, the number of days on which an employee has actually worked under an employer shall include the days on which— (i) he has been laid-off under an agreement or as permitted by standing orders made under the Industrial Employment (Standing Orders) Act, 1946, or under the Industrial Disputes Act, 1947, or under any other law applicable to the establishment; (ii) he has been on leave with full wages, earned in the previous year; (iii) he has been absent due to temporary disablement caused by accident arising out of and in the course of his employment; and (iv) in the case of a female, she has been on maternity leave; so, however, that the total period of such maternity leave does not exceed twenty-six weeks;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 54(C)",
+      "cells": {
+        "provision": "54(C)",
+        "name": "Seasonal establishment: share of its days in operation actually worked for continuous service",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": "atLeast",
+        "percent": 75,
+        "amount": null,
+        "wording": "(C) where an employee, employed in a seasonal establishment, is not in continuous service within the meaning of clause (A), for any period of one year or six months, he shall be deemed to be in continuous service under the employer for such period if he has actually worked for not less than seventy-five per cent. of the number of days on which the establishment was in operation during such period."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 55(1)",
+      "cells": {
+        "provision": "55(1)",
+        "name": "Service after which an employee makes a nomination",
+        "sphere": "everyEstablishment",
+        "count": 1,
+        "unit": "years",
+        "bound": "atLeast",
+        "percent": null,
+        "amount": null,
+        "wording": "55. (1) Each employee, who has completed one year of service, shall make, a nomination within such time, in such form and in such manner, as may be prescribed by the appropriate Government."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 56(3)",
+      "cells": {
+        "provision": "56(3)",
+        "name": "Time to pay gratuity from the date it becomes payable",
+        "sphere": "everyEstablishment",
+        "count": 30,
+        "unit": "days",
+        "bound": "atMost",
+        "percent": null,
+        "amount": null,
+        "wording": "(3) The employer shall arrange to pay the amount of gratuity within thirty days from the date it becomes payable to the person to whom the gratuity is payable."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 56(4) and its proviso",
+      "cells": {
+        "provision": "56(4)",
+        "name": "Simple interest on gratuity paid late, at most the Central Government's rate for repayment of long-term deposits",
+        "sphere": "everyEstablishment",
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "percent": null,
+        "amount": null,
+        "wording": "(4) If the amount of gratuity payable under sub-section (3) is not paid by the employer within the period specified in sub-section (3), the employer shall pay, from the date on which the gratuity becomes payable to the date on which it is paid, simple interest at such rate, not exceeding the rate notified by the Central Government from time to time for repayment of long term deposits: Provided that no such interest shall be payable if the delay in the payment is due to the fault of the employee and the employer has obtained permission in writing from the competent authority for the delayed payment on this ground."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 56(8)",
+      "cells": {
+        "provision": "56(8)",
+        "name": "Time to appeal against an order of the competent authority, from its receipt",
+        "sphere": "everyEstablishment",
+        "count": 60,
+        "unit": "days",
+        "bound": "atMost",
+        "percent": null,
+        "amount": null,
+        "wording": "(8) Any person aggrieved by an order under sub-section (5) may, within sixty days from the date of the receipt of the order, prefer an appeal to the appropriate Government or such other authority as may be specified by the appropriate Government in this behalf:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 56(8), first proviso",
+      "cells": {
+        "provision": "56(8)-proviso-1",
+        "name": "Further time the appellate authority may allow for an appeal",
+        "sphere": "everyEstablishment",
+        "count": 60,
+        "unit": "days",
+        "bound": "atMost",
+        "percent": null,
+        "amount": null,
+        "wording": "Provided that the appropriate Government or the appellate authority, as the case may be, may, if it is satisfied that the appellant was prevented by sufficient cause from preferring the appeal within the said period of sixty days, extend the said period by a further period of sixty days:"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 33(1)(a), second proviso",
+      "cells": {
+        "provision": "rule-33(1)(a)-proviso-2",
+        "name": "Fixed-term employee: a further part of a year above this many months rounds up to one more year",
+        "sphere": "centralSphere",
+        "count": 6,
+        "unit": "months",
+        "bound": "moreThan",
+        "percent": null,
+        "amount": null,
+        "wording": "Provided further that an employee on fixed term employment shall be eligible for gratuity, if he renders service under the contract for a period of at least one year and for subsequent period in excess of six months and more, but less than one year, shall be rounded off to one additional year."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 33(2)(a)",
+      "cells": {
+        "provision": "rule-33(2)(a)",
+        "name": "Employer's notice of the amount, or of why the claim is refused, from receiving the application",
+        "sphere": "centralSphere",
+        "count": 15,
+        "unit": "days",
+        "bound": "atMost",
+        "percent": null,
+        "amount": null,
+        "wording": "(2) (a) within fifteen days of the receipt of an application under sub-rule (1) for payment of gratuity, the employer shall— (i) if the claim is found admissible on verification, issue a notice in Form-V to the applicant employee, nominee or legal heir, as the case may be, specifying the amount of gratuity payable and fixing a date, not being later than the thirtieth day after the date of receipt of the application, for payment thereof; or (ii) if the claim for gratuity is not found admissible, issue a notice in Form-V to the applicant employee, nominee or legal heir, as the case may be, specifying the reasons why the claim for gratuity is not considered admissible and a copy of the notice shall be endorsed to the competent authority."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 33(2)(a)(i)",
+      "cells": {
+        "provision": "rule-33(2)(a)(i)",
+        "name": "Latest date for payment the employer's notice may fix, from receiving the application",
+        "sphere": "centralSphere",
+        "count": 30,
+        "unit": "days",
+        "bound": "atMost",
+        "percent": null,
+        "amount": null,
+        "wording": "(2) (a) within fifteen days of the receipt of an application under sub-rule (1) for payment of gratuity, the employer shall— (i) if the claim is found admissible on verification, issue a notice in Form-V to the applicant employee, nominee or legal heir, as the case may be, specifying the amount of gratuity payable and fixing a date, not being later than the thirtieth day after the date of receipt of the application, for payment thereof; or"
+      }
+    }
+  ]
+}

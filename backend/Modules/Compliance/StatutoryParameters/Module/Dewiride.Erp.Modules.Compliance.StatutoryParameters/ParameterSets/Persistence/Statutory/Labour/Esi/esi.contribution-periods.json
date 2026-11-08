@@ -1,0 +1,120 @@
+{
+  "key": "esi.contribution-periods",
+  "title": "ESI contribution and benefit periods",
+  "description": "The two contribution periods of a year with their benefit periods, and the first contribution period of a person who becomes an employee for the first time, in the words of regulation 4 of the Employees' State Insurance (General) Regulations, 1950, in ESIC's consolidated text, kept in force by section 164(2) of the Code on Social Security, 2020. Each day and month falls at its next occurrence: a period runs from its first day to the next occurrence of its last day, and its benefit period from the next occurrence of its first day after the contribution period ends, as the Table's words “of the year following” place them. Section 164(2)(b) keeps the Regulations “for a period of one year from the date of commencement of this Code”, 21 November 2025 for them, so the rows end on 20 November 2026, the earlier day on which that year may end, and no period is seeded after it. The set answers for the last day of the wage period.",
+  "basis": "law",
+  "asOf": "wagePeriodEnd",
+  "columns": [
+    {
+      "name": "period",
+      "title": "Period",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Contribution period",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "startsOn",
+      "title": "Starts on",
+      "kind": "dayMonth",
+      "optional": true
+    },
+    {
+      "name": "endsOn",
+      "title": "Ends on",
+      "kind": "dayMonth",
+      "optional": true
+    },
+    {
+      "name": "benefitStartsOn",
+      "title": "Benefit period starts on",
+      "kind": "dayMonth",
+      "optional": true
+    },
+    {
+      "name": "benefitEndsOn",
+      "title": "Benefit period ends on",
+      "kind": "dayMonth",
+      "optional": true
+    },
+    {
+      "name": "benefitAfterMonths",
+      "title": "First benefit period after (months of employment)",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Employees' State Insurance (General) Regulations, 1950, Employees' State Insurance Corporation Notification No. RS/5/48, 17 October 1950, in ESIC's consolidated text as on 11.01.2024, as amended by the ESI (General) (Amdt.) Regulations, 2020 of 18 May 2020: regulation 4",
+        "Code on Social Security, 2020 (36 of 2020), section 164(2)(a) and (b), keeping in force the rules and regulations made under the Employees' State Insurance Act, 1948, which section 164(1) repeals; in force from “the 21st day of November, 2025” by S.O. 5319(E), 21 November 2025, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    },
+    {
+      "from": "2026-11-21",
+      "instruments": [
+        "Code on Social Security, 2020 (36 of 2020), section 164(2)(b): the rules, regulations and schemes made or framed under the Employees' State Insurance Act, 1948 “shall remain in force, to the extent they are not inconsistent with the provisions of this Code for a period of one year from the date of commencement of this Code”",
+        "Code on Social Security, 2020 (36 of 2020), section 1(3): “any reference in any such provision to the commencement of this Code shall be construed as a reference to the coming into force of that provision”; S.O. 5319(E), 21 November 2025, serial number 8, as corrected by S.O. 5936(E), 19 December 2025, brought section 164(2) into force on 21 November 2025"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-11-20",
+      "source": "Employees' State Insurance (General) Regulations, 1950, regulation 4, Table, in ESIC's consolidated text as on 11.01.2024",
+      "cells": {
+        "period": "april-to-september",
+        "name": "1 April to 30 September",
+        "startsOn": "04-01",
+        "endsOn": "09-30",
+        "benefitStartsOn": "01-01",
+        "benefitEndsOn": "06-30",
+        "benefitAfterMonths": null,
+        "wording": "4. Contribution and Benefit periods. Contribution periods and the corresponding benefit periods shall be as under:— [Contribution period] 1st April to 30th September [Corresponding benefit period] 1st January of the year following, to 30th June."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-11-20",
+      "source": "Employees' State Insurance (General) Regulations, 1950, regulation 4, Table, in ESIC's consolidated text as on 11.01.2024",
+      "cells": {
+        "period": "october-to-march",
+        "name": "1 October to 31 March of the year following",
+        "startsOn": "10-01",
+        "endsOn": "03-31",
+        "benefitStartsOn": "07-01",
+        "benefitEndsOn": "12-31",
+        "benefitAfterMonths": null,
+        "wording": "4. Contribution and Benefit periods. Contribution periods and the corresponding benefit periods shall be as under:— [Contribution period] 1st October to 31st March of the year following [Corresponding benefit period] 1st July to 31st December."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-11-20",
+      "source": "Employees' State Insurance (General) Regulations, 1950, regulation 4, proviso, in ESIC's consolidated text as on 11.01.2024",
+      "cells": {
+        "period": "first-employment",
+        "name": "First contribution period of a person who becomes an employee for the first time",
+        "startsOn": null,
+        "endsOn": null,
+        "benefitStartsOn": null,
+        "benefitEndsOn": null,
+        "benefitAfterMonths": 9,
+        "wording": "Provided that in the case of a person who becomes an employee within the meaning of the Act for the first time, the first contribution period shall commence from the date of such employment in the contribution period current on that day and the corresponding benefit period for him shall commence on the expiry of the period of 9 months from the date of such employment."
+      }
+    }
+  ]
+}

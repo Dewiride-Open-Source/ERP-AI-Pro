@@ -1774,6 +1774,7 @@ export function deserializeIntoPagedResponseOfPositionResponse(pagedResponseOfPo
 export function deserializeIntoParameterCellResponse(parameterCellResponse: Partial<ParameterCellResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
     return {
         "column": n => { parameterCellResponse.column = n.getStringValue(); },
+        "stateName": n => { parameterCellResponse.stateName = n.getStringValue(); },
         "value": n => { parameterCellResponse.value = n.getStringValue(); },
     }
 }
@@ -2945,6 +2946,10 @@ export interface ParameterCellResponse extends AdditionalDataHolder, Parsable {
      * The column property
      */
     column?: string | null;
+    /**
+     * The stateName property
+     */
+    stateName?: string | null;
     /**
      * The value property
      */
@@ -4270,6 +4275,7 @@ export function serializePagedResponseOfPositionResponse(writer: SerializationWr
 export function serializeParameterCellResponse(writer: SerializationWriter, parameterCellResponse: Partial<ParameterCellResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
     if (!parameterCellResponse || isSerializingDerivedType) { return; }
     writer.writeStringValue("column", parameterCellResponse.column);
+    writer.writeStringValue("stateName", parameterCellResponse.stateName);
     writer.writeStringValue("value", parameterCellResponse.value);
     writer.writeAdditionalData(parameterCellResponse.additionalData);
 }
@@ -4954,6 +4960,11 @@ export const ParameterAsOfObject = {
     TaxPeriodStart: "taxPeriodStart",
     DeductionDate: "deductionDate",
     FinancialYearStart: "financialYearStart",
+    WageDate: "wageDate",
+    WagePeriodEnd: "wagePeriodEnd",
+    EmploymentEndDate: "employmentEndDate",
+    AccountingYearEnd: "accountingYearEnd",
+    ContributionPeriodEnd: "contributionPeriodEnd",
 } as const;
 export const ParameterColumnKindObject = {
     Text: "text",
@@ -4964,6 +4975,7 @@ export const ParameterColumnKindObject = {
     Choice: "choice",
     StateCode: "stateCode",
     Date: "date",
+    DayMonth: "dayMonth",
 } as const;
 export const ParameterSetBasisObject = {
     Law: "law",

@@ -17,6 +17,9 @@ import {
   readParameterSet,
   cellText,
   companyRatesKey,
+  esiContributionPeriodsKey,
+  labourSetPrefixes,
+  professionalTaxSlabsKey,
   sacCodesKey,
   tdsCrosswalkKey,
   tdsEntriesKey,
@@ -24,6 +27,7 @@ import {
   valueOf,
   versionAddress,
   versionsSnapshot,
+  welfareFundContributionsKey,
   type ParameterSet,
   type ShownValue,
   type ShownVersion,
@@ -510,5 +514,90 @@ test.describe("the direct-tax sets", () => {
     await expect(entries.row(entryTitle(set, withDate!))).toContainText(
       cellText(column, valueOf(withDate!, column.name)),
     );
+  });
+});
+
+test.describe("the labour sets", () => {
+  test.use({ persona: "administrator" });
+
+  forEachTheme(
+    "show the professional-tax slabs with each State named beside its code, found by its name",
+    async ({ page, capture }) => {
+      const set = await readParameterSet(page.request, professionalTaxSlabsKey);
+      const shown = shownVersionOf(set);
+      const found = expectedMatches(shown.rows, "Maharashtra", (row) => entryKeys(set, row));
+      expect(found.length, "Maharashtra's slabs").toBeGreaterThan(0);
+      const setPage = new ParameterSetPage(page);
+      const entries = setPage.entries(set);
+
+      await setPage.goto(parameterSetPath(set.key), set.title);
+      await setPage.waitUntilInteractive();
+      await expect(setPage.asOf).toHaveText(asOfTexts.taxPeriodStart);
+      expect(await entries.rows()).toEqual(
+        shown.rows.slice(0, entriesPerPage).map((row) => entryRow(set, row)),
+      );
+      await entries.searchFor("Maharashtra");
+      await expect
+        .poll(() => entries.rows())
+        .toEqual(found.slice(0, entriesPerPage).map((row) => entryRow(set, row)));
+      await expect(entries.row(entryTitle(set, found[0]!))).toContainText("Maharashtra (27)");
+      await capture("professional-tax-slab", entries.row(entryTitle(set, found[0]!)));
+    },
+  );
+
+  forEachTheme("show the ESI contribution periods' days and months in words", async ({ page, capture }) => {
+    const set = await readParameterSet(page.request, esiContributionPeriodsKey);
+    const shown = shownVersionOf(set);
+    const dayMonths = set.columns.filter((column) => column.kind === "dayMonth");
+    const april = shown.rows.find((row) => dayMonths.some((column) => valueOf(row, column.name) === "04-01"));
+    expect(april, "the period that opens on 1 April").toBeDefined();
+    const setPage = new ParameterSetPage(page);
+    const entries = setPage.entries(set);
+
+    await setPage.goto(parameterSetPath(set.key), set.title);
+    await setPage.waitUntilInteractive();
+    await expect(setPage.asOf).toHaveText(asOfTexts.wagePeriodEnd);
+    await expect(setPage.versions).toMatchAriaSnapshot(versionsSnapshot(set));
+    expect(await entries.rows()).toEqual(
+      shown.rows.slice(0, entriesPerPage).map((row) => entryRow(set, row)),
+    );
+    await expect(entries.row(entryTitle(set, april!))).toContainText("1 April");
+    await capture("esi-contribution-periods-versions", setPage.versionsCard);
+    await capture("esi-contribution-period", entries.row(entryTitle(set, april!)));
+  });
+
+  test("show the welfare fund's contributions in rupees and paise", async ({ page }) => {
+    const set = await readParameterSet(page.request, welfareFundContributionsKey);
+    const shown = shownVersionOf(set);
+    const delhi = shown.rows.find((row) => valueOf(row, "stateCode") === "07");
+    expect(delhi, "Delhi's contributions").toBeDefined();
+    const setPage = new ParameterSetPage(page);
+    const entries = setPage.entries(set);
+
+    await setPage.goto(parameterSetPath(set.key), set.title);
+    await setPage.waitUntilInteractive();
+    await expect(setPage.asOf).toHaveText(asOfTexts.contributionPeriodEnd);
+    await entries.searchFor("Delhi");
+    await expect.poll(() => entries.rows()).toContainEqual(entryRow(set, delhi!));
+    await expect(entries.row(entryTitle(set, delhi!))).toContainText("₹0.75");
+  });
+
+  test("open every labour set with its basis, the days it answers for and today's entries", async ({
+    page,
+  }) => {
+    const summaries = (await readParameterSets(page.request)).filter((summary) =>
+      labourSetPrefixes.some((prefix) => summary.key.startsWith(prefix)),
+    );
+    expect(summaries.length, "the labour sets").toBeGreaterThan(0);
+    const setPage = new ParameterSetPage(page);
+
+    for (const summary of summaries) {
+      const set = await readParameterSet(page.request, summary.key);
+      const shown = shownVersionOf(set);
+      await setPage.goto(parameterSetPath(set.key), set.title);
+      await expect(setPage.basis).toHaveText(basisLabel(set.basis));
+      await expect(setPage.asOf).toHaveText(asOfTexts[set.asOf]);
+      await expect(setPage.entries(set).status).toHaveText(shownCount(shown.rows.length));
+    }
   });
 });

@@ -1,0 +1,155 @@
+{
+  "key": "labour-welfare-fund.coverage",
+  "title": "Labour welfare fund coverage",
+  "description": "Who a State's labour welfare fund reaches, in the words of its Act from 1 April 2026: the establishments it covers, with the number of persons that brings an establishment in where the Act sets one, and who is an employee and who is left out, with the wages above which a supervisor is left out and the least days of employment where the Act sets them. Each Act's references to central Acts, among them Acts the Labour Codes repeal, are kept as the Act writes them. Where a definition was read only in part, the words read are given and each gap is marked …. A State without a row is one whose definitions the ERP has not read in full, never a finding that its fund covers no one: Gujarat's, Karnataka's and Odisha's are not seeded. The set answers for the last day of a contribution period, the day the register fixes who is counted.",
+  "basis": "law",
+  "asOf": "contributionPeriodEnd",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "stateCode",
+      "title": "State",
+      "kind": "stateCode"
+    },
+    {
+      "name": "act",
+      "title": "Act",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "establishments",
+      "title": "Establishments, in the Act's words",
+      "kind": "text"
+    },
+    {
+      "name": "employees",
+      "title": "Employees, in the Act's words",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "excluded",
+      "title": "Persons left out, in the Act's words",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "supervisorWageLimit",
+      "title": "Supervisors drawing more are left out (₹ a month)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "minimumDaysEmployed",
+      "title": "Least days employed in twelve months",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Punjab Labour Welfare Fund Act, 1965 (Punjab Act 17 of 1965), section 2(2), (4) and (5) as in force in Haryana, clauses (2) and (4) as substituted by Haryana Act No. 7 of 2007, 4 April 2007",
+        "Bombay Labour Welfare Fund Act, 1953 (Bombay Act XL of 1953), section 2, as extended to the Union territory of Delhi with modifications by G.S.R. 1286(E), 15 December 1986",
+        "Maharashtra Labour Welfare Fund Act, 1953 (Mah. XL of 1953), section 2(2), (4) and (5), clause (2) as substituted by Mah. 24 of 2003 with effect from 7 January 2002",
+        "Goa Labour Welfare Fund Act, 1986 (Act 4 of 1987), section 2(c) and (e), assented to by the President of India on 4 April 1987, Official Gazette, Series I, No. 5, 30 April 1987",
+        "Kerala Labour Welfare Fund Act, 1975 (11 of 1977), section 2(d) and (f), as amended by the Kerala Labour Welfare Fund (Amendment) Act, 1986 (Act 1 of 1987), deemed in force from 25 February 1984, and the Kerala Labour Welfare Fund (Amendment) Act, 1994 (Act 7 of 1994)",
+        "Telangana Labour Welfare Fund Act, 1987 (Act No. 34 of 1987), section 2(2) and (4), as the Labour Department of Telangana publishes it"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Punjab Labour Welfare Fund Act, 1965, section 2(2), (4) and (5) as in force in Haryana, clauses (2) and (4) as substituted by Haryana Act No. 7 of 2007, in the Labour Department's consolidated text",
+      "cells": {
+        "entry": "06-2",
+        "stateCode": "06",
+        "act": "Punjab Labour Welfare Fund Act, 1965, as amended in Haryana",
+        "establishments": "(4) 'establishment' means a factory and includes any premises including the precincts thereof wherein and in any part of which any industry within the meaning of clause (j) of section 2 of the Industrial Disputes Act, 1947 (Act 14 of 1947), is carried on and also includes a shop or a commercial establishment within the meaning of the Punjab Shops and Commercial Establishments Act, 1958 (Punjab Act 15 of 1958), in which, on any day. Ten or more employees are employed or were employed during the preceding twelve months; (5) 'factory' means a factory as defined in clause (m) of section 2 of the Factories Act, 1948, or any place which is deemed to be a factory under sub-section (2) of section 85 of that Act ;",
+        "employees": "(2) 'employee' means any person employed, directly by or through any agency(including a contractor) with or without the knowledge of the principal employer, for remuneration in any factory or establishment to do any work connected with its affairs;",
+        "excluded": null,
+        "supervisorWageLimit": null,
+        "minimumDaysEmployed": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bombay Labour Welfare Fund Act, 1953, section 2, as extended to the Union territory of Delhi by G.S.R. 1286(E), in the Delhi Labour Welfare Board's copy; only the words read are given, each gap marked …",
+      "cells": {
+        "entry": "07-2",
+        "stateCode": "07",
+        "act": "Bombay Labour Welfare Fund Act, 1953, as extended to the Union territory of Delhi",
+        "establishments": "A factory … Any establishment within the meaning of the delhi shops and establishments act, 1954 … which employs, or on any working day during the preceding twelve months, employed five or more persons",
+        "employees": null,
+        "excluded": "… employed mainly in a managerial capacity … being employed in a supervisory capacity draw as wages exceeding one thousand and six hundred rupees per Mensem",
+        "supervisorWageLimit": 1600,
+        "minimumDaysEmployed": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra Labour Welfare Fund Act, 1953, section 2(2), (4) and (5), clause (2) as substituted by Mah. 24 of 2003, in the Maharashtra Labour Welfare Board's consolidated text",
+      "cells": {
+        "entry": "27-2",
+        "stateCode": "27",
+        "act": "Maharashtra Labour Welfare Fund Act, 1953",
+        "establishments": "(4) \"Establishment\" means- (i) a factory; (ii) a tramway or motor omnibus service or a motor transport undertaking to which the Motor Transport Workers Act, 1961, applies: and (iii) any establishment within the meaning of the Maharashtra Shops and Establishments Act, 1948, (Mah. LXXIX of 1948), which employs, or on any working day during the preceding twelve months, employed five or more persons including the establishments which have been granted exemption partly or wholly under the proviso to section 4 of that Act. Provided that, any such establishment shall continue to be an establishment for the purposes of this Act, notwithstanding a reduction in the number of persons to less than five at any subsequent time: Provided further that, where for a continuous period of not less than three months the number of persons employed therein has been less than five, such establishment shall cease to be an establishment for the purposes of this Act with effect from the beginning of the month following the expiry of the said period of three months, but the employer shall within one month from the date of such cessation, intimate by registered post the fact thereof to such authority as the State Government may specify in this behalf; Explanation.-For the removal of doubt, it is hereby declared that where an establishment has different branches or departments, all such branches or departments, whether situated in the same premises, or different premises shall be treated as parts of the same establishment; (5) \"Factory\" means a factory as defined in section 2(m) of the Factories Act, 1948 (LXIII of 1948), and includes any place wherein five or more persons are employed or working and- (i) wherein any manufacturing process is being carried on with the aid of power or is ordinarily so carried on: (ii) which is deemed to be a factory under section 85 of the said Act:",
+        "employees": "(2) \"Employee\" means any person who is employed for hire or reward to do any work, skilled or unskilled, manual, clerical, supervisory or technical in an establishment directly by the employer or through contractor or any other agency,",
+        "excluded": "but does not include any person- (i) who is employed mainly in a managerial capacity, (ii) who, being employed in a supervisory capacity, draws wages exceeding three thousand five hundred rupees per mensem, or exercises powers or carries out, either by the nature of the duties attached to the office, or by reason of the powers vested in him, functions mainly of a managerial nature, or (iii) who is employed as an apprentice under the Apprentices Act, 1961;",
+        "supervisorWageLimit": 3500,
+        "minimumDaysEmployed": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Goa Labour Welfare Fund Act, 1986 (Act 4 of 1987), section 2(c) and (e), Official Gazette, Series I, No. 5, 30 April 1987, read in a scan whose number of the Factories Act is not clear and is marked …",
+      "cells": {
+        "entry": "30-2",
+        "stateCode": "30",
+        "act": "Goa Labour Welfare Fund Act, 1986",
+        "establishments": "(e) 'establishment' means any- (i) factory as defined in clause (m) of section 2 of the Factories Act, 1948 …, or any place which is deemed to be a factory under section 85 of that Act, or (ii) motor transport undertaking as defined in clause (g) of section 2 of the Motor Transport Workers Act, 1961 (Central Act 27 of 1961), or (iii) establishment, including a society registered under the Societies Registration Act, 1860 (Central Act 21 of 1860), and a charitable or other trust whether registered under any law applicable to such charitable or other trust or not, which carries on any business or trade or any work in connection therewith or ancillary thereto but does not include an establishment not being a factory which is a unit or department of the Central or any State Government, or (iv) establishment as defined under sub-section (9) of section 2 of the Goa, Daman and Diu Shops and Establishments Act, 1973 (Act 13 of 1974), or (v) establishment of a contractor, or (vi) scheduled employment as defined in clause (g) of section 2 of the Minimum Wages Act, 1948 (Central Act 11 of 1948), or (vii) plantation, or (viii) motor transport service including trucks, engaged in transport of passengers or goods, or (ix) port, dock, wharf or jetty, or (x) inland water transport service including barges, launches, dredgers, engaged in movement, transport or handling of goods or cargo or transport of passengers, or (xi) establishment which the Government may, by notification, declare to be an establishment for the purpose of this Act;",
+        "employees": "(c) 'employee' means any person who is employed for hire or reward to do any work, skilled or unskilled, manual, supervisory, clerical or technical in an establishment for a continuous period of 30 days during the period of 12 months whether the terms of employment be expressed or implied,",
+        "excluded": "but does not include any person- (i) who is employed mainly in a managerial capacity; or (ii) who, being employed in a supervisory capacity, draws wages exceeding one thousand and six hundred rupees per mensem or exercises, either by the nature of the duties attached to the office or by reasons of the powers vested in him, functions mainly of a managerial nature,",
+        "supervisorWageLimit": 1600,
+        "minimumDaysEmployed": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Kerala Labour Welfare Fund Act, 1975, section 2(d) and (f) as amended in 1986 and 1994, in the Labour Commissionerate's copy; the provisos to clause (f)(iv), which the 1986 Act omitted and the copy still prints, and the words of item (B) the copy does not print are marked …",
+      "cells": {
+        "entry": "32-2",
+        "stateCode": "32",
+        "act": "Kerala Labour Welfare Fund Act, 1975",
+        "establishments": "(f) \"establishment\" includes- (i) a factory as defined in clause (m) of section 2 of the Factories Act, 1948 (Central Act 63 of 1948) or any place which is deemed to be a factory under sub-section (2) of section 85 of that Act ; (ii) a motor transport undertaking as defined in clause (g) of section 2 of the Motor Transport Workers Act, 1961 (Central Act 27 of 1961) ; (iii) any land used for growing tea, rubber, coffee, cardamom, oil palm or cocoa, in which ten or more persons are employed or were employed in any day of the preceding twelve months; (iv) any commercial establishment within the meaning of clause (4) or any shop within the meaning of clause (15) of section 2 of the Kerala shops and commercial Establishments Act, 1960 (34 of 1960), which employs, or on any working day during the preceeding twelve months employed two or more persons: … (v) an establishment, including a society registered under the Societies Registration Act, 1860 (Central Act 21 of 1860) or the Travancore-Cochin Literary, Scientific and Charitable Societies Registration Act, 1955 (XII of 1955), which carries on any business or trade or any work in connection therewith or ancillary thereto and which employs, or on any working day during the preceeding twelve months employed, more than twenty persons, but does not include an establishment (not being a factory) of the Central or any State Government ; (vi) any other establishment which the Government may, by notification in the Gazette, declare to be an establishment for the purposes of this Act;",
+        "employees": "(d) \"employee\" means- (i) any person who is employed for hire or reward to do any work skilled or unskilled, manual, supervisory, clerical or technical, in an establishment for an aggregate period of not less than thirty days during the preceding twelve months whether the terms of employment be express or implied, … (ii) any other person employed in any establishment, whom the Government may, by notification in the Gazette, declare to be an employee for the purposes of this Act.",
+        "excluded": "but does not include any person- (A) who is employed mainly in a managerial capacity (B) … or exercise either by the nature or the duties attached to the office or by reason of the powers vested in him, functions mainly of a managerial nature ; or (C) who is employed as an apprentice or on part-time basis. Explanation.-An apprentice means a person who according to the certified standing orders applicable to the establishment, is an apprentice or who is declared to be an apprentice by the authority specified in this behalf by the Government ;",
+        "supervisorWageLimit": null,
+        "minimumDaysEmployed": 30
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Telangana Labour Welfare Fund Act, 1987 (Act No. 34 of 1987), section 2(2) and (4), as the Labour Department of Telangana publishes it; only the words read are given, each gap marked …",
+      "cells": {
+        "entry": "36-2",
+        "stateCode": "36",
+        "act": "Telangana Labour Welfare Fund Act, 1987",
+        "establishments": "… a factory as defined in Section 2(m) of the Factories Act, 1948 … a motor transport undertaking as defined in the Motor Transport Workers Act, 1961 … any other establishment as defined in Section 2 (10) of the Andhra Pradesh Shops and Establishments Act, 1966 … which employs or on any working day during the preceding twelve months employed twenty or more persons",
+        "employees": "… for a period of thirty days during the period of twelve months …",
+        "excluded": "… employed mainly in a managerial capacity … being employed in a supervisory capacity, draws wages exceeding Rs. 1,600 (Rupees sixteen hundred) per mensum … employed as an apprentice or on part time basis",
+        "supervisorWageLimit": 1600,
+        "minimumDaysEmployed": 30
+      }
+    }
+  ]
+}

@@ -9123,13 +9123,19 @@
           "supplyDate",
           "taxPeriodStart",
           "deductionDate",
-          "financialYearStart"
+          "financialYearStart",
+          "wageDate",
+          "wagePeriodEnd",
+          "employmentEndDate",
+          "accountingYearEnd",
+          "contributionPeriodEnd"
         ]
       },
       "ParameterCellResponse": {
         "required": [
           "column",
-          "value"
+          "value",
+          "stateName"
         ],
         "type": "object",
         "properties": {
@@ -9137,6 +9143,12 @@
             "type": "string"
           },
           "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stateName": {
             "type": [
               "null",
               "string"
@@ -9168,7 +9180,8 @@
           "amount",
           "choice",
           "stateCode",
-          "date"
+          "date",
+          "dayMonth"
         ]
       },
       "ParameterColumnResponse": {

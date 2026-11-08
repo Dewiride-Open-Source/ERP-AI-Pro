@@ -1,0 +1,239 @@
+{
+  "key": "esi.average-daily-wage-divisors",
+  "title": "ESI average daily wages: divisors",
+  "description": "How the average daily wages during a wage period are reckoned for the Employees' State Insurance: for an employee employed on time-rate basis, the wage payable for the complete wage period divided by 26, 13, 6 or 1 as the employee is monthly, fortnightly, weekly or daily rated; for an employee employed on any other basis, the wages earned divided by the days worked; and the days deemed worked when wages are received without working on any day, by the length of the wage period. Each is in the words of rule 2(1B) of the Employees' State Insurance (Central) Rules, 1950, in ESIC's consolidated text, and from 8 May 2026 of rule 2(1)(h) of the Social Security (Central) Rules, 2026, which states the same divisors for Chapter IV of the Code on Social Security, 2020. The set answers for the last day of the wage period.",
+  "basis": "law",
+  "asOf": "wagePeriodEnd",
+  "columns": [
+    {
+      "name": "divisor",
+      "title": "Divisor",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Employee or wage period",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "days",
+      "title": "Divided by (days)",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Employees' State Insurance (Central) Rules, 1950, S.R.O. 212, 22 June 1950, Ministry of Labour, in ESIC's consolidated text as on 26.04.2024: rule 2(1B), inserted by G.S.R. 76, 22 January 1991, w.e.f. 1 February 1991",
+        "Code on Social Security, 2020 (36 of 2020), section 164(2)(a) and (b), keeping in force the rules and regulations made under the Employees' State Insurance Act, 1948, which section 164(1) repeals; in force from “the 21st day of November, 2025” by S.O. 5319(E), 21 November 2025, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    },
+    {
+      "from": "2026-05-08",
+      "instruments": [
+        "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 310, 8 May 2026, made “in supersession of the— … (iii) Employees' State Insurance (Central) Rules, 1950”, rule 2(1)(h); rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B)(a), in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "monthly-rated",
+        "name": "Time-rate basis, monthly rated",
+        "days": 26,
+        "wording": "(1B) “Average daily wages during a wage period” means— (a) in respect of an employee who is employed on time-rate basis, the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B)(a), in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "fortnightly-rated",
+        "name": "Time-rate basis, fortnightly rated",
+        "days": 13,
+        "wording": "(1B) “Average daily wages during a wage period” means— (a) in respect of an employee who is employed on time-rate basis, the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B)(a), in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "weekly-rated",
+        "name": "Time-rate basis, weekly rated",
+        "days": 6,
+        "wording": "(1B) “Average daily wages during a wage period” means— (a) in respect of an employee who is employed on time-rate basis, the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B)(a), in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "daily-rated",
+        "name": "Time-rate basis, daily rated",
+        "days": 1,
+        "wording": "(1B) “Average daily wages during a wage period” means— (a) in respect of an employee who is employed on time-rate basis, the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B)(b), the proviso and the Explanation, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "other-basis",
+        "name": "Any other basis: the days worked in the wage period",
+        "days": null,
+        "wording": "(1B) “Average daily wages during a wage period” means— (b) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 days or day if the wage period be a month, a fortnight, a week or a day respectively. Explanation: Where any night shift continues beyond midnight, the period of the night shift after midnight shall be counted for reckoning the day worked as part of the day preceding;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B), proviso, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "no-day-worked-month",
+        "name": "Wages without working on any day: a wage period of a month",
+        "days": 26,
+        "wording": "(1B) “Average daily wages during a wage period” means— (b) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 days or day if the wage period be a month, a fortnight, a week or a day respectively."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B), proviso, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "no-day-worked-fortnight",
+        "name": "Wages without working on any day: a wage period of a fortnight",
+        "days": 13,
+        "wording": "(1B) “Average daily wages during a wage period” means— (b) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 days or day if the wage period be a month, a fortnight, a week or a day respectively."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B), proviso, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "no-day-worked-week",
+        "name": "Wages without working on any day: a wage period of a week",
+        "days": 6,
+        "wording": "(1B) “Average daily wages during a wage period” means— (b) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 days or day if the wage period be a month, a fortnight, a week or a day respectively."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 2(1B), proviso, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "divisor": "no-day-worked-day",
+        "name": "Wages without working on any day: a wage period of a day",
+        "days": 1,
+        "wording": "(1B) “Average daily wages during a wage period” means— (b) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 days or day if the wage period be a month, a fortnight, a week or a day respectively."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h)(i)",
+      "cells": {
+        "divisor": "monthly-rated",
+        "name": "Time-rate basis, monthly rated",
+        "days": 26,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (i) in respect of an employee who is employed on time-rate basis, the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h)(i)",
+      "cells": {
+        "divisor": "fortnightly-rated",
+        "name": "Time-rate basis, fortnightly rated",
+        "days": 13,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (i) in respect of an employee who is employed on time-rate basis, the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h)(i)",
+      "cells": {
+        "divisor": "weekly-rated",
+        "name": "Time-rate basis, weekly rated",
+        "days": 6,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (i) in respect of an employee who is employed on time-rate basis, the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h)(i)",
+      "cells": {
+        "divisor": "daily-rated",
+        "name": "Time-rate basis, daily rated",
+        "days": 1,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (i) in respect of an employee who is employed on time-rate basis, the amount of wage which would have been payable to him for the complete wage period had he worked on all the working days in that wage period, divided by 26 if he is monthly rated, 13 if he is fortnightly rated, 6 if he is weekly rated and 1 if he is daily rated;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h)(ii), the proviso and the Explanation",
+      "cells": {
+        "divisor": "other-basis",
+        "name": "Any other basis: the days worked in the wage period",
+        "days": null,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (ii) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 day or days if the wage period be a month, a fortnight, a week or a day respectively. Explanation.— Where any night shift continues beyond midnight, the period of the night shift after midnight shall be counted for reckoning the day worked as part of the day preceding;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h), proviso",
+      "cells": {
+        "divisor": "no-day-worked-month",
+        "name": "Wages without working on any day: a wage period of a month",
+        "days": 26,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (ii) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 day or days if the wage period be a month, a fortnight, a week or a day respectively."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h), proviso",
+      "cells": {
+        "divisor": "no-day-worked-fortnight",
+        "name": "Wages without working on any day: a wage period of a fortnight",
+        "days": 13,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (ii) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 day or days if the wage period be a month, a fortnight, a week or a day respectively."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h), proviso",
+      "cells": {
+        "divisor": "no-day-worked-week",
+        "name": "Wages without working on any day: a wage period of a week",
+        "days": 6,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (ii) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 day or days if the wage period be a month, a fortnight, a week or a day respectively."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 2(1)(h), proviso",
+      "cells": {
+        "divisor": "no-day-worked-day",
+        "name": "Wages without working on any day: a wage period of a day",
+        "days": 1,
+        "wording": "(h) average daily wages during a wage period under Chapter IV of the Code means— (ii) in respect of an employee employed on any other basis, the amount of wages earned during the complete wage period in the contribution period divided by the number of days in full or part for which he has worked for wages in that wage period: Provided that where an employee receives wages without working on any day during such wage period, he shall be deemed to have worked for 26, 13, 6 or 1 day or days if the wage period be a month, a fortnight, a week or a day respectively."
+      }
+    }
+  ]
+}

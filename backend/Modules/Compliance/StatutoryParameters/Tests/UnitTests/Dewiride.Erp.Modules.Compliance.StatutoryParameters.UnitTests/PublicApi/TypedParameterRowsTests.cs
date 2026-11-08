@@ -1,4 +1,6 @@
+using System.Globalization;
 using Dewiride.Erp.BuildingBlocks.Kernel.Monetary;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Returns;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Gst.Services;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain;
@@ -34,6 +36,11 @@ public sealed class TypedParameterRowsTests
         TestSets.Column("amount", CellKind.Amount),
         TestSets.Column("test", CellKind.Text));
 
+    private static readonly ParameterSet PeriodSet = TestSets.Set(
+        TestSets.Column("period", CellKind.Code, isKey: true),
+        TestSets.Column("starts", CellKind.DayMonth),
+        TestSets.Column("ends", CellKind.DayMonth, isOptional: true));
+
     private static readonly ParameterSet WindowSet = TestSets.Set(
         TestSets.Column("option", CellKind.Code, isKey: true),
         TestSets.Column("setUpOnOrAfter", CellKind.Date),
@@ -49,6 +56,18 @@ public sealed class TypedParameterRowsTests
         Assert.Equal(
             [new ProbeWindow("probe-a", new DateOnly(2019, 10, 1), new DateOnly(2024, 3, 31)), new ProbeWindow("probe-b", new DateOnly(2016, 3, 1), null)],
             rows.Read<ProbeWindow>());
+    }
+
+    [Fact]
+    public void Read_DayMonthCells_AsDaysAndMonthsAndAnEmptyOneAsNull()
+    {
+        var rows = new TypedParameterRows(PeriodSet, [
+            Row(PeriodSet, ("period", "april-september"), ("starts", "04-01"), ("ends", "09-30")),
+            Row(PeriodSet, ("period", "probe"), ("starts", "02-29"), ("ends", null))]);
+
+        Assert.Equal(
+            [new ProbePeriod("april-september", new DayAndMonth(4, 1), new DayAndMonth(9, 30)), new ProbePeriod("probe", new DayAndMonth(2, 29), null)],
+            rows.Read<ProbePeriod>());
     }
 
     [Fact]
@@ -81,12 +100,14 @@ public sealed class TypedParameterRowsTests
         Assert.Equal(new GstReturnDueDate("probe", "Probe return", "PROBE-1", ReturnFilers.Quarterly, ReturnPeriod.FirstTwoMonthsOfQuarter, null, 25, 1, "Probe wording."), rule);
     }
 
-    [Fact]
-    public void Read_AmountCells_AsMoneyInRupees()
+    [Theory]
+    [InlineData("5000000")]
+    [InlineData("0.75")]
+    public void Read_AmountCells_AsMoneyInRupeesWithTheirPaise(string amount)
     {
-        var rows = new TypedParameterRows(ThresholdSet, [Row(ThresholdSet, ("threshold", "probe"), ("name", "Probe limit"), ("amount", "5000000"), ("test", "Probe test."))]);
+        var rows = new TypedParameterRows(ThresholdSet, [Row(ThresholdSet, ("threshold", "probe"), ("name", "Probe limit"), ("amount", amount), ("test", "Probe test."))]);
 
-        Assert.Equal(new Money(5000000m, Currency.Inr), Assert.Single(rows.Read<GstReturnThreshold>()).Amount);
+        Assert.Equal(new Money(decimal.Parse(amount, CultureInfo.InvariantCulture), Currency.Inr), Assert.Single(rows.Read<GstReturnThreshold>()).Amount);
     }
 
     [Fact]
@@ -144,4 +165,6 @@ public sealed class TypedParameterRowsTests
         ParameterRow.Create(set, TestSets.Day("2017-07-01"), null, TestSets.Cells(cells), "Probe source");
 
     private sealed record ProbeWindow(string Option, DateOnly SetUpOnOrAfter, DateOnly? ProductionBy);
+
+    private sealed record ProbePeriod(string Period, DayAndMonth Starts, DayAndMonth? Ends);
 }

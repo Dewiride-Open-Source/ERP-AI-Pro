@@ -78,6 +78,9 @@ public sealed class ParameterSetTypesTests
             case CellKind.Date:
                 Assert.Equal(typeof(DateOnly), type);
                 break;
+            case CellKind.DayMonth:
+                Assert.Equal(typeof(DayAndMonth), type);
+                break;
             case CellKind.Choice:
                 Assert.True(type.IsEnum, $"Column {column.Name} is a choice, so its parameter is an enum, not {type.Name}.");
                 Assert.Equal(column.Choices.Select(choice => choice.Value), Enum.GetNames(type).Select(JsonNamingPolicy.CamelCase.ConvertName));

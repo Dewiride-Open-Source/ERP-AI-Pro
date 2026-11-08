@@ -1,0 +1,91 @@
+{
+  "key": "esi.contribution-exemptions",
+  "title": "Exemptions from ESI contributions",
+  "description": "The ESI contributions not paid for an employee: the employee's contribution where the average daily wages during a wage period, reckoned by the set esi.average-daily-wage-divisors, are up to and including ₹176 (rule 52 of the Employees' State Insurance (Central) Rules, 1950, in ESIC's consolidated text); and the employer's contribution for an employee who is a person with disability, for at most three years from the commencement of the contribution period, reimbursed by the Central Government (rule 51A of those Rules, and from 8 May 2026 rule 19(2) and (3) of the Social Security (Central) Rules, 2026). The Rules of 2026 superseded those of 1950 on 8 May 2026 and exempt no employee's contribution, and no notification under section 2(31) of the Code on Social Security, 2020 specifying the wage of an exempted employee was found, so that row ends on 7 May 2026: no row means none is seeded, never that no employee is exempt. The set answers for the last day of the wage period.",
+  "basis": "law",
+  "asOf": "wagePeriodEnd",
+  "columns": [
+    {
+      "name": "exemption",
+      "title": "Exemption",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Share not paid",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "averageDailyWagesUpTo",
+      "title": "Average daily wages up to and including (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "years",
+      "title": "For at most (years)",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Employees' State Insurance (Central) Rules, 1950, S.R.O. 212, 22 June 1950, Ministry of Labour, in ESIC's consolidated text as on 26.04.2024: rule 51A, inserted by G.S.R. 254(E), 31 March 2008, w.e.f. 1 April 2008, and renumbered by G.S.R. 959(E), 6 October 2016; rule 52, its amount substituted by G.S.R. 638(E), 6 September 2019, w.e.f. 6 September 2019",
+        "Code on Social Security, 2020 (36 of 2020), section 164(2)(a) and (b), keeping in force the rules and regulations made under the Employees' State Insurance Act, 1948, which section 164(1) repeals; in force from “the 21st day of November, 2025” by S.O. 5319(E), 21 November 2025, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    },
+    {
+      "from": "2026-05-08",
+      "instruments": [
+        "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 310, 8 May 2026, made “in supersession of the— … (iii) Employees' State Insurance (Central) Rules, 1950”, rule 19(2) and (3); rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 52, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "exemption": "employee-share-average-daily-wages",
+        "name": "Employee's contribution: average daily wages up to the limit",
+        "averageDailyWagesUpTo": 176,
+        "years": null,
+        "wording": "52. Exemption from payment of employee's contribution. The average daily wages during a wage period for exemption from payment of employee's contribution under section 42 shall be upto and inclusive of rupees one hundred seventy-six only."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-05-07",
+      "source": "Employees' State Insurance (Central) Rules, 1950, rule 51A, in ESIC's consolidated text as on 26.04.2024",
+      "cells": {
+        "exemption": "employer-share-disability",
+        "name": "Employer's contribution: an employee who is a person with disability",
+        "averageDailyWagesUpTo": null,
+        "years": 3,
+        "wording": "51A. Employer's contribution in respect of certain employees. (1) In respect of an employee who is a person with disability under the Persons with Disabilities (Equal Opportunities, Protection of Rights and Full Participation) Act, 1995 (1 of 1996), and under the National Trust for Welfare of Persons with Autism, Cerebral Palsy, Mental Retardation and Multiple Disabilities Act, 1999 (44 of 1999), the employer shall not be required to pay employer's share of contribution upto a maximum period of three years from the date of commencement of the contribution period. (2) The employer's share of contribution in respect of such employees and for such period under sub-section (1) shall be reimbursed to the Corporation by the Central Government."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 19(2) and (3)",
+      "cells": {
+        "exemption": "employer-share-disability",
+        "name": "Employer's contribution: an employee who is a person with disability",
+        "averageDailyWagesUpTo": null,
+        "years": 3,
+        "wording": "(2) In respect of an employee who is a person with disability under the Rights of Persons with Disabilities Act, 2016 (49 of 2016) and under the National Trust for Welfare of Persons with Autism, Cerebral Palsy, Mental Retardation and Multiple Disabilities Act, 1999 (44 of 1999), the employer shall not be required to pay employer's share of contribution up to a maximum period of three years or for such period as may be specified by the Central Government, from the date of commencement of the contribution period. (3) The employer's share of contribution in respect of such employees and for such period under sub-rule (2) shall be reimbursed to the Corporation by the Central Government."
+      }
+    }
+  ]
+}

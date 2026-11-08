@@ -4,9 +4,10 @@ using System.Text.RegularExpressions;
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain.Columns;
 
 // A column of a set, declared in its seed file beside the data. A value is checked as canonical text: a number without
-// trailing zeros and in its column's range, a code, a GST State code or a choice as written, a date as yyyy-MM-dd, and a
-// text in the shape every text of a set keeps. A percent is 0 to 100 with at most four decimals and an amount is whole
-// rupees, never negative.
+// trailing zeros and in its column's range, a code, a GST State code or a choice as written, a date as yyyy-MM-dd, a day and
+// month of any year as MM-dd (29 February among them, the leap year 2000 being the year it is read in), and a
+// text in the shape every text of a set keeps. A percent is 0 to 100 with at most four decimals and an amount is rupees with
+// at most two decimals, its paise, never negative.
 internal sealed partial record ParameterColumn
 {
     public const int NameMaxLength = 40;
@@ -19,7 +20,13 @@ internal sealed partial record ParameterColumn
 
     public const int PercentMaxDecimals = 4;
 
+    public const int AmountMaxDecimals = 2;
+
     public const string DateFormat = "yyyy-MM-dd";
+
+    public const string DayMonthFormat = "MM-dd";
+
+    private const string LeapYearPrefix = "2000-";
 
     public ParameterColumn(
         string name,
@@ -124,6 +131,7 @@ internal sealed partial record ParameterColumn
             CellKind.StateCode => StateCodePattern().IsMatch(value) ? null : $"'{value}' is not a GST State code of two digits",
             CellKind.Choice => Choices.Any(choice => string.Equals(choice.Value, value, StringComparison.Ordinal)) ? null : $"'{value}' is not one of the column's choices",
             CellKind.Date => IsDate(value) ? null : $"'{value}' is not a date written yyyy-MM-dd",
+            CellKind.DayMonth => IsDayMonth(value) ? null : $"'{value}' is not a day and month written MM-dd",
             _ => NumberValueProblem(value),
         };
     }
@@ -146,12 +154,18 @@ internal sealed partial record ParameterColumn
         DateOnly.TryParseExact(value, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
         && string.Equals(date.ToString(DateFormat, CultureInfo.InvariantCulture), value, StringComparison.Ordinal);
 
+    private static bool IsDayMonth(string value) =>
+        value.Length == DayMonthFormat.Length
+        && DateOnly.TryParseExact(LeapYearPrefix + value, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
+        && string.Equals(day.ToString(DayMonthFormat, CultureInfo.InvariantCulture), value, StringComparison.Ordinal);
+
     private static string? NumberProblem(CellKind kind, decimal value) => kind switch
     {
         CellKind.Integer when decimal.Truncate(value) != value || value < int.MinValue || value > int.MaxValue => $"is not a whole number from {int.MinValue} to {int.MaxValue}",
         CellKind.Percent when value is < 0m or > 100m => "is not between 0 and 100",
         CellKind.Percent when CanonicalNumber.DecimalsOf(value) > PercentMaxDecimals => $"has more than {PercentMaxDecimals} decimals",
-        CellKind.Amount when decimal.Truncate(value) != value || value < 0m => "is not a whole, non-negative number of rupees",
+        CellKind.Amount when value < 0m => "is a negative number of rupees",
+        CellKind.Amount when CanonicalNumber.DecimalsOf(value) > AmountMaxDecimals => $"has more than {AmountMaxDecimals} decimals, the paise of an amount",
         _ => null,
     };
 

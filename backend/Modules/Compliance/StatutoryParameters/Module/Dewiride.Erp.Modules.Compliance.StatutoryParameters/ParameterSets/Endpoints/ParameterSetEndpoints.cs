@@ -52,6 +52,6 @@ internal static class ParameterSetEndpoints
     {
         var result = await handler.HandleAsync(new GetParameterSetQuery(request.Key, request.On), cancellationToken);
 
-        return result.IsSuccess ? TypedResults.Ok(ParameterSetResponses.Of(result.Value.Set, result.Value.Shown)) : result.Error!.ToProblem();
+        return result.IsSuccess ? TypedResults.Ok(ParameterSetResponses.Of(result.Value)) : result.Error!.ToProblem();
     }
 }

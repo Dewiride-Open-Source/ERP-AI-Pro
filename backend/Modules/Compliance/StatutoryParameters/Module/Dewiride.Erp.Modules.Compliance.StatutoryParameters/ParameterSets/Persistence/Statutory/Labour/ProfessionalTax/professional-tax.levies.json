@@ -1,0 +1,267 @@
+{
+  "key": "professional-tax.levies",
+  "title": "Professional tax: who levies it in each State",
+  "description": "Which States and Union territories levy the tax on professions, trades, callings and employments on salary and wage earners, and under which Act, from 1 April 2026: one row for each whose instrument was read, with the words that levy the tax, the Act's extent where it leaves part of the State out or reaches beyond it, and its definition of salary or income verbatim, even where it cites the Income-tax Act, 1961; “…” marks words the ERP's copy leaves out. Where an official text says the State levies none, its row says so in that text's words: Odisha's Act repealed from 1 April 2026, Jammu and Kashmir's certificate, and Tamil Nadu's Act of 1992 repealed, its councils levying the tax instead, which the ERP does not hold. A State without a row is one whose text the ERP has not read, which says nothing of whether it levies the tax. The tax period is the month or year the tax is for, and the set answers for its first day.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "stateCode",
+      "title": "State",
+      "kind": "stateCode",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "In the ERP's words",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "status",
+      "title": "Levy",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "levied",
+          "title": "Levied under the State's Act"
+        },
+        {
+          "value": "notLevied",
+          "title": "Not levied, an official text says"
+        },
+        {
+          "value": "localBodies",
+          "title": "Levied by local bodies, not the State"
+        }
+      ]
+    },
+    {
+      "name": "law",
+      "title": "Act or text",
+      "kind": "text"
+    },
+    {
+      "name": "words",
+      "title": "In its words",
+      "kind": "text"
+    },
+    {
+      "name": "extent",
+      "title": "Extent, as printed",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "salary",
+      "title": "Salary or income, as the Act defines it",
+      "kind": "text",
+      "optional": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Certificate of the Commissioner State Taxes, Jammu and Kashmir, 18 October 2021: “It is to certify that no taxes on professions, trades, callings and employments are being charged in the Union Territory of Jammu & Kashmir.”",
+        "Punjab State Development Tax Act, 2018 (Punjab Act No. 11 of 2018), No. 12-Leg./2018, Punjab Government Gazette Extraordinary, 19 April 2018, sections 1(2), 2(m) and 4(1), in force from its publication in the Official Gazette (section 1(3))",
+        "Bihar Tax on Professions, Trades, Callings and Employments Act, 2011 (Bihar Act 10, 2011), its Schedule as substituted by S.O. 28, Commercial Taxes Department, 2 February 2016, in force from the date of its issuance",
+        "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968 (Nagaland Act 4 of 1968), the Schedule (See Section 3), as published by the Department of Taxes, Nagaland",
+        "Mizoram Professions, Trades, Callings and Employments Taxation Act, 1995 (Mizoram Act No. 7 of 1995), assent 6 November 1995, sections 1(2), 2(i) and 3, in the Taxation Department's copy of the Act as enacted",
+        "Tripura Professions, Trades, Callings and Employments Taxation Act, 1997 (Tripura Act No. 3 of 1997), Tripura Gazette Extraordinary, 1 September 1997, sections 2(j) and 3(1)",
+        "Assam Professions, Trades, Callings and Employments Taxation Act, 1947 (Assam Act VI of 1947), long title and sections 2(g) and 4, as consolidated by the Commissionerate of Taxes",
+        "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979 (West Bengal Act VI of 1979), sections 2(j) and 3(1), as consolidated by the Directorate of Commercial Taxes",
+        "Odisha State Tax on Professions, Trades, Callings and Employment (Repeal) Ordinance, 2026 (Odisha Ordinance 02 of 2026), Law Department notification No. 5969I-Legis-22/2026/L, 21 April 2026, Odisha Gazette Extraordinary No. 1496: “This Ordinance shall come into force with effect from dated 1st April, 2026.”",
+        "Gujarat State Tax on Professions, Trades, Callings and Employments Act, 1976 (President's Act No. 11 of 1976), section 3(1) and (2) as amended by Gujarat Act No. 10 of 2008, section 4, Gujarat Government Gazette Extraordinary, Extra No. 10, 29 March 2008",
+        "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975 (Mah. XVI of 1975), sections 2(h) and 3(1), text as on 16 July 2025, as consolidated by the Goods and Services Tax Department",
+        "Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976 (Karnataka Act 35 of 1976), sections 2(j) and 3(1), as consolidated by the Commercial Taxes Department",
+        "Tamil Nadu Urban Local Bodies Act, 1998, sections 117-B(1) and 117-I(1) of Chapter VI-A, inserted by the Tamil Nadu Urban Local Bodies (Amendment) Act, 1999 (Tamil Nadu Act 54 of 1999), as consolidated by the Tamil Nadu State Finance Commission",
+        "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, section 4(1), in the consolidated text of the Commercial Taxes Department, Telangana"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Certificate of the Commissioner State Taxes, Jammu and Kashmir, 18 October 2021",
+      "cells": {
+        "stateCode": "01",
+        "name": "Jammu and Kashmir charges no such tax",
+        "status": "notLevied",
+        "law": "Certificate of the Commissioner State Taxes, Jammu and Kashmir, 18 October 2021",
+        "words": "It is to certify that no taxes on professions, trades, callings and employments are being charged in the Union Territory of Jammu & Kashmir.",
+        "extent": null,
+        "salary": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Punjab State Development Tax Act, 2018, sections 1(2), 2(m) and 4(1)",
+      "cells": {
+        "stateCode": "03",
+        "name": "Punjab levies it as the State Development Tax under its Act of 2018",
+        "status": "levied",
+        "law": "The Punjab State Development Tax Act, 2018 (Punjab Act No. 11 of 2018)",
+        "words": "Subject to the provisions of Article 276 of the Constitution of India and provisions of this Act, there shall be levied and collected a tax on professions, trades, callings and employments.",
+        "extent": "It extends to the whole of the State of Punjab, and offices of the Government of Punjab and offices of any body, whether incorporated or not, which is owned or controlled by the State of Punjab situated in the capital of Punjab.",
+        "salary": "“salary” or “wage” includes pay or wages, dearness allowance and all other remunerations received by any person on regular basis, whether payable in cash or kind, and also includes perquisites and profits in lieu of salary as defined in section 17 of the Income Tax Act, 1961, but does not include any form of bonus or gratuity; Explanation.- Regular basis means a period exceeding one hundred and eighty days."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bihar Tax on Professions, Trades, Callings and Employments Act, 2011, Schedule, as substituted by S.O. 28, Commercial Taxes Department, 2 February 2016",
+      "cells": {
+        "stateCode": "10",
+        "name": "Bihar levies it under its Act of 2011",
+        "status": "levied",
+        "law": "The Bihar Tax on Professions, Trades, Callings and Employments Act, 2011 (Bihar Act 10, 2011)",
+        "words": "SCHEDULE (See Section 4) Schedule of rates under The Bihar Tax on Professions, Trades, Callings and Employments Act, 2011 … Class of Tax Assesses … Amount of Tax payable",
+        "extent": null,
+        "salary": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968, the Schedule, as published by the Department of Taxes, Nagaland",
+      "cells": {
+        "stateCode": "13",
+        "name": "Nagaland levies it under its Act of 1968",
+        "status": "levied",
+        "law": "The Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968 (Nagaland Act 4 of 1968)",
+        "words": "THE SCHEDULE (See Section 3) … Class of persons … Rate of Tax … Salary and wages earners: Such persons whose monthly salaries or wages are-",
+        "extent": null,
+        "salary": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Mizoram Professions, Trades, Callings and Employments Taxation Act, 1995, sections 1(2), 2(i) and 3, in the Taxation Department's copy of the Act as enacted",
+      "cells": {
+        "stateCode": "15",
+        "name": "Mizoram levies it under its Act of 1995",
+        "status": "levied",
+        "law": "The Mizoram Professions, Trades, Callings and Employments Taxation Act, 1995 (Mizoram Act No. 7 of 1995)",
+        "words": "As from the date which may be notified by the State Government in the Official Gazette and subject to the provisions of this Act, every person who carries on a trade … or who follows a profession or calling or who is in employment, either wholly or in part within the State shall be liable to pay for each financial year a tax in respect of such profession, trade, calling or employment …",
+        "extent": "It shall extent to the whole of Mizoram excluding the areas of Lai, Mara and Chakma Autonomous District Councils in Chhimtuipui District.",
+        "salary": "“total gross income” means aggregate of income derived from all sources."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Tripura Professions, Trades, Callings and Employments Taxation Act, 1997, sections 2(j) and 3(1)",
+      "cells": {
+        "stateCode": "16",
+        "name": "Tripura levies it under its Act of 1997",
+        "status": "levied",
+        "law": "The Tripura Professions, Trades, Callings and Employments Taxation Act, 1997 (Tripura Act No. 3 of 1997)",
+        "words": "Subject to the provisions of article 276 of the Constitution of India, there shall be levied and collected a tax on professions, trades, callings and employments, in accordance with the provisions of this Act.",
+        "extent": null,
+        "salary": "“salary” or “wage” includes pay, dearness allowance and all other remunerations received by any person on regular basis, whether payable in cash or in kind, and also includes perquisites, and profits in lieu of salary, as defined in section 17 of the Income-tax Act, 1961 (43 of 1961);"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Assam Professions, Trades, Callings and Employments Taxation Act, 1947, long title and sections 2(g) and 4, as consolidated by the Commissionerate of Taxes",
+      "cells": {
+        "stateCode": "18",
+        "name": "Assam levies it under its Act of 1947",
+        "status": "levied",
+        "law": "The Assam Professions, Trades, Callings and Employments Taxation Act, 1947 (Assam Act VI of 1947)",
+        "words": "[Long title] An Act to levy a tax on professions, trades, callings and employments [Section 4] The tax under section 3 shall be payable by every person specified in that section and falling under one or the other of the classes mentioned in the second column of the Schedule annexed to this Act at the rate mentioned against the class of such persons in the third column of the Schedule",
+        "extent": null,
+        "salary": "“salary” or “wages” includes pay, dearness allowance and all other remunerations received by any person on regular basis, whether payable in cash or in kind, and also includes perquisites and profits in lieu of salary, as defined in section 17 of the Income Tax Act, 1961;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979, sections 2(j) and 3(1), as consolidated by the Directorate of Commercial Taxes",
+      "cells": {
+        "stateCode": "19",
+        "name": "West Bengal levies it under its Act of 1979",
+        "status": "levied",
+        "law": "The West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979 (West Bengal Act VI of 1979)",
+        "words": "Subject to the provisions of article 276 of the Constitution of India, there shall be levied and collected a tax on professions, trades, callings and employments, in accordance with the provisions of this Act.",
+        "extent": null,
+        "salary": "“salary” or “wage” includes pay, dearness allowance and all other remunerations received by any person on regular basis, whether payable in cash or in kind, and also includes perquisites, and profits in lieu of salary, as defined in section 17 of the Income-tax Act, 1961 (43 of 1961); Explanation.-For the purposes of this clause or clause (c), the expression “on regular basis” shall mean for a period exceeding 180 days in a year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Odisha State Tax on Professions, Trades, Callings and Employment (Repeal) Ordinance, 2026, sections 1(2) and 2(1)",
+      "cells": {
+        "stateCode": "21",
+        "name": "Odisha's Act of 2000 is repealed from 1 April 2026",
+        "status": "notLevied",
+        "law": "The Odisha State Tax on Professions, Trades, Callings and Employment (Repeal) Ordinance, 2026 (Odisha Ordinance 02 of 2026)",
+        "words": "[Section 1(2)] This Ordinance shall come into force with effect from dated 1st April, 2026. [Section 2(1)] The Odisha State Tax on Professions, Trades, Callings and Employments Act, 2000 is hereby repealed.",
+        "extent": null,
+        "salary": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Gujarat State Tax on Professions, Trades, Callings and Employments Act, 1976, section 3(1) and (2), first proviso, as amended by Gujarat Act No. 10 of 2008, section 4",
+      "cells": {
+        "stateCode": "24",
+        "name": "Gujarat's Designated Authorities levy it under the State's Act of 1976",
+        "status": "levied",
+        "law": "The Gujarat State Tax on Professions, Trades, Callings and Employments Act, 1976 (President's Act No. 11 of 1976)",
+        "words": "[Section 3(1)] … by the Designated Authorities for the benefit of the Panchayats, Municipalities, Municipal Corporations or, as the case may be, the State [Section 3(2), first proviso] … the rates of tax for the class of persons mentioned in entry 1 of the said Schedule shall be fixed by the State Government by notification in the Official Gazette",
+        "extent": null,
+        "salary": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, sections 2(h) and 3(1), text as on 16 July 2025",
+      "cells": {
+        "stateCode": "27",
+        "name": "Maharashtra levies it under its Act of 1975",
+        "status": "levied",
+        "law": "The Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975 (Mah. XVI of 1975)",
+        "words": "Subject to the provisions of article 276 of the Constitution of India and of this Act, there shall be levied and collected a tax on professions, trades, callings and employments for the benefit of the State.",
+        "extent": null,
+        "salary": "“salary” or “wage” includes pay or wages, dearness allowance and all other remunerations received by any person on regular basis, whether payable in cash or kind, and also includes perquisites, and profits in lieu of salary, as defined in section 17 of the Income-tax Act, 1961 (43 of 1961), but does not include bonus in any form and on any account or gratuity;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976, sections 2(j) and 3(1), as consolidated by the Commercial Taxes Department",
+      "cells": {
+        "stateCode": "29",
+        "name": "Karnataka levies it under its Act of 1976",
+        "status": "levied",
+        "law": "The Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976 (Karnataka Act 35 of 1976)",
+        "words": "There shall be levied and collected a tax on professions, trades, callings and employment for the benefit of the State.",
+        "extent": null,
+        "salary": "‘salary’ or ‘wage’ includes pay or wage, dearness allowance and all other remunerations received or receivable by any person including any amount received by way of arrears of salary or bonus by whatever name called whether payable in cash or kind and also includes perquisites and profits in lieu of salary as defined in section 17 of the Income Tax Act, 1961. Explanation.- (i) Where ‘bonus’ by whatever name called is received in part or full, then such bonus shall be spread over for twelve months of the year or to such number of months the bonus relates for purposes of computation of ‘Salary’ or ‘Wage’ for such months. (ii) Where arrears of salary is received in part or full, then such arrears shall be spread over for the relevant months for which it relates for purposes of computation of ‘Salary’ or ‘Wage’ for such months."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Tamil Nadu Urban Local Bodies Act, 1998, sections 117-B(1) and 117-I(1), as consolidated by the Tamil Nadu State Finance Commission",
+      "cells": {
+        "stateCode": "33",
+        "name": "Tamil Nadu's Act of 1992 is repealed and its councils levy the tax",
+        "status": "localBodies",
+        "law": "The Tamil Nadu Urban Local Bodies Act, 1998, Chapter VI-A",
+        "words": "[Section 117-B(1)] There shall be levied by the council a tax on profession, trade, calling and employment. [Section 117-I(1)] Notwithstanding the repeal of the Tamil Nadu Tax on Professions, Trades, Callings and Employments Act, 1992 (Tamil Nadu Act 24 of 1992) (hereafter in this section referred to as the 1992 Act) by the Tamil Nadu Municipal Laws (Second Amendment) Act, 1998 (Tamil Nadu Act 59 of 1998), …",
+        "extent": null,
+        "salary": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, section 4(1), in the consolidated text of the Commercial Taxes Department",
+      "cells": {
+        "stateCode": "36",
+        "name": "Telangana levies it under its Act of 1987",
+        "status": "levied",
+        "law": "The Telangana Tax on Professions, Trades, Callings and Employments Act, 1987",
+        "words": "There shall be levied and collected a tax on professions, trades, callings and employments for the benefit of the State.",
+        "extent": null,
+        "salary": null
+      }
+    }
+  ]
+}

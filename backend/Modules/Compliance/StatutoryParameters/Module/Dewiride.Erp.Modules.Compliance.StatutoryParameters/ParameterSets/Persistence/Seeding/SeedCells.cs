@@ -3,7 +3,7 @@ using Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Domain.C
 
 namespace Dewiride.Erp.Modules.Compliance.StatutoryParameters.ParameterSets.Persistence.Seeding;
 
-// A text, code, choice, GST State code or date cell is a JSON string and an integer, percent or amount cell a JSON number, read
+// A text, code, choice, GST State code, date or day-and-month cell is a JSON string and an integer, percent or amount cell a JSON number, read
 // exactly as a decimal and kept as its canonical text; null leaves an optional column empty.
 internal static class SeedCells
 {

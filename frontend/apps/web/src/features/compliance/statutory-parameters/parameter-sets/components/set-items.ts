@@ -50,6 +50,7 @@ export interface ParameterColumn {
 export interface ParameterCell {
   readonly column: string;
   readonly value: string | null;
+  readonly stateName: string | null;
 }
 
 export interface ParameterRow {
@@ -128,7 +129,11 @@ function optionalVersionSummaryOf(
 }
 
 function cellOf(cell: ParameterCellResponse): ParameterCell {
-  return { column: required(cell.column, "cell's column"), value: cell.value ?? null };
+  return {
+    column: required(cell.column, "cell's column"),
+    value: cell.value ?? null,
+    stateName: cell.stateName ?? null,
+  };
 }
 
 function rowOf(row: ParameterRowResponse | null | undefined): ParameterRow {

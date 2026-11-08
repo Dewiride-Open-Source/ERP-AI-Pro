@@ -1,0 +1,68 @@
+{
+  "key": "esi.contribution-rates",
+  "title": "ESI contribution rates",
+  "description": "The employer's and the employee's contributions to the Employees' State Insurance Corporation for a wage period under Chapter IV of the Code on Social Security, 2020, as rule 19(1) of the Social Security (Central) Rules, 2026 sets them from 8 May 2026: each a share of the wages payable to the employee, “rounded to the next higher rupee”, which the set writes as rounded up to a multiple of ₹1. The set starts on 8 May 2026: ESIC's consolidated text of rule 51 of the Employees' State Insurance (Central) Rules, 1950, which governed before, still prints the rates its footnotes say G.S.R. 423(E) replaced from 1 July 2019, so the rates of 1 April to 7 May 2026 are not seeded. The shares not paid for some employees are the set esi.contribution-exemptions. Contributions fall due on the last day of the wage period (section 29(4) of the Code), and the set answers for that day.",
+  "basis": "law",
+  "asOf": "wagePeriodEnd",
+  "columns": [
+    {
+      "name": "share",
+      "title": "Share",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Contribution",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "rate",
+      "title": "Rate of the wages payable",
+      "kind": "percent"
+    },
+    {
+      "name": "roundedUpTo",
+      "title": "Rounded up to a multiple of (₹)",
+      "kind": "amount"
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-05-08",
+      "instruments": [
+        "Social Security (Central) Rules, 2026, G.S.R. 344(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 310, 8 May 2026, rule 19(1); rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 19(1)(a)",
+      "cells": {
+        "share": "employer",
+        "name": "Employer's contribution",
+        "rate": 3.25,
+        "roundedUpTo": 1,
+        "wording": "19. Rate of contributions.—(1) The amount of contribution for a wage period shall be in respect of— (a) employer's contribution, a sum (rounded to the next higher rupee) equal to three and one-fourth per cent. of the wages payable to an employee; and"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Social Security (Central) Rules, 2026, rule 19(1)(b)",
+      "cells": {
+        "share": "employee",
+        "name": "Employee's contribution",
+        "rate": 0.75,
+        "roundedUpTo": 1,
+        "wording": "19. Rate of contributions.—(1) The amount of contribution for a wage period shall be in respect of— (b) employee's contribution, a sum (rounded to the next higher rupee) equal to three-fourth per cent. of the wages payable to an employee."
+      }
+    }
+  ]
+}

@@ -23,12 +23,24 @@ const asOfTexts: Readonly<Record<ParameterAsOf, string>> = {
   deductionDate:
     "Each version applies to tax deducted on or after the day it starts: on the credit or the payment at which the Act requires the deduction.",
   financialYearStart: "Each version applies to the financial years that begin on or after the day it starts.",
+  wageDate: "Each version applies to wages earned on or after the day it starts.",
+  wagePeriodEnd: "Each version applies to the wage periods that end on or after the day it starts.",
+  employmentEndDate: "Each version applies to employment that ends on or after the day it starts.",
+  accountingYearEnd: "Each version applies to the accounting years that end on or after the day it starts.",
+  contributionPeriodEnd:
+    "Each version applies to the contribution periods that end on or after the day it starts.",
 };
 
 const longDates = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
   month: "long",
   year: "numeric",
+  timeZone: "UTC",
+});
+
+const longDaysOfMonths = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "long",
   timeZone: "UTC",
 });
 
@@ -46,6 +58,12 @@ export function asOfText(asOf: ParameterAsOf): string {
 // which keeps the day whatever the time zone of the server.
 export function longDate(isoDate: string): string {
   return longDates.format(new Date(`${isoDate}T00:00:00Z`));
+}
+
+// A day and month comes as MM-dd and names that day of every year, so it is written in the leap year 2000, which holds
+// 29 February too.
+export function longDayMonth(dayMonth: string): string {
+  return longDaysOfMonths.format(new Date(`2000-${dayMonth}T00:00:00Z`));
 }
 
 export function fromText(isoDate: string): string {

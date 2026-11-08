@@ -72,6 +72,7 @@ public sealed class ParameterColumnSetTests
     [InlineData(nameof(CellKind.Percent))]
     [InlineData(nameof(CellKind.Amount))]
     [InlineData(nameof(CellKind.Date))]
+    [InlineData(nameof(CellKind.DayMonth))]
     public void Column_KeyOfAnotherKind_IsRefused(string kindName)
     {
         var kind = Enum.Parse<CellKind>(kindName);
@@ -90,6 +91,7 @@ public sealed class ParameterColumnSetTests
     [InlineData(nameof(CellKind.Percent), "0", "100")]
     [InlineData(nameof(CellKind.Percent), "0.0001", "99.9999")]
     [InlineData(nameof(CellKind.Amount), "0", "50000000")]
+    [InlineData(nameof(CellKind.Amount), "0.75", "2.25")]
     public void Column_BoundsThatFitTheKind_AreDeclared(string kindName, string minimum, string maximum)
     {
         var kind = Enum.Parse<CellKind>(kindName);
@@ -106,10 +108,11 @@ public sealed class ParameterColumnSetTests
     [InlineData(nameof(CellKind.Percent), null, "100.5")]
     [InlineData(nameof(CellKind.Percent), "-1", null)]
     [InlineData(nameof(CellKind.Percent), "0.00001", null)]
-    [InlineData(nameof(CellKind.Amount), "0.5", null)]
+    [InlineData(nameof(CellKind.Amount), "0.005", null)]
     [InlineData(nameof(CellKind.Amount), "-1", null)]
     [InlineData(nameof(CellKind.Integer), "31", "1")]
     [InlineData(nameof(CellKind.Date), "1", null)]
+    [InlineData(nameof(CellKind.DayMonth), null, "1")]
     public void Column_BoundsThatDoNotFit_AreRefused(string kindName, string? minimum, string? maximum)
     {
         var kind = Enum.Parse<CellKind>(kindName);
@@ -205,8 +208,13 @@ public sealed class ParameterColumnSetTests
     [InlineData(nameof(CellKind.Percent), "100")]
     [InlineData(nameof(CellKind.Amount), "50000000")]
     [InlineData(nameof(CellKind.Amount), "0")]
+    [InlineData(nameof(CellKind.Amount), "0.75")]
+    [InlineData(nameof(CellKind.Amount), "1.5")]
     [InlineData(nameof(CellKind.Date), "2016-03-01")]
     [InlineData(nameof(CellKind.Date), "2024-02-29")]
+    [InlineData(nameof(CellKind.DayMonth), "04-01")]
+    [InlineData(nameof(CellKind.DayMonth), "12-31")]
+    [InlineData(nameof(CellKind.DayMonth), "02-29")]
     public void Problem_ValueOfItsKindInCanonicalText_IsNone(string kindName, string value)
     {
         var kind = Enum.Parse<CellKind>(kindName);
@@ -232,8 +240,10 @@ public sealed class ParameterColumnSetTests
     [InlineData(nameof(CellKind.Percent), "100.0001")]
     [InlineData(nameof(CellKind.Percent), "0.12345")]
     [InlineData(nameof(CellKind.Percent), "-0.5")]
-    [InlineData(nameof(CellKind.Amount), "10.5")]
+    [InlineData(nameof(CellKind.Amount), "10.505")]
+    [InlineData(nameof(CellKind.Amount), "2.50")]
     [InlineData(nameof(CellKind.Amount), "-1")]
+    [InlineData(nameof(CellKind.Amount), "-0.75")]
     [InlineData(nameof(CellKind.Amount), "5,00,00,000")]
     [InlineData(nameof(CellKind.Date), "2016-3-1")]
     [InlineData(nameof(CellKind.Date), "2016-02-30")]
@@ -242,6 +252,15 @@ public sealed class ParameterColumnSetTests
     [InlineData(nameof(CellKind.Date), "01-03-2016")]
     [InlineData(nameof(CellKind.Date), "2016-03-01T00:00:00")]
     [InlineData(nameof(CellKind.Date), "1 March 2016")]
+    [InlineData(nameof(CellKind.DayMonth), "4-1")]
+    [InlineData(nameof(CellKind.DayMonth), "04-1")]
+    [InlineData(nameof(CellKind.DayMonth), "13-01")]
+    [InlineData(nameof(CellKind.DayMonth), "00-10")]
+    [InlineData(nameof(CellKind.DayMonth), "02-30")]
+    [InlineData(nameof(CellKind.DayMonth), "04-31")]
+    [InlineData(nameof(CellKind.DayMonth), "2026-04-01")]
+    [InlineData(nameof(CellKind.DayMonth), "04-01 ")]
+    [InlineData(nameof(CellKind.DayMonth), "1 April")]
     public void Problem_ValueThatBreaksItsKind_IsNamed(string kindName, string value)
     {
         var kind = Enum.Parse<CellKind>(kindName);

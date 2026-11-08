@@ -1,0 +1,1126 @@
+{
+  "key": "professional-tax.salary-slabs",
+  "title": "Professional tax on salary and wage earners: slabs by State",
+  "description": "The tax on salary and wage earners in each State whose Schedule or rate notification was read, slab by slab as printed, from 1 April 2026, keyed by the GST State code and the entry. A band is measured on the monthly salary or wages, the monthly gross income or the income of the year, and its bounds are as printed: more than or at least one figure, up to or less than another; a salary between two bands, or below Karnataka's one slab, is in no row, and the payroll decides it. The tax is as the entry states it, a month's, a year's or both, with the month taxed differently (February in Maharashtra and Karnataka) and the yearly lump sum Mizoram allows; a slab printed Nil or Zero is 0 a month and 0 a year. West Bengal's slabs end on 30 September 2026, when its Finance Act, 2026 ends their basis, and the ERP holds none after them until its new Schedule is read. The tax period is the month or year the tax is for, and the set answers for its first day.",
+  "basis": "law",
+  "asOf": "taxPeriodStart",
+  "columns": [
+    {
+      "name": "slab",
+      "title": "Slab",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "stateCode",
+      "title": "State",
+      "kind": "stateCode"
+    },
+    {
+      "name": "name",
+      "title": "Slab, in the ERP's words",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "earners",
+      "title": "Earners, as printed",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "band",
+      "title": "Band, as printed",
+      "kind": "text",
+      "optional": true
+    },
+    {
+      "name": "rate",
+      "title": "Tax, as printed",
+      "kind": "text"
+    },
+    {
+      "name": "measure",
+      "title": "Band measured on",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "monthlySalaryOrWages",
+          "title": "Monthly salary or wages"
+        },
+        {
+          "value": "monthlyGrossIncome",
+          "title": "Monthly gross income"
+        },
+        {
+          "value": "annualIncome",
+          "title": "Income of the year"
+        }
+      ]
+    },
+    {
+      "name": "above",
+      "title": "More than (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "atLeast",
+      "title": "At least (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "upTo",
+      "title": "Up to (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "below",
+      "title": "Less than (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "monthly",
+      "title": "Tax a month (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "yearly",
+      "title": "Tax a year (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "otherMonth",
+      "title": "Month taxed differently",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1,
+      "maximum": 12
+    },
+    {
+      "name": "otherMonthTax",
+      "title": "Tax in that month (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "lumpSum",
+      "title": "Yearly lump sum instead (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "explanations",
+      "title": "Explanations, as printed",
+      "kind": "text",
+      "optional": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Punjab State Development Tax Act, 2018 (Punjab Act No. 11 of 2018), No. 12-Leg./2018, Punjab Government Gazette Extraordinary, 19 April 2018, section 4 and the Schedule, serial number 1, in force from its publication in the Official Gazette (section 1(3))",
+        "S.O. 28, Commercial Taxes Department, Bihar, 2 February 2016, under section 17(1) of the Bihar Tax on Professions, Trades, Callings and Employments Act, 2011, substituting its Schedule, its English text authoritative by S.O. 29 of the same date: “This notification shall come into force with effect from the date of its issuance.”",
+        "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968 (Nagaland Act 4 of 1968), the Schedule (See Section 3), serial 1, as published by the Department of Taxes, Nagaland",
+        "Notification No. J.17011/1/2017-TAX, Taxation Department, Mizoram, 11 July 2024, under the proviso to section 4 of the Mizoram Professions, Trades, Callings and Employments Taxation Act, 1995, superseding Notification No. J.17011/1/96-TAX of 24 May 2013, “with effect from the assessment year 2023 – 2024 with reference to the total gross income during the return period of 2024 – 2025”",
+        "Notification No. F.II-1(7)-TAX/99(P-I), Finance Department (Taxes & Excise), Tripura, 25 July 2018, Tripura Gazette Extraordinary No. 443, under section 3(2) of the Tripura Professions, Trades, Callings and Employments Taxation Act, 1997, “with effect from the date of publication of this Notification in the Official Gazette”",
+        "Corrigendum No. F.II-1(7)-TAX/99(P-I), Finance Department (Taxes & Excise), Tripura, 30 October 2018, Tripura Gazette Extraordinary No. 1031, clause (i), substituting item (ii) of serial number 1 of the Schedule of the notification of 25 July 2018",
+        "Notification eCF No. 169350/124, Finance (Taxation) Department, Assam, 1 April 2025, Assam Gazette Extraordinary No. 139, 2 April 2025, substituting entry 1 of the Schedule to the Assam Professions, Trades, Callings and Employments Taxation Act, 1947: “This shall come into force on the date of their publication in the Official Gazette.”",
+        "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979 (West Bengal Act VI of 1979), section 3(2) and the Schedule, serial number 1, effective from 1 April 2014 (Notification No. 440-L, 11 March 2014, read with Notification No. 848-F.T., 28 May 2014), as the Directorate of Commercial Taxes publishes it",
+        "West Bengal Finance Act, 2016 (West Bengal Act VI of 2016), Notification No. 682-L, 28 July 2016, section 2(3)(a) and (b), amending serial number 1 of the Schedule, deemed in force 1 August 2016 by Notification No. 1197-F.T., 16 August 2016, clause (e)",
+        "Notification No. GHN-35-PFT-2022-S.3(2)(10)-Th, Finance Department, Gujarat, 8 April 2022, fixing the rates of entry 1 of the Schedule under section 3(2) of the Gujarat State Tax on Professions, Trades, Callings and Employments Act, 1976: “This notification shall be deemed to have come into force with effect from the 1st day of April, 2022.”",
+        "Maharashtra State Tax on Professions, Trades, Callings and Employments (Amendment) Act, 2023 (Mah. Act No. XIX of 2023), first published in the Maharashtra Government Gazette on 6 April 2023, section 3, substituting entry 1 of Schedule I, in force 1 April 2023 (section 1(2))",
+        "Karnataka Tax on Profession, Trades, Callings and Employments (Amendment) Act, 2023 (Karnataka Act No. 14 of 2023), first published 14 March 2023, section 7, substituting the Schedule, in force 1 April 2023 (section 1(2))",
+        "Karnataka Tax on Profession, Trades, Callings and Employments (Amendment) Act, 2025 (Karnataka Act No. 33 of 2025), first published 15 April 2025, section 2, substituting the entries of column (3) of serial number 1 of the Schedule, in force 1 April 2025 (section 1(2))",
+        "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, First Schedule, entry 1, as amended up to date in the consolidated text of the Commercial Taxes Department, Telangana"
+      ]
+    },
+    {
+      "from": "2026-10-01",
+      "instruments": [
+        "West Bengal Finance Act, 2026 (West Bengal Act XIII of 2026), Notification No. 756-L, 7 August 2026, Kolkata Gazette Extraordinary Part III, section 2(2)(a), substituting in section 3(2) the words that tax each class of the Schedule at the rate mentioned against it",
+        "Notification No. 1406-F.T., Finance Department (Revenue), West Bengal, 18 August 2026, Kolkata Gazette Extraordinary Part I, clause (b): “to appoint the 1st day of October, 2026, as the date on which sub-section (1), clause (a) of sub-section (2) and sub-section (4) of section 2 of the said Act shall come into force”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Punjab State Development Tax Act, 2018, Schedule, serial number 1",
+      "cells": {
+        "slab": "03-1",
+        "stateCode": "03",
+        "name": "Punjab: persons assessable under the head salaries or wages",
+        "earners": "All such persons who are assessable under the Head Income from Salaries and/ or Wages as per the Income Tax Act, 1961.",
+        "band": null,
+        "rate": "Rs. 200/- per month",
+        "measure": null,
+        "above": null,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": 200,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bihar Tax on Professions, Trades, Callings and Employments Act, 2011, Schedule, serial number 1(a), as substituted by S.O. 28, Commercial Taxes Department, 2 February 2016",
+      "cells": {
+        "slab": "10-1(a)",
+        "stateCode": "10",
+        "name": "Bihar: income up to ₹3 lakh a year",
+        "earners": null,
+        "band": "(a) Persons, whose income do not exceed three lac rupees per annum.",
+        "rate": "Nil",
+        "measure": "annualIncome",
+        "above": null,
+        "atLeast": null,
+        "upTo": 300000,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bihar Tax on Professions, Trades, Callings and Employments Act, 2011, Schedule, serial number 1(b), as substituted by S.O. 28, Commercial Taxes Department, 2 February 2016",
+      "cells": {
+        "slab": "10-1(b)",
+        "stateCode": "10",
+        "name": "Bihar: income above ₹3 lakh up to ₹5 lakh a year",
+        "earners": null,
+        "band": "(b) Persons, whose income exceeds three lac rupees per annum but does not exceed five lac rupees per annum.",
+        "rate": "One thousand rupees per annum.",
+        "measure": "annualIncome",
+        "above": 300000,
+        "atLeast": null,
+        "upTo": 500000,
+        "below": null,
+        "monthly": null,
+        "yearly": 1000,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bihar Tax on Professions, Trades, Callings and Employments Act, 2011, Schedule, serial number 1(c), as substituted by S.O. 28, Commercial Taxes Department, 2 February 2016",
+      "cells": {
+        "slab": "10-1(c)",
+        "stateCode": "10",
+        "name": "Bihar: income above ₹5 lakh up to ₹10 lakh a year",
+        "earners": null,
+        "band": "(c) Persons, whose income exceeds five lac rupees per annum but does not exceed ten lac rupees per annum.",
+        "rate": "Two thousand rupees per annum",
+        "measure": "annualIncome",
+        "above": 500000,
+        "atLeast": null,
+        "upTo": 1000000,
+        "below": null,
+        "monthly": null,
+        "yearly": 2000,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Bihar Tax on Professions, Trades, Callings and Employments Act, 2011, Schedule, serial number 1(d), as substituted by S.O. 28, Commercial Taxes Department, 2 February 2016",
+      "cells": {
+        "slab": "10-1(d)",
+        "stateCode": "10",
+        "name": "Bihar: income above ₹10 lakh a year",
+        "earners": null,
+        "band": "(d) Persons, whose income exceeds ten lac rupees per annum.",
+        "rate": "Two thousand and five hundred rupees per annum",
+        "measure": "annualIncome",
+        "above": 1000000,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": null,
+        "yearly": 2500,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968, the Schedule, serial 1(i), as published by the Department of Taxes, Nagaland",
+      "cells": {
+        "slab": "13-1(i)",
+        "stateCode": "13",
+        "name": "Nagaland: less than ₹4,000 a month",
+        "earners": "Salary and wages earners: Such persons whose monthly salaries or wages are-",
+        "band": "(i) Less than Rs 4000/",
+        "rate": "(i) Nil",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": null,
+        "upTo": null,
+        "below": 4000,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968, the Schedule, serial 1(ii), as published by the Department of Taxes, Nagaland",
+      "cells": {
+        "slab": "13-1(ii)",
+        "stateCode": "13",
+        "name": "Nagaland: more than ₹4,000 but less than ₹5,000 a month",
+        "earners": "Salary and wages earners: Such persons whose monthly salaries or wages are-",
+        "band": "(ii) More than Rs 4000 but less than Rs 5000",
+        "rate": "(ii) 35 per mensem",
+        "measure": "monthlySalaryOrWages",
+        "above": 4000,
+        "atLeast": null,
+        "upTo": null,
+        "below": 5000,
+        "monthly": 35,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968, the Schedule, serial 1(iii), as published by the Department of Taxes, Nagaland",
+      "cells": {
+        "slab": "13-1(iii)",
+        "stateCode": "13",
+        "name": "Nagaland: more than ₹5,000 but less than ₹7,000 a month",
+        "earners": "Salary and wages earners: Such persons whose monthly salaries or wages are-",
+        "band": "(iii) More than Rs 5000 but less than Rs 7000",
+        "rate": "(iii) 75 per mensem",
+        "measure": "monthlySalaryOrWages",
+        "above": 5000,
+        "atLeast": null,
+        "upTo": null,
+        "below": 7000,
+        "monthly": 75,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968, the Schedule, serial 1(iv), as published by the Department of Taxes, Nagaland",
+      "cells": {
+        "slab": "13-1(iv)",
+        "stateCode": "13",
+        "name": "Nagaland: more than ₹7,000 but less than ₹9,000 a month",
+        "earners": "Salary and wages earners: Such persons whose monthly salaries or wages are-",
+        "band": "(iv) More than Rs 7000 but less than Rs 9000",
+        "rate": "(iv) 110 per mensem",
+        "measure": "monthlySalaryOrWages",
+        "above": 7000,
+        "atLeast": null,
+        "upTo": null,
+        "below": 9000,
+        "monthly": 110,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968, the Schedule, serial 1(v), as published by the Department of Taxes, Nagaland",
+      "cells": {
+        "slab": "13-1(v)",
+        "stateCode": "13",
+        "name": "Nagaland: more than ₹9,000 but less than ₹12,000 a month",
+        "earners": "Salary and wages earners: Such persons whose monthly salaries or wages are-",
+        "band": "(v) More than Rs 9000 but less than Rs 12000",
+        "rate": "(v) 180 per mensem",
+        "measure": "monthlySalaryOrWages",
+        "above": 9000,
+        "atLeast": null,
+        "upTo": null,
+        "below": 12000,
+        "monthly": 180,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Nagaland Professions, Trades, Callings and Employment Taxation Act, 1968, the Schedule, serial 1(vi), as published by the Department of Taxes, Nagaland",
+      "cells": {
+        "slab": "13-1(vi)",
+        "stateCode": "13",
+        "name": "Nagaland: ₹12,000 a month or more",
+        "earners": "Salary and wages earners: Such persons whose monthly salaries or wages are-",
+        "band": "(vi) Rs 12000 or more",
+        "rate": "(vi) 208 per mensem",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": 12000,
+        "upTo": null,
+        "below": null,
+        "monthly": 208,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. J.17011/1/2017-TAX, Taxation Department, Mizoram, 11 July 2024, the Schedule, serial number 1(1)",
+      "cells": {
+        "slab": "15-1(1)",
+        "stateCode": "15",
+        "name": "Mizoram: total gross monthly income up to ₹5,000",
+        "earners": "Salary and Wage earners where the total gross monthly income -",
+        "band": "(1) Does not exceed 5,000/-",
+        "rate": "NIL",
+        "measure": "monthlyGrossIncome",
+        "above": null,
+        "atLeast": null,
+        "upTo": 5000,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. J.17011/1/2017-TAX, Taxation Department, Mizoram, 11 July 2024, the Schedule, serial number 1(2)",
+      "cells": {
+        "slab": "15-1(2)",
+        "stateCode": "15",
+        "name": "Mizoram: above ₹5,000 up to ₹8,000 a month",
+        "earners": "Salary and Wage earners where the total gross monthly income -",
+        "band": "(2) Exceeds 5,000/- but does not exceed 8,000.00",
+        "rate": "75.00 per month or the assessee may pay 900.00 per annum in lump-sum.",
+        "measure": "monthlyGrossIncome",
+        "above": 5000,
+        "atLeast": null,
+        "upTo": 8000,
+        "below": null,
+        "monthly": 75,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": 900,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. J.17011/1/2017-TAX, Taxation Department, Mizoram, 11 July 2024, the Schedule, serial number 1(3)",
+      "cells": {
+        "slab": "15-1(3)",
+        "stateCode": "15",
+        "name": "Mizoram: above ₹8,000 up to ₹10,000 a month",
+        "earners": "Salary and Wage earners where the total gross monthly income -",
+        "band": "(3) Exceeds 8,000.00 but does not exceed 10,000.00",
+        "rate": "120.00 per month or the assessee may pay 1,440.00 per annum in lump-sum.",
+        "measure": "monthlyGrossIncome",
+        "above": 8000,
+        "atLeast": null,
+        "upTo": 10000,
+        "below": null,
+        "monthly": 120,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": 1440,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. J.17011/1/2017-TAX, Taxation Department, Mizoram, 11 July 2024, the Schedule, serial number 1(4)",
+      "cells": {
+        "slab": "15-1(4)",
+        "stateCode": "15",
+        "name": "Mizoram: above ₹10,000 up to ₹12,000 a month",
+        "earners": "Salary and Wage earners where the total gross monthly income -",
+        "band": "(4) Exceeds 10,000.00 but does not exceed 12,000.00",
+        "rate": "150.00 per month or the assessee may pay Rs. 1,800.00 per annum in lump-sum.",
+        "measure": "monthlyGrossIncome",
+        "above": 10000,
+        "atLeast": null,
+        "upTo": 12000,
+        "below": null,
+        "monthly": 150,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": 1800,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. J.17011/1/2017-TAX, Taxation Department, Mizoram, 11 July 2024, the Schedule, serial number 1(5)",
+      "cells": {
+        "slab": "15-1(5)",
+        "stateCode": "15",
+        "name": "Mizoram: above ₹12,000 up to ₹15,000 a month",
+        "earners": "Salary and Wage earners where the total gross monthly income -",
+        "band": "(5) Exceeds 12,000.00 but does not exceed 15,000.00",
+        "rate": "180.00 per month or the assessee may pay 2,160.00 per annum in lump-sum.",
+        "measure": "monthlyGrossIncome",
+        "above": 12000,
+        "atLeast": null,
+        "upTo": 15000,
+        "below": null,
+        "monthly": 180,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": 2160,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. J.17011/1/2017-TAX, Taxation Department, Mizoram, 11 July 2024, the Schedule, serial number 1(6)",
+      "cells": {
+        "slab": "15-1(6)",
+        "stateCode": "15",
+        "name": "Mizoram: above ₹15,000 up to ₹20,000 a month",
+        "earners": "Salary and Wage earners where the total gross monthly income -",
+        "band": "(6) Exceeds 15,000.00 but does not exceed 20,000.00",
+        "rate": "195.00 per month or the assessee may pay Rs. 2,340.00 per annum in lump-sum.",
+        "measure": "monthlyGrossIncome",
+        "above": 15000,
+        "atLeast": null,
+        "upTo": 20000,
+        "below": null,
+        "monthly": 195,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": 2340,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. J.17011/1/2017-TAX, Taxation Department, Mizoram, 11 July 2024, the Schedule, serial number 1(7)",
+      "cells": {
+        "slab": "15-1(7)",
+        "stateCode": "15",
+        "name": "Mizoram: above ₹20,000 a month",
+        "earners": "Salary and Wage earners where the total gross monthly income -",
+        "band": "(7) Exceeds 20,000.00",
+        "rate": "208.00 per month or the assessee may pay Rs. 2,500.00 per annum in lump-sum.",
+        "measure": "monthlyGrossIncome",
+        "above": 20000,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": 208,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": 2500,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. F.II-1(7)-TAX/99(P-I), Finance Department (Taxes & Excise), Tripura, 25 July 2018, Schedule, serial number 1(i)",
+      "cells": {
+        "slab": "16-1(i)",
+        "stateCode": "16",
+        "name": "Tripura: monthly gross income up to ₹7,500",
+        "earners": "Salary & Wage earners:- When the range of monthly gross income is-",
+        "band": "(i) Up to Rs. 7,500/-",
+        "rate": "Nil",
+        "measure": "monthlyGrossIncome",
+        "above": null,
+        "atLeast": null,
+        "upTo": 7500,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. F.II-1(7)-TAX/99(P-I), Finance Department (Taxes & Excise), Tripura, 25 July 2018, Schedule, serial number 1(ii), as substituted by the Corrigendum of 30 October 2018, clause (i)",
+      "cells": {
+        "slab": "16-1(ii)",
+        "stateCode": "16",
+        "name": "Tripura: ₹7,501 to ₹15,000 a month",
+        "earners": "Salary & Wage earners:- When the range of monthly gross income is-",
+        "band": "(ii) Rs. 7,501/- and above and up to Rs. 15,000/-",
+        "rate": "Rs. 1800/- (Rs. 150/- per month)",
+        "measure": "monthlyGrossIncome",
+        "above": null,
+        "atLeast": 7501,
+        "upTo": 15000,
+        "below": null,
+        "monthly": 150,
+        "yearly": 1800,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. F.II-1(7)-TAX/99(P-I), Finance Department (Taxes & Excise), Tripura, 25 July 2018, Schedule, serial number 1(iii)",
+      "cells": {
+        "slab": "16-1(iii)",
+        "stateCode": "16",
+        "name": "Tripura: ₹15,001 a month or more",
+        "earners": "Salary & Wage earners:- When the range of monthly gross income is-",
+        "band": "(iii) Rs. 15001/- and above",
+        "rate": "Rs. 2496/- (Rs. 208/- per month)",
+        "measure": "monthlyGrossIncome",
+        "above": null,
+        "atLeast": 15001,
+        "upTo": null,
+        "below": null,
+        "monthly": 208,
+        "yearly": 2496,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Assam Professions, Trades, Callings and Employments Taxation Act, 1947, Schedule, entry 1(i), as substituted by Notification eCF No. 169350/124, Finance (Taxation) Department, 1 April 2025",
+      "cells": {
+        "slab": "18-1(i)",
+        "stateCode": "18",
+        "name": "Assam: up to ₹15,000 a month",
+        "earners": "Salary and wage earners, such persons whose monthly salaries or wages are-",
+        "band": "(i) Up to Rs. 15,000.00",
+        "rate": "Nil",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": null,
+        "upTo": 15000,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Assam Professions, Trades, Callings and Employments Taxation Act, 1947, Schedule, entry 1(ii), as substituted by Notification eCF No. 169350/124, Finance (Taxation) Department, 1 April 2025",
+      "cells": {
+        "slab": "18-1(ii)",
+        "stateCode": "18",
+        "name": "Assam: ₹15,001 or more but less than ₹25,000 a month",
+        "earners": "Salary and wage earners, such persons whose monthly salaries or wages are-",
+        "band": "(ii) Rs.15,001.00 or more but less than Rs.25,000.00",
+        "rate": "Rs. 180.00 per month",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": 15001,
+        "upTo": null,
+        "below": 25000,
+        "monthly": 180,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Assam Professions, Trades, Callings and Employments Taxation Act, 1947, Schedule, entry 1(iii), as substituted by Notification eCF No. 169350/124, Finance (Taxation) Department, 1 April 2025",
+      "cells": {
+        "slab": "18-1(iii)",
+        "stateCode": "18",
+        "name": "Assam: ₹25,000 a month or more",
+        "earners": "Salary and wage earners, such persons whose monthly salaries or wages are-",
+        "band": "(iii) Rs. 25,000.00 and more",
+        "rate": "Rs. 208.00 per month",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": 25000,
+        "upTo": null,
+        "below": null,
+        "monthly": 208,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-09-30",
+      "source": "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979, Schedule, serial number 1, item (i), as amended by the West Bengal Finance Act, 2016, section 2(3)(a)",
+      "cells": {
+        "slab": "19-1(i)",
+        "stateCode": "19",
+        "name": "West Bengal: up to ₹10,000 a month",
+        "earners": "Employees earning monthly salary or wages—",
+        "band": "(i) Not exceeding Rs. 10,000",
+        "rate": "Nil",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": null,
+        "upTo": 10000,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-09-30",
+      "source": "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979, Schedule, serial number 1, item (iii), in the Directorate of Commercial Taxes' Schedule effective from 1 April 2014",
+      "cells": {
+        "slab": "19-1(iii)",
+        "stateCode": "19",
+        "name": "West Bengal: above ₹10,000 up to ₹15,000 a month",
+        "earners": "Employees earning monthly salary or wages—",
+        "band": "(iii) Above Rs. 10,000 but not exceeding Rs. 15,000",
+        "rate": "Rs.110 per month",
+        "measure": "monthlySalaryOrWages",
+        "above": 10000,
+        "atLeast": null,
+        "upTo": 15000,
+        "below": null,
+        "monthly": 110,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-09-30",
+      "source": "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979, Schedule, serial number 1, item (iv), in the Directorate of Commercial Taxes' Schedule effective from 1 April 2014",
+      "cells": {
+        "slab": "19-1(iv)",
+        "stateCode": "19",
+        "name": "West Bengal: above ₹15,000 up to ₹25,000 a month",
+        "earners": "Employees earning monthly salary or wages—",
+        "band": "(iv) Above Rs. 15,000 but not exceeding Rs. 25,000",
+        "rate": "Rs. 130 per month",
+        "measure": "monthlySalaryOrWages",
+        "above": 15000,
+        "atLeast": null,
+        "upTo": 25000,
+        "below": null,
+        "monthly": 130,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-09-30",
+      "source": "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979, Schedule, serial number 1, item (v), in the Directorate of Commercial Taxes' Schedule effective from 1 April 2014",
+      "cells": {
+        "slab": "19-1(v)",
+        "stateCode": "19",
+        "name": "West Bengal: above ₹25,000 up to ₹40,000 a month",
+        "earners": "Employees earning monthly salary or wages—",
+        "band": "(v) Above Rs.25,000 but not exceeding Rs.40,000",
+        "rate": "Rs. 150 per month",
+        "measure": "monthlySalaryOrWages",
+        "above": 25000,
+        "atLeast": null,
+        "upTo": 40000,
+        "below": null,
+        "monthly": 150,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-09-30",
+      "source": "West Bengal State Tax on Professions, Trades, Callings and Employments Act, 1979, Schedule, serial number 1, item (vi), in the Directorate of Commercial Taxes' Schedule effective from 1 April 2014",
+      "cells": {
+        "slab": "19-1(vi)",
+        "stateCode": "19",
+        "name": "West Bengal: above ₹40,000 a month",
+        "earners": "Employees earning monthly salary or wages—",
+        "band": "(vi) Above Rs.40,000",
+        "rate": "Rs. 200 per month",
+        "measure": "monthlySalaryOrWages",
+        "above": 40000,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": 200,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. GHN-35-PFT-2022-S.3(2)(10)-Th, Finance Department, Gujarat, 8 April 2022, Schedule, entry 1(A)(i) and Explanations I and II",
+      "cells": {
+        "slab": "24-1(A)(i)",
+        "stateCode": "24",
+        "name": "Gujarat, government, panchayat, public sector and grant-in-aid employees: up to ₹12,000 a month",
+        "earners": "Salary and Wages earners of the State Government, Central Government, Panchayats, Public Sector Undertakings of the State and the Central Government, and Grant-in-aids institutions",
+        "band": "(i) Up to ₹12,000/-",
+        "rate": "[Rate of tax per month (in ₹)] (i) Zero",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": null,
+        "upTo": 12000,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": "[Explanation I] … the monthly salary or wages shall, for the purpose of this entry, be reckoned on the basis of the actual amount of salary or wages paid or payable for a month [Explanation II] Where a person ceases to be a salary or wages earner before the end of any month, his liability to pay the tax for that month shall be proportionately reduced."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. GHN-35-PFT-2022-S.3(2)(10)-Th, Finance Department, Gujarat, 8 April 2022, Schedule, entry 1(A)(ii) and Explanations I and II",
+      "cells": {
+        "slab": "24-1(A)(ii)",
+        "stateCode": "24",
+        "name": "Gujarat, government, panchayat, public sector and grant-in-aid employees: above ₹12,000 a month",
+        "earners": "Salary and Wages earners of the State Government, Central Government, Panchayats, Public Sector Undertakings of the State and the Central Government, and Grant-in-aids institutions",
+        "band": "(ii) More than ₹12,000/-",
+        "rate": "[Rate of tax per month (in ₹)] (ii) ₹200/-",
+        "measure": "monthlySalaryOrWages",
+        "above": 12000,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": 200,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": "[Explanation I] … the monthly salary or wages shall, for the purpose of this entry, be reckoned on the basis of the actual amount of salary or wages paid or payable for a month [Explanation II] Where a person ceases to be a salary or wages earner before the end of any month, his liability to pay the tax for that month shall be proportionately reduced."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. GHN-35-PFT-2022-S.3(2)(10)-Th, Finance Department, Gujarat, 8 April 2022, Schedule, entry 1(B)(i) and Explanations I and II",
+      "cells": {
+        "slab": "24-1(B)(i)",
+        "stateCode": "24",
+        "name": "Gujarat, other salary and wage earners: up to ₹12,000 a month",
+        "earners": "Salary and Wages earners other than those mentioned in sub-entry(A)",
+        "band": "(i) Up to ₹12,000/-",
+        "rate": "[Rate of tax per month (in ₹)] (i) Zero",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": null,
+        "upTo": 12000,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": "[Explanation I] … the monthly salary or wages shall, for the purpose of this entry, be reckoned on the basis of the actual amount of salary or wages paid or payable for a month [Explanation II] Where a person ceases to be a salary or wages earner before the end of any month, his liability to pay the tax for that month shall be proportionately reduced."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Notification No. GHN-35-PFT-2022-S.3(2)(10)-Th, Finance Department, Gujarat, 8 April 2022, Schedule, entry 1(B)(ii) and Explanations I and II",
+      "cells": {
+        "slab": "24-1(B)(ii)",
+        "stateCode": "24",
+        "name": "Gujarat, other salary and wage earners: above ₹12,000 a month",
+        "earners": "Salary and Wages earners other than those mentioned in sub-entry(A)",
+        "band": "(ii) More than ₹12,000/-",
+        "rate": "[Rate of tax per month (in ₹)] (ii) ₹200/-",
+        "measure": "monthlySalaryOrWages",
+        "above": 12000,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": 200,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": "[Explanation I] … the monthly salary or wages shall, for the purpose of this entry, be reckoned on the basis of the actual amount of salary or wages paid or payable for a month [Explanation II] Where a person ceases to be a salary or wages earner before the end of any month, his liability to pay the tax for that month shall be proportionately reduced."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, Schedule I, entry 1(i)(a), as substituted by Mah. Act No. XIX of 2023, section 3",
+      "cells": {
+        "slab": "27-1(i)(a)",
+        "stateCode": "27",
+        "name": "Maharashtra, men: up to ₹7,500 a month",
+        "earners": "Salary and wage earners— (i) in case of men, whose monthly salaries or wages,—",
+        "band": "(a) do not exceed rupees seven thousand five hundred ;",
+        "rate": "Nil.",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": null,
+        "upTo": 7500,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, Schedule I, entry 1(i)(b), as substituted by Mah. Act No. XIX of 2023, section 3",
+      "cells": {
+        "slab": "27-1(i)(b)",
+        "stateCode": "27",
+        "name": "Maharashtra, men: above ₹7,500 up to ₹10,000 a month",
+        "earners": "Salary and wage earners— (i) in case of men, whose monthly salaries or wages,—",
+        "band": "(b) exceed rupees seven thousand five hundred but do not exceed rupees ten thousand ;",
+        "rate": "one hundred seventy-five per month.",
+        "measure": "monthlySalaryOrWages",
+        "above": 7500,
+        "atLeast": null,
+        "upTo": 10000,
+        "below": null,
+        "monthly": 175,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, Schedule I, entry 1(i)(c), as substituted by Mah. Act No. XIX of 2023, section 3",
+      "cells": {
+        "slab": "27-1(i)(c)",
+        "stateCode": "27",
+        "name": "Maharashtra, men: above ₹10,000 a month",
+        "earners": "Salary and wage earners— (i) in case of men, whose monthly salaries or wages,—",
+        "band": "(c) exceed rupees ten thousand ;",
+        "rate": "two thousand five hundred per annum to be paid in following manner :— (a) two hundred per month except for the month of February ; (b) three hundred for the month of February;",
+        "measure": "monthlySalaryOrWages",
+        "above": 10000,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": 200,
+        "yearly": 2500,
+        "otherMonth": 2,
+        "otherMonthTax": 300,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, Schedule I, entry 1(ii)(a), as substituted by Mah. Act No. XIX of 2023, section 3",
+      "cells": {
+        "slab": "27-1(ii)(a)",
+        "stateCode": "27",
+        "name": "Maharashtra, women: up to ₹25,000 a month",
+        "earners": "Salary and wage earners— (ii) in case of women, whose monthly salaries or wages,—",
+        "band": "(a) do not exceed rupees twenty-five thousand ;",
+        "rate": "Nil.",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": null,
+        "upTo": 25000,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Maharashtra State Tax on Professions, Trades, Callings and Employments Act, 1975, Schedule I, entry 1(ii)(b), as substituted by Mah. Act No. XIX of 2023, section 3",
+      "cells": {
+        "slab": "27-1(ii)(b)",
+        "stateCode": "27",
+        "name": "Maharashtra, women: above ₹25,000 a month",
+        "earners": "Salary and wage earners— (ii) in case of women, whose monthly salaries or wages,—",
+        "band": "(b) exceed rupees twenty-five thousand ;",
+        "rate": "two thousand five hundred per annum to be paid in following manner :— (a) two hundred per month except for the month of February ; (b) three hundred for the month of February.",
+        "measure": "monthlySalaryOrWages",
+        "above": 25000,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": 200,
+        "yearly": 2500,
+        "otherMonth": 2,
+        "otherMonthTax": 300,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Karnataka Tax on Professions, Trades, Callings and Employments Act, 1976, Schedule, serial number 1: column (2) as substituted by Karnataka Act No. 14 of 2023, section 7, and column (3) as substituted by Karnataka Act No. 33 of 2025, section 2",
+      "cells": {
+        "slab": "29-1",
+        "stateCode": "29",
+        "name": "Karnataka: ₹25,000 a month or more",
+        "earners": "Salary or wage earners whose salary or wage or both, as the case may be, for a month is Rs. 25,000-00 and above",
+        "band": null,
+        "rate": "(i) Rs.200-00 per month (except for the month of February); (ii) Rs.300-00 for the month of February",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": 25000,
+        "upTo": null,
+        "below": null,
+        "monthly": 200,
+        "yearly": null,
+        "otherMonth": 2,
+        "otherMonthTax": 300,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, First Schedule, entry 1(i), as amended up to date in the consolidated text of the Commercial Taxes Department",
+      "cells": {
+        "slab": "36-1(i)",
+        "stateCode": "36",
+        "name": "Telangana: up to ₹15,000 a month",
+        "earners": "Salary and wage earners whose monthly salaries or wages in Rs:",
+        "band": "(i) Up to 15,000",
+        "rate": "Nil",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": null,
+        "upTo": 15000,
+        "below": null,
+        "monthly": 0,
+        "yearly": 0,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, First Schedule, entry 1(ii), as amended up to date in the consolidated text of the Commercial Taxes Department",
+      "cells": {
+        "slab": "36-1(ii)",
+        "stateCode": "36",
+        "name": "Telangana: ₹15,001 to ₹20,000 a month",
+        "earners": "Salary and wage earners whose monthly salaries or wages in Rs:",
+        "band": "(ii) From 15,001 to 20,000",
+        "rate": "150 PM",
+        "measure": "monthlySalaryOrWages",
+        "above": null,
+        "atLeast": 15001,
+        "upTo": 20000,
+        "below": null,
+        "monthly": 150,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Telangana Tax on Professions, Trades, Callings and Employments Act, 1987, First Schedule, entry 1(iii), as amended up to date in the consolidated text of the Commercial Taxes Department",
+      "cells": {
+        "slab": "36-1(iii)",
+        "stateCode": "36",
+        "name": "Telangana: above ₹20,000 a month",
+        "earners": "Salary and wage earners whose monthly salaries or wages in Rs:",
+        "band": "(iii) Above 20,000",
+        "rate": "200 PM",
+        "measure": "monthlySalaryOrWages",
+        "above": 20000,
+        "atLeast": null,
+        "upTo": null,
+        "below": null,
+        "monthly": 200,
+        "yearly": null,
+        "otherMonth": null,
+        "otherMonthTax": null,
+        "lumpSum": null,
+        "explanations": null
+      }
+    }
+  ]
+}

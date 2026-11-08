@@ -42,6 +42,8 @@ const day = column("day", "integer");
 
 const opened = column("opened", "date");
 
+const periodStart = column("periodStart", "dayMonth");
+
 const state = column("state", "stateCode");
 
 const reference = column("reference", "code");
@@ -56,15 +58,15 @@ const row: ParameterRow = {
   until: null,
   source: "Order 7 of 2024, item 3",
   cells: [
-    { column: "code", value: "alpha-1" },
-    { column: "label", value: "Monthly statement of sales" },
-    { column: "share", value: "2.25" },
-    { column: "limit", value: "123456789" },
-    { column: "cadence", value: "everyQuarter" },
-    { column: "day", value: "28" },
-    { column: "state", value: "09" },
-    { column: "reference", value: "beta-2" },
-    { column: "note", value: null },
+    { column: "code", value: "alpha-1", stateName: null },
+    { column: "label", value: "Monthly statement of sales", stateName: null },
+    { column: "share", value: "2.25", stateName: null },
+    { column: "limit", value: "123456789", stateName: null },
+    { column: "cadence", value: "everyQuarter", stateName: null },
+    { column: "day", value: "28", stateName: null },
+    { column: "state", value: "09", stateName: "Uttar Pradesh" },
+    { column: "reference", value: "beta-2", stateName: null },
+    { column: "note", value: null, stateName: null },
   ],
 };
 
@@ -77,9 +79,15 @@ test("cellText_EachKind_IsWrittenAsAPersonReadsIt", () => {
   assert.equal(cellText(cadence, "everyQuarter"), "Every quarter");
   assert.equal(cellText(day, "28"), "28");
   assert.equal(cellText(opened, "2019-10-01"), "1 October 2019");
+  assert.equal(cellText(periodStart, "10-01"), "1 October");
   assert.equal(cellText(state, "09"), "09");
   assert.equal(cellText(code, "alpha-1"), "alpha-1");
   assert.equal(cellText(note, "As written, with (brackets)."), "As written, with (brackets).");
+});
+
+test("cellText_StateCodeWithTheNameOfItsState_IsTheNameThenTheCode", () => {
+  assert.equal(cellText(state, "09", "Uttar Pradesh"), "Uttar Pradesh (09)");
+  assert.equal(cellText(state, "09", null), "09");
 });
 
 test("cellText_EmptyCell_IsNone", () => {
@@ -124,7 +132,7 @@ test("entryRow_Row_HoldsTheTextOfEachCellAndItsSourceUnderTheEntrysKey", () => {
       limit: "₹12,34,56,789",
       cadence: "Every quarter",
       day: "28",
-      state: "09",
+      state: "Uttar Pradesh (09)",
       reference: "beta-2",
       note: "None",
       [sourceColumnId]: "Order 7 of 2024, item 3",
@@ -132,10 +140,10 @@ test("entryRow_Row_HoldsTheTextOfEachCellAndItsSourceUnderTheEntrysKey", () => {
   });
 });
 
-test("entrySearchKeys_Row_SearchesTheKeyAndTheWordsOfItsTextCodesAndChoices", () => {
+test("entrySearchKeys_Row_SearchesTheKeyAndTheWordsOfItsTextCodesChoicesAndStates", () => {
   assert.deepEqual(entrySearchKeys(columns, row), {
     code: "alpha-1",
-    name: "alpha-1 Monthly statement of sales Every quarter beta-2",
+    name: "alpha-1 Monthly statement of sales Every quarter Uttar Pradesh (09) beta-2",
   });
 });
 

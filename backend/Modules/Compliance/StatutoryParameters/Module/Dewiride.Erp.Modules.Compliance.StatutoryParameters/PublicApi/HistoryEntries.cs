@@ -42,6 +42,11 @@ internal static class HistoryEntries
         AsOfDate.TaxPeriodStart => ParameterAsOf.TaxPeriodStart,
         AsOfDate.DeductionDate => ParameterAsOf.DeductionDate,
         AsOfDate.FinancialYearStart => ParameterAsOf.FinancialYearStart,
+        AsOfDate.WageDate => ParameterAsOf.WageDate,
+        AsOfDate.WagePeriodEnd => ParameterAsOf.WagePeriodEnd,
+        AsOfDate.EmploymentEndDate => ParameterAsOf.EmploymentEndDate,
+        AsOfDate.AccountingYearEnd => ParameterAsOf.AccountingYearEnd,
+        AsOfDate.ContributionPeriodEnd => ParameterAsOf.ContributionPeriodEnd,
         _ => throw new ArgumentOutOfRangeException(nameof(asOf), asOf, "A set answers for one of the store's as-of dates."),
     };
 
@@ -55,6 +60,7 @@ internal static class HistoryEntries
         CellKind.Choice => ParameterColumnKind.Choice,
         CellKind.StateCode => ParameterColumnKind.StateCode,
         CellKind.Date => ParameterColumnKind.Date,
+        CellKind.DayMonth => ParameterColumnKind.DayMonth,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "A column is of one of the store's kinds."),
     };
 }

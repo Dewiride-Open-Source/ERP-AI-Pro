@@ -12,4 +12,5 @@ public enum ParameterColumnKind
     Choice = 6,
     StateCode = 7,
     Date = 8,
+    DayMonth = 9,
 }

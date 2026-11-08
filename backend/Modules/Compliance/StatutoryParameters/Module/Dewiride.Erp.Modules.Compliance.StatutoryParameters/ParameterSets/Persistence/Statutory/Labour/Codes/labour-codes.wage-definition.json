@@ -1,0 +1,539 @@
+{
+  "key": "labour-codes.wage-definition",
+  "title": "Wages as the Code on Wages and the Code on Social Security define them",
+  "description": "The definition of “wages” in section 2(y) of the Code on Wages, 2019 and section 2(88) of the Code on Social Security, 2020, both in force from 21 November 2025, clause by clause: the pay wages include, the payments they exclude and the rules for computing them, each in the Code's words. The payments excluded by clauses (a) to (i) count against the first proviso's limit: where they exceed one-half of all remuneration, or another per cent. the Central Government notifies, of which none is held, the excess is added back to wages; a payment excluded by clause (j) or (k) never is. Remuneration in kind counts as wages up to the share the Explanation sets. The second proviso takes clauses (d), (f), (g) and (h) into wages for equal wages to all genders and for payment of wages. The Code on Wages defines wages for its purposes, bonus among them, and the Code on Social Security for its own, provident fund, ESI and gratuity among them. The set answers for the day for which wages are earned.",
+  "basis": "law",
+  "asOf": "wageDate",
+  "columns": [
+    {
+      "name": "clause",
+      "title": "Clause",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "What it is",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "labourCode",
+      "title": "Code",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "codeOnWages",
+          "title": "Code on Wages, 2019"
+        },
+        {
+          "value": "codeOnSocialSecurity",
+          "title": "Code on Social Security, 2020"
+        }
+      ]
+    },
+    {
+      "name": "treatment",
+      "title": "In wages",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "included",
+          "title": "Included in wages"
+        },
+        {
+          "value": "excludedWithinLimit",
+          "title": "Excluded, but counted against the first proviso's limit"
+        },
+        {
+          "value": "excluded",
+          "title": "Excluded outright"
+        },
+        {
+          "value": "rule",
+          "title": "A rule for computing wages"
+        }
+      ]
+    },
+    {
+      "name": "percent",
+      "title": "Per cent",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "bound",
+      "title": "Bound",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "moreThan",
+          "title": "More than (exceeds)"
+        },
+        {
+          "value": "atMost",
+          "title": "At most (does not exceed)"
+        }
+      ]
+    },
+    {
+      "name": "wording",
+      "title": "In the Code's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Code on Wages, 2019 (No. 29 of 2019), 8 August 2019, Gazette of India, Extraordinary, Part II, Section 1, No. 48: section 2(y), in force from 21 November 2025 by S.O. 5322(E) of that day (Part II, Section 3(ii), No. 5146), among “sections 1 to 41”",
+        "Code on Social Security, 2020 (No. 36 of 2020), 28 September 2020, Gazette of India, Extraordinary, Part II, Section 1, No. 61: section 2(88), in force from 21 November 2025 by S.O. 5319(E) of that day (Part II, Section 3(ii), No. 5143), among “sections 1 to 14”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), inclusion (i)",
+      "cells": {
+        "clause": "cw-2(y)-includes(i)",
+        "name": "Basic pay",
+        "labourCode": "codeOnWages",
+        "treatment": "included",
+        "percent": null,
+        "bound": null,
+        "wording": "(y) “wages” means all remuneration whether by way of salaries, allowances or otherwise, expressed in terms of money or capable of being so expressed which would, if the terms of employment, express or implied, were fulfilled, be payable to a person employed in respect of his employment or of work done in such employment, and includes,— (i) basic pay;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), inclusion (ii)",
+      "cells": {
+        "clause": "cw-2(y)-includes(ii)",
+        "name": "Dearness allowance",
+        "labourCode": "codeOnWages",
+        "treatment": "included",
+        "percent": null,
+        "bound": null,
+        "wording": "(y) “wages” means all remuneration whether by way of salaries, allowances or otherwise, expressed in terms of money or capable of being so expressed which would, if the terms of employment, express or implied, were fulfilled, be payable to a person employed in respect of his employment or of work done in such employment, and includes,— (ii) dearness allowance; and"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), inclusion (iii)",
+      "cells": {
+        "clause": "cw-2(y)-includes(iii)",
+        "name": "Retaining allowance, if any",
+        "labourCode": "codeOnWages",
+        "treatment": "included",
+        "percent": null,
+        "bound": null,
+        "wording": "(y) “wages” means all remuneration whether by way of salaries, allowances or otherwise, expressed in terms of money or capable of being so expressed which would, if the terms of employment, express or implied, were fulfilled, be payable to a person employed in respect of his employment or of work done in such employment, and includes,— (iii) retaining allowance, if any,"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (a)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(a)",
+        "name": "Bonus under any law that is not part of the remuneration payable under the terms of employment",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (a) any bonus payable under any law for the time being in force, which does not form part of the remuneration payable under the terms of employment;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (b)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(b)",
+        "name": "House-accommodation, light, water, medical attendance and any other amenity or service excluded by an order of the appropriate Government",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (b) the value of any house-accommodation, or of the supply of light, water, medical attendance or other amenity or of any service excluded from the computation of wages by a general or special order of the appropriate Government;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (c)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(c)",
+        "name": "Employer's contribution to a pension or provident fund, with its interest",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (c) any contribution paid by the employer to any pension or provident fund, and the interest which may have accrued thereon;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (d)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(d)",
+        "name": "Conveyance allowance or travelling concession",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (d) any conveyance allowance or the value of any travelling concession;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (e)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(e)",
+        "name": "Sums paid to defray special expenses of the employment",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (e) any sum paid to the employed person to defray special expenses entailed on him by the nature of his employment;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (f)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(f)",
+        "name": "House rent allowance",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (f) house rent allowance;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (g)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(g)",
+        "name": "Remuneration under an award, a settlement or an order of a court or Tribunal",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (g) remuneration payable under any award or settlement between the parties or order of a court or Tribunal;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (h)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(h)",
+        "name": "Overtime allowance",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (h) any overtime allowance;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (i)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(i)",
+        "name": "Commission",
+        "labourCode": "codeOnWages",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (i) any commission payable to the employee;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (j)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(j)",
+        "name": "Gratuity payable on the termination of employment",
+        "labourCode": "codeOnWages",
+        "treatment": "excluded",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (j) any gratuity payable on the termination of employment;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), exclusion (k)",
+      "cells": {
+        "clause": "cw-2(y)-excludes(k)",
+        "name": "Retrenchment compensation, other retirement benefits and ex gratia payments on the termination of employment",
+        "labourCode": "codeOnWages",
+        "treatment": "excluded",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (k) any retrenchment compensation or other retirement benefit payable to the employee or any ex gratia payment made to him on the termination of employment:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), first proviso",
+      "cells": {
+        "clause": "cw-2(y)-proviso-1",
+        "name": "Payments excluded by clauses (a) to (i) above this share of all remuneration are added back to wages",
+        "labourCode": "codeOnWages",
+        "treatment": "rule",
+        "percent": 50,
+        "bound": "moreThan",
+        "wording": "Provided that, for calculating the wages under this clause, if payments made by the employer to the employee under clauses (a) to (i) exceeds one-half, or such other per cent. as may be notified by the Central Government, of the all remuneration calculated under this clause, the amount which exceeds such one-half, or the per cent. so notified, shall be deemed as remuneration and shall be accordingly added in wages under this clause:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), second proviso",
+      "cells": {
+        "clause": "cw-2(y)-proviso-2",
+        "name": "Clauses (d), (f), (g) and (h) are taken into wages for equal wages to all genders and for payment of wages",
+        "labourCode": "codeOnWages",
+        "treatment": "rule",
+        "percent": null,
+        "bound": null,
+        "wording": "Provided further that for the purpose of equal wages to all genders and for the purpose of payment of wages, the emoluments specified in clauses (d), (f), (g) and (h) shall be taken for computation of wage."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(y), Explanation",
+      "cells": {
+        "clause": "cw-2(y)-explanation",
+        "name": "Remuneration in kind counts as wages up to this share of the total wages payable",
+        "labourCode": "codeOnWages",
+        "treatment": "rule",
+        "percent": 15,
+        "bound": "atMost",
+        "wording": "Explanation.—Where an employee is given in lieu of the whole or part of the wages payable to him, any remuneration in kind by his employer, the value of such remuneration in kind which does not exceed fifteen per cent. of the total wages payable to him, shall be deemed to form part of the wages of such employee;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), inclusion (a)",
+      "cells": {
+        "clause": "css-2(88)-includes(a)",
+        "name": "Basic pay",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "included",
+        "percent": null,
+        "bound": null,
+        "wording": "(88) “wages” means all remuneration, whether by way of salaries, allowances or otherwise, expressed in terms of money or capable of being so expressed which would, if the terms of employment, express or implied, were fulfilled, be payable to a person employed in respect of his employment or of work done in such employment, and includes,— (a) basic pay;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), inclusion (b)",
+      "cells": {
+        "clause": "css-2(88)-includes(b)",
+        "name": "Dearness allowance",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "included",
+        "percent": null,
+        "bound": null,
+        "wording": "(88) “wages” means all remuneration, whether by way of salaries, allowances or otherwise, expressed in terms of money or capable of being so expressed which would, if the terms of employment, express or implied, were fulfilled, be payable to a person employed in respect of his employment or of work done in such employment, and includes,— (b) dearness allowance; and"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), inclusion (c)",
+      "cells": {
+        "clause": "css-2(88)-includes(c)",
+        "name": "Retaining allowance, if any",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "included",
+        "percent": null,
+        "bound": null,
+        "wording": "(88) “wages” means all remuneration, whether by way of salaries, allowances or otherwise, expressed in terms of money or capable of being so expressed which would, if the terms of employment, express or implied, were fulfilled, be payable to a person employed in respect of his employment or of work done in such employment, and includes,— (c) retaining allowance, if any,"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (a)",
+      "cells": {
+        "clause": "css-2(88)-excludes(a)",
+        "name": "Bonus under any law that is not part of the remuneration payable under the terms of employment",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (a) any bonus payable under any law for the time being in force, which does not form part of the remuneration payable under the terms of employment;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (b)",
+      "cells": {
+        "clause": "css-2(88)-excludes(b)",
+        "name": "House-accommodation, light, water, medical attendance and any other amenity or service excluded by an order of the appropriate Government",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (b) the value of any house-accommodation, or of the supply of light, water, medical attendance or other amenity or of any service excluded from the computation of wages by a general or special order of the appropriate Government;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (c)",
+      "cells": {
+        "clause": "css-2(88)-excludes(c)",
+        "name": "Employer's contribution to a pension or provident fund, with its interest",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (c) any contribution paid by the employer to any pension or provident fund, and the interest which may have accrued thereon;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (d)",
+      "cells": {
+        "clause": "css-2(88)-excludes(d)",
+        "name": "Conveyance allowance or travelling concession",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (d) any conveyance allowance or the value of any travelling concession;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (e)",
+      "cells": {
+        "clause": "css-2(88)-excludes(e)",
+        "name": "Sums paid to defray special expenses of the employment",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (e) any sum paid to the employed person to defray special expenses entailed on him by the nature of his employment;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (f)",
+      "cells": {
+        "clause": "css-2(88)-excludes(f)",
+        "name": "House rent allowance",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (f) house rent allowance;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (g)",
+      "cells": {
+        "clause": "css-2(88)-excludes(g)",
+        "name": "Remuneration under an award, a settlement or an order of a court or Tribunal",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (g) remuneration payable under any award or settlement between the parties or order of a court or Tribunal;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (h)",
+      "cells": {
+        "clause": "css-2(88)-excludes(h)",
+        "name": "Overtime allowance",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (h) any overtime allowance;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (i)",
+      "cells": {
+        "clause": "css-2(88)-excludes(i)",
+        "name": "Commission",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excludedWithinLimit",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (i) any commission payable to the employee;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (j)",
+      "cells": {
+        "clause": "css-2(88)-excludes(j)",
+        "name": "Gratuity payable on the termination of employment",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excluded",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (j) any gratuity payable on the termination of employment;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), exclusion (k)",
+      "cells": {
+        "clause": "css-2(88)-excludes(k)",
+        "name": "Retrenchment compensation, other retirement benefits and ex gratia payments on the termination of employment",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "excluded",
+        "percent": null,
+        "bound": null,
+        "wording": "but does not include— (k) any retrenchment compensation or other retirement benefit payable to the employee or any ex gratia payment made to him on the termination of employment, under any law for the time being in force:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), first proviso",
+      "cells": {
+        "clause": "css-2(88)-proviso-1",
+        "name": "Payments excluded by sub-clauses (a) to (i) above this share of all remuneration are added back to wages",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "rule",
+        "percent": 50,
+        "bound": "moreThan",
+        "wording": "Provided that for calculating the wages under this clause, if payments made by the employer to the employee under sub-clauses (a) to (i) exceeds one-half, or such other per cent. as may be notified by the Central Government, of the all remuneration calculated under this clause, the amount which exceeds such one-half, or the per cent. so notified, shall be deemed as remuneration and shall be accordingly added in wages under this clause:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), second proviso",
+      "cells": {
+        "clause": "css-2(88)-proviso-2",
+        "name": "Sub-clauses (d), (f), (g) and (h) are taken into wages for equal wages to all genders and for payment of wages",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "rule",
+        "percent": null,
+        "bound": null,
+        "wording": "Provided further that for the purpose of equal wages to all genders and for the purpose of payment of wages, the emoluments specified in sub-clauses (d), (f), (g) and (h) shall be taken for computation of wage."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 2(88), Explanation",
+      "cells": {
+        "clause": "css-2(88)-explanation",
+        "name": "Remuneration in kind counts as wages up to this share of the total wages payable",
+        "labourCode": "codeOnSocialSecurity",
+        "treatment": "rule",
+        "percent": 15,
+        "bound": "atMost",
+        "wording": "Explanation.—Where an employee is given in lieu of the whole or part of the wages payable to him, any remuneration in kind by his employer, the value of such remuneration in kind which does not exceed fifteen per cent. of the total wages payable to him, shall be deemed to form part of the wages of such employee;"
+      }
+    }
+  ]
+}

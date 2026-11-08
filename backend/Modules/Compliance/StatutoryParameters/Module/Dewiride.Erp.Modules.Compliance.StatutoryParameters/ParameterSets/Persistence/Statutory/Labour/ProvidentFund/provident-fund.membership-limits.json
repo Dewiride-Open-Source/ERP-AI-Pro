@@ -1,0 +1,197 @@
+{
+  "key": "provident-fund.membership-limits",
+  "title": "Provident fund wage ceiling and membership limits",
+  "description": "The wage ceiling the Central Government notifies under section 2(89) of the Code on Social Security, 2020 for becoming a member under Chapter III, and the monthly wage or pay limits that make an employee an excluded employee of the Provident Fund or admit him to the Pension Scheme, each in its instrument's words. Until 28 June 2026 the Employees' Provident Funds Scheme, 1952 and the Employees' Pension Scheme, 1995, continued by section 164(2) of the Code, write the amounts; from 29 June 2026 the Schemes of 2026 tie them to the wage ceiling: ₹15,000 under S.O. 2702(E) of 29 May 2026, the first notification under section 2(89) read, and ₹25,000 from 17 September 2026 under S.O. 5109(E). The Scheme of 2026 holds no limit for a person with disability, and its limit does not make an International Worker an excluded employee. A wage month a version divides is split by the payroll as EPFO instructs.",
+  "basis": "law",
+  "asOf": "wageDate",
+  "columns": [
+    {
+      "name": "limit",
+      "title": "Limit",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "What it decides",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "amount",
+      "title": "Amount (₹ a month)",
+      "kind": "amount"
+    },
+    {
+      "name": "test",
+      "title": "How a wage is tested",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "wageCeiling",
+          "title": "The wage ceiling for Chapter III"
+        },
+        {
+          "value": "excludedAbove",
+          "title": "Excluded from the Fund when the wage is above it"
+        },
+        {
+          "value": "memberUpTo",
+          "title": "A member of the Pension Scheme when the wage is at most it"
+        }
+      ]
+    },
+    {
+      "name": "wording",
+      "title": "In the instruments' words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Employees' Provident Funds Scheme, 1952, paragraph 2(f)(ii) and its provision for persons with disability, and Employees' Pension Scheme, 1995, paragraph 6, as EPFO's consolidated texts print them, in force until the Schemes of 2026 superseded them on 29 June 2026",
+        "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 164(2), which keeps in force the schemes of the repealed Employees' Provident Funds and Miscellaneous Provisions Act, 1952, in force from 21 November 2025 by S.O. 5319(E), 21 November 2025, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    },
+    {
+      "from": "2026-05-29",
+      "instruments": [
+        "S.O. 2702(E), 29 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 2609, under section 2(89) of the Code on Social Security, 2020, in force on its publication, the notification naming no other day"
+      ]
+    },
+    {
+      "from": "2026-06-29",
+      "instruments": [
+        "Employees' Provident Funds Scheme, 2026, G.S.R. 525(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 473, superseding the Employees' Provident Funds Scheme, 1952: “It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 703(E), 4 August 2026, No. 639",
+        "Employees' Pension Scheme, 2026, G.S.R. 527(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 475, superseding the Employees' Pension Scheme, 1995: “It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 704(E), 4 August 2026, No. 640"
+      ]
+    },
+    {
+      "from": "2026-09-17",
+      "instruments": [
+        "S.O. 5109(E), 17 September 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 4918, under section 2(89) of the Code on Social Security, 2020, superseding S.O. 2702(E): “with effect from the date of publication of this notification in the Official Gazette.”",
+        "G.S.R. 847(E), 25 September 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 777, inserting paragraph 7(1)(iii) of the Employees' Pension Scheme, 2026: “This notification shall come into force on the 17th September, 2026.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Employees' Provident Funds Scheme, 1952, paragraph 2(f)(ii), in EPFO's consolidated text, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "limit": "excluded-employee",
+        "name": "Excluded employee of the Provident Fund: his pay when he would become a member",
+        "amount": 15000,
+        "test": "excludedAbove",
+        "wording": "Employees' Provident Funds Scheme, 1952, paragraph 2(f)(ii): … exceeds fifteen thousand rupees per month;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Employees' Provident Funds Scheme, 1952, the provision for persons with disability that EPFO's consolidated text prints under paragraph 83, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "limit": "excluded-employee-with-disability",
+        "name": "Excluded employee of the Provident Fund with a disability: his pay when he would become a member",
+        "amount": 25000,
+        "test": "excludedAbove",
+        "wording": "Employees' Provident Funds Scheme, 1952, provision for persons with disability: … a person with disability, whose pay at the time he is otherwise entitled to become a member of the Fund, exceeds twenty-five thousand rupees per month."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "Employees' Pension Scheme, 1995, paragraph 6, printed as 7 in EPFO's consolidated text, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "limit": "pension-scheme-member",
+        "name": "Member of the Pension Scheme: his pay when he becomes a member of the Provident Fund",
+        "amount": 15000,
+        "test": "memberUpTo",
+        "wording": "Employees' Pension Scheme, 1995, paragraph 6: … who on or after the 16th November, 1995, becomes a member of the Employees' Provident Fund Scheme, 1952 … and whose pay on such date is less than or equal to fifteen thousand rupees …"
+      }
+    },
+    {
+      "from": "2026-05-29",
+      "until": "2026-09-16",
+      "source": "S.O. 2702(E), 29 May 2026, under section 2(89) of the Code on Social Security, 2020",
+      "cells": {
+        "limit": "wage-ceiling",
+        "name": "Wage ceiling for Chapter III of the Code on Social Security, 2020",
+        "amount": 15000,
+        "test": "wageCeiling",
+        "wording": "Code on Social Security, 2020, section 2(89): “wage ceiling” means such amount of wages as may be notified by the Central Government, for the purposes of becoming a member under Chapter III and Chapter IV; S.O. 2702(E): In exercise of the powers conferred by clause (89) of section 2 of the Code on Social Security, 2020 (36 of 2020), the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "until": "2026-09-16",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 2(f)(i), as corrected by G.S.R. 703(E), item 1(ii), and paragraph 9(3); the wage ceiling of S.O. 2702(E), 29 May 2026",
+      "cells": {
+        "limit": "excluded-employee",
+        "name": "Excluded employee of the Provident Fund: his wage when he would become a member",
+        "amount": 15000,
+        "test": "excludedAbove",
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 2(f)(i), as corrected: “Excluded employee” means,- (i) an employee other than the International Worker whose wage at the time he is otherwise entitled to become a member of the Fund, exceeds wage ceiling as prescribed under the Code; Paragraph 9(3): Every excluded employee or an exempted employee shall become a member of this Fund forthwith on ceasing to be an excluded employee or an exempted employee. S.O. 2702(E): … the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "until": "2026-09-16",
+      "source": "Employees' Pension Scheme, 2026, paragraph 7(1)(i); the wage ceiling of S.O. 2702(E), 29 May 2026",
+      "cells": {
+        "limit": "pension-scheme-member",
+        "name": "Member of the Pension Scheme: his wages when he becomes a member of the Provident Fund",
+        "amount": 15000,
+        "test": "memberUpTo",
+        "wording": "Employees' Pension Scheme, 2026, paragraph 7(1): This Scheme shall apply to every employee … (i) who, on or after the date of notification of this Scheme, becomes a member of the Employees' Provident Funds Scheme, 2026 or the Provident Fund of the establishment which is exempted under section 143 of the Code and whose wages on such date is less than or equal to wage ceiling notified by the Central Government; S.O. 2702(E): … the Central Government hereby notifies rupees fifteen thousand (₹15,000) per month as the wage ceiling for the purposes of Chapter III of the said Code."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "S.O. 5109(E), 17 September 2026, under section 2(89) of the Code on Social Security, 2020, superseding S.O. 2702(E)",
+      "cells": {
+        "limit": "wage-ceiling",
+        "name": "Wage ceiling for Chapter III of the Code on Social Security, 2020",
+        "amount": 25000,
+        "test": "wageCeiling",
+        "wording": "Code on Social Security, 2020, section 2(89): “wage ceiling” means such amount of wages as may be notified by the Central Government, for the purposes of becoming a member under Chapter III and Chapter IV; S.O. 5109(E): In exercise of the powers conferred by clause (89) of section 2 of the Code on Social Security, 2020 (36 of 2020) and in supersession of the notification of the Government of India in the Ministry of Labour and Employment, number S.O. 2702(E) dated 29th May 2026, except as respects things done or omitted to be done before such supersession, the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "Employees' Provident Funds Scheme, 2026, paragraph 2(f)(i), as corrected by G.S.R. 703(E), item 1(ii), and paragraph 9(3); the wage ceiling of S.O. 5109(E), 17 September 2026",
+      "cells": {
+        "limit": "excluded-employee",
+        "name": "Excluded employee of the Provident Fund: his wage when he would become a member",
+        "amount": 25000,
+        "test": "excludedAbove",
+        "wording": "Employees' Provident Funds Scheme, 2026, paragraph 2(f)(i), as corrected: “Excluded employee” means,- (i) an employee other than the International Worker whose wage at the time he is otherwise entitled to become a member of the Fund, exceeds wage ceiling as prescribed under the Code; Paragraph 9(3): Every excluded employee or an exempted employee shall become a member of this Fund forthwith on ceasing to be an excluded employee or an exempted employee. S.O. 5109(E): … the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "Employees' Pension Scheme, 2026, paragraph 7(1)(i); the wage ceiling of S.O. 5109(E), 17 September 2026",
+      "cells": {
+        "limit": "pension-scheme-member",
+        "name": "Member of the Pension Scheme: his wages when he becomes a member of the Provident Fund",
+        "amount": 25000,
+        "test": "memberUpTo",
+        "wording": "Employees' Pension Scheme, 2026, paragraph 7(1): This Scheme shall apply to every employee … (i) who, on or after the date of notification of this Scheme, becomes a member of the Employees' Provident Funds Scheme, 2026 or the Provident Fund of the establishment which is exempted under section 143 of the Code and whose wages on such date is less than or equal to wage ceiling notified by the Central Government; S.O. 5109(E): … the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    },
+    {
+      "from": "2026-09-17",
+      "source": "Employees' Pension Scheme, 2026, paragraph 7(1)(iii), inserted by G.S.R. 847(E), 25 September 2026, in force 17 September 2026; the wage ceiling of S.O. 5109(E), 17 September 2026",
+      "cells": {
+        "limit": "pension-scheme-member-on-new-ceiling",
+        "name": "Member of the Pension Scheme: the wages, when a new wage ceiling is notified, of a Provident Fund member outside it",
+        "amount": 25000,
+        "test": "memberUpTo",
+        "wording": "Employees' Pension Scheme, 2026, paragraph 7(1)(iii), inserted by G.S.R. 847(E): (iii) who has been a member of the Employees' Provident Funds Scheme, 2026, but not the member of this Scheme and whose wages on the date of notification of the new wage ceiling is less than or equal to wage ceiling notified by the Central Government. G.S.R. 847(E), paragraph 2: This notification shall come into force on the 17th September, 2026. S.O. 5109(E): … the Central Government hereby notifies rupees twenty-five thousand (₹25,000) per month as the wage ceiling for the purposes of Chapter III of the said Code, with effect from the date of publication of this notification in the Official Gazette."
+      }
+    }
+  ]
+}

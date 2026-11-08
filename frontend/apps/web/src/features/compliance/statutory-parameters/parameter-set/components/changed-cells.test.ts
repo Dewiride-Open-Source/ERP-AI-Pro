@@ -25,10 +25,10 @@ function row(values: {
     until: null,
     source: values.source,
     cells: [
-      { column: "code", value: "alpha-1" },
-      { column: "wording", value: values.wording },
-      { column: "share", value: values.share },
-      { column: "note", value: values.note },
+      { column: "code", value: "alpha-1", stateName: null },
+      { column: "wording", value: values.wording, stateName: null },
+      { column: "share", value: values.share, stateName: null },
+      { column: "note", value: values.note, stateName: null },
     ],
   };
 }

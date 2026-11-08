@@ -1,0 +1,531 @@
+{
+  "key": "bonus.rules",
+  "title": "Bonus under the Code on Wages, 2019",
+  "description": "Bonus under Chapter IV of the Code on Wages, 2019, in force from 21 November 2025, for every establishment the Chapter covers, whatever its appropriate Government: the accounting year, the minimum and the maximum bonus, the allocable surplus, set on and set off, a new establishment's first accounting years, the time for payment, the public sector, the employees the Chapter leaves out and the establishments it covers, each in the Code's words. Eight and one-third per cent., which no decimal of four places holds, is held exactly as the fraction 25/3 per cent. A row's bound says how its number binds or, in a row without a number, its per cent. The wage limits of section 26(1) and (2) are each appropriate Government's, in bonus.wage-limits and bonus.state-wage-limit-readings, and the prior charges of section 34(c) are in bonus.prior-charges. The set answers for the last day of the accounting year a bonus is for, from the year 2026-27.",
+  "basis": "law",
+  "asOf": "accountingYearEnd",
+  "columns": [
+    {
+      "name": "provision",
+      "title": "Provision",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "What it says",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "percent",
+      "title": "Per cent",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "percentNumerator",
+      "title": "Per cent as a fraction: numerator",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "percentDenominator",
+      "title": "Per cent as a fraction: denominator",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "amount",
+      "title": "Amount (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "count",
+      "title": "Number",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "unit",
+      "title": "Unit",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "days",
+          "title": "Days of work"
+        },
+        {
+          "value": "months",
+          "title": "Months"
+        },
+        {
+          "value": "years",
+          "title": "Years"
+        },
+        {
+          "value": "accountingYears",
+          "title": "Accounting years"
+        },
+        {
+          "value": "persons",
+          "title": "Persons employed"
+        }
+      ]
+    },
+    {
+      "name": "bound",
+      "title": "Bound",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "atLeast",
+          "title": "At least (not less than)"
+        },
+        {
+          "value": "moreThan",
+          "title": "More than (higher than)"
+        },
+        {
+          "value": "atMost",
+          "title": "At most (not exceeding, within)"
+        }
+      ]
+    },
+    {
+      "name": "day",
+      "title": "Day of the year",
+      "kind": "dayMonth",
+      "optional": true
+    },
+    {
+      "name": "wording",
+      "title": "In the Code's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Code on Wages, 2019 (No. 29 of 2019), 8 August 2019, Gazette of India, Extraordinary, Part II, Section 1, No. 48: sections 2(a) and 26 to 41, in force from 21 November 2025 by S.O. 5322(E) of that day (Part II, Section 3(ii), No. 5146): “appoints the 21st day of November, 2025 as the date on which the following provisions of the said Code, shall come into force”, among them “sections 1 to 41”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 2(a)",
+      "cells": {
+        "provision": "2(a)",
+        "name": "Day the accounting year begins",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "day": "04-01",
+        "wording": "(a) “accounting year” means the year commencing on the 1st day of April;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 26(1): eight and one-third per cent., held as 25/3 per cent.",
+      "cells": {
+        "provision": "26(1)",
+        "name": "Minimum bonus: a share of the wages earned or a sum, whichever is higher",
+        "percent": null,
+        "percentNumerator": 25,
+        "percentDenominator": 3,
+        "amount": 100,
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "day": null,
+        "wording": "26. (1) There shall be paid to every employee, drawing wages not exceeding such amount per mensem, as determined by notification, by the appropriate Government, by his employer, who has put in at least thirty days work in an accounting year, an annual minimum bonus calculated at the rate of eight and one-third per cent. of the wages earned by the employee or one hundred rupees, whichever is higher whether or not the employer has any allocable surplus during the previous accounting year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 26(1), “at least thirty days work in an accounting year”",
+      "cells": {
+        "provision": "26(1)-days",
+        "name": "Days of work in the accounting year that earn the minimum bonus",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 30,
+        "unit": "days",
+        "bound": "atLeast",
+        "day": null,
+        "wording": "26. (1) There shall be paid to every employee, drawing wages not exceeding such amount per mensem, as determined by notification, by the appropriate Government, by his employer, who has put in at least thirty days work in an accounting year, an annual minimum bonus calculated at the rate of eight and one-third per cent. of the wages earned by the employee or one hundred rupees, whichever is higher whether or not the employer has any allocable surplus during the previous accounting year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 26(3)",
+      "cells": {
+        "provision": "26(3)",
+        "name": "Most bonus out of an allocable surplus above the minimum bonus, as a share of the wages earned",
+        "percent": 20,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": "atMost",
+        "day": null,
+        "wording": "(3) Where in respect of any accounting year referred to in sub-section (1), the allocable surplus exceeds the amount of minimum bonus payable to the employees under that sub-section, the employer shall, in lieu of such minimum bonus, be bound to pay to every employee in respect of that accounting year, bonus which shall be an amount in proportion to the wages earned by the employee during the accounting year, subject to a maximum of twenty per cent. of such wages."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 26(5)",
+      "cells": {
+        "provision": "26(5)",
+        "name": "Most total bonus where a production or productivity bonus is agreed, the minimum bonus included",
+        "percent": 20,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": "atMost",
+        "day": null,
+        "wording": "(5) Any demand for bonus in excess of the bonus referred to in sub-section (1), either on the basis of production or productivity in an accounting year for which the bonus is payable shall be determined by an agreement or settlement between the employer and the employees, subject to the condition that the total bonus including the annual minimum bonus referred to in sub-section (1) shall not exceed twenty per cent. of the wages earned by the employee in the accounting year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 26(6), its Explanations 1 and 2 and section 26(9)",
+      "cells": {
+        "provision": "26(6)",
+        "name": "New establishment: bonus only for a year of profit, without set on and set off, in its first accounting years",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 5,
+        "unit": "accountingYears",
+        "bound": "atMost",
+        "day": null,
+        "wording": "(6) In the first five accounting years following the accounting year in which the employer sells the goods produced or manufactured by him or renders services, as the case may be, from such establishment, bonus shall be payable only in respect of the accounting year in which the employer derives profit from such establishment and such bonus shall be calculated in accordance with the provisions of this Code in relation to that year, but without applying the provisions of section 36. Explanation 1.—For the purpose of sub-section (6), an employer shall not be deemed to have derived profit in any accounting year, unless— (a) he has made provision for depreciation of that year to which he is entitled under the Income-tax Act or, as the case may be, under the agricultural income tax law; and (b) the arrears of such depreciation and losses incurred by him in respect of the establishment for the previous accounting years have been fully set off against his profits. Explanation 2.—For the purposes of sub-sections (6), (7) and (8), sale of the goods produced or manufactured during the course of the trial running of any factory or of the prospecting stage of any mine or an oil-field shall not be taken into consideration and where any question arises with regard to such production or manufacture, the appropriate Government may, after giving the parties a reasonable opportunity of representing the case, decide upon the issue. (9) The provisions of sub-sections (6), (7) and (8) shall, so far as may be, apply to new departments or undertakings or branches set up by existing establishments."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 26(7)(i)",
+      "cells": {
+        "provision": "26(7)(i)",
+        "name": "New establishment: set on and set off in this accounting year, over the fifth and sixth",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 6,
+        "unit": "accountingYears",
+        "bound": null,
+        "day": null,
+        "wording": "(7) For the sixth and seventh accounting years following the accounting year in which the employer sells the goods produced or manufactured by him or renders services, as the case may be, from such establishment, the provisions of section 36 shall apply subject to the following modifications, namely:— (i) for the sixth accounting year set on or set off, as the case may be, shall be made, in the manner as may be prescribed by the Central Government, taking into account the excess or deficiency, if any, as the case may be, of the allocable surplus set on or set off in respect of the fifth and sixth accounting years;"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 26(7)(ii)",
+      "cells": {
+        "provision": "26(7)(ii)",
+        "name": "New establishment: set on and set off in this accounting year, over the fifth, sixth and seventh",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 7,
+        "unit": "accountingYears",
+        "bound": null,
+        "day": null,
+        "wording": "(7) For the sixth and seventh accounting years following the accounting year in which the employer sells the goods produced or manufactured by him or renders services, as the case may be, from such establishment, the provisions of section 36 shall apply subject to the following modifications, namely:— (ii) for the seventh accounting year set on or set off, as the case may be, shall be made, in the manner as may be prescribed by the Central Government, taking into account the excess or deficiency, if any, as the case may be, of the allocable surplus set on or set off in respect of the fifth, sixth and seventh accounting years."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 26(8)",
+      "cells": {
+        "provision": "26(8)",
+        "name": "New establishment: ordinary set on and set off from this accounting year",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 8,
+        "unit": "accountingYears",
+        "bound": "atLeast",
+        "day": null,
+        "wording": "(8) From the eighth accounting year following the accounting year in which the employer sells the goods produced or manufactured by him or renders services, as the case may be, from such establishment, the provisions of section 36 shall apply in relation to such establishment as they apply in relation to any other establishment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, sections 27 and 28: eight and one third per cent., held as 25/3 per cent.",
+      "cells": {
+        "provision": "27",
+        "name": "Minimum bonus reduced for an employee who did not work all the working days",
+        "percent": null,
+        "percentNumerator": 25,
+        "percentDenominator": 3,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": "moreThan",
+        "day": null,
+        "wording": "27. Where an employee has not worked for all the working days in an accounting year, the minimum bonus under sub-section (1) of section 26, if such bonus is higher than eight and one third per cent. of the salary or wage of the days such employee has worked in that accounting year, shall be proportionately reduced. 28. For the purposes of section 27, an employee shall be deemed to have worked in an establishment in any accounting year also on the days on which,— (a) he has been laid off under an agreement or as permitted by standing orders under the Industrial Employment (Standing Orders) Act, 1946, or under the Industrial Disputes Act, 1947, or under any other law applicable to the establishment; (b) he has been on leave with salary or wages; (c) he has been absent due to temporary disablement caused by accident arising out of and in the course of his employment; and (d) the employee has been on maternity leave with salary or wages, during the accounting year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 29",
+      "cells": {
+        "provision": "29",
+        "name": "Dismissals that disqualify an employee from bonus",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "day": null,
+        "wording": "29. Notwithstanding anything contained in this Code, an employee shall be disqualified from receiving bonus under this Code, if he is dismissed from service for— (a) fraud; or (b) riotous or violent behaviour while on the premises of the establishment; or (c) theft, misappropriation or sabotage of any property of the establishment; or (d) conviction for sexual harassment."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 31(1), “sixty per cent. in case of a banking company”",
+      "cells": {
+        "provision": "31(1)-banking-company",
+        "name": "Allocable surplus of a banking company, as a share of the available surplus",
+        "percent": 60,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "day": null,
+        "wording": "31. (1) The bonus shall be paid out of the allocable surplus which shall be an amount equal to sixty per cent. in case of a banking company and sixty-seven per cent. in case of other establishment, of the available surplus and the available surplus shall be the amount calculated in accordance with section 33."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 31(1), “sixty-seven per cent. in case of other establishment”",
+      "cells": {
+        "provision": "31(1)-other-establishment",
+        "name": "Allocable surplus of any other establishment, as a share of the available surplus",
+        "percent": 67,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "day": null,
+        "wording": "31. (1) The bonus shall be paid out of the allocable surplus which shall be an amount equal to sixty per cent. in case of a banking company and sixty-seven per cent. in case of other establishment, of the available surplus and the available surplus shall be the amount calculated in accordance with section 33."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 36(1), “subject to a limit of twenty per cent. of the total salary or wage”",
+      "cells": {
+        "provision": "36(1)",
+        "name": "Set on: most excess allocable surplus carried forward, as a share of the total salary or wage",
+        "percent": 20,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": "atMost",
+        "day": null,
+        "wording": "36. (1) Where for any accounting year, the allocable surplus exceeds the amount of maximum bonus payable to the employees in the establishment under section 26, then, the excess shall, subject to a limit of twenty per cent. of the total salary or wage of the employees employed in the establishment in that accounting year, be carried forward for being set on in the succeeding accounting year and so on up to and inclusive of the fourth accounting year to be utilised for the purpose of payment of bonus in such manner as may be prescribed by the Central Government."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 36(1), “up to and inclusive of the fourth accounting year”",
+      "cells": {
+        "provision": "36(1)-years",
+        "name": "Set on: the last succeeding accounting year to which the excess is carried forward",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 4,
+        "unit": "accountingYears",
+        "bound": "atMost",
+        "day": null,
+        "wording": "36. (1) Where for any accounting year, the allocable surplus exceeds the amount of maximum bonus payable to the employees in the establishment under section 26, then, the excess shall, subject to a limit of twenty per cent. of the total salary or wage of the employees employed in the establishment in that accounting year, be carried forward for being set on in the succeeding accounting year and so on up to and inclusive of the fourth accounting year to be utilised for the purpose of payment of bonus in such manner as may be prescribed by the Central Government."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 36(2)",
+      "cells": {
+        "provision": "36(2)",
+        "name": "Set off: the last succeeding accounting year to which a shortfall is carried forward",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 4,
+        "unit": "accountingYears",
+        "bound": "atMost",
+        "day": null,
+        "wording": "(2) Where for any accounting year, there is no available surplus or the allocable surplus in respect of that year falls short of the amount of minimum bonus payable to the employees in the establishment under section 26, and there is no amount or sufficient amount carried forward and set on under sub-section (1) which could be utilised for the purpose of payment of the minimum bonus, then, such minimum amount or the deficiency, as the case may be, shall be carried forward for being set off in the succeeding accounting year and so on up to and inclusive of the fourth accounting year in such manner as may be prescribed by the Central Government."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 36(4)",
+      "cells": {
+        "provision": "36(4)",
+        "name": "An amount carried forward from the earliest accounting year is taken into account first",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "day": null,
+        "wording": "(4) Where in any accounting year any amount has been carried forward and set on or set off under this section, then, in calculating bonus for the succeeding accounting year, the amount of set on or set off carried forward from the earliest accounting year shall first be taken into account."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 39(1)",
+      "cells": {
+        "provision": "39(1)",
+        "name": "Time to credit bonus to the employee's bank account, from the close of the accounting year",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 8,
+        "unit": "months",
+        "bound": "atMost",
+        "day": null,
+        "wording": "39. (1) All amounts payable to an employee by way of bonus under this Code shall be paid by crediting it in the bank account of the employee by his employer within a period of eight months from the close of the accounting year:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 39(1), proviso",
+      "cells": {
+        "provision": "39(1)-proviso",
+        "name": "Longest total period to which the time for paying bonus may be extended",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 2,
+        "unit": "years",
+        "bound": "atMost",
+        "day": null,
+        "wording": "Provided that the appropriate Government or such authority as the appropriate Government may specify in this behalf may, upon an application made to it by the employer and for sufficient reasons, by order, extend the said period of eight months to such further period or periods as it thinks fit; so, however, that the total period so extended shall not in any case exceed two years."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 39(2)",
+      "cells": {
+        "provision": "39(2)",
+        "name": "Time to pay disputed bonus, from the award becoming enforceable or the settlement coming into operation",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 1,
+        "unit": "months",
+        "bound": "atMost",
+        "day": null,
+        "wording": "(2) Notwithstanding anything contained in sub-section (1), where there is a dispute regarding payment of bonus pending before any authority, such bonus shall be paid, within a period of one month from the date on which the award becomes enforceable or the settlement comes into operation, in respect of such dispute:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 39(2), proviso: eight and one-third per cent., held as 25/3 per cent.",
+      "cells": {
+        "provision": "39(2)-proviso",
+        "name": "In a dispute over a higher rate: the share of the wages earned paid within this time from the close of the accounting year",
+        "percent": null,
+        "percentNumerator": 25,
+        "percentDenominator": 3,
+        "amount": null,
+        "count": 8,
+        "unit": "months",
+        "bound": "atMost",
+        "day": null,
+        "wording": "(2) Notwithstanding anything contained in sub-section (1), where there is a dispute regarding payment of bonus pending before any authority, such bonus shall be paid, within a period of one month from the date on which the award becomes enforceable or the settlement comes into operation, in respect of such dispute: Provided that if, there is a dispute for payment at the higher rate, the employer shall pay eight and one-third per cent. of the wages earned by the employee as per the provisions of this Code within a period of eight months from the close of the accounting year."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 40(1) and (2)",
+      "cells": {
+        "provision": "40(1)",
+        "name": "Public sector establishment covered when its income from sales or services in competition is this share of its gross income",
+        "percent": 20,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": "atLeast",
+        "day": null,
+        "wording": "40. (1) If in any accounting year an establishment in public sector sells any goods produced or manufactured by it or renders any services, in competition with an establishment in private sector, and the income from such sale or services or both, is not less than twenty per cent. of the gross income of the establishment in public sector for that year, then, the provisions of this Chapter shall apply in relation to such establishment in public sector as they apply in relation to a like establishment in private sector. (2) Save as otherwise provided in sub-section (1), nothing in this Chapter shall apply to the employees employed by any establishment in public sector."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 41(1)",
+      "cells": {
+        "provision": "41(1)",
+        "name": "Employees to whom Chapter IV does not apply",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": null,
+        "unit": null,
+        "bound": null,
+        "day": null,
+        "wording": "41. (1) Nothing in this Chapter shall apply to— (a) employees employed by the Life Insurance Corporation of India; (b) seamen as defined in clause (42) of section 3 of the Merchant Shipping Act, 1958; (c) employees registered or listed under any scheme made under the Dock Workers (Regulation of Employment) Act, 1948, and employed by registered or listed employers; (d) employees employed by an establishment under the authority of any department of the Central Government or a State Government or a local authority; (e) employees employed by— (i) the Indian Red Cross Society or any other institution of a like nature including its branches; (ii) universities and other educational institutions; (iii) institutions including hospitals, chamber of commerce and social welfare institutions established not for purposes of profit; (f) employees employed by the Reserve Bank of India; (g) employees employed by public sector financial institution other than a banking company, which the Central Government may, by notification, specify, having regard to— (i) its capital structure; (ii) its objectives and the nature of its activities; (iii) the nature and extent of financial assistance or any concession given to it by the Government; and (iv) any other relevant factor; (h) employees employed by inland water transport establishments operating on routes passing through any other country; and (i) employees of any other establishment which the appropriate Government may, by notification, exempt having regard to the overall benefits under any other scheme of profit sharing available in such establishments to the employees."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "Code on Wages, 2019, section 41(2)",
+      "cells": {
+        "provision": "41(2)",
+        "name": "Establishments Chapter IV applies to, by the persons employed on any day of the accounting year",
+        "percent": null,
+        "percentNumerator": null,
+        "percentDenominator": null,
+        "amount": null,
+        "count": 20,
+        "unit": "persons",
+        "bound": "atLeast",
+        "day": null,
+        "wording": "(2) Subject to the provisions of sub-section (1) and notwithstanding anything contained in any other provisions of this Chapter, the provisions of this Chapter shall apply to such establishment in which twenty or more persons are employed or were employed on any day during an accounting year."
+      }
+    }
+  ]
+}

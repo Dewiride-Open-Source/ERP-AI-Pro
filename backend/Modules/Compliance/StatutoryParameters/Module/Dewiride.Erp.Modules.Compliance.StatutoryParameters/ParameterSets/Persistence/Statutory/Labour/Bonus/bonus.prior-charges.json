@@ -1,0 +1,329 @@
+{
+  "key": "bonus.prior-charges",
+  "title": "Prior charges deducted from gross profits for bonus",
+  "description": "The further sums an employer deducts from its gross profits as prior charges under section 34(c) of the Code on Wages, 2019, in rule 26 and Appendix D of the Wages (Central) Rules, 2026, in force from 8 May 2026: by category of employer, a company other than a banking company, a banking company, a corporation, a co-operative society and any other employer, with the provisos for a foreign company, a foreign banking company, a firm and an individual or Hindu undivided family, and the Explanation of “reserves”, each in the Appendix's words. Section 34(c) leaves these sums to rules “prescribed by the Central Government”, which section 67(3)(f) gives the Central Government to make, so they apply whatever the appropriate Government. The rules were published as the Code on Wages (Central) Rules, 2026, a name G.S.R. 629(E) of 15 July 2026 corrected. The set answers for the last day of the accounting year a bonus is for.",
+  "basis": "law",
+  "asOf": "accountingYearEnd",
+  "columns": [
+    {
+      "name": "item",
+      "title": "Item of Appendix D",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Sum deducted",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "category",
+      "title": "Category of employer",
+      "kind": "choice",
+      "optional": true,
+      "choices": [
+        {
+          "value": "company",
+          "title": "Company, other than a banking company"
+        },
+        {
+          "value": "bankingCompany",
+          "title": "Banking company"
+        },
+        {
+          "value": "corporation",
+          "title": "Corporation"
+        },
+        {
+          "value": "cooperativeSociety",
+          "title": "Co-operative society"
+        },
+        {
+          "value": "otherEmployer",
+          "title": "Any other employer"
+        }
+      ]
+    },
+    {
+      "name": "percent",
+      "title": "Per cent",
+      "kind": "percent",
+      "optional": true
+    },
+    {
+      "name": "amount",
+      "title": "Amount (₹)",
+      "kind": "amount",
+      "optional": true
+    },
+    {
+      "name": "wording",
+      "title": "In the Appendix's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-05-08",
+      "instruments": [
+        "Wages (Central) Rules, 2026, G.S.R. 343(E), 8 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3(i), No. 309: rule 26 and Appendix D, under sections 34(c) and 67(3)(f) of the Code on Wages, 2019; rule 1(2): “They shall come into force on the date of their publication in the Official Gazette.”",
+        "G.S.R. 629(E), 15 July 2026, Ministry of Labour and Employment, corrigendum to G.S.R. 343(E), Gazette of India, Extraordinary, Part II, Section 3(i), No. 571: in rule 1(1), “for “the Code on Wages” read “the Wages””, so the rules are the Wages (Central) Rules, 2026"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 1(i)",
+      "cells": {
+        "item": "1(i)",
+        "name": "Dividends on preference share capital, at the actual rate",
+        "category": "company",
+        "percent": null,
+        "amount": null,
+        "wording": "(i) The dividends payable on its preference share capital for the accounting year calculated at the actual rate at which such dividends are payable;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 1(ii)",
+      "cells": {
+        "item": "1(ii)",
+        "name": "Paid up equity share capital at the commencement of the accounting year",
+        "category": "company",
+        "percent": 8.5,
+        "amount": null,
+        "wording": "(ii) 8.5 percent of its paid up equity share capital as at the commencement of the accounting year;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 1(iii)",
+      "cells": {
+        "item": "1(iii)",
+        "name": "Reserves at the commencement of the accounting year, profits carried forward included",
+        "category": "company",
+        "percent": 6,
+        "amount": null,
+        "wording": "(iii) 6 percent of its reserves shown in its balance sheet as at the commencement of the accounting year, including any profits carried forward from the previous accounting year:"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 1, proviso",
+      "cells": {
+        "item": "1-proviso",
+        "name": "Foreign company: net fixed and current assets in India less its current liabilities in India",
+        "category": "company",
+        "percent": 8.5,
+        "amount": null,
+        "wording": "Provided that where the employer is a foreign company within the meaning of section 2 (42) of the Companies Act, 2013 (18 of 2013), the total amount to be deducted under this item shall be 8.5 percent on the aggregate of the value of the net fixed assets and the current assets of the company in India after deducting the amount of its current liabilities (other than any amount shown as payable by the company to its Head Office whether towards any advance made by the Head Office or otherwise or any interest paid by the company to its Head Office) in India."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 2(i)",
+      "cells": {
+        "item": "2(i)",
+        "name": "Dividends on preference share capital, at the rate payable",
+        "category": "bankingCompany",
+        "percent": null,
+        "amount": null,
+        "wording": "(i) The dividends payable on its preference share capital for the accounting year calculated at the rate at which such dividends are payable;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 2(ii)",
+      "cells": {
+        "item": "2(ii)",
+        "name": "Paid up equity share capital at the commencement of the accounting year",
+        "category": "bankingCompany",
+        "percent": 7.5,
+        "amount": null,
+        "wording": "(ii) 7.5 per cent of its paid up equity share capital as at the commencement of the accounting year;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 2(iii)",
+      "cells": {
+        "item": "2(iii)",
+        "name": "Reserves at the commencement of the accounting year, profits carried forward included",
+        "category": "bankingCompany",
+        "percent": 5,
+        "amount": null,
+        "wording": "(iii) 5 percent of its reserves shown in its balance sheet as at the commencement of the accounting year, including any profits carried forward from the previous accounting year;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 2(iv)",
+      "cells": {
+        "item": "2(iv)",
+        "name": "Sums transferred to the reserve fund of the Banking Regulation Act or to reserves on the Reserve Bank's direction, whichever is higher",
+        "category": "bankingCompany",
+        "percent": null,
+        "amount": null,
+        "wording": "(iv) any sum which, in respect of the accounting year, is transferred by it— (a) to a reserve fund under sub-section (1) of section 17 of the Banking Regulation Act, 1949 (10 of 1949); or (b) to any reserves in India in pursuance of any direction or advice given by the Reserve Bank of India, whichever is higher:"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 2, proviso, clause (i)",
+      "cells": {
+        "item": "2-proviso(i)",
+        "name": "Foreign banking company: preference dividends on its preference share capital in the proportion of its working funds in India",
+        "category": "bankingCompany",
+        "percent": null,
+        "amount": null,
+        "wording": "Provided that where the banking company is a foreign company within the meaning of section 2 (42) of the Companies Act, 2013 (18 of 2013), the amount to be deducted under this item shall be the aggregate of— (i) the dividends payable to its preference shareholders for the accounting year at the rate at which such dividends are payable on such amount as bears the same proportion to its total preference share capital as its total working funds in India bear to its total world working funds;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 2, proviso, clause (ii)",
+      "cells": {
+        "item": "2-proviso(ii)",
+        "name": "Foreign banking company: paid up equity share capital in the proportion of its working funds in India",
+        "category": "bankingCompany",
+        "percent": 7.5,
+        "amount": null,
+        "wording": "Provided that where the banking company is a foreign company within the meaning of section 2 (42) of the Companies Act, 2013 (18 of 2013), the amount to be deducted under this item shall be the aggregate of— (ii) 7.5 per cent of such amount as bears the same proportion to its total paid up equity share capital as its total working funds in India bear to its total working funds."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 2, proviso, clause (iii)",
+      "cells": {
+        "item": "2-proviso(iii)",
+        "name": "Foreign banking company: disclosed reserves in the proportion of its working funds in India",
+        "category": "bankingCompany",
+        "percent": 5,
+        "amount": null,
+        "wording": "Provided that where the banking company is a foreign company within the meaning of section 2 (42) of the Companies Act, 2013 (18 of 2013), the amount to be deducted under this item shall be the aggregate of— (iii) 5 per cent of such amount as bears the same proportion to its total disclosed reserves as its total working funds in India bear to its total world working funds;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 2, proviso, clause (iv)",
+      "cells": {
+        "item": "2-proviso(iv)",
+        "name": "Foreign banking company: its deposit with the Reserve Bank under the Banking Regulation Act",
+        "category": "bankingCompany",
+        "percent": null,
+        "amount": null,
+        "wording": "Provided that where the banking company is a foreign company within the meaning of section 2 (42) of the Companies Act, 2013 (18 of 2013), the amount to be deducted under this item shall be the aggregate of— (iv) any sum which, in respect of the accounting year, is deposited by it with the Reserve Bank of India under sub-clause (ii) of clause (b) of sub-section (2) of section 11 of the Banking Regulation Act, 1949 (10 of 1949), not exceeding the amount required under the aforesaid provision to be so deposited.]"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 3(i)",
+      "cells": {
+        "item": "3(i)",
+        "name": "Paid up capital at the commencement of the accounting year",
+        "category": "corporation",
+        "percent": 8.5,
+        "amount": null,
+        "wording": "(i) 8.5 per cent of its paid up capital as at the commencement of the accounting year;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 3(ii)",
+      "cells": {
+        "item": "3(ii)",
+        "name": "Reserves at the commencement of the accounting year, profits carried forward included",
+        "category": "corporation",
+        "percent": 6,
+        "amount": null,
+        "wording": "(ii) 6 per cent of its reserves, if any, shown in its balance sheet as at the commencement of the accounting year, including any profits carried forward from the previous accounting year."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 4(i)",
+      "cells": {
+        "item": "4(i)",
+        "name": "Capital invested in its establishment, from its books at the commencement of the accounting year",
+        "category": "cooperativeSociety",
+        "percent": 8.5,
+        "amount": null,
+        "wording": "(i) 8.5 per cent of the capital invested by such society in its establishment as evidenced from its books of accounts at the commencement of the accounting year;"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 4(ii)",
+      "cells": {
+        "item": "4(ii)",
+        "name": "Sums carried to a reserve fund under the law of co-operative societies",
+        "category": "cooperativeSociety",
+        "percent": null,
+        "amount": null,
+        "wording": "(ii) such sums as has been carried forward in respect of the accounting year to a reserve fund under any law relating to co-operative societies for the time being in force."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 5",
+      "cells": {
+        "item": "5",
+        "name": "Capital invested in the establishment, from the books at the commencement of the accounting year",
+        "category": "otherEmployer",
+        "percent": 8.5,
+        "amount": null,
+        "wording": "[Item 5. Category of employer] Any other employer not falling under any of the aforesaid categories. [Further sums to be deducted] 8.5 per cent of the capital invested in the establishment as evidenced from his books of accounts at the commencement of the accounting year:"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 5, first proviso",
+      "cells": {
+        "item": "5-proviso-1",
+        "name": "Annuity deposit payable under Chapter XXII-A of the Income Tax Act",
+        "category": "otherEmployer",
+        "percent": null,
+        "amount": null,
+        "wording": "Provided that where such employer is a person to whom Chapter XXII-A of the income Tax Act applies, the annuity deposit payable under the provisions of that Chapter during the accounting year shall also be deducted:"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 5, second proviso, with its clauses (i) and (ii)",
+      "cells": {
+        "item": "5-proviso-2",
+        "name": "Firm: partners' remuneration, a share of the gross profits after depreciation, with a sum for each partner",
+        "category": "otherEmployer",
+        "percent": 25,
+        "amount": 500000,
+        "wording": "Provided further that where such employer is a firm, an amount equal to 25 per cent of the gross profits derived by it from the establishment in respect of the accounting year after deducting depreciation in accordance with the provisions of clause (a) of section 34 by way of remuneration to all the partners taking part in the conduct of business of the establishment shall also be deducted, but where the partnership agreement, whether oral or written, provides for the payment of remuneration to any such partner, and— (i) the total remuneration payable to all such partners is less than the said 25 per cent the amount payable, subject to a maximum of five lakh rupees to each such partner; or (ii) the total remuneration payable to all such partners is higher than the said 25 percent, such percentage, or a sum calculated at the rate of five lakh rupees to each such partner, whichever is less, shall be deducted under this proviso:"
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, item 5, third proviso",
+      "cells": {
+        "item": "5-proviso-3",
+        "name": "Individual or Hindu undivided family: remuneration, a share of the gross profits after depreciation or a sum, whichever is less",
+        "category": "otherEmployer",
+        "percent": 25,
+        "amount": 500000,
+        "wording": "Provided also that where such employer is an individual or a Hindu Undivided Family— (i) an amount equal to 25 per cent of the gross profits derived by such employer from the establishment in respect of the accounting year after deducting depreciation in accordance with the provisions of clause (a) of section 34; or (ii) five lakh rupees, whichever is less by way of remuneration to such employer, shall also be deducted."
+      }
+    },
+    {
+      "from": "2026-05-08",
+      "source": "Wages (Central) Rules, 2026, rule 26 and Appendix D, Explanation",
+      "cells": {
+        "item": "explanation",
+        "name": "What the reserves of items 1(iii), 2(iii) and 3(ii) leave out and take in",
+        "category": null,
+        "percent": null,
+        "amount": null,
+        "wording": "Explanation.— The expression “reserves” occurring in column (3) against Item Nos. 1(iii), 2(iii) and 3(ii) shall not include any amount set apart for the purpose of— (i) payment of any direct tax which, according to the balance-sheet, would be payable; (ii) meeting any depreciation admissible in accordance with the provisions of clause (a) of section 34; (iii) payment of dividends which have been declared, but shall include,— (a) any amount, over and above the amount referred to in clause-(i) of this Explanation, set apart as specific reserve for the purpose of payment of any direct tax; and (b) any amount set apart for meeting any depreciation in excess of the amount admissible in accordance with the provisions of clause (a) of section 34."
+      }
+    }
+  ]
+}

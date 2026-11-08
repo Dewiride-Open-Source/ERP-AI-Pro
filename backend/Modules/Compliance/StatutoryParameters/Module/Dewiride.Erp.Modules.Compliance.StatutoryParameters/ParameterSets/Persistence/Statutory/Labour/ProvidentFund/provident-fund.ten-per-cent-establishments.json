@@ -1,0 +1,80 @@
+{
+  "key": "provident-fund.ten-per-cent-establishments",
+  "title": "Establishments whose provident fund contributions are ten per cent",
+  "description": "The establishments to which the first proviso to section 16(1)(a) of the Code on Social Security, 2020 does not apply, so that the employer's and the employee's contributions to the Provident Fund are ten per cent of the wages instead of twelve, each in the words and numbering of paragraph 2 of S.O. 3582(E) of 1 July 2026. The notification superseded S.O. 320(E) of 9 April 1997 and is deemed in force from 21 November 2025, so the set holds it from 1 April 2026; from 29 June 2026 paragraph 18(2) of the Employees' Provident Funds Scheme, 2026 sets the ten per cent for the class of establishments the Central Government notifies. The rates themselves are in provident-fund.contribution-rates.",
+  "basis": "law",
+  "asOf": "wageDate",
+  "columns": [
+    {
+      "name": "entry",
+      "title": "Entry",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "establishments",
+      "title": "Establishments, in the notification's words",
+      "kind": "text",
+      "rowTitle": true
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "S.O. 3582(E), 1 July 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 3447, under the first proviso to section 16(1)(a) of the Code on Social Security, 2020, superseding S.O. 320(E) of 9 April 1997: “This notification shall be deemed to come into force from the 21st day of November, 2025.”",
+        "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 16(1)(a) and its first proviso, in force from 21 November 2025 by S.O. 5319(E), 21 November 2025, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "S.O. 3582(E), paragraph 2, item i",
+      "cells": {
+        "entry": "2(i)",
+        "establishments": "any establishment for which a resolution plan or repayment plan has been approved by the Adjudicating Authority established under the Insolvency and Bankruptcy Code, 2016 (31 of 2016)"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "S.O. 3582(E), paragraph 2, item ii(a)",
+      "cells": {
+        "entry": "2(ii)(a)",
+        "establishments": "any establishment in the jute Industry"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "S.O. 3582(E), paragraph 2, item ii(b)",
+      "cells": {
+        "entry": "2(ii)(b)",
+        "establishments": "any establishment in the beedi Industry"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "S.O. 3582(E), paragraph 2, item ii(c)",
+      "cells": {
+        "entry": "2(ii)(c)",
+        "establishments": "any establishment in the brick Industry"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "S.O. 3582(E), paragraph 2, item ii(d)",
+      "cells": {
+        "entry": "2(ii)(d)",
+        "establishments": "any establishment in the coir Industry other than the spinning sector"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "source": "S.O. 3582(E), paragraph 2, item ii(e)",
+      "cells": {
+        "entry": "2(ii)(e)",
+        "establishments": "any establishment in the guar gum factories"
+      }
+    }
+  ]
+}

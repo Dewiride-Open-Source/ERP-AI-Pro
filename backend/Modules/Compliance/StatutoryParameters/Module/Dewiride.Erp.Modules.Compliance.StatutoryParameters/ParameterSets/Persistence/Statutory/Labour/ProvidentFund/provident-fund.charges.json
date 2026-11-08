@@ -1,0 +1,204 @@
+{
+  "key": "provident-fund.charges",
+  "title": "Provident fund administrative and inspection charges",
+  "description": "The administrative charges an employer pays with the provident fund contributions, and the inspection charges that an establishment exempted under section 143 of the Code on Social Security, 2020 pays in their place, each a per cent of the pay or wages with its least sum, in its notification's words. S.O. 2011(E) fixes the administrative charges from 1 June 2018 under the Employees' Provident Funds Scheme, 1952; from 29 June 2026 it is held as continued by section 164(2)(a) of the Code under paragraphs 28(2) and 29(1) of the Employees' Provident Funds Scheme, 2026, under which no other percentage was found. S.O. 2701(E) of 29 May 2026, its rate corrected by S.O. 4602(E), fixes the inspection charges for exemptions from the Schemes of 1952 and 1976, read from 29 June 2026 as their successors of 2026. The inspection charges before 29 May 2026 and the Insurance Fund's administrative charges were not read in their instruments.",
+  "basis": "law",
+  "asOf": "wageDate",
+  "columns": [
+    {
+      "name": "charge",
+      "title": "Charge",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Charge, and who pays it",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "scheme",
+      "title": "Charged under",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "providentFunds",
+          "title": "The Employees' Provident Funds Scheme"
+        },
+        {
+          "value": "depositLinkedInsurance",
+          "title": "The Employees' Deposit-Linked Insurance Scheme"
+        }
+      ]
+    },
+    {
+      "name": "establishments",
+      "title": "Establishments",
+      "kind": "choice",
+      "choices": [
+        {
+          "value": "otherEstablishments",
+          "title": "Other establishments"
+        },
+        {
+          "value": "nonFunctionalWithoutMembers",
+          "title": "Non-functional, with no contributory member"
+        },
+        {
+          "value": "exempted",
+          "title": "Exempted under section 143 of the Code"
+        }
+      ]
+    },
+    {
+      "name": "rate",
+      "title": "Rate (per cent of the pay or wages)",
+      "kind": "percent"
+    },
+    {
+      "name": "minimum",
+      "title": "Least sum (₹)",
+      "kind": "amount"
+    },
+    {
+      "name": "wording",
+      "title": "In the instruments' words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "S.O. 2011(E), 21 May 2018, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 1818, under the Explanation to paragraph 30 read with paragraph 39 of the Employees' Provident Funds Scheme, 1952: “with effect from 1st June, 2018”",
+        "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020: section 164(2), which keeps in force the schemes and notifications of the repealed Employees' Provident Funds and Miscellaneous Provisions Act, 1952, in force from 21 November 2025 by S.O. 5319(E), 21 November 2025, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    },
+    {
+      "from": "2026-05-29",
+      "instruments": [
+        "S.O. 2701(E), 29 May 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 2608, under section 143(6) of the Code on Social Security, 2020, superseding S.O. 1436 of 9 July 1998 and S.O. 238 of 11 January 1998, in force on its publication, the notification naming no other day",
+        "S.O. 4602(E), 20 August 2026, corrigendum, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (ii), No. 4422, to S.O. 2701(E): “in page 2, in line 31, for \"0.35\" read \"0.18\".”"
+      ]
+    },
+    {
+      "from": "2026-06-29",
+      "instruments": [
+        "Employees' Provident Funds Scheme, 2026, G.S.R. 525(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 473, superseding the Employees' Provident Funds Scheme, 1952: “It shall come into force on the date of its publication in the Official Gazette.”; corrected by G.S.R. 703(E), 4 August 2026, No. 639",
+        "Employees' Deposit-Linked Insurance Scheme, 2026, G.S.R. 526(E), 29 June 2026, Ministry of Labour and Employment, Gazette of India, Extraordinary, Part II, Section 3, Sub-section (i), No. 474, superseding the Employees' Deposit-Linked Insurance Scheme, 1976: “It shall come into force on the date of its publication in the Official Gazette.”",
+        "Code on Social Security, 2020, section 164(2)(a): a notification made under a repealed enactment “shall be in force to the extent they are not contrary to the provisions of this Code … till they are repealed under the corresponding provisions of this Code”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "S.O. 2011(E), 21 May 2018, in force 1 June 2018, under the Explanation to paragraph 30 read with paragraph 39 of the Employees' Provident Funds Scheme, 1952, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "charge": "provident-fund-administrative",
+        "name": "Administrative charges of an establishment other than a non-functional one with no contributory member",
+        "scheme": "providentFunds",
+        "establishments": "otherEstablishments",
+        "rate": 0.5,
+        "minimum": 500,
+        "wording": "S.O. 2011(E): … the Central Government, after consulting the Central Board and having regard to the resources of the Employees' Provident Fund available for meeting its normal administrative expenses, hereby fixes the administrative charges payable by the employer for the purposes of paragraph 30 and sub-paragraph (1) of paragraph 38 of the said Scheme with effect from 1st June, 2018 at 0.50 per cent (zero point five zero per cent.) of the pay as referred to in the said paragraphs subject to a minimum sum of seventy-five rupees per month for every non-functional establishment having no contributory member and five hundred rupees per month per establishment for other establishments."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-06-28",
+      "source": "S.O. 2011(E), 21 May 2018, in force 1 June 2018, under the Explanation to paragraph 30 read with paragraph 39 of the Employees' Provident Funds Scheme, 1952, continued by section 164(2) of the Code on Social Security, 2020",
+      "cells": {
+        "charge": "provident-fund-administrative-non-functional",
+        "name": "Administrative charges of a non-functional establishment with no contributory member",
+        "scheme": "providentFunds",
+        "establishments": "nonFunctionalWithoutMembers",
+        "rate": 0.5,
+        "minimum": 75,
+        "wording": "S.O. 2011(E): … the Central Government, after consulting the Central Board and having regard to the resources of the Employees' Provident Fund available for meeting its normal administrative expenses, hereby fixes the administrative charges payable by the employer for the purposes of paragraph 30 and sub-paragraph (1) of paragraph 38 of the said Scheme with effect from 1st June, 2018 at 0.50 per cent (zero point five zero per cent.) of the pay as referred to in the said paragraphs subject to a minimum sum of seventy-five rupees per month for every non-functional establishment having no contributory member and five hundred rupees per month per establishment for other establishments."
+      }
+    },
+    {
+      "from": "2026-05-29",
+      "until": "2026-06-28",
+      "source": "S.O. 2701(E), 29 May 2026, under section 143(6) of the Code on Social Security, 2020, Table, Sl. No. (i), its rate “0.35” read “0.18” by the corrigendum S.O. 4602(E), 20 August 2026",
+      "cells": {
+        "charge": "provident-fund-inspection",
+        "name": "Inspection charges of an establishment exempted from the Employees' Provident Funds Scheme",
+        "scheme": "providentFunds",
+        "establishments": "exempted",
+        "rate": 0.18,
+        "minimum": 8750,
+        "wording": "S.O. 2701(E): … the Central Government hereby directs that the employers in relation to an establishment or class of establishments or any person or class of persons exempted under section 143 of the said Code from the provisions of the scheme specified in column (2) of the Table below to pay inspection charges at the rate specified in column (3) for the time being payable to the employees of the establishment or receivable by the persons or class of persons, as the case may be, in respect of which contributions, would have been payable but for such exemption, subject to the minimum amount specified in column (4) to the administration account mentioned in column (5) of the said Table, within fifteen days of the close of every month. [Table, Sl. No. (i)] Exempted from: Employees' Provident Fund Scheme, 1952. Rate of Inspection charges (per cent. of wages): 0.18. Minimum Inspection Charge (in Rupees): 8750. Payable to: Provident Fund Administration Account."
+      }
+    },
+    {
+      "from": "2026-05-29",
+      "until": "2026-06-28",
+      "source": "S.O. 2701(E), 29 May 2026, under section 143(6) of the Code on Social Security, 2020, Table, Sl. No. (ii)",
+      "cells": {
+        "charge": "insurance-fund-inspection",
+        "name": "Inspection charges of an establishment exempted from the Employees' Deposit-Linked Insurance Scheme",
+        "scheme": "depositLinkedInsurance",
+        "establishments": "exempted",
+        "rate": 0.005,
+        "minimum": 1250,
+        "wording": "S.O. 2701(E): … the Central Government hereby directs that the employers in relation to an establishment or class of establishments or any person or class of persons exempted under section 143 of the said Code from the provisions of the scheme specified in column (2) of the Table below to pay inspection charges at the rate specified in column (3) for the time being payable to the employees of the establishment or receivable by the persons or class of persons, as the case may be, in respect of which contributions, would have been payable but for such exemption, subject to the minimum amount specified in column (4) to the administration account mentioned in column (5) of the said Table, within fifteen days of the close of every month. [Table, Sl. No. (ii)] Exempted from: Employees Deposit-Linked Insurance Scheme, 1976. Rate of Inspection charges (per cent. of wages): 0.005. Minimum Inspection Charge (in Rupees): 1250. Payable to: Insurance Fund Administration Account."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "S.O. 2011(E), 21 May 2018, continued by section 164(2)(a) of the Code on Social Security, 2020, read with paragraphs 28(2) and 29(1) of the Employees' Provident Funds Scheme, 2026, which superseded the Scheme of 1952",
+      "cells": {
+        "charge": "provident-fund-administrative",
+        "name": "Administrative charges of an establishment other than a non-functional one with no contributory member",
+        "scheme": "providentFunds",
+        "establishments": "otherEstablishments",
+        "rate": 0.5,
+        "minimum": 500,
+        "wording": "S.O. 2011(E): … the Central Government, after consulting the Central Board and having regard to the resources of the Employees' Provident Fund available for meeting its normal administrative expenses, hereby fixes the administrative charges payable by the employer for the purposes of paragraph 30 and sub-paragraph (1) of paragraph 38 of the said Scheme with effect from 1st June, 2018 at 0.50 per cent (zero point five zero per cent.) of the pay as referred to in the said paragraphs subject to a minimum sum of seventy-five rupees per month for every non-functional establishment having no contributory member and five hundred rupees per month per establishment for other establishments. Employees' Provident Funds Scheme, 2026, paragraph 28(2): The employer shall together with the employee's contribution, pay the employer's contribution and administrative charge of such percentage of wages. Paragraph 29(1): The Central Government may, in consultation with the Central Board and having regard to the resources of the Fund available for meeting its normal administrative expenses, fix the percentage of administrative charges payable under sub-paragraph (2) of paragraph 28."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "S.O. 2011(E), 21 May 2018, continued by section 164(2)(a) of the Code on Social Security, 2020, read with paragraphs 28(2) and 29(1) of the Employees' Provident Funds Scheme, 2026, which superseded the Scheme of 1952",
+      "cells": {
+        "charge": "provident-fund-administrative-non-functional",
+        "name": "Administrative charges of a non-functional establishment with no contributory member",
+        "scheme": "providentFunds",
+        "establishments": "nonFunctionalWithoutMembers",
+        "rate": 0.5,
+        "minimum": 75,
+        "wording": "S.O. 2011(E): … the Central Government, after consulting the Central Board and having regard to the resources of the Employees' Provident Fund available for meeting its normal administrative expenses, hereby fixes the administrative charges payable by the employer for the purposes of paragraph 30 and sub-paragraph (1) of paragraph 38 of the said Scheme with effect from 1st June, 2018 at 0.50 per cent (zero point five zero per cent.) of the pay as referred to in the said paragraphs subject to a minimum sum of seventy-five rupees per month for every non-functional establishment having no contributory member and five hundred rupees per month per establishment for other establishments. Employees' Provident Funds Scheme, 2026, paragraph 28(2): The employer shall together with the employee's contribution, pay the employer's contribution and administrative charge of such percentage of wages. Paragraph 29(1): The Central Government may, in consultation with the Central Board and having regard to the resources of the Fund available for meeting its normal administrative expenses, fix the percentage of administrative charges payable under sub-paragraph (2) of paragraph 28."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "S.O. 2701(E), Table, Sl. No. (i), as corrected by S.O. 4602(E), its Employees' Provident Fund Scheme, 1952 read as the Employees' Provident Funds Scheme, 2026 that superseded it, whose paragraph 13(5) requires the inspection charges the Central Government notifies",
+      "cells": {
+        "charge": "provident-fund-inspection",
+        "name": "Inspection charges of an establishment exempted from the Employees' Provident Funds Scheme",
+        "scheme": "providentFunds",
+        "establishments": "exempted",
+        "rate": 0.18,
+        "minimum": 8750,
+        "wording": "S.O. 2701(E): … the Central Government hereby directs that the employers in relation to an establishment or class of establishments or any person or class of persons exempted under section 143 of the said Code from the provisions of the scheme specified in column (2) of the Table below to pay inspection charges at the rate specified in column (3) for the time being payable to the employees of the establishment or receivable by the persons or class of persons, as the case may be, in respect of which contributions, would have been payable but for such exemption, subject to the minimum amount specified in column (4) to the administration account mentioned in column (5) of the said Table, within fifteen days of the close of every month. [Table, Sl. No. (i)] Exempted from: Employees' Provident Fund Scheme, 1952. Rate of Inspection charges (per cent. of wages): 0.18. Minimum Inspection Charge (in Rupees): 8750. Payable to: Provident Fund Administration Account. Employees' Provident Funds Scheme, 2026, paragraph 13(5): The employer shall pay inspection charges at the rate notified by the Central Government."
+      }
+    },
+    {
+      "from": "2026-06-29",
+      "source": "S.O. 2701(E), Table, Sl. No. (ii), its Employees Deposit-Linked Insurance Scheme, 1976 read as the Employees' Deposit-Linked Insurance Scheme, 2026 that superseded it, whose paragraph 27(xii) requires the inspection charges the Central Government notifies",
+      "cells": {
+        "charge": "insurance-fund-inspection",
+        "name": "Inspection charges of an establishment exempted from the Employees' Deposit-Linked Insurance Scheme",
+        "scheme": "depositLinkedInsurance",
+        "establishments": "exempted",
+        "rate": 0.005,
+        "minimum": 1250,
+        "wording": "S.O. 2701(E): … the Central Government hereby directs that the employers in relation to an establishment or class of establishments or any person or class of persons exempted under section 143 of the said Code from the provisions of the scheme specified in column (2) of the Table below to pay inspection charges at the rate specified in column (3) for the time being payable to the employees of the establishment or receivable by the persons or class of persons, as the case may be, in respect of which contributions, would have been payable but for such exemption, subject to the minimum amount specified in column (4) to the administration account mentioned in column (5) of the said Table, within fifteen days of the close of every month. [Table, Sl. No. (ii)] Exempted from: Employees Deposit-Linked Insurance Scheme, 1976. Rate of Inspection charges (per cent. of wages): 0.005. Minimum Inspection Charge (in Rupees): 1250. Payable to: Insurance Fund Administration Account. Employees' Deposit-Linked Insurance Scheme, 2026, paragraph 27(xii): the establishment exempted from the this Scheme shall facilitate inspection of the establishment by an Inspector cum-Facilitator and shall pay inspection charges at the rates the Central Government may notify;"
+      }
+    }
+  ]
+}

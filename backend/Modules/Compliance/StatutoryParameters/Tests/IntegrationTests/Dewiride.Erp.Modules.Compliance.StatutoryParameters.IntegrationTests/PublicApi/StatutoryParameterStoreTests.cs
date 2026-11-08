@@ -10,6 +10,14 @@ using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Td
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Tds.FinanceAct;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Tds.Limits;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.IncomeTax.Tds.Rates;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Labour.Bonus;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Labour.Codes;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Labour.Esi;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Labour.Gratuity;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Labour.ProfessionalTax;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Labour.ProvidentFund.Contributions;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Labour.ProvidentFund.Remittance;
+using Dewiride.Erp.Modules.Compliance.StatutoryParameters.Contracts.Labour.WelfareFund;
 using Dewiride.Erp.Modules.Compliance.StatutoryParameters.IntegrationTests.Seeding;
 using Dewiride.Erp.Testing;
 
@@ -99,6 +107,30 @@ public sealed class StatutoryParameterStoreTests(ErpApiFactory factory)
             "income-tax.tds-surcharge-and-cess" => Of(await store.GetAsOfAsync<TdsSurchargesAndCess>(day, cancellationToken), set => (set.Version, [.. set.Clauses.Select(row => row.Clause)])),
             "income-tax.tds-terms" => Of(await store.GetAsOfAsync<TdsTerms>(day, cancellationToken), set => (set.Version, [.. set.Terms.Select(row => row.Term)])),
             "income-tax.tds-threshold-limits" => Of(await store.GetAsOfAsync<TdsThresholdLimits>(day, cancellationToken), set => (set.Version, [.. set.Limits.Select(row => row.Limit)])),
+            "bonus.prior-charges" => Of(await store.GetAsOfAsync<BonusPriorCharges>(day, cancellationToken), set => (set.Version, [.. set.Charges.Select(row => row.Item)])),
+            "bonus.rules" => Of(await store.GetAsOfAsync<BonusRules>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(row => row.Provision)])),
+            "bonus.state-wage-limit-readings" => Of(await store.GetAsOfAsync<StateWageLimitReadings>(day, cancellationToken), set => (set.Version, [.. set.Readings.Select(row => row.StateCode)])),
+            "bonus.wage-limits" => Of(await store.GetAsOfAsync<BonusWageLimits>(day, cancellationToken), set => (set.Version, [.. set.Limits.Select(row => row.Government)])),
+            "esi.average-daily-wage-divisors" => Of(await store.GetAsOfAsync<EsiAverageDailyWageDivisors>(day, cancellationToken), set => (set.Version, [.. set.Divisors.Select(row => row.Divisor)])),
+            "esi.contribution-due-dates" => Of(await store.GetAsOfAsync<EsiContributionDueDates>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(row => row.Rule)])),
+            "esi.contribution-exemptions" => Of(await store.GetAsOfAsync<EsiContributionExemptions>(day, cancellationToken), set => (set.Version, [.. set.Exemptions.Select(row => row.Exemption)])),
+            "esi.contribution-periods" => Of(await store.GetAsOfAsync<EsiContributionPeriods>(day, cancellationToken), set => (set.Version, [.. set.Periods.Select(row => row.Period)])),
+            "esi.contribution-rates" => Of(await store.GetAsOfAsync<EsiContributionRates>(day, cancellationToken), set => (set.Version, [.. set.Rates.Select(row => row.Share)])),
+            "esi.coverage-wage-limits" => Of(await store.GetAsOfAsync<EsiCoverageWageLimits>(day, cancellationToken), set => (set.Version, [.. set.Limits.Select(row => row.Limit)])),
+            "gratuity.rules" => Of(await store.GetAsOfAsync<GratuityRules>(day, cancellationToken), set => (set.Version, [.. set.Rules.Select(row => row.Provision)])),
+            "labour-codes.wage-definition" => Of(await store.GetAsOfAsync<WageDefinition>(day, cancellationToken), set => (set.Version, [.. set.Clauses.Select(row => row.Clause)])),
+            "labour-welfare-fund.contributions" => Of(await store.GetAsOfAsync<WelfareFundContributions>(day, cancellationToken), set => (set.Version, [.. set.Contributions.Select(row => row.Entry)])),
+            "labour-welfare-fund.coverage" => Of(await store.GetAsOfAsync<WelfareFundCoverage>(day, cancellationToken), set => (set.Version, [.. set.Definitions.Select(row => row.Entry)])),
+            "labour-welfare-fund.due-days" => Of(await store.GetAsOfAsync<WelfareFundDueDays>(day, cancellationToken), set => (set.Version, [.. set.Days.Select(row => row.Entry)])),
+            "professional-tax.exemptions" => Of(await store.GetAsOfAsync<ProfessionalTaxExemptions>(day, cancellationToken), set => (set.Version, [.. set.Exemptions.Select(row => row.Exemption)])),
+            "professional-tax.levies" => Of(await store.GetAsOfAsync<ProfessionalTaxLevies>(day, cancellationToken), set => (set.Version, [.. set.States.Select(row => row.StateCode)])),
+            "professional-tax.salary-slabs" => Of(await store.GetAsOfAsync<ProfessionalTaxSlabs>(day, cancellationToken), set => (set.Version, [.. set.Slabs.Select(row => row.Slab)])),
+            "provident-fund.charges" => Of(await store.GetAsOfAsync<ProvidentFundCharges>(day, cancellationToken), set => (set.Version, [.. set.Charges.Select(row => row.Charge)])),
+            "provident-fund.contribution-rates" => Of(await store.GetAsOfAsync<ProvidentFundContributionRates>(day, cancellationToken), set => (set.Version, [.. set.Rates.Select(row => row.Contribution)])),
+            "provident-fund.due-dates" => Of(await store.GetAsOfAsync<ProvidentFundDueDates>(day, cancellationToken), set => (set.Version, [.. set.Remittances.Select(row => row.Remittance)])),
+            "provident-fund.membership-limits" => Of(await store.GetAsOfAsync<ProvidentFundMembershipLimits>(day, cancellationToken), set => (set.Version, [.. set.Limits.Select(row => row.Limit)])),
+            "provident-fund.rounding" => Of(await store.GetAsOfAsync<ProvidentFundRounding>(day, cancellationToken), set => (set.Version, [.. set.Contributions.Select(row => row.Contributions)])),
+            "provident-fund.ten-per-cent-establishments" => Of(await store.GetAsOfAsync<TenPerCentEstablishments>(day, cancellationToken), set => (set.Version, [.. set.Entries.Select(row => row.Entry)])),
             _ => throw new ArgumentOutOfRangeException(nameof(key), key, "No typed set reads this key."),
         };
     }

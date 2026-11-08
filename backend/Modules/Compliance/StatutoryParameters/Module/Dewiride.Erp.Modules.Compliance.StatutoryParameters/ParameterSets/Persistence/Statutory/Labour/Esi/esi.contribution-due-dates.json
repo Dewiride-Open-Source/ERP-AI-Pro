@@ -1,0 +1,95 @@
+{
+  "key": "esi.contribution-due-dates",
+  "title": "ESI contribution due dates",
+  "description": "When the contributions of a wage period fall due and by when they are paid: on the last day of the wage period (section 29(4) of the Code on Social Security, 2020), or of the employment in it for an employee employed for part of it (regulation 36), and paid within 15 days of the last day of the calendar month in which they fall due, or on the last day of a permanent closure (regulation 31), the regulations being those of the Employees' State Insurance (General) Regulations, 1950, in ESIC's consolidated text, kept in force by section 164(2) of the Code. Section 164(2)(b) keeps them “for a period of one year from the date of commencement of this Code”, 21 November 2025 for them, so their rows end on 20 November 2026, the earlier day on which that year may end, and the Code's own row runs on. The set answers for the last day of the wage period.",
+  "basis": "law",
+  "asOf": "wagePeriodEnd",
+  "columns": [
+    {
+      "name": "rule",
+      "title": "Rule",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Contributions fall due or are paid",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "daysAfterMonthEnd",
+      "title": "Days after the end of the month they fall due in",
+      "kind": "integer",
+      "optional": true,
+      "minimum": 1
+    },
+    {
+      "name": "wording",
+      "title": "In the instrument's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Code on Social Security, 2020 (36 of 2020), Gazette of India, Extraordinary, Part II, Section 1, No. 61, 29 September 2020, section 29(4), in force from “the 21st day of November, 2025” by S.O. 5319(E), 21 November 2025, serial number 4: “sections 17 to 141”",
+        "Employees' State Insurance (General) Regulations, 1950, Employees' State Insurance Corporation Notification No. RS/5/48, 17 October 1950, in ESIC's consolidated text as on 11.01.2024, as amended by the ESI (General) (Amdt.) Regulations, 2020 of 18 May 2020: regulations 31 and 36",
+        "Code on Social Security, 2020 (36 of 2020), section 164(2)(a) and (b), keeping in force the rules and regulations made under the Employees' State Insurance Act, 1948, which section 164(1) repeals; in force from “the 21st day of November, 2025” by S.O. 5319(E), 21 November 2025, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 5143, as corrected by S.O. 5936(E), 19 December 2025"
+      ]
+    },
+    {
+      "from": "2026-11-21",
+      "instruments": [
+        "Code on Social Security, 2020 (36 of 2020), section 164(2)(b): the rules, regulations and schemes made or framed under the Employees' State Insurance Act, 1948 “shall remain in force, to the extent they are not inconsistent with the provisions of this Code for a period of one year from the date of commencement of this Code”",
+        "Code on Social Security, 2020 (36 of 2020), section 1(3): “any reference in any such provision to the commencement of this Code shall be construed as a reference to the coming into force of that provision”; S.O. 5319(E), 21 November 2025, serial number 8, as corrected by S.O. 5936(E), 19 December 2025, brought section 164(2) into force on 21 November 2025"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "Code on Social Security, 2020, section 29(4)",
+      "cells": {
+        "rule": "falls-due",
+        "name": "Contributions of a wage period fall due",
+        "daysAfterMonthEnd": null,
+        "wording": "(4) The contributions payable in respect of each wage period shall ordinarily fall due on the last day of the wage period, and where an employee is employed for part of the wage period, or is employed under two or more employers during the same wage period, the contributions shall fall due on such days as may be specified in the regulations."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-11-20",
+      "source": "Employees' State Insurance (General) Regulations, 1950, regulation 36, in ESIC's consolidated text as on 11.01.2024",
+      "cells": {
+        "rule": "part-period",
+        "name": "Contributions of part of a wage period fall due",
+        "daysAfterMonthEnd": null,
+        "wording": "36. Employment for part of a wage period. Where an employee is employed by an employer for part of a wage period, the contributions in respect of such wage period, shall fall due on the last day of the employment by such employer in that wage period."
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-11-20",
+      "source": "Employees' State Insurance (General) Regulations, 1950, regulation 31, in ESIC's consolidated text as on 11.01.2024",
+      "cells": {
+        "rule": "payment",
+        "name": "Contributions are paid",
+        "daysAfterMonthEnd": 15,
+        "wording": "31. Time for payment of contribution. An employer who is liable to pay contributions in respect of any employee shall pay those contributions within 15 days of the last day of the calendar month in which the contributions fall due:"
+      }
+    },
+    {
+      "from": "2026-04-01",
+      "until": "2026-11-20",
+      "source": "Employees' State Insurance (General) Regulations, 1950, regulation 31, first proviso, in ESIC's consolidated text as on 11.01.2024",
+      "cells": {
+        "rule": "closure",
+        "name": "Contributions are paid on a permanent closure",
+        "daysAfterMonthEnd": null,
+        "wording": "31. Time for payment of contribution. An employer who is liable to pay contributions in respect of any employee shall pay those contributions within 15 days of the last day of the calendar month in which the contributions fall due: Provided that where a factory/establishment is permanently closed, the employer shall pay contribution on the last day of its closure:"
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "key": "bonus.wage-limits",
+  "title": "Bonus wage limits notified under section 26 of the Code on Wages, 2019",
+  "description": "The wage limits of section 26 of the Code on Wages, 2019 that an appropriate Government determines by notification: an employee drawing wages not exceeding the eligibility limit a month is paid bonus (section 26(1)), and the bonus of one whose wage exceeds the calculation wage is calculated as if the wage were that amount or the minimum wage fixed by the appropriate Government, whichever is higher (section 26(2)). The Central Government's limits, S.O. 4711(E) and S.O. 4710(E), published on 25 August 2026 and deemed in force from 21 November 2025, bind the establishments for which it is the appropriate Government (section 2(d)(i)). A State's or a Union territory's own notification is a row keyed by its GST State code; until one is held, bonus.state-wage-limit-readings gives the ERP's reading. Minimum wages are not held here. The set answers for the last day of the accounting year a bonus is for, from the year 2026-27.",
+  "basis": "law",
+  "asOf": "accountingYearEnd",
+  "columns": [
+    {
+      "name": "government",
+      "title": "Appropriate Government",
+      "kind": "code",
+      "key": true
+    },
+    {
+      "name": "name",
+      "title": "Government",
+      "kind": "text",
+      "rowTitle": true
+    },
+    {
+      "name": "stateCode",
+      "title": "State or Union territory",
+      "kind": "stateCode",
+      "optional": true
+    },
+    {
+      "name": "eligibilityLimit",
+      "title": "Eligibility limit (₹ a month)",
+      "kind": "amount"
+    },
+    {
+      "name": "calculationWage",
+      "title": "Calculation wage (₹ a month)",
+      "kind": "amount"
+    },
+    {
+      "name": "eligibilityWording",
+      "title": "Eligibility limit, in the notification's words",
+      "kind": "text"
+    },
+    {
+      "name": "calculationWording",
+      "title": "Calculation wage, in the notification's words",
+      "kind": "text"
+    }
+  ],
+  "versions": [
+    {
+      "from": "2026-04-01",
+      "instruments": [
+        "Code on Wages, 2019 (No. 29 of 2019), 8 August 2019, Gazette of India, Extraordinary, Part II, Section 1, No. 48: sections 2(d) and 26(1) and (2), in force from 21 November 2025 by S.O. 5322(E) of that day (Part II, Section 3(ii), No. 5146), among “sections 1 to 41”",
+        "S.O. 4711(E), 25 August 2026, Ministry of Labour and Employment, under section 26(1) of the Code on Wages, 2019, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 4526, 25 August 2026: “This notification shall be deemed to have come into force on the 21st day of November, 2025.”",
+        "S.O. 4710(E), 25 August 2026, Ministry of Labour and Employment, under section 26(2) of the Code on Wages, 2019, Gazette of India, Extraordinary, Part II, Section 3(ii), No. 4525, 25 August 2026: “This notification shall be deemed to have come into force on the 21st day of November, 2025.”"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "from": "2026-04-01",
+      "source": "S.O. 4711(E) and S.O. 4710(E), 25 August 2026, Ministry of Labour and Employment, under section 26(1) and (2) of the Code on Wages, 2019, each deemed in force from 21 November 2025 (its paragraph 2)",
+      "cells": {
+        "government": "central",
+        "name": "Central Government",
+        "stateCode": null,
+        "eligibilityLimit": 21000,
+        "calculationWage": 7000,
+        "eligibilityWording": "In exercise of the powers conferred by sub-section (1) of section 26 of the Code on Wages, 2019 (29 of 2019), the Central Government hereby determines that every employee drawing wages not exceeding twenty-one thousand rupees per mensum shall be paid bonus as specified in the said sub-section.",
+        "calculationWording": "In exercise of the powers conferred by sub-section (2) of section 26 of the Code on Wages, 2019 (29 of 2019), the Central Government hereby determines that for the purpose of calculation of the bonus payable under sub-sections (1) and (3) of section 26 of the said Code, where the wage of an employee being eligible for bonus under sub-section (1) of section 26, exceed seven thousand rupees per mensum, the bonus payable to such employee shall be calculated, as if his wage was seven thousand rupees per mensum or the minimum wage fixed by the Central Government, whichever is higher."
+      }
+    }
+  ]
+}
