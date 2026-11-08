@@ -1486,25 +1486,25 @@
           "id": "business-building-blocks-statutory-datasets-personal-income-tax",
           "title": "Statutory datasets: personal income-tax rates",
           "scope": "Seed and golden-test, from tax year 2026-27, the income-tax rates of individuals, Hindu undivided families and the other persons charged at the slab rates, which the salary deduction of section 392 of the Income-tax Act, 2025 reads as the rates in force: section 202(1) of that Act and Paragraph A of Parts I-B and III of the First Schedule to the Finance Act, 2026, with the surcharge and cess on that tax, each a parameter set with a typed Contracts record and golden-value tests, the Finance Act's one-year rows ending with their tax year.",
-          "status": "planned",
+          "status": "deferred",
           "edition": "community",
           "editionConfirmedOn": "2026-11-08",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the rates of Part III of the First Schedule to the Finance Act, 2026 are the rates in force for the deductions of section 392 other than sub-section (7) and of section 393(1) [Table: Sl. No. 8(iii)] (section 3(10)(ii) and (iii)) and for advance tax (section 3(10)(iv)); income-tax.tds-rates marks those entries as deducted at the rates in force, income-tax.tds-rates-in-force-readings reads none of them, and no set holds the rates. Owner decision of 2026-11-08: the personal rates come as their own small Community table before the salary-tax work, which depends on this item."
+          "notes": "Owner decision of 2026-11-08: deferred, the remaining statutory datasets not needed now; the statutory parameter store and every set already seeded stay. From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the rates of Part III of the First Schedule to the Finance Act, 2026 are the rates in force for the deductions of section 392 other than sub-section (7) and of section 393(1) [Table: Sl. No. 8(iii)] (section 3(10)(ii) and (iii)) and for advance tax (section 3(10)(iv)); income-tax.tds-rates marks those entries as deducted at the rates in force, income-tax.tds-rates-in-force-readings reads none of them, and no set holds the rates. Owner decision of 2026-11-08: the personal rates come as their own small Community table before the salary-tax work, which depends on this item."
         },
         {
           "id": "business-building-blocks-statutory-datasets-minimum-wages",
           "title": "Statutory datasets: minimum wages",
           "scope": "Seed and golden-test, from the law in force on 1 April 2026, the minimum rates of wages that the Central Government and each State Government fix or revise under the Code on Wages, 2019, by employment, skill level and area as each notification states them, with the variable dearness allowance each revision notifies and the floor wage the Central Government fixes.",
-          "status": "planned",
+          "status": "deferred",
           "edition": "community",
           "editionConfirmedOn": "2026-11-08",
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "Owner decision of 2026-11-08: minimum wages are a Community item of their own, before the payroll work, because the wage on which statutory bonus is calculated under section 26(2) of the Code on Wages, 2019 is the higher of the notified amount and the minimum wage. From business-building-blocks-statutory-datasets-labour (ADR-0065): bonus.wage-limits and bonus.state-wage-limit-readings hold the calculation wage as ₹7,000 or the minimum wage, whichever is higher, in the instruments' words; the minimum wages of this item complete them."
+          "notes": "Owner decision of 2026-11-08: deferred, the remaining statutory datasets not needed now; the statutory parameter store and every set already seeded stay. Owner decision of 2026-11-08: minimum wages are a Community item of their own, before the payroll work, because the wage on which statutory bonus is calculated under section 26(2) of the Code on Wages, 2019 is the higher of the notified amount and the minimum wage. From business-building-blocks-statutory-datasets-labour (ADR-0065): bonus.wage-limits and bonus.state-wage-limit-readings hold the calculation wage as ₹7,000 or the minimum wage, whichever is higher, in the instruments' words; the minimum wages of this item complete them."
         },
         {
           "id": "business-building-blocks-document-numbering-series",
