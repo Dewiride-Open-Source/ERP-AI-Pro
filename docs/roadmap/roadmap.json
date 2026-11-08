@@ -1453,10 +1453,10 @@
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [
             "The parameter store gains the as-of meanings `deductionDate` (the credit or payment at which the Income-tax Act, 2025 requires the deduction) and `financialYearStart` (the first day of a financial year whose financial statements a version governs) and the cell kind `date` (an ISO date, read as `DateOnly`), each checked when the seed files are read, read by `IStatutoryParameterRows`, carried by the OpenAPI contract and the web client, and shown by the viewer with its own text; the GST sets and their tests keep their meaning.",
-            "The TDS sets of the Income-tax Act, 2025 from 1 April 2026, read in the Gazette texts: every entry of section 392 and of the three Tables of section 393 (54) with its nature, payee, payer, rate, threshold and timing as printed; the rates by case, the threshold limits, the no-deduction cases of section 393(4), the declarations of section 393(6) (with the depository version from 1 April 2027), the higher rates of section 397(2) with rules 162(3)(c) and 217, the terms of sections 2 and 402 that carry a limit, and the rates in force and the surcharge on deductions of the Finance Act, 2026 (section 3(7) and Part II of its First Schedule); the ERP's reading, marked as such, of which Part II item each rates-in-force entry takes; each set typed in Contracts and every row pinned by a golden-value test beside its instrument.",
-            "The crosswalk `tds.ita1961-to-ita2025`, the ERP's reading, maps each TDS provision of the Income-tax Act, 1961 in force on 31 March 2026 (the sections the Finance Act, 2025 lists, with 197) to the provision of the Income-tax Act, 2025 that governs the same payment from 1 April 2026, each row citing the 2025 Act's words, the Income Tax Department's words where it states the pair, and the 1961 heading as the department's TDS rate page gives it; a pair whose 1961 side no readable instrument holds (194N's non-filer proviso, 195(6), 197A, 206AA) is absent and named.",
-            "Income tax of a domestic company for tax years from 2026-27: the Finance Act, 2026's rates (25 % within the turnover limit, 30 % otherwise), the options of sections 199 to 201 with their windows as dates, the surcharge as the Taxation and Other Laws (Amendment) Act, 2026 left it, the Health and Education Cess, minimum alternate tax with its credit rules, and the advance-tax instalments and interest of sections 404 to 408, 424 and 425, the Finance Act's one-year rows ending on 31 March 2027 by a version from 1 April 2027 (owner decision of 2026-11-08); depreciation: the rates and Notes of Appendix I of the Income-tax Rules, 2026 by block, the allowances of section 33 and rule 25, and the useful lives and limits of Schedule II to the Companies Act, 2013 as in force on 1 April 2026, continuous process plant absent until G.S.R. 237(E) is read; each set typed in Contracts and golden-tested.",
-            "The statutory parameters pages show every new set, its as-of text and its dates, percentages and amounts; Playwright covers a TDS set, the crosswalk and the Schedule II lives in light and dark on all six projects; facts the research could not confirm are absent from the seed files and named in ADR-0064 and the roadmap notes, and the notes record the TDS section codes of the Rules' Forms 138, 140 and 144, the personal income-tax rates and the statement rules found for the items that will use them."
+            "The TDS sets of the Income-tax Act, 2025 from 1 April 2026, read in the Gazette texts: every entry of section 392 and of the three Tables of section 393 (54) with its nature, payee, payer, rate, threshold and timing as printed; the rates by case, the threshold limits, the no-deduction cases of section 393(4), the declarations of section 393(6) (with the depository version from 1 April 2027), the higher rates of section 397(2) with rules 162(3)(c) and 217, the terms of sections 2 and 402 that carry a limit, and the rates in force and the surcharge and cess on deductions of the Finance Act, 2026 (`income-tax.tds-surcharge-and-cess`: section 3(7), (16) and (17) and Part II of its First Schedule); the ERP's reading, marked as such, of which Part II item each rates-in-force entry takes; each set typed in Contracts and every row pinned by a golden-value test beside its instrument.",
+            "The crosswalk `income-tax.tds-crosswalk`, the ERP's reading, maps each TDS provision of the Income-tax Act, 1961 in force on 31 March 2026 (the sections the Finance Act, 2025 lists, with 197) to the provision of the Income-tax Act, 2025 that governs the same payment from 1 April 2026, each row citing the 2025 Act's words, the Income Tax Department's words where it states the pair, and the 1961 heading as the department's TRACES pages give it; a pair whose 1961 side no readable instrument holds (194N's non-filer proviso, 195(6), 197A, 206AA) is absent and named.",
+            "Income tax of a domestic company for tax years from 2026-27: the Finance Act, 2026's rates (25 % within the turnover limit, 30 % otherwise), the options of sections 199 to 201 with their windows as dates, the surcharge as the Taxation and Other Laws (Amendment) Act, 2026 left it, the Health and Education Cess, minimum alternate tax with its credit rules, and the advance-tax instalments and interest of sections 404 to 408, 424 and 425, the Finance Act's one-year rows ending on 31 March 2027 by a version from 1 April 2027 (owner decision of 2026-11-08); depreciation: the rates and Notes of Appendix I of the Income-tax Rules, 2026 by block, the allowances of section 33 and rule 25, and the useful lives and limits of Schedule II to the Companies Act, 2013 for financial years from 2026-27, continuous process plant absent until G.S.R. 237(E) is read; each set typed in Contracts and golden-tested.",
+            "The statutory parameters pages show every new set, its as-of text and its dates, percentages and amounts, the sets as a searched and paged list and a set of more than six columns as cards; Playwright covers a TDS set, the crosswalk and the Schedule II lives in light and dark on all six projects; facts the research could not confirm are absent from the seed files and named in ADR-0064 and the roadmap notes, and the notes record the TDS section codes of the Rules' Forms 138, 140 and 144, the personal income-tax rates and the statement rules found for the items that will use them."
           ],
           "tags": [],
           "dependsOn": [],
@@ -1473,7 +1473,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): each dataset is a seed file under ParameterSets/Persistence/Statutory/<area>/ with a typed Contracts record and its boundary and golden-value tests. Split from business-building-blocks-statutory-datasets-direct-tax-and-labour by the owner's decisions of 2026-11-08, which also start every dataset with the law in force on 1 April 2026."
+          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): each dataset is a seed file under ParameterSets/Persistence/Statutory/<area>/ with a typed Contracts record and its boundary and golden-value tests. Split from business-building-blocks-statutory-datasets-direct-tax-and-labour by the owner's decisions of 2026-11-08, which also start every dataset with the law in force on 1 April 2026. From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the store also has the cell kind date (yyyy-MM-dd, read as DateOnly) and the as-of meanings deductionDate and financialYearStart (a version only from 1 April) beside supplyDate and taxPeriodStart; a set whose entries hold more than six columns, the source included, shows them as cards, and the list of sets is searched and paged, ten a page."
         },
         {
           "id": "business-building-blocks-document-numbering-series",
@@ -1608,7 +1608,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the entries under which a client deducts tax from the company's invoices from 1 April 2026 are rows of income-tax.tds-entries (keyed in the Act's notation, such as 393(1)-6(iii) for fees for professional or technical services, with the payer and payee as printed), read as of the deduction date (ParameterAsOf.DeductionDate), and income-tax.tds-crosswalk, the ERP's reading, pairs each 1961 TDS provision with its 2025 successor (194J with 393(1)-6(iii)) for documents that still name the old sections."
         },
         {
           "id": "clients-web-client-list-wizard-and-import",
@@ -1679,7 +1680,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the TDS law of the Income-tax Act, 2025 from 1 April 2026 is in parameter sets read through IStatutoryParameters as of the credit or payment at which the Act requires the deduction (ParameterAsOf.DeductionDate): income-tax.tds-entries (each entry of sections 392 and 393 keyed in the Act's notation, such as 393(1)-6(iii) for fees for professional or technical services, with its payee, payer, rate, threshold and timing as printed), income-tax.tds-rates (by case, such as 393(1)-6(i).D(a)), -tds-threshold-limits, -tds-no-deduction-cases (section 393(4)), -tds-declarations (section 393(6)), -tds-higher-rates (section 397(2) with rules 162(3)(c) and 217) and -tds-terms (sections 2 and 402); income-tax.tds-crosswalk, the ERP's reading, pairs each 1961 TDS provision with its 2025 successor (194J with 393(1)-6(iii), 197 with 395(1) for lower or nil deduction certificates)."
         },
         {
           "id": "vendors-contractor-agreements",
@@ -2154,7 +2156,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): every TDS value of the Income-tax Act, 2025 and the Finance Act, 2026 from 1 April 2026 is a typed parameter set read through IStatutoryParameters.GetAsOfAsync as of the deduction date (ParameterAsOf.DeductionDate), the credit or the payment the entry names, which the engine decides: TdsEntries, TdsRates, TdsThresholdLimits, TdsNoDeductionCases, TdsDeclarations, TdsHigherRates and TdsTerms (the Act's standing law, open-ended), and TdsRatesInForce (Part II of the First Schedule), TdsSurchargesAndCess (section 3(7), (16) and (17)) and TdsRateInForceReadings (the ERP's reading of which Part II item a rates-in-force entry takes; 393(2) Sl. Nos. 7, 8, 9 and 17 depend on the kind of income, and they and the surcharge band are the engine's to decide). The Finance Act's rows end on 31 March 2027 by a version from 1 April 2027, so an answer without them means that year's Finance Act is not yet seeded and the engine refuses to compute rather than deduct nothing. An amount is whole rupees as a decimal and can exceed a 32-bit integer."
         },
         {
           "id": "finance-expenses-tds-ledger-challans-and-statements",
@@ -2164,7 +2167,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the TDS sets of the Income-tax Act, 2025 exist as of the deduction date (income-tax.tds-entries and the rest), and no set holds the statements' section codes or the deposit and statement rules. The Income-tax Rules, 2026 (G.S.R. 198(E), 20 March 2026) print 63 section codes from 1001 to 1067 as notes to Form No. 138 (salary: 1001 to 1003 and 1032), Form No. 140 (residents, 40 codes) and Form No. 144 (non-residents, 30 codes); 1007, 1010, 1025 and 1036 appear in no instrument read, and Form No. 141, which carries section 393(1) Sl. Nos. 2(i), 3(i), 6(ii) and 8(vi), prints no list. Read but not seeded: rule 218 (tax deducted by a deductor other than the Government is paid by 30 April for a credit or payment in March and otherwise within seven days from the end of the month; through Form No. 141 within thirty days from the end of the month of the deduction), rule 219 (the statement each deduction goes in, and the quarterly statements due by 31 July, 31 October, 31 January and 31 May) and rule 220 (Form No. 145, Part A up to ₹500000 in a tax year and Parts B and C above it); G.S.R. 830(E) of 22 September 2026, in force 1 October 2026, amends rules 215(1), 218(3) and 219(5) and Forms No. 132 and 141, and brings 393(2) Sl. No. 17 by a resident individual or Hindu undivided family into Form No. 141."
         },
         {
           "id": "finance-expenses-itc-and-gstr-2b-ims-reconciliation",
@@ -2460,7 +2464,8 @@
           "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the salary deduction is the entry 392(1) of income-tax.tds-entries, paired with section 192 in income-tax.tds-crosswalk; the personal income-tax rates are in Part III, Paragraph A of the Finance Act, 2026's First Schedule and section 202(1) of the Income-tax Act, 2025, and no parameter set holds them (owner decision of 2026-11-08: they are seeded before salary tax, as Community statutory data)."
         },
         {
           "id": "finance-payroll-payroll-run-pipeline",
@@ -2555,7 +2560,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): the standing GST return due dates for tax periods from January 2021 are the parameter set gst.return-due-dates (GstReturnDueDates: the due day and the months after the period's last month, IFF's opening day, the instrument's words), answered by IStatutoryParameters for the first day of a tax period; the quarterly GSTR-3B day follows a registration's State through gst.quarterly-return-states, which holds no row for 26 (the rule names its two former Union Territories) or 97 (Other Territory); the turnover limits are gst.return-thresholds. Not seeded, so this item researches them from the notifications: the GSTR-9 exemption of every year (15/2025-Central Tax, which carries it from 2024-25, was read only in a GST Council newsletter; owner decision of 2026-11-07), one-off extensions as overrides by return, filer type, period and scope (national, State codes and districts; 09, 26, 29 and 30/2024 and 01 and 02/2025 were read in full, 12 and 17/2025 and 01/2026 only in newsletters), the three-year bar of sections 37(5), 39(11) and 44(2) from 1 October 2023, weekends and holidays, and every Central Tax notification after 22 April 2026."
+          "notes": "From business-building-blocks-statutory-parameter-store-and-gst-datasets (ADR-0063): the standing GST return due dates for tax periods from January 2021 are the parameter set gst.return-due-dates (GstReturnDueDates: the due day and the months after the period's last month, IFF's opening day, the instrument's words), answered by IStatutoryParameters for the first day of a tax period; the quarterly GSTR-3B day follows a registration's State through gst.quarterly-return-states, which holds no row for 26 (the rule names its two former Union Territories) or 97 (Other Territory); the turnover limits are gst.return-thresholds. Not seeded, so this item researches them from the notifications: the GSTR-9 exemption of every year (15/2025-Central Tax, which carries it from 2024-25, was read only in a GST Council newsletter; owner decision of 2026-11-07), one-off extensions as overrides by return, filer type, period and scope (national, State codes and districts; 09, 26, 29 and 30/2024 and 01 and 02/2025 were read in full, 12 and 17/2025 and 01/2026 only in newsletters), the three-year bar of sections 37(5), 39(11) and 44(2) from 1 October 2023, weekends and holidays, and every Central Tax notification after 22 April 2026. From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): a company's advance-tax instalments (15, 45, 75 and 100 % of the tax by 15 June, 15 September, 15 December and 15 March, section 408) are income-tax.advance-tax-instalments, read as of the first day of the tax year; the TDS deposit and statement dates are not seeded: rule 218 of the Income-tax Rules, 2026 (tax deducted by a deductor other than the Government is paid by 30 April for a credit or payment in March and otherwise within seven days from the end of the month; through Form No. 141 within thirty days from the end of the month of the deduction) and rule 219(4) (the quarterly statements by 31 July, 31 October, 31 January and 31 May), with G.S.R. 830(E) amending rules 215(1), 218(3) and 219(5) from 1 October 2026."
         },
         {
           "id": "compliance-gst-filing-packs",
@@ -2585,7 +2590,8 @@
           "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): the TDS law of the Income-tax Act, 2025 and the Finance Act, 2026 from 1 April 2026 is the Community parameter sets income-tax.tds-entries, -tds-rates, -tds-threshold-limits, -tds-no-deduction-cases, -tds-declarations, -tds-higher-rates, -tds-terms, -tds-rates-in-force, -tds-surcharge-and-cess and -tds-rates-in-force-readings, read as of the deduction date, with the crosswalk income-tax.tds-crosswalk (the ERP's reading); the statements' section codes 1001 to 1067 and rules 218 to 220 are not seeded, and the notes of finance-expenses-tds-ledger-challans-and-statements record what was read."
         },
         {
           "id": "compliance-income-tax-filing-packs-company-return",
@@ -2595,7 +2601,8 @@
           "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): a domestic company's tax from tax year 2026-27 is the Community parameter sets read as of the first day of the tax year (ParameterAsOf.TaxPeriodStart): income-tax.company-rates (Paragraph E of Part III of the Finance Act, 2026's First Schedule: 25 % within the ₹400 crore turnover limit and 30 % otherwise, and the options of sections 199, 200 and 201 with their windows as dates), -company-surcharge, -health-and-education-cess, -minimum-alternate-tax (14 %, with its credit rules), -advance-tax-instalments (sections 403, 404 and 408) and -advance-tax-interest (sections 424 and 425), and depreciation as income-tax.depreciation-rates, -depreciation-notes and -depreciation-allowances. The Finance Act's rows end on 31 March 2027, so tax year 2027-28 has no rate until the Finance Act, 2027 is seeded; foreign companies' own tax is not seeded."
         },
         {
           "id": "compliance-company-secretarial-records",
@@ -3359,7 +3366,8 @@
           "edition": "community",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "From business-building-blocks-statutory-datasets-direct-tax-and-labour (ADR-0064): income-tax depreciation from tax year 2026-27 is income-tax.depreciation-rates (the Table of Appendix I to the Income-tax Rules, 2026, 138 printed rates by block), -depreciation-notes (its nine Notes) and -depreciation-allowances (section 33 of the Income-tax Act, 2025 and rule 25: the half rate for an asset used under 180 days, additional depreciation, the caps), read as of the first day of the tax year; Schedule II to the Companies Act, 2013 for financial years from 2026-27 is companies.schedule-ii-useful-lives (99 useful lives of Part C with the extra-shift mark) and companies.schedule-ii-limits (the residual value and shift limits), read as of the first day of the financial year (ParameterAsOf.FinancialYearStart). Not seeded: Part C's IV(i)(b), continuous process plant, until G.S.R. 237(E) of 31 March 2014 is read; Appendix II of the Rules; Schedule II's Parts A and B as text; and no set links an asset kind to a Schedule II entry and an income-tax block."
         },
         {
           "id": "procurement-assets-asset-assignment-and-lifecycle",
