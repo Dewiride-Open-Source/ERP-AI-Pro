@@ -2,7 +2,7 @@ name: erp-ai-pro-backup
 
 services:
   key-ring-reader:
-    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261105@sha256:c95d26b361997d1c3fdcbc03f194c041ca46a71c13ca005765e6ee03d7da714e
     pull_policy: missing
     entrypoint: ["/usr/sbin/busybox"]
     user: "1654:1654"
@@ -20,7 +20,7 @@ services:
         read_only: true
 
   key-ring-writer:
-    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261105@sha256:c95d26b361997d1c3fdcbc03f194c041ca46a71c13ca005765e6ee03d7da714e
     pull_policy: missing
     entrypoint: ["/usr/sbin/busybox"]
     user: "1654:1654"
@@ -37,7 +37,7 @@ services:
         target: /volume
 
   key-ring-owner:
-    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261105@sha256:c95d26b361997d1c3fdcbc03f194c041ca46a71c13ca005765e6ee03d7da714e
     pull_policy: missing
     entrypoint: ["/usr/sbin/busybox"]
     user: "0:0"
@@ -55,7 +55,7 @@ services:
         target: /volume
 
   proxy-data-reader:
-    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261105@sha256:c95d26b361997d1c3fdcbc03f194c041ca46a71c13ca005765e6ee03d7da714e
     pull_policy: missing
     entrypoint: ["/usr/sbin/busybox"]
     user: "10001:10001"
@@ -73,7 +73,7 @@ services:
         read_only: true
 
   proxy-data-writer:
-    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261105@sha256:c95d26b361997d1c3fdcbc03f194c041ca46a71c13ca005765e6ee03d7da714e
     pull_policy: missing
     entrypoint: ["/usr/sbin/busybox"]
     user: "10001:10001"
@@ -90,7 +90,7 @@ services:
         target: /volume
 
   proxy-data-owner:
-    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261027@sha256:7e9a73905aebef24eb3e2153d152c5b499c2bdebf74d876420d567806d09ef36
+    image: mcr.microsoft.com/azurelinux/distroless/debug:3.0.20261105@sha256:c95d26b361997d1c3fdcbc03f194c041ca46a71c13ca005765e6ee03d7da714e
     pull_policy: missing
     entrypoint: ["/usr/sbin/busybox"]
     user: "0:0"
