@@ -80,7 +80,7 @@ https:// {
 {$ERP_SITE_ADDRESS} {
 	import edge
 	handle /api/* {
-		# Above the largest body an API route can be configured to accept, an upload of 100 MiB plus its multipart framing, so the API answers every body it refuses with its own problem.
+		# Above the largest body an API route can be configured to accept, an upload of 100 MiB plus its multipart framing, so the API answers every body up to that size it refuses with its own problem; a request declaring more is refused here with an empty 413.
 		request_body {
 			max_size 101MiB
 		}

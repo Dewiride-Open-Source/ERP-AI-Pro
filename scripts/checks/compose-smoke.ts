@@ -50,7 +50,7 @@ type Check = { name: string; url: string; status: number; redirect?: string; hea
 
 type Expectation = Omit<Check, "url">;
 
-type ProxyCheck = Expectation & { path: string; method?: "GET" | "POST"; form?: () => Buffer; host?: string; plain?: boolean };
+type ProxyCheck = Expectation & { path: string; method?: "GET" | "POST"; form?: () => Buffer; host?: string; plain?: boolean; continueFirst?: boolean };
 
 type Answer = { status: number; location: string | null; header: (name: string) => string; body: () => Promise<string> };
 
@@ -116,7 +116,7 @@ const proxyChecks: ProxyCheck[] = [
   { name: "a made-up answer from Microsoft through the proxy", path: "/api/auth/signin-oidc", method: "POST", form: () => formBody({ code: "made-up", state: "made-up" }), status: 302, redirect: "/login?error=sign-in-failed" },
   { name: "front-channel sign-out through the proxy", path: `/api/auth/signout-oidc?${unknownEntraSession}`, status: 200 },
   { name: "a body over the web limit reaches the api through the proxy", path: "/api/auth/signin-oidc", method: "POST", form: () => formBody({ code: "a".repeat(overWebLimitBytes), state: "made-up" }), status: 302, redirect: "/login?error=sign-in-failed" },
-  { name: "the proxy refuses a body over the web limit", path: "/login", method: "POST", form: () => formBody({ field: "a".repeat(overWebLimitBytes) }), status: 413 },
+  { name: "the proxy refuses a body over the web limit", path: "/login", method: "POST", form: () => formBody({ field: "a".repeat(overWebLimitBytes) }), continueFirst: true, status: 413 },
   { name: "a directory search through the proxy", path: `/api/identity/users/directory?search=${queryMarkers.search}`, status: 401, body: '"request.unauthenticated"' },
   { name: "a download link through the proxy", path: `/api/platform/attachments/00000000-0000-0000-0000-000000000000/content?link=${queryMarkers.link}`, status: 401, body: '"request.unauthenticated"' },
   { name: "proxy redirects http to https", path: "/login", plain: true, status: 308, redirect: `https://${siteAddress}/login` },
@@ -310,7 +310,7 @@ async function verify(check: Check): Promise<string | undefined> {
   return problemOf(check, { status: response.status, location: response.headers.get("location"), header: (name) => response.headers.get(name) ?? "", body: () => response.text() });
 }
 
-function sendThroughProxy(check: Pick<ProxyCheck, "path" | "method" | "form" | "host" | "plain">, root: string): Promise<ProxyAnswer> {
+function sendThroughProxy(check: Pick<ProxyCheck, "path" | "method" | "form" | "host" | "plain" | "continueFirst">, root: string): Promise<ProxyAnswer> {
   return new Promise((resolveAnswer, reject) => {
     const headers: OutgoingHttpHeaders = {};
     const form = check.form?.();
@@ -319,16 +319,23 @@ function sendThroughProxy(check: Pick<ProxyCheck, "path" | "method" | "form" | "
       headers["content-type"] = "application/x-www-form-urlencoded";
       headers["content-length"] = form.length;
     }
+    // Caddy refuses a body by its declared length before reading it and closes the connection, so a client still sending the
+    // body reads a reset; a check of that refusal sends the body only on 100 Continue, which the refusal never gives.
+    if (check.continueFirst) headers.expect = "100-continue";
     const collect = (incoming: IncomingMessage) => {
       const chunks: Buffer[] = [];
       incoming.on("data", (chunk: Buffer) => chunks.push(chunk));
       incoming.on("error", reject);
-      incoming.on("end", () => resolveAnswer({ status: incoming.statusCode ?? 0, headers: incoming.headers, body: Buffer.concat(chunks).toString("utf8") }));
+      incoming.on("end", () => {
+        resolveAnswer({ status: incoming.statusCode ?? 0, headers: incoming.headers, body: Buffer.concat(chunks).toString("utf8") });
+        incoming.socket?.destroy();
+      });
     };
     const options = { host: siteAddress, path: check.path, method: check.method ?? "GET", headers, agent: false };
     const outgoing = check.plain ? httpRequest({ ...options, port: proxyHttpPort }, collect) : request({ ...options, port: proxyHttpsPort, ca: root, servername: "" }, collect);
     outgoing.on("error", reject);
-    outgoing.end(form);
+    if (check.continueFirst) outgoing.on("continue", () => outgoing.end(form));
+    else outgoing.end(form);
   });
 }
 

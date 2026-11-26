@@ -30,6 +30,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "Microsoft.Extensions.*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "System.Security.Cryptography.*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: dotnet-ef
+        update-types: ["version-update:semver-major"]
     labels: [dependencies, backend]
     commit-message:
       prefix: "build(deps)"
@@ -156,9 +160,11 @@ updates:
       prefix: "build(images)"
 
   # The BuildKit of release.yml and docker-build.yml is an input of their setup-buildx-action step, which no ecosystem reads, so
-  # .github/buildkit/Dockerfile, which nothing builds, pins it, and the release waits for its updates like any other; image-pins.test.ts keeps both workflows reading it
+  # infra/buildkit/Dockerfile, which nothing builds, pins it, and the release waits for its updates like any other; image-pins.test.ts
+  # keeps both workflows reading it. Dependabot refuses to open a pull request that changes a Dockerfile under .github
+  # (dependency_file_not_supported), so the pin lives under infra
   - package-ecosystem: docker
-    directory: /.github/buildkit
+    directory: /infra/buildkit
     schedule:
       interval: weekly
       day: monday

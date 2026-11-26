@@ -55,9 +55,9 @@ jobs:
       - name: Read the pinned BuildKit
         id: buildkit
         run: |
-          image="$(sed -n 's/^FROM //p' .github/buildkit/Dockerfile)"
+          image="$(sed -n 's/^FROM //p' infra/buildkit/Dockerfile)"
           if [[ ! "$image" =~ ^moby/buildkit:v[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$ ]]; then
-            echo "::error::.github/buildkit/Dockerfile pins no BuildKit image by version and digest."
+            echo "::error::infra/buildkit/Dockerfile pins no BuildKit image by version and digest."
             exit 1
           fi
           echo "image=$image" >> "$GITHUB_OUTPUT"

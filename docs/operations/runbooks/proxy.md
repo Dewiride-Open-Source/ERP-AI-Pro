@@ -36,7 +36,7 @@ Each computer and phone that opens the ERP trusts this certificate once, as a tr
 `infra/proxy/Caddyfile` holds all of it, and the compose smoke test checks each point through the proxy on every build:
 
 - **TLS.** TLS 1.3, and TLS 1.2 with ECDHE and AES-GCM or ChaCha20-Poly1305 only: Caddy's own defaults, which the Caddyfile leaves unchanged and the smoke test measures. A device that cannot speak TLS 1.2 cannot open the ERP.
-- **Bodies.** Up to 101 MiB on `/api/*`, the largest upload plus room to spare, so the API answers every body it refuses itself. Up to 2 MiB on pages, and a larger one answers 413 with an empty body. Nothing is held back: uploads, downloads and the change history export stream through.
+- **Bodies.** Up to 101 MiB on `/api/*`, the largest upload plus room to spare, so the API answers every body up to that size it refuses itself. Up to 2 MiB on pages. On both, a request whose `Content-Length` declares more than the limit answers 413 with an empty body as soon as its headers arrive, before any of the body is read, so a client still sending the body may see the connection close instead. Nothing is held back: uploads, downloads and the change history export stream through.
 - **Time.** Reading a request's body and writing its answer may each take 11 minutes from the request's start, more than the API's own limits of at most 10 minutes. A connection that stalls for a minute is cut.
 - **Other hosts.** A plain-HTTP request goes to `https://<ERP_SITE_ADDRESS>` with 308, whatever host it names, and an HTTPS request naming another host answers 421.
 - **Headers.** No answer names the proxy (`Server`, `Via`), and HSTS is not sent while people open an IP address, because browsers ignore it there.

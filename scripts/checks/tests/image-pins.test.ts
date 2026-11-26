@@ -8,16 +8,21 @@ const read = (path: string): string => readFileSync(join(repoRoot, path), 'utf8'
 
 const azuriteRepository = 'mcr.microsoft.com/azure-storage/azurite';
 const azuriteComposeFile = 'infra/compose/compose.override.yaml';
-const azuriteFollowers = ['.github/actions/start-azurite/action.yml', 'docs/guides/local-development.md'];
+const azuriteFollowers = ['.github/actions/start-azurite/action.yml', 'docs/guides/local-development.md', 'docs/architecture/persistence.md'];
 const azuritePinned = /^mcr\.microsoft\.com\/azure-storage\/azurite:\d+\.\d+\.\d+@sha256:[0-9a-f]{64}$/;
 
 const azuriteReferences = (path: string): string[] =>
   [...read(path).matchAll(/mcr\.microsoft\.com\/azure-storage\/azurite[^\s"'`]*/g)].map((match) => match[0]);
 
-const buildkitPinFile = '.github/buildkit/Dockerfile';
+const buildkitPinFile = 'infra/buildkit/Dockerfile';
 const workflowFolder = '.github/workflows';
 const buildkitPinned = /^FROM moby\/buildkit:v\d+\.\d+\.\d+@sha256:[0-9a-f]{64}$/;
 const takesThePin = 'driver-opts: image=${{ steps.buildkit.outputs.image }}';
+
+const playwrightGuide = 'docs/guides/testing.md';
+const playwrightCatalogFile = 'frontend/pnpm-workspace.yaml';
+const playwrightImages = /mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)-noble@sha256:[0-9a-f]{64}/g;
+const playwrightServers = /npx -y playwright@(\d+\.\d+\.\d+) run-server/g;
 
 const count = (text: string, part: string): number => text.split(part).length - 1;
 
@@ -41,6 +46,17 @@ test('every other Azurite reference equals the one Dependabot keeps current in c
     for (const image of images) {
       assert.equal(image, expected, `${path} runs ${image}; bump it to the reference in ${azuriteComposeFile}`);
     }
+  }
+});
+
+test('the testing guide runs the Playwright server image and version the catalog pins for @playwright/test', () => {
+  const pinned = /^ {2}"@playwright\/test": (\d+\.\d+\.\d+)$/m.exec(read(playwrightCatalogFile))?.[1];
+  assert.ok(pinned, `${playwrightCatalogFile} pins no @playwright/test version`);
+  const guide = read(playwrightGuide);
+  const versions = [...guide.matchAll(playwrightImages), ...guide.matchAll(playwrightServers)].map((match) => match[1]);
+  assert.ok(versions.length >= 2, `${playwrightGuide} names no digest-pinned Playwright image and server`);
+  for (const version of versions) {
+    assert.equal(version, pinned, `${playwrightGuide} runs Playwright ${version}; bump it to the ${pinned} of ${playwrightCatalogFile}`);
   }
 });
 
