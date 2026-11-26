@@ -1,7 +1,7 @@
 {
   "$schema": "./roadmap.schema.json",
   "version": 1,
-  "updatedOn": "2026-11-08",
+  "updatedOn": "2026-11-27",
   "milestones": [
     {
       "id": "m0-repository-ready",
@@ -1511,7 +1511,7 @@
           "id": "business-building-blocks-document-numbering-series",
           "title": "Document numbering series",
           "scope": "Provide configurable number series per document type and financial year (max 16 characters, unique per FY, prefix and reset rules) with gap-free concurrent allocation proven by a parallel integration test.",
-          "status": "in-progress",
+          "status": "done",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [
@@ -1522,7 +1522,9 @@
           ],
           "tags": [],
           "dependsOn": [],
-          "startedOn": "2026-11-08"
+          "startedOn": "2026-11-08",
+          "completedOn": "2026-11-27",
+          "notes": "BuildingBlocks.Numbering numbers each kind of document a module declares, per financial year and without a gap, inside the issuing transaction under the kind's application lock and the year's GST serial-number rule (gst.document-serial-numbers: 16 characters, letters, digits, - and /); Finance and administrators set a numbering up and change it on Platform > Document numbering, every change on the audit trail (ADR-0066); no product module declares a kind yet."
         },
         {
           "id": "business-building-blocks-shared-minimal-approvals-building-block",
