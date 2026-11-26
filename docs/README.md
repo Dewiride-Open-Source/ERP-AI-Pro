@@ -82,5 +82,6 @@
 | [0064](adr/0064-statutory-datasets-tds-under-the-income-tax-act-2025-company-tax-and-depreciation.md) | Statutory datasets: TDS under the Income-tax Act, 2025, company tax and depreciation |
 | [0065](adr/0065-statutory-datasets-labour-provident-fund-esi-gratuity-bonus-professional-tax-and-welfare-funds.md) | Statutory datasets: provident fund, ESI, gratuity, bonus, professional tax and labour welfare funds |
 | [0066](adr/0066-document-numbering-series-per-kind-of-document-fixed-for-a-year-at-its-first-number-and-taken-in-the-issuing-transaction.md) | Document numbering: a series per kind of document, fixed for a year at its first number and taken in the issuing transaction |
+| [0067](adr/0067-opentelemetry-1-21-brings-system-diagnostics-diagnosticsource-11-to-the-net-10-hosts.md) | OpenTelemetry .NET 1.21 brings System.Diagnostics.DiagnosticSource 11 to the .NET 10 hosts |
 
 New decisions use [0000-template.md](adr/0000-template.md).

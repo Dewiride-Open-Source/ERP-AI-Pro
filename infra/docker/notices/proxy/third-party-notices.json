@@ -1,15 +1,15 @@
 {
   "image": "proxy",
   "repository": "ghcr.io/dewiride-open-source/erp-ai-pro/proxy",
-  "base": "docker.io/library/caddy:2.11.7-alpine@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f",
-  "system": "Alpine Linux v3.23",
+  "base": "docker.io/library/caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0",
+  "system": "Alpine Linux v3.24",
   "source": "https://github.com/Dewiride-Open-Source/ERP-AI-Pro",
   "copyright": "Copyright (c) 2026 Dewiride Technologies Private Limited.",
   "components": {
-    "pkg:github/caddyserver/caddy@v2.11.7": {
+    "pkg:github/caddyserver/caddy@v2.11.9": {
       "kind": "runtime",
       "name": "Caddy",
-      "version": "v2.11.7",
+      "version": "v2.11.9",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [],
@@ -18,13 +18,13 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://github.com/caddyserver/caddy/tree/v2.11.7",
-      "detail": "the server /usr/bin/caddy of the Caddy base image, built from commit 72dd0fb067f6d7826c7f79907670ba4a713bfe37 with go1.26.8; its Go modules follow"
+      "source": "https://github.com/caddyserver/caddy/tree/v2.11.9",
+      "detail": "the server /usr/bin/caddy of the Caddy base image, built from commit 0d98caea58f794f88e709b1bef2880996a471bca with go1.27.3; its Go modules follow"
     },
-    "pkg:golang/stdlib@1.26.8": {
+    "pkg:golang/stdlib@1.27.3": {
       "kind": "golang",
       "name": "Go standard library",
-      "version": "1.26.8",
+      "version": "1.27.3",
       "licence": "BSD-3-Clause",
       "spdx": "BSD-3-Clause",
       "copyright": [
@@ -35,8 +35,8 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://go.googlesource.com/go/+/refs/tags/go1.26.8",
-      "detail": "the Go runtime and standard library that go1.26.8 compiled into /usr/bin/caddy"
+      "source": "https://go.googlesource.com/go/+/refs/tags/go1.27.3",
+      "detail": "the Go runtime and standard library that go1.27.3 compiled into /usr/bin/caddy"
     },
     "pkg:golang/cel.dev/cel-go@v0.32.0": {
       "kind": "golang",
@@ -353,10 +353,10 @@
       "source": "https://proxy.golang.org/github.com/bits-and-blooms/bitset/@v/v1.25.0.zip",
       "detail": "built into /usr/bin/caddy; checksum h1:0Ro0qF4abCkM6SqWPVj29sFhAbMPAZpaDD7xhJ10beM="
     },
-    "pkg:golang/github.com/caddyserver/caddy/v2@v2.11.7": {
+    "pkg:golang/github.com/caddyserver/caddy/v2@v2.11.9": {
       "kind": "golang",
       "name": "github.com/caddyserver/caddy/v2",
-      "version": "v2.11.7",
+      "version": "v2.11.9",
       "licence": "Apache-2.0",
       "spdx": "Apache-2.0",
       "copyright": [],
@@ -365,8 +365,8 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://proxy.golang.org/github.com/caddyserver/caddy/v2/@v/v2.11.7.zip",
-      "detail": "built into /usr/bin/caddy; checksum h1:yj0Y4fYZGPkSvibBJ1sTWE33xC0fxztVyXEW5iIdUT4="
+      "source": "https://proxy.golang.org/github.com/caddyserver/caddy/v2/@v/v2.11.9.zip",
+      "detail": "built into /usr/bin/caddy; checksum h1:bhZtcRKQOq0fuLvEgCdPYvUxXyGn9kzjG4lh2332DTE="
     },
     "pkg:golang/github.com/caddyserver/certmagic@v0.25.6": {
       "kind": "golang",
@@ -622,10 +622,10 @@
       "source": "https://proxy.golang.org/github.com/fxamacker/cbor/v2/@v/v2.9.4.zip",
       "detail": "built into /usr/bin/caddy; checksum h1:xwjVlxEMR3S605oUlgBjKLTTeGFciYPGYCtF/35LKGo="
     },
-    "pkg:golang/github.com/go-chi/chi/v5@v5.3.2": {
+    "pkg:golang/github.com/go-chi/chi/v5@v5.4.0": {
       "kind": "golang",
       "name": "github.com/go-chi/chi/v5",
-      "version": "v5.3.2",
+      "version": "v5.4.0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [
@@ -636,8 +636,8 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://proxy.golang.org/github.com/go-chi/chi/v5/@v/v5.3.2.zip",
-      "detail": "built into /usr/bin/caddy; checksum h1:5YQkICvTCSZ25hoRsyJazN0scjzKGiu4VAUc7H1o1nY="
+      "source": "https://proxy.golang.org/github.com/go-chi/chi/v5/@v/v5.4.0.zip",
+      "detail": "built into /usr/bin/caddy; checksum h1:+ufzvFTGKyin26Or5DLrlIDq4ygIDBVcj7oVNeeaYFE="
     },
     "pkg:golang/github.com/go-jose/go-jose/v3@v3.0.5": {
       "kind": "golang",
@@ -657,10 +657,10 @@
       "source": "https://proxy.golang.org/github.com/go-jose/go-jose/v3/@v/v3.0.5.zip",
       "detail": "built into /usr/bin/caddy; checksum h1:BLLJWbC4nMZOfuPVxoZIxeYsn6Nl2r1fITaJ78UQlVQ="
     },
-    "pkg:golang/github.com/go-jose/go-jose/v4@v4.1.5": {
+    "pkg:golang/github.com/go-jose/go-jose/v4@v4.1.6": {
       "kind": "golang",
       "name": "github.com/go-jose/go-jose/v4",
-      "version": "v4.1.5",
+      "version": "v4.1.6",
       "licence": "Apache-2.0 AND BSD-3-Clause",
       "spdx": "Apache-2.0 AND BSD-3-Clause",
       "copyright": [
@@ -672,8 +672,8 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://proxy.golang.org/github.com/go-jose/go-jose/v4/@v/v4.1.5.zip",
-      "detail": "built into /usr/bin/caddy; checksum h1:RjgjO2LOtWOJKUC5wpwY9LR3B3vwVAz6JS2YHfYU6eA="
+      "source": "https://proxy.golang.org/github.com/go-jose/go-jose/v4/@v/v4.1.6.zip",
+      "detail": "built into /usr/bin/caddy; checksum h1:sNRkftxFJxwsILiQukqp5z83QBSmntVwmgRY7AqBDO4="
     },
     "pkg:golang/github.com/go-logr/logr@v1.4.4": {
       "kind": "golang",
@@ -2268,10 +2268,10 @@
       "source": "https://proxy.golang.org/golang.org/x/crypto/@v/v0.57.0.zip",
       "detail": "built into /usr/bin/caddy; checksum h1:3ZVCjf8Ggz7zneR/EHRVx68Ctf+2pmIMP2UFhh9cC6M="
     },
-    "pkg:golang/golang.org/x/crypto/x509roots/fallback@v0.0.0-20260929172509-b39ff6d641ec": {
+    "pkg:golang/golang.org/x/crypto/x509roots/fallback@v0.0.0-20261030153154-30a33513ff6d": {
       "kind": "golang",
       "name": "golang.org/x/crypto/x509roots/fallback",
-      "version": "v0.0.0-20260929172509-b39ff6d641ec",
+      "version": "v0.0.0-20261030153154-30a33513ff6d",
       "licence": "BSD-3-Clause",
       "spdx": "BSD-3-Clause",
       "copyright": [
@@ -2282,8 +2282,8 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://proxy.golang.org/golang.org/x/crypto/x509roots/fallback/@v/v0.0.0-20260929172509-b39ff6d641ec.zip",
-      "detail": "built into /usr/bin/caddy; checksum h1:6gLejUU4OPMnmDEz8DkDkWMoyDj2Ny5iUy1Ze3raJhs="
+      "source": "https://proxy.golang.org/golang.org/x/crypto/x509roots/fallback/@v/v0.0.0-20261030153154-30a33513ff6d.zip",
+      "detail": "built into /usr/bin/caddy; checksum h1:5NBkmd8MXirajj6AAEpi4HFVJnVkBNPTL1ggYAKqaws="
     },
     "pkg:golang/golang.org/x/exp@v0.0.0-20260908205506-85c1c2202aba": {
       "kind": "golang",
@@ -2304,10 +2304,10 @@
       "source": "https://proxy.golang.org/golang.org/x/exp/@v/v0.0.0-20260908205506-85c1c2202aba.zip",
       "detail": "built into /usr/bin/caddy; checksum h1:Ck8QetSgk912qxWLMCKxd0in+aiyBQyDSMae6e/xmpU="
     },
-    "pkg:golang/golang.org/x/net@v0.59.0": {
+    "pkg:golang/golang.org/x/net@v0.60.0": {
       "kind": "golang",
       "name": "golang.org/x/net",
-      "version": "v0.59.0",
+      "version": "v0.60.0",
       "licence": "BSD-3-Clause",
       "spdx": "BSD-3-Clause",
       "copyright": [
@@ -2320,8 +2320,8 @@
         24
       ],
       "inImage": [],
-      "source": "https://proxy.golang.org/golang.org/x/net/@v/v0.59.0.zip",
-      "detail": "built into /usr/bin/caddy; checksum h1:5zfYln+w5XCxwrnMMJPufRgNoXEaGxl0wo5GqPXyues="
+      "source": "https://proxy.golang.org/golang.org/x/net/@v/v0.60.0.zip",
+      "detail": "built into /usr/bin/caddy; checksum h1:79p50tfZlm0J9YfoDsSi639qSXNGVwEzOPLCxM2FsYU="
     },
     "pkg:golang/golang.org/x/oauth2@v0.37.0": {
       "kind": "golang",
@@ -2541,10 +2541,10 @@
       "source": "https://proxy.golang.org/gopkg.in/yaml.v3/@v/v3.0.1.zip",
       "detail": "built into /usr/bin/caddy; checksum h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA="
     },
-    "pkg:apk/alpine/alpine-baselayout@3.7.2-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/alpine-baselayout@3.7.2-r1?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "alpine-baselayout",
-      "version": "3.7.2-r0",
+      "version": "3.7.2-r1",
       "licence": "GPL-2.0-only",
       "spdx": "GPL-2.0-only",
       "copyright": [],
@@ -2553,14 +2553,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/15b3b78187b3808104f98f765e9632e0b09281a7/main/alpine-baselayout",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/60a7585bbab2fa0f762504eb617dbca90216e31f/main/alpine-baselayout",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin alpine-baselayout; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/alpine-baselayout-data@3.7.2-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/alpine-baselayout-data@3.7.2-r1?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "alpine-baselayout-data",
-      "version": "3.7.2-r0",
+      "version": "3.7.2-r1",
       "licence": "GPL-2.0-only",
       "spdx": "GPL-2.0-only",
       "copyright": [],
@@ -2569,11 +2569,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/15b3b78187b3808104f98f765e9632e0b09281a7/main/alpine-baselayout",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/60a7585bbab2fa0f762504eb617dbca90216e31f/main/alpine-baselayout",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin alpine-baselayout; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/alpine-keys@2.6-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/alpine-keys@2.6-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "alpine-keys",
       "version": "2.6-r0",
@@ -2589,10 +2589,10 @@
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin alpine-keys; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/alpine-release@3.23.7-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/alpine-release@3.24.4-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "alpine-release",
-      "version": "3.23.7-r0",
+      "version": "3.24.4-r0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [],
@@ -2601,14 +2601,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/13bdc4d2587d70f0c94daf578deaafe046796112/main/alpine-base",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/105b835acd9971b9770fb61f5a1ddcc133c180dc/main/alpine-base",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin alpine-base; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/apk-tools@3.0.8-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/apk-tools@3.0.9-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "apk-tools",
-      "version": "3.0.8-r0",
+      "version": "3.0.9-r0",
       "licence": "GPL-2.0-only",
       "spdx": "GPL-2.0-only",
       "copyright": [],
@@ -2617,14 +2617,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/286502dc74df00f907f93b0563867630dcc139e5/main/apk-tools",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/13685e8f2cf1c103cbba2fb9efcfcf19f4918df0/main/apk-tools",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin apk-tools; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/brotli-libs@1.2.0-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/brotli-libs@1.2.1-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "brotli-libs",
-      "version": "1.2.0-r0",
+      "version": "1.2.1-r0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [],
@@ -2633,14 +2633,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/e1a74d1bc0c4e0308990de2e9ec9d82529fcac8f/main/brotli",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/8313352127992a9d82e2c2024494f6c38a4dffb4/main/brotli",
       "supplier": "Person: prspkt (prspkt@protonmail.com)",
       "detail": "origin brotli; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/busybox@1.37.0-r30?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/busybox@1.37.0-r31?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "busybox",
-      "version": "1.37.0-r30",
+      "version": "1.37.0-r31",
       "licence": "GPL-2.0-only",
       "spdx": "GPL-2.0-only",
       "copyright": [],
@@ -2649,14 +2649,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/1e823a60eb85606954b3a5af5f8e5bbd1ea680cf/main/busybox",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/c3ef5d10e6ef6528852c51f0564963e2f8c1be19/main/busybox",
       "supplier": "Person: Sören Tempel (soeren+alpine@soeren-tempel.net)",
       "detail": "origin busybox; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/busybox-binsh@1.37.0-r30?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/busybox-binsh@1.37.0-r31?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "busybox-binsh",
-      "version": "1.37.0-r30",
+      "version": "1.37.0-r31",
       "licence": "GPL-2.0-only",
       "spdx": "GPL-2.0-only",
       "copyright": [],
@@ -2665,11 +2665,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/1e823a60eb85606954b3a5af5f8e5bbd1ea680cf/main/busybox",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/c3ef5d10e6ef6528852c51f0564963e2f8c1be19/main/busybox",
       "supplier": "Person: Sören Tempel (soeren+alpine@soeren-tempel.net)",
       "detail": "origin busybox; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/c-ares@1.34.9-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/c-ares@1.34.9-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "c-ares",
       "version": "1.34.9-r0",
@@ -2681,11 +2681,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/3ad686d491ca23a0182a59883595ca078960b958/main/c-ares",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/50f178d7a4c30ea44b54b7d4731ab58558c38b14/main/c-ares",
       "supplier": "Person: Carlo Landmeter (clandmeter@alpinelinux.org)",
       "detail": "origin c-ares; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/ca-certificates@20261020-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/ca-certificates@20261020-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "ca-certificates",
       "version": "20261020-r0",
@@ -2698,11 +2698,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/ac857c298f6fd212498ce76bb87836d940cdba2d/main/ca-certificates",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/e78f5987166c6ffbe23f6472e2e8f040298fe2da/main/ca-certificates",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin ca-certificates; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/ca-certificates-bundle@20261020-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/ca-certificates-bundle@20261020-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "ca-certificates-bundle",
       "version": "20261020-r0",
@@ -2715,14 +2715,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/ac857c298f6fd212498ce76bb87836d940cdba2d/main/ca-certificates",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/e78f5987166c6ffbe23f6472e2e8f040298fe2da/main/ca-certificates",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin ca-certificates; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/curl@8.22.0-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/curl@8.23.0-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "curl",
-      "version": "8.22.0-r0",
+      "version": "8.23.0-r0",
       "licence": "curl",
       "spdx": "curl",
       "copyright": [],
@@ -2731,14 +2731,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/ce63a8e353eacc32ad36fd49ae1f427f4306da87/main/curl",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/c65a7b3f6d6bc4b3c0a8a6fff759d8fd05a167ce/main/curl",
       "supplier": "Person: Achill Gilgenast (achill@achill.org)",
       "detail": "origin curl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libapk@3.0.8-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libapk@3.0.9-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libapk",
-      "version": "3.0.8-r0",
+      "version": "3.0.9-r0",
       "licence": "GPL-2.0-only",
       "spdx": "GPL-2.0-only",
       "copyright": [],
@@ -2747,11 +2747,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/286502dc74df00f907f93b0563867630dcc139e5/main/apk-tools",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/13685e8f2cf1c103cbba2fb9efcfcf19f4918df0/main/apk-tools",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin apk-tools; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libcap@2.78-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libcap@2.78-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libcap",
       "version": "2.78-r0",
@@ -2764,11 +2764,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/0c35848136c4c16a1b1672cb812efa88fffef1c2/main/libcap",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libcap-getcap@2.78-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libcap-getcap@2.78-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libcap-getcap",
       "version": "2.78-r0",
@@ -2781,11 +2781,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/0c35848136c4c16a1b1672cb812efa88fffef1c2/main/libcap",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libcap-setcap@2.78-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libcap-setcap@2.78-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libcap-setcap",
       "version": "2.78-r0",
@@ -2798,11 +2798,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/0c35848136c4c16a1b1672cb812efa88fffef1c2/main/libcap",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libcap-utils@2.78-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libcap-utils@2.78-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libcap-utils",
       "version": "2.78-r0",
@@ -2815,11 +2815,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/0c35848136c4c16a1b1672cb812efa88fffef1c2/main/libcap",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libcap2@2.78-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libcap2@2.78-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libcap2",
       "version": "2.78-r0",
@@ -2832,11 +2832,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/91f6971a1590396adc8c65ddf45c324f9540a1a0/main/libcap",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/0c35848136c4c16a1b1672cb812efa88fffef1c2/main/libcap",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin libcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libcrypto3@3.5.9-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libcrypto3@3.5.9-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libcrypto3",
       "version": "3.5.9-r0",
@@ -2848,14 +2848,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/adcf4978067013c3c0917e54542f3b762d7bfc48/main/openssl",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/29b9ec24b1b5b39aeef51fa2a044210e2ec5258e/main/openssl",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin openssl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libcurl@8.22.0-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libcurl@8.23.0-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libcurl",
-      "version": "8.22.0-r0",
+      "version": "8.23.0-r0",
       "licence": "curl",
       "spdx": "curl",
       "copyright": [],
@@ -2864,11 +2864,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/ce63a8e353eacc32ad36fd49ae1f427f4306da87/main/curl",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/c65a7b3f6d6bc4b3c0a8a6fff759d8fd05a167ce/main/curl",
       "supplier": "Person: Achill Gilgenast (achill@achill.org)",
       "detail": "origin curl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libidn2@2.3.8-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libidn2@2.3.8-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libidn2",
       "version": "2.3.8-r0",
@@ -2887,7 +2887,7 @@
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin libidn2; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libpsl@0.21.5-r3?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libpsl@0.21.5-r3?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libpsl",
       "version": "0.21.5-r3",
@@ -2903,7 +2903,7 @@
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin libpsl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libssl3@3.5.9-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libssl3@3.5.9-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libssl3",
       "version": "3.5.9-r0",
@@ -2915,14 +2915,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/adcf4978067013c3c0917e54542f3b762d7bfc48/main/openssl",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/29b9ec24b1b5b39aeef51fa2a044210e2ec5258e/main/openssl",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin openssl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/libunistring@1.4.1-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/libunistring@1.4.2-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "libunistring",
-      "version": "1.4.1-r0",
+      "version": "1.4.2-r0",
       "licence": "GPL-2.0-or-later OR LGPL-3.0-or-later",
       "spdx": "GPL-2.0-or-later OR LGPL-3.0-or-later",
       "copyright": [],
@@ -2934,11 +2934,11 @@
         "/usr/share/doc/erp-ai-pro/COPYING.LESSER",
         "/usr/share/doc/erp-ai-pro/COPYING"
       ],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/cd5407e1341869af38d836fe83f9dbc98799f43a/main/libunistring",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/30d9f19340385b2cd16eaf1cc6a9a8b30c4afe1c/main/libunistring",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin libunistring; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/mailcap@2.1.54-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/mailcap@2.1.54-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "mailcap",
       "version": "2.1.54-r0",
@@ -2952,10 +2952,10 @@
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin mailcap; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/musl@1.2.5-r24?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/musl@1.2.6-r3?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "musl",
-      "version": "1.2.5-r24",
+      "version": "1.2.6-r3",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [],
@@ -2964,14 +2964,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/fd05fc094264bce4fb76efc6c7f61ba4abfcb609/main/musl",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/8f79d39391b46d6dbf1800fb68b8212a21d5ee2e/main/musl",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin musl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/musl-utils@1.2.5-r24?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/musl-utils@1.2.6-r3?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "musl-utils",
-      "version": "1.2.5-r24",
+      "version": "1.2.6-r3",
       "licence": "MIT AND BSD-2-Clause AND GPL-2.0-or-later",
       "spdx": "MIT AND BSD-2-Clause AND GPL-2.0-or-later",
       "copyright": [],
@@ -2982,14 +2982,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/fd05fc094264bce4fb76efc6c7f61ba4abfcb609/main/musl",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/8f79d39391b46d6dbf1800fb68b8212a21d5ee2e/main/musl",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin musl; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/nghttp2-libs@1.69.0-r0?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/nghttp2-libs@1.70.0-r0?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "nghttp2-libs",
-      "version": "1.69.0-r0",
+      "version": "1.70.0-r0",
       "licence": "MIT",
       "spdx": "MIT",
       "copyright": [],
@@ -2998,14 +2998,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/40d265063c14143f5ef8a35c216b9e6392d120a7/main/nghttp2",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/d5a34efc88bbe8d18737fda28125071c4aef8517/main/nghttp2",
       "supplier": "Person: Francesco Colista (fcolista@alpinelinux.org)",
       "detail": "origin nghttp2; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/scanelf@1.3.8-r2?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/scanelf@1.3.9-r1?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "scanelf",
-      "version": "1.3.8-r2",
+      "version": "1.3.9-r1",
       "licence": "GPL-2.0-only",
       "spdx": "GPL-2.0-only",
       "copyright": [],
@@ -3014,14 +3014,14 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/3912b4fa83437852312ad3c37a00229ff59fab1c/main/pax-utils",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/c61801eeacb3ffcd9c2025b09e402153bb93fb39/main/pax-utils",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin pax-utils; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/ssl_client@1.37.0-r30?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/ssl_client@1.37.0-r31?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "ssl_client",
-      "version": "1.37.0-r30",
+      "version": "1.37.0-r31",
       "licence": "GPL-2.0-only",
       "spdx": "GPL-2.0-only",
       "copyright": [],
@@ -3030,11 +3030,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/1e823a60eb85606954b3a5af5f8e5bbd1ea680cf/main/busybox",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/c3ef5d10e6ef6528852c51f0564963e2f8c1be19/main/busybox",
       "supplier": "Person: Sören Tempel (soeren+alpine@soeren-tempel.net)",
       "detail": "origin busybox; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/zlib@1.3.2-r1?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/zlib@1.3.2-r1?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "zlib",
       "version": "1.3.2-r1",
@@ -3046,11 +3046,11 @@
       ],
       "notices": [],
       "inImage": [],
-      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/b92621a82657b055485976b304462bddf9aa9183/main/zlib",
+      "source": "https://gitlab.alpinelinux.org/alpine/aports/-/tree/0afa2da0e8c8051c6f8f64a7a388e5a259904245/main/zlib",
       "supplier": "Person: Natanael Copa (ncopa@alpinelinux.org)",
       "detail": "origin zlib; Alpine packages carry no copyright file, so the copyright notices are those of the package's sources at its aports commit"
     },
-    "pkg:apk/alpine/zstd-libs@1.5.7-r2?arch=x86_64&distro=alpine-3.23.7": {
+    "pkg:apk/alpine/zstd-libs@1.5.7-r2?arch=x86_64&distro=alpine-3.24.4": {
       "kind": "apk",
       "name": "zstd-libs",
       "version": "1.5.7-r2",

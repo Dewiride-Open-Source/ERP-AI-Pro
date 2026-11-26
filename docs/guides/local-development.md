@@ -108,7 +108,7 @@ Attachments live in Azure Blob Storage, encrypted by the API with its own key be
 
 ```bash
 docker run --detach --name erp-azurite --restart unless-stopped --publish 127.0.0.1:10000:10000 \
-  mcr.microsoft.com/azure-storage/azurite:3.37.0@sha256:830430c1da1a2d537e08f3e6764dd1f5ae00cf0346bcaf625b968ec3f0971fd5 \
+  mcr.microsoft.com/azure-storage/azurite:3.38.0@sha256:c26024d62bf4a5b88a40968afd217234c00e1fc9a4790dc6105d1ca7979f6eec \
   azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --inMemoryPersistence --disableTelemetry
 setx ERP_TEST_BLOB_EMULATOR_HOST 127.0.0.1
 ```

@@ -97,9 +97,9 @@ updates:
       # typescript-eslint supports TypeScript < 7; the TypeScript 7 (Go) compiler has no JS API
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
-      # @vercel/otel 2.2.0 accepts only the OpenTelemetry JS SDK 2 line: instrumentation, api-logs and sdk-logs below
-      # 0.300.0, and resources, sdk-metrics and sdk-trace-base below 3.0.0 (npm points sdk-trace-base 2.12.0 to
-      # @opentelemetry/sdk-trace). sdk-logs 0.223.0 and those SDK 2 packages accept @opentelemetry/api below 1.10.0 only
+      # @vercel/otel 2.3.0 accepts only the OpenTelemetry JS SDK 2 line: instrumentation, api-logs and sdk-logs below
+      # 0.300.0, and resources, sdk-metrics and sdk-trace-base below 3.0.0. sdk-logs 0.223.2 and those SDK 2 packages
+      # accept @opentelemetry/api below 1.10.0 only
       - dependency-name: "@opentelemetry/api"
         versions: [">=1.10.0"]
       - dependency-name: "@opentelemetry/api-logs"
@@ -108,6 +108,10 @@ updates:
         versions: [">=0.300.0"]
       - dependency-name: "@opentelemetry/sdk-logs"
         versions: [">=0.300.0"]
+      # From 1.0.0-preview.112 the Kiota runtime requires @opentelemetry/api ^1.10.0, which the SDK 2 line refuses, so
+      # it would bring a second copy of the API whose tracer finds no registered provider
+      - dependency-name: "@microsoft/kiota-*"
+        versions: [">=1.0.0-preview.112"]
     labels: [dependencies, frontend]
     commit-message:
       prefix: "build(deps)"
@@ -143,9 +147,9 @@ updates:
       # Runtime images stay on the LTS lines: Node 24 and .NET 10; digests within them still update
       - dependency-name: library/node
         update-types: ["version-update:semver-major"]
-      - dependency-name: mcr.microsoft.com/dotnet/sdk
+      - dependency-name: dotnet/sdk
         update-types: ["version-update:semver-major"]
-      - dependency-name: mcr.microsoft.com/dotnet/aspnet
+      - dependency-name: dotnet/aspnet
         update-types: ["version-update:semver-major"]
     labels: [dependencies, infra]
     commit-message:

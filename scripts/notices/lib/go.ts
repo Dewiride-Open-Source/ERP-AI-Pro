@@ -71,7 +71,7 @@ export function moduleProxyPath(path: string): string {
 }
 
 export const caddyArtifacts: Readonly<Record<string, string>> = {
-  "2.11.7": "b430516910839fbaf35c0a9e9df80d1e2e30aa792530293c39f4a97a1b2c9060",
+  "2.11.9": "07fe00aefec10b60d33e26bddf73d522fdd6d7d48dd0bf125fbce3238ec867e7",
 };
 
 export const caddyArtifactUrl = (version: string): string => `https://github.com/caddyserver/caddy/releases/download/v${version}/caddy_${version}_buildable-artifact.tar.gz`;
