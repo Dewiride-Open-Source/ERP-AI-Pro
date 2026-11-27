@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/BuildingBlocks/">
     <Project Path="BuildingBlocks/Application/Dewiride.Erp.BuildingBlocks.Application/Dewiride.Erp.BuildingBlocks.Application.csproj" />
+    <Project Path="BuildingBlocks/Approvals/Dewiride.Erp.BuildingBlocks.Approvals/Dewiride.Erp.BuildingBlocks.Approvals.csproj" />
     <Project Path="BuildingBlocks/Attachments/Dewiride.Erp.BuildingBlocks.Attachments/Dewiride.Erp.BuildingBlocks.Attachments.csproj" />
     <Project Path="BuildingBlocks/Auditing/Dewiride.Erp.BuildingBlocks.Auditing/Dewiride.Erp.BuildingBlocks.Auditing.csproj" />
     <Project Path="BuildingBlocks/Authentication/Dewiride.Erp.BuildingBlocks.Authentication/Dewiride.Erp.BuildingBlocks.Authentication.csproj" />

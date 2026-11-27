@@ -33,6 +33,15 @@ const recordTypes = new Map<string, RecordType>([
   ["platform.reference-data.exchange-rates", { label: "Exchange rate", noun: "exchange rate" }],
   ["platform.numbering.series", { label: "Document numbering", noun: "numbering" }],
   ["platform.numbering.series-years", { label: "Numbering year", noun: "numbering year" }],
+  [
+    "platform.approvals.requests",
+    { label: "Approval request", noun: "approval request", createdVerb: "submitted" },
+  ],
+  ["platform.approvals.steps", { label: "Approval step", noun: "step" }],
+  [
+    "platform.approvals.kind-settings",
+    { label: "Approval setting", noun: "approval setting", createdVerb: "set up" },
+  ],
   ["compliance.statutory-parameters.parameter-sets", { label: "Parameter set", noun: "parameter set" }],
   ["compliance.statutory-parameters.parameter-versions", { label: "Parameter set version", noun: "version" }],
   ["compliance.statutory-parameters.parameter-rows", { label: "Parameter set entry", noun: "entry" }],

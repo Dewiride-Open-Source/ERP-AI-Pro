@@ -1,13 +1,17 @@
+using Dewiride.Erp.ArchitectureTests.Rules.Probes.Approvals;
+using Dewiride.Erp.BuildingBlocks.Approvals.Domain;
+using Dewiride.Erp.BuildingBlocks.Approvals.Persistence;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
 using Dewiride.Erp.BuildingBlocks.Numbering.Persistence;
 using Dewiride.Erp.BuildingBlocks.Persistence;
+using Dewiride.Erp.BuildingBlocks.Persistence.Auditing.Changes;
 using Microsoft.EntityFrameworkCore;
 
 namespace Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
 
 // Contexts built as a module's is, each mapping what one rule on a module's model accepts or refuses, for the rules that would
-// otherwise only meet the product's contexts, none of which maps the integration-event or the numbering tables yet.
+// otherwise only meet the product's contexts, none of which maps the integration-event, the numbering or the approval tables yet.
 public static class ProbeContexts
 {
     public sealed class Recording() : ModuleDbContext(Options<Recording>(), SchemaName)
@@ -101,6 +105,45 @@ public static class ProbeContexts
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<NumberSeries>().ToTable(NumberingTables.Series, NumberingTables.Schema, table => table.ExcludeFromMigrations(false));
+        }
+    }
+
+    public sealed class Approving() : ModuleDbContext(Options<Approving>(), "probe_approving")
+    {
+        public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+
+        public DbSet<ApprovalStep> ApprovalSteps => Set<ApprovalStep>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ProbeClaim>().RecordChangesAs(ProbeApprovals.ClaimsKey).Property(c => c.Id).ValueGeneratedNever();
+            base.OnModelCreating(modelBuilder);
+        }
+    }
+
+    public sealed class Reapproving() : ModuleDbContext(Options<Reapproving>(), "probe_reapproving")
+    {
+        public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+
+        public DbSet<ApprovalStep> ApprovalSteps => Set<ApprovalStep>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<ApprovalStep>().ToTable("Steps", "probe_reapproving", table => table.ExcludeFromMigrations());
+        }
+    }
+
+    public sealed class ApprovalsMigrating() : ModuleDbContext(Options<ApprovalsMigrating>(), "probe_approvals_migrating")
+    {
+        public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+
+        public DbSet<ApprovalStep> ApprovalSteps => Set<ApprovalStep>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<ApprovalRequest>().ToTable(ApprovalTables.Requests, ApprovalTables.Schema, table => table.ExcludeFromMigrations(false));
         }
     }
 

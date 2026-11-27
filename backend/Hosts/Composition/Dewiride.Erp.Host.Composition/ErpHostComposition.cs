@@ -1,4 +1,5 @@
 using System.Reflection;
+using Dewiride.Erp.BuildingBlocks.Approvals;
 using Dewiride.Erp.BuildingBlocks.Attachments;
 using Dewiride.Erp.BuildingBlocks.Auditing;
 using Dewiride.Erp.BuildingBlocks.Caching;
@@ -36,6 +37,7 @@ public static class ErpHostComposition
         builder.AddErpJobs();
         builder.AddErpIntegrationEvents();
         builder.AddErpNumbering();
+        builder.AddErpApprovals();
         builder.AddModules(Modules.All);
 
         return builder;

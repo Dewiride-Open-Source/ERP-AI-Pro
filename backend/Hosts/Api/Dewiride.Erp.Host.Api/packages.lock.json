@@ -520,6 +520,14 @@
           "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
         }
       },
+      "dewiride.erp.buildingblocks.approvals": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )"
+        }
+      },
       "dewiride.erp.buildingblocks.attachments": {
         "type": "Project",
         "dependencies": {
@@ -646,6 +654,7 @@
       "dewiride.erp.host.composition": {
         "type": "Project",
         "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Approvals": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Attachments": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Auditing": "[1.0.0, )",
           "Dewiride.Erp.BuildingBlocks.Caching": "[1.0.0, )",

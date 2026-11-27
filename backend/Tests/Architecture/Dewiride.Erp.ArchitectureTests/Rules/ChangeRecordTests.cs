@@ -1,5 +1,6 @@
 using System.Reflection;
 using Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
+using Dewiride.Erp.BuildingBlocks.Approvals.Domain;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.Kernel.Domain;
 using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
@@ -133,6 +134,19 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
     }
 
     [Fact]
+    public void KeysOutside_AModuleContextMappingTheApprovals_LeavesTheApprovalsKeysToItsBuildingBlock()
+    {
+        using var probe = new ProbeContexts.Approving();
+        var recorded = RecordedTypesOf(probe).ToList();
+
+        Assert.Contains(recorded, entityType => entityType.ClrType == typeof(ApprovalRequest));
+        Assert.Contains(recorded, entityType => entityType.ClrType == typeof(ApprovalStep));
+        Assert.Single(OwnedBy(recorded, typeof(ProbeContexts.Approving).Assembly));
+        Assert.Empty(KeysOutside(OwnedBy(recorded, typeof(ProbeContexts.Approving).Assembly), ProbeContext.PermissionPrefix));
+        Assert.Empty(recorded.SelectMany(RecordedEntityTypes.ProblemsOf));
+    }
+
+    [Fact]
     public void RecordNames_NameOnlyRecordedTypesAndEachTypeOnce()
     {
         var keys = RecordedTypes().Select(pair => RecordedEntityTypes.KeyOf(pair.EntityType)!).ToHashSet(StringComparer.Ordinal);
@@ -186,8 +200,8 @@ public sealed class ChangeRecordTests(ErpApiFactory factory) : IClassFixture<Erp
             .Where(entityType => !typeof(IAuditable).IsAssignableFrom(entityType.ClrType) && !typeof(IAppendOnly).IsAssignableFrom(entityType.ClrType) && entityType.ClrType != typeof(OutboxMessage))
             .Select(entityType => $"{contextType.Name} maps {entityType.DisplayName()}, which is neither auditable nor append-only")];
 
-    // A module's change keys are those of its own types: a type a building block lends every context, such as the numbering's, keeps
-    // the key of its building block's module.
+    // A module's change keys are those of its own types: a type a building block lends every context, such as the numbering's or the
+    // approvals', keeps the key of its building block's module.
     private static List<IEntityType> OwnedBy(IEnumerable<IEntityType> recordedTypes, Assembly assembly) =>
         [.. recordedTypes.Where(entityType => entityType.ClrType.Assembly == assembly)];
 

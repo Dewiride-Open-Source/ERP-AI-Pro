@@ -19,10 +19,175 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("test_sample")
-                .HasAnnotation("ProductVersion", "10.0.14")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Approvals.Domain.ApprovalRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("CurrentStep")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RequestedFor")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte>("State")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy", "SubmittedAt");
+
+                    b.HasIndex("Kind", "SubjectId")
+                        .IsUnique()
+                        .HasFilter("[State] = 1");
+
+                    b.HasIndex("RequestedFor", "SubmittedAt");
+
+                    b.HasIndex("State", "SubmittedAt");
+
+                    b.HasIndex("Kind", "SubjectId", "SubmittedAt");
+
+                    b.ToTable("ApprovalRequests", "platform_approvals", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+
+                    b.HasAnnotation("Erp:ChangeRecords:Key", "platform.approvals.requests");
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Approvals.Domain.ApprovalStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ApproverId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("ApproverKind")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("ApproverRole")
+                        .HasMaxLength(16)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DecidedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DueAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("InPlaceOfApprover")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Rule")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte>("State")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("WorkingDays")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApproverId", "State")
+                        .HasFilter("[State] = 2");
+
+                    b.HasIndex("ApproverRole", "State")
+                        .HasFilter("[State] = 2");
+
+                    b.HasIndex("DecidedBy", "DecidedAt");
+
+                    b.HasIndex("RequestId", "Order")
+                        .IsUnique();
+
+                    b.ToTable("ApprovalSteps", "platform_approvals", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+
+                    b
+                        .HasAnnotation("Erp:ChangeRecords:Key", "platform.approvals.steps")
+                        .HasAnnotation("Erp:ChangeRecords:Subject", "RequestId");
+                });
 
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence.OutboxMessage", b =>
                 {
@@ -82,6 +247,44 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                     b.HasIndex("ProcessedAt");
 
                     b.ToTable("ProcessedMessages", "test_sample");
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Approvals.Sample.SampleClaim", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("ReceiptAttached")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("RequestedFor")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("State")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Claims", "test_sample");
+
+                    b.HasAnnotation("Erp:ChangeRecords:Key", "test.approvals.claims");
                 });
 
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.IntegrationEvents.Sample.Receipts.SampleReceipt", b =>
@@ -546,6 +749,15 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                         });
                 });
 
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Approvals.Domain.ApprovalStep", b =>
+                {
+                    b.HasOne("Dewiride.Erp.BuildingBlocks.Approvals.Domain.ApprovalRequest", null)
+                        .WithMany("Steps")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Notes.SampleNote", b =>
                 {
                     b.HasOne("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleAggregate", null)
@@ -571,6 +783,11 @@ namespace Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.Migrat
                         .HasForeignKey("SeriesId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.Approvals.Domain.ApprovalRequest", b =>
+                {
+                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("Dewiride.Erp.BuildingBlocks.IntegrationTests.Persistence.Sample.SampleAggregate", b =>

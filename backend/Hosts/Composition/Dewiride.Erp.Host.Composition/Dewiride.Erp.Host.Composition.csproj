@@ -5,6 +5,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Approvals/Dewiride.Erp.BuildingBlocks.Approvals/Dewiride.Erp.BuildingBlocks.Approvals.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Attachments/Dewiride.Erp.BuildingBlocks.Attachments/Dewiride.Erp.BuildingBlocks.Attachments.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Auditing/Dewiride.Erp.BuildingBlocks.Auditing/Dewiride.Erp.BuildingBlocks.Auditing.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Caching/Dewiride.Erp.BuildingBlocks.Caching/Dewiride.Erp.BuildingBlocks.Caching.csproj" />

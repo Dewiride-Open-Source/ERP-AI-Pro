@@ -3,6 +3,7 @@
     "path": "..\\Dewiride.Erp.slnx",
     "projects": [
       "BuildingBlocks\\Application\\Dewiride.Erp.BuildingBlocks.Application\\Dewiride.Erp.BuildingBlocks.Application.csproj",
+      "BuildingBlocks\\Approvals\\Dewiride.Erp.BuildingBlocks.Approvals\\Dewiride.Erp.BuildingBlocks.Approvals.csproj",
       "BuildingBlocks\\Attachments\\Dewiride.Erp.BuildingBlocks.Attachments\\Dewiride.Erp.BuildingBlocks.Attachments.csproj",
       "BuildingBlocks\\Auditing\\Dewiride.Erp.BuildingBlocks.Auditing\\Dewiride.Erp.BuildingBlocks.Auditing.csproj",
       "BuildingBlocks\\Authentication\\Dewiride.Erp.BuildingBlocks.Authentication\\Dewiride.Erp.BuildingBlocks.Authentication.csproj",

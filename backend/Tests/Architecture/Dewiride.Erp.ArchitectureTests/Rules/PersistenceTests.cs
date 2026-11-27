@@ -1,4 +1,5 @@
 using Dewiride.Erp.ArchitectureTests.Rules.Probes.Persistence;
+using Dewiride.Erp.BuildingBlocks.Approvals.Domain;
 using Dewiride.Erp.BuildingBlocks.IntegrationEvents.Persistence;
 using Dewiride.Erp.BuildingBlocks.Numbering.Domain;
 using Dewiride.Erp.BuildingBlocks.Persistence;
@@ -30,7 +31,7 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
     }
 
     [Fact]
-    public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssemblyTheChangeRecordsTheIntegrationEventAndTheNumberingTables()
+    public void CatalogueContexts_MapOnlyEntityTypesFromTheirOwnAssemblyTheChangeRecordsTheIntegrationEventTheNumberingAndTheApprovalTables()
     {
         using var scope = factory.Services.CreateScope();
 
@@ -47,9 +48,11 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
         using var recording = new ProbeContexts.Recording();
         using var foreign = new ProbeContexts.Foreign();
         using var numbered = new ProbeContexts.Numbered();
+        using var approving = new ProbeContexts.Approving();
 
         Assert.Empty(ForeignEntityTypes(recording.Model, typeof(ProbeContexts.Recording)));
         Assert.Empty(ForeignEntityTypes(numbered.Model, typeof(ProbeContexts.Numbered)));
+        Assert.Empty(ForeignEntityTypes(approving.Model, typeof(ProbeContexts.Approving)));
         Assert.Contains(ProbeContexts.Foreign.BagName, Assert.Single(ForeignEntityTypes(foreign.Model, typeof(ProbeContexts.Foreign))), StringComparison.Ordinal);
     }
 
@@ -88,7 +91,8 @@ public sealed class PersistenceTests(ErpApiFactory factory) : IClassFixture<ErpA
         Assert.Empty(violations);
     }
 
-    private static readonly HashSet<Type> SharedEntityTypes = [typeof(ChangeRecord), typeof(OutboxMessage), typeof(ProcessedMessage), typeof(NumberSeries), typeof(NumberSeriesYear)];
+    private static readonly HashSet<Type> SharedEntityTypes =
+        [typeof(ChangeRecord), typeof(OutboxMessage), typeof(ProcessedMessage), typeof(NumberSeries), typeof(NumberSeriesYear), typeof(ApprovalRequest), typeof(ApprovalStep)];
 
     private static List<string> ForeignEntityTypes(IModel model, Type contextType) =>
         [.. model.GetEntityTypes()

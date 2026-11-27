@@ -46,6 +46,9 @@ test("recordTypeLabel_EveryChangeKeyTheHistoryRecords_HasAName", () => {
   assert.equal(recordTypeLabel("platform.attachments.files"), "File");
   assert.equal(recordTypeLabel("platform.numbering.series"), "Document numbering");
   assert.equal(recordTypeLabel("platform.numbering.series-years"), "Numbering year");
+  assert.equal(recordTypeLabel("platform.approvals.requests"), "Approval request");
+  assert.equal(recordTypeLabel("platform.approvals.steps"), "Approval step");
+  assert.equal(recordTypeLabel("platform.approvals.kind-settings"), "Approval setting");
   assert.equal(recordTypeLabel("compliance.statutory-parameters.parameter-sets"), "Parameter set");
   assert.equal(
     recordTypeLabel("compliance.statutory-parameters.parameter-versions"),
