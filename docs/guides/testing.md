@@ -39,7 +39,7 @@ A pull request runs only chromium and mobile-android, so a change to the Playwri
 The WebKit projects run on Linux in CI, and a runner is slower than a developer machine. The Playwright image runs the same browsers as a server the local test runner connects to, with the processors of a runner's share:
 
 ```bash
-MSYS_NO_PATHCONV=1 docker run --detach --name erp-pw-linux --rm --init --ipc=host --cpus=2 -p 127.0.0.1:3390:3390 --workdir /home/pwuser --user pwuser mcr.microsoft.com/playwright:v1.65.1-noble@sha256:1507cbfc550a63a6b7396791ca4f00df17beb56342d2447b3f106c306f525579 /bin/sh -c "npx -y playwright@1.65.1 run-server --port 3390 --host 0.0.0.0"
+MSYS_NO_PATHCONV=1 docker run --detach --name erp-pw-linux --rm --init --ipc=host --cpus=2 -p 127.0.0.1:3390:3390 --workdir /home/pwuser --user pwuser mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f /bin/sh -c "npx -y playwright@1.64.1 run-server --port 3390 --host 0.0.0.0"
 cd frontend/e2e && PW_TEST_CONNECT_WS_ENDPOINT=ws://127.0.0.1:3390/ PW_TEST_CONNECT_EXPOSE_NETWORK='<loopback>' pnpm exec playwright test <spec> --project=webkit --repeat-each=3 --retries=0
 docker stop erp-pw-linux
 ```

@@ -116,6 +116,10 @@ updates:
       # it would bring a second copy of the API whose tracer finds no registered provider
       - dependency-name: "@microsoft/kiota-*"
         versions: [">=1.0.0-preview.112"]
+      # Playwright 1.65's Firefox build crashes its content process once a page's aria-labelledby is read from two worlds
+      # (microsoft/playwright#43967), which a named getByRole followed by an axe scan does in nearly every spec
+      - dependency-name: "@playwright/test"
+        versions: [">=1.65.0 <1.66.0"]
     labels: [dependencies, frontend]
     commit-message:
       prefix: "build(deps)"
