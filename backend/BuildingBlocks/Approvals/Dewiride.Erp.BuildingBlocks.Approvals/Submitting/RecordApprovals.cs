@@ -15,10 +15,14 @@ namespace Dewiride.Erp.BuildingBlocks.Approvals.Submitting;
 // approvals' own context, which administrators change apart from any request. Both calls look at the rows the unit of work already
 // tracks first, because a query never returns a row not yet saved: a request submitted earlier in the same unit is a second one,
 // and a request withdrawn earlier in it still waits in the database, where its row would refuse the new one, so submitting again
-// there throws. The person who submits is the request's actor, the system when a job submits. A call that breaks these rules is a
-// mistake in the module's code rather than anything a person did, so it throws.
+// there throws and withdrawing again changes nothing. A request found waiting can close while a withdrawal waits for its lock, and
+// the record be asked for again at once, so the withdrawal looks again, three times at most, before it answers that the record is
+// busy. The person who submits is the request's actor, the system when a job submits. A call that breaks these rules is a mistake
+// in the module's code rather than anything a person did, so it throws.
 internal sealed class RecordApprovals(ApprovalKindCatalog catalog, ApprovalsDbContext approvals, ApprovalRouting routing, IActorContext actor, TimeProvider timeProvider) : IApprovals
 {
+    private const int WithdrawalAttempts = 3;
+
     public async Task<Result<ApprovalSubmitted>> SubmitAsync(ModuleDbContext context, string kind, Guid subjectId, Guid requestedFor, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -79,25 +83,37 @@ internal sealed class RecordApprovals(ApprovalKindCatalog catalog, ApprovalsDbCo
             return unsaved.Withdraw(null, now);
         }
 
-        var waiting = await requests
-            .AsNoTracking()
-            .Where(request => request.Kind == kind && request.SubjectId == subjectId && request.State == ApprovalState.Submitted)
-            .Select(request => request.Id)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
-        if (waiting == default)
+        if (requests.Local.Any(request => request.Kind == kind && request.SubjectId == subjectId && WithdrawnUnsaved(context, request)))
         {
             return Result.Success();
         }
 
-        if (!await ApprovalLock.TryAcquireAsync(context, waiting, cancellationToken).ConfigureAwait(false))
+        for (var attempt = 0; attempt < WithdrawalAttempts; attempt++)
         {
-            return ApprovalErrors.Busy;
+            var waiting = await requests
+                .AsNoTracking()
+                .Where(request => request.Kind == kind && request.SubjectId == subjectId && request.State == ApprovalState.Submitted)
+                .Select(request => request.Id)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            if (waiting == default)
+            {
+                return Result.Success();
+            }
+
+            if (!await ApprovalLock.TryAcquireAsync(context, waiting, cancellationToken).ConfigureAwait(false))
+            {
+                return ApprovalErrors.Busy;
+            }
+
+            var request = await requests.Include(r => r.Steps).SingleAsync(r => r.Id == waiting, cancellationToken).ConfigureAwait(false);
+            if (request.State == ApprovalState.Submitted)
+            {
+                return request.Withdraw(null, now);
+            }
         }
 
-        var request = await requests.Include(r => r.Steps).SingleAsync(r => r.Id == waiting, cancellationToken).ConfigureAwait(false);
-
-        return request.State == ApprovalState.Submitted ? request.Withdraw(null, now) : Result.Success();
+        return ApprovalErrors.Busy;
     }
 
     public async Task<ApprovalStatus?> StatusOfAsync(ModuleDbContext context, string kind, Guid subjectId, CancellationToken cancellationToken)

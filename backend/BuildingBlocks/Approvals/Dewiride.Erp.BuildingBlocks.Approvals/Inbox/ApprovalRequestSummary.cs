@@ -6,6 +6,7 @@ namespace Dewiride.Erp.BuildingBlocks.Approvals.Inbox;
 // A request as a list shows it. The kind's title is its key when no release declares the kind, and a name is null when no module
 // names that record or person. The waiting step's fields are null once the request is closed: WaitingForId and WaitingForName name
 // the person a step waits for, and WaitingForRole the role whose holders decide it; Late is true from the step's due time on.
+// SubmittedByKind says whether a person submitted the request or the ERP itself, as one of its jobs does.
 public sealed record ApprovalRequestSummary(
     ApprovalRequestId Id,
     string Kind,
@@ -16,6 +17,7 @@ public sealed record ApprovalRequestSummary(
     Guid RequestedForId,
     string? RequestedForName,
     Guid SubmittedById,
+    ApprovalSubmitterKind SubmittedByKind,
     string? SubmittedByName,
     DateTimeOffset SubmittedAt,
     ApprovalState State,

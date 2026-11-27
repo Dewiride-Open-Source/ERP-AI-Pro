@@ -3,7 +3,8 @@ import { test } from "node:test";
 
 import type { ApprovalRequestSummaryResponse } from "@dewiride/erp-api-client";
 
-import { nonEmpty, requestRow, requestRows, waitingStepOf } from "./request-rows.ts";
+import { kindFilterNote, nonEmpty, requestRow, requestRows, waitingStepOf } from "./request-rows.ts";
+import { kindsUnavailableNote } from "./request-text.ts";
 
 const viewer = "6f2c1d7e-9a41-4b8e-9c55-0d2f7a1b3c4e";
 
@@ -78,11 +79,24 @@ test("requestRow_ARequestSubmittedForSomeoneElse_NamesTheSubmitter", () => {
 
 test("requestRow_ARequestAJobSubmitted_NamesTheErpAsItsSubmitter", () => {
   const row = requestRow(
-    waitingRequest({ submittedById: "00000000-0000-0000-0000-000000000001", submittedByName: null }),
+    waitingRequest({
+      submittedById: "00000000-0000-0000-0000-000000000001",
+      submittedByKind: "system",
+      submittedByName: null,
+    }),
     viewer,
   );
 
   assert.equal(row?.submittedBy, "the ERP");
+});
+
+test("kindFilterNote_KindsThatCouldNotBeReadAndNoKindChosen_ExplainsTheMissingFilter", () => {
+  assert.equal(kindFilterNote(true, []), kindsUnavailableNote);
+});
+
+test("kindFilterNote_AKindChosenOrTheKindsRead_NeedsNoNote", () => {
+  assert.equal(kindFilterNote(true, ["test.approvals.manager-01"]), undefined);
+  assert.equal(kindFilterNote(false, []), undefined);
 });
 
 test("requestRow_AStepThatWaitsForARole_NamesTheRole", () => {

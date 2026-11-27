@@ -27,7 +27,7 @@ const billApproval: ApprovalKindItem = {
 test("stepRuleText_AManagerStep_SaysWhoseManagerDecidesIt", () => {
   assert.equal(
     stepRuleText({ order: 1, title: "Manager", rule: "manager", role: undefined }),
-    "Decided by the manager of the person who asks, as on the day they ask. A manager who has left or has never signed in is passed over for the one above, and the administrators decide when nobody is left.",
+    "Decided by the manager of the person who asks, as on the day they ask. A manager who has left, who was added by work email and has not signed in yet, or who submitted the request is passed over for the one above, and the administrators decide when nobody is left.",
   );
 });
 

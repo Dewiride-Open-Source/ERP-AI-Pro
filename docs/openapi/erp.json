@@ -9257,6 +9257,7 @@
           "requestedForId",
           "requestedForName",
           "submittedById",
+          "submittedByKind",
           "submittedByName",
           "submittedAt",
           "state",
@@ -9313,6 +9314,9 @@
           "submittedById": {
             "type": "string",
             "format": "uuid"
+          },
+          "submittedByKind": {
+            "$ref": "#/components/schemas/ApprovalSubmitterKind"
           },
           "submittedByName": {
             "type": [
@@ -9406,6 +9410,7 @@
           "requestedForId",
           "requestedForName",
           "submittedById",
+          "submittedByKind",
           "submittedByName",
           "submittedAt",
           "state",
@@ -9456,6 +9461,9 @@
           "submittedById": {
             "type": "string",
             "format": "uuid"
+          },
+          "submittedByKind": {
+            "$ref": "#/components/schemas/ApprovalSubmitterKind"
           },
           "submittedByName": {
             "type": [
@@ -9643,6 +9651,12 @@
           "returned",
           "rejected",
           "closed"
+        ]
+      },
+      "ApprovalSubmitterKind": {
+        "enum": [
+          "person",
+          "system"
         ]
       },
       "ApprovalWithdrawalRequest": {

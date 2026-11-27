@@ -26,7 +26,9 @@ export interface ApprovalPageLink {
   readonly title: string;
 }
 
-const newestFirst = "The newest first. Times are in India Standard Time.";
+export const countedBoxes: ReadonlySet<RequestBox> = new Set(["waiting", "mine"]);
+
+const newestFirst = "The newest first, unless you sort them otherwise. Times are in India Standard Time.";
 
 export const requestBoxPages: Readonly<Record<RequestBox, ApprovalPage>> = {
   waiting: {
@@ -37,7 +39,7 @@ export const requestBoxPages: Readonly<Record<RequestBox, ApprovalPage>> = {
       "The requests that wait for your decision, because they wait for you or for a role you hold.",
     listHeading: "Requests waiting for you",
     listDescription:
-      "Late requests come first. Each step has a number of working days, Monday to Friday, which end at midnight India time.",
+      "Late requests come first, unless you sort them otherwise. Each step has a number of working days, Monday to Friday, which end at midnight India time.",
     loadingLabel: "Loading the requests waiting for you",
     empty: {
       title: "Nothing waits for your decision.",

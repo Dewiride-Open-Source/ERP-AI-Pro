@@ -93,6 +93,7 @@ internal sealed class ApprovalInbox(
         var earlier = await context.Requests
             .AsNoTracking()
             .Where(r => r.Kind == request.Kind && r.SubjectId == request.SubjectId && r.SubmittedAt < request.SubmittedAt)
+            .Where(ApprovalVisibility.ClosedVisibleTo(caller))
             .OrderByDescending(r => r.SubmittedAt)
             .ThenByDescending(r => r.Id)
             .Take(EarlierRequestsShown)
@@ -220,6 +221,7 @@ internal sealed class ApprovalInbox(
             row.RequestedFor,
             names.PersonName(row.RequestedFor),
             row.SubmittedBy,
+            row.SubmittedBy == ActorIds.System ? ApprovalSubmitterKind.System : ApprovalSubmitterKind.Person,
             names.PersonName(row.SubmittedBy),
             row.SubmittedAt,
             row.State,

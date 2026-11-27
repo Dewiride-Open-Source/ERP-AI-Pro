@@ -168,6 +168,10 @@ export interface ApprovalRequestResponse extends AdditionalDataHolder, Parsable 
      */
     submittedById?: Guid | null;
     /**
+     * The submittedByKind property
+     */
+    submittedByKind?: ApprovalSubmitterKind | null;
+    /**
      * The submittedByName property
      */
     submittedByName?: string | null;
@@ -253,6 +257,10 @@ export interface ApprovalRequestSummaryResponse extends AdditionalDataHolder, Pa
      * The submittedById property
      */
     submittedById?: Guid | null;
+    /**
+     * The submittedByKind property
+     */
+    submittedByKind?: ApprovalSubmitterKind | null;
     /**
      * The submittedByName property
      */
@@ -351,6 +359,7 @@ export interface ApprovalStepResponse extends AdditionalDataHolder, Parsable {
 }
 export type ApprovalStepRule = (typeof ApprovalStepRuleObject)[keyof typeof ApprovalStepRuleObject];
 export type ApprovalStepState = (typeof ApprovalStepStateObject)[keyof typeof ApprovalStepStateObject];
+export type ApprovalSubmitterKind = (typeof ApprovalSubmitterKindObject)[keyof typeof ApprovalSubmitterKindObject];
 export interface ApprovalWithdrawalRequest extends AdditionalDataHolder, Parsable {
     /**
      * Why the request is withdrawn; optional, at most 1,000 characters, kept without the spaces at either end.
@@ -1693,6 +1702,7 @@ export function deserializeIntoApprovalRequestResponse(approvalRequestResponse: 
         "subjectType": n => { approvalRequestResponse.subjectType = n.getStringValue(); },
         "submittedAt": n => { approvalRequestResponse.submittedAt = n.getDateValue(); },
         "submittedById": n => { approvalRequestResponse.submittedById = n.getGuidValue(); },
+        "submittedByKind": n => { approvalRequestResponse.submittedByKind = n.getEnumValue<ApprovalSubmitterKind>(ApprovalSubmitterKindObject); },
         "submittedByName": n => { approvalRequestResponse.submittedByName = n.getStringValue(); },
         "version": n => { approvalRequestResponse.version = n.getStringValue(); },
         "waitingForId": n => { approvalRequestResponse.waitingForId = n.getGuidValue(); },
@@ -1724,6 +1734,7 @@ export function deserializeIntoApprovalRequestSummaryResponse(approvalRequestSum
         "subjectType": n => { approvalRequestSummaryResponse.subjectType = n.getStringValue(); },
         "submittedAt": n => { approvalRequestSummaryResponse.submittedAt = n.getDateValue(); },
         "submittedById": n => { approvalRequestSummaryResponse.submittedById = n.getGuidValue(); },
+        "submittedByKind": n => { approvalRequestSummaryResponse.submittedByKind = n.getEnumValue<ApprovalSubmitterKind>(ApprovalSubmitterKindObject); },
         "submittedByName": n => { approvalRequestSummaryResponse.submittedByName = n.getStringValue(); },
         "waitingForId": n => { approvalRequestSummaryResponse.waitingForId = n.getGuidValue(); },
         "waitingForKind": n => { approvalRequestSummaryResponse.waitingForKind = n.getEnumValue<ApproverKind>(ApproverKindObject); },
@@ -4657,6 +4668,7 @@ export function serializeApprovalRequestResponse(writer: SerializationWriter, ap
     writer.writeStringValue("subjectType", approvalRequestResponse.subjectType);
     writer.writeDateValue("submittedAt", approvalRequestResponse.submittedAt);
     writer.writeGuidValue("submittedById", approvalRequestResponse.submittedById);
+    writer.writeEnumValue<ApprovalSubmitterKind>("submittedByKind", approvalRequestResponse.submittedByKind);
     writer.writeStringValue("submittedByName", approvalRequestResponse.submittedByName);
     writer.writeStringValue("version", approvalRequestResponse.version);
     writer.writeGuidValue("waitingForId", approvalRequestResponse.waitingForId);
@@ -4689,6 +4701,7 @@ export function serializeApprovalRequestSummaryResponse(writer: SerializationWri
     writer.writeStringValue("subjectType", approvalRequestSummaryResponse.subjectType);
     writer.writeDateValue("submittedAt", approvalRequestSummaryResponse.submittedAt);
     writer.writeGuidValue("submittedById", approvalRequestSummaryResponse.submittedById);
+    writer.writeEnumValue<ApprovalSubmitterKind>("submittedByKind", approvalRequestSummaryResponse.submittedByKind);
     writer.writeStringValue("submittedByName", approvalRequestSummaryResponse.submittedByName);
     writer.writeGuidValue("waitingForId", approvalRequestSummaryResponse.waitingForId);
     writer.writeEnumValue<ApproverKind>("waitingForKind", approvalRequestSummaryResponse.waitingForKind);
@@ -6402,6 +6415,10 @@ export const ApprovalStepStateObject = {
     Returned: "returned",
     Rejected: "rejected",
     Closed: "closed",
+} as const;
+export const ApprovalSubmitterKindObject = {
+    Person: "person",
+    System: "system",
 } as const;
 export const ApproverKindObject = {
     Person: "person",

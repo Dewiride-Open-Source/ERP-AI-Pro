@@ -17,6 +17,10 @@ public sealed class SampleClaimOutcomes(
 {
     public const string RefusedCode = "test.approvals.outcome-refused";
 
+    public const string BusyCode = "test.approvals.outcome-busy";
+
+    public const string UnavailableCode = "test.approvals.outcome-unavailable";
+
     public async Task<Result> HandleAsync(ApprovalOutcome outcome, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(outcome);
@@ -33,6 +37,10 @@ public sealed class SampleClaimOutcomes(
                 break;
             case SampleClaimMisbehaviour.RefuseEveryOutcome:
                 return Error.Failure(RefusedCode, "The sample refuses every outcome.");
+            case SampleClaimMisbehaviour.ReportBusy:
+                return Error.Conflict(BusyCode, "The sample's claim is being changed by someone else.");
+            case SampleClaimMisbehaviour.ReportUnavailable:
+                return Error.Unavailable(UnavailableCode, "The sample cannot reach what it needs.");
         }
 
         var applied = await apply.HandleAsync(new ApplySampleClaimOutcomeCommand(SampleClaimId.From(outcome.SubjectId), outcome.State), cancellationToken);

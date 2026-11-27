@@ -5,7 +5,15 @@ import type {
   ErpRole,
 } from "@dewiride/erp-api-client";
 
-import { approverText, personText, requestLinkName, sameId, waitingText } from "./request-text.ts";
+import {
+  approverText,
+  kindsUnavailableNote,
+  personText,
+  requestLinkName,
+  sameId,
+  submitterText,
+  waitingText,
+} from "./request-text.ts";
 
 // A row crosses from the server to the browser, so it holds plain values only, with the words the page shows for the people
 // in it; the reader is "you". A request asked for by one person and submitted by another names both.
@@ -42,6 +50,7 @@ type RequestFacts = Pick<
   | "requestedForId"
   | "requestedForName"
   | "submittedById"
+  | "submittedByKind"
   | "submittedByName"
   | "submittedAt"
   | "state"
@@ -73,7 +82,11 @@ export function requestRow(request: RequestFacts, viewer: string | undefined): R
     askedBy: personText(askedBy, viewer, true),
     submittedBy: sameId(requestedForId, submittedById)
       ? undefined
-      : personText({ id: submittedById, name: nonEmpty(request.submittedByName) }, viewer),
+      : submitterText(
+          request.submittedByKind,
+          { id: submittedById, name: nonEmpty(request.submittedByName) },
+          viewer,
+        ),
     submittedAt,
     state,
     waiting: step === undefined ? undefined : waitingText(step.title, approverText(step, viewer)),
@@ -81,6 +94,10 @@ export function requestRow(request: RequestFacts, viewer: string | undefined): R
     late: state === "submitted" && request.late === true,
     closedAt: request.closedAt instanceof Date ? request.closedAt : undefined,
   };
+}
+
+export function kindFilterNote(kindsUnavailable: boolean, chosen: readonly string[]): string | undefined {
+  return kindsUnavailable && chosen.length === 0 ? kindsUnavailableNote : undefined;
 }
 
 export function requestRows(requests: readonly RequestFacts[], viewer: string | undefined): RequestRow[] {

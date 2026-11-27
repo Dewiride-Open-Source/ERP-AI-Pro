@@ -254,6 +254,26 @@ public sealed class DecisionTests
     }
 
     [Theory]
+    [InlineData(SampleClaimMisbehaviour.ReportBusy, ErrorKind.Conflict)]
+    [InlineData(SampleClaimMisbehaviour.ReportUnavailable, ErrorKind.Unavailable)]
+    public async Task DecideAsync_AnOutcomeHandlerBusyOrUnavailableOnASendBack_AnswersItsErrorAndChangesNothing(SampleClaimMisbehaviour misbehaviour, ErrorKind kind)
+    {
+        await using var database = await CreateAsync();
+        var (asker, accountant) = (NewPerson(), NewPerson());
+        var (claim, requestId) = await database.SubmittedClaimAsync(database.FinanceKind, asker);
+        var version = await database.VersionOfAsync(requestId);
+        database.Script.Misbehaviour = misbehaviour;
+
+        var returned = await database.DecideAsync(requestId, ApprovalDecision.Return, Caller(accountant, ErpRole.Finance), "Wrong cost centre.");
+
+        Assert.Equal(kind, returned.Error!.Kind);
+        var request = await database.RequestAsync(requestId);
+        Assert.Equal(ApprovalState.Submitted, request.State);
+        Assert.Equal(version, request.RowVersion);
+        Assert.Equal(SampleClaimState.Waiting, (await database.ClaimAsync(claim)).State);
+    }
+
+    [Theory]
     [InlineData(SampleClaimMisbehaviour.AskForApproval)]
     [InlineData(SampleClaimMisbehaviour.Withdraw)]
     public async Task DecideAsync_AnOutcomeHandlerAskingForOrWithdrawingAnApproval_ThrowsAndChangesNothing(SampleClaimMisbehaviour misbehaviour)

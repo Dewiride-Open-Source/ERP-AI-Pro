@@ -117,6 +117,29 @@ public sealed class WithdrawalTests
         Assert.Equal(ApprovalState.Approved, Assert.Single(database.Script.Received).State);
     }
 
+    [Fact]
+    public async Task CancellingTheRecord_AskedForAgainWhileItWaitedForTheEarlierRequestsLock_WithdrawsTheNewRequest()
+    {
+        await using var database = await CreateAsync();
+        var (asker, accountant) = (NewPerson(), NewPerson());
+        var (claim, first) = await database.SubmittedClaimAsync(database.FinanceKind, asker);
+
+        var (cancellation, second) = await database.WhileLockedAsync(first, async () =>
+        {
+            var askedForTheLock = database.LockRequests.NextRequest();
+            var cancelling = database.CancelClaimAsync(database.FinanceKind, claim, asker);
+            Assert.Same(askedForTheLock, await Task.WhenAny(askedForTheLock, cancelling).WaitAsync(TestContext.Current.CancellationToken));
+            Assert.True((await SendBackWithoutTheLockAsync(database, first, claim, accountant)).IsSuccess);
+            var again = (await database.ResubmitClaimAsync(database.FinanceKind, claim, asker)).Value.RequestId!.Value;
+
+            return (cancelling, again);
+        });
+
+        Assert.Equal(SampleClaimState.Cancelled, (await cancellation).Value);
+        Assert.Equal(ApprovalState.Returned, (await database.RequestAsync(first)).State);
+        Assert.Equal(ApprovalState.Withdrawn, (await database.RequestAsync(second)).State);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -169,4 +192,14 @@ public sealed class WithdrawalTests
     }
 
     private static Result<bool> Answer(Result result) => result.IsSuccess ? true : result.Error!;
+
+    private static Task<Result<int>> SendBackWithoutTheLockAsync(ApprovalsDatabase database, ApprovalRequestId id, SampleClaimId claim, Guid decider) =>
+        database.RunUnitAsync<int>(decider, async (context, _, token) =>
+        {
+            var request = await context.Set<ApprovalRequest>().Include(r => r.Steps).SingleAsync(r => r.Id == id, token);
+            var returned = request.Return(decider, inPlaceOfApprover: false, "Change the date.", database.Clock.GetUtcNow());
+            (await context.Claims.SingleAsync(c => c.Id == claim, token)).MoveTo(SampleClaimState.Draft);
+
+            return returned.IsFailure ? returned.Error! : 0;
+        });
 }

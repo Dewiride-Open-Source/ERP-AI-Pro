@@ -6,4 +6,6 @@ public enum SampleClaimMisbehaviour
     AskForApproval,
     Withdraw,
     RefuseEveryOutcome,
+    ReportBusy,
+    ReportUnavailable,
 }

@@ -407,7 +407,7 @@ test.describe("approvals for a manager", () => {
             await requestPage.submit.click();
             await expect(requestPage.summary).toBeFocused();
             await expect(requestPage.summary).toContainText(
-              "This request no longer exists, or you can no longer see it.",
+              "This request no longer waits for you, so you can no longer see it.",
             );
             await expect(requestPage.reload).toHaveCount(0);
             await expect(requestPage.dialog).toBeVisible();
@@ -527,9 +527,11 @@ test.describe("approvals for the person who asked", () => {
             - text: The requests of this kind asked for this record before this one, the newest first.
             - list "Earlier requests for this record":
               - listitem:
-                - text: ${JSON.stringify(`Withdrawn Asked on ${dateTimeText(withdrawn.submittedAt)} closed on ${dateTimeText(withdrawn.closedAt ?? "")}`)}
+                - text: Withdrawn
+                - link ${JSON.stringify(`Asked on ${dateTimeText(withdrawn.submittedAt)}`)}:
+                  - /url: ${approvalRequestPath(withdrawn.id)}
+                - text: ${JSON.stringify(`closed on ${dateTimeText(withdrawn.closedAt ?? "")}`)}
           `);
-          await expect(requestPage.earlier.getByRole("link"), "an earlier request's page").toHaveCount(0);
           await capture("approval-earlier-requests", requestPage.earlier);
         } finally {
           await withdrawWaiting(own, asked);

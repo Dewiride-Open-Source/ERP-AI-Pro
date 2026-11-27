@@ -13,10 +13,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Dewiride.Erp.BuildingBlocks.Approvals.Deciding;
 
-// The request is read first on the approvals' own context, to learn its kind and whether the caller may see it, and again under
-// its lock in the unit of work of the kind's context, where its state and version decide: of two people deciding at once one
-// decides and the other finds the request closed. The outcome handler is created for each decision and runs in that unit of work,
-// so the change records of the request, its steps and the record all name the caller under one correlation id.
+// The request is read first on the approvals' own context, to learn its kind, and again under its lock in the unit of work of the
+// kind's context, where whether the caller still sees it, its state and its version decide: of two people deciding at once one
+// decides, and the other finds the request closed, or unknown when that decision took it out of their sight. The outcome handler is
+// created for each decision and runs in that unit of work, so the change records of the request, its steps and the record all name
+// the caller under one correlation id.
 internal sealed partial class ApprovalDecisions(
     IServiceProvider services,
     ApprovalKindCatalog catalog,
@@ -104,7 +105,7 @@ internal sealed partial class ApprovalDecisions(
                 }
 
                 var request = await context.Set<ApprovalRequest>().Include(r => r.Steps).SingleOrDefaultAsync(r => r.Id == id, token).ConfigureAwait(false);
-                if (request is null)
+                if (request is null || !ApprovalVisibility.IsVisibleTo(request, caller))
                 {
                     return ApprovalErrors.RequestNotFound;
                 }

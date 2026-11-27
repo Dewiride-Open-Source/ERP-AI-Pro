@@ -100,6 +100,7 @@ export async function RequestBoxOverview({
               }}
               requests={requestRows(read.list.items ?? [], viewer)}
               kindOptions={kindOptions(kinds)}
+              kindsUnavailable={kinds.status !== "read"}
               labelledBy={headingId}
             />
           ) : (

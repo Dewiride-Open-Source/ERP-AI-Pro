@@ -1,4 +1,10 @@
-import type { ApprovalState, ApprovalStepState, ApproverKind, ErpRole } from "@dewiride/erp-api-client";
+import type {
+  ApprovalState,
+  ApprovalStepState,
+  ApprovalSubmitterKind,
+  ApproverKind,
+  ErpRole,
+} from "@dewiride/erp-api-client";
 
 import { formatDateTimeIst, formatDayIst } from "@/shared/format/dates";
 
@@ -31,9 +37,8 @@ export const lateLabel = "Late";
 
 export const notRecorded = "—";
 
-// The API names the ERP's own actor, which submits a request when one of the ERP's jobs asks for approval, by this fixed id,
-// which change records carry too, and gives it no name.
-export const systemActorId = "00000000-0000-0000-0000-000000000001";
+export const kindsUnavailableNote =
+  "The kinds of request could not be read, so the list cannot be filtered by kind of request now.";
 
 const stateLabels: Readonly<Record<ApprovalState, string>> = {
   submitted: "Waiting",
@@ -106,8 +111,16 @@ export function personText(
 ): string {
   const { id, name } = person;
   if (id !== undefined && viewer !== undefined && sameId(id, viewer)) return sentenceStart ? "You" : "you";
-  if (id !== undefined && sameId(id, systemActorId)) return sentenceStart ? "The ERP" : "the ERP";
   return name ?? (sentenceStart ? "An unknown person" : "an unknown person");
+}
+
+// The ERP itself submits a request when one of its jobs asks for approval, and the API says so with the submitter's kind.
+export function submitterText(
+  kind: ApprovalSubmitterKind | null | undefined,
+  person: PersonReference,
+  viewer: string | undefined,
+): string {
+  return kind === "system" ? "the ERP" : personText(person, viewer);
 }
 
 export function approverText(approver: Approver, viewer: string | undefined, sentenceStart = false): string {

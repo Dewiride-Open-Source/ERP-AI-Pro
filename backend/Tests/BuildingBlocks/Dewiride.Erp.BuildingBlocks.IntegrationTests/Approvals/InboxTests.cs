@@ -191,6 +191,50 @@ public sealed class InboxTests
     }
 
     [Fact]
+    public async Task GetAsync_ARecordAskedForThreeTimes_ListsItsEarlierRequestsNewestFirstToThoseWhoTookPartAlone()
+    {
+        await using var database = await CreateAsync();
+        var (asker, manager, newManager) = (NewPerson(), NewPerson(), NewPerson());
+        database.Managers.Set(asker, new ReportingManager(manager, IsActive: true));
+        var (claim, first) = await database.SubmittedClaimAsync(database.ManagerKind, asker);
+        Assert.True((await database.DecideAsync(first, ApprovalDecision.Return, Caller(manager), "Add the receipt.")).IsSuccess);
+        database.Clock.Advance(TimeSpan.FromHours(1));
+        var second = (await database.ResubmitClaimAsync(database.ManagerKind, claim, asker)).Value.RequestId!.Value;
+        Assert.True((await database.DecideAsync(second, ApprovalDecision.Return, Caller(manager), "Split the hotel and the meals.")).IsSuccess);
+        database.Managers.Set(asker, new ReportingManager(newManager, IsActive: true));
+        database.Clock.Advance(TimeSpan.FromHours(1));
+        var third = (await database.ResubmitClaimAsync(database.ManagerKind, claim, asker)).Value.RequestId!.Value;
+
+        var forTheAsker = await GetAsync(database, third, Caller(asker));
+        var forTheNewManager = await GetAsync(database, third, Caller(newManager));
+        var forAnAdministrator = await GetAsync(database, third, Administrator(NewPerson()));
+
+        Assert.Equal([second, first], forTheAsker.EarlierRequests.Select(earlier => earlier.Id));
+        Assert.Empty(forTheNewManager.EarlierRequests);
+        Assert.Equal([second, first], forAnAdministrator.EarlierRequests.Select(earlier => earlier.Id));
+    }
+
+    [Fact]
+    public async Task GetAsync_ARecordAskedForTwelveTimes_ListsItsTenNewestEarlierRequests()
+    {
+        await using var database = await CreateAsync();
+        var asker = NewPerson();
+        var (claim, request) = await database.SubmittedClaimAsync(database.FinanceKind, asker);
+        var asked = new List<ApprovalRequestId> { request };
+        for (var again = 0; again < 11; again++)
+        {
+            Assert.True((await database.WithdrawAsync(request, Caller(asker))).IsSuccess);
+            database.Clock.Advance(TimeSpan.FromMinutes(1));
+            request = (await database.ResubmitClaimAsync(database.FinanceKind, claim, asker)).Value.RequestId!.Value;
+            asked.Add(request);
+        }
+
+        var details = await GetAsync(database, request, Caller(asker));
+
+        Assert.Equal(asked[1..^1].AsEnumerable().Reverse(), details.EarlierRequests.Select(earlier => earlier.Id));
+    }
+
+    [Fact]
     public async Task CountAsync_ForTheCaller_CountsWhatWaitsForThemWhatOfThatIsLateAndTheirOwnStillWaiting()
     {
         await using var database = await CreateAsync();

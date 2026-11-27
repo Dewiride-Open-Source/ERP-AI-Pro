@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Approvals.Domain;
+using Dewiride.Erp.BuildingBlocks.Approvals.Inbox;
 using Dewiride.Erp.BuildingBlocks.Kernel.Access;
 
 namespace Dewiride.Erp.Modules.Platform.Approvals.Requests.Endpoints.Responses;
@@ -13,6 +14,7 @@ namespace Dewiride.Erp.Modules.Platform.Approvals.Requests.Endpoints.Responses;
 /// <param name="RequestedForId">Microsoft Entra object id of the person the request is for, whose manager decides a manager step.</param>
 /// <param name="RequestedForName">Name the ERP shows for that person; null when it knows none.</param>
 /// <param name="SubmittedById">Microsoft Entra object id of the person who submitted the request, or the system's id when a job submitted it.</param>
+/// <param name="SubmittedByKind">Whether a person submitted the request or the ERP itself did, as one of its jobs does.</param>
 /// <param name="SubmittedByName">Name the ERP shows for that person; null when it knows none, as for the system.</param>
 /// <param name="SubmittedAt">When the request was submitted.</param>
 /// <param name="State">Where the request stands: submitted while it waits, then approved, returned (sent back), rejected or withdrawn.</param>
@@ -34,6 +36,7 @@ internal sealed record ApprovalRequestSummaryResponse(
     Guid RequestedForId,
     string? RequestedForName,
     Guid SubmittedById,
+    ApprovalSubmitterKind SubmittedByKind,
     string? SubmittedByName,
     DateTimeOffset SubmittedAt,
     ApprovalState State,

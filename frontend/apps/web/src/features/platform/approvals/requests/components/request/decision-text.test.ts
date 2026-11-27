@@ -56,6 +56,13 @@ test("actionDescription_ApprovingTheLastStep_SaysTheRequestIsApproved", () => {
   );
 });
 
+test("actionDescription_ASubjectWithoutAWaitingStep_SaysItDecidesTheStepTheRequestWaitsAt", () => {
+  assert.equal(
+    actionDescription("approve", { ...subject, waitingStepTitle: undefined, nextStepTitle: undefined }),
+    "Approving it decides the step the request waits at.",
+  );
+});
+
 test("actionDescription_ClosingTheRequest_SaysWhatHappensToIt", () => {
   assert.equal(
     actionDescription("return", subject),
@@ -79,6 +86,22 @@ test("actionDoneMessage_AStepApprovedBeforeTheLast_SaysWhoTheNextStepWaitsFor", 
   assert.equal(
     actionDoneMessage("approve", answer({}), viewer),
     "You approved the Manager step. Next, the Finance step waits for Finance.",
+  );
+});
+
+test("actionDoneMessage_ApprovedStepsWithoutTitles_SaysAStepWasApproved", () => {
+  assert.equal(
+    actionDoneMessage(
+      "approve",
+      answer({
+        steps: [
+          { order: 1, state: "approved" },
+          { order: 2, title: "Finance", state: "waiting" },
+        ],
+      }),
+      viewer,
+    ),
+    "You approved a step. Next, the Finance step waits for Finance.",
   );
 });
 

@@ -168,6 +168,17 @@ test.describe("approval lists", () => {
           await list.setColumnVisible("Asked by", true);
           await expect(page).toHaveURL((url) => url.pathname === approvalPagePaths.mine && url.search === "");
           expect(await approvals.requestIds()).toEqual(newest);
+
+          await approvals.goto("mine", "?page=9");
+          await expect(page).toHaveURL(
+            (url) => url.pathname === approvalPagePaths.mine && url.search === "?page=2",
+          );
+          await expect(list.pageLabel).toHaveText("Page 2 of 2");
+          await approvals.goto("mine", `?size=${pageSize}&sort=submittedAt%3Adesc`);
+          await expect(page).toHaveURL((url) => url.pathname === approvalPagePaths.mine && url.search === "");
+          await approvals.goto("mine", "?page=abc");
+          await expect(page).toHaveURL((url) => url.pathname === approvalPagePaths.mine && url.search === "");
+          await expect(list.pageLabel).toHaveText("Page 1 of 2");
         } finally {
           await withdrawWaiting(own, asked);
           await manager.request.dispose();

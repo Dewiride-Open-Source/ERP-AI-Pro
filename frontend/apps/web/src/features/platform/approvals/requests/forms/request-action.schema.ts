@@ -63,7 +63,7 @@ export const requestActionProblemMessages: ProblemMessages = {
   "approval.own-request": "Nobody decides a request they asked for or submitted.",
   "approval.not-yours-to-withdraw":
     "Only the person the request is for, or the person who submitted it, can withdraw it.",
-  "approval.request-not-found": "This request no longer exists, or you can no longer see it.",
+  "approval.request-not-found": "This request no longer waits for you, so you can no longer see it.",
   "approval.kind-retired":
     "This version of the ERP no longer asks approval for this kind of request, so it can be neither decided nor withdrawn here.",
 };

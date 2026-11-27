@@ -20,7 +20,7 @@ import {
   stepDaysText,
   stepSentence,
   stepStateLabel,
-  systemActorId,
+  submitterText,
   waitingCountText,
   waitingText,
   workingDaysText,
@@ -101,9 +101,10 @@ test("personText_TheViewer_IsYou", () => {
   assert.equal(personText({ id: viewer, name: "Ravi Kumar" }, viewer, true), "You");
 });
 
-test("personText_TheErpsOwnActor_IsTheErp", () => {
-  assert.equal(personText({ id: systemActorId, name: undefined }, viewer), "the ERP");
-  assert.equal(personText({ id: systemActorId, name: undefined }, viewer, true), "The ERP");
+test("submitterText_TheErpOrAPerson_NamesTheErpOrThePerson", () => {
+  assert.equal(submitterText("system", { id: undefined, name: undefined }, viewer), "the ERP");
+  assert.equal(submitterText("person", asha, viewer), "Asha Rao");
+  assert.equal(submitterText(undefined, { id: viewer, name: "Ravi Kumar" }, viewer), "you");
 });
 
 test("personText_SomeoneElse_IsTheirNameAsTheirRecordSpellsIt", () => {

@@ -28,13 +28,13 @@ The key is three lower-case kebab segments under the module's permission prefix;
 ## Submitting, withdrawing and the status
 
 - `IApprovals.SubmitAsync(context, kind, subjectId, requestedFor, cancellationToken)` is called last in the command that changes the record, after its own checks, on the context that maps the tables, inside its unit of work. It plans every step (3 below), adds the request and its steps, and answers the request's id and state; while an administrator has switched the kind off it answers approved without a request, and the module applies the approval itself in the same command. A second waiting request for the same kind and record is refused (409 `approval.already-submitted`; the filtered unique index refuses one at the same moment as 409 `concurrency.conflict`).
-- `IApprovals.WithdrawAsync(context, kind, subjectId, cancellationToken)` closes the record's waiting request without calling the outcome handler, because the module's command already moves the record. It is the first thing that command does, before it reads its record or takes a lock of its own; withdrawing and submitting again in one unit of work is refused, and neither call may run while a decision runs.
+- `IApprovals.WithdrawAsync(context, kind, subjectId, cancellationToken)` closes the record's waiting request without calling the outcome handler, because the module's command already moves the record. It is the first thing that command does, before it reads its record or takes a lock of its own; withdrawing and submitting again in one unit of work is refused, and neither call may run while a decision runs. A request it finds waiting can close while it waits for that request's lock, and the record be asked for again at once, so it looks again, three times at most, before it answers 409 `concurrency.conflict`.
 - `IApprovals.StatusOfAsync(context, kind, subjectId, cancellationToken)` answers the record's latest request (its id, state, the waiting step and its due time), or null.
 
 ## The outcome
 
 ```csharp
-public sealed class BillApprovalOutcomes(ICommandHandler<ApplyBillApproval, Unit> apply) : IApprovalOutcomeHandler
+public sealed class BillApprovalOutcomes(ICommandHandler<ApplyBillApprovalCommand, BillState> apply) : IApprovalOutcomeHandler
 {
     public Task<Result> HandleAsync(ApprovalOutcome outcome, CancellationToken cancellationToken) => ...;
 }
@@ -44,10 +44,10 @@ When a request reaches a final state on the Approvals page, the block calls the 
 
 ## Who decides
 
-- A manager step goes to the asker's manager on the day of submission, walking up past a manager who is deactivated, has no account or submitted the request, and to the administrators when nobody is left. A role step goes to every holder of the role, checked against the decider's roles when they decide.
+- A manager step goes to the asker's manager on the day of submission, walking up past a manager who is deactivated, whose record has no Microsoft Entra object id yet (registered by work email and not signed in) or who submitted the request, and to the administrators when nobody is left. A role step goes to every holder of the role, checked against the decider's roles when they decide.
 - Nobody decides a request they asked for or submitted, administrators included (403 `approval.own-request`). Any holder of `platform.approvals.requests.decide-any` (administrators) decides any other waiting request in place of its approver, and the step records that. One person may decide two steps of a request.
 - Approving moves the request to its next step or approves it; sending back and rejecting need a reason of 1 to 1,000 characters and end the request; every final state is final, and asking again after changes is a new request, the record's earlier requests listed on its page.
-- A decision takes the application lock `platform_approvals.<request id>` of its transaction and checks the request's state and the version the decider saw (409 `approval.not-waiting`, `concurrency.conflict`), so ten people deciding at once leave one decision.
+- A decision takes the application lock `platform_approvals.<request id>` of its transaction and, on the request read under it, checks that the decider still sees it, then its state and the version the decider saw (409 `approval.not-waiting`, `concurrency.conflict`), so ten people deciding at once leave one decision; a decider whom that decision took out of sight, such as a holder of the role who did not decide, is answered as for an unknown request.
 
 ## Time
 
@@ -55,7 +55,7 @@ Each step has its kind's working days, captured when the request is submitted; i
 
 ## The page and who sees what
 
-`/platform/approvals` lists what waits for the caller (late first), `/mine` what they asked for or submitted, `/decided` what they decided, `/kinds` each kind with its steps and setting (administrators switch a kind off and change its working days there), and `/all`, for administrators, every request. A request's page is visible to its asker, its submitter, anyone who decided one of its steps and anyone its waiting step waits for; anyone else is answered as for an unknown request. With the module's flag off, consumers still submit and nobody can decide until it is on again; switching a kind off also removes its maker-checker.
+`/platform/approvals` lists what waits for the caller (late first), `/mine` what they asked for or submitted, `/decided` what they decided, `/kinds` each kind with its steps and setting (administrators switch a kind off and change its working days there), and `/all`, for administrators, every request. A request's page is visible to its asker, its submitter, anyone who decided one of its steps, anyone its waiting step waits for and holders of `platform.approvals.requests.read-all` (administrators); anyone else is answered as for an unknown request. The earlier requests it lists, all closed, are those the reader asked for, submitted or decided, or every one for a holder of `read-all`, and a request submitted by one of the ERP's jobs names the ERP as its submitter (`submittedByKind` `system`). With the module's flag off, consumers still submit and nobody can decide until it is on again; switching a kind off also removes its maker-checker.
 
 ## Records
 

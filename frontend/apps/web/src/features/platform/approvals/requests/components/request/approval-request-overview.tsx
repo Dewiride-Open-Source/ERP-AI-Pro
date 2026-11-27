@@ -125,11 +125,7 @@ export async function ApprovalRequestOverview({ requestId }: { requestId: string
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <EarlierRequests
-              earlier={detail.earlier}
-              linked={mayShow(session, "platform.approvals.requests.read-all")}
-              labelledBy={earlierHeadingId}
-            />
+            <EarlierRequests earlier={detail.earlier} labelledBy={earlierHeadingId} />
           </CardContent>
         </Card>
       )}
@@ -195,15 +191,12 @@ function Fact({ label, testId, children }: { label: string; testId: string; chil
   );
 }
 
-// An earlier request is shown to a person who asked for it, decided it or may see every request, which the page cannot tell
-// for another person, so only a person who may see every request is offered its page.
+// The API lists only the earlier requests the reader may open, so each one links to its page.
 function EarlierRequests({
   earlier,
-  linked,
   labelledBy,
 }: {
   earlier: readonly EarlierRequestItem[];
-  linked: boolean;
   labelledBy: string;
 }) {
   return (
@@ -217,17 +210,13 @@ function EarlierRequests({
             data-testid="approval-earlier-request"
           >
             <RequestStateBadge state={item.state} />{" "}
-            {linked ? (
-              <Link
-                href={`/platform/approvals/requests/${item.id}`}
-                prefetch={false}
-                className="rounded-sm font-medium text-primary underline-offset-4 focus-ring hover:underline"
-              >
-                {asked}
-              </Link>
-            ) : (
-              <span className="font-medium">{asked}</span>
-            )}
+            <Link
+              href={`/platform/approvals/requests/${item.id}`}
+              prefetch={false}
+              className="rounded-sm font-medium text-primary underline-offset-4 focus-ring hover:underline"
+            >
+              {asked}
+            </Link>
             {item.closedAt === undefined ? null : (
               <>
                 {" "}

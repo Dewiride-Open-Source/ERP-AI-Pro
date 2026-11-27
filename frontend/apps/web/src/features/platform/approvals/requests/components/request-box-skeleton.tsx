@@ -5,7 +5,7 @@ import { Skeleton } from "@dewiride/erp-ui/components/ui/skeleton";
 
 import { requestLists, type RequestBox } from "../lists/requests.list";
 
-import { requestBoxPages } from "./approval-pages";
+import { countedBoxes, requestBoxPages } from "./approval-pages";
 
 export function RequestBoxOverviewSkeleton({ box }: { box: RequestBox }) {
   const page = requestBoxPages[box];
@@ -23,6 +23,7 @@ export function RequestBoxOverviewSkeleton({ box }: { box: RequestBox }) {
           <Skeleton className="h-9 w-full max-w-64" />
         </div>
         <Skeleton className="h-4 w-full max-w-md" />
+        {countedBoxes.has(box) ? <Skeleton className="h-4 w-full max-w-sm" /> : null}
       </header>
 
       <Card>

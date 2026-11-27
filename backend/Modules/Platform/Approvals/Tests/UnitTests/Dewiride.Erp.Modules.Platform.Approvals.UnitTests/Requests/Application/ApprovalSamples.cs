@@ -16,6 +16,7 @@ internal static class ApprovalSamples
         Guid.CreateVersion7(),
         "Meera Nair",
         Guid.CreateVersion7(),
+        ApprovalSubmitterKind.Person,
         "Meera Nair",
         new DateTimeOffset(2026, 11, 26, 5, 30, 0, TimeSpan.Zero),
         ApprovalState.Submitted,

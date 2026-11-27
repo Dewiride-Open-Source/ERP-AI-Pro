@@ -29,7 +29,7 @@ Enforced by `backend/Tests/Architecture/Dewiride.Erp.ArchitectureTests`, `backen
 | `<Feature>.Persistence` | Domain, EF Core | ASP.NET Core |
 | `<Feature>.Hosting` | Application, Domain, `BuildingBlocks.*`, `Microsoft.Extensions.*` (hosting, DI, logging, feature management) | ASP.NET Core, EF Core, Endpoints |
 | `<Feature>.Ai` (Enterprise modules) | own Application/Domain, `BuildingBlocks.Ai` | provider SDKs |
-| `Integration` (`Integration.Publishers`: the domain-event handlers that publish the module's integration events; `Integration.Consumers`: the sealed `IIntegrationEventHandler<TEvent>` subscribers) | own Application, Domain and DbContext, `BuildingBlocks.*`, its own and other modules' `Contracts` events | other modules' implementations |
+| `Integration` (`Integration.Publishers`: the domain-event handlers that publish the module's integration events; `Integration.Consumers`: the sealed `IIntegrationEventHandler<TEvent>` subscribers; directly in `Integration`: the sealed approval outcome handlers (`IApprovalOutcomeHandler`), which run the module's own command inside a decision's transaction, and the building-block ports the module implements over other modules' `Contracts` queries, such as `UsersReportingManagers` and `GstSerialNumberRules`) | own Application, Domain and DbContext, `BuildingBlocks.*`, its own and other modules' `Contracts` events and queries | other modules' implementations |
 | `Shared` (module level, `Shared/<Concern>`: what two features' Application share, such as `Identity/Users` `Shared/Positions`) | the module's Domain and DbContext, `BuildingBlocks.*` | ASP.NET Core, Endpoints |
 
 ## Layer rules (`LayerTests`)

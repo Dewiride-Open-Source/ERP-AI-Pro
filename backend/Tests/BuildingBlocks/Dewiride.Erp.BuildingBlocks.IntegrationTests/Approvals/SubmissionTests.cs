@@ -1,4 +1,5 @@
 using Dewiride.Erp.BuildingBlocks.Application.Actors;
+using Dewiride.Erp.BuildingBlocks.Approvals.Deciding;
 using Dewiride.Erp.BuildingBlocks.Approvals.Domain;
 using Dewiride.Erp.BuildingBlocks.Approvals.Persistence;
 using Dewiride.Erp.BuildingBlocks.Approvals.Routing;
@@ -286,4 +287,25 @@ public sealed class SubmissionTests
         Assert.Equal(new ApprovalStatus(requestId, ApprovalState.Submitted, 1, "Finance", DueOnWednesday), status);
         Assert.Null(none);
     }
+
+    [Fact]
+    public async Task StatusOfAsync_ARecordAskedForAgain_AnswersItsNewestRequestThenThatRequestClosed()
+    {
+        await using var database = await CreateAsync();
+        var (asker, accountant) = (NewPerson(), NewPerson());
+        var (claim, first) = await database.SubmittedClaimAsync(database.FinanceKind, asker);
+        Assert.True((await database.WithdrawAsync(first, Caller(asker))).IsSuccess);
+        database.Clock.Advance(TimeSpan.FromHours(1));
+        var second = (await database.ResubmitClaimAsync(database.FinanceKind, claim, asker)).Value.RequestId!.Value;
+
+        var waiting = await StatusOfAsync(database, asker, claim);
+        Assert.True((await database.DecideAsync(second, ApprovalDecision.Approve, Caller(accountant, ErpRole.Finance))).IsSuccess);
+        var approved = await StatusOfAsync(database, asker, claim);
+
+        Assert.Equal(new ApprovalStatus(second, ApprovalState.Submitted, 1, "Finance", DueOnWednesday), waiting);
+        Assert.Equal(new ApprovalStatus(second, ApprovalState.Approved, null, null, null), approved);
+    }
+
+    private static Task<ApprovalStatus?> StatusOfAsync(ApprovalsDatabase database, Guid actor, SampleClaimId claim) =>
+        database.AsAsync(actor, (services, token) => services.GetRequiredService<IApprovals>().StatusOfAsync(services.GetRequiredService<SampleDbContext>(), database.FinanceKind.Key, claim.Value, token));
 }

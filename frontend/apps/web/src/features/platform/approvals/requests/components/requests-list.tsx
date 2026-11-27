@@ -17,7 +17,7 @@ import { approvalStates, requestLists, type RequestBox } from "../lists/requests
 
 import { requestBoxPages } from "./approval-pages";
 import { LateBadge, RequestStanding } from "./request-badges";
-import type { RequestRow } from "./request-rows";
+import { kindFilterNote, type RequestRow } from "./request-rows";
 import { approvalStateLabel, dueDateText, notRecorded } from "./request-text";
 
 const stateOptions = approvalStates.map((state) => ({ value: state, label: approvalStateLabel(state) }));
@@ -155,6 +155,7 @@ export function RequestsList({
   page,
   requests,
   kindOptions,
+  kindsUnavailable,
   labelledBy,
 }: {
   box: RequestBox;
@@ -162,6 +163,7 @@ export function RequestsList({
   page: DataTablePage;
   requests: readonly RequestRow[];
   kindOptions: readonly DataTableFilterOption[];
+  kindsUnavailable: boolean;
   labelledBy: string;
 }) {
   const boxPage = requestBoxPages[box];
@@ -176,51 +178,63 @@ export function RequestsList({
   }, [kindOptions, chosenKinds]);
   const filtersState = box !== "waiting";
   const hasFilters = kindChoices.length > 0 || filtersState;
+  const kindNote = kindFilterNote(kindsUnavailable, chosenKinds);
 
   return (
-    <ListTable
-      basePath={boxPage.path}
-      definition={requestLists[box]}
-      query={query}
-      page={page}
-      label={boxPage.listHeading}
-      labelledBy={labelledBy}
-      noun={{ one: "request", other: "requests" }}
-      columns={box === "waiting" ? waitingColumns : answeredColumns}
-      rows={requests}
-      getRowId={(request) => request.id}
-      noMatches="No requests match these filters."
-      empty={
-        <Empty className="border" data-testid="approval-requests-empty">
-          <EmptyHeader>
-            <EmptyTitle>{boxPage.empty.title}</EmptyTitle>
-            <EmptyDescription>{boxPage.empty.description}</EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      }
-      filters={
-        hasFilters ? (
-          <>
-            {kindChoices.length > 0 ? (
-              <DataTableOptionsFilter
-                name="kind"
-                label="Kind of request"
-                options={kindChoices}
-                defaultValues={chosenKinds}
-              />
-            ) : null}
-            {filtersState ? (
-              <DataTableOptionsFilter
-                name="state"
-                label="Status"
-                options={stateOptions}
-                defaultValues={choices(state)}
-              />
-            ) : null}
-          </>
-        ) : undefined
-      }
-    />
+    <>
+      {kindNote === undefined ? null : (
+        <div
+          role="status"
+          data-testid="approval-filters-unavailable"
+          className="mb-4 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground"
+        >
+          <p>{kindNote}</p>
+        </div>
+      )}
+      <ListTable
+        basePath={boxPage.path}
+        definition={requestLists[box]}
+        query={query}
+        page={page}
+        label={boxPage.listHeading}
+        labelledBy={labelledBy}
+        noun={{ one: "request", other: "requests" }}
+        columns={box === "waiting" ? waitingColumns : answeredColumns}
+        rows={requests}
+        getRowId={(request) => request.id}
+        noMatches="No requests match these filters."
+        empty={
+          <Empty className="border" data-testid="approval-requests-empty">
+            <EmptyHeader>
+              <EmptyTitle>{boxPage.empty.title}</EmptyTitle>
+              <EmptyDescription>{boxPage.empty.description}</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        }
+        filters={
+          hasFilters ? (
+            <>
+              {kindChoices.length > 0 ? (
+                <DataTableOptionsFilter
+                  name="kind"
+                  label="Kind of request"
+                  options={kindChoices}
+                  defaultValues={chosenKinds}
+                />
+              ) : null}
+              {filtersState ? (
+                <DataTableOptionsFilter
+                  name="state"
+                  label="Status"
+                  options={stateOptions}
+                  defaultValues={choices(state)}
+                />
+              ) : null}
+            </>
+          ) : undefined
+        }
+      />
+    </>
   );
 }
 

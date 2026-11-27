@@ -59,7 +59,7 @@ public sealed class RequestWithdrawalTests(ApprovalsHost host) : IClassFixture<A
     }
 
     [Fact]
-    public async Task Get_ARecordAskedForAgain_ShowsItsEarlierRequestAndWhatEachPersonMayDo()
+    public async Task Get_ARecordAskedForAgain_ShowsItsEarlierRequestToItsAskerAloneAndWhatEachPersonMayDo()
     {
         using var asker = await host.SignInAsync("Ishaan Bose");
         using var manager = await host.SignInAsync("Sunita Pillai");
@@ -72,7 +72,8 @@ public sealed class RequestWithdrawalTests(ApprovalsHost host) : IClassFixture<A
         var asManager = await ApprovalsApi.GetAsync(manager.Client, id);
         var asAsker = await ApprovalsApi.GetAsync(asker.Client, id);
 
-        var listed = Assert.Single(asManager.EarlierRequests);
+        Assert.Empty(asManager.EarlierRequests);
+        var listed = Assert.Single(asAsker.EarlierRequests);
         Assert.Equal((earlier, ApprovalState.Withdrawn), (listed.Id, listed.State));
         Assert.NotNull(listed.ClosedAt);
         Assert.Equal((record, record), (asManager.SubjectId, asAsker.SubjectId));

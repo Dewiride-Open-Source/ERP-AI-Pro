@@ -26,10 +26,11 @@ export const settingSaved = "Saved the setting.";
 export const showLatestSettingsLabel = "Show the latest settings";
 
 // A manager step goes to the manager of the person who asks as their positions stood on the day they asked, passing over a
-// manager who has left, has never signed in or submitted the request, and to the administrators when nobody is left.
+// manager who is deactivated, whose record has no Microsoft account yet (registered by work email and not signed in) or who
+// submitted the request, and to the administrators when nobody is left.
 export function stepRuleText(step: KindStepItem): string {
   if (step.rule === "role" && step.role !== undefined) return `Decided by ${roleGroupText(step.role)}.`;
-  return "Decided by the manager of the person who asks, as on the day they ask. A manager who has left or has never signed in is passed over for the one above, and the administrators decide when nobody is left.";
+  return "Decided by the manager of the person who asks, as on the day they ask. A manager who has left, who was added by work email and has not signed in yet, or who submitted the request is passed over for the one above, and the administrators decide when nobody is left.";
 }
 
 export function approvalText(kind: ApprovalKindItem): string {

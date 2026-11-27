@@ -21,17 +21,19 @@ public sealed class ConcurrentDecisionTests
         var asker = NewPerson();
         var (claim, requestId) = await database.SubmittedClaimAsync(database.FinanceKind, asker);
         var version = await database.VersionOfAsync(requestId);
-        var deciders = Enumerable.Range(0, 10).Select(_ => NewPerson()).ToList();
+        var deciders = Enumerable.Range(0, 10).Select(index => index % 2 == 0 ? Caller(NewPerson(), ErpRole.Finance) : Administrator(NewPerson())).ToList();
 
         var outcomes = await Task.WhenAll(deciders.Select((decider, index) =>
-            database.DecideAsync(requestId, index % 2 == 0 ? ApprovalDecision.Approve : ApprovalDecision.Reject, Caller(decider, ErpRole.Finance), "Decided at once.", version)));
+            database.DecideAsync(requestId, index % 4 < 2 ? ApprovalDecision.Approve : ApprovalDecision.Reject, decider, "Decided at once.", version)));
 
         var decided = Assert.Single(outcomes, outcome => outcome.IsSuccess);
-        Assert.All(outcomes.Where(outcome => outcome.IsFailure), outcome => Assert.Equal(ErrorKind.Conflict, outcome.Error!.Kind));
+        Assert.All(
+            deciders.Zip(outcomes).Where(pair => pair.Second.IsFailure),
+            pair => Assert.Equal(pair.First.SeesAll ? ErrorKind.Conflict : ErrorKind.NotFound, pair.Second.Error!.Kind));
         var request = await database.RequestAsync(requestId);
         var step = Assert.Single(request.Steps);
         Assert.Equal(decided.Value.Request.State, request.State);
-        Assert.Contains(step.DecidedBy!.Value, deciders);
+        Assert.Contains(step.DecidedBy!.Value, deciders.Select(decider => decider.ObjectId));
         Assert.Single(database.Script.Received);
         var claimState = (await database.ClaimAsync(claim)).State;
         Assert.Equal(request.State == ApprovalState.Approved ? SampleClaimState.Approved : SampleClaimState.Rejected, claimState);
