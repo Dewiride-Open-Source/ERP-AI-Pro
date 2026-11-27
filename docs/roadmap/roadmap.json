@@ -1530,13 +1530,20 @@
           "id": "business-building-blocks-shared-minimal-approvals-building-block",
           "title": "Shared minimal approvals building block",
           "scope": "Add backend/BuildingBlocks/Approvals with an ApprovalRequest entity bound to any aggregate by generic reference, a state machine (submitted, approved, rejected, returned, withdrawn), approver resolution by manager or role, SLA reminder jobs, endpoints and an approvals inbox page, used by vendors, bills, payouts, reimbursements and timesheets until `approvals-workflow-consumer-migration` migrates them (tag bridge).",
-          "status": "planned",
+          "status": "in-progress",
           "edition": "community",
           "editionConfirmedOn": "2026-11-01",
-          "acceptance": [],
+          "acceptance": [
+            "A module declares each kind of approval it needs (ordered steps decided by the asker's manager or by a role, and the working days each step has), submits a request inside the command that changes its record, so the record and its request commit together or neither, and reads its record's latest request by kind and record; a second waiting request for the same record is refused; a manager step goes to the asker's manager on the day of submission, skipping a manager who is deactivated, has no account or submitted the request, and to the administrators when nobody is left; proven against SQL Server.",
+            "Approving, sending back, rejecting and withdrawing run in one transaction on the module's own context together with the module's outcome, so the record moves with the request or nothing changes; nobody decides a request they asked for or submitted, an administrator may decide any other waiting request in place of its approver, sending back or rejecting needs a reason, and ten people deciding one request at once leave exactly one decision; every change is a change record naming the person who decided.",
+            "`/platform/approvals` shows each person the requests waiting for their decision, late ones first and marked once their working days (Monday to Friday, India time) have passed, the requests they asked for, the ones they decided and each kind of request with its steps, and administrators every request; administrators switch approval off for a kind or change its working days there, a kind switched off going straight through without a request; the request page shows each step with who decided it, when and why, with the decision dialogs; a Playwright spec on every project in light and dark covers it with one validation failure, an outcome its module refuses, the module switched off and the API unavailable.",
+            "The routes require `platform.approvals.requests.read`, `.decide` and `.withdraw`, held by Employee, and `.read-all`, `.decide-any` and `platform.approvals.kinds.change`, held by administrators alone, with the sentences the owner approved on 2026-11-27, proven by integration tests of every route; `IReportingLines` of `Identity.Users.Contracts` answers a person's managers on a date from their positions, proven against SQL Server; ADR-0068, `docs/architecture/approvals.md`, the registers and the audit trail's record types describe the block, and no integration event is published.",
+            "By the owner's decisions of 2026-11-27 lateness is shown in the ERP, the daily reminder job comes with `business-building-blocks-minimal-transactional-email-sender`, and delegation with the first consumer that needs it; the notes of those items say so."
+          ],
           "tags": [],
           "dependsOn": [],
-          "notes": "Edition split (ADR-0030): this building block is the permanent Community approval mechanism; Community modules call it and never the Enterprise workflow engine, which takes over routing in the Enterprise edition through the approval-routing contract of `business-building-blocks-edition-extension-points`. From user-management-departments-designations-and-reporting-lines (ADR-0042): approver resolution by manager reads a person's manager on a date from identity_users.Positions (their latest position starting on or before it); this item adds the contract it needs to Identity.Users.Contracts, which publishes none yet, and no reporting cycle exists on any date, so a walk up the managers ends."
+          "startedOn": "2026-11-27",
+          "notes": "Edition split (ADR-0030): this building block is the permanent Community approval mechanism; Community modules call it and never the Enterprise workflow engine, which takes over routing in the Enterprise edition through the approval-routing contract of `business-building-blocks-edition-extension-points`. From user-management-departments-designations-and-reporting-lines (ADR-0042): approver resolution by manager reads a person's manager on a date from identity_users.Positions (their latest position starting on or before it); this item adds the contract it needs to Identity.Users.Contracts, which publishes none yet, and no reporting cycle exists on any date, so a walk up the managers ends. Owner decisions of 2026-11-27: administrators switch approval off for a kind of request (while the ERP has one user) and change its working days; any administrator decides a waiting request in place of its approver, never their own; working days run Monday to Friday in India time; lateness is shown in the ERP, the daily reminder job and its email moving to `business-building-blocks-minimal-transactional-email-sender`; delegation and a named-approver rule come with the first consumer that needs them; finished requests are kept for ever; one person may decide two steps of a request."
         },
         {
           "id": "business-building-blocks-minimal-transactional-email-sender",
@@ -1547,7 +1554,8 @@
           "editionConfirmedOn": "2026-11-01",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "Owner decision of 2026-11-27: this item also builds the daily reminder job over the waiting approval steps' due times of `business-building-blocks-shared-minimal-approvals-building-block` and sends its emails, the SLA reminders that item's scope named."
         },
         {
           "id": "business-building-blocks-web-shared-kit-extensions",
@@ -2421,7 +2429,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here."
+          "notes": "Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here. Owner decisions of 2026-11-27: `business-building-blocks-shared-minimal-approvals-building-block` has no delegation and no reminder job; this item adds delegation to it, and the reminders come from `business-building-blocks-minimal-transactional-email-sender`."
         },
         {
           "id": "finance-reimbursements-settlement-and-posting",
@@ -2751,7 +2759,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here."
+          "notes": "Edition split (ADR-0030): the minimal approvals building block is the permanent Community approval path; `approvals-workflow-consumer-migration` plugs the Enterprise engine in behind its approval-routing contract and retires nothing here. Owner decisions of 2026-11-27: `business-building-blocks-shared-minimal-approvals-building-block` decides by the asker's manager or a role only; delegate approvers and an engagement-lead rule are added to it by this item, unless a consumer before it adds them."
         },
         {
           "id": "timesheets-billing-feed",
@@ -2866,7 +2874,8 @@
           "edition": "enterprise",
           "acceptance": [],
           "tags": [],
-          "dependsOn": []
+          "dependsOn": [],
+          "notes": "`business-building-blocks-shared-minimal-approvals-building-block` refuses, in every edition, a decision by the person who asked for or submitted a request and requires a reason to send back or reject (owner decisions of 2026-11-27); this item makes both configurable for the Enterprise engine."
         },
         {
           "id": "approvals-workflow-ai-approval-assistant",
@@ -3095,7 +3104,7 @@
           "acceptance": [],
           "tags": [],
           "dependsOn": [],
-          "notes": "Edition split (ADR-0030): requests go through `business-building-blocks-shared-minimal-approvals-building-block`, and loss-of-pay days are published as a Community contract or integration event that the Enterprise `finance-payroll-payroll-run-pipeline` consumes; Community code never names payroll."
+          "notes": "Edition split (ADR-0030): requests go through `business-building-blocks-shared-minimal-approvals-building-block`, and loss-of-pay days are published as a Community contract or integration event that the Enterprise `finance-payroll-payroll-run-pipeline` consumes; Community code never names payroll. `business-building-blocks-shared-minimal-approvals-building-block` counts working days Monday to Friday and treats public holidays as working days until this item's State holiday calendars exist (owner decision of 2026-11-27); this item makes the building block read them."
         },
         {
           "id": "hr-core-attendance",
