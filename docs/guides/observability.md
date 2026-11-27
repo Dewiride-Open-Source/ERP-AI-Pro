@@ -108,6 +108,10 @@ What the outbox relay and the deliveries record ([integration events](../archite
 
 - Readiness adds `database:platform_numbering`. A number is taken in the transaction of the document that carries it, so it logs and traces as that command's save does; the building block writes no log line and has no meter of its own, and a refusal is the command's `Result` ([document numbering](../architecture/document-numbering.md)).
 
+## Approvals
+
+- Readiness adds `database:platform_approvals`. Each decision and each withdrawal on the Approvals page logs one line at `Information`, "Approval request {RequestId} of {Kind} is {State} after step {Step}", with ids and states alone, never a name or a reason; a submission and an outcome trace as the save of the transaction they share, and the building block has no meter of its own ([approvals](../architecture/approvals.md)).
+
 ## Seeing it locally
 
 The Aspire dashboard runs as the `aspire-dashboard` service under the compose profile `observability` and receives OTLP from the containers on the compose network.
