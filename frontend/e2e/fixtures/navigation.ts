@@ -72,6 +72,13 @@ export const registeredNavigation: readonly RegisteredNavigation[] = [
     employees: false,
   },
   {
+    area: "Platform",
+    title: "Approvals",
+    href: "/platform/approvals",
+    description: "See the requests waiting for your decision and follow the ones you asked for.",
+    employees: true,
+  },
+  {
     area: "Organisation",
     title: "People",
     href: "/identity/users",

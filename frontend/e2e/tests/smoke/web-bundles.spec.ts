@@ -1,5 +1,11 @@
 import type { APIRequestContext } from "@playwright/test";
 
+import {
+  askForApproval,
+  requestApi,
+  untouchedApprovalKind,
+  withdrawApproval,
+} from "../../fixtures/records/approval-records";
 import { retiredJob, runKeyPrefix, seedJobRun } from "../../fixtures/records/job-runs";
 import { ownPersonRecordId } from "../../fixtures/records/person-records";
 import { signIn, type SignedInPerson } from "../../fixtures/sign-in";
@@ -7,6 +13,7 @@ import { expect, test } from "../../fixtures/test";
 import { centralTaxRatesKey } from "../../pages/compliance/statutory-parameters/parameter-set.page";
 import { parameterSetPath } from "../../pages/compliance/statutory-parameters/parameter-sets.page";
 import { personPath } from "../../pages/identity/users/person.page";
+import { approvalRequestPath } from "../../pages/platform/approvals/approvals.page";
 import { jobRunPath } from "../../pages/platform/jobs/runs.page";
 
 const chunkPath = /\/_next\/static\/chunks\/[^"'\s<>\\]+\.js/g;
@@ -52,6 +59,21 @@ const parameterSetVersionsMarker = "parameter-set-versions";
 
 const numberingMarker = "numbering-preview";
 
+const approvalPagesMarker = "approval-page-link";
+
+const approvalRequestsMarker = "No requests match these filters.";
+
+const approvalKindsMarker = "approval-kind-save";
+
+const approvalActionsMarker = "approval-decision-submit";
+
+const approvalsMarkers = [
+  approvalPagesMarker,
+  approvalRequestsMarker,
+  approvalKindsMarker,
+  approvalActionsMarker,
+];
+
 const otherModuleMarkers = [
   "supplier-example-form",
   "motion-demo-preference",
@@ -63,7 +85,10 @@ const otherModuleMarkers = [
   jobRunsMarker,
   parameterSetVersionsMarker,
   numberingMarker,
+  ...approvalsMarkers,
 ];
+
+const outsideApprovalsMarkers = otherModuleMarkers.filter((marker) => !approvalsMarkers.includes(marker));
 
 function otherReferenceDataMarkers(...own: readonly string[]): string[] {
   return referenceDataMarkers.filter((marker) => !own.includes(marker));
@@ -77,6 +102,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "motion-demo-preference",
       "overlay-hover-card",
       "upload-progress",
@@ -96,6 +122,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "supplier-example-form",
       "motion-demo-preference",
       "upload-progress",
@@ -114,6 +141,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "supplier-example-form",
       "motion-demo-preference",
       "upload-progress",
@@ -132,6 +160,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "supplier-example-form",
       "upload-progress",
       "system-info-refresh",
@@ -150,6 +179,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "upload-progress",
       "Delete this attachment?",
       "supplier-example-form",
@@ -167,6 +197,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "system-info-refresh",
       "supplier-example-form",
       "motion-demo-preference",
@@ -185,6 +216,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "upload-progress",
       "Delete this attachment?",
       "system-info-refresh",
@@ -204,6 +236,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "upload-progress",
       "Delete this attachment?",
       "system-info-refresh",
@@ -231,6 +264,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       jobRunsMarker,
       "audit-export",
       "No people match these filters.",
@@ -251,6 +285,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "upload-progress",
       "Delete this attachment?",
       "No files match these filters.",
@@ -272,6 +307,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       "audit-export",
       "No people match these filters.",
       "upload-progress",
@@ -293,6 +329,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       designationsMarker,
       orgChartMarker,
       "record-move",
@@ -313,6 +350,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       departmentsMarker,
       orgChartMarker,
       "record-move",
@@ -333,6 +371,7 @@ const routes: readonly WebRoute[] = [
       ...referenceDataMarkers,
       parameterSetVersionsMarker,
       numberingMarker,
+      ...approvalsMarkers,
       departmentsMarker,
       designationsMarker,
       "record-move",
@@ -380,6 +419,42 @@ const routes: readonly WebRoute[] = [
     foreignMarkers: [
       ...referenceDataMarkers,
       ...otherModuleMarkers.filter((marker) => marker !== numberingMarker),
+    ],
+  },
+  {
+    path: "/platform/approvals",
+    ownMarkers: [approvalPagesMarker, approvalRequestsMarker],
+    foreignMarkers: [
+      ...referenceDataMarkers,
+      ...outsideApprovalsMarkers,
+      approvalKindsMarker,
+      approvalActionsMarker,
+    ],
+  },
+  {
+    path: "/platform/approvals/kinds",
+    ownMarkers: [approvalPagesMarker, approvalKindsMarker],
+    foreignMarkers: [
+      ...referenceDataMarkers,
+      ...outsideApprovalsMarkers,
+      approvalRequestsMarker,
+      approvalActionsMarker,
+    ],
+  },
+  {
+    path: "/platform/approvals/requests/[requestId]",
+    address: async (request) => {
+      const id = await askForApproval(request, untouchedApprovalKind);
+      await withdrawApproval(requestApi(request), id);
+      return approvalRequestPath(id);
+    },
+    ownMarkers: [approvalActionsMarker],
+    foreignMarkers: [
+      ...referenceDataMarkers,
+      ...outsideApprovalsMarkers,
+      approvalPagesMarker,
+      approvalRequestsMarker,
+      approvalKindsMarker,
     ],
   },
   // The list of sets ships no client code of its own, only the shared searched list's, so only what it must leave out is
