@@ -1,5 +1,7 @@
 using Dewiride.Erp.BuildingBlocks.Endpoints.RateLimiting;
+using Dewiride.Erp.Testing.Approvals;
 using Dewiride.Erp.Testing.Blob;
+using Dewiride.Erp.Testing.EndToEnd.Approvals;
 using Dewiride.Erp.Testing.EndToEnd.Jobs;
 using Dewiride.Erp.Testing.EndToEnd.Numbering;
 using Dewiride.Erp.Testing.Numbering;
@@ -12,7 +14,8 @@ namespace Dewiride.Erp.Testing.EndToEnd;
 // The API Playwright starts: the API a host test builds, with the test identity provider, the test header scheme, the persona
 // sign-in, the routes that add people to the test directory and switch its refusal of the application's token, two recurring test
 // jobs of its own and the routes that seed job runs and the schedule rows of those jobs, kinds of document of its own to
-// number and the routes that take their numbers and remove their numbering, listening on a port, on a database and a blob container of its own, so a run
+// number and the routes that take their numbers and remove their numbering, kinds of approval of its own and the route that
+// submits their requests, listening on a port, on a database and a blob container of its own, so a run
 // reaches neither Azure nor Microsoft Entra ID and leaves the developer's data alone. Playwright stops its servers on Windows by
 // killing them, which leaves their database and container behind, so every start removes those whose host has gone, the session
 // lock on the database and the lease on the container having ended with its process, once they are older than LeftoverAge. Every
@@ -54,12 +57,14 @@ public static class EndToEndHost
             .WithConfiguration(AccountCheckScheduleKey, AccountCheckSchedule)
             .WithTestServices(EndToEndJobs.Register)
             .WithTestServices(TestNumberedDocuments.Register)
+            .WithTestServices(TestApprovalKinds.Register)
             .WithTestEndpoints(PersonaSignIn.Map)
             .WithTestEndpoints(DirectoryPeople.Map)
             .WithTestEndpoints(DirectoryApplicationAccess.Map)
             .WithTestEndpoints(JobRuns.Map)
             .WithTestEndpoints(JobSchedules.Map)
-            .WithTestEndpoints(NumberingRoutes.Map);
+            .WithTestEndpoints(NumberingRoutes.Map)
+            .WithTestEndpoints(ApprovalRoutes.Map);
         factory.UseKestrel(settings.Port);
         factory.StartServer();
 
