@@ -5,6 +5,7 @@ import {
   orgChartNavigation,
   peopleNavigation,
 } from "@/features/identity/users";
+import { approvalsNavigation } from "@/features/platform/approvals";
 import { attachmentsNavigation } from "@/features/platform/attachments";
 import { auditNavigation } from "@/features/platform/audit";
 import { jobsNavigation } from "@/features/platform/jobs";
@@ -21,6 +22,7 @@ export const navigation: readonly NavigationEntry[] = [
   referenceListsNavigation,
   exchangeRatesNavigation,
   numberingNavigation,
+  approvalsNavigation,
   peopleNavigation,
   orgChartNavigation,
   departmentsNavigation,
