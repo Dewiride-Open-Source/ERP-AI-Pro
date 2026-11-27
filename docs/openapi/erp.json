@@ -7812,6 +7812,1268 @@
         ]
       }
     },
+    "/api/platform/approvals/requests": {
+      "get": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Lists the approval requests of one box: those that wait for the caller's decision, late first; those the caller asked for or submitted; those with a step the caller decided; or every request, for a caller who may see them all.",
+        "operationId": "Platform.Approvals.ListApprovalRequests",
+        "parameters": [
+          {
+            "name": "box",
+            "in": "query",
+            "description": "Which requests to list: waiting, those that wait for your decision, late first, when absent; mine, those you asked for or submitted; decided, those with a step you decided; all, every request, which needs the permission platform.approvals.requests.read-all.",
+            "schema": {
+              "pattern": "^(waiting|mine|decided|all)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number, from 1; the first page when absent.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Items per page, from 1 to 200; 50 when absent.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Comma-separated field:asc or field:desc terms over the fields the endpoint allows.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "Semicolon-separated field:operator:value terms over the fields the endpoint allows; values are percent-encoded and an in-list separates its values with |.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfApprovalRequestSummaryResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/requests/counts": {
+      "get": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Counts the requests that wait for the caller's decision, how many of them are late, and how many the caller asked for or submitted still wait.",
+        "operationId": "Platform.Approvals.CountApprovalRequests",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalCountsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/requests/{id}": {
+      "get": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Describes one approval request with its steps, the earlier requests of its record and what the caller may do with it; a request the caller may not see answers as an unknown one.",
+        "operationId": "Platform.Approvals.GetApprovalRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequestResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/requests/{id}/approve": {
+      "post": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Approves the step a request waits at: its next step starts waiting, or at the last step the request is approved together with the change its module makes to the record.",
+        "operationId": "Platform.Approvals.ApproveApprovalRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequestResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/requests/{id}/return": {
+      "post": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Sends a request back with what needs to change, closing it together with the change its module makes to the record.",
+        "operationId": "Platform.Approvals.ReturnApprovalRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequestResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/requests/{id}/reject": {
+      "post": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Rejects a request with the reason why, closing it together with the change its module makes to the record.",
+        "operationId": "Platform.Approvals.RejectApprovalRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequestResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/requests/{id}/withdraw": {
+      "post": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Withdraws a request that still waits, as the person it is for or the person who submitted it, closing it together with the change its module makes to the record.",
+        "operationId": "Platform.Approvals.WithdrawApprovalRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalWithdrawalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRequestResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/kinds": {
+      "get": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Lists the kinds of request the ERP asks approval for, by title, each with its steps, the working days it declares and the administrators' setting once one is set up.",
+        "operationId": "Platform.Approvals.ListApprovalKinds",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalKindResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/kind-settings": {
+      "post": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Sets up whether a kind of request needs approval and how many working days each of its steps has, for the requests submitted from then on.",
+        "operationId": "Platform.Approvals.SetUpApprovalKindSetting",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "A UUID chosen by the client for this request; repeating the request with the same key replays the first response instead of acting twice.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUpApprovalKindSettingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalKindResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
+    "/api/platform/approvals/kind-settings/{id}": {
+      "put": {
+        "tags": [
+          "Platform.Approvals"
+        ],
+        "summary": "Changes whether a kind of request needs approval and how many working days each of its steps has, for the requests submitted from then on; a request already waiting keeps its route and its due times.",
+        "operationId": "Platform.Approvals.ChangeApprovalKindSetting",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeApprovalKindSettingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Gateway Timeout",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalKindResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": [],
+            "AntiforgeryToken": []
+          }
+        ]
+      }
+    },
     "/api/platform/features": {
       "get": {
         "tags": [
@@ -7851,6 +9113,571 @@
   },
   "components": {
     "schemas": {
+      "ApprovalCountsResponse": {
+        "required": [
+          "waitingForMe",
+          "lateForMe",
+          "mineWaiting"
+        ],
+        "type": "object",
+        "properties": {
+          "waitingForMe": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lateForMe": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mineWaiting": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ApprovalDecisionRequest": {
+        "required": [
+          "version",
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Version of the request the decision was made from, as the API last returned it."
+          },
+          "comment": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "What needs to change, to send the request back, or why it is rejected, to reject it, both of which need one; a note to approve it, which needs none. At most 1,000 characters, kept without the spaces at either end; a blank one is none."
+          }
+        }
+      },
+      "ApprovalKindResponse": {
+        "required": [
+          "kind",
+          "title",
+          "description",
+          "steps",
+          "declaredWorkingDays",
+          "setting"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalKindStepResponse"
+            }
+          },
+          "declaredWorkingDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "setting": {
+            "$ref": "#/components/schemas/ApprovalKindSettingResponse"
+          }
+        }
+      },
+      "ApprovalKindSettingResponse": {
+        "required": [
+          "id",
+          "required",
+          "workingDaysToDecide",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "workingDaysToDecide": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "ApprovalKindStepResponse": {
+        "required": [
+          "order",
+          "title",
+          "rule",
+          "role"
+        ],
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/ApprovalStepRule"
+          },
+          "role": {
+            "$ref": "#/components/schemas/ErpRole"
+          }
+        }
+      },
+      "ApprovalRequestResponse": {
+        "required": [
+          "id",
+          "kind",
+          "kindTitle",
+          "subjectType",
+          "subjectId",
+          "subjectName",
+          "requestedForId",
+          "requestedForName",
+          "submittedById",
+          "submittedByName",
+          "submittedAt",
+          "state",
+          "waitingStepTitle",
+          "waitingForKind",
+          "waitingForId",
+          "waitingForName",
+          "waitingForRole",
+          "dueAt",
+          "late",
+          "closedAt",
+          "version",
+          "steps",
+          "earlierRequests",
+          "canDecide",
+          "decidesInPlace",
+          "canWithdraw"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "kindTitle": {
+            "type": "string"
+          },
+          "subjectType": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedForId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestedForName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "submittedById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submittedByName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ApprovalState"
+          },
+          "waitingStepTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "waitingForKind": {
+            "$ref": "#/components/schemas/ApproverKind"
+          },
+          "waitingForId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "waitingForName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "waitingForRole": {
+            "$ref": "#/components/schemas/ErpRole"
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "late": {
+            "type": "boolean"
+          },
+          "closedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalStepResponse"
+            }
+          },
+          "earlierRequests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EarlierApprovalRequestResponse"
+            }
+          },
+          "canDecide": {
+            "type": "boolean"
+          },
+          "decidesInPlace": {
+            "type": "boolean"
+          },
+          "canWithdraw": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApprovalRequestSummaryResponse": {
+        "required": [
+          "id",
+          "kind",
+          "kindTitle",
+          "subjectType",
+          "subjectId",
+          "subjectName",
+          "requestedForId",
+          "requestedForName",
+          "submittedById",
+          "submittedByName",
+          "submittedAt",
+          "state",
+          "waitingStepTitle",
+          "waitingForKind",
+          "waitingForId",
+          "waitingForName",
+          "waitingForRole",
+          "dueAt",
+          "late",
+          "closedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "kindTitle": {
+            "type": "string"
+          },
+          "subjectType": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedForId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestedForName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "submittedById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "submittedByName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ApprovalState"
+          },
+          "waitingStepTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "waitingForKind": {
+            "$ref": "#/components/schemas/ApproverKind"
+          },
+          "waitingForId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "waitingForName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "waitingForRole": {
+            "$ref": "#/components/schemas/ErpRole"
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "late": {
+            "type": "boolean"
+          },
+          "closedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ApprovalState": {
+        "enum": [
+          "submitted",
+          "approved",
+          "returned",
+          "rejected",
+          "withdrawn"
+        ]
+      },
+      "ApprovalStepResponse": {
+        "required": [
+          "order",
+          "title",
+          "rule",
+          "state",
+          "approverKind",
+          "approverId",
+          "approverName",
+          "approverRole",
+          "workingDays",
+          "startedAt",
+          "dueAt",
+          "late",
+          "decidedById",
+          "decidedByName",
+          "decidedAt",
+          "inPlaceOfApprover",
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/ApprovalStepRule"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ApprovalStepState"
+          },
+          "approverKind": {
+            "$ref": "#/components/schemas/ApproverKind"
+          },
+          "approverId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "approverName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "approverRole": {
+            "$ref": "#/components/schemas/ErpRole"
+          },
+          "workingDays": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "late": {
+            "type": "boolean"
+          },
+          "decidedById": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "decidedByName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "decidedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "inPlaceOfApprover": {
+            "type": "boolean"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ApprovalStepRule": {
+        "enum": [
+          "manager",
+          "role"
+        ]
+      },
+      "ApprovalStepState": {
+        "enum": [
+          "pending",
+          "waiting",
+          "approved",
+          "returned",
+          "rejected",
+          "closed"
+        ]
+      },
+      "ApprovalWithdrawalRequest": {
+        "required": [
+          "version",
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Version of the request the withdrawal was made from, as the API last returned it."
+          },
+          "comment": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why the request is withdrawn; optional, at most 1,000 characters, kept without the spaces at either end."
+          }
+        }
+      },
+      "ApproverKind": {
+        "enum": [
+          "person",
+          "role"
+        ]
+      },
       "AssignPersonRolesRequest": {
         "required": [
           "roles",
@@ -7935,6 +9762,42 @@
           "system",
           "anonymous"
         ]
+      },
+      "ChangeApprovalKindSettingRequest": {
+        "required": [
+          "required",
+          "workingDaysToDecide",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "required": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Whether the kind's records need approval from now on; false lets each go through at once, without a request, so nobody but the person who made it looks at it."
+          },
+          "workingDaysToDecide": {
+            "maximum": 30,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Working days each step of the requests submitted from now on has, from 1 to 30; a request already waiting keeps its due times.",
+            "format": "int32"
+          },
+          "version": {
+            "maxLength": 64,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Version of the setting the change was made from, as the API last returned it."
+          }
+        }
       },
       "ChangedValueResponse": {
         "required": [
@@ -8501,6 +10364,35 @@
           },
           "expiresAt": {
             "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EarlierApprovalRequestResponse": {
+        "required": [
+          "id",
+          "state",
+          "submittedAt",
+          "closedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ApprovalState"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "date-time"
           }
         }
@@ -9517,6 +11409,40 @@
           }
         }
       },
+      "PagedResponseOfApprovalRequestSummaryResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalCount",
+          "totalPages"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalRequestSummaryResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfAttachmentResponse": {
         "required": [
           "items",
@@ -10218,6 +12144,12 @@
           "identity.users.positions.read",
           "identity.users.positions.record",
           "identity.users.positions.withdraw",
+          "platform.approvals.kinds.change",
+          "platform.approvals.requests.decide",
+          "platform.approvals.requests.decide-any",
+          "platform.approvals.requests.read",
+          "platform.approvals.requests.read-all",
+          "platform.approvals.requests.withdraw",
           "platform.attachments.files.delete",
           "platform.attachments.files.read",
           "platform.attachments.files.upload",
@@ -10835,6 +12767,42 @@
           }
         }
       },
+      "SetUpApprovalKindSettingRequest": {
+        "required": [
+          "kind",
+          "required",
+          "workingDaysToDecide"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "maxLength": 128,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Key of the kind of request, as the list of kinds gives it."
+          },
+          "required": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Whether the kind's records need approval; false lets each go through at once, without a request, so nobody but the person who made it looks at it."
+          },
+          "workingDaysToDecide": {
+            "maximum": 30,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Working days each step of the kind's requests has, from 1 to 30.",
+            "format": "int32"
+          }
+        }
+      },
       "SetUpNumberSeriesRequest": {
         "required": [
           "documentType",
@@ -11169,6 +13137,9 @@
     },
     {
       "name": "Platform.Numbering"
+    },
+    {
+      "name": "Platform.Approvals"
     },
     {
       "name": "Platform.Features"

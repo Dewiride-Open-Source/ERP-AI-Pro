@@ -39,6 +39,14 @@
     <Project Path="Modules/Identity/Users/Tests/UnitTests/Dewiride.Erp.Modules.Identity.Users.UnitTests/Dewiride.Erp.Modules.Identity.Users.UnitTests.csproj" />
     <Project Path="Modules/Identity/Users/Tests/IntegrationTests/Dewiride.Erp.Modules.Identity.Users.IntegrationTests/Dewiride.Erp.Modules.Identity.Users.IntegrationTests.csproj" />
   </Folder>
+  <Folder Name="/Modules/Platform/Approvals/">
+    <Project Path="Modules/Platform/Approvals/Contracts/Dewiride.Erp.Modules.Platform.Approvals.Contracts/Dewiride.Erp.Modules.Platform.Approvals.Contracts.csproj" />
+    <Project Path="Modules/Platform/Approvals/Module/Dewiride.Erp.Modules.Platform.Approvals/Dewiride.Erp.Modules.Platform.Approvals.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Platform/Approvals/Tests/">
+    <Project Path="Modules/Platform/Approvals/Tests/UnitTests/Dewiride.Erp.Modules.Platform.Approvals.UnitTests/Dewiride.Erp.Modules.Platform.Approvals.UnitTests.csproj" />
+    <Project Path="Modules/Platform/Approvals/Tests/IntegrationTests/Dewiride.Erp.Modules.Platform.Approvals.IntegrationTests/Dewiride.Erp.Modules.Platform.Approvals.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/Modules/Platform/Attachments/">
     <Project Path="Modules/Platform/Attachments/Contracts/Dewiride.Erp.Modules.Platform.Attachments.Contracts/Dewiride.Erp.Modules.Platform.Attachments.Contracts.csproj" />
     <Project Path="Modules/Platform/Attachments/Module/Dewiride.Erp.Modules.Platform.Attachments/Dewiride.Erp.Modules.Platform.Attachments.csproj" />

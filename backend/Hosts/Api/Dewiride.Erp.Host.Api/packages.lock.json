@@ -667,6 +667,7 @@
           "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
           "Dewiride.Erp.Modules.Compliance.StatutoryParameters": "[1.0.0, )",
           "Dewiride.Erp.Modules.Identity.Users": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Approvals": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.Attachments": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.Audit": "[1.0.0, )",
           "Dewiride.Erp.Modules.Platform.Jobs": "[1.0.0, )",
@@ -705,6 +706,25 @@
         }
       },
       "dewiride.erp.modules.identity.users.contracts": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.approvals": {
+        "type": "Project",
+        "dependencies": {
+          "Dewiride.Erp.BuildingBlocks.Application": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Approvals": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Endpoints": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Idempotency": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Modules": "[1.0.0, )",
+          "Dewiride.Erp.BuildingBlocks.Persistence": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Identity.Users.Contracts": "[1.0.0, )",
+          "Dewiride.Erp.Modules.Platform.Approvals.Contracts": "[1.0.0, )"
+        }
+      },
+      "dewiride.erp.modules.platform.approvals.contracts": {
         "type": "Project",
         "dependencies": {
           "Dewiride.Erp.BuildingBlocks.Kernel": "[1.0.0, )"

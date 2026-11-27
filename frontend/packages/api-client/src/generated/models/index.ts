@@ -4,6 +4,364 @@
 // @ts-ignore
 import { type AdditionalDataHolder, type ApiError, type DateOnly, type Guid, type Parsable, type ParseNode, type SerializationWriter } from '@microsoft/kiota-abstractions';
 
+export interface ApprovalCountsResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The lateForMe property
+     */
+    lateForMe?: number | null;
+    /**
+     * The mineWaiting property
+     */
+    mineWaiting?: number | null;
+    /**
+     * The waitingForMe property
+     */
+    waitingForMe?: number | null;
+}
+export interface ApprovalDecisionRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * What needs to change, to send the request back, or why it is rejected, to reject it, both of which need one; a note to approve it, which needs none. At most 1,000 characters, kept without the spaces at either end; a blank one is none.
+     */
+    comment?: string | null;
+    /**
+     * Version of the request the decision was made from, as the API last returned it.
+     */
+    version?: string | null;
+}
+export interface ApprovalKindResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The declaredWorkingDays property
+     */
+    declaredWorkingDays?: number | null;
+    /**
+     * The description property
+     */
+    description?: string | null;
+    /**
+     * The kind property
+     */
+    kind?: string | null;
+    /**
+     * The setting property
+     */
+    setting?: ApprovalKindSettingResponse | null;
+    /**
+     * The steps property
+     */
+    steps?: ApprovalKindStepResponse[] | null;
+    /**
+     * The title property
+     */
+    title?: string | null;
+}
+export interface ApprovalKindSettingResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The required property
+     */
+    required?: boolean | null;
+    /**
+     * The version property
+     */
+    version?: string | null;
+    /**
+     * The workingDaysToDecide property
+     */
+    workingDaysToDecide?: number | null;
+}
+export interface ApprovalKindStepResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The order property
+     */
+    order?: number | null;
+    /**
+     * The role property
+     */
+    role?: ErpRole | null;
+    /**
+     * The rule property
+     */
+    rule?: ApprovalStepRule | null;
+    /**
+     * The title property
+     */
+    title?: string | null;
+}
+export interface ApprovalRequestResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The canDecide property
+     */
+    canDecide?: boolean | null;
+    /**
+     * The canWithdraw property
+     */
+    canWithdraw?: boolean | null;
+    /**
+     * The closedAt property
+     */
+    closedAt?: Date | null;
+    /**
+     * The decidesInPlace property
+     */
+    decidesInPlace?: boolean | null;
+    /**
+     * The dueAt property
+     */
+    dueAt?: Date | null;
+    /**
+     * The earlierRequests property
+     */
+    earlierRequests?: EarlierApprovalRequestResponse[] | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The kind property
+     */
+    kind?: string | null;
+    /**
+     * The kindTitle property
+     */
+    kindTitle?: string | null;
+    /**
+     * The late property
+     */
+    late?: boolean | null;
+    /**
+     * The requestedForId property
+     */
+    requestedForId?: Guid | null;
+    /**
+     * The requestedForName property
+     */
+    requestedForName?: string | null;
+    /**
+     * The state property
+     */
+    state?: ApprovalState | null;
+    /**
+     * The steps property
+     */
+    steps?: ApprovalStepResponse[] | null;
+    /**
+     * The subjectId property
+     */
+    subjectId?: Guid | null;
+    /**
+     * The subjectName property
+     */
+    subjectName?: string | null;
+    /**
+     * The subjectType property
+     */
+    subjectType?: string | null;
+    /**
+     * The submittedAt property
+     */
+    submittedAt?: Date | null;
+    /**
+     * The submittedById property
+     */
+    submittedById?: Guid | null;
+    /**
+     * The submittedByName property
+     */
+    submittedByName?: string | null;
+    /**
+     * The version property
+     */
+    version?: string | null;
+    /**
+     * The waitingForId property
+     */
+    waitingForId?: Guid | null;
+    /**
+     * The waitingForKind property
+     */
+    waitingForKind?: ApproverKind | null;
+    /**
+     * The waitingForName property
+     */
+    waitingForName?: string | null;
+    /**
+     * The waitingForRole property
+     */
+    waitingForRole?: ErpRole | null;
+    /**
+     * The waitingStepTitle property
+     */
+    waitingStepTitle?: string | null;
+}
+export interface ApprovalRequestSummaryResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The closedAt property
+     */
+    closedAt?: Date | null;
+    /**
+     * The dueAt property
+     */
+    dueAt?: Date | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The kind property
+     */
+    kind?: string | null;
+    /**
+     * The kindTitle property
+     */
+    kindTitle?: string | null;
+    /**
+     * The late property
+     */
+    late?: boolean | null;
+    /**
+     * The requestedForId property
+     */
+    requestedForId?: Guid | null;
+    /**
+     * The requestedForName property
+     */
+    requestedForName?: string | null;
+    /**
+     * The state property
+     */
+    state?: ApprovalState | null;
+    /**
+     * The subjectId property
+     */
+    subjectId?: Guid | null;
+    /**
+     * The subjectName property
+     */
+    subjectName?: string | null;
+    /**
+     * The subjectType property
+     */
+    subjectType?: string | null;
+    /**
+     * The submittedAt property
+     */
+    submittedAt?: Date | null;
+    /**
+     * The submittedById property
+     */
+    submittedById?: Guid | null;
+    /**
+     * The submittedByName property
+     */
+    submittedByName?: string | null;
+    /**
+     * The waitingForId property
+     */
+    waitingForId?: Guid | null;
+    /**
+     * The waitingForKind property
+     */
+    waitingForKind?: ApproverKind | null;
+    /**
+     * The waitingForName property
+     */
+    waitingForName?: string | null;
+    /**
+     * The waitingForRole property
+     */
+    waitingForRole?: ErpRole | null;
+    /**
+     * The waitingStepTitle property
+     */
+    waitingStepTitle?: string | null;
+}
+export type ApprovalState = (typeof ApprovalStateObject)[keyof typeof ApprovalStateObject];
+export interface ApprovalStepResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The approverId property
+     */
+    approverId?: Guid | null;
+    /**
+     * The approverKind property
+     */
+    approverKind?: ApproverKind | null;
+    /**
+     * The approverName property
+     */
+    approverName?: string | null;
+    /**
+     * The approverRole property
+     */
+    approverRole?: ErpRole | null;
+    /**
+     * The comment property
+     */
+    comment?: string | null;
+    /**
+     * The decidedAt property
+     */
+    decidedAt?: Date | null;
+    /**
+     * The decidedById property
+     */
+    decidedById?: Guid | null;
+    /**
+     * The decidedByName property
+     */
+    decidedByName?: string | null;
+    /**
+     * The dueAt property
+     */
+    dueAt?: Date | null;
+    /**
+     * The inPlaceOfApprover property
+     */
+    inPlaceOfApprover?: boolean | null;
+    /**
+     * The late property
+     */
+    late?: boolean | null;
+    /**
+     * The order property
+     */
+    order?: number | null;
+    /**
+     * The rule property
+     */
+    rule?: ApprovalStepRule | null;
+    /**
+     * The startedAt property
+     */
+    startedAt?: Date | null;
+    /**
+     * The state property
+     */
+    state?: ApprovalStepState | null;
+    /**
+     * The title property
+     */
+    title?: string | null;
+    /**
+     * The workingDays property
+     */
+    workingDays?: number | null;
+}
+export type ApprovalStepRule = (typeof ApprovalStepRuleObject)[keyof typeof ApprovalStepRuleObject];
+export type ApprovalStepState = (typeof ApprovalStepStateObject)[keyof typeof ApprovalStepStateObject];
+export interface ApprovalWithdrawalRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Why the request is withdrawn; optional, at most 1,000 characters, kept without the spaces at either end.
+     */
+    comment?: string | null;
+    /**
+     * Version of the request the withdrawal was made from, as the API last returned it.
+     */
+    version?: string | null;
+}
+export type ApproverKind = (typeof ApproverKindObject)[keyof typeof ApproverKindObject];
 export interface AssignPersonRolesRequest extends AdditionalDataHolder, Parsable {
     /**
      * Roles the person holds in the ERP from now on, in place of those they held; their app roles in Microsoft Entra give them Administrator and Employee besides.
@@ -50,6 +408,20 @@ export interface AttachmentResponse extends AdditionalDataHolder, Parsable {
 }
 export type AttachmentScanStatus = (typeof AttachmentScanStatusObject)[keyof typeof AttachmentScanStatusObject];
 export type ChangeActorKind = (typeof ChangeActorKindObject)[keyof typeof ChangeActorKindObject];
+export interface ChangeApprovalKindSettingRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Whether the kind's records need approval from now on; false lets each go through at once, without a request, so nobody but the person who made it looks at it.
+     */
+    required?: boolean | null;
+    /**
+     * Version of the setting the change was made from, as the API last returned it.
+     */
+    version?: string | null;
+    /**
+     * Working days each step of the requests submitted from now on has, from 1 to 30; a request already waiting keeps its due times.
+     */
+    workingDaysToDecide?: number | null;
+}
 export interface ChangedValueResponse extends AdditionalDataHolder, Parsable {
     /**
      * The after property
@@ -211,6 +583,87 @@ export interface CountryResponse extends AdditionalDataHolder, Parsable {
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalCountsResponse}
+ */
+// @ts-ignore
+export function createApprovalCountsResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalCountsResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalDecisionRequest}
+ */
+// @ts-ignore
+export function createApprovalDecisionRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalDecisionRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalKindResponse}
+ */
+// @ts-ignore
+export function createApprovalKindResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalKindResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalKindSettingResponse}
+ */
+// @ts-ignore
+export function createApprovalKindSettingResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalKindSettingResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalKindStepResponse}
+ */
+// @ts-ignore
+export function createApprovalKindStepResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalKindStepResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalRequestResponse}
+ */
+// @ts-ignore
+export function createApprovalRequestResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalRequestResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalRequestSummaryResponse}
+ */
+// @ts-ignore
+export function createApprovalRequestSummaryResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalRequestSummaryResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalStepResponse}
+ */
+// @ts-ignore
+export function createApprovalStepResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalStepResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ApprovalWithdrawalRequest}
+ */
+// @ts-ignore
+export function createApprovalWithdrawalRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoApprovalWithdrawalRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {AssignPersonRolesRequest}
  */
 // @ts-ignore
@@ -225,6 +678,15 @@ export function createAssignPersonRolesRequestFromDiscriminatorValue(parseNode: 
 // @ts-ignore
 export function createAttachmentResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoAttachmentResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {ChangeApprovalKindSettingRequest}
+ */
+// @ts-ignore
+export function createChangeApprovalKindSettingRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoChangeApprovalKindSettingRequest;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -421,6 +883,15 @@ export function createDirectorySearchResponseFromDiscriminatorValue(parseNode: P
 // @ts-ignore
 export function createDownloadLinkResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoDownloadLinkResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {EarlierApprovalRequestResponse}
+ */
+// @ts-ignore
+export function createEarlierApprovalRequestResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoEarlierApprovalRequestResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -664,6 +1135,15 @@ export function createNumberSeriesYearResponseFromDiscriminatorValue(parseNode: 
 // @ts-ignore
 export function createOrgChartPersonResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
     return deserializeIntoOrgChartPersonResponse;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {PagedResponseOfApprovalRequestSummaryResponse}
+ */
+// @ts-ignore
+export function createPagedResponseOfApprovalRequestSummaryResponseFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoPagedResponseOfApprovalRequestSummaryResponse;
 }
 /**
  * Creates a new instance of the appropriate class based on discriminator value
@@ -947,6 +1427,15 @@ export function createSessionResponseFromDiscriminatorValue(parseNode: ParseNode
 /**
  * Creates a new instance of the appropriate class based on discriminator value
  * @param parseNode The parse node to use to read the discriminator value and create the object
+ * @returns {SetUpApprovalKindSettingRequest}
+ */
+// @ts-ignore
+export function createSetUpApprovalKindSettingRequestFromDiscriminatorValue(parseNode: ParseNode | undefined) : ((instance?: Parsable) => Record<string, (node: ParseNode) => void>) {
+    return deserializeIntoSetUpApprovalKindSettingRequest;
+}
+/**
+ * Creates a new instance of the appropriate class based on discriminator value
+ * @param parseNode The parse node to use to read the discriminator value and create the object
  * @returns {SetUpNumberSeriesRequest}
  */
 // @ts-ignore
@@ -1110,6 +1599,180 @@ export interface DepartmentResponse extends AdditionalDataHolder, Parsable {
 }
 /**
  * The deserialization information for the current model
+ * @param ApprovalCountsResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalCountsResponse(approvalCountsResponse: Partial<ApprovalCountsResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "lateForMe": n => { approvalCountsResponse.lateForMe = n.getNumberValue(); },
+        "mineWaiting": n => { approvalCountsResponse.mineWaiting = n.getNumberValue(); },
+        "waitingForMe": n => { approvalCountsResponse.waitingForMe = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ApprovalDecisionRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalDecisionRequest(approvalDecisionRequest: Partial<ApprovalDecisionRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "comment": n => { approvalDecisionRequest.comment = n.getStringValue(); },
+        "version": n => { approvalDecisionRequest.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ApprovalKindResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalKindResponse(approvalKindResponse: Partial<ApprovalKindResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "declaredWorkingDays": n => { approvalKindResponse.declaredWorkingDays = n.getNumberValue(); },
+        "description": n => { approvalKindResponse.description = n.getStringValue(); },
+        "kind": n => { approvalKindResponse.kind = n.getStringValue(); },
+        "setting": n => { approvalKindResponse.setting = n.getObjectValue<ApprovalKindSettingResponse>(createApprovalKindSettingResponseFromDiscriminatorValue); },
+        "steps": n => { approvalKindResponse.steps = n.getCollectionOfObjectValues<ApprovalKindStepResponse>(createApprovalKindStepResponseFromDiscriminatorValue); },
+        "title": n => { approvalKindResponse.title = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ApprovalKindSettingResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalKindSettingResponse(approvalKindSettingResponse: Partial<ApprovalKindSettingResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "id": n => { approvalKindSettingResponse.id = n.getGuidValue(); },
+        "required": n => { approvalKindSettingResponse.required = n.getBooleanValue(); },
+        "version": n => { approvalKindSettingResponse.version = n.getStringValue(); },
+        "workingDaysToDecide": n => { approvalKindSettingResponse.workingDaysToDecide = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ApprovalKindStepResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalKindStepResponse(approvalKindStepResponse: Partial<ApprovalKindStepResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "order": n => { approvalKindStepResponse.order = n.getNumberValue(); },
+        "role": n => { approvalKindStepResponse.role = n.getEnumValue<ErpRole>(ErpRoleObject); },
+        "rule": n => { approvalKindStepResponse.rule = n.getEnumValue<ApprovalStepRule>(ApprovalStepRuleObject); },
+        "title": n => { approvalKindStepResponse.title = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ApprovalRequestResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalRequestResponse(approvalRequestResponse: Partial<ApprovalRequestResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "canDecide": n => { approvalRequestResponse.canDecide = n.getBooleanValue(); },
+        "canWithdraw": n => { approvalRequestResponse.canWithdraw = n.getBooleanValue(); },
+        "closedAt": n => { approvalRequestResponse.closedAt = n.getDateValue(); },
+        "decidesInPlace": n => { approvalRequestResponse.decidesInPlace = n.getBooleanValue(); },
+        "dueAt": n => { approvalRequestResponse.dueAt = n.getDateValue(); },
+        "earlierRequests": n => { approvalRequestResponse.earlierRequests = n.getCollectionOfObjectValues<EarlierApprovalRequestResponse>(createEarlierApprovalRequestResponseFromDiscriminatorValue); },
+        "id": n => { approvalRequestResponse.id = n.getGuidValue(); },
+        "kind": n => { approvalRequestResponse.kind = n.getStringValue(); },
+        "kindTitle": n => { approvalRequestResponse.kindTitle = n.getStringValue(); },
+        "late": n => { approvalRequestResponse.late = n.getBooleanValue(); },
+        "requestedForId": n => { approvalRequestResponse.requestedForId = n.getGuidValue(); },
+        "requestedForName": n => { approvalRequestResponse.requestedForName = n.getStringValue(); },
+        "state": n => { approvalRequestResponse.state = n.getEnumValue<ApprovalState>(ApprovalStateObject); },
+        "steps": n => { approvalRequestResponse.steps = n.getCollectionOfObjectValues<ApprovalStepResponse>(createApprovalStepResponseFromDiscriminatorValue); },
+        "subjectId": n => { approvalRequestResponse.subjectId = n.getGuidValue(); },
+        "subjectName": n => { approvalRequestResponse.subjectName = n.getStringValue(); },
+        "subjectType": n => { approvalRequestResponse.subjectType = n.getStringValue(); },
+        "submittedAt": n => { approvalRequestResponse.submittedAt = n.getDateValue(); },
+        "submittedById": n => { approvalRequestResponse.submittedById = n.getGuidValue(); },
+        "submittedByName": n => { approvalRequestResponse.submittedByName = n.getStringValue(); },
+        "version": n => { approvalRequestResponse.version = n.getStringValue(); },
+        "waitingForId": n => { approvalRequestResponse.waitingForId = n.getGuidValue(); },
+        "waitingForKind": n => { approvalRequestResponse.waitingForKind = n.getEnumValue<ApproverKind>(ApproverKindObject); },
+        "waitingForName": n => { approvalRequestResponse.waitingForName = n.getStringValue(); },
+        "waitingForRole": n => { approvalRequestResponse.waitingForRole = n.getEnumValue<ErpRole>(ErpRoleObject); },
+        "waitingStepTitle": n => { approvalRequestResponse.waitingStepTitle = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ApprovalRequestSummaryResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalRequestSummaryResponse(approvalRequestSummaryResponse: Partial<ApprovalRequestSummaryResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "closedAt": n => { approvalRequestSummaryResponse.closedAt = n.getDateValue(); },
+        "dueAt": n => { approvalRequestSummaryResponse.dueAt = n.getDateValue(); },
+        "id": n => { approvalRequestSummaryResponse.id = n.getGuidValue(); },
+        "kind": n => { approvalRequestSummaryResponse.kind = n.getStringValue(); },
+        "kindTitle": n => { approvalRequestSummaryResponse.kindTitle = n.getStringValue(); },
+        "late": n => { approvalRequestSummaryResponse.late = n.getBooleanValue(); },
+        "requestedForId": n => { approvalRequestSummaryResponse.requestedForId = n.getGuidValue(); },
+        "requestedForName": n => { approvalRequestSummaryResponse.requestedForName = n.getStringValue(); },
+        "state": n => { approvalRequestSummaryResponse.state = n.getEnumValue<ApprovalState>(ApprovalStateObject); },
+        "subjectId": n => { approvalRequestSummaryResponse.subjectId = n.getGuidValue(); },
+        "subjectName": n => { approvalRequestSummaryResponse.subjectName = n.getStringValue(); },
+        "subjectType": n => { approvalRequestSummaryResponse.subjectType = n.getStringValue(); },
+        "submittedAt": n => { approvalRequestSummaryResponse.submittedAt = n.getDateValue(); },
+        "submittedById": n => { approvalRequestSummaryResponse.submittedById = n.getGuidValue(); },
+        "submittedByName": n => { approvalRequestSummaryResponse.submittedByName = n.getStringValue(); },
+        "waitingForId": n => { approvalRequestSummaryResponse.waitingForId = n.getGuidValue(); },
+        "waitingForKind": n => { approvalRequestSummaryResponse.waitingForKind = n.getEnumValue<ApproverKind>(ApproverKindObject); },
+        "waitingForName": n => { approvalRequestSummaryResponse.waitingForName = n.getStringValue(); },
+        "waitingForRole": n => { approvalRequestSummaryResponse.waitingForRole = n.getEnumValue<ErpRole>(ErpRoleObject); },
+        "waitingStepTitle": n => { approvalRequestSummaryResponse.waitingStepTitle = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ApprovalStepResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalStepResponse(approvalStepResponse: Partial<ApprovalStepResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "approverId": n => { approvalStepResponse.approverId = n.getGuidValue(); },
+        "approverKind": n => { approvalStepResponse.approverKind = n.getEnumValue<ApproverKind>(ApproverKindObject); },
+        "approverName": n => { approvalStepResponse.approverName = n.getStringValue(); },
+        "approverRole": n => { approvalStepResponse.approverRole = n.getEnumValue<ErpRole>(ErpRoleObject); },
+        "comment": n => { approvalStepResponse.comment = n.getStringValue(); },
+        "decidedAt": n => { approvalStepResponse.decidedAt = n.getDateValue(); },
+        "decidedById": n => { approvalStepResponse.decidedById = n.getGuidValue(); },
+        "decidedByName": n => { approvalStepResponse.decidedByName = n.getStringValue(); },
+        "dueAt": n => { approvalStepResponse.dueAt = n.getDateValue(); },
+        "inPlaceOfApprover": n => { approvalStepResponse.inPlaceOfApprover = n.getBooleanValue(); },
+        "late": n => { approvalStepResponse.late = n.getBooleanValue(); },
+        "order": n => { approvalStepResponse.order = n.getNumberValue(); },
+        "rule": n => { approvalStepResponse.rule = n.getEnumValue<ApprovalStepRule>(ApprovalStepRuleObject); },
+        "startedAt": n => { approvalStepResponse.startedAt = n.getDateValue(); },
+        "state": n => { approvalStepResponse.state = n.getEnumValue<ApprovalStepState>(ApprovalStepStateObject); },
+        "title": n => { approvalStepResponse.title = n.getStringValue(); },
+        "workingDays": n => { approvalStepResponse.workingDays = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ApprovalWithdrawalRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoApprovalWithdrawalRequest(approvalWithdrawalRequest: Partial<ApprovalWithdrawalRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "comment": n => { approvalWithdrawalRequest.comment = n.getStringValue(); },
+        "version": n => { approvalWithdrawalRequest.version = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param AssignPersonRolesRequest The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -1136,6 +1799,19 @@ export function deserializeIntoAttachmentResponse(attachmentResponse: Partial<At
         "scanStatus": n => { attachmentResponse.scanStatus = n.getEnumValue<AttachmentScanStatus>(AttachmentScanStatusObject); },
         "sha256": n => { attachmentResponse.sha256 = n.getStringValue(); },
         "sizeBytes": n => { attachmentResponse.sizeBytes = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param ChangeApprovalKindSettingRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoChangeApprovalKindSettingRequest(changeApprovalKindSettingRequest: Partial<ChangeApprovalKindSettingRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "required": n => { changeApprovalKindSettingRequest.required = n.getBooleanValue(); },
+        "version": n => { changeApprovalKindSettingRequest.version = n.getStringValue(); },
+        "workingDaysToDecide": n => { changeApprovalKindSettingRequest.workingDaysToDecide = n.getNumberValue(); },
     }
 }
 /**
@@ -1405,6 +2081,20 @@ export function deserializeIntoDownloadLinkResponse(downloadLinkResponse: Partia
     return {
         "expiresAt": n => { downloadLinkResponse.expiresAt = n.getDateValue(); },
         "url": n => { downloadLinkResponse.url = n.getStringValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param EarlierApprovalRequestResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoEarlierApprovalRequestResponse(earlierApprovalRequestResponse: Partial<EarlierApprovalRequestResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "closedAt": n => { earlierApprovalRequestResponse.closedAt = n.getDateValue(); },
+        "id": n => { earlierApprovalRequestResponse.id = n.getGuidValue(); },
+        "state": n => { earlierApprovalRequestResponse.state = n.getEnumValue<ApprovalState>(ApprovalStateObject); },
+        "submittedAt": n => { earlierApprovalRequestResponse.submittedAt = n.getDateValue(); },
     }
 }
 /**
@@ -1806,6 +2496,21 @@ export function deserializeIntoOrgChartPersonResponse(orgChartPersonResponse: Pa
         "id": n => { orgChartPersonResponse.id = n.getGuidValue(); },
         "managerDisplayName": n => { orgChartPersonResponse.managerDisplayName = n.getStringValue(); },
         "managerId": n => { orgChartPersonResponse.managerId = n.getGuidValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
+ * @param PagedResponseOfApprovalRequestSummaryResponse The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoPagedResponseOfApprovalRequestSummaryResponse(pagedResponseOfApprovalRequestSummaryResponse: Partial<PagedResponseOfApprovalRequestSummaryResponse> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "items": n => { pagedResponseOfApprovalRequestSummaryResponse.items = n.getCollectionOfObjectValues<ApprovalRequestSummaryResponse>(createApprovalRequestSummaryResponseFromDiscriminatorValue); },
+        "page": n => { pagedResponseOfApprovalRequestSummaryResponse.page = n.getNumberValue(); },
+        "pageSize": n => { pagedResponseOfApprovalRequestSummaryResponse.pageSize = n.getNumberValue(); },
+        "totalCount": n => { pagedResponseOfApprovalRequestSummaryResponse.totalCount = n.getNumberValue(); },
+        "totalPages": n => { pagedResponseOfApprovalRequestSummaryResponse.totalPages = n.getNumberValue(); },
     }
 }
 /**
@@ -2289,6 +2994,19 @@ export function deserializeIntoSessionResponse(sessionResponse: Partial<SessionR
 }
 /**
  * The deserialization information for the current model
+ * @param SetUpApprovalKindSettingRequest The instance to deserialize into.
+ * @returns {Record<string, (node: ParseNode) => void>}
+ */
+// @ts-ignore
+export function deserializeIntoSetUpApprovalKindSettingRequest(setUpApprovalKindSettingRequest: Partial<SetUpApprovalKindSettingRequest> | undefined = {}) : Record<string, (node: ParseNode) => void> {
+    return {
+        "kind": n => { setUpApprovalKindSettingRequest.kind = n.getStringValue(); },
+        "required": n => { setUpApprovalKindSettingRequest.required = n.getBooleanValue(); },
+        "workingDaysToDecide": n => { setUpApprovalKindSettingRequest.workingDaysToDecide = n.getNumberValue(); },
+    }
+}
+/**
+ * The deserialization information for the current model
  * @param SetUpNumberSeriesRequest The instance to deserialize into.
  * @returns {Record<string, (node: ParseNode) => void>}
  */
@@ -2487,6 +3205,24 @@ export interface DownloadLinkResponse extends AdditionalDataHolder, Parsable {
      * The url property
      */
     url?: string | null;
+}
+export interface EarlierApprovalRequestResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The closedAt property
+     */
+    closedAt?: Date | null;
+    /**
+     * The id property
+     */
+    id?: Guid | null;
+    /**
+     * The state property
+     */
+    state?: ApprovalState | null;
+    /**
+     * The submittedAt property
+     */
+    submittedAt?: Date | null;
 }
 export type ErpRole = (typeof ErpRoleObject)[keyof typeof ErpRoleObject];
 export interface ExchangeRateResponse extends AdditionalDataHolder, Parsable {
@@ -3071,6 +3807,28 @@ export interface OrgChartPersonResponse extends AdditionalDataHolder, Parsable {
      * The managerId property
      */
     managerId?: Guid | null;
+}
+export interface PagedResponseOfApprovalRequestSummaryResponse extends AdditionalDataHolder, Parsable {
+    /**
+     * The items property
+     */
+    items?: ApprovalRequestSummaryResponse[] | null;
+    /**
+     * The page property
+     */
+    page?: number | null;
+    /**
+     * The pageSize property
+     */
+    pageSize?: number | null;
+    /**
+     * The totalCount property
+     */
+    totalCount?: number | null;
+    /**
+     * The totalPages property
+     */
+    totalPages?: number | null;
 }
 export interface PagedResponseOfAttachmentResponse extends AdditionalDataHolder, Parsable {
     /**
@@ -3799,6 +4557,189 @@ export interface RegisterPersonRequest extends AdditionalDataHolder, Parsable {
 }
 /**
  * Serializes information the current object
+ * @param ApprovalCountsResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalCountsResponse(writer: SerializationWriter, approvalCountsResponse: Partial<ApprovalCountsResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalCountsResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("lateForMe", approvalCountsResponse.lateForMe);
+    writer.writeNumberValue("mineWaiting", approvalCountsResponse.mineWaiting);
+    writer.writeNumberValue("waitingForMe", approvalCountsResponse.waitingForMe);
+    writer.writeAdditionalData(approvalCountsResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ApprovalDecisionRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalDecisionRequest(writer: SerializationWriter, approvalDecisionRequest: Partial<ApprovalDecisionRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalDecisionRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("comment", approvalDecisionRequest.comment);
+    writer.writeStringValue("version", approvalDecisionRequest.version);
+    writer.writeAdditionalData(approvalDecisionRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ApprovalKindResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalKindResponse(writer: SerializationWriter, approvalKindResponse: Partial<ApprovalKindResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalKindResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("declaredWorkingDays", approvalKindResponse.declaredWorkingDays);
+    writer.writeStringValue("description", approvalKindResponse.description);
+    writer.writeStringValue("kind", approvalKindResponse.kind);
+    writer.writeObjectValue<ApprovalKindSettingResponse>("setting", approvalKindResponse.setting, serializeApprovalKindSettingResponse);
+    writer.writeCollectionOfObjectValues<ApprovalKindStepResponse>("steps", approvalKindResponse.steps, serializeApprovalKindStepResponse);
+    writer.writeStringValue("title", approvalKindResponse.title);
+    writer.writeAdditionalData(approvalKindResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ApprovalKindSettingResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalKindSettingResponse(writer: SerializationWriter, approvalKindSettingResponse: Partial<ApprovalKindSettingResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalKindSettingResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("id", approvalKindSettingResponse.id);
+    writer.writeBooleanValue("required", approvalKindSettingResponse.required);
+    writer.writeStringValue("version", approvalKindSettingResponse.version);
+    writer.writeNumberValue("workingDaysToDecide", approvalKindSettingResponse.workingDaysToDecide);
+    writer.writeAdditionalData(approvalKindSettingResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ApprovalKindStepResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalKindStepResponse(writer: SerializationWriter, approvalKindStepResponse: Partial<ApprovalKindStepResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalKindStepResponse || isSerializingDerivedType) { return; }
+    writer.writeNumberValue("order", approvalKindStepResponse.order);
+    writer.writeEnumValue<ErpRole>("role", approvalKindStepResponse.role);
+    writer.writeEnumValue<ApprovalStepRule>("rule", approvalKindStepResponse.rule);
+    writer.writeStringValue("title", approvalKindStepResponse.title);
+    writer.writeAdditionalData(approvalKindStepResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ApprovalRequestResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalRequestResponse(writer: SerializationWriter, approvalRequestResponse: Partial<ApprovalRequestResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalRequestResponse || isSerializingDerivedType) { return; }
+    writer.writeBooleanValue("canDecide", approvalRequestResponse.canDecide);
+    writer.writeBooleanValue("canWithdraw", approvalRequestResponse.canWithdraw);
+    writer.writeDateValue("closedAt", approvalRequestResponse.closedAt);
+    writer.writeBooleanValue("decidesInPlace", approvalRequestResponse.decidesInPlace);
+    writer.writeDateValue("dueAt", approvalRequestResponse.dueAt);
+    writer.writeCollectionOfObjectValues<EarlierApprovalRequestResponse>("earlierRequests", approvalRequestResponse.earlierRequests, serializeEarlierApprovalRequestResponse);
+    writer.writeGuidValue("id", approvalRequestResponse.id);
+    writer.writeStringValue("kind", approvalRequestResponse.kind);
+    writer.writeStringValue("kindTitle", approvalRequestResponse.kindTitle);
+    writer.writeBooleanValue("late", approvalRequestResponse.late);
+    writer.writeGuidValue("requestedForId", approvalRequestResponse.requestedForId);
+    writer.writeStringValue("requestedForName", approvalRequestResponse.requestedForName);
+    writer.writeEnumValue<ApprovalState>("state", approvalRequestResponse.state);
+    writer.writeCollectionOfObjectValues<ApprovalStepResponse>("steps", approvalRequestResponse.steps, serializeApprovalStepResponse);
+    writer.writeGuidValue("subjectId", approvalRequestResponse.subjectId);
+    writer.writeStringValue("subjectName", approvalRequestResponse.subjectName);
+    writer.writeStringValue("subjectType", approvalRequestResponse.subjectType);
+    writer.writeDateValue("submittedAt", approvalRequestResponse.submittedAt);
+    writer.writeGuidValue("submittedById", approvalRequestResponse.submittedById);
+    writer.writeStringValue("submittedByName", approvalRequestResponse.submittedByName);
+    writer.writeStringValue("version", approvalRequestResponse.version);
+    writer.writeGuidValue("waitingForId", approvalRequestResponse.waitingForId);
+    writer.writeEnumValue<ApproverKind>("waitingForKind", approvalRequestResponse.waitingForKind);
+    writer.writeStringValue("waitingForName", approvalRequestResponse.waitingForName);
+    writer.writeEnumValue<ErpRole>("waitingForRole", approvalRequestResponse.waitingForRole);
+    writer.writeStringValue("waitingStepTitle", approvalRequestResponse.waitingStepTitle);
+    writer.writeAdditionalData(approvalRequestResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ApprovalRequestSummaryResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalRequestSummaryResponse(writer: SerializationWriter, approvalRequestSummaryResponse: Partial<ApprovalRequestSummaryResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalRequestSummaryResponse || isSerializingDerivedType) { return; }
+    writer.writeDateValue("closedAt", approvalRequestSummaryResponse.closedAt);
+    writer.writeDateValue("dueAt", approvalRequestSummaryResponse.dueAt);
+    writer.writeGuidValue("id", approvalRequestSummaryResponse.id);
+    writer.writeStringValue("kind", approvalRequestSummaryResponse.kind);
+    writer.writeStringValue("kindTitle", approvalRequestSummaryResponse.kindTitle);
+    writer.writeBooleanValue("late", approvalRequestSummaryResponse.late);
+    writer.writeGuidValue("requestedForId", approvalRequestSummaryResponse.requestedForId);
+    writer.writeStringValue("requestedForName", approvalRequestSummaryResponse.requestedForName);
+    writer.writeEnumValue<ApprovalState>("state", approvalRequestSummaryResponse.state);
+    writer.writeGuidValue("subjectId", approvalRequestSummaryResponse.subjectId);
+    writer.writeStringValue("subjectName", approvalRequestSummaryResponse.subjectName);
+    writer.writeStringValue("subjectType", approvalRequestSummaryResponse.subjectType);
+    writer.writeDateValue("submittedAt", approvalRequestSummaryResponse.submittedAt);
+    writer.writeGuidValue("submittedById", approvalRequestSummaryResponse.submittedById);
+    writer.writeStringValue("submittedByName", approvalRequestSummaryResponse.submittedByName);
+    writer.writeGuidValue("waitingForId", approvalRequestSummaryResponse.waitingForId);
+    writer.writeEnumValue<ApproverKind>("waitingForKind", approvalRequestSummaryResponse.waitingForKind);
+    writer.writeStringValue("waitingForName", approvalRequestSummaryResponse.waitingForName);
+    writer.writeEnumValue<ErpRole>("waitingForRole", approvalRequestSummaryResponse.waitingForRole);
+    writer.writeStringValue("waitingStepTitle", approvalRequestSummaryResponse.waitingStepTitle);
+    writer.writeAdditionalData(approvalRequestSummaryResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ApprovalStepResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalStepResponse(writer: SerializationWriter, approvalStepResponse: Partial<ApprovalStepResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalStepResponse || isSerializingDerivedType) { return; }
+    writer.writeGuidValue("approverId", approvalStepResponse.approverId);
+    writer.writeEnumValue<ApproverKind>("approverKind", approvalStepResponse.approverKind);
+    writer.writeStringValue("approverName", approvalStepResponse.approverName);
+    writer.writeEnumValue<ErpRole>("approverRole", approvalStepResponse.approverRole);
+    writer.writeStringValue("comment", approvalStepResponse.comment);
+    writer.writeDateValue("decidedAt", approvalStepResponse.decidedAt);
+    writer.writeGuidValue("decidedById", approvalStepResponse.decidedById);
+    writer.writeStringValue("decidedByName", approvalStepResponse.decidedByName);
+    writer.writeDateValue("dueAt", approvalStepResponse.dueAt);
+    writer.writeBooleanValue("inPlaceOfApprover", approvalStepResponse.inPlaceOfApprover);
+    writer.writeBooleanValue("late", approvalStepResponse.late);
+    writer.writeNumberValue("order", approvalStepResponse.order);
+    writer.writeEnumValue<ApprovalStepRule>("rule", approvalStepResponse.rule);
+    writer.writeDateValue("startedAt", approvalStepResponse.startedAt);
+    writer.writeEnumValue<ApprovalStepState>("state", approvalStepResponse.state);
+    writer.writeStringValue("title", approvalStepResponse.title);
+    writer.writeNumberValue("workingDays", approvalStepResponse.workingDays);
+    writer.writeAdditionalData(approvalStepResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ApprovalWithdrawalRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeApprovalWithdrawalRequest(writer: SerializationWriter, approvalWithdrawalRequest: Partial<ApprovalWithdrawalRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!approvalWithdrawalRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("comment", approvalWithdrawalRequest.comment);
+    writer.writeStringValue("version", approvalWithdrawalRequest.version);
+    writer.writeAdditionalData(approvalWithdrawalRequest.additionalData);
+}
+/**
+ * Serializes information the current object
  * @param AssignPersonRolesRequest The instance to serialize from.
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param writer Serialization writer to use to serialize this model
@@ -3829,6 +4770,20 @@ export function serializeAttachmentResponse(writer: SerializationWriter, attachm
     writer.writeStringValue("sha256", attachmentResponse.sha256);
     writer.writeNumberValue("sizeBytes", attachmentResponse.sizeBytes);
     writer.writeAdditionalData(attachmentResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param ChangeApprovalKindSettingRequest The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeChangeApprovalKindSettingRequest(writer: SerializationWriter, changeApprovalKindSettingRequest: Partial<ChangeApprovalKindSettingRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!changeApprovalKindSettingRequest || isSerializingDerivedType) { return; }
+    writer.writeBooleanValue("required", changeApprovalKindSettingRequest.required);
+    writer.writeStringValue("version", changeApprovalKindSettingRequest.version);
+    writer.writeNumberValue("workingDaysToDecide", changeApprovalKindSettingRequest.workingDaysToDecide);
+    writer.writeAdditionalData(changeApprovalKindSettingRequest.additionalData);
 }
 /**
  * Serializes information the current object
@@ -4119,6 +5074,21 @@ export function serializeDownloadLinkResponse(writer: SerializationWriter, downl
     writer.writeDateValue("expiresAt", downloadLinkResponse.expiresAt);
     writer.writeStringValue("url", downloadLinkResponse.url);
     writer.writeAdditionalData(downloadLinkResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param EarlierApprovalRequestResponse The instance to serialize from.
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeEarlierApprovalRequestResponse(writer: SerializationWriter, earlierApprovalRequestResponse: Partial<EarlierApprovalRequestResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!earlierApprovalRequestResponse || isSerializingDerivedType) { return; }
+    writer.writeDateValue("closedAt", earlierApprovalRequestResponse.closedAt);
+    writer.writeGuidValue("id", earlierApprovalRequestResponse.id);
+    writer.writeEnumValue<ApprovalState>("state", earlierApprovalRequestResponse.state);
+    writer.writeDateValue("submittedAt", earlierApprovalRequestResponse.submittedAt);
+    writer.writeAdditionalData(earlierApprovalRequestResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -4548,6 +5518,22 @@ export function serializeOrgChartPersonResponse(writer: SerializationWriter, org
     writer.writeStringValue("managerDisplayName", orgChartPersonResponse.managerDisplayName);
     writer.writeGuidValue("managerId", orgChartPersonResponse.managerId);
     writer.writeAdditionalData(orgChartPersonResponse.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param PagedResponseOfApprovalRequestSummaryResponse The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializePagedResponseOfApprovalRequestSummaryResponse(writer: SerializationWriter, pagedResponseOfApprovalRequestSummaryResponse: Partial<PagedResponseOfApprovalRequestSummaryResponse> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!pagedResponseOfApprovalRequestSummaryResponse || isSerializingDerivedType) { return; }
+    writer.writeCollectionOfObjectValues<ApprovalRequestSummaryResponse>("items", pagedResponseOfApprovalRequestSummaryResponse.items, serializeApprovalRequestSummaryResponse);
+    writer.writeNumberValue("page", pagedResponseOfApprovalRequestSummaryResponse.page);
+    writer.writeNumberValue("pageSize", pagedResponseOfApprovalRequestSummaryResponse.pageSize);
+    writer.writeNumberValue("totalCount", pagedResponseOfApprovalRequestSummaryResponse.totalCount);
+    writer.writeNumberValue("totalPages", pagedResponseOfApprovalRequestSummaryResponse.totalPages);
+    writer.writeAdditionalData(pagedResponseOfApprovalRequestSummaryResponse.additionalData);
 }
 /**
  * Serializes information the current object
@@ -5067,6 +6053,20 @@ export function serializeSessionResponse(writer: SerializationWriter, sessionRes
 /**
  * Serializes information the current object
  * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
+ * @param SetUpApprovalKindSettingRequest The instance to serialize from.
+ * @param writer Serialization writer to use to serialize this model
+ */
+// @ts-ignore
+export function serializeSetUpApprovalKindSettingRequest(writer: SerializationWriter, setUpApprovalKindSettingRequest: Partial<SetUpApprovalKindSettingRequest> | undefined | null = {}, isSerializingDerivedType: boolean = false) : void {
+    if (!setUpApprovalKindSettingRequest || isSerializingDerivedType) { return; }
+    writer.writeStringValue("kind", setUpApprovalKindSettingRequest.kind);
+    writer.writeBooleanValue("required", setUpApprovalKindSettingRequest.required);
+    writer.writeNumberValue("workingDaysToDecide", setUpApprovalKindSettingRequest.workingDaysToDecide);
+    writer.writeAdditionalData(setUpApprovalKindSettingRequest.additionalData);
+}
+/**
+ * Serializes information the current object
+ * @param isSerializingDerivedType A boolean indicating whether the serialization is for a derived type.
  * @param SetUpNumberSeriesRequest The instance to serialize from.
  * @param writer Serialization writer to use to serialize this model
  */
@@ -5225,6 +6225,20 @@ export interface SessionResponse extends AdditionalDataHolder, Parsable {
      */
     lifetimeEndsAt?: Date | null;
 }
+export interface SetUpApprovalKindSettingRequest extends AdditionalDataHolder, Parsable {
+    /**
+     * Key of the kind of request, as the list of kinds gives it.
+     */
+    kind?: string | null;
+    /**
+     * Whether the kind's records need approval; false lets each go through at once, without a request, so nobody but the person who made it looks at it.
+     */
+    required?: boolean | null;
+    /**
+     * Working days each step of the kind's requests has, from 1 to 30.
+     */
+    workingDaysToDecide?: number | null;
+}
 export interface SetUpNumberSeriesRequest extends AdditionalDataHolder, Parsable {
     /**
      * Key of the kind of document to number, as the list of numbered documents gives it.
@@ -5370,6 +6384,29 @@ export interface UploadPolicyResponse extends AdditionalDataHolder, Parsable {
      */
     maxSizeBytes?: number | null;
 }
+export const ApprovalStateObject = {
+    Submitted: "submitted",
+    Approved: "approved",
+    Returned: "returned",
+    Rejected: "rejected",
+    Withdrawn: "withdrawn",
+} as const;
+export const ApprovalStepRuleObject = {
+    Manager: "manager",
+    Role: "role",
+} as const;
+export const ApprovalStepStateObject = {
+    Pending: "pending",
+    Waiting: "waiting",
+    Approved: "approved",
+    Returned: "returned",
+    Rejected: "rejected",
+    Closed: "closed",
+} as const;
+export const ApproverKindObject = {
+    Person: "person",
+    Role: "role",
+} as const;
 export const AttachmentScanStatusObject = {
     NotScanned: "notScanned",
     Clean: "clean",
@@ -5485,6 +6522,12 @@ export const PermissionObject = {
     IdentityUsersPositionsRead: "identity.users.positions.read",
     IdentityUsersPositionsRecord: "identity.users.positions.record",
     IdentityUsersPositionsWithdraw: "identity.users.positions.withdraw",
+    PlatformApprovalsKindsChange: "platform.approvals.kinds.change",
+    PlatformApprovalsRequestsDecide: "platform.approvals.requests.decide",
+    PlatformApprovalsRequestsDecideAny: "platform.approvals.requests.decide-any",
+    PlatformApprovalsRequestsRead: "platform.approvals.requests.read",
+    PlatformApprovalsRequestsReadAll: "platform.approvals.requests.read-all",
+    PlatformApprovalsRequestsWithdraw: "platform.approvals.requests.withdraw",
     PlatformAttachmentsFilesDelete: "platform.attachments.files.delete",
     PlatformAttachmentsFilesRead: "platform.attachments.files.read",
     PlatformAttachmentsFilesUpload: "platform.attachments.files.upload",

@@ -15,5 +15,6 @@ public static class Modules
         new ErpModules.Platform.ReferenceData.ReferenceDataModule(),
         new ErpModules.Compliance.StatutoryParameters.StatutoryParametersModule(),
         new ErpModules.Platform.Numbering.NumberingModule(),
+        new ErpModules.Platform.Approvals.ApprovalsModule(),
     ];
 }
